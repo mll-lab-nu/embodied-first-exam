@@ -38,9 +38,12 @@ client and one episode. **Task:** Guide the metal loop along the entire wire fro
   objects are (no object poses or positions). The success implementation is not exposed, and of the simulator's internal
   measurements only the safety readings of `meta["safety"]` are (listed under Action types, below); the task
   requirements above still apply in full.
-- **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); there is no step budget, but the
+- **Your only budget is the time limit (`## Time limit`)**; there is no step budget, but the
   episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
   `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.1 s of wall clock here.
+  This service also ends the episode itself (`meta["reason"]` is `timeout`; it is graded as it stands) when its own
+  count of that limit, `meta["time_left_s"]`, reaches 0. That count has run since the service first started, a little
+  before your session, so plan by `time_left_s`.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -149,3 +152,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

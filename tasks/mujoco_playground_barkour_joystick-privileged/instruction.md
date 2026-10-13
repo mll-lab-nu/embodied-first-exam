@@ -32,7 +32,7 @@ The episode lasts exactly 1000 control steps: the trajectory must have T = 1000 
 the 12 joint position actuators, in `s.joint_names` order (front-left, hind-left, front-right, hind-right legs, each abduction, hip, knee), in radians; T = 1000 (the whole schedule). Values
 outside the actuator ranges (`s.lower`, `s.upper`) are clipped. `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your 3600 s are up is graded. The tooling logs your sessions and
+you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling logs your sessions and
 resets (cost accounting, not graded).
 
 ## Tooling (installed; `python` from any directory)
@@ -66,3 +66,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

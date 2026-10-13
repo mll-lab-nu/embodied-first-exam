@@ -16,7 +16,7 @@ heights above the floor; measured on this scene.)
 - **One episode, no reset.** `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, @@IMAGE_HW@@×@@IMAGE_HW@@: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
 - There is nothing to hand in: the service records every control step it ran, replays the episode in a fresh simulator and grades the replay. Keep the controller at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way (and stops your background programs), so do not stop early.
+- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way (and stops your background programs), so do not stop early.
 
 ## Success
 @@SUCCESS_PAR@@

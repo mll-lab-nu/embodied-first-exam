@@ -87,7 +87,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Grasping is **sticky** (this family's setting in ManiGuard's evaluator): closing the gripper attaches an object as soon as a finger touches it; opening releases it. `s.object_in_hand()` names what is attached, which is what the goal means by held.
 - End-effector frames: `eef` is OmniGibson's end-effector link (+z along the fingers, the fingers close along +y); `tcp`
   is the fingertip centre, further along +z by the long fingers' length (`s.robot_spec()["tcp"]`).
-- Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU). Your wall-clock budget is 120 min (7200 s);
+- Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU). The time limit (`## Time limit`) is your only budget:
   there is no step budget (ManiGuard's own evaluator would stop at 4200 steps; here that is reported, not
   enforced), only the cap of 50,000 control steps per episode above.
 - One `Session` per process: Isaac Sim launches once (a few minutes per process; plan your experiments accordingly). The
@@ -99,3 +99,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **30 GiB of GPU memory**, **25 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

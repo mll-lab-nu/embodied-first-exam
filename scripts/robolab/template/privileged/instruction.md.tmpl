@@ -55,7 +55,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   are **WXYZ**. `s.objects()["table"]["bounds"][1][2]` is the table-top height.
 - Action (8): panda_joint1..7 absolute joint-position targets (rad, PD-tracked) + gripper command (0 = open, 1 = close; the
   Robotiq action is binary). `s.hold_action()` is the no-op.
-- Control runs at 15 Hz (sim dt 1/120 s, decimation 8). Your wall-clock budget is 90 min (5400 s); there is no step
+- Control runs at 15 Hz (sim dt 1/120 s, decimation 8). There is no step budget: the time limit (`## Time limit`) is your only
   budget (a runaway guard ends an episode after 100,000 control steps, the most a trajectory may hold). The episode
   **ends by itself the moment the success predicate holds**: after that `s.step` raises and the primitives become
   no-ops, so stop recording there.

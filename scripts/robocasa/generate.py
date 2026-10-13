@@ -21,7 +21,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(1, str(ROOT / "scripts"))
 from envs import SOURCES, SUCCESS, slug  # noqa: E402
-from task_conventions import normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
+from task_conventions import cutoff_sec, normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
 
 # -- benchmark configuration -----------------------------------------------------------------------------------
 BENCH = HERE.name
@@ -62,15 +62,22 @@ ALLOWED_HOSTS = (
     '["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", '
     '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 )
-AGENT = f"""[agent]
-timeout_sec = 3600.0
+# `[agent] timeout_sec` is the cutoff table's number for the mode (scripts/task_cutoffs.toml, PROTOCOL §2.12);
+# normalize writes the same number again, with the instruction's closing `## Time limit` section and the sim service's wall clock.
+def agent_block(mode: str) -> str:
+    return f"""[agent]
+timeout_sec = {cutoff_sec(TITLE, mode)}.0
 # The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = {ALLOWED_HOSTS}
 """
+
+
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 # Standard mode, the sim service's collect hook (shared/finalize.sh): its timeout, and how long it waits for the verdict
-# (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree).
+# (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree). A number of its own, not the agent's
+# cutoff: it was sized for the replay of an episode as long as a 3600 s agent time limit. Lowering the cutoff
+# (scripts/task_cutoffs.toml) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
 COLLECT_TIMEOUT_S = 3600
 COLLECT_WAIT_S = 3450
 # README Change Log of the standard tasks (PROTOCOL §2.8: published tasks are fixed in place), oldest first.
@@ -198,7 +205,7 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 ## Rules
 - Write your own controller. Do not use the benchmark's demonstrations, trained policies or any published solution.
 - Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
 """
 
 
@@ -218,8 +225,9 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth, with each camera's
   calibration) and the robot's own state. No object poses, no scene layout, no success signal.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
-  episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). There is nothing
+  to hand in: the service records the episode as the trajectory and grades it. Leave your script at
+  `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
@@ -270,7 +278,7 @@ def readme_head(rec: dict, mode: str) -> list[str]:
         ("Simulator / robot", f"`robosuite` / `{ROBOT}`"),
         ("Family / instance", f"`{BENCH}/{rec['env']}`"),
         ("Oracle", "`full`"),
-        ("Agent time budget", "3600 s; tokens: protocol default (PROTOCOL §5)"),
+        ("Agent time budget", f"{cutoff_sec(TITLE, mode)} s; tokens: protocol default (PROTOCOL §5)"),
         ("Base image", f"`{image}`"),
     ]
     return [f"# {name}", "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows]
@@ -374,7 +382,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-{AGENT}
+{agent_block("privileged")}
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4
@@ -432,14 +440,15 @@ timeout_sec = 30
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
 # restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
 # waits for that verdict (up to {COLLECT_WAIT_S} s), then, bounded, for the optional replay video, which decides nothing.
-# timeout_sec = the agent's budget: the replay runs the episode's own physics once more, without its cameras, so it
-# cannot take longer than the episode did (about 0.035 s per control step + one scene build; finalize.sh has the sums).
+# timeout_sec was sized for an episode as long as a 3600 s agent time limit: the replay runs the episode's own physics
+# once more, without its cameras, so it cannot take longer than the episode did (about 0.035 s per control step + one
+# scene build; finalize.sh has the sums). Look at it when the agent's cutoff is raised.
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
 timeout_sec = {COLLECT_TIMEOUT_S}
 
-{AGENT}
+{agent_block("standard")}
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4

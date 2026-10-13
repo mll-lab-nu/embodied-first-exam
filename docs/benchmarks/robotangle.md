@@ -145,11 +145,30 @@ One image and one version serve both modes:
 
 ## Time budget (D8)
 
+**Since 2026-10-12: 7200 s (2 h)** for every task of both modes, and the same for the standard sidecar's wall clock (owner: stricter cutoffs, one number for both modes; `scripts/task_cutoffs.toml` history). No result in the pool was recorded with the earlier 21600 s. One full reference execution takes 2–185 min (below), so a task whose reference execution is longer than the budget cannot be finished by replaying a reference-length solution at the reference's speed; the table can give such a family or task an exception. The text below describes the budget before that and why it was chosen.
+
 `[agent].timeout_sec = 21600` (6 h) for every task, uniform within the benchmark. This is the benchmark owner's rule:
 these puzzles are far harder than typical robotics tasks, and the budget probes the capability ceiling. Simulator
 speed-ups give the agent more interaction within the 6 h; they never shorten it. One full reference execution takes
 2–185 min (fiber_bundling hard is the longest). The standard sidecar's wall clock (`RCB_WALL_CLOCK_S`) is 21600 s as
-well.
+well, and unlike every other benchmark's it is a deadline: the service ends the episode itself (`reason = "timeout"`)
+when its own count, running since the service first started (a little before the agent's session), reaches 0; the
+standard instruction says so and tells the agent to plan by `meta["time_left_s"]`.
+
+The number lives in `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md)): `normalize` writes it into
+`[agent] timeout_sec`, `RCB_WALL_CLOCK_S` and the closing `## Time limit` section of each instruction (PROTOCOL
+§2.12). The packages' own budget sentences ("Your wall-clock budget is 360 min (21600 s)") are swapped by
+`mk_tasks.py` (`review_fixes`) for "the time limit (`## Time limit`)", so that an instruction states the limit once.
+
+**To do at RoboTangle's next task update (owner, 2026-10-12): the service's wall clock becomes report-only.** Today
+`environment/sim/server.py` ends the episode itself (`deadline_reached()` -> `finish("timeout")`, the deadline being
+`RCB_WALL_CLOCK_S` after the service's first start), so a standard-mode agent has a little less than the stated time: the
+service started before the agent's session did. Every other benchmark's service only reports the number
+(`spec["budget"]["wall_clock_s"]`, `meta["time_left_s"]`) and lets Harbor's agent timeout stop the agent, after which
+the collect hook ends the episode (PROTOCOL §2.12). The next RoboTangle pull request that changes its tasks does the
+same: remove the deadline from the service (the main loop's `deadline_reached()` check and `ctrl_step`'s), keep
+`time_left_s` as a report, drop the `SERVICE_DEADLINE` sentence that `mk_tasks.py` adds to the standard instruction,
+and update this section. It was not done with the cutoff table (#157): that change touched no service.
 
 This is above PROTOCOL §2.3's default cap of 14400 s. **Accepted by the owner (2026-10-08) as a documented per-benchmark
 exception** (PROTOCOL §2.3, issue #87, PR #88; `check-task-fields.sh` caps `robotangle-*` at 21600 s). RoboTangle results
@@ -525,6 +544,7 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
 8. **IPC on compute capability 8.6** (RTX A6000 class, the sm_86 libuipc build): compiled and audited, never run on such a
    GPU; none was available. GPU physics is not bit-identical across GPU models anyway, so the evidence from the RTX PRO 6000
    does not transfer bit for bit to any other GPU.
+9. **The service's wall clock becomes report-only** at the next task update (owner, 2026-10-12; Time budget, above).
 
 ## Protocol requests (raised in the proposal issue; decided 2026-10-08)
 

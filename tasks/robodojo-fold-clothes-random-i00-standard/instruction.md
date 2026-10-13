@@ -4,10 +4,9 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-**Time limit: one hour.** You have 60 min (3600 s) of wall-clock time in total, counted from the start of the trial; when it is
-up you are stopped where you are. Nothing is handed in: the one episode is graded as it stands at that moment, so the task
-must be completed before the cutoff (the episode ends by itself when RoboDojo's check passes: `res.meta["done"]`). The
-time you wait for the service counts: its first start in a trial takes ~4-15 min (Client, below).
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open.
 
@@ -39,11 +38,11 @@ it does not apply here: where the description above mentions step_lim, read the 
   error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, link6 poses, velocities, efforts). No object poses, no success signal.
-- There is no step budget; your wall-clock budget is 60 min (3600 s; `meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
+- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
   reported as cost (`meta["control_steps"]` counts them; the technical cap above is 15,000).
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
-- **Graded on your live episode.** This task's physics does not replay bit for bit (the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)), so the episode as it happened in the service decides; the service still replays it twice for the record.
+- **Graded on your live episode.** This task's physics does not replay bit for bit (the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)), so the episode as it happened in the service decides; the service still replays it once for the record.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
   until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
@@ -115,3 +114,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

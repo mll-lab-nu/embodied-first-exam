@@ -104,10 +104,13 @@ which was graded on ws (AMD, with `instance_exact = 1`).
   gets a service, and `reward.json` has `infra_error = 1`, `instance_mismatch = 1`.
 
 ## Time budget (D8)
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+
 5400 s for every task of both modes, longer than the 3600 s default: the families are bimanual physical puzzles that
 take several attempts (a failed push or a dropped object is reset in privileged mode and must be recovered in standard
 mode), every Python process pays about a minute of scene build before its first step, and a standard-mode crash resume
-replays the episode on the agent's clock. Results are reported with this budget.
+replays the episode on the agent's clock. Results are reported with this budget. The number lives in
+`scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Grading and determinism
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier

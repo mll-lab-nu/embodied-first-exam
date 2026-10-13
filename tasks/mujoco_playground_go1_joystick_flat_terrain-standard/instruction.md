@@ -25,9 +25,9 @@ The same schedule is `spec["command_schedule"]`; every response's `meta["command
   velocity), foot contacts. No world positions, no success check.
 - **The episode ends** after 1000 control steps, the whole schedule (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when the robot meets its termination rule (the trunk's up axis pointing below the horizon (the z component of the IMU frame's z axis negative): a failure), when you submit `done`, or when your time is up (before the end of the schedule, both are failures).
 - **Success** is judged on the whole schedule: no termination, and in every command segment, after its first 25 control steps, a mean |v_xy - cmd_xy| of at most 0.2 m/s (`imu_linvel`) and a mean |w_z - cmd_wz| of at most 0.3 rad/s (`imu_gyro`).
-- Your wall-clock budget is 3600 s from your start. Simulated time only advances with your commands (and
-  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is counted from your first call to
-  the service; approximate — the harness's own deadline is authoritative.
+- Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
+  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
+  from your first call to the service; approximate — the harness's own deadline is authoritative.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
@@ -61,3 +61,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

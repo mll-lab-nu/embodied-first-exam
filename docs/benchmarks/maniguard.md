@@ -226,7 +226,11 @@ primitives. Every one scores 0, for the reason given.
 | `maniguard-lid-transport-i07` | the uncovered jar pushed along the countertop into the sphere (held by its wall, pressed 2 mm down) | `ltl_violated` 1: the jar leaves the countertop on the way (`lid_before_lift` at step 429); ManiGuard's own goal is met (step 2599) |
 
 ## Time budget (D8)
-7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 7200 s, and why it was chosen; results are grouped by budget.
+
+The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
+every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
+2026-10-11: 7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
 scene load (measured: 23 s with a warm cache, 239 s with a cold one, which every trial's first process has: Kit's shaders
 and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall second), and the shortlisted tasks are long
 multi-phase manipulations. ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A Harbor

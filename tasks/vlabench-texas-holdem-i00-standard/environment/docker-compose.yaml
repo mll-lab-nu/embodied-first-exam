@@ -21,7 +21,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "We're playing Texas hold'em! Show me your hand on the placemat: put the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades on the placemat."
       RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
-      RCB_WALL_CLOCK_S: "3600.0"
+      RCB_WALL_CLOCK_S: "1800.0"
       RCB_MAX_CONTROL_STEPS: "9000"
       RCB_IMAGE_HW: "320"
       # One episode, no reset, as instruction.md tells the agent: pinned, not a knob (a `${RCB_RESET_BUDGET:-0}` here

@@ -8,7 +8,7 @@
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_xingshu_yong` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), re-made on 2026-10-09 (README, Change Log; docs/benchmarks/robopaint.md, Targets). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 726 and mark_width_mm 5.14, against the colouring-in limits 1450 mm and 2.25 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task

@@ -113,7 +113,7 @@ harbor view jobs
 
 **Running official results:**
 - Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (PROTOCOL §2.11, D11): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
-- Align reasoning effort and the time budget (3600 s by default) across agents. The token budget (100M input / 10M output tokens per trial) is defined in PROTOCOL §5; it will be applied to Harbor's recorded counts, which is not implemented yet (PROTOCOL §7).
+- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), and the numbers per benchmark and mode are in one table, [docs/CUTOFFS.md](docs/CUTOFFS.md) (3600 s by default; PROTOCOL §2.12). The token budget (100M input / 10M output tokens per trial) is defined in PROTOCOL §5; it will be applied to Harbor's recorded counts, which is not implemented yet (PROTOCOL §7).
 
 ## Integrity
 

@@ -21,9 +21,9 @@ oracle_evidence = "@@ORACLE_EVIDENCE@@"
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 15000.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
-                                  # (replay_timeout(15,000 actions) = 1200 s + actions / 2.5 = 7200 s each) + 600 s; a usual
-                                  # trajectory (up to 1,500 actions) has 1800 s per replay
+timeout_sec = 7800.0              # ONE fresh-process replay (owner, 2026-10-12; two and 15000 s before) at tests/grade.py's
+                                  # limit for the longest accepted trajectory (replay_timeout(15,000 actions) = 1200 s +
+                                  # actions / 2.5 = 7200 s) + 600 s; a usual trajectory (up to 1,500 actions) has 1800 s
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image
 
@@ -33,7 +33,7 @@ cpus = 8
 memory_mb = 32768
 
 [agent]
-timeout_sec = @@AGENT_TIMEOUT_S@@.0              # RoboDojo budget, both modes (owner, 2026-10-11; mk_tasks.py AGENT_TIMEOUT_S, which the instruction's cutoff text is rendered from): every Python process pays a few minutes of Isaac Sim launch + scene build
+timeout_sec = @@AGENT_TIMEOUT_S@@.0              # the agent's cutoff: scripts/task_cutoffs.toml, the one table (written by normalize, PROTOCOL §2.12); every Python process pays a few minutes of Isaac Sim launch + scene build
 # RoboDojo's training demonstrations and policy checkpoints are public (Hugging Face), so the agent reaches the model APIs and the package registries,
 # nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

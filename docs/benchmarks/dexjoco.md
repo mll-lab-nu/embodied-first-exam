@@ -13,7 +13,7 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 | tasks | 11 families × 2 modes: `tasks/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
-| agent time budget | 5400 s for every task (D8: dexterous control of 16 hand joints per arm through a thin interface; the model runs we made used most of it) |
+| agent time budget | 3600 s for every task since 2026-10-12 (owner: stricter cutoffs in 30-minute steps, one number for both modes); 5400 s before (D8: dexterous control of 16 hand joints per arm through a thin interface; the model runs we made used most of it); the number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12) |
 | egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL §2.7) |
 
 ## Tasks

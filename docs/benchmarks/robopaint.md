@@ -338,7 +338,10 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.
 
 ## Time budget (D8)
-7200 s for every task of both modes, longer than the default 3600 s:
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 7200 s, and why it was chosen; results are grouped by budget.
+
+7200 s for every task of both modes, longer than the default 3600 s. The number lives in `scripts/task_cutoffs.toml`
+(shown in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in its closing `## Time limit` section (PROTOCOL §2.12), and the templates' own text says "the time limit (`## Time limit`)". Why longer than the default:
 - The agent first has to learn the brush's mark from test strokes on the practice sheet: width against press depth, the
   drag of the tuft, the paint's blending. The privileged mode gives the exact sheet but no brush model.
 - Every stroke on the main sheet is irreversible in standard mode.

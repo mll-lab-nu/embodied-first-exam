@@ -123,9 +123,10 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   in `/spec` (`robot_spec.base`). LabUtopia's standard tasks join the declaration of eai-standard/2.2 §10 and are
   checked by `ci_checks/check-standard-texts.sh`.
 - **Texts** are in `scripts/labutopia/families.json` (goal in both wordings, scene, inventory).
-- **Budget: 5400 s** (D8), both modes, the same as RoboLab's (also on Isaac Sim): the first simulator with its
+- **Budget: 3600 s since 2026-10-12** (D8), both modes, the same as RoboLab's (also on Isaac Sim; owner: stricter cutoffs in 30-minute steps). Before that 5400 s, chosen because the first simulator with its
   renderer in a container takes 5 to 27 minutes to start (below), which a standard task pays before its service
-  answers.
+  answers. The number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every
+  instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Simulator version: Isaac Sim 6.1.0
 LabUtopia's README installs Isaac Sim 5.1.0. The host this benchmark was built on has NVIDIA's R595 driver (595.91.07,

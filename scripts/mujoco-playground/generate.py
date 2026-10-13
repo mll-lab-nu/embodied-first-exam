@@ -22,7 +22,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -152,6 +152,10 @@ COPY test.sh /tests/test.sh
 COPY grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 """
+# The agent's time cutoff per mode: the table's number (scripts/task_cutoffs.toml, PROTOCOL §2.12), written into
+# `[agent] timeout_sec` and the sim service's wall clock; normalize writes the same number again, and the instruction's
+# closing `## Time limit` section. No template states it a second time.
+CUTOFF = {m: cutoff_sec("MuJoCo Playground", m) for m in ("privileged", "standard")}
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and rendering (EGL when a GPU is there, else OSMesa); no GPU reservation.
@@ -171,7 +175,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_quadruped.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "3600"
+      RCB_WALL_CLOCK_S: "{CUTOFF['standard']}"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in about a second
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
@@ -447,7 +451,7 @@ def make(env: str, out: Path) -> tuple[Path, Path]:
 
     p = out / f"{v['name']}-privileged"
     reset_dir(p)
-    put(p / "task.toml", render("task.toml", v))
+    put(p / "task.toml", render("task.toml", {**v, "agent_timeout": CUTOFF["privileged"]}))
     put(p / "instruction.md", render("instruction.md", v))
     put(p / "README.md", render("README.md", v))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
@@ -464,7 +468,7 @@ def make(env: str, out: Path) -> tuple[Path, Path]:
 
     s = out / f"{v['name']}-standard"
     reset_dir(s)
-    put(s / "task.toml", render("standard/task.toml", v))
+    put(s / "task.toml", render("standard/task.toml", {**v, "agent_timeout": CUTOFF["standard"]}))
     put(s / "instruction.md", render("standard/instruction.md", v))
     put(s / "README.md", render("standard/README.md", v))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)

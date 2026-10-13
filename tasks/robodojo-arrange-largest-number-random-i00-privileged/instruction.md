@@ -3,11 +3,9 @@
 You control two simulated **ARX X5 arms with parallel two-finger grippers** at a table (RoboDojo's dual-arm simulation
 setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-**Time limit: one hour.** You have 60 min (3600 s) of wall-clock time in total, counted from the start of your session; when it
-is up you are stopped where you are. Only what is in `/app/output/` at that moment is graded, so
-`/app/output/trajectory.npz` must be written before the cutoff: save a working trajectory as soon as you have one and
-overwrite it as you improve it. Every Python process that opens a `Session` first spends ~3-5 min launching Isaac Sim
-and building the scene, and that time counts.
+`/app/output/trajectory.npz` must be written before the time limit (`## Time limit`) is up: save a working
+trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
+spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
 **Task:** Look at the digit blocks on the table (4 or 5 of them) and place them on the row of mats so that, read in order along the row, they form the largest possible number (largest digit on the first mat, smallest on the last), then return the arm home.
 
@@ -45,11 +43,11 @@ Unlike the plain arrange_largest_number, this _random variant uses other digit t
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same frozen layout in two fresh processes and scored 1 if the task succeeds in both replays and both end in the same state,
-else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
+open-loop from the same frozen layout once, in a fresh process, and scored 1 if the task succeeds in that replay, else 0.
+Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
 as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
 The file holds `task` and `actions`, a (T, 14) float array of at most **15,000 rows** (one per action, 10 min of robot
-time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. Each replay has
+time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. The replay has
 max(1800 s, 1200 s + 1 s per 2.5 rows) of wall clock, several times what a replay takes here.
 
 ## Tooling (already installed; run `python` from any directory)
@@ -82,7 +80,7 @@ Resets: RoboDojo's own reset settles the scene again from where it is, so after 
 start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the grader's.
 The first episode in a fresh process (nothing stepped since the Session started) is exactly the grader's.
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays once, in a fresh process; that replay is exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_robodojo.py replay --task arrange_largest_number_random --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
@@ -91,8 +89,8 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   position targets (rad); RoboDojo's controller moves each arm from where it is to the new target over the action's 10
   physics steps (linear for 8, then holding). Gripper: RoboDojo's normalised command, clipped to 0..1 (1 = fully open, as at the start; 0 = closed; a closing gripper stops at whatever is between its fingers).
   `s.hold_action()` keeps the current targets.
-- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). Your wall-clock budget is 60 min (3600 s, the
-  time limit at the top); there is no step budget.
+- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). There is no step budget: the time limit
+  (`## Time limit`) is your only budget.
 - One `Session` per process (~3-5 min). Rendering happens only when a frame is asked for and never moves anything. Do
   not call `s.close()` before writing every output.
 
@@ -101,3 +99,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of GPU memory**, **32 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

@@ -21,7 +21,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions; the cutoff table)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -31,7 +31,9 @@ IMAGE = f"ghcr.io/mll-lab-nu/eai-autobio:{VERSION}"
 _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitlines() if "=" in ln and ln[0] != "#")
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Canyu Chen"
-AGENT_TIMEOUT = 3600  # the protocol's default (D8), uniform within the benchmark
+# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12). No copy of the number here:
+# normalize writes it into task.toml, the instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
+CUTOFF = {m: cutoff_sec("AutoBio", m) for m in ("privileged", "standard")}
 # The graders' time (docs/benchmarks/autobio.md, "Time limits of the graders"). The longest episode (600000 rows) replays in
 # 1000 s in the slowest family (insert_centrifuge_5430, 600 control steps/s); a verdict replay may take REPLAY_TIMEOUT.
 REPLAY_TIMEOUT = 2400     # one verdict replay: shared/grade.py VERDICT_TIMEOUT_S, shared/standard/finalize.sh REPLAY_TIMEOUT_S
@@ -143,7 +145,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_autobio.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT}"
+      RCB_WALL_CLOCK_S: "{CUTOFF["standard"]}"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
@@ -224,8 +226,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is {AGENT_TIMEOUT} s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -292,8 +293,8 @@ in a service you cannot open. You get one client and one episode.
   the robot's own proprioception: joint positions, velocities and drive efforts{", gripper openings" if grip else ""}, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
   success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is {AGENT_TIMEOUT} s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
-  only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - {done}
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -417,7 +418,7 @@ expert_time_estimate_hours = {t["hours"] + (1.0 if std else 0.0)}
 
 {verifier}
 [agent]
-timeout_sec = {AGENT_TIMEOUT}.0
+timeout_sec = {CUTOFF["standard" if std else "privileged"]}.0
 # AutoBio's scripted experts are in its public repository and its recorded demonstrations on Hugging Face (and a
 # standard-mode agent could rebuild the simulator from the repository): the agent reaches the model APIs and the package registries, nothing
 # else (scripts/set_agent_egress.py HOSTS).

@@ -8,7 +8,7 @@
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `hiding_Easter_eggs` / seed 301 |
 | Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-hiding-Easter-eggs-i00__QL9YpHL (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 20a382a8; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/hiding_Easter_eggs/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/hiding_Easter_eggs/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
-| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
@@ -55,7 +55,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`) |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in |
 | GPU | an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`) |
-| Budget | 14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s (docs/benchmarks/behavior.md) |
+| Budget | the agent's time (the `Agent time budget` row; the number lives in `scripts/task_cutoffs.toml`): every Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s (docs/benchmarks/behavior.md) |
 | Verifier time | each replay min(4 h, max(3600 s, 1200 s + steps / 2)); `[verifier] timeout_sec` 30600 s (two capped replays + 30 min) |
 
 ### Change Log

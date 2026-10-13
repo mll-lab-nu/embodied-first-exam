@@ -8,7 +8,7 @@
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_lettering_business` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; the lettering family redesigned on 2026-10-09, generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 1240 and mark_width_mm 0.37, against the colouring-in limits 3730 mm and 0.10 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Lettering). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task

@@ -97,8 +97,8 @@ inside the object's axis-aligned bounding box grown by 3 cm on every side; the *
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
 completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-Your wall-clock budget is 90 min (5400 s): save a trajectory as soon as one replays successfully (you can overwrite
-it later), and do not stop before you have one.
+Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
+one.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -136,7 +136,7 @@ CLI equivalent of the grader:
   arm works at y > 0). Quaternions are **WXYZ**.
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (4 physics substeps). There is no step budget; your wall-clock budget is 90 min (5400 s).
+- Control runs at 30 Hz (4 physics substeps). There is no step budget: the time limit (`## Time limit`) is your only budget.
   One technical cap: a trajectory, and a `Session` between two resets, has at most 200000 control steps (about
   1.85 h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
   `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
@@ -150,3 +150,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **6 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

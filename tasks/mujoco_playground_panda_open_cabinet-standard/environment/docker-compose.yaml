@@ -22,6 +22,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       PYTHONPATH: /srv
       RCB_MJ_ROOT: /opt/rcb_mj
+      RCB_WALL_CLOCK_S: "1800"
     shm_size: "4gb"
     deploy:
       resources:

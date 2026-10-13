@@ -30,8 +30,8 @@ reads your work afterwards, so keep them short and factual rather than long.
 | `NOTES.md` | **at most 20 lines**: what your final approach is and why it works, plus the approaches you tried that failed and what each one told you about the task. No narration of your session, no restating this file |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and
-`NOTES.md` to match) whenever you have a better one.** You have a wall-clock budget
-({{agent_timeout_hours}} h) and it ends without warning; a run that ends with no file scores zero no matter
+`NOTES.md` to match) whenever you have a better one.** The time limit (`## Time limit`) ends without
+warning; a run that ends with no file scores zero no matter
 how good the policy in your scratch directory was. Do not stop early: you cannot see the score here, so a
 trajectory that looks good may still fall short of the pass mark — keep improving it until the time is up.
 Saving is cheap — a few hundred KB and well under a second.

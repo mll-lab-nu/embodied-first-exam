@@ -8,7 +8,7 @@
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `keyboard_out_of_bin` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-keyboard-out-of-bin-i00__rG5UBUk (robolab-keyboard-out-of-bin-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/keyboard_out_of_bin/unlimited/). Human review per family (PROTOCOL §2.7). |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.2` |
 
 ## Task
@@ -51,7 +51,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Simulator | NVIDIA RoboLab v0.3.1 (Isaac Lab 2.3.2 / Isaac Sim 5.1, PhysX on the CPU, RTX rendering), Franka Panda + Robotiq 2F-85 (DROID setup) |
 | RoboLab task | `KeyboardOutOfBinTask`; the frozen instance (the full scene state after RoboLab's canonical seed-0 reset, with its hash) is `environment/instance.json` |
 | Image | built locally on every host (`images/robolab/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
-| Budget | 5400 s in both modes: every Python process pays ~2 min of Isaac Sim launch + scene build (docs/benchmarks/robolab.md) |
+| Budget | the agent's cutoff is the `Agent time budget` row above (`scripts/task_cutoffs.toml`); out of it, every Python process pays ~2 min of Isaac Sim launch + scene build (docs/benchmarks/robolab.md) |
 | Generator | `scripts/robolab/mk_tasks.py` (`scripts/robolab/families.json`, `template/privileged/`, `shared/`); docs/benchmarks/robolab.md |
 
 ### Change Log

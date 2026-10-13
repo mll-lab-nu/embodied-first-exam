@@ -24,7 +24,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_quadruped.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "3600"
+      RCB_WALL_CLOCK_S: "1800"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in about a second
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log

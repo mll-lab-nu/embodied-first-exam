@@ -1,0 +1,222 @@
+# Agent time cutoffs: THE table (docs/PROTOCOL.md §2.12). One row per benchmark, one number per mode, in seconds;
+# optional exceptions per family and per task further down.
+#
+# The number is the agent's wall-clock limit: Harbor's `[agent] timeout_sec`, counted around the agent's run only
+# (after the environment is built and started and the harness is installed); at the cutoff the agent is stopped and the
+# trial is graded as it stands. Everything that states or follows the limit is written from this file by
+# scripts/task_conventions.py (`normalize`): `[agent] timeout_sec` in task.toml, the closing `## Time limit` section of
+# instruction.md ("You have N seconds to complete this task. ..."), the README's "Agent time budget" row and, in the
+# standard modes, the sim service's `RCB_WALL_CLOCK_S`.
+#
+# To change a time:
+#   1. edit the number in this file, and add a `[[history]]` entry at the bottom (date, who decided, old -> new):
+#      CI and `apply` refuse a changed number without one;
+#   2. python3 scripts/task_cutoffs.py apply     # rewrites the tasks, docs/CUTOFFS.md and tasks/dataset.toml (~3 min)
+#   3. commit everything and open a pull request (CI runs ci_checks/check-cutoffs.py and the generators' checks).
+# Never edit the number in a task, a template or a generator: ci_checks/check-cutoffs.py fails when a task disagrees
+# with this table. Limits: a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+# The benchmark names are the labels of scripts/task_conventions.py BENCHMARKS; a mode a benchmark has no tasks in has
+# no number.
+
+[cutoff_sec]
+"AutoBio"           = { privileged =  3600, standard =  3600 }
+"BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
+"BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"DexJoCo"           = { privileged =  3600, standard =  3600 }
+"DexToolBench"      = { privileged =  3600, standard =  3600 }
+"HumanoidBench"     = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"KinDER"            = { privileged =  3600, standard =  3600 }
+"LIBERO-MAX"        = { privileged =  1800, standard =  1800 }
+"LabUtopia"         = { privileged =  3600, standard =  3600 }
+"ManiGuard"         = { privileged =  3600, standard =  3600 }
+"MetaWorld+"        = { privileged =  1800, standard =  1800 }
+"MolmoSpaces"       = { privileged =  3600, standard =  3600 }
+"MuJoCo Playground" = { privileged =  1800, standard =  1800 }
+"MyoSuite"          = { privileged =  3600, standard =  3600 }
+"RoboCasa"          = { privileged =  3600, standard =  3600 }
+"RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
+"RoboCasa365"       = { privileged =  3600, standard =  3600 }
+"RoboDojo"          = { privileged =  3600, standard =  3600 }
+"RoboLab"           = { privileged =  3600, standard =  3600 }
+"RoboOlympics"      = { standard-realtime = 7200 }
+"RoboPaint"         = { privileged =  3600, standard =  3600 }
+"RoboTangle"        = { privileged =  7200, standard =  7200 }
+"RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
+"RoboWits"          = { privileged =  3600, standard =  3600 }
+"VLABench"          = { privileged =  1800, standard =  1800 }
+"YAMLab"            = { privileged =  3600, standard =  3600 }
+
+# Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
+# - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboTangle"` lists a
+#   benchmark's). A family's entry gives a number per mode; a mode it leaves out keeps the benchmark's number.
+# - A task is its directory name under tasks/ (the mode is in the name).
+# An entry that matches no task fails CI. An exception is an owner decision like any cutoff: add its `[[history]]` entry.
+#
+# [family_cutoff_sec."RoboTangle"]
+# "cast_coil" = { privileged = 14400, standard = 14400 }      # every cast_coil task, whatever its tier
+#
+# [task_cutoff_sec]
+# "robotangle-cast-coil-hard-i00-standard" = 10800             # this one task directory
+
+# History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
+# shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
+# is the `to_sec` of its newest entry here or, for a number that never changed, scripts/task_cutoffs.baseline.toml (the
+# table on 2026-10-11, never edited). A number that differs from its last recorded value fails until its entry is added.
+#   benchmark   + modes          a benchmark's row              e.g. benchmark = "RoboLab", modes = ["privileged", "standard"]
+#   benchmark   + family + modes a family's exception           e.g. benchmark = "RoboTangle", family = "cast_coil", modes = ["standard"]
+#   task                         a task's exception             e.g. task = "robotangle-cast-coil-hard-i00-standard"
+#   from_sec / to_sec            the number before and after; 0 = no entry (a new row or exception: from_sec = 0; an
+#                                exception removed: to_sec = 0)
+#   date, decided_by, note       "YYYY-MM-DD"; who decided; why, and what happens to results under the old number
+# [[history]]
+# date = "2026-10-20"
+# benchmark = "RoboLab"
+# modes = ["privileged", "standard"]
+# from_sec = 5400
+# to_sec = 3600
+# decided_by = "owner"
+# note = "why; results recorded with the old value are reported separately"
+
+[[history]]
+date = "2026-10-11"
+benchmark = "RoboDojo"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "#155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "BEHAVIOR-1K"
+modes = ["privileged", "standard"]
+from_sec = 14400
+to_sec = 7200
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 14400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "ManiGuard"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboPaint"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboLab"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "MyoSuite"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "DexJoCo"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboWits"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "YAMLab"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "LabUtopia"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboTwin 2.0"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "VLABench"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "MetaWorld+"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "LIBERO-MAX"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "MuJoCo Playground"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboTangle"
+modes = ["privileged", "standard"]
+from_sec = 21600
+to_sec = 7200
+decided_by = "owner"
+note = "stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used"

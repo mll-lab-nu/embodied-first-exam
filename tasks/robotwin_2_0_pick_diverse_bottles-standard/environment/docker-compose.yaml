@@ -22,6 +22,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       PYTHONPATH: /srv:/opt/RoboTwin
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+      RCB_WALL_CLOCK_S: "1800"
     shm_size: "8gb"
     deploy:
       resources:

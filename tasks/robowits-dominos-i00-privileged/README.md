@@ -8,7 +8,7 @@
 | Simulator / robot | `robowits` / `marvin-bimanual` |
 | Family / instance | `dominos` / seed 0 |
 | Oracle | `partial` — Reference solution solution/oracle_dominos.py (written for this instance; RoboWits ships no expert). It scored 1 under Harbor -a oracle on an earlier version of this task: job robowits-dominos-i00-oracle-thin-0925-000706, trial robowits-dominos-i00__qL9Rvsb, 2026-09-25 (laptop, Intel; success=1, deterministic=1, instance_exact=1; an uncommitted tree just before dev/qineng f15dbdb7). Same since then: the frozen instance (state hash 4f933a76ce2ce34b) and the oracle script (byte-identical to that run's /app/output/gen.py). Changed since then, so the label is partial: the grader tests/grade.py (dev/qineng 82d76c61 added the GPU-backend exception; this PR writes the verdict before the video) and the tooling rcb_robowits.py (dev/qineng 5aa848bd, bddfc520, adce3fef, 8f0ebd55, 82d76c61, 6c0b439e, fe5fb9e6, 1515ea4e). Not re-run on this version (static validation only, 2026-10-01). |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robowits:0.1.1` |
 
 ## Task

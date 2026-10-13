@@ -151,7 +151,11 @@ resumed the same episode after 49 s of downtime, the oracle continued from the r
 as usual: success 1, live = replay 1 = replay 2, `resumes = 1`, `sim_startups = 2`, no infra error.
 
 ## Time budget (D8)
-5400 s for every task of both modes, as RoboLab: every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+
+The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
+every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
+2026-10-11: 5400 s for every task of both modes, as RoboLab: every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build
 (more on a loaded host), and these are long two-arm episodes (the reference demonstrations run 10-28 s of robot time).
 A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache: 629 s measured on a
 heavily loaded host; the standard sidecar's startup watchdog is therefore 1800 s (as BEHAVIOR-1K), and the standard

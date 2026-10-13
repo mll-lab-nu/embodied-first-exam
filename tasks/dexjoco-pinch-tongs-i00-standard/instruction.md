@@ -11,7 +11,7 @@ The kitchen tongs lie on the table in front of the robot; their two arms are joi
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
   the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your wall-clock budget (90 minutes) is the limit (`meta["time_left_s"]`). Actions and
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record (save it early, update it as you go).
@@ -74,3 +74,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

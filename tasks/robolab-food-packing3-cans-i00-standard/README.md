@@ -8,7 +8,7 @@
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `food_packing3_cans` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-food-packing3-cans-i00__LsaHDUU (robolab-food-packing3-cans-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/food_packing3_cans/unlimited/). Human review per family (PROTOCOL §2.7). |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.2` |
 
 ## Task

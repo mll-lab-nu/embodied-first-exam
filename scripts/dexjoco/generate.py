@@ -26,12 +26,15 @@ ROOT = HERE.parent.parent
 SHARED = HERE / "shared"
 LAYER = ROOT / "scripts" / "eai_standard"
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize  # noqa: E402
+from task_conventions import cutoff_sec, normalize  # noqa: E402
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-dexjoco:" + (ROOT / "images" / "dexjoco" / "VERSION").read_text().strip()
 CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
-AGENT_TIMEOUT = 5400        # 1.5 h for the whole benchmark (PROTOCOL D8): dexterous control of a 16-DoF hand per arm
+# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why longer than the default:
+# dexterous control of a 16-DoF hand per arm, docs/benchmarks/dexjoco.md). No copy of the number here: normalize writes it
+# into task.toml, the instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
+CUTOFF = {m: cutoff_sec("DexJoCo", m) for m in ("privileged", "standard")}
 # Privileged hand-in cap (rows of trajectory.npz), read from the tooling: its one source.
 MAX_ROWS = int(re.search(r"^MAX_TRAJECTORY_ROWS = ([\d_]+)", (SHARED / "rcb_dexjoco.py").read_text(), re.M).group(1))
 # Privileged verifier: two replays of at most MAX_ROWS rows in one fresh process, then the video. The slowest family
@@ -213,8 +216,8 @@ general policy.
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
 open-loop from the same initial state in a fresh process and scored 1 if its episode ends in success, else 0. Also
 leave the script that produced it at `/app/output/gen.py`. A trajectory may have at most {MAX_ROWS:,} rows
-({MAX_ROWS // 50} s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. You have
-{AGENT_TIMEOUT // 60} minutes of wall clock: save a first trajectory early, improve it, and do not stop before the task is solved.
+({MAX_ROWS // 50} s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. Save a
+first trajectory early, improve it, and do not stop before the task is solved.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -339,7 +342,7 @@ environment_mode = "separate"     # the verifier runs in its own sandbox (tests/
 network_mode = "no-network"
 
 [agent]
-timeout_sec = {float(AGENT_TIMEOUT)}
+timeout_sec = {float(CUTOFF["privileged"])}
 network_mode = "allowlist"        # the reference demonstrations are public on Hugging Face (PROTOCOL §2.7)
 allowed_hosts = {json.dumps(ALLOWED_HOSTS)}
 
@@ -480,7 +483,7 @@ one client and one episode. **Task:** {f["goal"]}
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
   the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your wall-clock budget ({AGENT_TIMEOUT // 60} minutes) is the limit (`meta["time_left_s"]`). Actions and
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record (save it early, update it as you go).
@@ -629,7 +632,7 @@ command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice 
 timeout_sec = {COLLECT_TIMEOUT}                # two replays of an episode without a step cap, then the video (finalize.sh: RCB_COLLECT_BUDGET_S)
 
 [agent]
-timeout_sec = {float(AGENT_TIMEOUT)}
+timeout_sec = {float(CUTOFF["standard"])}
 network_mode = "allowlist"        # the reference demonstrations are public on Hugging Face (PROTOCOL §2.7)
 allowed_hosts = {json.dumps(ALLOWED_HOSTS)}
 
@@ -661,7 +664,7 @@ services:
       RCB_INSTANCE: /srv/instance.npz
       RCB_TOOL: /srv/rcb_dexjoco.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT}"
+      RCB_WALL_CLOCK_S: "{CUTOFF["standard"]}"
       RCB_COLLECT_BUDGET_S: "{COLLECT_TIMEOUT}"   # the collect hook's timeout_sec (task.toml): finalize.sh fits its replays and video in
       OPENBLAS_NUM_THREADS: "{BLAS_THREADS}"       # the service, a resume and the collect hook's replays: one thread count (the result depends on it below 4; with fewer than 4 CPUs visible the service starts no episode: too_few_cpus)
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds

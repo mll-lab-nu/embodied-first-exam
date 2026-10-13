@@ -8,7 +8,7 @@
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `setting_mousetraps` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (340 s on average); demonstration video (339 s): https://player.vimeo.com/video/1114054686 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
-| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
@@ -48,7 +48,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` frames or a watch window; binary RCB1 responses |
 | Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
-| Budget | 14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md) |
+| Budget | the agent's time is the `Agent time budget` row (the number lives in `scripts/task_cutoffs.toml`; docs/benchmarks/behavior.md) |
 | Collect hook time | 37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min |
 
 ### Sidecar and grading

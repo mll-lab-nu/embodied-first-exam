@@ -8,7 +8,7 @@
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `putting_shoes_on_rack` / seed 301 |
 | Oracle | `partial` — solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 6283 rows) through the client. Recorded Harbor oracle run (laptop, a pre-v1.0 version): 2026-09-25 behavior-putting-shoes-on-rack-i__XB2NUoX (job behavior-putting-shoes-on-rack-i00-limited-oracle-0925-015349) scored 1 with live_matches_replay 1 (6283 control steps), 1 of 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). |
-| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
@@ -48,7 +48,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` frames or a watch window; binary RCB1 responses |
 | Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
-| Budget | 14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md) |
+| Budget | the agent's time is the `Agent time budget` row (the number lives in `scripts/task_cutoffs.toml`; docs/benchmarks/behavior.md) |
 | Collect hook time | 37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min |
 
 ### Sidecar and grading

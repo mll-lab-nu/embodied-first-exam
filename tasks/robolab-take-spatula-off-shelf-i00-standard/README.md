@@ -8,7 +8,7 @@
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `take_spatula_off_shelf` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-take-spatula-off-shelf-i__vipvPdN (robolab-take-spatula-off-shelf-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_spatula_off_shelf/unlimited/); robolab-take-spatula-off-shelf-i__TqQfCCX (robolab-take-spatula-off-shelf-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_spatula_off_shelf/limited/). Human review per family (PROTOCOL §2.7). |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.2` |
 
 ## Task

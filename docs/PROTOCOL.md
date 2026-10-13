@@ -7,7 +7,7 @@ cap above the host's CPU count is clamped by the runner); enforcement is off by 
 the calibration batch has confirmed the limits. Also on 2026-10-10 and 2026-10-11 (owner decisions, board 0072): every task's
 agent egress is the model APIs and the package registries, every instruction states the same honour rule about looking
 solutions up (§2.11), and the usage gateway forwards model-API calls only (D11, §5). On 2026-10-11 (owner): §4.8's exception for
-physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Earlier versions, whose rules are all part of this text: v1.0
+physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Also on 2026-10-11 (owner, board 0080): the agent's time cutoffs live in one table, and every instruction ends with its cutoff and the request not to cheat in one format (§2.12; 2026-10-12: at the end of the instruction, and the table takes exceptions per family and per task). On 2026-10-12 (owner): §3's and §4.8's exception for grading by one replay instead of two (RoboDojo). Earlier versions, whose rules are all part of this text: v1.0
 (2026-09-30: the two modes and their names), v1.1 (2026-10-08: the standard-realtime mode, §4b), v1.1.4 (compute
 resources, §2.9), v1.1.5 (resource limits, §2.10).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard and
@@ -58,7 +58,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). |
+| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. The usage gateway (`scripts/usage_gateway/`) is allowed: it forwards model-API requests unchanged, records token usage, and refuses what a trial may not have: a request past the token budget (§5) and, since 2026-10-10, every request that is not a model-API call (§2.11). No tool that runs outside the trial's container is offered to the model (§2.11): official runs turn the harness's web search off (Codex `web_search = "disabled"`, Claude Code `WebSearch` and `WebFetch` disallowed; `scripts/run_agent_batch.sh` `WEB_SEARCH=disabled`, the default) and start the harness without account connectors, apps, plugins, image generation and cloud agents (Codex: with the same switch the runner sets those features to false in the run's `config.toml`, `scripts/codex_tools_off.py`). These run at the model provider, so no egress allowlist stops them (2026-10-02: Codex with a ChatGPT login searched GitHub by default; 2026-10-10: the same login handed the model 238 account connector tools, and 21 trials called them) |
@@ -68,7 +68,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 1. `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`. [CI] `solution/solve.sh` depending on the oracle level (§2.7). [new]
 2. `[task].name = "robot-coding-bench/<folder>"`; required metadata present and valid (§2.3). [CI]
-3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400, or ≤ the benchmark's documented exception (§2.3). [CI]
+3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400, or ≤ the benchmark's documented exception (§2.3), and equal to the task's number in the cutoff table (§2.12). [CI]
 4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
 5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
 6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
@@ -85,11 +85,15 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 17. `[metadata.resources]` states the minimum CPU cores, memory and GPU memory of the agent phase and the verifier
     phase, the GPU class and a recommended GPU; the README's `## Compute resources` shows the same values (§2.9). [CI] (v1.1.4)
 18. `[metadata.resources.limits]` states the agent phase's limits (GPU memory, memory, processes, disk) and the whole
-    trial's expected peak, `[metadata.resources.caps]` the docker caps per service; `instruction.md` ends with the
-    `## Resource limits` paragraph rendered from them (§2.10). [CI] (v1.1.5)
+    trial's expected peak, `[metadata.resources.caps]` the docker caps per service; `instruction.md` has the
+    `## Resource limits` paragraph rendered from them, just before the closing `## Time limit` (§2.10). [CI] (v1.1.5)
 19. `[agent] network_mode = "allowlist"` with the one host list (the model APIs and the package registries);
-    `instruction.md` states `## External material` just before `## Resource limits`; the task itself needs no download
+    `instruction.md` states `## External material` just before `## Resource limits` (and `## Time limit` last, item 20); the task itself needs no download
     at run time (§2.11). [CI]
+20. `instruction.md` ends with `## Time limit`, rendered from the cutoff table, after `## External material` and
+    `## Resource limits` ("You have N seconds to complete this task. Do not cheat by using online solutions or hints
+    specific to this task.", then what the cutoff means in the task's mode), and states the limit nowhere else; a
+    standard-mode `sim` service is told the same number (§2.12). [CI]
 
 ## 2. Task contract
 
@@ -125,7 +129,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
 | `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
-| `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
+| `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark); the number is the cutoff table's for the task (its benchmark and mode, unless the table gives its family or the task an exception), written by `scripts/task_conventions.py` (§2.12) | MUST / SHOULD / MUST | [CI] / [new] / [CI] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
 | `[verifier].timeout_sec`, `[environment]` `cpus` / `memory_mb` / `build_timeout_sec` | SHOULD | [current] |
 | `[metadata.resources]`: the minimum compute (§2.9) | MUST | [CI] (v1.1.4) |
@@ -134,8 +138,10 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 **Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
 decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in the exception table of
-`ci_checks/check-task-fields.sh`. The budget is uniform within the benchmark, in both modes. A standard sidecar's wall
-clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it. That benchmark's results state the budget and are
+`ci_checks/check-task-fields.sh` (the cutoff table refuses a number above the cap, `scripts/task_conventions.py`
+`CUTOFF_CAP_EXCEPTIONS`). The budget is uniform within the benchmark, in both modes (the cutoff table may give a family or a task another
+number within the cap, §2.12). A standard sidecar's wall
+clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it, in every benchmark (§2.12) [CI]. That benchmark's results state the budget and are
 compared only with results under the same budget (D8). The token budget (D10) is unchanged.
 - **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task. The topological puzzles are much
   harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
@@ -171,11 +177,13 @@ Harbor builds the task images locally from the task directory on every run; only
 | States the deliverable under `/app/output/` | MUST | [CI] |
 | Mentions `/tests/` | MUST NOT | [CI] |
 | States every convention the agent cannot infer: frames, quaternion order, units, action layout, tool or client usage | MUST | [current] |
-| States the time budget and tells the agent to save a deliverable early and not to stop early | SHOULD | [new] |
+| Ends with `## Time limit` (§2.12), the last thing the agent reads: the time limit in seconds and the request not to cheat, in the same words in every task, then what the cutoff means in the task's mode; `scripts/task_conventions.py` writes it from the cutoff table and it is never edited in a task | MUST | [CI] (2026-10-11, at the end since 2026-10-12; before: SHOULD "states the time budget", in each benchmark's own words) |
+| States the agent's time limit a second time as a duration ("your wall-clock budget is 90 min (5400 s)", "You have 60 minutes", "Time limit: one hour"). The task's own text says "the time limit (`## Time limit`)" | MUST NOT | [CI] (the wordings in use before 2026-10-11: `ci_checks/check-cutoffs.py` `OTHER_LIMIT`) |
+| Says what the cutoff means for this benchmark where the mode's paragraph does not: a simulator's start-up cost, what the service's `time_left_s` counts from, a service that ends the episode on its own clock (RoboTangle), a match that must be over in time; and tells the agent not to stop early where a first deliverable can be improved | SHOULD | [current] |
 | Gives the success predicate's exact parameters | MAY | [current] |
 | World-frame quantities (coordinates, table height): decided per benchmark, consistent within it, documented | MUST | [new] |
 | Written by a human | SHOULD | [current] |
-| Ends with `## External material` (§2.11: the same words in every task) and `## Resource limits`, rendered from `[metadata.resources.limits]` (§2.10); `scripts/task_conventions.py` writes both | MUST | [CI] (v1.1.5; 2026-10-10) |
+| Ends with three sections `scripts/task_conventions.py` writes, in this order: `## External material` (§2.11: the same words in every task), `## Resource limits`, rendered from `[metadata.resources.limits]` (§2.10), and `## Time limit` (§2.12) | MUST | [CI] (v1.1.5; 2026-10-10; 2026-10-12) |
 | Tells the agent that it needs to download something, or that it may download anything but packages from the registries | MUST NOT | [new] (§2.11: packages install, nothing else is reachable) |
 
 ### 2.6 Verifier
@@ -236,8 +244,9 @@ example → nop result → predicate summary*. The reviewer checks:
 | Item | Level | Basis |
 |---|---|---|
 | Listed in `tasks/dataset.toml` with the digest of its current files (re-run `cd tasks && harbor add --scan .` after any change; `ci_checks/check-dataset-manifest.sh` recomputes every digest) | MUST | [CI] |
-| A published task's `environment/` and `tests/` inputs are immutable; a change is a new task | MUST | [current] |
+| A published task's `environment/` and `tests/` inputs are immutable; a change is a new task. One line is not such an input: `RCB_WALL_CLOCK_S` of the `sim` service in `environment/docker-compose.yaml`, which mirrors the cutoff table (§2.12) and is rewritten with it by `scripts/task_cutoffs.py apply`, like `[agent] timeout_sec`; it changes what the service reports, not the scene, the instance or the success rule. Nothing else under `environment/` or `tests/` follows the table | MUST | [current]; the one line: [CI] (`ci_checks/check-cutoffs.py`) |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
+| A change of a task's cutoff, or of the text `scripts/task_conventions.py` owns in every instruction (`## External material`, `## Resource limits`, `## Time limit`), changes the task in place: same name and instance, new digest. A cutoff change is recorded in the cutoff table's `[[history]]` (§2.12; required: CI refuses a number that differs from its last recorded value), which stands for the per-task Change Log entry; a change of the shared text in §7. Results under another cutoff are reported separately (D8) | MUST (the record) | [new] (2026-10-11; precedents: #155 RoboDojo 5400 → 3600 s, #150 / #151) |
 
 ### 2.9 Compute resources (v1.1.4)
 
@@ -298,7 +307,7 @@ GiB (`memory_mb / 1024`, `nvidia-smi` MiB / 1024).
 |---|---|---|
 | `[metadata.resources.limits]` and `[metadata.resources.caps]` with every field below | MUST | [CI] (v1.1.5) |
 | `scope = "trial"` in privileged mode, `"agent"` in standard and standard-realtime modes | MUST | [CI] |
-| `instruction.md` ends with `## Resource limits`, equal to what `scripts/task_conventions.py` renders from the limits and `[environment].cpus` | MUST | [CI] |
+| `instruction.md` has `## Resource limits`, equal to what `scripts/task_conventions.py` renders from the limits and `[environment].cpus`, after `## External material` and just before the closing `## Time limit` (§2.12; until 2026-10-12 it was the last section) | MUST | [CI] |
 | Relations: memory `min ≤ limit` (scope trial) and GPU memory `min ≤ limit` (scope trial), `max_gpu_memory_gb > 0` only where the limited containers have a GPU; `trial_max_* ≥ min_*` and `≥` the limit (scope trial: equal, unless the task has a benchmark-owned, observe-only service); the scope's memory caps `≥ 1.2 × max_memory_gb` and `≥ max_memory_gb + 2`; `pids ≥ 8 × max_processes` for the services the limits bind; a cap for every compose service (cache helpers `rcb_*` aside); every declared cap is the cap docker applies: `caps.main.cpus = [environment].cpus`, `caps.main.memory_gb = [environment].memory_mb / 1024` (Harbor writes main's caps from `[environment]`), every other value equals the compose file's `cpus` / `mem_limit` / `pids_limit` of that service, and the relations are checked on those applied values; scope agent: `max_memory_gb ≤ [environment].memory_mb / 1024`; no cap below the task's own minimums: `min_cpus ≤` the CPU caps of all services together, and where the verifier phase runs in a sidecar (a collect hook replays there) `verifier_min_memory_gb ≤` the memory caps of those sidecars | MUST | [CI] |
 | `measured` says what the values rest on; limits sit with a generous margin above measured peaks (e.g. `max(1.5 × peak, peak + 4 GiB)`), so that no past normal trial exceeds them; values without data say so | MUST / SHOULD | [new] |
 | The oracle passes within the limits | MUST | from v1.2 (checked by the calibration batch) |
@@ -510,6 +519,70 @@ Open: Codex with a ChatGPT login needs `chatgpt.com` itself at start-up, over HT
 keeps that host beside the gateway, and its account connectors are off by the harness's configuration only; official
 runs prefer API keys, which have none.
 
+### 2.12 Time cutoff (2026-10-11; at the end of the instruction and with exceptions, 2026-10-12)
+Every task gives the agent a fixed wall-clock time, its **cutoff**, and tells the agent so in the last section of its
+instruction, together with the request not to cheat, in one format in every task (owner, 2026-10-11, board 0080, issue
+#156, after
+Terminal-Bench's "You have 28800 seconds to complete this task. Do not cheat by using online solutions or hints specific
+to this task."). Until then each benchmark stated its budget in its own words and place ("60 minutes", "1 h", "90 min
+(5400 s)", a paragraph of its own in RoboDojo since #155; RoboTwin's privileged instructions not at all), and the number
+was a constant, a data value or a literal in each of 26 generators.
+
+| Item | Level | Basis |
+|---|---|---|
+| One table holds every cutoff: `scripts/task_cutoffs.toml`, seconds per benchmark and mode (a whole number, within D8's cap or the benchmark's exception, §2.3). Nothing else is a source of the number: no generator constant, no template value that survives a render | MUST | [CI] (`scripts/task_conventions.py` refuses an unusable table; `ci_checks/check-cutoffs.py`) |
+| The table has four tables and no other (`[cutoff_sec]`, `[family_cutoff_sec]`, `[task_cutoff_sec]`, `[[history]]`: a misspelled one is refused, not ignored). It may give a family or a single task another number than its benchmark's (`[family_cutoff_sec]`, `[task_cutoff_sec]`); the most specific entry wins: task > family > benchmark and mode. A family is `[metadata] family` in `task.toml`. An exception is an owner decision like any cutoff, has its `[[history]]` entry, stays within the cap, and must reach a task (an entry that matches none fails CI). None is in use on 2026-10-12 | MAY | [CI] (owner, 2026-10-12) |
+| `scripts/task_conventions.py` (`normalize`, which every generator ends with) writes the task's number into `[agent] timeout_sec`, the `## Time limit` section of `instruction.md`, the README's `Agent time budget` row and, in the standard modes, the `sim` service's `RCB_WALL_CLOCK_S` (added to the service's environment where a task did not set it) | MUST | [CI] |
+| `instruction.md` ends with `## Time limit`, equal to what `normalize` renders for the task's number and mode: after `## External material` and `## Resource limits`, nothing after it, so that it is the last thing the agent reads (owner, 2026-10-12: at the end, where Terminal-Bench has it; on 2026-10-11 the paragraphs stood under the title) | MUST | [CI] |
+| Its first paragraph is the same sentence pair in every task: `You have N seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.` Seconds only, the number as in `task.toml` | MUST | [CI] |
+| Its second paragraph says what the cutoff means in the task's mode (below), the same words in every task of the mode | MUST | [CI] |
+| The instruction states the agent's limit nowhere else as a duration; a benchmark's own text refers to "the time limit (`## Time limit`)" (§2.5), and nothing before the section contradicts it | MUST | [CI] (a heuristic: the wordings tasks used before 2026-10-11 and the obvious other shapes, "You have one hour", "The limit is 3600 seconds", "Finish within 60 minutes"; a reviewer still reads the text) |
+| Nothing is added to the instruction on its way to the agent: Harbor passes `instruction.md` as it is, and official runs use no prompt template and no extra instruction | MUST for official runs | [current] (`scripts/run_agent_batch.sh` passes none) |
+| "Do not cheat" is §2.11's honour rule, not a second rule: installing packages is allowed and is not cheating (the second paragraph says so and points to `## External material`, which keeps the substance: what counts as a solution, that trials are reviewed, what the network reaches); a trial that fetched a solution is flagged and decided by the owner (§2.11, §5) | MUST (how it is read) | [new] |
+| What stops the agent is Harbor's agent timeout, `[agent] timeout_sec`, with no multiplier in official runs. Harbor counts it around the agent's run only (its trial's agent phase: `asyncio.wait_for(agent.run(...), timeout=...)`): after the environment has been built and started and after the agent's harness has been installed, each of which has a timeout of its own, not from the container's start. In the standard modes the `sim` service starts with the environment, so whatever start-up it has not finished by then is waited out inside the agent's time | MUST | [current] (Harbor 0.23; official runs pass only a multiplier for the harness's set-up) |
+| At the cutoff the trial is graded as it stands: privileged, what is in `/app/output/` at that moment; standard modes, the episode as the `sim` service holds it (the collect hook ends and records it, §4.8). A timeout is a result, not an infrastructure error, and is not retried | MUST | [current] |
+| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing; it counts from the service's start or from the agent's first request, so the instruction calls it the service's own count. A service that ends the episode on its own clock says so in the benchmark's own text: today RoboTangle's, counted from the service's first start, which becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number; [current] |
+| Changing a cutoff: edit the table, add an entry to its `[[history]]` (what changed, from and to, date, who decided, why; `apply` and CI refuse a number that differs from its last recorded value: its newest entry, or `scripts/task_cutoffs.baseline.toml`, the table of 2026-10-11, for a number that never changed), run `python3 scripts/task_cutoffs.py apply`, commit; an owner decision, like the cap's exceptions. The task changes in place and keeps its name (§2.8); the `[[history]]` entry is the record, there is no Change Log entry in each task's README (owner, 2026-10-12); results recorded under another cutoff are reported separately (D8) | MUST | [new] |
+| A new benchmark needs two things before its tasks pass: its label in `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name; the table's rows are named by it), which goes in its shared-files pull request (D6), and its row in the table with a `[[history]]` entry (`from_sec = 0`), which goes in the pull request that adds its first tasks: the one line of a shared file a tasks pull request carries, because a row without tasks and tasks without a row both fail | MUST | [CI] |
+
+**The section** (privileged mode, 3600 s; `scripts/task_conventions.py` `CUTOFF_HEADING`, `CUTOFF_SENTENCE`, `CUTOFF_NOTE`):
+
+> ## Time limit
+> You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+>
+> This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
+
+Standard and standard-realtime modes, second paragraph:
+
+> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+
+Seconds only, because the sentence is then the same in every task and the number is the one in `task.toml`; a second
+unit is a second number to keep right. The sentence pair opens the section and the explanation follows it, because the
+explanation refers to it; the two together are the end of every instruction. A heading of its own lets a benchmark's
+text point to it from anywhere ("the time limit (`## Time limit`)") and keeps it apart from `## Resource limits`. Half
+of the failed privileged trials recorded until 2026-10-11 ended at the cutoff, which is why the section also says what
+is graded then.
+
+**The table's exceptions.**
+
+```toml
+[family_cutoff_sec."RoboTangle"]              # benchmark; then one line per family, a number per mode
+"cast_coil" = { privileged = 14400, standard = 14400 }
+
+[task_cutoff_sec]                              # one line per task directory
+"robotangle-cast-coil-hard-i00-standard" = 10800
+```
+
+A mode a family's entry leaves out keeps the benchmark's number. A generator reads the benchmark's number
+(`cutoff_sec`); `normalize` then writes the task's own, so a generator needs no knowledge of exceptions.
+
+**What follows a cutoff and what does not.** `apply` rewrites everything the table decides (above) and each task's
+digest; [`CUTOFFS.md`](CUTOFFS.md) is the table rendered for reading, with its exceptions and history. A scheduler's
+estimate of a trial's length reads `task.toml`. Not derived from the cutoff: the token budget (§5), the resource limits
+(§2.10), reset budgets (§4.5), step caps, verifier timeouts. Collect-hook and verifier budgets that were sized for an
+episode as long as the agent's time (RoboCasa's three benchmarks, RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K) hold for any
+shorter cutoff and are looked at when one is raised.
+
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
 | Item | Level | Basis |
@@ -518,6 +591,7 @@ runs prefer API keys, which have none.
 | The generating script at `/app/output/gen.py` | SHOULD | [current] |
 | Graded by open-loop replay from the frozen initial state in a fresh process | MUST | [current] |
 | ≥ 2 replays with matching final-state hashes, reported as `deterministic` | SHOULD (the field is MUST) | [current] |
+| Exception, one replay: a benchmark whose tasks are measured to replay bit for bit may be graded by ONE fresh-process replay, to save grading time (`success` = that replay's success). Nothing is compared then, and `reward.json` says so: `deterministic = 1` with `determinism_checked = 0` and `replays = 1`. The replay must start from the frozen state, shown by the recorded initial-state hash: a rebuilt instance that hashes differently gives no verdict (`instance_mismatch` with `infra_error`). The benchmark's doc states the rule, the measurement behind it and what it gives up (a trajectory whose outcome differs between fresh processes is no longer caught). RoboDojo, its 48 privileged tasks ([`benchmarks/robodojo.md`](benchmarks/robodojo.md)) | MAY, by owner decision | [new] (owner, 2026-10-12) |
 | Success judged on the state at the end of the replay ("success at any step" needs a stated reason) | SHOULD | [current] |
 | The frozen instance copied into both `environment/` and `tests/` with its expected initial-state hash, checked on rebuild | SHOULD | [current] |
 | A hash check before moving to new hardware. Reference hardware is an RTX 4090: `place_a2b_left`, `place_a2b_right`, `place_object_scale` and `place_object_stand` rebuild to a different state on an L40S, and grading there reports `instance_mismatch` with `infra_error` (privileged: also when no trajectory was handed in; standard: the service's `reason`) | SHOULD | [current] |
@@ -672,6 +746,7 @@ results must state the reset budget and are compared only with results under the
 | A fresh replay decides: `success = replay_success ∧ deterministic` | MUST | [current] |
 | `∧ live_success` when a live predicate exists | SHOULD | [current] |
 | Exception, physics that does not replay bit for bit: a task measured not to (its frozen instance records it and why, e.g. `"determinism": "verdict"`; the benchmark's doc names the tasks and the measurement) is graded by the live episode the trusted service ran, `success = live_success`, read from the sim sidecar's own record of that episode (`final.json`; nothing the agent's container writes is read); the fresh replays still run and are reported (`replay_success`, `state_identical`, `deterministic`) but never decide, a replay without a result does not void the live verdict, and `reward.json` says `graded_by_live = 1`. A missing live record stays `infra_error`; an episode resumed after a crash (§4.7) is graded on its live state after the resume, so `reward.json` reports `resumes` and `resume_state_mismatch` and results state them. Such a task is standard-only: an open-loop trajectory of it cannot be graded reproducibly, so it has no privileged twin (`ci_checks/check-instance-copies.sh` and `scripts/task_conventions.py` list exactly these tasks). The verifier still grades `final.json` only, so §2.6's same verdict in a fresh process holds. RoboDojo: 6 tasks (two cloth, three liquid, `make_toast_random`) | MAY, by owner decision | [new] (owner, 2026-10-11) |
+| Exception, one replay (the same decision as §3's): a benchmark whose tasks are measured to replay bit for bit may replay the recorded episode ONCE in a fresh process, and one successful replay is enough: `success = live_success ∧ replay_success` (the live predicate is then required, not SHOULD: it is what guards against a replay that succeeds where the episode did not, as the replay guards against a live success that does not repeat). `deterministic` is still measured, the replay's end state against the live episode's (= `state_identical`, `live_matches_replay`; `determinism_checked = 1`, `replays = 1`), and reported, but does not decide. A replay without a result, or one that did not start from the frozen state, stays `infra_error`. A task graded by the live episode (the exception above) records one replay instead of two. RoboDojo, its 54 standard tasks ([`benchmarks/robodojo.md`](benchmarks/robodojo.md)) | MAY, by owner decision | [new] (owner, 2026-10-12) |
 | The verifier grades `final.json` only, without network access | MUST | [current] |
 
 ### 4.9 Live recording (sidecar only)
@@ -822,6 +897,17 @@ Open:
    in their tooling yet, so their GPU limits rest on card-sized peaks until the calibration batch.
    Findings: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
    harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
+7. Time cutoffs (§2.12; owner, 2026-10-11 and 2026-10-12, board 0080): every task's `instruction.md` changed in place
+   (the closing `## Time limit` section; each benchmark's earlier statements of its budget reworded to "the time limit
+   (`## Time limit`)"), and the 225 standard tasks whose `sim` service took its reported wall clock from a code default of 3600
+   (RoboTwin, DexToolBench, MetaWorld+, RoboCasa's three benchmarks, MuJoCo Playground's four manipulation twins) got
+   the line `RCB_WALL_CLOCK_S: "3600"` in `environment/docker-compose.yaml`: the same value, now written from the
+   table. No cutoff changed; scenes, instances, tooling, services and success rules are unchanged, earlier results
+   stand, and trials started before the change read the earlier wording. The generators' own copies of the number
+   are gone. Stricter values are set in the table afterwards, by owner decision, each with its `[[history]]` entry.
+   Open: RoboTangle's standard service ends the episode on its own wall clock, started with the service, a little before
+   the agent's session; it becomes report-only, like every other service's, at RoboTangle's next task update
+   (docs/benchmarks/robotangle.md, "To do").
 
 Decided (owner, 2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,

@@ -13,7 +13,7 @@ On the bench in front of the arm: one small glass beaker, about 6.5 cm across an
   the robot's own proprioception: joint positions, velocities and drive efforts, the gripper's opening, the pose of its
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). **The service
   needs 13 to 27 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
@@ -74,3 +74,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

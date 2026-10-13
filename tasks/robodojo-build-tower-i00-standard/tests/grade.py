@@ -1,12 +1,16 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote:
-/data/final.json (live success, two fresh-process replays of the recorded trajectory, determinism, crash-recovery
-fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, and no
-infrastructure failure. Numeric-only reward.json; a reward is written whatever final.json holds.
+/data/final.json (live success, ONE fresh-process replay of the recorded trajectory, whether it ended in the live
+episode's state, crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay
+success, and no infrastructure failure: one successful replay is enough (the owner's decision of 2026-10-12; before, two
+replays that also had to end in the same state). The live success guards against a replay that succeeds where the episode
+did not, the replay against a live success that does not repeat. `deterministic` (= `state_identical` =
+`live_matches_replay`: the replay ended in the live episode's state; `determinism_checked` = 1 when both hashes exist)
+is reported and does not decide. Numeric-only reward.json; a reward is written whatever final.json holds.
 
 A task whose physics does not replay bit for bit (instance.json "determinism": "verdict"; final.json `graded_by` "live")
 is graded by its LIVE episode, which the trusted service ran: success = live success, and no infrastructure failure of the
-live record (final.json missing, unreadable or unfinalized, or the service's own infra_error). Its two replays are
-reported (`replay_success`, `state_identical`, `deterministic`, `replay_error`, `gpu_lost`) and never decide
+live record (final.json missing, unreadable or unfinalized, or the service's own infra_error). Its one replay is
+reported (`replay_success`, `state_identical`, `deterministic`, `replay_error`, `gpu_lost`) and never decides
 (`graded_by_live` = 1). Such a task is standard-only: an open-loop trajectory of it cannot be graded reproducibly.
 
 infra_error = 1 (no verdict on the agent, PROTOCOL §2.6): final.json is missing (the service never came up, or its
@@ -48,13 +52,16 @@ if live_graded:   # the physics does not replay bit for bit: the live episode de
     grader_error = 0
 else:
     infra = bool(d.get("infra_error")) or gpu_lost or unfinished or replay_error
-    ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not infra
+    # one successful replay is enough (owner, 2026-10-12): `deterministic` is reported below and is not part of the verdict
+    ok = bool(d.get("success")) and bool(d.get("replay_success")) and not infra
     grader_error = int(gpu_lost or replay_error)   # the replays could not run: an infrastructure failure, not the agent's 0
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
            "state_identical": int(bool(d.get("state_identical"))), "determinism_verdict_mode": int(bool(d.get("determinism_verdict_mode"))),
+           # the replays the hook ran by rule (1), and whether there were two end states to compare (the live one and the replay's)
+           "replays": int(num("replays")), "determinism_checked": int(bool(d.get("replay_sha")) and bool(d.get("live_sha"))),
            "ended_failed_check": int(d.get("reason") == "failed_check"), "ended_step_guard": int(d.get("reason") == "step_guard"),
-           # the replays' fresh processes rebuilt the frozen layout to its recorded state (finalize.sh; a mismatch on a task
+           # the replay's fresh process rebuilt the frozen layout to its recorded state (finalize.sh; a mismatch on a task
            # that is not graded by verdict is a replay_error: no verdict on the agent)
            "instance_exact": int(bool(d.get("instance_exact"))), "instance_mismatch": int(bool(d.get("instance_mismatch"))),
            "finalized": int(not unfinished), "missing_log": 0, "n_actions": int(num("n_actions")), "sim_steps": int(num("control_steps")),

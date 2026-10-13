@@ -8,7 +8,7 @@
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `baoding` / seed 0 |
 | Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #65 |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task

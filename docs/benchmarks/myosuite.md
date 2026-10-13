@@ -93,8 +93,10 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 - **Texts (D7).** The privileged instruction quotes MyoSuite's reward code; the standard instruction states the goal and
   its thresholds in words (distances, angles, hold time), including MyoSuite's own failure thresholds, of which baoding's
   is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.
-- **Budget: 5400 s** (D8, uniform within the benchmark). Muscle-level control on a CPU-rendered simulator is slow to
+- **Budget: 3600 s since 2026-10-12** (D8, uniform within the benchmark; owner: stricter cutoffs in 30-minute steps, one number for both modes). Before that 5400 s: Muscle-level control on a CPU-rendered simulator is slow to
   explore, and three of the seven positive examples below took a model 74-86 minutes (baoding, obj_reorient, relocate).
+  The number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction
+  states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Modes
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
