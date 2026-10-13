@@ -32,20 +32,67 @@ WHEELS = ("fl", "fr", "bl", "br")
 
 def xml_model(plant, surfaces, command):
     """Procedural chassis; wheel/joint/tendon mechanism retains source numeric settings."""
-    a, b = command["a"], command["b"]
+    circuit = "track_id" in command
+    if circuit:
+        from .tracks import get_route
+
+        route = get_route(command["track_id"])
+        extent = route.half_extent
+    else:
+        a, b = command["a"], command["b"]
+        extent = 12
     road = []
+    assets = []
     for i, surface in enumerate(surfaces):
         left, right, mu = surface
         road.append(
-            f'<geom name="surface{i}" type="box" pos="{(left + right) / 2} 0 -0.10" size="{(right - left) / 2} 12 .10" friction="{mu} .005 .0001" priority="2" condim="3" rgba="{0.53 + 0.03 * (i % 2)} {0.43 + 0.03 * (i % 2)} .30 1"/>'
+            f'<geom name="surface{i}" type="box" pos="{(left + right) / 2} 0 -0.10" size="{(right - left) / 2} {extent} .10" friction="{mu} .005 .0001" priority="2" condim="3" rgba="{0.53 + 0.03 * (i % 2)} {0.43 + 0.03 * (i % 2)} .30 1"/>'
         )
-    # Solid outer/inner track barriers; contacts are actual physics, not rendered decorations.
-    for i, angle in enumerate(np.linspace(0, 2 * np.pi, 48, endpoint=False)):
-        for side in (-1, 1):
-            x, y = (a + side * 0.9) * np.cos(angle), (b + side * 0.9) * np.sin(angle)
+    if circuit:
+        samples = route.at(np.linspace(0, route.length, min(1500, max(128, int(route.length / 0.7))), endpoint=False))
+        # One non-overlapping visual ribbon, split into surface-colored meshes.
+        # The physics floor above is unchanged and is the only tire-contact road.
+        normals = np.column_stack((-np.sin(samples[:, 2]), np.cos(samples[:, 2])))
+        vertices = np.empty((2 * len(samples), 3))
+        vertices[0::2, :2] = samples[:, :2] + 0.8 * normals
+        vertices[1::2, :2] = samples[:, :2] - 0.8 * normals
+        vertices[:, 2] = 0.004
+        faces = [[] for _ in surfaces]
+        for i, (x, y, yaw, _) in enumerate(samples):
+            j = (i + 1) % len(samples)
+            surface_index = next((k for k, (lo, hi, _) in enumerate(surfaces) if lo <= x < hi), 0)
+            faces[surface_index].extend([(2 * i, 2 * i + 1, 2 * j), (2 * i + 1, 2 * j + 1, 2 * j)])
+        for index, triangles in enumerate(faces):
+            if not triangles:
+                continue
+            vertex_text = " ".join(str(float(v)) for v in vertices.ravel())
+            face_text = " ".join(str(v) for triangle in triangles for v in triangle)
+            assets.append(f'<mesh name="road{index}" inertia="shell" vertex="{vertex_text}" face="{face_text}"/>')
+            shade = 0.17 + 0.035 * index
             road.append(
-                f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{x} {y} .13" mass="0" rgba=".85 .42 .12 1"/>'
+                f'<geom type="mesh" mesh="road{index}" contype="0" conaffinity="0" rgba="{shade} {shade + 0.01} {shade + 0.03} 1"/>'
             )
+        road.append(
+            '<geom type="plane" size="0 0 .1" pos="0 0 -.11" contype="0" conaffinity="0" rgba=".53 .46 .34 1"/>'
+        )
+        for i, (x, y, yaw, _) in enumerate(samples):
+            for side in (-1, 1):
+                bx, by = x - side * 0.9 * np.sin(yaw), y + side * 0.9 * np.cos(yaw)
+                # Avoid placing barriers inside another route branch at crossovers.
+                if route.distance([[bx, by]])[0] < 0.82:
+                    continue
+                color = ".90 .90 .88 1" if i % 2 else ".80 .16 .12 1"
+                road.append(
+                    f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{bx} {by} .13" mass="0" rgba="{color}"/>'
+                )
+    else:
+        # Solid outer/inner track barriers; contacts are actual physics, not rendered decorations.
+        for i, angle in enumerate(np.linspace(0, 2 * np.pi, 48, endpoint=False)):
+            for side in (-1, 1):
+                x, y = (a + side * 0.9) * np.cos(angle), (b + side * 0.9) * np.sin(angle)
+                road.append(
+                    f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{x} {y} .13" mass="0" rgba=".85 .42 .12 1"/>'
+                )
     wheels = []
     for name, x, y in (("fl", 0.1385, 0.115), ("fr", 0.1385, -0.115), ("bl", -0.158, 0.115), ("br", -0.158, -0.115)):
         steering = f'<joint name="{name}_steering" class="steering"/>' if name.startswith("f") else ""
@@ -57,8 +104,9 @@ def xml_model(plant, surfaces, command):
           </body>''')
     tendon = "".join(f'<joint joint="{n}_spin" coef=".25"/>' for n in WHEELS)
     return f"""<mujoco model="contact_vehicle"><compiler angle="radian"/><option timestep=".002" integrator="implicitfast" cone="elliptic" iterations="50"/><size njmax="2000" nconmax="300"/>
-    <visual><global offwidth="640" offheight="480"/><quality shadowsize="1024" offsamples="0"/><headlight ambient=".5 .5 .5" diffuse=".65 .65 .65"/></visual>
+    <visual>{'<map znear=".0001" zfar="5"/>' if circuit else ""}<global offwidth="640" offheight="480"/><quality shadowsize="1024" offsamples="0"/><headlight ambient=".5 .5 .5" diffuse=".65 .65 .65"/></visual>
     <default><geom solref=".01 1"/><default class="steering"><joint type="hinge" axis="0 0 1" limited="true" range="-.38 .38" frictionloss=".01" damping=".001" armature=".0002"/></default><default class="spin"><joint type="hinge" axis="0 1 0" frictionloss=".001" damping=".01" armature=".01"/></default></default>
+    <asset>{"".join(assets)}</asset>
     <worldbody><light pos="0 0 10" dir="0 0 -1" directional="true"/>{"".join(road)}
     <body name="car" pos="0 0 .08"><freejoint/>
     <geom name="chassis" type="box" pos="-.01 0 .094655" size=".20 .09 .035" mass="3.542137" rgba=".12 .38 .51 1"/>

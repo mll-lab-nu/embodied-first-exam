@@ -12,6 +12,14 @@ FAMILIES = ["neural-fly", "g1", "anycar", "go2-weave", "go2-attitude", "go2-forw
 
 
 def spec(name, index):
+    if name.startswith("anycar-circuit-v1-"):
+        from .anycar_spec import make_circuit_spec
+
+        value = make_circuit_spec(index, name.removeprefix("anycar-circuit-v1-"))
+        value["name"] = name
+        value["public"].update(name=name, task_variant=value["task_variant"])
+        value["public"]["limitations"] += " " + value["public"]["geometry"]
+        return value
     if name.startswith("go2-"):
         from .trusted.go2_spec import make_spec
 
@@ -25,7 +33,7 @@ def spec(name, index):
         value.update(schema="control-transfer-instance/2", transfer_track="same-plant")
         return value
     if name == "anycar":
-        from .trusted.anycar_spec import make_spec
+        from .anycar_spec import make_spec
 
         return make_spec(index)
     family = "linearbot" if name.startswith("linearbot") else name

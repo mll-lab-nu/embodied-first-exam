@@ -99,7 +99,7 @@ These are **planar schematic approximations**, derived from attributed CC BY4.0 
 
 Routes scale uniformly, preserving aspect ratio. Scale is chosen from the sharpest discretized curvature (0.85/m target) and an80m minimum perimeter, keeping interpolated curvature below1.2/m in all available layouts. Actual metric scale varies by layout and is recorded; this is not one fixed1:10 collection. The procedural RC vehicle dimensions/physics do not change. Asphalt appearance marks friction-region boundaries without exposing coefficients. The overview fits the whole route; the close-up still follows only delivered noisy x/y. No true-state/score/coefficient overlays are added.
 
-The existing ellipse `make_spec(index)` remains unchanged. New **opt-in** stdlib hook `make_circuit_spec(index, track_id)` adds a resolved public route ID and `task_variant=circuit-sector/1`, with the existing persistent-plant banks and three feedback rounds. Root must register/generate this variant separately; the worker does not edit shared lifecycle/generator files. Circuit feedback remains241 rows and25 images over24s. Each episode traverses a prescribed-time **sector**, not a full lap, at0.85m/s with a1s start ramp; start fraction varies by episode seed. Friction boundaries span the sector's x extent. Full-lap nominal training is separately available. Ordered oriented gates, corridor distance and time-indexed position/heading/speed replace ellipse-specific angle/radius scoring; safety and accuracy thresholds stay unchanged. A route's task geometry is public; plant, coefficients, seed bank and scorer remain private.
+The existing ellipse `make_spec(index)` remains unchanged. New **opt-in** stdlib hook `make_circuit_spec(index, track_id)` adds a resolved public route ID and `task_variant=circuit-sector/1`, with the existing persistent-plant banks and three feedback rounds. The shared generator registers it separately as `anycar-circuit-v1-<layout>`; all circuit tasks remain development-only with `oracle="none"`. Circuit feedback remains241 rows and25 images over24s. Each episode traverses a prescribed-time **sector**, not a full lap, at0.85m/s with a1s start ramp; start fraction varies by episode seed. Friction boundaries span the sector's x extent. Full-lap nominal training is separately available. Ordered oriented gates, corridor distance and time-indexed position/heading/speed replace ellipse-specific angle/radius scoring; safety and accuracy thresholds stay unchanged. A route's task geometry is public; plant, coefficients, seed bank and scorer remain private.
 
 ```bash
 python -m scripts.control_transfer.control_public.anycar_nominal --list-tracks
@@ -118,3 +118,25 @@ python -m scripts.control_transfer.trusted.anycar_circuits_validate --out <fresh
 ```
 
 The all-venue validation executes one bend-focused24s CPU rollout per latest raced venue layout plus zigzag, alternating two plants, using the unadapted public nominal controller. Four videos are replayed and exact feedback preserved. This is broad implementation smoke coverage, **not** an all-layout/full-lap or multi-round agent acceptance result. The original two-instance ellipse evidence is historical and is never relabelled as circuit evaluation.
+
+## Generating optional circuit tasks
+
+The standard 14-task control-transfer suite keeps its existing identities and ellipse instances.
+The catalog and nominal trainer support all 159 runnable historical layouts plus zigzag.
+Create self-contained circuit tasks on demand, two independent plant instances per selected route:
+
+```bash
+python3 -S -m scripts.control_transfer.gen_tasks list-circuits
+python3 -S -m scripts.control_transfer.gen_tasks render --circuit zigzag --circuit monaco --output-root /tmp/circuit-tasks
+python3 -S -m scripts.control_transfer.gen_tasks check --circuit zigzag --circuit monaco --output-root /tmp/circuit-tasks
+# All runnable historical layout versions, plus zigzag: 320 tasks, several GB of standalone copies.
+python3 -S -m scripts.control_transfer.gen_tasks render --all-circuits --output-root /tmp/all-circuit-tasks
+```
+
+An explicit layout selects that historical version; a venue alias resolves to its latest raced
+available layout in the pinned catalog. Unknown or unavailable layouts fail before task writes.
+The default generator check also covers optional circuit tasks materialized in its output directory.
+Refresh `tasks/dataset.toml` with Harbor if optional tasks are added under repository `tasks/`.
+The trusted adapter passes the route ID unchanged; only public geometry/nominal modules and license
+attribution enter the agent package. Converter, evaluator, plant draws and case banks stay private.
+Current circuit evidence is local CPU sector smoke, not native Harbor circuit acceptance.

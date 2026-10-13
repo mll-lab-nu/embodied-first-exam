@@ -50,3 +50,9 @@ Use [policy adaptation](../POLICY_MODE.md) where its contract applies. Each task
 ## Adding a task
 
 Add a task-specific specification, generator and image/asset provenance; declare `collection = "roboEngineer"` and one of `drone`, `racing-car`, `humanoid`, or `quadruped` as its `embodiment`. Preserve a separate `robot` identifier for the actual platform and a `family` for the objective. Freeze public/adaptation/held-out definitions before comparing agents, and validate the task's isolation, replay, baseline and nop behavior through native Harbor. Update this roadmap to implemented only when runnable task packages and their validation evidence exist. Follow [CONTRIBUTING.md](../../CONTRIBUTING.md) for the repository's review requirements.
+
+
+AnyCar additionally provides an opt-in `circuit-sector/1` variant with scaled historical F1
+circuit outlines and synthetic zigzag tracking. It is development-only and excluded from
+the native ellipse acceptance totals. The [AnyCar guide](roboengineer-anycar.md#generating-optional-circuit-tasks)
+describes the 78-venue catalog, historical layout availability, task generation and evidence limits.

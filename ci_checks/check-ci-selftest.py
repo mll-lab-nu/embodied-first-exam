@@ -72,6 +72,12 @@ NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource st
 POLICY_TASK = "quadrotor-landing-random-pad-i00-standard"
 POLICY_CHECK = [sys.executable, str(ROOT / "ci_checks/check-policy.py")]
 MUTATIONS = [
+    ("circuit attribution does not permit unrelated repositories", "control-transfer-anycar-i00-standard", "environment/public/anycarbench/NOTICE",
+     append("\nhttps://github.com/example/controller-solution\n"),
+     [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")], "locates upstream material"),
+    ("circuit attribution is not permitted in agent instructions", "control-transfer-anycar-i00-standard", "instruction.md",
+     append("\nhttps://github.com/f1db/f1db\n"),
+     [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")], "locates upstream material"),
     ("control transfer verifier drops its complete input cache identity", "control-transfer-anycar-i01-standard", "tests/Dockerfile",
      sub(r'^LABEL roboengineer.verifier_inputs_sha256=.*\n', ''), POLICY_CHECK, "generated contract differs"),
     ("control transfer verifier drops its frozen-instance cache identity", "control-transfer-anycar-i01-standard", "tests/Dockerfile",

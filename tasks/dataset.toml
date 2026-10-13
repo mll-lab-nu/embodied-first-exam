@@ -6739,11 +6739,11 @@ digest = "sha256:b2ad056fbbd73cde5e532950606cd83ee17ca3a1ad4e56b190a2fc06d50d30e
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-anycar-i00-standard"
-digest = "sha256:7347256103876d563f79fe2be5e770832fc9befd638b4f612adac33a13237a6c"
+digest = "sha256:09aba84894fb018dfbac0802aa3eb363e45377a9a6d686f2ed3803228137eeac"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-anycar-i01-standard"
-digest = "sha256:ee2ce79c50819358650b7bd35199770a739b056f717f4606a6488bfa9cc7e191"
+digest = "sha256:e010e23849406da39db92974622774c154a8a8b1fa63918111462a4442370261"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-attitude-i00-standard"

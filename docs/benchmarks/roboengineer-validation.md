@@ -72,3 +72,33 @@ RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a
 ```
 
 Repeat native oracle/no-op checks for both instances of each admitted family. An infrastructure verdict must be resolved separately from a controller failure. Changes to task inputs require regenerated task copies and Harbor manifest digests. Benchmarks with incomplete references require the repository's human review; successful integration does not remove that gate. All new tasks still need actual coding-agent evaluations before model comparisons are reported.
+
+
+## Subsequent optional circuit extension
+
+The AnyCar historical-circuit extension is separate from the native ellipse results above.
+Pinned F1DB geometry covers 78 World Championship venues, 160 recorded layout versions
+(159 runnable; one malformed Buenos Aires outline is explicitly unavailable), and a synthetic
+zigzag. The registered variant is `circuit-sector/1`, with 24-second prescribed-time sectors,
+three adaptation rounds and ten held-out cases per plant. Optional circuit tasks have
+`oracle="none"`; these are not additional native Harbor successes or LLM evaluations.
+
+The worker's frozen-source validation passed one bend-focused CPU sector per venue plus
+zigzag (79/79), with four decoded dual-view videos and exact rendered/non-rendered replays.
+All 159 historical interpolants and zigzag pass geometry checks; this does not establish
+full-lap or all-layout physical acceptance. The synthetic zigzag separately completed one
+169.3-second nominal lap. Track outlines are scaled planar schematics, not surveyed 3D tracks.
+
+Integration checks pass 16 AnyCar numerical/geometry tests and three standard-library
+packaging tests, including 320 distinct layout/plant specifications and rejection of misplaced
+private files. Actual generated public-only nominal training and private CPU deployment
+were exercised on zigzag/i00 and Monaco/i01. Both deployment cases succeed and reproduce
+state, noisy feedback and metrics exactly in fresh processes; both 1280×480 videos decode,
+and the adapter returns 50 frames and 482 noisy rows total. One original held-out ellipse
+case per plant also reproduces the archived state, metrics and noisy feedback exactly.
+These local checks do not establish container/device isolation for circuit tasks.
+
+Evidence is in the separate `anycar/historical-circuits-v3` and
+`anycar/integration-circuits-v1` operator directories, with source manifests and receipts.
+The prior native archive and videos remain unchanged. See the [AnyCar task guide](roboengineer-anycar.md#generating-optional-circuit-tasks)
+for listing or generating any historical layout, or the full optional 320-task suite.

@@ -68,6 +68,11 @@ def reference(t, command):
     """One ellipse lap, prescribed in time, including a 1 s smooth acceleration."""
     import numpy as np
 
+    if "track_id" in command:
+        from scripts.control_transfer.components.anycarbench.tracks import get_route
+
+        return get_route(command["track_id"]).reference(t, command)
+
     a, b, phase, direction = (command[k] for k in ("a", "b", "phase", "direction"))
     rate = 2 * np.pi / (HORIZON - 0.5)
     effective = 0.5 * t * t if t < 1 else t - 0.5

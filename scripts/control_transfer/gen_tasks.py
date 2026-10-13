@@ -102,7 +102,11 @@ def copy_package(task, where, private, family):
             if not source.is_file() or source.is_symlink():
                 continue
             relative = source.relative_to(SRC / "components" / package).as_posix()
-            if source.suffix not in (".py", ".json") and source.name not in ("LICENSE.anycar", "NOTICE"):
+            if source.suffix not in (".py", ".json") and source.name not in (
+                "LICENSE.anycar",
+                "LICENSE.f1db",
+                "NOTICE",
+            ):
                 continue
             if (
                 private
@@ -113,7 +117,15 @@ def copy_package(task, where, private, family):
             if not private:
                 if family == "g1" and relative not in G1_PUBLIC:
                     continue
-                if family == "anycar" and relative not in ("__init__.py", "model.py", "LICENSE.anycar", "NOTICE"):
+                if family == "anycar" and relative not in (
+                    "__init__.py",
+                    "model.py",
+                    "tracks.py",
+                    "circuits.json",
+                    "LICENSE.anycar",
+                    "LICENSE.f1db",
+                    "NOTICE",
+                ):
                     continue
                 if family == "go2":
                     continue
@@ -174,6 +186,8 @@ def render(task, name, index):
     oracle = "full" if native_full else "none"
     if native_full:
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
+    elif instance.get("task_variant") == "circuit-sector/1":
+        reference_note = "Development-only circuit-sector variant. Local nominal-controller sector smoke covers all 78 historical venues plus zigzag, but full multi-round/held-out native Harbor acceptance is not established for these circuit tasks. No verified full oracle or LLM score is claimed."
     elif family == "g1":
         reference_note = "No full oracle. The local trained reference passes 17 of 24 held-out cases; both plants remain incompletely solved. Native GPU training validation remains outstanding. Human review required."
     else:
@@ -300,6 +314,8 @@ build_timeout_sec = 600.0
         training += f" Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task {name[4:]} --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`."
     if family == "anycar":
         training += " Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`."
+    if instance.get("task_variant") == "circuit-sector/1":
+        training += f" Use `--track {public['track_id']}` to train on this task's public route, and `--full-lap` for nominal full-lap practice. Deployment evaluates 24-second sectors; full-lap practice does not change that horizon."
     if family == "neural-fly":
         training += " The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`."
     put(
@@ -439,14 +455,49 @@ def main():
     import argparse
 
     p = argparse.ArgumentParser()
-    p.add_argument("action", choices=["render", "check"])
+    p.add_argument("action", choices=["render", "check", "list-circuits"])
+    selection = p.add_mutually_exclusive_group()
+    selection.add_argument(
+        "--circuit", action="append", help="Opt-in circuit layout or venue alias; repeat to select several"
+    )
+    selection.add_argument(
+        "--all-circuits",
+        action="store_true",
+        help="Opt-in all 159 runnable historical layouts plus zigzag (320 self-contained tasks)",
+    )
+    p.add_argument(
+        "--output-root", type=Path, default=ROOT / "tasks", help="Task directory parent; defaults to repository tasks/"
+    )
     a = p.parse_args()
+    if a.action == "list-circuits":
+        from scripts.control_transfer.components.anycarbench.tracks import track_ids
+
+        print(json.dumps(track_ids(), indent=2))
+        return
+    if a.circuit or a.all_circuits:
+        from scripts.control_transfer.components.anycarbench.tracks import resolve_track, track_ids
+
+        try:
+            circuits = track_ids() if a.all_circuits else sorted({resolve_track(name) for name in a.circuit})
+        except ValueError as error:
+            p.error(str(error))
+        names = ["anycar-circuit-v1-" + name for name in circuits]
+    else:
+        names = list(FAMILIES)
+        # Optional tasks, if materialized, are still covered by the default check.
+        names += sorted(
+            {
+                path.name.removeprefix("control-transfer-").removesuffix("-standard").rsplit("-i", 1)[0]
+                for path in a.output_root.glob("control-transfer-anycar-circuit-v1-*-i??-standard")
+                if path.is_dir()
+            }
+        )
     os.umask(0o022)
     bad = []
-    for name in FAMILIES:
+    for name in names:
         for i in range(2):
             ident = f"control-transfer-{name}-i{i:02d}-standard"
-            target = ROOT / "tasks" / ident
+            target = a.output_root / ident
             with tempfile.TemporaryDirectory() as t:
                 task = Path(t) / ident
                 render(task, name, i)
@@ -458,7 +509,7 @@ def main():
                     bad.append(ident)
     if bad:
         raise SystemExit("Generated tasks differ: " + ", ".join(bad))
-    print(f"control transfer: {2 * len(FAMILIES)} tasks " + a.action)
+    print(f"control transfer: {2 * len(names)} tasks " + a.action)
 
 
 if __name__ == "__main__":
