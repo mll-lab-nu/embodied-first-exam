@@ -363,6 +363,21 @@ def frame_words(s: str, where: str, mode: str = "privileged") -> str:
     return s
 
 
+# R5 (dev 84c360ff28, user 2026-10-13): the static-contact guard, the Robot safety line's sentence from
+# topogym_rules for MuJoCo instances; the released texts predate it. Standard mode reports the stops in clipped[].
+R5_ANCHOR = "stalls at that torque."
+R5_SENTENCE = (" An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its "
+               "joint targets become its measured joints for that control step, so it stops pushing ({report}).")
+R5_REPORT = {"privileged": "the safety readings report these stops as static_guard", "standard": "reported in clipped[]"}
+
+
+def r5_words(s: str, mode: str) -> str:
+    """The static-contact guard's sentence after the Robot safety line's torque sentence, once (a no-op where it is)."""
+    if "deep in a fixed object" in s or R5_ANCHOR not in s:
+        return s
+    return s.replace(R5_ANCHOR, R5_ANCHOR + R5_SENTENCE.format(report=R5_REPORT[mode]), 1)
+
+
 def flat_words(s: str, fence: bool) -> str:
     """The cloth families' flat condition led by the user's words (a no-op on texts without it)."""
     new = FLAT_NEW.format(fence=" (cloth resting on the fence does not count)" if fence else "")
@@ -925,10 +940,10 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         fence = "`fence`" in rd("instruction.md")
-        put(t / "README.md", frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode).encode())
+        put(t / "README.md", r5_words(frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode).encode())
         ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
-        ins = frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode)
+        ins = r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode)
         put(t / "instruction.md", ins.encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
