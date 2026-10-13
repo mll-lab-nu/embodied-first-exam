@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Self-contained native Harbor task generation; trusted code never copied into the agent."""
 
-import ast, json, os, shutil, sys, tempfile
+import ast, hashlib, json, os, shutil, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -338,10 +338,17 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
     )
     put(task, "tests/grade.py", (SRC / "trusted/verify.py").read_text())
     put(task, "tests/test.sh", "#!/bin/bash\nmkdir -p /logs/verifier\npython /tests/grade.py\n", True)
+    # Bind Docker's layer cache to the exact frozen instance as well as the
+    # build context. Equal-size files staged with equal mtimes otherwise reused
+    # a stale COPY layer in the native validation host's BuildKit file sync.
+    instance_bytes_sha = hashlib.sha256((task / "tests/instance.json").read_bytes()).hexdigest()
     put(
         task,
         "tests/Dockerfile",
-        f"FROM {BASE}\nCOPY grade.py test.sh instance.json /tests/\nRUN chmod +x /tests/test.sh\n",
+        f"FROM {BASE}\n"
+        f'LABEL roboengineer.instance_sha256="{instance_bytes_sha}"\n'
+        "COPY grade.py test.sh instance.json /tests/\n"
+        f"RUN echo '{instance_bytes_sha}  /tests/instance.json' | sha256sum -c - && chmod +x /tests/test.sh\n",
     )
     put(
         task,

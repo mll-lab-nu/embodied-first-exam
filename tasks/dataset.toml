@@ -6723,57 +6723,57 @@ digest = "sha256:8348fb8e418c5f33063cf665d3499250609665b3bcf71351c44c673a80b1175
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-neural-fly-i00-standard"
-digest = "sha256:e4d0cda9ebe8a077955ba5f396d349416ab44ccca8f905ec08800968de6e1e2f"
+digest = "sha256:7cd1f0691bab7af507d69388c155c251165e44e82ee48a0c2267f70690a1c0be"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-neural-fly-i01-standard"
-digest = "sha256:cb429310a2751c6223f71ea059b3c7edfbbf07c231f1afc2e36aa284ec1ca1cb"
+digest = "sha256:fdbf254f106c517a0bf0727866a2ba22fa54372437fad19c00e1596063e06f62"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-g1-i00-standard"
-digest = "sha256:821a4c6ed42b9a744a90393245aebf673994b9be4d5b3d1925ccfdcfe201ca72"
+digest = "sha256:03003556115bb5e9aa6f54c0c37a2df9acdd7688ca1c6758d3120f797d32ad1c"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-g1-i01-standard"
-digest = "sha256:db95966a5c7192ae70de0c5c20f5a8b55c484f1ee58b027927ed40d262bf6108"
+digest = "sha256:171d04f65a0b43dd6e3a194931fb3329b2f6bd7612114f2861775d03eef36eb3"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-anycar-i00-standard"
-digest = "sha256:3ae856caf64e707852945cd33b9a1efd35cb073da68fe03c9d80d89473942a9f"
+digest = "sha256:2bc3eaf3cbed4a7f9cea3bc5a8e0943b38e254b8430ab7056dfd8b20d2d77ba6"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-anycar-i01-standard"
-digest = "sha256:237fbba9ff485a58af93907e81a8a6e32d4ba62703cfd1483ade96536b8e3e66"
+digest = "sha256:781a81450f1dc8ff8a8f9a16e5798e8b9b5d7ff0d98972a87075ed80bbb7476b"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-attitude-i00-standard"
-digest = "sha256:1c7812a7e42f47b1d051fe50c50db7dc284d9868f5e5c8eed68f93abb47275f9"
+digest = "sha256:e89da821f90acf98512689ed2bc9e84c2dacc505ea9309cae2815c4ff1db9200"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-attitude-i01-standard"
-digest = "sha256:65543688b3661acd01e7b04fea57458e2ffcb0cfd5958d7725993c431b5e2cf4"
+digest = "sha256:6bca8927ae7ffe875da877a20a28e4918cf6a4eab270e0d315a8203d91093397"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-forward-jump-i00-standard"
-digest = "sha256:5deac041911ce7123db5b852098985a7648d3452bf100b7b8bbb608da5526ac2"
+digest = "sha256:971f189d972ee70c493229c8f6b94677c566bd92bd66cebafe9d3402f15bce4e"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-forward-jump-i01-standard"
-digest = "sha256:9405b644ffee003454930ebe3d81db1d2ae6bf790ae762e46c013b58a097a619"
+digest = "sha256:bbb8e737e4d55fd4c931a1b3a56f1fc5fb3e999c4db57e51e5edb0224daca2b7"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-weave-i00-standard"
-digest = "sha256:b9a3670552cba1036dfe03ac0880f0609f8279c4d12116aaca67340f4b196fa1"
+digest = "sha256:71a4fd479e0656f0830f4d6175f3bb7ab9286fb6c156246cc8281558a2e9b4d0"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-weave-i01-standard"
-digest = "sha256:9d0080119493e66f5beb27ec338380eacb2142bc42096200878140c071612781"
+digest = "sha256:c7fb08ea1a5c04c94e557c2565ff5733b0a980952420002b1ae03e58dc1ba2a4"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-yaw-jump-i00-standard"
-digest = "sha256:857d7f544aaada0055287222ff7c62d981bacc688e15942e850005e60b0517c0"
+digest = "sha256:04e884984cb800df0c3e8097d5744615a2f062f89f0484bafe22003c234874ab"
 
 [[tasks]]
 name = "robot-coding-bench/control-transfer-go2-yaw-jump-i01-standard"
-digest = "sha256:e4ebe6811afe1e003a78b98aef39eca81ae2bae729e432c17a1d9e1141a1adf3"
+digest = "sha256:93525395f6d58cf20b7d73c5e756fbba9b38ccde69fa4c94188c425fb6d8347d"
 
