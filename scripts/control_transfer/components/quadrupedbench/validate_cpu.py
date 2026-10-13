@@ -99,7 +99,7 @@ def main():
         list(here.glob("*.py"))
         + [here / "requirements-cpu.txt"]
         + list((here.parents[1] / "control_public").glob("go2*.py"))
-        + [(here.parents[1] / "trusted/go2.py")]
+        + list((here.parents[1] / "trusted").glob("go2*.py"))
     )
     summary["source_sha256"] = {str(p.relative_to(here.parents[1])): digest(p) for p in sources}
     for task in TASKS:

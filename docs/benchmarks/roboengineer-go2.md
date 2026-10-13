@@ -59,7 +59,7 @@ Public feedback is `{"telemetry": [{"t": ..., "values": [...37 numbers...]}]}` a
 - `scripts.control_transfer.trusted.go2.validate(policy) -> bytes`: canonical JSON artifact.
 - `scripts.control_transfer.trusted.go2.rollout(policy_path, case, out, render=True) -> record`: writes operator `record.json`, `states.json`, and `video.mp4`. The output directory must not already exist.
 - Record keys include `state_sha256`, `metrics.success`, `metrics.score`, `feedback.telemetry`, `dynamics`, frame times and runtime provenance. Shared feedback handling must register dimension **37** and image rate **1 Hz**, from full video rate **10 Hz**.
-- Shared packaging should copy only `control_public/go2*.py` and prepared nominal Go2 assets into the agent image (only the required MJCF/meshes/license, without upstream README, screenshots or provenance manifests); private `trusted/go2.py`, quadruped evaluation components, private specs and reference evidence remain outside it. Do not make the repository's `components` tree reachable from the public training module.
+- Shared packaging should copy only the explicitly listed public `control_public/go2*.py` files and prepared nominal Go2 assets into the agent image (only the required MJCF/meshes/license, without upstream README, screenshots or provenance manifests); private `trusted/go2.py`, quadruped evaluation components, private specs and reference evidence remain outside it. Do not make the repository's `components` tree reachable from the public training module.
 - Runtime: MuJoCo **3.5.0**, NumPy **2.3.1**, PyOpenGL supplied by MuJoCo, `ffmpeg`, and `libosmesa6`; no torch, CUDA, Isaac or GPU inference runtime. Set `MUJOCO_GL=osmesa`, `LIBGL_ALWAYS_SOFTWARE=1`, `LP_NUM_THREADS=4`, `OPENBLAS_NUM_THREADS=1`; omit all GPU device reservations. Assets use `CONTROL_ASSETS/go2` or operator `GO2_ASSET_DIR`.
 
 ## Reproduce local checks
@@ -99,10 +99,16 @@ Archived MuJoCo 3.8.0 schema-v2 local validation (instance 0, same-plant bank) u
 
 ## Public training allowlist and private evaluation materials
 
-Public nominal files: `control_public/go2.py`, `control_public/go2_nominal.py`, and `control_public/go2_train.py` (plus empty package initializers only as needed). Public nominal assets: pinned `go2.xml`, its referenced mesh files under `assets/`, and `LICENSE`. Do not copy upstream README, screenshots, scene/MJX variants, or `asset-manifest.json`. The training module constructs the nominal scene itself.
+Public nominal files: `control_public/go2_data.py`, `control_public/go2.py`, `control_public/go2_nominal.py`, and `control_public/go2_train.py` (plus empty package initializers only as needed). Public nominal assets: pinned `go2.xml`, its referenced mesh files under `assets/`, and `LICENSE`. Do not copy upstream README, screenshots, scene/MJX variants, or `asset-manifest.json`. The training module constructs the nominal scene itself.
 
 Private evaluator materials: `trusted/go2.py`; every `components/quadrupedbench/*` module including `simulation.py`, `assets.py`, `reference.py` and validation tools; the private prepared Go2 asset directory with its checksum manifest; generated adaptation/held-out banks; reference artifacts; true state/contact traces, rewards, runtime paths and raw operator records. Shared feedback must project only the declared noisy telemetry and sampled images. The nominal robot geometry is intentionally public; private draws and evaluator data are not.
 
 Admission: `go2-attitude` is the positive-reference candidate. `go2-weave`, `go2-forward-jump`, and `go2-yaw-jump` are explicitly **development-only**, not release-blocking tasks. Their unchanged success predicates remain authoritative. Shared registration/allowlisting and isolation validation belong to the orchestrator.
 
 Required-runtime acceptance was repeated on MuJoCo **3.5.0**, same frozen policies and schema-v2 bank: attitude **10/10**, mean **91.06475**; weave **0/10**, mean **0**; forward jump **0/10**, mean **0**; yaw jump **0/10**, mean **9.8**. All 40 source-frozen fresh-process replays matched, four no-op controls scored zero, and four OSMesa videos decoded. The minimal public nominal asset allowlist also passed a two-second training rollout. No success thresholds or reference policies changed.
+
+## Stdlib-only static CI
+
+`trusted/go2_spec.py` provides `make_spec` without importing NumPy, MuJoCo or the numeric controller. The existing `trusted/go2.py` import remains compatible and loads physics only inside `rollout`. Public `control_public/go2_data.py` contains the shared pure-data constants, default artifact and JSON validator; include it in the public training allowlist alongside the existing three Go2 public modules. Keep `trusted/go2_spec.py` private because it generates seed banks.
+
+Run `python -S -m unittest scripts.control_transfer.tests.test_go2_spec -v` in the static job. It generates all four specs through both import paths and verifies the absence of numerical/physics modules. Specs, default artifacts and task criteria remain identical to the pre-refactor version. Root may normalize the returned instance schema.
