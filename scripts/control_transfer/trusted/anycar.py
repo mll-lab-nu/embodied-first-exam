@@ -69,6 +69,11 @@ class Video:
         self.camera.distance = 13
         self.camera.azimuth = 90
         self.camera.elevation = -70
+        # Fixed orientation; center uses the already-delivered noisy position only.
+        self.detail_camera = mujoco.MjvCamera()
+        self.detail_camera.distance = 1.65
+        self.detail_camera.azimuth = 90
+        self.detail_camera.elevation = -55
         self.process = subprocess.Popen(
             [
                 "ffmpeg",
@@ -79,7 +84,7 @@ class Video:
                 "-pix_fmt",
                 "rgb24",
                 "-s",
-                "640x480",
+                "1280x480",
                 "-r",
                 "10",
                 "-i",
@@ -100,21 +105,28 @@ class Video:
             stdin=subprocess.PIPE,
         )
 
-    def frame(self, v, target):
-        self.renderer.update_scene(v.data, camera=self.camera)
+    def view(self, v, target, camera):
+        self.renderer.update_scene(v.data, camera=camera)
         scene = self.renderer.scene
         # Public commanded target marker, no privileged trajectory/score overlays.
         geom = scene.geoms[scene.ngeom]
         mujoco.mjv_initGeom(
             geom,
-            mujoco.mjtGeom.mjGEOM_SPHERE,
-            np.array([0.09, 0.09, 0.09]),
-            np.array([target[0], target[1], 0.13]),
+            mujoco.mjtGeom.mjGEOM_CYLINDER,
+            np.array([0.12, 0.006, 0.0]),
+            np.array([target[0], target[1], 0.012]),
             np.eye(3).ravel(),
             np.array([0.1, 0.85, 0.55, 0.85]),
         )
         scene.ngeom += 1
-        self.process.stdin.write(self.renderer.render().tobytes())
+        return self.renderer.render().copy()
+
+    def frame(self, v, target, observation):
+        overview = self.view(v, target, self.camera)
+        self.detail_camera.lookat[:] = [observation[0], observation[1], 0.10]
+        detail = self.view(v, target, self.detail_camera)
+        # Both views are encoded in the single agent-visible stream; no private overlay.
+        self.process.stdin.write(np.concatenate((overview, detail), axis=1).tobytes())
 
     def close(self):
         self.process.stdin.close()
@@ -201,7 +213,7 @@ def rollout(policy_path, case, out, render=True):
             if i % 5 == 0:
                 telemetry.append(dict(t=t, values=[*observation.tolist(), *target.tolist(), *action.tolist()]))
                 if video:
-                    video.frame(v, target)
+                    video.frame(v, target, observation)
             if i < round(HORIZON / DT):
                 v.advance(action)
     finally:

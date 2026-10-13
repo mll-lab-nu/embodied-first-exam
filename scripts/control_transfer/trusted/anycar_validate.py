@@ -59,7 +59,7 @@ def run(policy, case, out, render):
             subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(out / "video.mp4")])
         )
         stream = probe["streams"][0]
-        if (stream["width"], stream["height"], int(stream["nb_frames"])) != (640, 480, 241):
+        if (stream["width"], stream["height"], int(stream["nb_frames"])) != (1280, 480, 241):
             raise ValueError("Invalid video")
     return record
 
@@ -67,6 +67,7 @@ def run(policy, case, out, render):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--index", type=int, default=0)
     a = parser.parse_args()
     a.out.mkdir(parents=True, exist_ok=False)
     source_root = Path(__file__).resolve().parents[1]
@@ -77,7 +78,7 @@ def main():
     )
     source_hashes = {str(p.relative_to(source_root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_files}
     write(a.out / "source-sha256.json", source_hashes)
-    spec = make_spec(0)
+    spec = make_spec(a.index)
     write(a.out / "instance-private.json", spec)
     policy = dict(DEFAULT)
     rounds = []
@@ -135,7 +136,10 @@ def main():
     ), "Source changed during validation"
     summary = dict(
         source_sha256=source_hashes,
-        schema="anycar-local-validation/1",
+        schema="anycar-local-validation/2",
+        instance_index=a.index,
+        instance_schema=spec["schema"],
+        transfer_track=spec["transfer_track"],
         container_isolation_tested=False,
         llm_agent_tested=False,
         rounds=rounds,
