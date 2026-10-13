@@ -32,7 +32,7 @@ services:
       RCB_TASK: interlocked_claws
       RCB_INSTANCE: /tmp/robotangle-instance/instance.json
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "21600"
+      RCB_WALL_CLOCK_S: "7200"
       RCB_STARTUP_TIMEOUT_S: "1800"  # >= 2 x the slowest measured scene build (docs/benchmarks/robotangle.md)
       PYTHONPATH: /srv:/opt/topogym
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log

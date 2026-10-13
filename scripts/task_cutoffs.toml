@@ -39,8 +39,8 @@
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
 "RoboLab"           = { privileged =  3600, standard =  3600 }
 "RoboOlympics"      = { standard-realtime = 7200 }
-"RoboPaint"         = { privileged =  5400, standard =  5400 }
-"RoboTangle"        = { privileged = 21600, standard = 21600 }
+"RoboPaint"         = { privileged =  3600, standard =  3600 }
+"RoboTangle"        = { privileged =  7200, standard =  7200 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
 "RoboWits"          = { privileged =  3600, standard =  3600 }
 "VLABench"          = { privileged =  1800, standard =  1800 }
@@ -109,7 +109,7 @@ date = "2026-10-12"
 benchmark = "RoboPaint"
 modes = ["privileged", "standard"]
 from_sec = 7200
-to_sec = 5400
+to_sec = 3600
 decided_by = "owner"
 note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such"
 
@@ -211,3 +211,12 @@ from_sec = 3600
 to_sec = 1800
 decided_by = "owner"
 note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboTangle"
+modes = ["privileged", "standard"]
+from_sec = 21600
+to_sec = 7200
+decided_by = "owner"
+note = "stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used"
