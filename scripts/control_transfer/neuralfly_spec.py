@@ -6,7 +6,7 @@ from .neuralfly_constants import BOUNDS, DEFAULT
 
 
 def make_spec(index, revision="fixed-eight/1"):
-    if revision not in ("fixed-eight/1", "general-eight/1"):
+    if revision not in ("fixed-eight/1", "general-eight/1", "general-eight-wind/1"):
         raise ValueError("Trajectory revision")
     if type(index) is not int or not 0 <= index < 1000:
         raise ValueError("Instance index")
@@ -56,7 +56,7 @@ def make_spec(index, revision="fixed-eight/1"):
         "bank": {"adaptation": bank(False), "held_out": bank(True)},
     }
 
-    if revision == "general-eight/1":
+    if revision in ("general-eight/1", "general-eight-wind/1"):
         result.update(name="neural-fly-general-v1", task_revision=revision)
         result["public"].update(
             name="neural-fly-general-v1",
@@ -64,5 +64,13 @@ def make_spec(index, revision="fixed-eight/1"):
         )
         for cases in result["bank"].values():
             for case in cases:
-                case["trajectory_revision"] = revision
+                case["trajectory_revision"] = "general-eight/1"
+    if revision == "general-eight-wind/1":
+        result["name"] = result["public"]["name"] = "neural-fly-vector-wind-v1"
+        result["public"]["limitations"] += (
+            " Synthetic world-frame vector wind with isotropic quadratic drag increment (0.045 kg/m); not calibrated directional aerodynamics. Per-axis residual force cap remains 12 N."
+        )
+        for cases in result["bank"].values():
+            for case in cases:
+                case["dynamics_revision"] = "vector-wind/1"
     return result

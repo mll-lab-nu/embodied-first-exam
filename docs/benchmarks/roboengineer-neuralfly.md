@@ -124,3 +124,32 @@ layouts, with the operator download function and CLI removed. Runtime requires
 pre-baked, checksum-verified assets and fails closed if they are missing/modified.
 The benchmark remains the original Neural Fly surrogate physically; the mesh is
 appearance only. Prior reference scores are not new Skydio agent results.
+
+### Experimental vector-wind revision
+
+`make_spec(index, revision="general-eight-wind/1")` produces the separately named
+`neural-fly-vector-wind-v1` task. Its private cases use `trajectory_revision=general-eight/1`
+and `dynamics_revision=vector-wind/1`; existing hooks and absent dynamics revisions
+retain scalar-wind physics exactly. Unknown dynamics revisions fail closed.
+
+The wind is now a world-frame air velocity pointing toward airflow travel direction.
+A fixed plant heading uses the pre-existing wind phase; speed uses the same five strata,
+including `8.5 + 2.4 sin(t + phase)` m/s for gusts. This horizontally uniform field has
+no vertical wind or spatial turbulence. Force is the existing **zero-wind** fitted
+surrogate plus `c (|w-v|(w-v) + |v|v)`, with assumed `c=0.045 kg/m`. Subtracting the
+calm-air drag avoids adding calm drag twice. The total still clips at +/-12 N per axis.
+This is a synthetic isotropic directional extension, not a directional calibration
+of the paper's aircraft or a replay of measured wind vectors. Heading and gust phase
+are coupled in this initial revision.
+
+Private records use `neuralfly-cpu/4` and identify the synthetic calibration. `wind.npz`
+contains the world air velocity at saved trajectory timestamps for operator visualization.
+It must remain private, alongside trajectory truth: do not add it to public exports,
+feedback allowlists or agent videos. Public feedback channels remain unchanged. Operator
+demos may show direction and magnitude, explicitly separate from agent-facing feedback.
+Shared registration is pending; no native acceptance or model score is claimed.
+
+Local validation: 25 tests pass; stdlib spec checks pass. The prior i00 gusting record
+replays exactly, and two new gusting rollouts match each other exactly. The unchanged
+scripted controller completed 43.52 s with RMSE 0.07599 m, score 83.1984 and zero force
+clipping in this one case. This is not a full-bank validation or an adaptation campaign.
