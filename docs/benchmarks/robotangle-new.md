@@ -46,8 +46,11 @@ layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "
 ## Time budget (D8)
 
 10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; `scripts/task_cutoffs.toml`), within the default cap: no exception.
-RoboTangle has its own row (7200 s since 2026-10-12). The texts say "the time limit (`## Time limit`)"; RoboTangle's own sentence that the
-standard service ends the episode on its own clock stays (`RCB_WALL_CLOCK_S` follows the table).
+RoboTangle has its own row (7200 s since 2026-10-12). The texts say "the time limit (`## Time limit`)". The standard service's clock
+(`meta["time_left_s"]`, `RCB_WALL_CLOCK_S` follows the table) counts from the agent's first request to the service (PROTOCOL §2.12;
+logged in `episode.jsonl`, kept over a restart), so the instruction has the common closing sentence and no sentence of its own about the
+service's clock (2026-10-13; RoboTangle's "has run since the service first started" is not carried over). The service still ends the
+episode with reason `timeout` when that count reaches 0; counted from the first request, that is never before the harness's cutoff.
 
 ## Safety readings in standard mode (`meta["safety"]`)
 
@@ -75,6 +78,14 @@ response. Pending the owner: this listing under PROTOCOL §4.5's declared teleme
 
 As RoboTangle (docs/benchmarks/robotangle.md): `eai-standard/2.4`; no world coordinates in standard texts (D7,
 `check-standard-texts.sh`); agent egress on the allowlist (PROTOCOL §2.11).
+
+The agent-facing frame of the standard service is the robot frame (user, 2026-10-13: the table height and the robot base's
+world position are never disclosed): origin at the robot's kinematic root link on its mounting, axes as the simulator's world
+(+z up). The proprio TCP poses, `ee_pose` targets, `/kinematics` (ik targets, fk poses) and the camera extrinsics (static
+mounts, per-observe calibration, per-frame `extrinsic_cv`) are in it; `robot_spec.base.pose` is the identity; no text and no
+`/spec` field states a world coordinate of the mounting. `joint_position` rows, physics, graders and state hashes do not depend
+on the frame. Privileged mode keeps the simulator's world frame (its tooling is the simulator); its texts state no table height
+or robot base position either.
 
 ## Registration (the lines a rename changes)
 
