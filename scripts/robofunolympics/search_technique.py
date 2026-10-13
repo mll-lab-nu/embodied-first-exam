@@ -310,17 +310,20 @@ class Pass(Spec):
             o["post"] = (w.pos("ball").copy(), w.vel("ball").copy())
 
     def score(self, o):
+        """Every pass above every touch that is no pass, and that above no touch at all."""
         ref = o["ref"]
         if o["post"] is None:
             out = o["metrics"].get("speed_out_m_s")
             if out is not None:                                # touched, but not a pass / set: how fast it left
-                return -80 + 3 * min(out, 10.0) - 20 * min(o["near"], 1.0)
-            return -100 - 20 * min(o["near"], 2.0)
+                return -200 + 3 * min(out, 10.0) - 20 * min(o["near"], 1.0)
+            return -250 - 20 * min(o["near"], 2.0)
         p, v = o["post"]
         apex = p[2] + max(v[2], 0.0) ** 2 / 19.62
         land = ballistic(p, v)
         miss = float(np.linalg.norm(land - self.target))
-        sc = -50 + 15 * float(np.clip(apex - self.need, -3.0, 0.5)) - 5 * min(miss, 10.0)
+        miss = o["metrics"].get("from_target_centre_m", miss)  # the referee's, once the ball is down
+        apex = o["metrics"].get(f"{self.first}_apex_m") or apex
+        sc = 15 * float(np.clip(apex - self.need, -3.0, 0.5)) - 5 * min(miss, 10.0)
         why = ref.failed or ""
         if why and not any(k in why for k in ("outside the target", "rise", "did not reach")):
             sc -= 25                                           # a foul after the contact (a second touch, a fall)
@@ -328,32 +331,39 @@ class Pass(Spec):
 
 
 class Bump(Pass):
-    """The walk to the ball first: sideways (searched: its speed and length), then at rest until 2.7 s."""
-    prelude = [(0.0, 0.3, 0.0, 2.0), (0.0, 0.0, 0.0, 0.7)]
+    """The walk to where the serve comes down first (forwards and to the left: speeds and length searched), then at
+    rest until 2.7 s; then the platform of the referee test (both arms out and down, the elbows nearly straight: a
+    still forearm already returns the serve above the net) turned and lifted a little by the keys."""
+    prelude = [(0.375, 0.27, 0.0, 2.0), (0.0, 0.0, 0.0, 0.7)]
     n_extra = 3
+    step_upper = 0.25
+    keys = [dict(left_shoulder_pitch=-0.6, left_elbow_pitch=1.2, right_shoulder_pitch=-0.6, right_elbow_pitch=1.2),
+            dict(torso=-0.15, left_shoulder_pitch=-0.6, left_elbow_pitch=1.2, right_shoulder_pitch=-0.6,
+                 right_elbow_pitch=1.2),
+            dict(torso=-0.15, left_shoulder_pitch=-0.8, left_elbow_pitch=1.2, right_shoulder_pitch=-0.8,
+                 right_elbow_pitch=1.2),
+            dict()]
+    times = (0.8, 1.6, 1.9, 2.8)
 
     def prelude_of(self, e):
-        vx, vy, secs = 0.15 * e[0], 0.3 + 0.1 * e[1], float(np.clip(2.0 + 0.3 * e[2], 0.5, 2.6))
+        vx, vy, secs = 0.375 + 0.1 * e[0], 0.27 + 0.1 * e[1], float(np.clip(2.0 + 0.3 * e[2], 0.5, 2.6))
         return [(vx, vy, 0.0, round(secs, 2)), (0.0, 0.0, 0.0, round(2.7 - secs, 2))]
-    keys = [dict(crouch=0.9, left_shoulder_pitch=-0.5, left_shoulder_roll=-0.3, left_elbow_pitch=1.57,
-                 right_shoulder_pitch=-0.5, right_shoulder_roll=0.3, right_elbow_pitch=1.57),
-            dict(crouch=0.7, torso=-0.3, left_shoulder_pitch=-0.8, left_shoulder_roll=-0.3, left_elbow_pitch=1.57,
-                 right_shoulder_pitch=-0.8, right_shoulder_roll=0.3, right_elbow_pitch=1.57),
-            dict(crouch=0.5, torso=-0.3, left_shoulder_pitch=-1.1, left_shoulder_roll=-0.3, left_elbow_pitch=1.57,
-                 right_shoulder_pitch=-1.1, right_shoulder_roll=0.3, right_elbow_pitch=1.57),
-            dict(crouch=0.45)]
-    times = (0.9, 1.6, 1.85, 2.8)
 
 
 class Set(Pass):
+    """At rest on the walking policy until just before the toss comes down, then the fists of the referee test held
+    above the forehead with the elbows bent, driven up and a little forward through the ball."""
     first, need = "set", 2.43 + 1.0 + 0.105
     prelude = [(0.0, 0.0, 0.0, 3.0)]
-    keys = [dict(crouch=0.7, left_shoulder_pitch=-2.6, left_shoulder_roll=0.2, left_elbow_pitch=0.3,
-                 right_shoulder_pitch=-2.6, right_shoulder_roll=-0.2, right_elbow_pitch=0.3),
-            dict(crouch=0.4, left_shoulder_pitch=-2.5, left_shoulder_roll=0.2, left_elbow_pitch=1.3,
-                 right_shoulder_pitch=-2.5, right_shoulder_roll=-0.2, right_elbow_pitch=1.3),
-            dict(crouch=0.45)]
-    times = (1.25, 1.5, 2.4)
+    step_upper = 0.25
+    keys = [dict(left_shoulder_pitch=-2.7, left_shoulder_roll=0.2, left_elbow_pitch=0.6,
+                 right_shoulder_pitch=-2.7, right_shoulder_roll=-0.2, right_elbow_pitch=0.6),
+            dict(left_shoulder_pitch=-2.7, left_shoulder_roll=0.2, left_elbow_pitch=0.6,
+                 right_shoulder_pitch=-2.7, right_shoulder_roll=-0.2, right_elbow_pitch=0.6),
+            dict(left_shoulder_pitch=-2.6, left_shoulder_roll=0.2, left_elbow_pitch=1.5,
+                 right_shoulder_pitch=-2.6, right_shoulder_roll=-0.2, right_elbow_pitch=1.5),
+            dict()]
+    times = (0.8, 1.30, 1.45, 2.4)
 
 
 SPECS = {"shot-put": ShotPut, "discus": Discus, "javelin": Javelin, "volleyball-serve": Serve, "volleyball-bump": Bump,

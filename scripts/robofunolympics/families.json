@@ -98,9 +98,9 @@
   },
   "volleyball-bump": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 6.0,
-   "evidence": "positive by injection (the real 14 m/s float serve onto a real forearm platform, the ball's velocity set as it comes off); negatives: the passive rebound (lands 2.6 m off the target), below net height, the body, a second touch, held, under the net, a net touch, over the centre line. A still forearm returns the serve to the right height and distance; the direction changes by 3 m/s for 4 cm of standing place"
+   "evidence": "Reference: a walk to where the serve comes down, then a forearm platform on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 11.4 m/s in, 7.3 m/s out, up to 3.08 m, down 0.13 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: the passive rebound, below net height, the body, a second touch, held, under the net, a net touch, over the centre line"
   },
   "volleyball-set": {
    "seed": 0,

@@ -6619,11 +6619,11 @@ digest = "sha256:56841d47ee5de61371ef3336561e5bba02b53d596149db18a7ce296362f2b6a
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-bump-i00-privileged"
-digest = "sha256:54d07bfd797e5cbbcb41b892942880a29d4f0630b40e3dad92a880178d314af0"
+digest = "sha256:126b83aff1fe7307357548fa089117e7a85aa60d4eab4c034e2be0ef438b6d30"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-bump-i00-standard"
-digest = "sha256:3737b794d31aa6212bba7f42bec3e2d23ffc85aefb2c965befc68c7c4b2c2096"
+digest = "sha256:0cfca0a8d5c452a2ec0a2f2d9851a29af88552686ce0c32c486af408fcb2ef71"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-serve-i00-privileged"
