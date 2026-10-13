@@ -1,0 +1,96 @@
+{
+  "airframe": "neural-lander-intel-aero-partial-v2",
+  "fully_calibrated_6dof": false,
+  "paper": "https://arxiv.org/abs/1811.08027",
+  "upstream_commit": "30ab04cb5ac3fd4fa55cd2a168ee28aa679f5e9b",
+  "published_calibration": {
+    "mass_kg": 1.47,
+    "gravity_m_s2": 9.81,
+    "air_density_kg_m3": 1.225,
+    "propeller_diameter_m": 0.23,
+    "nondimensional_thrust_coefficient": 0.08937873049125099,
+    "thrust_coefficient_N_per_RPM_squared": 8.510971060074351e-08,
+    "PWM_to_RPM_polynomial": [
+      -0.0026,
+      17.0948,
+      -14834.1065
+    ],
+    "source": "realdata/learning_fa.ipynb",
+    "source_cells_zero_based": [
+      17,
+      25,
+      26,
+      32
+    ]
+  },
+  "upstream_simulation_settings_not_measured": {
+    "source": "1d_landing_simulator.ipynb",
+    "source_cell_zero_based": 7,
+    "body_clearance_m": 0.09,
+    "maximum_collective_thrust_over_weight": 1.7,
+    "command_blend_at_100Hz": 0.2,
+    "equivalent_time_constant_s": 0.04481420117724551
+  },
+  "benchmark_assumptions_not_paper_calibration": {
+    "inertia_kg_m2": [
+      0.025,
+      0.025,
+      0.045
+    ],
+    "rotor_xy_m": [
+      [
+        0.18,
+        0.18
+      ],
+      [
+        -0.18,
+        0.18
+      ],
+      [
+        -0.18,
+        -0.18
+      ],
+      [
+        0.18,
+        -0.18
+      ]
+    ],
+    "motor_channel_to_rotor_mapping": "not identified in release; ordered as listed",
+    "yaw_torque_per_thrust_m": [
+      0.015,
+      -0.015,
+      0.015,
+      -0.015
+    ],
+    "body_and_landing_foot_geometry": "procedural collision approximation",
+    "contact_friction": [
+      0.8,
+      0.005,
+      0.0001
+    ],
+    "sensor_noise": "synthetic independent Gaussian noise"
+  },
+  "residual": {
+    "source": "realdata/learning_fa.ipynb",
+    "feature_order": [
+      "world_z",
+      "world_vx",
+      "world_vy",
+      "world_vz",
+      "qx",
+      "qy",
+      "qz",
+      "qw",
+      "rpm_0/8000",
+      "rpm_1/8000",
+      "rpm_2/8000",
+      "rpm_3/8000"
+    ],
+    "quaternion_convention": "ROS xyzw with negative w, matching all released training-window samples",
+    "outputs": "world-frame Fx, Fy, Fz in N",
+    "clipping": false,
+    "thrust_gating": false,
+    "default_scale": 1.0,
+    "checkpoint_sha256": "abcce30c945709ace29c3c68159738717a945b8e87f73d74bd3dcb54f74002e9"
+  }
+}

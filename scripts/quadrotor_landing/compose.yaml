@@ -1,0 +1,50 @@
+# Standalone prototype topology. Official Harbor integration will use its network and collect hooks.
+services:
+  agent:
+    build:
+      context: ../..
+      dockerfile: scripts/quadrotor_landing/Dockerfile.agent
+    environment:
+      LANDING_SERVICE_URL: http://sim:8000
+    volumes:
+      - agent_work:/app
+    networks: [deployment]
+    depends_on: [sim]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: 2g
+  sim:
+    build:
+      context: ../..
+      dockerfile: scripts/quadrotor_landing/Dockerfile.sim
+    volumes:
+      - ${LANDING_ASSETS:?Set the operator asset directory}:/assets:ro
+      - evaluator_data:/data
+    networks: [deployment]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 2g
+  verifier:
+    profiles: [grade]
+    build:
+      context: ../..
+      dockerfile: scripts/quadrotor_landing/Dockerfile.sim
+    network_mode: none
+    volumes:
+      - ${LANDING_ASSETS:?Set the operator asset directory}:/assets:ro
+      - evaluator_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [python, -m, scripts.quadrotor_landing.trusted.grade, --root, /data/session, --residual, /assets/residual.npz]
+networks:
+  deployment:
+    internal: true
+volumes:
+  agent_work:
+  evaluator_data:

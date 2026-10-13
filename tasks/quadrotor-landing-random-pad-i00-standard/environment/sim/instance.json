@@ -1,0 +1,49 @@
+{
+  "bank": {
+    "adaptation": [
+      {
+        "scale": 1.0,
+        "seed": 71
+      },
+      {
+        "scale": 1.0,
+        "seed": 72
+      },
+      {
+        "scale": 1.0,
+        "seed": 73
+      }
+    ],
+    "held_out": [
+      {
+        "scale": 1.0,
+        "seed": 101
+      },
+      {
+        "scale": 1.0,
+        "seed": 102
+      },
+      {
+        "scale": 1.0,
+        "seed": 103
+      },
+      {
+        "scale": 1.0,
+        "seed": 104
+      },
+      {
+        "scale": 1.0,
+        "seed": 105
+      },
+      {
+        "scale": 1.0,
+        "seed": 106
+      }
+    ]
+  },
+  "instance": 0,
+  "residual_sha256": "bebb6c7f9bc7364b296006c77542a9698162665dac6fb74e769e5583fc7a00ef",
+  "schema": "landing-instance/1",
+  "score_version": "oracle-relative-time/1",
+  "task_version": "random-pad-landing/4"
+}

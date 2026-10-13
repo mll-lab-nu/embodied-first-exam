@@ -19,6 +19,7 @@
 # no number.
 
 [cutoff_sec]
+"Neural Lander" = { standard = 3600 }
 "AutoBio"           = { privileged =  3600, standard =  3600 }
 "BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
 "BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
@@ -230,3 +231,12 @@ from_sec = 21600
 to_sec = 7200
 decided_by = "owner"
 note = "stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used"
+
+[[history]]
+date = "2026-10-13"
+benchmark = "Neural Lander"
+modes = ["standard"]
+from_sec = 0
+to_sec = 3600
+decided_by = "benchmark author, native integration requested by owner"
+note = "First policy-adaptation task: bounded deployments and private held-out evaluation."

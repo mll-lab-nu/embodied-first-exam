@@ -1,0 +1,10 @@
+FROM python:3.12.10-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libosmesa6 ffmpeg && rm -rf /var/lib/apt/lists/*
+COPY scripts/quadrotor_landing/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+WORKDIR /opt/task
+# Only nominal and agent-facing code. No evaluator, residual weights, references or private banks.
+COPY scripts/quadrotor_landing/public scripts/quadrotor_landing/public
+ENV PYTHONPATH=/opt/task PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa
+WORKDIR /app
+CMD ["sleep", "infinity"]

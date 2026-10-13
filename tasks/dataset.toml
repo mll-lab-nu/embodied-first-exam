@@ -5,7 +5,7 @@
 [dataset]
 name = "robot-coding-bench/robot-coding-bench"
 version = "0.1.0"
-description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance, in privileged and standard mode (robosuite, RoboTwin 2.0, DexToolBench, MuJoCo Playground, KinDER, HumanoidBench, MetaWorld+, RoboWits, RoboPaint, RoboLab, BEHAVIOR-1K, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1)."
+description = "Coding agents controlling simulated robots via Python primitives; replayable trajectories per frozen scene instance and bounded policy adaptation with private held-out evaluation, in privileged and standard mode (robosuite, RoboTwin 2.0, DexToolBench, MuJoCo Playground, KinDER, HumanoidBench, MetaWorld+, RoboWits, RoboPaint, RoboLab, BEHAVIOR-1K, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1)."
 authors = []
 keywords = [ "robotics", "manipulation", "humanoid", "code-as-policy", "harbor",]
 
@@ -6712,4 +6712,12 @@ digest = "sha256:2b78722a917c247b12607ddb2c0b2485bb6728f8a558121bf16076812bbff6d
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-vertical-jump-i00-standard"
 digest = "sha256:b78369488c008ecc71ea40aba410e621e3f1c9dd140a576c5b2bcc1c7262bc24"
+
+[[tasks]]
+name = "robot-coding-bench/quadrotor-landing-random-pad-i00-standard"
+digest = "sha256:e3c9ad5cdded18d96e987fb0e0593666c580dee14e551adf66cc9cb7a62d2be1"
+
+[[tasks]]
+name = "robot-coding-bench/quadrotor-landing-random-pad-i01-standard"
+digest = "sha256:6d6c98e3e8d34fbeff45309a14e9977ab646134d38860ff674b8275569255404"
 
