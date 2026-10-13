@@ -46,6 +46,8 @@ A rope lies on a table, tied into a knot around fixtures. Its start end (arc len
 Variants made today as "robot-access" tweaks: births and knots unchanged, only the fixtures or regions moved.
 - `_ra`: hard_nostop's curb 2 cm further from the knot (y -0.195..-0.155) with strip a 2 cm lower. medium_loose with bigger loops and a thinner eye post.
 - `_rw`: regions widened. Strips reach y 0.37 (back) or -0.37 (front) and are about 2 cm longer each way. medium's box reaches x 0.06 and y -0.37.
+- `_rw` outcome: the far edges at y 0.37 / -0.37 lie beyond the right wrist, so the labs planned inside the old strips.
+- **`_r2` (user decision 10-12, ~19:30; the current targets): goal regions only.** easier_v8_r2 / easier_loose_r2: back strip y 0.155..**0.31** (was 0.33). The far layout level moves to 0.28, where both arms can pinch a rope lying along x around x 0; at 0.30 that band was a single point. hard_nostop_r2: strip a y **-0.34**..-0.175, 1 cm wider. hard_nostop_ra_r2: strip a y **-0.35**..-0.195. easy and medium are unchanged (easy already ends at 0.31; the user keeps medium's eye post).
 
 **Every tier except very_easy has a goal region.** Only very_easy is solved end to end so far.
 

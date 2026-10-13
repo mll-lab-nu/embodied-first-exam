@@ -2650,6 +2650,648 @@
      "yaw_deg": 0.0
     }
    ]
+  },
+  "easier_v8_r2": {
+   "tier": "easier",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.7923,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.42,
+      0.155
+     ],
+     [
+      0.3,
+      0.155
+     ],
+     [
+      0.3,
+      0.31
+     ],
+     [
+      -0.42,
+      0.31
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3605,
+      0.2427,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3547,
+      0.2503,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3662,
+      0.2352,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.115,
+      -0.02,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.02,
+      -0.13,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.06,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.34,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ],
+   "base_instance": "easier_v8",
+   "note": "user decision 10-12 (_r2): goal region only; fixtures, ropes and births as the base instance"
+  },
+  "easier_loose_r2": {
+   "tier": "easier",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.9651,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.42,
+      0.155
+     ],
+     [
+      0.3,
+      0.155
+     ],
+     [
+      0.3,
+      0.31
+     ],
+     [
+      -0.42,
+      0.31
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3605,
+      0.2427,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3547,
+      0.2503,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3662,
+      0.2352,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.115,
+      -0.02,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.02,
+      -0.13,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.06,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.34,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ],
+   "base_instance": "easier_loose",
+   "note": "user decision 10-12 (_r2): goal region only; fixtures, ropes and births as the base instance"
+  },
+  "hard_nostop_r2": {
+   "tier": "hard",
+   "ropes": [
+    {
+     "name": "a",
+     "length_m": 1.5367,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_a_plate"
+    },
+    {
+     "name": "b",
+     "length_m": 0.9203,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_b_plate"
+    }
+   ],
+   "regions": {
+    "a": [
+     [
+      -0.44,
+      -0.34
+     ],
+     [
+      0.3,
+      -0.34
+     ],
+     [
+      0.3,
+      -0.175
+     ],
+     [
+      -0.44,
+      -0.175
+     ]
+    ],
+    "b": [
+     [
+      -0.3,
+      0.17
+     ],
+     [
+      0.42,
+      0.17
+     ],
+     [
+      0.42,
+      0.32
+     ],
+     [
+      -0.3,
+      0.32
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_b_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3589,
+      0.2503,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3626,
+      0.2416,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3552,
+      0.2591,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_a_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.389,
+      -0.2301,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3929,
+      -0.2214,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3852,
+      -0.2388,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "post_mid",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.13,
+      0.015,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_left",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.16,
+      0.15,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      0.02,
+      -0.155,
+      0.015
+     ],
+     "half_extents": [
+      0.3,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ],
+   "base_instance": "hard_nostop",
+   "note": "user decision 10-12 (_r2): goal region only; fixtures, ropes and births as the base instance"
+  },
+  "hard_nostop_ra_r2": {
+   "tier": "hard",
+   "ropes": [
+    {
+     "name": "a",
+     "length_m": 1.5367,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_a_plate"
+    },
+    {
+     "name": "b",
+     "length_m": 0.9203,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_b_plate"
+    }
+   ],
+   "regions": {
+    "a": [
+     [
+      -0.44,
+      -0.35
+     ],
+     [
+      0.3,
+      -0.35
+     ],
+     [
+      0.3,
+      -0.195
+     ],
+     [
+      -0.44,
+      -0.195
+     ]
+    ],
+    "b": [
+     [
+      -0.3,
+      0.17
+     ],
+     [
+      0.42,
+      0.17
+     ],
+     [
+      0.42,
+      0.32
+     ],
+     [
+      -0.3,
+      0.32
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_b_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3589,
+      0.2503,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3626,
+      0.2416,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3552,
+      0.2591,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_a_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.389,
+      -0.2301,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3929,
+      -0.2214,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3852,
+      -0.2388,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "post_mid",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.13,
+      0.015,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_left",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.16,
+      0.15,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      0.02,
+      -0.175,
+      0.015
+     ],
+     "half_extents": [
+      0.3,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ],
+   "base_instance": "hard_nostop_ra",
+   "note": "user decision 10-12 (_r2): goal region only; fixtures, ropes and births as the base instance"
   }
  }
 }
