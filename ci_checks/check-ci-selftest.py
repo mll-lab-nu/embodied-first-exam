@@ -280,7 +280,9 @@ def cutoff_exceptions(tmp: Path) -> int:
     fam_p, fam_s, other = "behavior-boxing-books-up-for-storage-i00-privileged", STD, "behavior-bringing-water-i00-standard"
     family = tomllib.loads((ROOT / "tasks" / STD / "task.toml").read_text())["metadata"]["family"]
     base = (ROOT / "scripts/task_cutoffs.toml").read_text()
-    head = base[:base.index("\n[[history]]") + 1]      # the table without its history
+    head = base.rstrip("\n") + "\n"                    # the repository's table with its history; a test's entries follow it
+    bench = tomllib.loads(base)["cutoff_sec"]["BEHAVIOR-1K"]["standard"]       # the benchmark's own number, whatever it is today
+    fam_std, fam_priv, own = bench // 2, bench // 2 + 900, bench // 2 + 1800  # three numbers that are not the benchmark's
     tables: list[Path] = []
 
     def table(extra: str) -> Path:
@@ -303,14 +305,14 @@ def cutoff_exceptions(tmp: Path) -> int:
             bad += 1
             print(f"FAIL check-ci-selftest [cutoff exceptions: {what}]" + (f":\n{out[-600:]}" if out else ""))
 
-    good = table(f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ standard = 7200, privileged = 9000 }}\n'
-                 f'[task_cutoff_sec]\n"{fam_p}" = 5400\n')
+    good = table(f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ standard = {fam_std}, privileged = {fam_priv} }}\n'
+                 f'[task_cutoff_sec]\n"{fam_p}" = {own}\n')
     work = tmp / "exceptions"
     for name in (fam_p, fam_s, other):
         shutil.copytree(ROOT / "tasks" / name, work / name)
     rc, out = run_py([str(ROOT / "scripts/task_conventions.py")] + [str(work / n) for n in (fam_p, fam_s, other)], good)
     expect(rc == 0, "normalize under a table with exceptions", out)
-    want = {fam_p: 5400, fam_s: 7200, other: 14400}     # the task's own; its family's for the mode; the benchmark's
+    want = {fam_p: own, fam_s: fam_std, other: bench}   # the task's own; its family's for the mode; the benchmark's
     for name, sec in want.items():
         t = work / name
         got = tomllib.loads((t / "task.toml").read_text())["agent"]["timeout_sec"]
@@ -319,8 +321,8 @@ def cutoff_exceptions(tmp: Path) -> int:
         rc, out = run_py([CUTOFFS[1], str(t)], good)
         expect(rc == 0, f"{name}: check-cutoffs.py under the table with exceptions", out)
         rc, out = run_py([CUTOFFS[1], str(t)], None)
-        expect((rc != 0 and "the table says" in out) if sec != 14400 else rc == 0, f"{name}: check-cutoffs.py under the repository's table", out)
-    expect('RCB_WALL_CLOCK_S: "7200"' in (work / fam_s / "environment/docker-compose.yaml").read_text(), f"{fam_s}: the sim service's wall clock is not the family's 7200")
+        expect((rc != 0 and "the table says" in out) if sec != bench else rc == 0, f"{name}: check-cutoffs.py under the repository's table", out)
+    expect(f'RCB_WALL_CLOCK_S: "{fam_std}"' in (work / fam_s / "environment/docker-compose.yaml").read_text(), f"{fam_s}: the sim service's wall clock is not the family's {fam_std}")
     # an entry that reaches no task; tables that are not usable
     for what, extra, say in [
         ("a family that no task has", '[family_cutoff_sec."BEHAVIOR-1K"]\n"no_such_family" = { standard = 7200 }\n', "has no task of family 'no_such_family'"),

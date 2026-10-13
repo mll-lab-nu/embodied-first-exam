@@ -8,7 +8,7 @@
 | Simulator / robot | `maniguard` / `franka-panda-longfinger` |
 | Family / instance | `cabinet_pickup` / seed 19 |
 | Oracle | `full` |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-maniguard:0.1.0` |
 
 ## Task
