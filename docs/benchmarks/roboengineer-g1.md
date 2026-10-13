@@ -56,7 +56,9 @@ The validation driver runs every held-out case twice in separate processes, chec
 
 ## Local development validation
 
-Seven family-specific tests check the numeric artifact boundary, joint ABI, private bank disjointness/fixed plants, true terrain collision heights, deterministic roughness and command-blind negative-controller behavior. Native CPU validation runs two 12-case banks with independent process replays. It has positive reference cases on every terrain class, but **full reference solvability remains incomplete for the second hidden plant**.
+Seven family-specific tests check the numeric artifact boundary, joint ABI, private bank disjointness/fixed plants, true terrain collision heights, deterministic roughness and command-blind negative-controller behavior. Native CPU validation runs two 12-case banks with independent process replays. It has positive reference cases on every terrain class, but **full reference solvability remains incomplete**.
+
+On the required schema-v2 plants (10100 and 11100), the released actor succeeds in 16/24 cases (6/12 and 10/12), and the 300-iteration trained actor in 17/24 (6/12 and 11/12). Neither plant is fully solved by the trained reference. All 24 cases per actor have exact fresh-process state and feedback replays; these are local operator validations, not agent scores or Harbor isolation evidence.
 
 A real blind-terrain PPO run used 300 iterations × 256 environments × 24 policy steps (1,843,200 transitions), initialized from the released numeric actor and an existing compatible training critic checkpoint. On the historical development plants (38471 and 38664), the resulting actor improved success from 10/24 to 17/24: first plant 3/12 → 12/12, second plant 7/12 → 5/12. These historical results are not acceptance results for the schema-v2 plants (10100 and 11100); this is not uniform improvement or evidence of convergence. The trained actor's numeric export agreed with the actual trained Torch model within 2.9e-6. Training reward and curriculum level increased modestly over complete-episode windows, while velocity error did not consistently improve; full curves are retained outside Git.
 
