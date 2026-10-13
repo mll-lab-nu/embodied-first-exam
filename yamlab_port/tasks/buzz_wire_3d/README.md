@@ -44,6 +44,7 @@ relative to this folder; run the tools from `tools/` or with `tools/` on `sys.pa
 | `BUZZ_FINISH` | finish strategy: `gdown` (pen grip, default) or `relay` (left pen grip, then right side pinch) |
 | `BUZZ_GD_ROLL`, `BUZZ_GD_YAW`, `BUZZ_GD_TILT`, `BUZZ_GD_XTIP`, `BUZZ_GD_HEIGHTS` | finish pen grip: roll and yaw (deg), tilt (deg), tip position (m) and release heights (m) |
 | `BUZZ_HZ_FINISH` | loop height above the deck at the end of the carry (handover 2) |
+| `BUZZ_FINISH_ATT` | release attitudes tried in order, `roll:yaw_short,...` (deg): wand roll about the handle, yaw stopped short of the finish yaw |
 | `BUZZ_MIRROR=1` | mirrored sequence (right picks and places, left carries) |
 | `BUZZ_RELAY_HZ`, `BUZZ_RELAY_OPEN`, `BUZZ_RELAY_WAIT` | relay finish: heights, release opening, wait steps |
 | `BUZZ_STOP_AFTER_LIFT=1` | stop after the pick-and-lift (lift test) |
