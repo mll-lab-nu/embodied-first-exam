@@ -43,7 +43,9 @@ the expected size of the pull request.
    section, after `## External material` and `## Resource limits` ("You have N seconds to complete this task. Do not
    cheat by using online solutions or hints specific to this task.", then what the cutoff means in the mode). Your own
    text never repeats the limit as a duration: say "the time limit (`## Time limit`)", and add what is particular to
-   your benchmark (a simulator's start-up cost, what your service's `time_left_s` counts from). A family or a single
+   your benchmark (a simulator's start-up cost). Your service's `time_s` / `time_left_s` count from the agent's first
+   request to it, never from the service's start, and a resumed service keeps that moment (STANDARD_MODE.md, "The
+   agent's clock": the shared layers do it for you; a test must show it). A family or a single
    task that needs another number than its benchmark gets an exception in the same table (owner decision).
 3. State the minimum compute (PROTOCOL §2.9): CPU cores, memory and GPU memory of the agent phase and the verifier
    phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /

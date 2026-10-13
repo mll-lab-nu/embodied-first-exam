@@ -18,6 +18,8 @@
     res.save("/app/runs/003")                    # meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, proprio.npy, depth, frame_meta.npz
     obs = r.get_obs(seconds=3, video="both")     # hold the last command, let physics run 3 s, return the video
     r.status()                                   # calls, control steps, done, reason, elapsed time
+    res.meta["time_left_s"]                      # your time limit minus the time since your first request to the service:
+                                                 # never out before your time is (spec()["budget"]["clock"]); plan by it
 
 Nothing is put into your context automatically: what you look at, and where you store it, is your code's decision.
 

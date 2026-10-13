@@ -72,6 +72,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
+    ("robofunolympics-", "RoboFunOlympics"),
 ]
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
 # STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
@@ -115,6 +116,17 @@ EXTERNAL_TEXT = (
     "to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or "
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
+# Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
+# the agent's egress is open and finding existing tools and controllers is part of the task. RoboFunOlympics (owner,
+# 2026-10-11): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
+EXTERNAL_OPEN = {
+    "robofunolympics-": (
+        "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
+        "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
+        "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
+        "The one thing not to look up is a solution to this exact task: this benchmark's own source code and reference "
+        "solutions. This is an honour rule; trials are reviewed."),
+}
 
 # PROTOCOL §2.12 (owner, 2026-10-11 / 12, board 0080): the agent's time cutoff. One table, scripts/task_cutoffs.toml
 # (seconds per benchmark and mode, with optional exceptions per family and per task), from which normalize writes
@@ -138,10 +150,20 @@ CUTOFF_NOTE = {
                    "one." + _CUTOFF_CLOSE),
     "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
                  "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
-                 "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-                 "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOSE),
+                 "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
+                 "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
+                 "spent before that request. Plan by it." + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
+# A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
+# text says what its service counts (PROTOCOL §2.12). RoboTangle: its service ends the episode on a clock started with
+# the service, until its next task update (docs/benchmarks/robotangle.md, "To do").
+_CUTOFF_NOTE_OWN_CLOCK = (
+    "This is wall-clock time from the start of your session; the time you wait for the simulator service "
+    "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
+    "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
+    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOSE)
+CUTOFF_NOTE_OWN = {("RoboTangle", "standard"): _CUTOFF_NOTE_OWN_CLOCK}   # (benchmark label, mode) -> its note
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
@@ -446,9 +468,11 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
-def render_external() -> str:
-    """instruction.md's `## External material` (PROTOCOL §2.11)."""
-    return EXTERNAL_HEADING + "\n" + EXTERNAL_TEXT + "\n"
+def render_external(task_name: str = "") -> str:
+    """instruction.md's `## External material` (PROTOCOL §2.11): the same words in every task, except the benchmarks of
+    EXTERNAL_OPEN, whose agents may download tools and controllers."""
+    text = next((v for p, v in EXTERNAL_OPEN.items() if task_name.startswith(p)), EXTERNAL_TEXT)
+    return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
 _CUTOFFS: tuple[dict, dict, dict] | None = None
@@ -559,10 +583,11 @@ def cutoff_sec(bench: str, mode: str) -> int:
         raise KeyError(f"{CUTOFFS_FILE.name} has no cutoff for {bench!r} in {mode} mode") from None
 
 
-def render_cutoff(sec: int, mode: str) -> str:
+def render_cutoff(sec: int, mode: str, bench: str = "") -> str:
     """instruction.md's last section (PROTOCOL §2.12): the heading, the cutoff sentence, then what the cutoff means in
-    the mode."""
-    return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + CUTOFF_NOTE[mode] + "\n"
+    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note)."""
+    note = CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
+    return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
 
 
 def strip_cutoff(s: str) -> str:
@@ -647,12 +672,12 @@ def normalize_instruction(task: Path) -> None:
         s = strip_cutoff(s)
     for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = s.rstrip() + "\n\n" + render_external()
+    s = s.rstrip() + "\n\n" + render_external(task.name)
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
     if sec is not None:
-        s += "\n" + render_cutoff(sec, mode_of(task))
+        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task))
     write_if_changed(p, s)
 
 

@@ -6,8 +6,9 @@ against a stand-in tool module: no MuJoCo, no GPU. The services under test are t
 
 Covers, for each service: a negative or non-numeric Content-Length is a 400 and the service stays up (read(-1) would
 read without a bound); a camera named many times is rendered once, before the frame budget is counted; a port held by
-another process at start is waited for, not a crash. RoboTwin's service has the same tests in
-scripts/robotwin/tests/test_standard_service.py.
+another process at start is waited for, not a crash; the agent's clock (meta time_s / time_left_s) is not started by
+the service's start or by a probe that only connects to the port, starts at the first request, and is not set back by
+a resume. RoboTwin's service has the same tests in scripts/robotwin/tests/test_standard_service.py.
 """
 from __future__ import annotations
 
@@ -128,6 +129,29 @@ class ServerCase:
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read() or b"{}")
 
+    def wait_port(self, timeout: float = 30) -> None:
+        """Ready, found the way a healthcheck may: by connecting to the port and sending nothing."""
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            self.assertIsNone(self.proc.poll(), f"the service exited: {(self.tmp / 'log').read_text()[-2000:]}")
+            try:
+                socket.create_connection(("127.0.0.1", self.port), timeout=2).close()
+                return
+            except OSError:
+                time.sleep(0.05)
+        self.fail("the service did not come up")
+
+    def meta(self) -> dict:
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/observe", data=json.dumps({"video": "none"}).encode())
+        return rcb1.decode(urllib.request.urlopen(req, timeout=60).read())[0]
+
+    def first_requests(self) -> list:
+        try:
+            ev = [json.loads(x) for x in (self.data / "episode.jsonl").read_text().splitlines() if x.strip()]
+        except OSError:
+            return []
+        return [e for e in ev if e.get("ev") == "first_request"]
+
     def renders(self) -> int:
         try:
             return (self.data / "renders").stat().st_size
@@ -201,6 +225,33 @@ class ServerCase:
             self.assertIn("waiting for it to be free", (self.tmp / "log").read_text())
             self.assertIsNone(self.proc.poll())
         self.assertEqual(self.wait_up()["calls"], 0)
+
+
+    def test_the_agents_clock_starts_at_its_first_request_and_survives_a_resume(self):
+        self.start(); self.wait_port()
+        ready = time.time()
+        time.sleep(2.0)                                              # up and idle: the harness is still being installed
+        self.wait_port()                                             # a probe that connects again
+        self.assertEqual(self.first_requests(), [], "the service's start or a connect without a request started the clock")
+        t_req = time.time()
+        spec = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/spec", timeout=5).read())   # the first request
+        self.assertIn("first request", spec["budget"]["clock"])
+        m0 = self.meta(); lag = time.time() - t_req
+        self.assertLessEqual(m0["time_s"], lag + 0.1, f"time_s counts from the service's start ({time.time() - ready:.1f} s ago)")
+        self.assertGreaterEqual(m0["time_left_s"], spec["budget"]["wall_clock_s"] - lag - 0.2)
+        first = self.first_requests()
+        self.assertEqual(len(first), 1)
+        self.assertLessEqual(abs(first[0]["ts"] - t_req), lag + 0.1)
+        time.sleep(1.5)
+        self.proc.kill(); self.proc.wait(); self.log.close()         # a crash: compose restarts the container
+        self.start(); self.wait_port()
+        m1 = self.meta(); since = time.time() - t_req
+        self.assertGreaterEqual(m1["time_s"], m0["time_s"] + 1.5, "the resume set the agent's clock back")
+        self.assertGreaterEqual(m1["time_s"], since - lag - 0.3)
+        self.assertLessEqual(m1["time_s"], since + 0.1)
+        self.assertLessEqual(m1["time_left_s"], m0["time_left_s"] - 1.5)
+        self.assertEqual(len(self.first_requests()), 1, "a resume logged a second first_request")
+        self.assertEqual(self.wait_up()["calls"], 2)                 # the same episode: both observes are counted
 
 
 class TestServerMj(ServerCase, unittest.TestCase):

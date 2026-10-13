@@ -60,18 +60,6 @@ EP = L.Episode(DATA, dim=NA, resume="exact")
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 
 
-def first_start() -> float:
-    """When this container's service was first started (startups.jsonl, kept across restarts). The agent's budget runs
-    from about then: Harbor starts the sidecar with the environment, and the scene takes minutes to build before the
-    episode's own clock (E["t0"], set when the service is ready) starts."""
-    try:
-        with open(EP.f_startups) as f:
-            return float(json.loads(f.readline())["ts"])
-    except (OSError, ValueError, KeyError, TypeError):
-        return time.time()
-
-
-T_FIRST = first_start()
 S = M.Session(instance=INSTANCE, cameras=True)
 assert M.N_ACT == NA, (M.N_ACT, NA)
 for _c in S.cameras():  # the first frame rendered in a container takes minutes (Isaac Sim prepares the stage for its
@@ -391,8 +379,8 @@ def meta_common(cams) -> dict:
         "control_steps": n,
         "physics_steps": n * SUBSTEPS,
         "sim_time_s": round(n * DT, 4),
-        "time_s": round(time.time() - E["t0"], 2),  # since the episode started (the service ready)
-        "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - T_FIRST), 1)),  # of the agent's budget: the start-up counts
+        "time_s": round(L.agent_time(E), 2),  # since the agent's first request (rcb_limited.agent_time)
+        "time_left_s": max(0.0, round(WALL_CLOCK_S - L.agent_time(E), 1)),
         "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()},
         "done": E["done"],
         "reason": E["reason"],
