@@ -155,6 +155,7 @@ except RuntimeError as _exc:
         traceback.print_exc(); _give_up(f"instance_mismatch: {_exc}"[:300], infra=True)
     raise
 E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
+S.max_rows = None   # a standard episode has no row cap (PROTOCOL §4.4): the tool's hand-in cap for privileged trajectories (rcb_traj.MAX_T) is not its
 ENV = S.env; ROBOT = ENV.robot
 ENV.step_lim = None; ENV.eval_video_path = None; ENV.take_action_cnt = 0; ENV.eval_success = False; ENV.now_obs = {}
 L_ARM = [j.get_name() for j in ROBOT.left_arm_joints]; R_ARM = [j.get_name() for j in ROBOT.right_arm_joints]

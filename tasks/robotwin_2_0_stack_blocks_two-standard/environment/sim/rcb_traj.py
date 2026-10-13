@@ -36,6 +36,8 @@ Python (what the agent gets)
   s.record_start(); ...; actions = s.record_stop()
   s.replay(actions) -> dict(success=bool, sim_steps=int, state_sha=str)
   s.save_trajectory(actions, "traj.npz")
+A trajectory has at most MAX_T = 200,000 rows (800 s of physics): the verifier grades a longer file as bad_trajectory, so
+save_trajectory() and replay() refuse one (ValueError) instead of saving a file, or reporting a success, that cannot count.
 """
 from __future__ import annotations
 
@@ -61,6 +63,12 @@ SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jso
 # videos of what the agent tried. Self-reported like the session log. RCB_AGENT_TRACE_DIR="" disables it.
 TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", "/app/output/rcb_trace")
 TRACE_MAX_FILES = 300; TRACE_MAX_BYTES = 400 * 1024 * 1024
+# The longest trajectory the verifier grades (tests/grade.py MAX_T: about 13 minutes of physics at 250 Hz; a longer file
+# is `bad_trajectory`). Session.save_trajectory and Session.replay refuse more rows, so that the tool never saves, or
+# reports as a success, a file the verifier rejects (until 2026-10-13 it did: a 209,233-row trajectory replayed to
+# success here and was graded 0). Session.max_rows = None lifts it: the standard-mode service, whose episode has no
+# row cap and is not handed in as a file, does that for its own Session.
+MAX_T = 200_000
 
 
 def _slog(ev: str, **kw) -> None:
@@ -172,6 +180,7 @@ class Session:
         envs_module = importlib.import_module(f"envs.{task}")
         self.env = getattr(envs_module, task)()      # RoboTwin Base_Task subclass (not yet set up)
         self._recording: list[np.ndarray] | None = None
+        self.max_rows: int | None = MAX_T            # the hand-in cap save_trajectory / replay enforce (None: no cap)
         self._sim_steps = 0
         self._resets = 0
         self._joints = None
@@ -329,13 +338,28 @@ class Session:
     def record_start(self) -> None:
         self._recording = []
 
+    def _too_long(self, n: int) -> str | None:
+        """Why a trajectory of `n` rows cannot be handed in (None if it can): the verifier's row cap."""
+        cap = getattr(self, "max_rows", MAX_T)
+        if cap is None or n <= cap:
+            return None
+        return (f"the trajectory has {n:,} rows; the verifier grades at most {cap:,} rows (MAX_T: {cap / 250:.0f} s of "
+                f"physics at 250 Hz) and rejects a longer file as bad_trajectory. Hand in a shorter one: {n - cap:,} rows "
+                "too many (rows are physics steps; waiting and slow motions cost rows)")
+
     def record_stop(self) -> np.ndarray:
         acts = np.array(self._recording or [], dtype=np.float64).reshape(-1, self.action_dim)
         self._recording = None
         _slog("record", task=self.task, n_actions=int(len(acts)), success=bool(self.env.check_success()))
+        why = self._too_long(len(acts))
+        if why:                                      # the rows are returned (they are the agent's work), with the warning
+            print(f"[rcb_traj] WARNING: {why}. save_trajectory() and replay() will refuse it.", file=sys.stderr, flush=True)
         return acts
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
+        why = self._too_long(len(np.asarray(actions)))
+        if why:
+            raise ValueError(f"not saved: {why}")
         np.savez(path, actions=np.asarray(actions, dtype=np.float64), task=self.task, seed=self.seed,
                  instance_sha=self.expected_sha or "", action_layout=self.action_layout, meta=json.dumps(meta or {}))
 
@@ -345,10 +369,13 @@ class Session:
                 "resets": int(self._resets), "state_sha": self.state_sha()}
 
     def replay(self, actions: np.ndarray) -> dict[str, Any]:
-        self.reset(); self._trace_kind = "replay"
         acts = np.asarray(actions, dtype=np.float64)
         if acts.ndim != 2 or acts.shape[1] != self.action_dim:
             raise ValueError(f"actions must be (T, {self.action_dim}), got {acts.shape}")
+        why = self._too_long(len(acts))
+        if why:
+            raise ValueError(f"not replayed: {why}")
+        self.reset(); self._trace_kind = "replay"
         for row in acts:
             self.step(row)
         st = self.status(); _slog("replay", task=self.task, n_actions=int(len(acts)), success=st["success"]); return st

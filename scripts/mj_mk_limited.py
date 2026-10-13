@@ -53,6 +53,32 @@ CHANGES_ALOHA = [
     "the wrist cameras' poses were those of the home pose however the arms had moved; a response with several frames now "
     "also carries the wrist cameras' pose for every frame (`cam2world_gl/<cam>`).",
 ]
+CHANGES_ALOHA_K = [   # after the egress entry (oldest first)
+    "2026-10-13 (board 0086): **the camera intrinsics the agent is given changed** (`environment/sim/server_mj.py`, "
+    "`meta[\"cameras\"][cam][\"intrinsic_cv\"]`). `overhead_cam`, `wrist_cam_left` and `wrist_cam_right` are defined by "
+    "their sensor (3.896 x 2.140 mm, 1.93 mm lens), and MuJoCo renders such a camera with the sensor's own extent in each "
+    "direction: in the 320 x 240 image fx = 158.52 px and fy = 216.45 px. The service reported fx = fy = 216.45 (from the "
+    "vertical field of view), 1.37 times too large in x, so points back-projected from depth were off sideways by that factor. "
+    "It now reports the true fx and fy of every camera (checked against CPU renders: a marker at a known 3-D point lands "
+    "0.1 to 0.2 px from its projection on average; 15 to 19 px, up to 35 px, before). `teleoperator_pov`, defined by its field of view, is "
+    "unchanged. The images, the physics, the grader and the pass rule are unchanged; standard-mode results of this task "
+    "from before this date were obtained with the wrong fx.",
+]
+CHANGES_OTHER = [     # the same service on tasks whose cameras are all defined by their field of view (DexToolBench, Panda)
+    "2026-10-13 (board 0086): `environment/sim/server_mj.py` reports the intrinsics of a camera that is defined by its "
+    "sensor size from the sensor (ALOHA's cameras: fx differs from fy). This task's cameras are defined by their field of "
+    "view: its calibration, and everything else, is unchanged.",
+]
+CHANGES_PEG = [       # mujoco_playground_aloha_single_peg_insertion only
+    "2026-10-13 (board 0086): the success rule's rear bound, and the text (`environment/sim/rcb_aloha.py`: "
+    "`Session.check`). The service required `0 <= t <= 0.75`, while the instruction said only `t ≤ 0.75` and placed t = 0 "
+    "\"at the rear wall\". t = 0 is the tube's centre; the rear wall's inner face is at t = −0.833. So a peg inserted "
+    "past the middle of the tube, the fully inserted one included, was graded a failure. The rule is now `−0.875 <= t <= "
+    "0.75` (the tip anywhere in the 88 mm cavity up to 12 mm inside its open end; the rear bound is read from the model, "
+    "with 2 mm for the contact's give), and the instruction states it. The scene, the instance and the 5 mm axis "
+    "tolerance are unchanged, so the task keeps its name. Every episode that passed still passes; an episode graded 0 "
+    "before this date with `tip_to_axis_m` < 0.005 and `axial_t` in [−0.875, 0) is a pass now.",
+]
 # The agent's egress (owner decisions 2026-10-10 / 10-11, board 0072): the model APIs and the package registries, for every task this script writes. The
 # Playground ALOHA / Panda twins were open (Harbor's default) until then; DexToolBench has been on the allowlist from the start.
 EGRESS_CHANGE = (
@@ -241,7 +267,9 @@ build_timeout_sec = 600.0
                                    "| | |\n|---|---|\n| oracle | `solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step) |\n"
                                    "| grading | the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode |\n"
                                    "\n## Change Log\n" + "".join(f"- {c}\n" for c in CHANGES + (CHANGES_ALOHA if tool == "rcb_aloha" else [])
-                                                                 + ([] if dtb else [EGRESS_CHANGE])))
+                                                                 + ([] if dtb else [EGRESS_CHANGE])
+                                                                 + (CHANGES_ALOHA_K if tool == "rcb_aloha" else CHANGES_OTHER)
+                                                                 + (CHANGES_PEG if base.endswith("aloha_single_peg_insertion") else [])))
     normalize(dst); normalize(src)   # protocol v1.0 conventions; the privileged twin's README gets its Twin row
     return dst
 
@@ -269,7 +297,8 @@ def instruction(src, inst, tool) -> str:
                     "time is up; the **final state** is graded (so end in the pose you want graded, and keep it).")
         cam_note = ("The overhead and teleoperator cameras are fixed. The two wrist cameras move with the arms (`spec[\"cameras\"][cam][\"moving\"]`):\n"
                     "  for them a response with several frames also carries one pose per frame, `res.raw[\"cam2world_gl/<cam>\"][\"data\"]`,\n"
-                    "  float64 `(n_frames, 4, 4)`." if tool == "rcb_aloha" else "The four cameras are fixed.")
+                    "  float64 `(n_frames, 4, 4)`. `intrinsic_cv` is `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy\n"
+                    "  differ for the overhead and wrist cameras (their sensor is wider than the image): use both." if tool == "rcb_aloha" else "The four cameras are fixed.")
         dims = f"{'14: per arm `waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate, gripper`' if tool == 'rcb_aloha' else '8: `actuator1..7` joint targets (rad), `actuator8` finger opening (0..0.04 m)'}"
     return f"""{title}
 

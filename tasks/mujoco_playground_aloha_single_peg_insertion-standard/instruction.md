@@ -22,8 +22,11 @@ client and one episode.
 
 ## Scoring
 At the **end of the trajectory** the peg's tip (site `peg_end2`) is within **5 mm** of the socket's axis (the line
-through sites `socket_rear` and `socket_entrance`) and at least **25 % of the socket's depth inside** it
-(axial parameter `t ≤ 0.75`, where t = 0 at the rear wall and 1 at the entrance). The service applies exactly this rule.
+through sites `socket_rear` and `socket_entrance`) and **inside the socket, at least 12 mm from its open end**: the
+axial parameter `t` is in `[-0.875, 0.75]`, where t = 0 at `socket_rear` (the middle of the tube), t = 1 at
+`socket_entrance` (the open end; 48 mm per unit of t) and t = -0.833 at the inner face of the red rear wall (the cavity
+is 88 mm deep; the lower bound leaves 2 mm for the contact's give). A peg pushed all the way in counts.
+The service applies exactly this rule.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
@@ -50,7 +53,8 @@ time is up; the **final state** is graded (so end in the pose you want graded, a
   **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
   axis, in metres. The overhead and teleoperator cameras are fixed. The two wrist cameras move with the arms (`spec["cameras"][cam]["moving"]`):
   for them a response with several frames also carries one pose per frame, `res.raw["cam2world_gl/<cam>"]["data"]`,
-  float64 `(n_frames, 4, 4)`.
+  float64 `(n_frames, 4, 4)`. `intrinsic_cv` is `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy
+  differ for the overhead and wrist cameras (their sensor is wider than the image): use both.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

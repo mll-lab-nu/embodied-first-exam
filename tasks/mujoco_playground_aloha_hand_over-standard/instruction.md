@@ -50,7 +50,8 @@ time is up; the **final state** is graded (so end in the pose you want graded, a
   **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
   axis, in metres. The overhead and teleoperator cameras are fixed. The two wrist cameras move with the arms (`spec["cameras"][cam]["moving"]`):
   for them a response with several frames also carries one pose per frame, `res.raw["cam2world_gl/<cam>"]["data"]`,
-  float64 `(n_frames, 4, 4)`.
+  float64 `(n_frames, 4, 4)`. `intrinsic_cv` is `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy
+  differ for the overhead and wrist cameras (their sensor is wider than the image): use both.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

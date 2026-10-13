@@ -13,8 +13,11 @@ start in a separate sandbox (MuJoCo on CPU is bit-exact). Leave the script that 
 
 ## Success
 At the **end of the trajectory** the peg's tip (site `peg_end2`) is within **5 mm** of the socket's axis (the line
-through sites `socket_rear` and `socket_entrance`) and at least **25 % of the socket's depth inside** it
-(axial parameter `t ≤ 0.75`, where t = 0 at the rear wall and 1 at the entrance). `s.check()` computes exactly this.
+through sites `socket_rear` and `socket_entrance`) and **inside the socket, at least 12 mm from its open end**: the
+axial parameter `t` is in `[-0.875, 0.75]`, where t = 0 at `socket_rear` (the middle of the tube), t = 1 at
+`socket_entrance` (the open end; 48 mm per unit of t) and t = -0.833 at the inner face of the red rear wall (the cavity
+is 88 mm deep; the lower bound leaves 2 mm for the contact's give). A peg pushed all the way in counts.
+`s.check()` computes exactly this.
 
 ## Tooling (`/opt/tools/rcb_aloha.py`, importable as `rcb_aloha`)
 ```python
