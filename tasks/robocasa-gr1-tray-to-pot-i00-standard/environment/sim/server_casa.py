@@ -218,23 +218,38 @@ def grab(cams, depth: bool):
     return imgs, dep
 
 
+def cam2world(cam: str) -> np.ndarray:
+    """Camera-to-world pose (4x4, OpenGL convention: x right, y up, looks along -z) of the viewpoint the mono RGB / depth
+    image is rendered from, in the current state (as server_mj.py). A model camera (every RoboCasa camera): data.cam_xpos
+    / data.cam_xmat, which is what the renderer reads. A free camera: the scene's two eye cameras share their axes and sit
+    ipd/2 to either side of the viewpoint, so the viewpoint is their mean. scene.camera[0] alone is the LEFT eye, ipd/2 =
+    3.4 cm to the left of the viewpoint: until 2026-10-13 that was reported for every camera."""
+    cid, _ = CAMS[cam]
+    if cid is not None:
+        R = np.array(S.data.cam_xmat[cid], float).reshape(3, 3)
+        pos = np.array(S.data.cam_xpos[cid], float)
+    else:
+        r = _renderer(False)
+        _update(r, cam)
+        a, b = r.scene.camera[0], r.scene.camera[1]
+        fwd = np.array(a.forward, float)
+        up = np.array(a.up, float)
+        pos = 0.5 * (np.array(a.pos, float) + np.array(b.pos, float))
+        R = np.column_stack([np.cross(fwd, up), up, -fwd])
+    return np.vstack([np.column_stack([R, pos]), [0.0, 0.0, 0.0, 1.0]])
+
+
 def calib() -> dict:
-    """Per camera: pinhole intrinsics and camera-to-world pose (OpenGL convention: looks along -z, +y up)."""
+    """Per camera: pinhole intrinsics and the camera-to-world pose in the current state (see cam2world). The RoboCasa
+    cameras are given by their vertical field of view (no sensor size), so pixels are square: fx = fy = (H / 2) /
+    tan(fovy / 2), principal point at the image centre."""
     out = {}
-    r = _renderer(False)
     for c in CAMS:
-        _update(r, c)
-        gl = r.scene.camera[0]
-        fwd = np.array(gl.forward, float)
-        up = np.array(gl.up, float)
-        pos = np.array(gl.pos, float)
-        right = np.cross(fwd, up)
-        R = np.column_stack([right, up, -fwd])
         fovy = float(S.model.cam_fovy[CAMS[c][0]]) if CAMS[c][0] is not None else float(S.model.vis.global_.fovy)
         f = 0.5 * H / np.tan(np.deg2rad(fovy) / 2)
         out[c] = {
             "intrinsic_cv": [[f, 0, W / 2], [0, f, H / 2], [0, 0, 1]],
-            "cam2world_gl": np.vstack([np.column_stack([R, pos]), [0, 0, 0, 1]]).tolist(),
+            "cam2world_gl": cam2world(c).tolist(),
             "width": W,
             "height": H,
             "fovy_deg": fovy,
@@ -812,7 +827,8 @@ def _end_from_signal():
     start_finalize()
 
 
-calib()  # opens the renderer before the first request
+_renderer(False)  # opens the renderer before the first request
+calib()
 
 
 def _resume_or_start() -> None:
