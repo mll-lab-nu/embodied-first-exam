@@ -5,7 +5,13 @@ import json
 from pathlib import Path
 import numpy as np
 from .anycar import Controller, DEFAULT, DT, HORIZON, reference, validate
-from ..components.anycarbench.model import Vehicle, NOMINAL
+
+if __package__ == "control_public":
+    # The agent image duplicates public modules at /app/control_public; components
+    # remain exclusively in the namespaced public package.
+    from scripts.control_transfer.components.anycarbench.model import Vehicle, NOMINAL
+else:
+    from ..components.anycarbench.model import Vehicle, NOMINAL
 
 
 def train_rollout(policy, command=None, plant=None, surfaces=None):

@@ -1,6 +1,8 @@
 """Real CPU physics, numeric ABI, privacy projection, and anti-shortcut scoring checks."""
 
 import json
+from pathlib import Path
+import shutil
 import unittest
 import tempfile
 import subprocess
@@ -58,6 +60,50 @@ class ContractTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(json.loads(value), json.loads(json.dumps([make_spec(0), make_spec(1)])))
+
+    def test_nominal_alias_in_isolated_public_package(self):
+        source = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            app = Path(directory)
+            files = (
+                "control_public/anycar.py",
+                "control_public/anycar_nominal.py",
+                "components/anycarbench/__init__.py",
+                "components/anycarbench/model.py",
+            )
+            for name in files:
+                destination = app / "scripts/control_transfer" / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source / name, destination)
+            shutil.copytree(app / "scripts/control_transfer/control_public", app / "control_public")
+            # -I excludes the checkout, cwd and PYTHONPATH; only this explicit
+            # public allowlist is importable alongside installed dependencies.
+            program = """
+import importlib, importlib.util, json, pathlib, sys
+import numpy as np
+app = pathlib.Path(sys.argv[1])
+sys.path.insert(0, str(app))
+assert importlib.util.find_spec('scripts.control_transfer.trusted') is None
+trajectories = []
+policies = []
+for name in ('control_public.anycar_nominal', 'scripts.control_transfer.control_public.anycar_nominal'):
+    module = importlib.import_module(name)
+    assert pathlib.Path(module.__file__).is_relative_to(app)
+    component = importlib.import_module(module.Vehicle.__module__)
+    assert pathlib.Path(component.__file__).is_relative_to(app)
+    trajectories.append(module.train_rollout(module.DEFAULT))
+    policies.append(module.validate(module.DEFAULT))
+assert trajectories[0].shape == (1201, 19)
+assert np.isfinite(trajectories[0]).all()
+np.testing.assert_array_equal(*trajectories)
+assert policies[0] == policies[1]
+assert not any(name.startswith('scripts.control_transfer.trusted') for name in sys.modules)
+print(json.dumps({'shape': list(trajectories[0].shape), 'identical': True}))
+"""
+            result = subprocess.check_output(
+                [sys.executable, "-I", "-c", program, str(app)], cwd=app, text=True, timeout=60
+            )
+            self.assertEqual(json.loads(result), {"shape": [1201, 19], "identical": True})
 
     def test_scoring_stationary_slow_reverse_shortcuts(self):
         c = dict(a=4.5, b=3.5, phase=0, direction=1)
