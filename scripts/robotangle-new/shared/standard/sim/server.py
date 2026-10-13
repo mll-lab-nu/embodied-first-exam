@@ -38,7 +38,8 @@ TASK = os.environ.get("RCB_TASK", "cube_pick_place"); INSTANCE = os.environ.get(
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 LOCK = threading.Lock()
-E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
+E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
+     "t_first": None}   # t_first: the agent's first request to this service (its clock starts there; main's #163 rule)
 JOBS: queue.Queue = queue.Queue()      # simulator work, executed in order by the main thread
 PID_FILE = os.path.join(DATA, "server.pid")
 # Crash-safe episode bookkeeping, set up before the scene is built (start count, back-off, startup watchdog); the journal row
@@ -297,7 +298,8 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, after "
+                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "
+                "counted from your first request to this service, any endpoint; meta time_s / time_left_s), after "
                 f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
                 "simulator error; a simulator "
                 f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
@@ -398,7 +400,7 @@ def robot_felt(safety: dict) -> dict:
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
-            "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
+            "time_s": round(agent_time(), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - agent_time(), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             "safety": robot_felt(S.safety()), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
 
@@ -624,6 +626,47 @@ def status() -> dict:
             "elapsed_s": round(time.time() - E["t0"], 1)}
 
 
+def agent_time() -> float:
+    """Seconds since the agent's first request to the service (0 before it): the agent's clock. The service is up before
+    the agent starts (the harness installs the agent first), so the service's own start is not that moment."""
+    return 0.0 if E["t_first"] is None else time.time() - E["t_first"]
+
+
+def start_clock(t_first: float) -> None:
+    E["t_first"] = t_first
+    E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - t_first)
+
+
+def touch() -> None:
+    """Every HTTP request passes here (any endpoint; a port probe that only connects does not): the first one starts the
+    agent's clock and is logged in episode.jsonl, so that a resumed service keeps it (never back to full)."""
+    if E["t_first"] is None:
+        t = time.time()
+        start_clock(t)
+        log({"ev": "first_request", "t_first": t})
+
+
+_make_handler = L.make_handler
+
+
+def _touching_handler(svc):
+    """rcb_limited's handler with touch() before every request (L.serve builds its handler with L.make_handler)."""
+    base = _make_handler(svc)
+
+    class Handler(base):
+        def do_GET(self):
+            touch()
+            return base.do_GET(self)
+
+        def do_POST(self):
+            touch()
+            return base.do_POST(self)
+    return Handler
+
+
+L.make_handler = _touching_handler
+
+
 def deadline_reached():
     return E["ready"] and not E["done"] and time.monotonic() >= E["deadline"]
 
@@ -660,7 +703,9 @@ E["deadline"] = float("inf")
 S.record_start()                        # before begin(): a resume replay of the journal is recorded too
 EP.begin(step_ticks=lambda row, ticks: S.step(row, _physics_steps=ticks), state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
          start_event={"task": TASK, "eval_index": S.eval_index})
-E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"])   # the wall clock runs from the first start
+_first = [e for e in EP.events() if e.get("ev") == "first_request"]
+if _first:                              # a resumed service: the agent's clock keeps running from its first request
+    start_clock(float(_first[0]["t_first"]))
 write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
