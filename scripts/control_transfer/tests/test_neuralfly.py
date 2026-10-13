@@ -13,7 +13,7 @@ from scripts.control_transfer.control_public.fly import Controller, DEFAULT, MAS
 from scripts.control_transfer.neuralfly_reference import improve, observed_error
 from scripts.control_transfer.neuralfly_spec import make_spec
 from scripts.control_transfer.neuralfly_video import Video
-from scripts.control_transfer.trusted.fly import features, load_force_asset, parameters, rollout
+from scripts.control_transfer.trusted.fly import episode_trajectory, features, load_force_asset, parameters, rollout
 from scripts.control_transfer.trusted.adapter import feedback
 from scripts.control_transfer.trusted.session import Session, atomic
 from scripts.control_transfer.trusted.verify import verdict
@@ -45,6 +45,49 @@ class NeuralFlyTests(unittest.TestCase):
             np.testing.assert_allclose((target(t + dt)[0] - target(t - dt)[0]) / (2 * dt), v, atol=1e-8)
             np.testing.assert_allclose((target(t + dt)[1] - target(t - dt)[1]) / (2 * dt), a, atol=1e-8)
             np.testing.assert_allclose(target(t + 2 * np.pi)[0], p, atol=1e-12)
+
+    def test_general_eight_derivatives_and_reverse_traversal(self):
+        for tilt in (0.0, np.pi / 2, 0.61):
+            for direction in (-1, 1):
+                command = dict(
+                    yaw=1.1, tilt=tilt, amplitude_x=1.43, amplitude_z=0.61, rate=0.87, direction=direction, phase=0.43
+                )
+                t, dt = 1.7, 1e-5
+                p, v, a = target(t, **command)
+                np.testing.assert_allclose(
+                    (target(t + dt, **command)[0] - target(t - dt, **command)[0]) / (2 * dt), v, atol=1e-8
+                )
+                np.testing.assert_allclose(
+                    (target(t + dt, **command)[1] - target(t - dt, **command)[1]) / (2 * dt), a, atol=1e-8
+                )
+                np.testing.assert_allclose(target(t + 2 * np.pi / command["rate"], **command)[0], p, atol=1e-12)
+        forward = target(0.7, phase=0.0, direction=1)
+        reverse = target(-0.7, phase=0.0, direction=-1)
+        np.testing.assert_allclose(forward[0], reverse[0])
+        np.testing.assert_allclose(forward[1], -reverse[1])
+        points = np.array([target(t, tilt=np.pi / 2, yaw=0.8)[0] for t in np.linspace(0, 7, 100)])
+        np.testing.assert_allclose(points[:, 2], 1.8, atol=1e-12)
+
+    def test_held_out_trajectory_diversity_and_ground_clearance(self):
+        for index in (0, 1):
+            spec = make_spec(index)
+            cases = spec["bank"]["held_out"]
+            commands = [episode_trajectory(c["episode_seed"]) for c in cases]
+            self.assertEqual({plane for plane, _ in commands}, {"horizontal", "vertical", "inclined"})
+            for wind in range(5):
+                self.assertEqual(
+                    {cmd["direction"] for case, (_, cmd) in zip(cases, commands) if case["stratum"] == wind}, {-1, 1}
+                )
+            self.assertEqual(len({round(cmd["yaw"], 8) for _, cmd in commands}), 10)
+            for case, (_, cmd) in zip(cases, commands):
+                self.assertEqual(episode_trajectory(case["episode_seed"])[1], cmd)
+                points = np.array([target(t, **cmd)[0] for t in np.linspace(0, 2 * np.pi / cmd["rate"], 200)])
+                self.assertGreater(points[:, 2].min(), 0.9)
+            train = {
+                json.dumps(episode_trajectory(c["episode_seed"])[1], sort_keys=True) for c in spec["bank"]["adaptation"]
+            }
+            held = {json.dumps(cmd, sort_keys=True) for _, cmd in commands}
+            self.assertFalse(train & held)
 
     def test_strict_numeric_policy_and_backward_compatibility(self):
         original = copy.deepcopy(DEFAULT)
@@ -176,6 +219,10 @@ class NeuralFlyTests(unittest.TestCase):
         video = Video.__new__(Video)
         video.model, video.renderer, video.camera = model, Renderer(), camera
         video.center = np.array([0.0, 0.0, 1.8])
+        video.curve = [
+            target(t, yaw=0.83, tilt=0.91, amplitude_x=1.4, amplitude_z=0.57)[0]
+            for t in np.linspace(0, 2 * np.pi, 100, endpoint=False)
+        ]
         video.writer = SimpleNamespace(stdin=io.BytesIO())
         for command in ([0.8, 0.1, 2.2], [-0.7, -0.2, 1.1]):
             model.site_pos[0] = command
@@ -186,6 +233,8 @@ class NeuralFlyTests(unittest.TestCase):
             marker = scene.geoms[scene.ngeom - 101]
             np.testing.assert_allclose(marker.pos, command, atol=1e-6)
             self.assertFalse(np.allclose(marker.pos, data.qpos[:3]))
+            drawn = [scene.geoms[scene.ngeom - 100 + i].pos.copy() for i in range(100)]
+            np.testing.assert_allclose(drawn, video.curve, atol=1e-6)
 
     def test_public_nominal_has_no_private_imports_or_draws(self):
         root = Path(__file__).resolve().parents[1]

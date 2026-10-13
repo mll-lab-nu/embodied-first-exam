@@ -10,7 +10,7 @@ import numpy as np
 from ..control_public.fly import Controller, DT, DURATION, Vehicle, target, validate
 from ..neuralfly_video import Video
 
-REVISION = "neuralfly-cpu/2"
+REVISION = "neuralfly-cpu/3"
 ASSET_SHA256 = "551eeb0d8e2c75e157c087f1ab2f5e40e68400a84fdf0882ed719ddfcfd8108a"
 
 
@@ -31,6 +31,28 @@ def parameters(seed):
         "motor_tau": float(rng.uniform(0.02, 0.06)),
         "mass_scale": float(rng.uniform(0.97, 1.03)),
     }
+
+
+def episode_trajectory(seed):
+    """Private command draw, independent of plant. Seeds are never public feedback.
+
+    Five-separated held-out seeds give opposite traversal directions per wind stratum.
+    Three plane classes and both directions occur in each ten-case held-out bank.
+    """
+    rng = np.random.default_rng(seed)
+    plane = ("vertical", "horizontal", "inclined")[seed % 3]
+    tilt = {"vertical": 0.0, "horizontal": np.pi / 2, "inclined": float(rng.uniform(np.pi / 12, 5 * np.pi / 12))}[plane]
+    command = dict(
+        phase=float(rng.uniform(-np.pi, np.pi)),
+        yaw=float(rng.uniform(-np.pi, np.pi)),
+        center=[*rng.uniform(-0.4, 0.4, 2), float(rng.uniform(1.8, 2.2))],
+        tilt=tilt,
+        amplitude_x=float(rng.uniform(0.9, 1.5)),
+        amplitude_z=float(rng.uniform(0.45, 0.85)),
+        rate=float(rng.uniform(0.8, 1.1)),
+        direction=1 if seed % 2 == 0 else -1,
+    )
+    return plane, command
 
 
 def load_force_asset(path):
@@ -65,11 +87,11 @@ def rollout(policy, case, out, asset=None, render=False):
     out.mkdir(parents=True, exist_ok=False)
     controller = Controller(policy)
     rng = np.random.default_rng(case["episode_seed"])
-    phase = float(rng.uniform(-np.pi, np.pi))
-    center = np.r_[rng.uniform(-0.4, 0.4, 2), 1.8]
+    plane, command = episode_trajectory(case["episode_seed"])
+    center = np.array(command["center"])
     initial_offset = rng.uniform(-0.15, 0.15, 3)
     vehicle = Vehicle(
-        target(0, phase, 0, center)[0] + initial_offset, mass_scale=params["mass_scale"], motor_tau=params["motor_tau"]
+        target(0, **command)[0] + initial_offset, mass_scale=params["mass_scale"], motor_tau=params["motor_tau"]
     )
     model, data = vehicle.model, vehicle.data
     wind_id = case["stratum"]
@@ -87,8 +109,9 @@ def rollout(policy, case, out, asset=None, render=False):
 
     telemetry, truth, errors = [], [], []
     crash = False
-    video = Video(model, out / "video.mp4", center) if render else None
-    steps = round(DURATION / DT)
+    curve = [target(t, **command)[0] for t in np.linspace(0, 2 * np.pi / command["rate"], 100, endpoint=False)]
+    video = Video(model, out / "video.mp4", center, curve=curve) if render else None
+    steps = round(DURATION / (command["rate"] * DT))
     bad_warnings = [
         mujoco.mjtWarning.mjWARN_BADQPOS,
         mujoco.mjtWarning.mjWARN_BADQVEL,
@@ -97,15 +120,15 @@ def rollout(policy, case, out, asset=None, render=False):
     try:
         for k in range(steps):
             t = k * DT
-            obs = vehicle.observation(t, target(t, phase, 0, center), rng)
+            obs = vehicle.observation(t, target(t, **command), rng)
             contact = vehicle.step(controller.action(obs), obs, policy, residual)
             finite = bool(np.isfinite(data.qpos).all() and np.isfinite(data.qvel).all())
-            error = float(np.linalg.norm(data.qpos[:3] - target(t + DT, phase, 0, center)[0])) if finite else 5.0
+            error = float(np.linalg.norm(data.qpos[:3] - target(t + DT, **command)[0])) if finite else 5.0
             errors.append(error)
             truth.append([data.time, *data.qpos, *data.qvel, *vehicle.rotor])
             if k % 5 == 0:
                 telemetry.append(obs)
-                model.site_pos[0] = target(t + DT, phase, 0, center)[0]
+                model.site_pos[0] = target(t + DT, **command)[0]
                 mujoco.mj_forward(model, data)
                 if video:
                     video.frame(data)
@@ -140,7 +163,8 @@ def rollout(policy, case, out, asset=None, render=False):
         "dynamics": params,
         "scenario": {
             "stratum": wind_id,
-            "phase": phase,
+            "trajectory": command,
+            "plane": plane,
             "center": center.tolist(),
             "initial_offset": initial_offset.tolist(),
         },

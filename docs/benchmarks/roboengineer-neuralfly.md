@@ -1,6 +1,6 @@
 # roboEngineer / Drone / Neural Fly
 
-Neural Fly asks a coding agent to track **six timed vertical figure-eight laps**, improve a numeric controller over three deployment-feedback rounds, and freeze it for a ten-case held-out bank. Deployment uses **native CPU MuJoCo, NumPy CPU inference and OSMesa software rendering**. This task is simulation transfer with a real-flight-data force surrogate; it is not a physical flight experiment, DAIML reproduction, or PX4 reproduction.
+Neural Fly asks a coding agent to track **six timed laps of varied figure-eight commands**, improve a numeric controller over three deployment-feedback rounds, and freeze it for a ten-case held-out bank. Deployment uses **native CPU MuJoCo, NumPy CPU inference and OSMesa software rendering**. This task is simulation transfer with a real-flight-data force surrogate; it is not a physical flight experiment, DAIML reproduction, or PX4 reproduction.
 
 ## Reference and provenance
 
@@ -27,12 +27,14 @@ The inherited surrogate clips each force axis to ±12 N. This is an explicit ben
 | Mass and inertia scale | Uniform [0.97, 1.03] from one instance-level draw |
 | Motor first-order time constant | Uniform [0.02, 0.06] s, fixed within an instance |
 | Sinusoidal wind phase | Uniform [−π, π], fixed within an instance |
+| Plane / orientation | Vertical, horizontal or inclined (15–75 degrees); yaw uniform [−π, π] |
+| Direction / shape | Both traversal senses in each wind stratum; half extents [0.9, 1.5] m and [0.45, 0.85] m |
 | Episode trajectory phase | Uniform [−π, π], independent episode draw |
-| Horizontal center | Each coordinate uniform [−0.4, 0.4] m; vertical center 1.8 m |
+| Horizontal center | Each coordinate uniform [−0.4, 0.4] m; vertical center uniform [1.8, 2.2] m |
 | Initial position | Reference at t=0 plus independent per-axis offset in [−0.15, 0.15] m |
 | Initial attitude / velocity | Upright, at rest |
 | Physics / controller | 500 Hz / 50 Hz; residual recomputed at each physics step |
-| Episode duration | Six 2π-second laps, quantized to 1,885 controller ticks (37.70 s) |
+| Episode duration | Six laps at episode angular rate [0.8, 1.1] rad/s; 34.28–47.12 s, quantized to 50 Hz |
 
 Wind strata are disturbance scenarios on that fixed physical plant. Public commands, initial positions and measurement noise differ by episode. Generalization to a newly drawn physical plant is a separate comparison and must be reported separately. These checked-in case definitions are reproducible development banks, not secret competition seeds.
 
@@ -84,6 +86,12 @@ The family checks cover randomized initialization, disjoint fixed-plant banks, a
 
 The spec imports only standard-library code and `neuralfly_constants.py`, a public data-only source of `DEFAULT` and `BOUNDS` re-exported by the controller. Include this constants module both in the private package root and in the exported public root beside `nominal_fly.py`. Static CI can run `python -S -m unittest scripts.control_transfer.tests.test_neuralfly_spec -v` without NumPy or MuJoCo.
 
-## Native integration acceptance
+## Historical fixed-eight native integration acceptance
 
-Both native Harbor development banks pass 10/10 held-out cases after three noisy-feedback adaptation rounds, with mean engineering scores 90.3151 and 94.2980; both no-submission controls score zero. Resource enforcement is enabled and every held-out case has an exact fresh-process CPU replay. All delivered feedback bytes and videos are independently audited. These are scripted reference checks, not coding-agent scores. The [integration record](roboengineer-validation.md) documents the verifier build fix, bounded isolation probes, archive identity and remaining gates.
+Both fixed-eight native Harbor development banks pass 10/10 held-out cases after three noisy-feedback adaptation rounds, with mean engineering scores 90.3151 and 94.2980; both no-submission controls score zero. Resource enforcement is enabled and every held-out case has an exact fresh-process CPU replay. All delivered feedback bytes and videos are independently audited. These are scripted reference checks, not coding-agent scores. The [integration record](roboengineer-validation.md) documents the verifier build fix, bounded isolation probes, archive identity and remaining gates.
+
+## General figure-eight revision
+
+`general-eight/1` / `neuralfly-cpu/3` replaces the single fixed-shape, fixed-plane trajectory with episode-specific orientation, shape, speed and traversal direction. Every ten-case held-out bank includes all three plane classes and both directions for each wind stratum. Phase, center and initial offsets also vary; adaptation and held-out commands are disjoint, while physical plant parameters persist. The public nominal simulator accepts the same trajectory parameters explicitly. Public feedback remains commanded world position/velocity/acceleration plus noisy sensors and images; private seeds and command-draw metadata stay operator-only. Videos display the actual rotated/scaled path, not the old fixed curve.
+
+This evaluates held-out trajectory tracking within the declared command distribution, not unrestricted arbitrary-path generalization. The numerical controller receives commands and cannot select their speed or direction. Score thresholds and motor limits are unchanged. Prior fixed-eight results do not certify this revision and must remain separately labeled. The broader flight directions also extrapolate the existing approximate aerodynamic surrogate beyond the paper's specific flight path; no new physical calibration is claimed.
