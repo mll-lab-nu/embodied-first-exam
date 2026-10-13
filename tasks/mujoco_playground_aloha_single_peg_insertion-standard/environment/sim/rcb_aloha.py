@@ -19,8 +19,13 @@ U(-0.1, 0.1) m each from the `home` keyframe. The robot starts in `home`.
 
 Success (defined here from Playground's own insertion geometry; Playground itself only has a shaped RL reward):
 at the end of the trajectory the peg's tip (site `peg_end2`) is within 5 mm of the socket's axis (the line through
-sites `socket_rear` and `socket_entrance`) and at least 25 % of the socket's depth inside it (axial parameter
-t <= 0.75, t = 0 at the rear wall, 1 at the entrance). trajectory = (T, 14) actuator targets, one row per control step.
+sites `socket_rear` and `socket_entrance`) and inside the cavity, at least 12 mm from its open end: the axial
+parameter t (0 at `socket_rear`, which is the tube's centre, 1 at `socket_entrance`, 48 mm per unit) is in
+[-0.875, 0.75]. The cavity is 88 mm deep: it ends at the inner face of the red rear wall, t = -0.833 (40 mm behind
+the centre; read from the model, Session.t_wall), and the lower bound allows REAR_MARGIN_M = 2 mm more for the
+contact's give when the peg is pushed home. Until 2026-10-13 the rule was 0 <= t <= 0.75 (and the texts said "t = 0
+at the rear wall"), which rejected a peg inserted past the tube's centre.
+trajectory = (T, 14) actuator targets, one row per control step.
 """
 from __future__ import annotations
 import hashlib, json, os, sys, time
@@ -55,7 +60,8 @@ SIM_DT = 0.0025                                    # AlohaSinglePegInsertion (pe
 SUBSTEPS = int(round(CONTROL_DT / SIM_DT))       # 8 (AlohaHandOver: 4)
 HANDOVER_TOL_M = 0.03
 MAX_STEPS = 3000                                   # 60 s of control; longer trajectories are rejected
-LINE_TOL_M = 0.005; DEPTH_T_MAX = 0.75
+LINE_TOL_M = 0.005; DEPTH_T_MAX = 0.75           # the tip within 5 mm of the axis; t <= 0.75: at least 12 mm inside the entrance
+REAR_MARGIN_M = 0.002                             # how far past the rear wall's inner face the tip may read (contact compliance)
 ACTUATOR_NAMES = [f"{s}/{j}" for s in ("left", "right") for j in ("waist", "shoulder", "elbow", "forearm_roll", "wrist_angle", "wrist_rotate", "gripper")]
 N = len(ACTUATOR_NAMES)                            # 14
 CAMERAS = ("overhead_cam", "teleoperator_pov", "wrist_cam_left", "wrist_cam_right")
@@ -114,6 +120,12 @@ class Session:
             self._peg = m.body("peg").id; self._socket = m.body("socket").id
             self._peg_q = m.jnt_qposadr[m.body_jntadr[self._peg]]; self._sock_q = m.jnt_qposadr[m.body_jntadr[self._socket]]
             self._s_ent = m.site("socket_entrance").id; self._s_rear = m.site("socket_rear").id; self._p_end2 = m.site("peg_end2").id
+            # The cavity's rear end on the axis, in units of t: the inner face of the rear wall (geom `wall`, a box of the
+            # socket body), from the model: its extent along the axis, on the entrance's side. -0.040 m / 0.048 m = -0.8333.
+            ax = m.site_pos[self._s_ent] - m.site_pos[self._s_rear]; ln = float(np.linalg.norm(ax)); u = ax / ln; w = m.geom("wall").id
+            Rw = np.zeros(9); mujoco.mju_quat2Mat(Rw, m.geom_quat[w]); Rw = Rw.reshape(3, 3)
+            face = float(np.dot(m.geom_pos[w] - m.site_pos[self._s_rear], u) + np.sum(np.abs(Rw.T @ u) * m.geom_size[w]))
+            self.t_wall = face / ln; self.t_min = (face - REAR_MARGIN_M) / ln      # -0.8333, -0.875
         else:
             self.box_xy = np.array(self.inst["box_xy_offset"], float); self.target_pos = np.array(self.inst["target_pos"], float)
             self._box = m.body("box").id; self._box_q = m.jnt_qposadr[m.body_jntadr[self._box]]; self._box_geom = m.geom("box").id
@@ -155,7 +167,7 @@ class Session:
         if self.env == "AlohaHandOver": return self._check_handover()
         d = self.data; rear = d.site_xpos[self._s_rear]; ent = d.site_xpos[self._s_ent]; tip = d.site_xpos[self._p_end2]
         ab = ent - rear; t = float(np.dot(tip - rear, ab) / (np.dot(ab, ab) + 1e-12)); dist = float(np.linalg.norm(tip - (rear + t * ab)))
-        inserted = dist < LINE_TOL_M and 0.0 <= t <= DEPTH_T_MAX
+        inserted = dist < LINE_TOL_M and self.t_min <= t <= DEPTH_T_MAX          # in the cavity: rear wall .. 12 mm inside the entrance
         return {"success": bool(inserted), "inserted": bool(inserted), "tip_to_axis_m": round(dist, 5), "axial_t": round(t, 4),
                 "socket_z": round(float(d.xpos[self._socket][2]), 4), "peg_z": round(float(d.xpos[self._peg][2]), 4), "time_s": round(self.steps * CONTROL_DT, 3)}
 
