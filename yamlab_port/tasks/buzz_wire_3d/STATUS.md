@@ -1,6 +1,7 @@
 # buzz_wire_3d: status
 
-Updated 2026-10-12 ~18:00 (agent: buzz_wire_3d task agent). FINAL hand-over state. No processes are left on vast.
+Updated 2026-10-12 ~21:30 (pingyue S3, topogym-51): easier DONE, see "easier: done" below. Earlier text: hand-over
+state of 2026-10-12 ~18:00 (buzz_wire_3d task agent).
 
 ## State
 
@@ -14,10 +15,21 @@ Updated 2026-10-12 ~18:00 (agent: buzz_wire_3d task agent). FINAL hand-over stat
     Replay is bit-identical.
   - nop: fails by time-out (no traversal, no touch). naive `naive_skip_traverse`: fails by wire touch, as
     intended (see "Negatives" below).
-- easier: NOT DONE. It uses the same deck, wand, handle, posts, layout and start yaw (60 deg); only the rail
-  differs.
-  - In Isaac, pick, ring handover and the full carry work, with no touch and an 8.1 mm minimum metal-to-wire gap.
-  - Blocked at the finish placement; no Isaac run succeeds yet. See "easier" below.
+  - Re-check with the current code (commit a808f149b, pingyue stack): success at the same step 5660, 0.17 mm /
+    0.0 deg, gap 8.46 mm; state hash `a7a0d8da…` differs from oracle9 only because the arm now retreats from its
+    own pose after the drop. The oracle9 actions still replay bit-identically on this stack (`37cb6060…`).
+- **easier: DONE** (same deck, wand, handle, posts, layout, start yaw and approved deviations as very_easy; only
+  the rail differs). Isaac Lab f4aa17f stack (`/data/pingyue/yamlab`), CPU, 1 env, mode=evaluation:
+  - oracle `easier_oracle4` (run `ea_o4`): success at step 5665 (188.8 s sim). No touch. Minimum metal-to-wire
+    gap 8.15 mm. Traversal complete. Final: 3.24 mm from the finish, 1.18 deg, supported, released, quiet.
+  - open-loop replays `easier_replay1` and `easier_replay2`: both succeed at step 5665 with the oracle's state
+    hash `27d29f0d36158d4166448fa91e164b2278d173eb64fed9a2b4919ee93ef574c1`; the state dump for the video
+    (`render_states.py dump`) also succeeds at 5665.
+  - nop `easier_nop`: time-out at step 9001, no touch (gap 13.3 mm), no traversal. naive `easier_naive`
+    (straight carry): wire touch at step 2333 (1.60 N, route cursor 45.9 mm).
+  - Video: `video/easier/` (state playback of the dump, every 3rd step at 10 fps; pose read-back error 1.2e-7 m):
+    `top.mp4`, `wire.mp4` (far-side view of the span; a wall panel covers the right edge), `finish.mp4` (finish
+    post close-up: handover 2, roll + yaw, drop, settle). Replay actions = `easier_oracle4/oracle_actions.npy`.
 - Run directories on vast are `/workspace/yamlab_port/runs/buzz_wire_3d/results/<run>/`:
   - very_easy: `oracle9`, `replay1`, `replay2`, `nop`, `naive_skip_traverse`;
   - easier: `easier_oracle1`, `easier_oracle2`, `easier_oracle3`.
@@ -127,7 +139,9 @@ Evidence on vast is in `/workspace/yamlab_port/runs/buzz_wire_3d/results/<run>/`
 5. Left arm descends, yaws to the finish yaw low, and releases from 32 mm. The wand settles on the finish
    support.
 
-## easier: state, what was tried, next idea
+## easier: done
+
+### Before (hand-over state)
 
 The easier span bends toward +y (the left arm), reaching y = 0 at x 0.47-0.58, and dips to z 1.019 near x 0.6.
 Pick, ring handover and carry are unchanged from very_easy and work in Isaac: in `easier_oracle1` and
@@ -157,23 +171,33 @@ arm-to-wire clearance in the carry is 4.4 mm. Only the finish placement fails.
      into the finish post (touch at step 6539).
    - `easier_oracle2` (pads opened 7.5 mm, wait 40 steps): traversal COMPLETE (cursor 637.8 mm). Then the wand
      pivots to 40 deg pitch and the loop touches the post at step 6546 (rail force 0.11 N).
-4. Tuned left pen grip (current default for easier; `GD_TIER`, `GD_TILT_TIER`, `HZ_FINISH_TIER` in
-   `stages_a.py`).
-   - The grip: tips on the outer handle end (62 mm), rolled 10 deg, tilted -8 deg.
-   - `tools/finish_grip_map.py` (`results/fgm2/`) shows it clears the span at the finish yaw from 40 mm,
-     with 6.5 mm to the wire and 9 mm at 150-160 deg. This keeps the clean vertical-jaw drop of very_easy.
-   - The offline plan is OK with handover 2 at 90 mm (`results/dry_easier_gd_r10_z0.090.log`).
-   - In Isaac (`easier_oracle3`) the measured carry-end pose differs slightly. The grasp at the 90 mm handover
-     is rejected (fingers 1.6 mm into the deck at the start of the follow path), and the run stops with a
-     plan error at step 3176. There is no touch.
+4. Tuned left pen grip: tips on the outer handle end (62 mm), rolled 10 deg, tilted -8 deg; offline plan OK
+   with handover 2 at 90 mm, but `easier_oracle3` stopped at handover 2 (left arm 1.6 mm into the deck, no touch).
 
-Best next idea: keep idea 4 (it keeps the clean drop) and make the handover robust.
-- Re-plan the left grasp at the measured pose with a small search: handover height 0.09-0.12 m; roll 5-15 deg;
-  tilt -12..-4 deg.
-- Or descend first with the carrier's ring grip to about 60 mm before handover. The ring grip is fine there.
-- Then run the usual pipeline: oracle, 2 replays, nop, naive.
-- Fallback: on top of idea 3, have the left arm (still holding) support the loop side while the right side
-  pinch opens.
+### What fixed it (pingyue, 2026-10-12; `tools/stages_a.py`, commit a808f149b)
+
+1. **Handover 2 at 105 mm** (`HZ_FINISH_TIER`). In `easier_oracle3` the ring grip let the handle sag 2.3 deg
+   (yaw +2.4 deg, position within 1 mm). The left finish grip has a single IK branch whose upper arm/elbow
+   (link_3/link_4) runs close to the deck: 9 mm at 90 mm, 17 mm at 105 mm, 30 mm at 120 mm, so the sag took
+   the margin away. Fallback (not needed in `ea_o4`): if no finish grip plans at the measured pose, the
+   carrier re-measures its ring grasp, levels the loop and raises it 15 / 30 mm along the vertical finish
+   post, and the planner retries.
+2. **No grip roll; the wand rolls instead** (`GD_TIER` easier = (0, 0), `FINISH_ATT_TIER`). A parallel-jaw
+   pinch on the flat handle faces aligns the pads with the faces: the planned 10 deg grip roll measured 0.5 deg
+   after closing (run `ea_o1`), and with roll 0 the left wrist camera (camera_d405) reaches the dip at the
+   finish yaw (wire clearance <= 0.3 mm; `finish_grip_map.py`). The roll is therefore applied to the wand about
+   its handle while it is lowered, and the yaw may stop a little short of the finish yaw. Release attitudes
+   (wand roll, yaw short of finish; deg) are tried in order (5, 2), (3, 4), (7, 2), (10, 0); left-arm wire
+   clearance at release 6 / 9 / 7.6 / 6.5 mm. The wand settles flat on the deck, so only the yaw offset stays
+   (tolerance 10 deg). Knob `BUZZ_FINISH_ATT`. very_easy keeps (0, 0) and plans as before (release 32 mm).
+   - `ea_o2` (5, 2): settled at 3.24 mm / 1.18 deg; `ea_o3` (3, 4): 2.78 mm / 3.75 deg. The drop shifts the
+     loop centre by about (-2.0, +2.7) mm in x, y (toward the handle) in both runs.
+3. **Retreat after the drop from the gripper itself** (`StagesR.release(..., from_tcp=True)` for the final
+   drop). The retreat target used to be `wand @ grasp`; after the drop the wand is 38 mm lower, so the target
+   sat inside the deck (`ea_o2`, `ea_o3` stopped there, already settled, 20 steps before the 30-step window).
+
+`ea_o4` sequence: handover 2 at 105 mm (first try), release attitude (5, 2) from 40 mm. Robot-to-wire minima
+(any link): carry 4.0 mm (right), yaw + lower 9.8 mm (left), drop 10.8 mm (left).
 
 ## Reproduce (vast; see README for install)
 
@@ -189,6 +213,28 @@ python $R/src/tools/dry_run_a.py 60 easier                                      
 
 All runs on vast used `OMP_NUM_THREADS=4 nice -n 19`, CPU, 1 env, mode=evaluation.
 
+easier (pingyue stack: `/data/pingyue/yamlab`, Isaac Lab f4aa17f; `runs/buzz/sync.sh` installs this folder into a
+copy of the pinned yamlab, `run.sh` = `source activate.sh`, `PYTHONPATH=runs/buzz/yamlab`, `BUZZ_NO_CAMERAS=1`,
+`nice -n 19`, `OMP_NUM_THREADS=2`, cwd `task/tools`; runs on orbits3 and the local 4090 machine give the same hashes):
+
+```bash
+R=/data/pingyue/yamlab/runs/buzz; bash $R/sync.sh
+$R/run.sh 5400 oracle_r.py --headless --device cpu --tier easier --mode oracle --out OUT              # easier_oracle4
+$R/run.sh 3600 replay.py --headless --device cpu --tier easier --actions OUT/oracle_actions.npy --out OUT2
+$R/run.sh 3600 oracle_r.py --headless --device cpu --tier easier --mode nop --nop_steps 9100 --out OUT3
+$R/run.sh 3600 oracle_r.py --headless --device cpu --tier easier --mode naive_skip_traverse --out OUT4
+# video: state playback; cp ../../setup/render_states.py $R/
+$R/run.sh 3600 $R/render_states.py dump --task BuzzWire3D-Easier-v0 --actions OUT/oracle_actions.npy --out D --grasp_clamp --task_kwargs
+BUZZ_NO_CAMERAS=0 $R/run.sh 3600 $R/render_states.py render --task BuzzWire3D-Easier-v0 --states D/states_full.npz --out V \
+  --grasp_clamp --task_kwargs --frame_every 3 --fps 10 --cameras top \
+  --closeup wire=1.05,-0.42,1.22:0.58,-0.03,0.98:48 --closeup finish=0.98,-0.30,1.06:0.73,-0.03,0.91:32
+```
+
+Render notes: `--closeup` adds its cameras to the list by itself (naming them in `--cameras` too records every
+frame twice; the committed `wire.mp4`/`finish.mp4` were de-duplicated with ffmpeg). RTX rendering works on the
+local 4090 (1889 frames x 3 cameras in 40 min while the GPU was shared); on orbits3 it produced no frame in
+88 min (libGLU missing); one local attempt stalled near the end of the frame loop and was re-run.
+
 ## Negatives (from the new start, evaluation mode)
 
 - nop `nop` (hold the start pose): fails by time-out at step 9001 (300 s). It never touches the wire (gap
@@ -200,6 +246,10 @@ All runs on vast used `OMP_NUM_THREADS=4 nice -n 19`, CPU, 1 env, mode=evaluatio
   route cursor at 45.5 mm. This is the intended reason: the shortcut drives the loop through the wire.
   - The naive carry skips the planner's arm-to-wire and arm-to-deck checks; with those checks the planner
     refused the shortcut (`naive_planfail_1`).
+- easier (same modes, current code): nop `easier_nop` fails by time-out at step 9001 (no touch, gap 13.3 mm, route
+  cursor 0, wand 350 mm / 108.7 deg from the finish); naive `easier_naive` fails by wire touch at step 2333
+  (rail force 1.60 N, route cursor 45.9 mm). Its log ends with a plan error after the touch: the env resets in
+  the terminating step and the next plan starts from the reset state.
 - Logging note: Isaac Lab auto-resets on termination. So the last logged wand pose of a terminated run is the
   post-reset pose, while the last diagnostics row (gap, force) is from the terminating step.
 

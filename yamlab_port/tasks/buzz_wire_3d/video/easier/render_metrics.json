@@ -1,0 +1,14 @@
+{
+ "task": "BuzzWire3D-Easier-v0",
+ "states": "/data/pingyue/yamlab/runs/buzz/out/ea_o4_dump/states_full.npz",
+ "frames": 1889,
+ "max_pose_readback_err_m": 1.1920928955078125e-07,
+ "wall_s": 2367.841652393341,
+ "cameras": [
+  "top",
+  "wire",
+  "finish",
+  "wire",
+  "finish"
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "name": "replay",
+ "success": true,
+ "success_step": 5665,
+ "termination": "success",
+ "steps": 5666,
+ "sim_time_s": 188.86666666659113,
+ "wall_time_s": 132.8970787525177,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 8.145912721681997,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": true,
+ "max_route_cursor_m": 0.6442127079999599,
+ "route_length_m": 0.6457751658709897,
+ "final": {
+  "distance_to_finish_m": 0.0032395816812910007,
+  "finish_angle_deg": 1.183998521982618,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 3.563920472515747e-06,
+  "ang_speed_rad_s": 0.0008152243099175394
+ },
+ "state_sha256": "27d29f0d36158d4166448fa91e164b2278d173eb64fed9a2b4919ee93ef574c1",
+ "phases": [
+  "replay"
+ ],
+ "mode": "replay",
+ "tier": "easier",
+ "source_actions": "/data/pingyue/yamlab/runs/buzz/out/ea_o4/oracle_actions.npy",
+ "cameras": false
+}
