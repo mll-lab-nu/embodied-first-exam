@@ -62,6 +62,24 @@ def main():
     )
     summary = {
         "kind": "local-family-validation",
+        "instance_schema": "control-transfer-instance/2",
+        "transfer_track": "same-plant",
+        "runtime": {
+            "python": sys.executable,
+            "osmesa_library_directory": environment.get("LD_LIBRARY_PATH", ""),
+            "assets": environment.get("GO2_ASSET_DIR", ""),
+            "environment": {
+                k: environment[k]
+                for k in (
+                    "MUJOCO_GL",
+                    "CUDA_VISIBLE_DEVICES",
+                    "LIBGL_ALWAYS_SOFTWARE",
+                    "OPENBLAS_NUM_THREADS",
+                    "OMP_NUM_THREADS",
+                    "LP_NUM_THREADS",
+                )
+            },
+        },
         "container_isolation_tested": False,
         "llm_agent_run": False,
         "tasks": {},
@@ -85,7 +103,11 @@ def main():
         nop_path.write_bytes(validate(nop))
         spec = make_spec(args.index, task)
         (folder / "instance.json").write_text(json.dumps(spec, sort_keys=True, indent=2))
+        assert spec["schema"] == "control-transfer-instance/2"
+        assert spec["transfer_track"] == "same-plant"
+        assert {c["plant_seed"] for bank in spec["bank"].values() for c in bank} == {10000 + args.index * 1000 + 100}
         records = []
+        dynamics = None
         for k, case in enumerate(spec["bank"]["held_out"]):
             case_path = folder / f"case-{k:02d}.json"
             case_path.write_text(json.dumps(case, sort_keys=True))
@@ -94,6 +116,11 @@ def main():
             assert record["state_sha256"] == replay["state_sha256"], "Fresh-process state mismatch"
             assert record["feedback_sha256"] == replay["feedback_sha256"], "Fresh-process feedback mismatch"
             assert record["metrics"] == replay["metrics"], "Fresh-process scoring mismatch"
+            assert type(record["metrics"]["success"]) is bool
+            assert 0 <= record["metrics"]["score"] <= 100
+            if dynamics is None:
+                dynamics = record["dynamics"]
+            assert record["dynamics"] == replay["dynamics"] == dynamics, "Hidden plant changed"
             assert set(record["feedback"]) == {"telemetry"}
             for row in record["feedback"]["telemetry"]:
                 assert set(row) == {"t", "values"} and len(row["values"]) == 37

@@ -13,11 +13,12 @@ def make_spec(index=0, task="attitude"):
         task = task[4:]
     if task not in TASKS or type(index) is not int or not 0 <= index < 10000:
         raise ValueError("Invalid Go2 specification")
-    plant = 730000 + index
+    base = 10000 + index * 1000
+    plant = base + 100
 
     def bank(held):
         return [
-            {"task": task, "plant_seed": plant, "episode_seed": 100000 + index * 1000 + (100 if held else 0) + i}
+            {"task": task, "plant_seed": plant, "episode_seed": base + (300 if held else 0) + i}
             for i in range(10 if held else 3)
         ]
 
@@ -54,7 +55,8 @@ def make_spec(index=0, task="attitude"):
         "limitations": "SPI-Active-inspired task port, not a hardware calibration or reproduction of its trained policies; MuJoCo contacts differ from Isaac Gym.",
     }
     return {
-        "schema": "control-transfer-instance/1",
+        "schema": "control-transfer-instance/2",
+        "transfer_track": "same-plant",
         "family": f"go2-{task}",
         "name": f"go2-{task}",
         "index": index,

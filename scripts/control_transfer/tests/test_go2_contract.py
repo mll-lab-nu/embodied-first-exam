@@ -103,7 +103,11 @@ class Contract(unittest.TestCase):
             s = make_spec(2, task)
             a, b = s["bank"]["adaptation"], s["bank"]["held_out"]
             self.assertEqual((len(a), len(b)), (3, 10))
-            self.assertEqual(len({c["plant_seed"] for c in a + b}), 1)
+            self.assertEqual(s["schema"], "control-transfer-instance/2")
+            self.assertEqual(s["transfer_track"], "same-plant")
+            self.assertEqual({c["plant_seed"] for c in a + b}, {12100})
+            self.assertEqual([c["episode_seed"] for c in a], list(range(12000, 12003)))
+            self.assertEqual([c["episode_seed"] for c in b], list(range(12300, 12310)))
             self.assertFalse({c["episode_seed"] for c in a} & {c["episode_seed"] for c in b})
             self.assertEqual(parameters(a[0]["plant_seed"]), parameters(b[-1]["plant_seed"]))
             self.assertNotEqual(

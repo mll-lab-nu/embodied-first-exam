@@ -28,6 +28,8 @@ SPI-Active's Isaac Gym config uses 200 Hz physics and decimation 4 (50 Hz action
 
 ## Persistent hidden plant
 
+Instances use `control-transfer-instance/2` and `transfer_track="same-plant"`. The operator bank uses `base=10000+index*1000`, fixed `plant_seed=base+100`, adaptation episode seeds `base+[0,1,2]`, and held-out episode seeds `base+300+[0,...,9]`. These seeds never enter public feedback. Legacy bank results are not acceptance evidence for this schema.
+
 One plant is drawn once per instance and reused across all three adaptation cases and ten held-out cases. The cases vary commands, initial yaw (-0.025 to 0.025 rad), initial joint perturbations (±0.004 rad), and measurement noise. Changing the instance changes the plant; this is a separate axis from case randomization.
 
 | Hidden property | Draw |
@@ -92,3 +94,5 @@ To reproduce the full family validation:
 python -m scripts.control_transfer.components.quadrupedbench.reference --out /tmp/go2-reference
 python -m scripts.control_transfer.components.quadrupedbench.validate_cpu --policies /tmp/go2-reference --out /tmp/go2-validation
 ```
+
+Schema-v2 local validation (instance 0, same-plant bank) used the unchanged frozen references: attitude 10/10 successes, mean score 91.06475; weave 0/10, mean 0; forward jump 0/10, mean 0; yaw jump 0/10, mean 9.8. All 40 fresh-process replays matched state, feedback and metrics; four no-op scores were zero and four OSMesa videos fully decoded. These results supersede the legacy seed-bank evidence for acceptance, but do not establish shared Harbor isolation or solvability of the three partial families.
