@@ -8,7 +8,7 @@
 | Simulator / robot | `robotwin` / `aloha-agilex` |
 | Family / instance | `pick_diverse_bottles` / seed 77321 |
 | Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task

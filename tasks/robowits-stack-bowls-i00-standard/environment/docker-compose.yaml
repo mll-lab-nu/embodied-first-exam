@@ -27,7 +27,7 @@ services:
       RCB_TASK: stack_bowls
       RCB_INSTANCE: /srv/instance.json
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "5400"
+      RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "900"   # >= 2 x the slowest measured scene build (docs/benchmarks/robowits.md)
       PYTHONPATH: /srv
       QD_OFFLINE_CACHE: "0"

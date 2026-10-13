@@ -8,7 +8,7 @@
 | Simulator / robot | `labutopia` / `franka-panda` |
 | Family / instance | `open_door` / seed 4 |
 | Oracle | `full` |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-labutopia:0.1.0` |
 
 ## Task

@@ -26,7 +26,7 @@ services:
       RCB_INSTANCE: /srv/instance.npz
       RCB_TOOL: /srv/rcb_myosuite.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "5400"
+      RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log

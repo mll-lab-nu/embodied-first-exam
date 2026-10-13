@@ -8,7 +8,7 @@
 | Simulator / robot | `myosuite` / `myolegs` |
 | Family / instance | `chase_tag` / seed 0 |
 | Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-chase-tag-i00-privilege__6GUXvYA`) fails once its rows are rounded to the client's float32 (the walk no longer reaches the opponent within its 329 rows); the family's solvability rests on the privileged twin; human review in PR #65 |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task

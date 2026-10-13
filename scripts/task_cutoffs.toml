@@ -20,31 +20,31 @@
 
 [cutoff_sec]
 "AutoBio"           = { privileged =  3600, standard =  3600 }
-"BEHAVIOR-1K"       = { privileged = 14400, standard = 14400 }
+"BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
 "BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
-"DexJoCo"           = { privileged =  5400, standard =  5400 }
+"DexJoCo"           = { privileged =  3600, standard =  3600 }
 "DexToolBench"      = { privileged =  3600, standard =  3600 }
 "HumanoidBench"     = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "KinDER"            = { privileged =  3600, standard =  3600 }
-"LIBERO-MAX"        = { privileged =  3600, standard =  3600 }
-"LabUtopia"         = { privileged =  5400, standard =  5400 }
-"ManiGuard"         = { privileged =  7200, standard =  7200 }
-"MetaWorld+"        = { privileged =  3600, standard =  3600 }
+"LIBERO-MAX"        = { privileged =  1800, standard =  1800 }
+"LabUtopia"         = { privileged =  3600, standard =  3600 }
+"ManiGuard"         = { privileged =  3600, standard =  3600 }
+"MetaWorld+"        = { privileged =  1800, standard =  1800 }
 "MolmoSpaces"       = { privileged =  3600, standard =  3600 }
-"MuJoCo Playground" = { privileged =  3600, standard =  3600 }
-"MyoSuite"          = { privileged =  5400, standard =  5400 }
+"MuJoCo Playground" = { privileged =  1800, standard =  1800 }
+"MyoSuite"          = { privileged =  3600, standard =  3600 }
 "RoboCasa"          = { privileged =  3600, standard =  3600 }
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
 "RoboCasa365"       = { privileged =  3600, standard =  3600 }
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
-"RoboLab"           = { privileged =  5400, standard =  5400 }
+"RoboLab"           = { privileged =  3600, standard =  3600 }
 "RoboOlympics"      = { standard-realtime = 7200 }
-"RoboPaint"         = { privileged =  7200, standard =  7200 }
+"RoboPaint"         = { privileged =  5400, standard =  5400 }
 "RoboTangle"        = { privileged = 21600, standard = 21600 }
-"RoboTwin 2.0"      = { privileged =  3600, standard =  3600 }
-"RoboWits"          = { privileged =  5400, standard =  5400 }
-"VLABench"          = { privileged =  3600, standard =  3600 }
-"YAMLab"            = { privileged =  5400, standard =  5400 }
+"RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
+"RoboWits"          = { privileged =  3600, standard =  3600 }
+"VLABench"          = { privileged =  1800, standard =  1800 }
+"YAMLab"            = { privileged =  3600, standard =  3600 }
 
 # Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
 # - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboTangle"` lists a
@@ -85,3 +85,129 @@ from_sec = 5400
 to_sec = 3600
 decided_by = "owner"
 note = "#155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "BEHAVIOR-1K"
+modes = ["privileged", "standard"]
+from_sec = 14400
+to_sec = 7200
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 14400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "ManiGuard"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboPaint"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 5400
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboLab"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "MyoSuite"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "DexJoCo"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboWits"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "YAMLab"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "LabUtopia"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboTwin 2.0"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "VLABench"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "MetaWorld+"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "LIBERO-MAX"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "MuJoCo Playground"
+modes = ["privileged", "standard"]
+from_sec = 3600
+to_sec = 1800
+decided_by = "owner"
+note = "stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such"

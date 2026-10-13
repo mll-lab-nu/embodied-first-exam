@@ -8,7 +8,7 @@
 | Simulator / robot | `myosuite` / `myoleg-osl` |
 | Family / instance | `osl_run` / seed 0 |
 | Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv`) fails once its rows are rounded to the client's float32 (the runner falls after 629 control steps); the family's solvability rests on the privileged twin; human review in PR #65 |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
