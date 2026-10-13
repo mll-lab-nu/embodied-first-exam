@@ -75,7 +75,11 @@ def rollout(policy, case, out, asset=None, render=False):
             raise ValueError("Policy size")
         policy = json.loads(raw)
     policy = validate(policy)
-    if set(case) != {"plant_seed", "episode_seed", "stratum"}:
+    revision = case.get("trajectory_revision", "fixed-eight/1")
+    if revision not in ("fixed-eight/1", "general-eight/1"):
+        raise ValueError("Trajectory revision")
+    fields = {"plant_seed", "episode_seed", "stratum"}
+    if set(case) not in (fields, fields | {"trajectory_revision"}):
         raise ValueError("Case fields")
     if type(case["stratum"]) is not int or not 0 <= case["stratum"] < 5:
         raise ValueError("Wind stratum")
@@ -87,8 +91,14 @@ def rollout(policy, case, out, asset=None, render=False):
     out.mkdir(parents=True, exist_ok=False)
     controller = Controller(policy)
     rng = np.random.default_rng(case["episode_seed"])
-    plane, command = episode_trajectory(case["episode_seed"])
-    center = np.array(command["center"])
+    if revision == "fixed-eight/1":
+        # Preserve the exact legacy RNG consumption before sensor-noise draws.
+        phase = float(rng.uniform(-np.pi, np.pi))
+        center = np.r_[rng.uniform(-0.4, 0.4, 2), 1.8]
+        plane, command = "vertical", dict(phase=phase, yaw=0, center=center, rate=1.0)
+    else:
+        plane, command = episode_trajectory(case["episode_seed"])
+        center = np.array(command["center"])
     initial_offset = rng.uniform(-0.15, 0.15, 3)
     vehicle = Vehicle(
         target(0, **command)[0] + initial_offset, mass_scale=params["mass_scale"], motor_tau=params["motor_tau"]
@@ -110,7 +120,11 @@ def rollout(policy, case, out, asset=None, render=False):
     telemetry, truth, errors = [], [], []
     crash = False
     curve = [target(t, **command)[0] for t in np.linspace(0, 2 * np.pi / command["rate"], 100, endpoint=False)]
-    video = Video(model, out / "video.mp4", center, curve=curve) if render else None
+    video = (
+        Video(model, out / "video.mp4", center, curve=curve if revision == "general-eight/1" else None)
+        if render
+        else None
+    )
     steps = round(DURATION / (command["rate"] * DT))
     bad_warnings = [
         mujoco.mjtWarning.mjWARN_BADQPOS,
@@ -158,13 +172,12 @@ def rollout(policy, case, out, asset=None, render=False):
     states = np.asarray(truth, dtype="<f8")
     np.savez_compressed(out / "trajectory.npz", state=states)
     record = {
-        "revision": REVISION,
+        "revision": REVISION if revision == "general-eight/1" else "neuralfly-cpu/2",
         "metrics": metrics,
         "dynamics": params,
         "scenario": {
             "stratum": wind_id,
-            "trajectory": command,
-            "plane": plane,
+            **({"trajectory": command, "plane": plane} if revision == "general-eight/1" else {"phase": phase}),
             "center": center.tolist(),
             "initial_offset": initial_offset.tolist(),
         },

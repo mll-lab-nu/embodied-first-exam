@@ -1,6 +1,6 @@
 # roboEngineer / Drone / Neural Fly
 
-Neural Fly asks a coding agent to track **six timed laps of varied figure-eight commands**, improve a numeric controller over three deployment-feedback rounds, and freeze it for a ten-case held-out bank. Deployment uses **native CPU MuJoCo, NumPy CPU inference and OSMesa software rendering**. This task is simulation transfer with a real-flight-data force surrogate; it is not a physical flight experiment, DAIML reproduction, or PX4 reproduction.
+The separately scored `neural-fly-general-v1` task asks a coding agent to track **six timed laps of varied figure-eight commands**, improve a numeric controller over three deployment-feedback rounds, and freeze it for a ten-case held-out bank. Deployment uses **native CPU MuJoCo, NumPy CPU inference and OSMesa software rendering**. This task is simulation transfer with a real-flight-data force surrogate; it is not a physical flight experiment, DAIML reproduction, or PX4 reproduction.
 
 ## Reference and provenance
 
@@ -95,3 +95,13 @@ Both fixed-eight native Harbor development banks pass 10/10 held-out cases after
 `general-eight/1` / `neuralfly-cpu/3` replaces the single fixed-shape, fixed-plane trajectory with episode-specific orientation, shape, speed and traversal direction. Every ten-case held-out bank includes all three plane classes and both directions for each wind stratum. Phase, center and initial offsets also vary; adaptation and held-out commands are disjoint, while physical plant parameters persist. The public nominal simulator accepts the same trajectory parameters explicitly. Public feedback remains commanded world position/velocity/acceleration plus noisy sensors and images; private seeds and command-draw metadata stay operator-only. Videos display the actual rotated/scaled path, not the old fixed curve.
 
 This evaluates held-out trajectory tracking within the declared command distribution, not unrestricted arbitrary-path generalization. The numerical controller receives commands and cannot select their speed or direction. Score thresholds and motor limits are unchanged. Prior fixed-eight results do not certify this revision and must remain separately labeled. The broader flight directions also extrapolate the existing approximate aerodynamic surrogate beyond the paper's specific flight path; no new physical calibration is claimed.
+
+## Legacy compatibility and integration routing
+
+Existing `neural-fly` IDs retain `make_spec(index)` / `make_spec(index, revision="fixed-eight/1")`: the original spec and three-field case bank are returned unchanged. Three-field cases dispatch to the original fixed-eight phase/center/offset RNG sequence and 1,885-tick horizon, with `neuralfly-cpu/2` records. Explicit `trajectory_revision="fixed-eight/1"` is also accepted. Unknown revisions fail admission.
+
+Root should register `neural-fly-general-v1` separately using `make_spec(index, revision="general-eight/1")`. Family remains `neural-fly` for existing policy and feedback adapters; the new name/task revision distinguishes scoring. Each general case includes `trajectory_revision="general-eight/1"`. No extra public or private module is required: retain existing allowlists, including public constants/nominal/video modules and private trusted fly. Keep the new task oracle=none pending acceptance. The operator validation CLI accepts `--revision general-eight/1`; default remains legacy.
+
+Both instance banks cover three plane classes and both senses overall, and each of five wind strata has both senses among its ten held-out cases. This is **not** the full 3×2×5 Cartesian product (which requires at least 30 cases). Trajectory draws are unchanged from commit 662208446, frozen before the prior fixed-reference checks; no reference tuning has occurred. Existing failures are retained. Adaptation and held-out trajectory sets remain disjoint.
+
+At rate 0.8, six laps round to 2,356 ticks (47.12 s). Telemetry and video contain 472 samples/frames. Frame physics times are 0.02, 0.12, ..., 47.12 s; the shared 1 Hz selector returns all 48 scheduled images at 0.02 through 47.02 s. The cap does not truncate the schedule; the last image is 0.10 s before the terminal state, within the 1 s sampling interval. Keep the shared +0.02 s correction; raw video PTS starts at zero. This does not imply an exact terminal image is returned.

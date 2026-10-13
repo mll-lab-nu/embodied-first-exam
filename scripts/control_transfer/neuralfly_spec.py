@@ -5,7 +5,9 @@ import copy
 from .neuralfly_constants import BOUNDS, DEFAULT
 
 
-def make_spec(index):
+def make_spec(index, revision="fixed-eight/1"):
+    if revision not in ("fixed-eight/1", "general-eight/1"):
+        raise ValueError("Trajectory revision")
     if type(index) is not int or not 0 <= index < 1000:
         raise ValueError("Instance index")
     base = 10000 + index * 1000
@@ -17,18 +19,17 @@ def make_spec(index):
             for i in range(10 if held else 5)
         ]
 
-    return {
+    result = {
         "schema": "control-transfer-instance/2",
         "transfer_track": "same-plant",
         "family": "neural-fly",
         "name": "neural-fly",
-        "task_revision": "general-eight/1",
         "index": index,
         "public": {
             "schema": "control-transfer/1",
             "protocol": "eai-policy/1.1",
             "name": "neural-fly",
-            "goal": "Track six timed laps of a randomized figure eight: vertical, horizontal or inclined plane; yaw in [-pi,pi]; both traversal directions; half extents 0.9-1.5 m and 0.45-0.85 m; angular rate 0.8-1.1 rad/s; randomized phase, center and initial offset. Follow the provided world-frame position, velocity and acceleration commands.",
+            "goal": "Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.",
             "score": "Crash or escape: 0. Otherwise 100 exp(-max(0,RMSE_m-0.03)/0.25). Success requires the full horizon and RMSE<0.25 m; acquisition is included.",
             "max_rounds": 3,
             "adaptation_cases": 5,
@@ -54,3 +55,14 @@ def make_spec(index):
         },
         "bank": {"adaptation": bank(False), "held_out": bank(True)},
     }
+
+    if revision == "general-eight/1":
+        result.update(name="neural-fly-general-v1", task_revision=revision)
+        result["public"].update(
+            name="neural-fly-general-v1",
+            goal="Track six timed laps of a randomized figure eight: vertical, horizontal or inclined plane; yaw in [-pi,pi]; both traversal directions; half extents 0.9-1.5 m and 0.45-0.85 m; angular rate 0.8-1.1 rad/s; randomized phase, center and initial offset. Follow the provided world-frame position, velocity and acceleration commands.",
+        )
+        for cases in result["bank"].values():
+            for case in cases:
+                case["trajectory_revision"] = revision
+    return result

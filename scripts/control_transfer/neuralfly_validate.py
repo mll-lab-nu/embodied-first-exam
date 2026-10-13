@@ -52,10 +52,10 @@ class LocalClient:
 
 
 def run_instance(request):
-    index, output, asset = request
+    index, output, asset, revision = request
     root = Path(output) / f"i{index:02d}"
     root.mkdir()
-    spec = make_spec(index)
+    spec = make_spec(index, revision=revision)
     spec.update(private_asset=str(Path(asset).resolve()), private_asset_sha256=ASSET_SHA256)
     atomic(root / "instance.json", spec)
     session = Session(root / "session", spec, wall_clock_s=14400, render=True)
@@ -131,6 +131,7 @@ def main():
     parser.add_argument("--asset", type=Path, required=True)
     parser.add_argument("--instances", nargs="+", type=int, default=[0, 1])
     parser.add_argument("--workers", type=int, choices=[1, 2], default=2)
+    parser.add_argument("--revision", choices=["fixed-eight/1", "general-eight/1"], default="fixed-eight/1")
     args = parser.parse_args()
     if os.environ.get("MUJOCO_GL") != "osmesa" or os.environ.get("CUDA_VISIBLE_DEVICES") != "":
         raise ValueError("Set MUJOCO_GL=osmesa and CUDA_VISIBLE_DEVICES to the empty string")
@@ -143,6 +144,7 @@ def main():
         "numpy": np.__version__,
         "platform": platform.platform(),
         "cpu_workers": args.workers,
+        "trajectory_revision": args.revision,
         "gl_backend": "osmesa",
         "gpu_visible": False,
         "asset_sha256": ASSET_SHA256,
@@ -157,7 +159,8 @@ def main():
     results = []
     with ProcessPoolExecutor(max_workers=args.workers) as pool:
         for result in pool.map(
-            run_instance, [(i, str(args.out.resolve()), str(args.asset.resolve())) for i in args.instances]
+            run_instance,
+            [(i, str(args.out.resolve()), str(args.asset.resolve()), args.revision) for i in args.instances],
         ):
             results.append(result)
             atomic(args.out / "validation.json", results)

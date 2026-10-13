@@ -68,9 +68,69 @@ class NeuralFlyTests(unittest.TestCase):
         points = np.array([target(t, tilt=np.pi / 2, yaw=0.8)[0] for t in np.linspace(0, 7, 100)])
         np.testing.assert_allclose(points[:, 2], 1.8, atol=1e-12)
 
+    def test_rotation_covariance_and_legacy_default_values(self):
+        yaw, tilt = 0.7, -0.48
+        c, s, ct, st = np.cos(yaw), np.sin(yaw), np.cos(tilt), np.sin(tilt)
+        rotation = np.array([[c, -s * ct, s * st], [s, c * ct, -c * st], [0, st, ct]])
+        for time in (0.0, 0.83, 3.17):
+            expected = (
+                np.array([1.25 * np.sin(time), 0, 1.8 + 0.75 * np.sin(2 * time)]),
+                np.array([1.25 * np.cos(time), 0, 1.5 * np.cos(2 * time)]),
+                np.array([-1.25 * np.sin(time), 0, -3 * np.sin(2 * time)]),
+            )
+            for value, old in zip(target(time), expected):
+                np.testing.assert_array_equal(value, old)
+            base = target(time, center=(0, 0, 0), direction=-1, rate=0.83)
+            turned = target(time, yaw=yaw, tilt=tilt, center=(0, 0, 0), direction=-1, rate=0.83)
+            for value, original in zip(turned, base):
+                np.testing.assert_allclose(value, rotation @ original, atol=1e-14)
+
+    def test_slow_six_lap_rollout_telemetry_and_frames_fit_image_cap(self):
+        from scripts.control_transfer import neuralfly_nominal
+
+        times, curves = [], []
+
+        class Recorder:
+            def __init__(self, model, path, center, *, curve):
+                curves.extend(curve)
+
+            def frame(self, data):
+                times.append(float(data.time))
+
+            def close(self):
+                pass
+
+        with tempfile.TemporaryDirectory() as d, patch.object(neuralfly_nominal, "Video", Recorder):
+            result = neuralfly_nominal.rollout(
+                {**DEFAULT, "kp": 10.0, "kd": 6.0, "observer_gain": 8.0},
+                rate=0.8,
+                direction=-1,
+                yaw=0.7,
+                tilt=np.pi / 2,
+                out=Path(d) / "nominal",
+                render=True,
+            )
+        steps = round(6 * 2 * np.pi / (0.8 * 0.02))
+        self.assertEqual(steps, 2356)
+        self.assertEqual(len(times), 472)
+        self.assertEqual(len(result["telemetry"]), 472)
+        np.testing.assert_allclose(times, np.arange(472) * 0.1 + 0.02, atol=1e-10)
+        np.testing.assert_allclose([r["t"] for r in result["telemetry"]], np.arange(472) * 0.1, atol=1e-12)
+        np.testing.assert_allclose(
+            curves,
+            [
+                target(t, rate=0.8, direction=-1, yaw=0.7, tilt=np.pi / 2)[0]
+                for t in np.linspace(0, 2 * np.pi / 0.8, 100, endpoint=False)
+            ],
+        )
+        sampled = times[::10]
+        self.assertEqual(len(sampled), 48)
+        self.assertLessEqual(steps * 0.02 - sampled[-1], 1.0)
+        self.assertAlmostEqual(sampled[-1], 47.02, places=8)
+
     def test_held_out_trajectory_diversity_and_ground_clearance(self):
         for index in (0, 1):
-            spec = make_spec(index)
+            spec = make_spec(index, revision="general-eight/1")
             cases = spec["bank"]["held_out"]
             commands = [episode_trajectory(c["episode_seed"]) for c in cases]
             self.assertEqual({plane for plane, _ in commands}, {"horizontal", "vertical", "inclined"})
