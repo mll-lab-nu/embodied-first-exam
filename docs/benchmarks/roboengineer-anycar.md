@@ -320,3 +320,12 @@ The worker's frozen default controller passed one adaptation-only case per compa
 (160/160), with finish times 28.0147–28.1447 s and all four traction surfaces. This broad
 smoke sweep is not a held-out model comparison. Compact tasks remain `oracle="none"`
 until native multi-round acceptance and reference solvability are established separately.
+
+### Public reference-line visual revision
+
+The diagnostic video renders a continuous cyan reference centerline in both
+views, replacing the moving target dot. Its geometry is derived only from the
+public commanded route (or ellipse parameters), never from hidden robot state.
+The line is a rendering overlay and does not change physics or noisy telemetry.
+Previous video artifacts remain unchanged; this visual revision produces new
+video bytes. Time-indexed target values remain available in noisy-feedback rows.
