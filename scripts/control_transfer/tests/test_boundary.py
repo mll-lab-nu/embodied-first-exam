@@ -1,0 +1,141 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+import io, tempfile, unittest, zipfile
+from unittest.mock import patch
+import numpy as np
+from scripts.control_transfer.control_public.weights import Network, shapes
+from scripts.control_transfer.trusted.adapter import feedback, validate
+from scripts.control_transfer.trusted.session import Session, atomic
+from scripts.control_transfer.trusted.verify import verdict
+from scripts.control_transfer.trusted.service import parse
+from scripts.control_transfer.specs import spec, FAMILIES
+
+
+class BoundaryTests(unittest.TestCase):
+    def test_strict_json(self):
+        for raw in [b'{"a":1,"a":2}', b'{"a":NaN}', b'{"a":Infinity}']:
+            with self.assertRaises(ValueError):
+                parse(raw)
+
+    def test_numeric_archives(self):
+        for family in ["linearbot", "g1"]:
+            a = {k: np.zeros(shape, np.float32) for k, shape in shapes(family).items()}
+            a["std"][:] = 1
+            stream = io.BytesIO()
+            np.savez_compressed(stream, **a)
+            actor = Network(stream.getvalue(), family)
+            self.assertEqual(actor(np.zeros(len(a["mean"]))).shape, (16 if family == "linearbot" else 29,))
+            a["extra"] = np.zeros(1)
+            stream = io.BytesIO()
+            np.savez_compressed(stream, **a)
+            with self.assertRaises(ValueError):
+                Network(stream.getvalue(), family)
+
+    def test_malicious_header_rejected_before_allocation(self):
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, "w") as z:
+            for k, shape in shapes("g1").items():
+                f = io.BytesIO()
+                np.lib.format.write_array_header_1_0(
+                    f, {"descr": "<f4", "fortran_order": False, "shape": (10**12,) if k == "mean" else shape}
+                )
+                z.writestr(k + ".npy", f.getvalue())
+        with self.assertRaises(ValueError):
+            Network(out.getvalue(), "g1")
+
+    def test_banks_disjoint_and_stratified(self):
+        for f in FAMILIES:
+            v = spec(f, 0)
+            banks = v["bank"]
+            a = {(x["plant_seed"], x["episode_seed"]) for x in banks["adaptation"]}
+            b = {(x["plant_seed"], x["episode_seed"]) for x in banks["held_out"]}
+            self.assertFalse(a & b)
+            if f == "yam":
+                self.assertEqual({x["episode_seed"] % 9 for x in banks["adaptation"]}, set(range(9)))
+
+    def test_feedback_excludes_privileged_fields(self):
+        with tempfile.TemporaryDirectory() as d:
+            r = {
+                "feedback": {"telemetry": [{"t": 0.0, "values": [0.1] * 29}]},
+                "metrics": {"score": 100},
+                "dynamics": {"secret": 42},
+            }
+            self.assertEqual(set(feedback("g1", r, d)), {"telemetry", "images"})
+            r["feedback"]["true_state"] = [1]
+            with self.assertRaises(ValueError):
+                feedback("g1", r, d)
+
+    def test_nop_and_restart(self):
+        with tempfile.TemporaryDirectory() as d:
+            v = spec("spacecraft", 0)
+            s = Session(Path(d) / "run", v, render=False)
+            self.assertIsNone(s.state["deadline"])
+            s.call("describe", {})
+            deadline = s.state["deadline"]
+            restored = Session(Path(d) / "run", v, render=False)
+            self.assertEqual(restored.state["deadline"], deadline)
+            restored.finalize()
+            p = Path(d) / "instance.json"
+            atomic(p, v)
+            r = verdict(s.root, p)
+            self.assertEqual(r["infra_error"], 0)
+            self.assertEqual(r["success"], 0)
+
+    def test_interrupted_round_is_not_reset(self):
+        with tempfile.TemporaryDirectory() as d:
+            v = spec("spacecraft", 0)
+            s = Session(d, v, render=False)
+            s.state["rounds"] = [{"status": "running"}]
+            s.persist()
+            s = Session(d, v, render=False)
+            self.assertTrue(s.state["infra_error"])
+            self.assertIn("error", s.call("describe", {}))
+
+    def test_bad_instance_and_bad_evidence_fail_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            v = spec("spacecraft", 0)
+            p = Path(d) / "instance.json"
+            atomic(p, v)
+            s = Session(Path(d) / "run", v, render=False)
+            s.finalize()
+            v["index"] = 9
+            atomic(p, v)
+            self.assertEqual(verdict(s.root, p)["infra_error"], 1)
+
+    def test_no_shell_paths_as_policy(self):
+        for family in ("g1", "linearbot"):
+            with self.assertRaises(ValueError):
+                validate(family, {"path": "/srv/instance.json"})
+
+    def test_budget_and_seal(self):
+        with tempfile.TemporaryDirectory() as d:
+            v = spec("spacecraft", 0)
+            s = Session(d, v, render=False)
+            fake = {
+                "metrics": {"score": 80.0, "success": True},
+                "feedback": {"telemetry": [{"t": 0.0, "values": [0.0] * 13}]},
+                "state_sha256": "a" * 64,
+            }
+            with patch.object(s, "episode", return_value=fake):
+                for i in range(3):
+                    self.assertEqual(
+                        s.call(
+                            "deploy",
+                            {"policy": v["public"]["default_policy"], "diagnosis": "Observed drift; increase damping."},
+                        )["round_id"],
+                        i,
+                    )
+                self.assertIn(
+                    "error", s.call("deploy", {"policy": v["public"]["default_policy"], "diagnosis": "fourth"})
+                )
+                self.assertTrue(s.call("seal", {"round_id": 1, "summary": "Choose second."})["sealed"])
+                self.assertIn("error", s.call("describe", {}))
+                result = s.finalize()
+                self.assertFalse(result["infra_error"])
+                self.assertEqual(len(result["episodes"]), 6)
+
+
+if __name__ == "__main__":
+    unittest.main()
