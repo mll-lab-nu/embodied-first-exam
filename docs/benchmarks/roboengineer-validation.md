@@ -164,3 +164,30 @@ schedules are preserved. The new tasks remain `oracle="none"`; native Harbor,
 all-layout physical acceptance, complete multi-round campaigns and LLM evaluation
 remain unperformed. Operator receipts and exact generated-source/artifact hashes are
 under `anycar/integration-full-laps-v1`.
+
+
+## AnyCar F1TENTH-style appearance update
+
+The procedural GT-style RC shell, glazing, rear wing, lamps and spoke wheels are
+visual-only. The existing AnyCar dynamics and collision primitives are retained;
+this is not a newly calibrated F1TENTH chassis. Public nominal and private deployment
+packages use identical model source, with refreshed task digests identifying the
+appearance change. Existing recordings remain associated with their original digests.
+
+Integration compares the old and new models on both plants, for ellipse and Silverstone
+commands: mass, inertia, joint, actuator and active collision arrays match, as do all
+500 driven control steps per pair (5,000 physics steps each). A fresh generated-package
+24-second ellipse recording and independent non-rendered replay match physical state,
+noisy feedback and metrics exactly; the rendered record also equals the archived
+pre-change record, including its runtime metadata. Rendering metadata correctly differs
+for the non-rendered replay. The new 1280×480 video decodes into 241 frames and the
+adapter delivers 25 hash-verified JPEGs with all 241 noisy rows. Both preview panels
+were inspected. All 125 existing AnyCar MP4 hashes remain unchanged.
+
+Thirty existing vehicle, circuit, lap-runtime and packaging tests pass. Repository CI
+passes all 20 Control Transfer task checks and 113 mutation checks; its system-Python
+optional NumPy/requests tier is skipped, with affected tests run separately in the
+pinned numerical environment above. The separate
+operator evidence is `anycar/integration-f1tenth-visual-v1`; the worker preview is
+`anycar/f1tenth-visual-v1`. This is a visual integration smoke test, not a new full-lap,
+multi-round, native Harbor or coding-agent campaign.

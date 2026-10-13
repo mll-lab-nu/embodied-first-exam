@@ -30,6 +30,62 @@ NOMINAL = dict(
 WHEELS = ("fl", "fr", "bl", "br")
 
 
+def visual_bodywork():
+    """Original GT-style RC bodywork; zero mass and no contact geometry."""
+    def loft(name, sections):
+        vertices = []
+        for x, width, bottom, top in sections:
+            # Beveled shoulders and a gently crowned top avoid a box silhouette.
+            vertices.extend([(x, -width, bottom), (x, width, bottom),
+                             (x, width, top - .008), (x, .72 * width, top),
+                             (x, -.72 * width, top), (x, -width, top - .008)])
+        faces = []
+        for i in range(len(sections) - 1):
+            for j in range(6):
+                a, b = i * 6 + j, i * 6 + (j + 1) % 6
+                c, d = a + 6, b + 6
+                faces.extend([(a, b, c), (b, d, c)])
+        for j in range(1, 5):
+            faces.append((0, j + 1, j))
+            k = (len(sections) - 1) * 6
+            faces.append((k, k + j, k + j + 1))
+        v = " ".join(str(t) for row in vertices for t in row)
+        f = " ".join(str(t) for row in faces for t in row)
+        return f'<mesh name="{name}" vertex="{v}" face="{f}"/>'
+
+    assets = [
+        '<material name="race_paint" rgba=".035 .22 .29 1" specular=".8" shininess=".75"/>',
+        '<material name="race_glass" rgba=".025 .045 .065 1" specular="1" shininess=".95"/>',
+        '<material name="carbon" rgba=".035 .04 .045 1" specular=".3" shininess=".3"/>',
+        '<material name="alloy" rgba=".58 .62 .65 1" specular=".9" shininess=".8"/>',
+        loft('gt_body', [(-.235,.065,.082,.102),(-.205,.103,.075,.128),
+                        (-.13,.105,.080,.14),(.06,.10,.082,.135),
+                        (.17,.105,.078,.115),(.225,.085,.080,.10)]),
+        loft('gt_cabin', [(-.14,.077,.13,.14),(-.075,.072,.132,.196),
+                         (.012,.066,.13,.194),(.094,.074,.12,.132)]),
+        loft('gt_roof', [(-.077,.061,.194,.197),(-.06,.063,.197,.203),
+                        (.008,.060,.194,.200),(.02,.056,.189,.193)]),
+    ]
+    visual = 'mass="0" contype="0" conaffinity="0" group="2"'
+    geoms = [f'<geom name="visual_{n}" type="mesh" mesh="{n}" material="{mat}" {visual}/>'
+             for n, mat in [('gt_body','race_paint'),('gt_cabin','race_glass'),('gt_roof','race_paint')]]
+    def box(name, pos, size, material='carbon', rgba=None):
+        color = f'rgba="{rgba}"' if rgba else f'material="{material}"'
+        geoms.append(f'<geom name="visual_{name}" type="box" pos="{pos}" size="{size}" {color} {visual}/>')
+    box('splitter', '.211 0 .076', '.027 .098 .003')
+    box('diffuser', '-.218 0 .074', '.025 .092 .006')
+    box('rear_wing', '-.207 0 .181', '.025 .118 .003')
+    for side in [-1, 1]:
+        box(f'wing_support{side}', f'-.20 {side*.055} .153', '.003 .003 .026')
+        box(f'wing_endplate{side}', f'-.207 {side*.119} .181', '.028 .002 .014', 'race_paint')
+        box(f'sill{side}', f'-.012 {side*.1} .082', '.115 .005 .008')
+        box(f'headlight{side}', f'.224 {side*.061} .098', '.002 .023 .005', rgba='.85 .94 1 1')
+        box(f'taillight{side}', f'-.231 {side*.047} .105', '.003 .019 .004', rgba='.85 .025 .018 1')
+        box(f'mirror{side}', f'.055 {side*.096} .149', '.012 .015 .006', 'race_paint')
+        box(f'roof_stripe{side}', f'-.025 {side*.013} .2035', '.032 .006 .001', rgba='.88 .66 .12 1')
+    return assets, "".join(geoms)
+
+
 def xml_model(plant, surfaces, command):
     """Procedural chassis; wheel/joint/tendon mechanism retains source numeric settings."""
     circuit = "track_id" in command
@@ -42,7 +98,7 @@ def xml_model(plant, surfaces, command):
         a, b = command["a"], command["b"]
         extent = 12
     road = []
-    assets = []
+    assets, bodywork = visual_bodywork()
     for i, surface in enumerate(surfaces):
         left, right, mu = surface
         road.append(
@@ -96,11 +152,20 @@ def xml_model(plant, surfaces, command):
     wheels = []
     for name, x, y in (("fl", 0.1385, 0.115), ("fr", 0.1385, -0.115), ("bl", -0.158, 0.115), ("br", -0.158, -0.115)):
         steering = f'<joint name="{name}_steering" class="steering"/>' if name.startswith("f") else ""
+        wheel_visuals = []
+        for side in (-1, 1):
+            yside = side * .021
+            wheel_visuals.append(f'<geom type="cylinder" size=".027 .001" pos="0 {yside} 0" euler="1.5707963267948966 0 0" mass="0" contype="0" conaffinity="0" material="carbon"/>')
+            for theta in np.linspace(0, 2*np.pi, 10, endpoint=False):
+                x1, z1 = .008*np.cos(theta), .008*np.sin(theta)
+                x2, z2 = .025*np.cos(theta+.12), .025*np.sin(theta+.12)
+                wheel_visuals.append(f'<geom type="capsule" size=".002" fromto="{x1} {yside*1.06} {z1} {x2} {yside*1.06} {z2}" mass="0" contype="0" conaffinity="0" material="alloy"/>')
         wheels.append(f'''<body name="wheel_{name}" pos="{x} {y} .0488">
           <joint name="{name}_suspension" type="slide" axis="0 0 1" limited="true" range="-.05 0" springdamper=".1 .1"/>
           {steering}<joint name="{name}_spin" class="spin"/>
-          <geom name="tire_{name}" type="cylinder" size=".04 .02" euler="1.5707963267948966 0 0" mass=".997904" friction="2 .005 .0001" contype="1" conaffinity="0" rgba=".09 .10 .11 1"/>
-          <geom type="cylinder" size=".023 .021" euler="1.5707963267948966 0 0" mass="0" contype="0" conaffinity="0" rgba=".65 .68 .70 1"/>
+          <geom name="tire_{name}" type="cylinder" size=".04 .02" euler="1.5707963267948966 0 0" mass=".997904" friction="2 .005 .0001" contype="1" conaffinity="0" rgba=".022 .025 .028 1"/>
+          {"".join(wheel_visuals)}
+          <geom type="cylinder" size=".008 .024" euler="1.5707963267948966 0 0" mass="0" contype="0" conaffinity="0" rgba=".65 .68 .70 1"/>
           </body>''')
     tendon = "".join(f'<joint joint="{n}_spin" coef=".25"/>' for n in WHEELS)
     return f"""<mujoco model="contact_vehicle"><compiler angle="radian"/><option timestep=".002" integrator="implicitfast" cone="elliptic" iterations="50"/><size njmax="2000" nconmax="300"/>
@@ -109,9 +174,10 @@ def xml_model(plant, surfaces, command):
     <asset>{"".join(assets)}</asset>
     <worldbody><light pos="0 0 10" dir="0 0 -1" directional="true"/>{"".join(road)}
     <body name="car" pos="0 0 .08"><freejoint/>
-    <geom name="chassis" type="box" pos="-.01 0 .094655" size=".20 .09 .035" mass="3.542137" rgba=".12 .38 .51 1"/>
-    <geom type="box" pos=".0123949 0 .162178" size=".012525 .045 .0125" mass=".072" rgba=".12 .12 .13 1"/>
-    <geom type="cylinder" pos="-.035325 0 .202405" size=".035 .015" mass=".180" rgba=".15 .15 .16 1"/>
+    <geom name="chassis" type="box" pos="-.01 0 .094655" size=".20 .09 .035" mass="3.542137" rgba="0 0 0 0"/>
+    <geom type="box" pos=".0123949 0 .162178" size=".012525 .045 .0125" mass=".072" rgba="0 0 0 0"/>
+    <geom type="cylinder" pos="-.035325 0 .202405" size=".035 .015" mass=".180" rgba="0 0 0 0"/>
+    {bodywork}
     <body name="steering_link" pos=".1385 0 .0488"><joint name="steering" class="steering"/><geom type="sphere" size=".015" mass=".01" contype="0" conaffinity="0" rgba="0 0 0 0"/></body>
     {"".join(wheels)}</body></worldbody>
     <tendon><fixed name="drive">{tendon}</fixed></tendon>
