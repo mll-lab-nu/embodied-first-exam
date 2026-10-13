@@ -175,9 +175,12 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
     the targets in effect (`cmd_`); never an object or an instrument;
   - `/kinematics` = the tool frame (the point between the fingertips) and the hand link, for arm joint positions, and
     damped-least-squares IK; `robot_spec` with the base pose, joint limits, drive gains and the gripper's command;
-  - `meta["time_left_s"]` is what is left of the agent's budget, counted from the service's first start in its
-    container: the minutes the service needs to come up are part of the budget (Harbor's clock for the agent starts
-    with the environment), and a clock started when the service is ready would overstate what is left by that much;
+  - `meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (since 2026-10-13,
+    as in every benchmark: STANDARD_MODE.md, "The agent's clock"). Harbor counts the agent's cutoff around the agent's
+    run only, after the harness has been installed, so the earlier rule (from the service's first start in its
+    container) ran ahead of the agent's clock by that set-up time. What `time_left_s` does not hold is the time the
+    agent waits for the service before its first request is answered: the minutes of start-up that fall inside the
+    agent's phase are part of its budget, and the instruction says so;
   - crash recovery with resume class `exact` (a resumed service is a fresh process). The collect hook replays the
     recorded trajectory in two fresh processes.
   - a request is checked in full before anything is executed: a malformed field (null or a wrong type for `dt`,

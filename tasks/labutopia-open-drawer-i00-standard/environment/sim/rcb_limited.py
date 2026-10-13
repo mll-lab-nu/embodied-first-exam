@@ -33,7 +33,10 @@ carries a field the protocol forbids (segmentation, object identities or sizes, 
 Crash recovery (class Episode; PROTOCOL §4.7): every executed control step is journaled, every completed call
 checkpointed (rows, state hash, the robot's proprio row); after a crash compose restarts the container and the service
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
-first half of a collect hook."""
+first half of a collect hook.
+The agent's clock (meta time_s / time_left_s = agent_time(E)) starts at its first request to the service, any endpoint
+(the HTTP layer notes it in E["t_first"] and logs `first_request`, which a resume reads back): the sidecar is up before
+the agent's session begins (the harness installs the agent first), so the service's own start is not that moment."""
 from __future__ import annotations
 import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -409,6 +412,22 @@ ON_SERVICE_ERROR = ("a connection error means the service crashed: it restarts a
                     "executed (meta.stopped, executed_rows).")
 
 
+CLOCK_NOTE = ("meta time_s / time_left_s count from your first request to the service (any endpoint), not from the "
+              "service's start, and keep running through a restart of the service; time_left_s = budget.wall_clock_s - "
+              "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
+              "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
+              "first request. Plan by time_left_s.")
+
+
+def agent_time(state: dict) -> float:
+    """Seconds since the agent's first request to the service (0.0 before it): the clock of meta time_s / time_left_s.
+    Harbor counts the agent's cutoff around the agent's run only, and the sidecar starts with the environment, a
+    minute or more before that (the harness is installed in between): a clock started with the service, or when the
+    scene is ready, ran ahead of the agent's and time_left_s reached 0 while the agent still had that time."""
+    t = state.get("t_first")
+    return 0.0 if t is None else max(0.0, time.time() - float(t))
+
+
 def _jsonable(v: Any) -> Any:
     if isinstance(v, np.ndarray):
         return v.tolist()
@@ -470,7 +489,8 @@ class Episode:
     - begin(): a fresh episode, or after a crash (run.sh exits non-zero, compose restarts the container, `restart:
       on-failure:N`) the SAME episode resumed: the journal is replayed up to the last checkpoint, the journal truncated
       there (the call that was in flight is lost as a whole: its caller got an error, not a result), the state hash
-      compared, the service's counters restored; the wall clock keeps running from the first start.
+      compared, the service's counters restored; the agent's clock keeps running from its first request (the logged
+      `first_request`: a resume never sets it back to full), the episode's own (state["t0"]) from the first start.
     - Resume check, by the simulator's determinism class: `exact` (bit-exact in a fresh process): the hash must match,
       else the episode ends `resume_failed` (infra_error). `approx` (a simulator declared nondeterministic): a
       mismatch is recorded (resume_state_mismatch, and the robot's deviation from its checkpointed proprio: joint_pos and
@@ -690,6 +710,9 @@ class Episode:
         for key, v in (last.get("persist") or {}).items():
             state[key] = v
         state["t0"] = float(starts[0]["ts"])
+        first = [e for e in ev if e.get("ev") == "first_request"]
+        if first:                                    # the agent's clock keeps running through a crash, never back to full
+            state["t_first"] = float(first[0].get("t_first") or first[0]["ts"])
         ended = [e for e in ev if e.get("ev") == "end" and int(e.get("control_steps") or 0) <= n]   # not the lost call's
         if ended:
             state["done"] = True; state["reason"] = ended[-1].get("reason"); state["t_end"] = float(ended[-1]["ts"])
@@ -843,8 +866,18 @@ class Service:
         self.episode, self.state_sha, self.proprio = episode, state_sha, proprio
         self.kin_calls = 0
 
+    def touch(self) -> None:
+        """Every HTTP request passes here: the first one starts the agent's clock (agent_time) and is logged, so that
+        a resume keeps it. A probe that must not start it connects to the port without sending a request."""
+        if self.state.get("t_first") is None:
+            self.state["t_first"] = t = time.time()
+            (self.episode.log if self.episode is not None else self.log)({"ev": "first_request", "t_first": t})
+
 
 def make_handler(svc: Service):
+    if isinstance(svc.spec.get("budget"), dict):
+        svc.spec["budget"].setdefault("clock", CLOCK_NOTE)   # what time_s / time_left_s count from, in every 2.2 /spec
+
     class H(BaseHTTPRequestHandler):
         def _send(self, code: int, ctype: str, body: bytes) -> None:
             try:
@@ -861,6 +894,12 @@ def make_handler(svc: Service):
 
         def log_message(self, *a):
             pass
+
+        def parse_request(self):             # every request, of any method and path (a subclass's endpoints too)
+            ok = super().parse_request()
+            if ok:
+                svc.touch()
+            return ok
 
         def _body(self):
             try:

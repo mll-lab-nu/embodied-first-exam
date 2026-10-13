@@ -260,6 +260,8 @@ class Requests(ServiceCase):
     def test_the_clock_starts_at_the_first_request(self):
         s = self.service()
         time.sleep(1.5)                                   # the agent's set-up: the service is up, nobody has called it
+        socket.create_connection(("127.0.0.1", s.port), timeout=10).close()   # a probe that connects and sends nothing
+        self.assertNotIn('"first_request"', (s.data / "episode.jsonl").read_text())
         spec = s.get("/spec")
         self.assertIn("first request", spec["budget"]["wall_clock_note"])
         _, m, _ = s.post("/observe", {})
@@ -272,6 +274,8 @@ class Requests(ServiceCase):
         s.start(); s.wait_up()                            # the PID file is written just before the port is bound
         _, m2, _ = s.post("/observe", {})
         self.assertGreater(m2["time_s"], 1.0)
+        self.assertLess(m2["time_left_s"], m["time_left_s"] - 1.0)   # never back to full
+        self.assertEqual((s.data / "episode.jsonl").read_text().count('"first_request"'), 1)
         self.assertEqual(m2["step"], 1)
 
     def test_the_service_uses_robotwins_own_gripper_rule(self):

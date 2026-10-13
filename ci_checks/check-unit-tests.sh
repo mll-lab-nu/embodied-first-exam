@@ -50,7 +50,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
   # service test that apply to it, run against that copy
   RCB_SERVICE_DIR="$root/scripts/libero-max/shared/standard" run 900 humanoidbench/tests/test_standard_service.py \
-    Endpoints Submit Observe ResetCapability ResetChecks Client Boot
+    Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot
   # the realtime clock under request load: the classes that do not depend on the runner's speed (TestClockUnderLoad
   # measures step counts under floods of requests; run the whole file by hand on a quiet host)
   run 900 humanoidbench/tests/test_realtime_load.py TestRequests TestStallEvidence TestGraders

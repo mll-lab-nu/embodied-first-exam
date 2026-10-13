@@ -16,7 +16,7 @@ cannot open. You get one client and one episode.
 - **Success** {{std_success}}
 - Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
   `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
-  from your first call to the service; approximate — the harness's own deadline is authoritative.
+  from your first request to the service: it never runs out before your time does, so plan by it.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.

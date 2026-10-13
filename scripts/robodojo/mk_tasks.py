@@ -75,7 +75,18 @@ CHANGE_LOG_ALL = {   # README Change Log entries of every task (PROTOCOL §2.8),
                  "docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, "
                  "RoboDojo's success check, the collect hook and the verifier are unchanged, so the task keeps its name; trials "
                  "recorded before this date ran with 5400 s and are kept apart (no official result was published with it).",
-                 ONE_REPLAY["standard"]],
+                 ONE_REPLAY["standard"],
+                 "2026-10-13 (owner, boards 0085 and 0087): the sim service's clock "
+                 "(`environment/sim/rcb_limited.py`, `environment/sim/server.py`, the docstring of "
+                 "`environment/rcb_client.py`). `meta[\"time_s\"]` and `meta[\"time_left_s\"]` count from the agent's "
+                 "first request to the service (any endpoint), and a restarted service keeps that moment; before, "
+                 "they counted from the service's own start of the episode (when its scene was ready). Where the "
+                 "service is ready before the agent's phase begins (the harness is installed in between: a median of "
+                 "79 s over the recorded standard trials), that clock ran ahead of the agent's and `time_left_s` "
+                 "reached 0 while the agent still had that time. `/spec` says what the clock counts from "
+                 "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. "
+                 "The service never ended an episode on this clock: the scene, the frozen instance, the pass rule "
+                 "and the grader are unchanged, so the task keeps its name and earlier results stand."],
 }
 REGISTRY = "ghcr.io/mll-lab-nu"
 MODES = ("privileged", "standard")
