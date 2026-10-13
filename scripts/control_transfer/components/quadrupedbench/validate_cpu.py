@@ -44,6 +44,11 @@ def evaluate(policy, case, out, render, environment):
 
 
 def main():
+    import mujoco
+    import numpy
+
+    if mujoco.__version__ != "3.5.0":
+        raise RuntimeError("Acceptance requires MuJoCo 3.5.0")
     parser = argparse.ArgumentParser()
     parser.add_argument("--policies", required=True, help="Operator-only directory with TASK.json for all four tasks")
     parser.add_argument("--out", required=True)
@@ -66,6 +71,10 @@ def main():
         "transfer_track": "same-plant",
         "runtime": {
             "python": sys.executable,
+            "mujoco_version": mujoco.__version__,
+            "mujoco_module": mujoco.__file__,
+            "numpy_version": numpy.__version__,
+            "pythonpath": environment.get("PYTHONPATH", ""),
             "osmesa_library_directory": environment.get("LD_LIBRARY_PATH", ""),
             "assets": environment.get("GO2_ASSET_DIR", ""),
             "environment": {
@@ -88,6 +97,7 @@ def main():
     here = Path(__file__).parent
     sources = (
         list(here.glob("*.py"))
+        + [here / "requirements-cpu.txt"]
         + list((here.parents[1] / "control_public").glob("go2*.py"))
         + [(here.parents[1] / "trusted/go2.py")]
     )
