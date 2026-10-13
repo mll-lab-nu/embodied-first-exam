@@ -1,0 +1,12 @@
+{
+ "task": "FiberBundling-Easy-v0",
+ "states": "esf_dump/states_full.npz",
+ "frames": 2636,
+ "max_pose_readback_err_m": 7.152557373046875e-07,
+ "wall_s": 290.72505402565,
+ "cameras": [
+  "top",
+  "left_wrist",
+  "ring"
+ ]
+}

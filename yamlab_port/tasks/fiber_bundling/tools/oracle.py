@@ -33,6 +33,7 @@ p.add_argument("--fiber_damping", type=float, default=None, help="EXPERIMENT ONL
 p.add_argument("--squeeze", type=float, default=-0.0105, help="gripper target while holding (pads touch at -0.012)")
 p.add_argument("--naive_offset_m", type=float, default=0.012, help="lateral feed offset of the naive_offset variant")
 p.add_argument("--stop_after", default=None, help="stop after this phase (debug)")
+p.add_argument("--rot_feedback", type=float, default=0.1, help="integral gain of the trunk direction servo in the feed")
 AppLauncher.add_app_launcher_args(p)
 args = p.parse_args(); args.headless = True
 app = AppLauncher(args).app
@@ -59,6 +60,13 @@ def slerp_R(R0, R1, u):
     k = w/ang; a = ang*u
     Kx = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
     return (np.eye(3)+np.sin(a)*Kx+(1-np.cos(a))*Kx@Kx) @ R0
+
+
+def rotvec_R(w):
+    ang = np.linalg.norm(w)
+    if ang < 1e-12: return np.eye(3)
+    k = w/ang; Kx = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    return np.eye(3)+np.sin(ang)*Kx+(1-np.cos(ang))*Kx@Kx
 
 
 class Oracle:
@@ -172,6 +180,18 @@ class Oracle:
             if self.done: return
             self.step(self.q_cmd, g0+(target-g0)*k/steps)
 
+    def axis_error(self, offset=np.zeros(3)):
+        """(radial offset of the front face centre from the (offset) ring axis [m], tilt of the trunk axis [deg])."""
+        T5 = self.T5(); fr = self.front_point(T5)-self.c-offset
+        return (float(np.linalg.norm(fr-(fr @ self.n)*self.n)), float(np.degrees(np.arccos(np.clip(T5[:3, 0] @ self.n, -1, 1)))))
+
+    def on_axis(self, offset=np.zeros(3)):
+        off, tilt = self.axis_error(offset)
+        return off < 0.002 and tilt < 1.0
+
+    def hand_lag(self):
+        return float(np.linalg.norm(K.fk_all(self.q_cmd, "left")[-1][:3, 3]-self.hand()[:3, 3]))
+
     # ---------------- trunk moves (closed loop on the measured grasp relation) ----------------
     def measure_grasp(self):
         self.X = np.linalg.inv(self.hand()) @ self.T5()  # trunk_05 frame in link_6 frame
@@ -190,12 +210,14 @@ class Oracle:
         Kx = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
         return (np.eye(3)+np.sin(a)*Kx+(1-np.cos(a))*Kx@Kx) @ R5
 
-    def move_trunk(self, offset, s, speed=None, settle=10, feedback=0.0):
+    def move_trunk(self, offset, s, speed=None, settle=10, feedback=0.0, rot_feedback=0.0, clip=0.003, until=None):
         """Move the front face centre along a straight line to c+offset+s*n (axis along n).
 
         The hand command follows the trunk target through the grasp relation X measured at the start
-        of the move; `feedback` adds a proportional correction of the measured front position error
-        (fraction per control step), which keeps the jacket on the ring axis while feeding.
+        of the move; `feedback` adds an integral correction of the measured front position error
+        (fraction per control step, clipped to `clip`), which keeps the jacket on the ring axis while feeding;
+        `rot_feedback` does the same for the trunk axis direction (the trunk pivots in the friction grasp).
+        `until`: during the settle steps, stop once it holds for 10 consecutive steps.
         """
         speed = speed or args.speed
         self.measure_grasp()
@@ -204,18 +226,27 @@ class Oracle:
         f1 = self.c+np.asarray(offset)+s*self.n
         R0 = T5[:3, :3]
         N = max(1, int(np.ceil(np.linalg.norm(f1-f0)/speed/self.env.step_dt)))
-        corr = np.zeros(3)
+        corr = np.zeros(3); corr_w = np.zeros(3); ok = 0
         for k in range(1, N+1+settle):
             if self.done: return
             u = min(k, N)/N; u = u*u*(3-2*u)
             f = f0+(f1-f0)*u
             R = slerp_R(R0, R5d, min(1.0, 3*u))
             if feedback > 0:
-                err = f-self.front_point()
-                corr = np.clip(corr+feedback*err, -0.003, 0.003)
+                T5m = self.T5()
+                # anti-windup (with rot_feedback): no integration while the hand lags its command, i.e. it is blocked
+                # (the wrist camera can rest on the kinked jacket behind the grasp)
+                if rot_feedback == 0 or self.hand_lag() < 0.002:
+                    corr = np.clip(corr+feedback*(f-self.front_point(T5m)), -clip, clip)
+                    if rot_feedback > 0:
+                        corr_w = np.clip(corr_w+rot_feedback*K.rot_err(R, T5m[:3, :3]), -0.2, 0.2)
+                R = rotvec_R(corr_w) @ R
             Tt = T_of(f+corr-R[:, 0]*self.L5, R)
             T6 = Tt @ np.linalg.inv(self.X)
             self.step(self.ik6(T6), self.grip)
+            if until is not None and k > N:
+                ok = ok+1 if until() else 0
+                if ok >= 10: return
 
     # ---------------- task phases ----------------
     def jacket_point(self, back):
@@ -331,12 +362,16 @@ class Oracle:
 
     def feed(self, final, offset=np.zeros(3)):
         self.phase = "feed"
-        # Align on the axis first while backing off 10 mm (the combed tips sit just before the ring plane, so an
-        # off-axis sheath must not move forward), then advance to the alignment station and feed.
+        # Servo the jacket onto the axis (position and direction; the trunk pivots in the friction grasp) while backing
+        # off only 5 mm: the combed tips sit just before the ring plane, so an off-axis sheath must not move forward, and
+        # backing the hand off further pushes the wrist camera into the slack jacket behind the grasp. Hold there until
+        # the jacket is on the axis (offset < 2 mm, tilt < 1 deg) or 150 steps have passed, then advance and feed.
+        fb = dict(feedback=0.15, rot_feedback=args.rot_feedback, clip=0.02)
         cur = float((self.front_point()-self.c) @ self.n)
-        self.move_trunk(offset, min(cur-0.010, -0.045), speed=0.008, feedback=0.15)
-        self.move_trunk(offset, -0.045, feedback=0.15)
-        self.move_trunk(offset, final, speed=0.01, feedback=0.15, settle=0)
+        self.move_trunk(offset, min(cur-0.005, -0.045), speed=0.005, settle=150, until=lambda: self.on_axis(offset), **fb)
+        self.events.append(dict(step=len(self.actions), aligned=self.axis_error(offset), strands=self.strand_rows()))
+        self.move_trunk(offset, -0.045, **fb)
+        self.move_trunk(offset, final, speed=0.01, settle=0, **fb)
         self.phase = "hold"
         self.hold(60)
 
