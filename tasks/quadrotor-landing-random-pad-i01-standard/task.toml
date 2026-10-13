@@ -10,6 +10,8 @@ keywords = ["robotics", "mujoco", "quadrotor", "policy", "system-identification"
 [metadata]
 author_name = "Robotic Engineering Bench contributors"
 author_org = "Robotic Engineering Bench"
+collection = "roboEngineer"
+embodiment = "drone"
 task_type = "policy"
 simulator = "mujoco"
 robot = "intel-aero-partial"

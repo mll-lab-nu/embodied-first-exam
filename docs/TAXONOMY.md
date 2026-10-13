@@ -5,6 +5,8 @@ Known values; a new value is added by pull request. See [PROTOCOL.md](PROTOCOL.m
 | Field | Values |
 |---|---|
 | `author_name` | the author's name (an organization may go in `author_org`) |
+| `collection` | optional umbrella collection; `roboEngineer` groups control-engineering tasks across embodiments ([roadmap](benchmarks/roboengineer.md)) |
+| `embodiment` | for `roboEngineer`: `drone` · `racing-car` · `humanoid` · `quadruped`; only `drone` is currently implemented in this collection. `robot` identifies the specific platform. |
 | `task_type` | `trajectory` · `policy` |
 | `mode` | `privileged` · `standard` (formerly `unlimited` / `limited`) · `standard-realtime` (protocol v1.1; named so since v1.1.1, PROTOCOL §4b) |
 | `protocol` | standard and standard-realtime mode only. Standard-realtime: `eai-standard/2.3`. Standard: `eai-standard/2.1` · `eai-standard/2.2` (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, MuJoCo Playground's quadruped tasks, YAMLab, RoboDojo, LabUtopia, AutoBio) · `eai-standard/2.4` (the operations capability: RoboTangle). Trajectory protocols are specified in [STANDARD_MODE.md](STANDARD_MODE.md); standard policy adaptation uses `eai-policy/1.0` in [POLICY_MODE.md](POLICY_MODE.md) |
@@ -71,4 +73,4 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 
 ## Quadrotor policy adaptation
 
-Neural Lander uses `task_type = "policy"`, `mode = "standard"`, protocol `eai-policy/1.0`, simulator `mujoco`, robot `intel-aero-partial`, family `quadrotor-landing/random-pad`. The two instances have separate frozen adaptation/held-out banks. They evaluate nominal training, bounded deployment-feedback iteration and final unseen placements on the same hidden plant. They have no privileged twins. Nominal mass and thrust are calibrated from the released aircraft data; inertia/contact assumptions are explicitly documented. This is simulation-to-simulation adaptation using a learned real-flight residual, not physical hardware deployment.
+Neural Landing belongs to `collection = "roboEngineer"`, `embodiment = "drone"`. Its existing benchmark label remains `Neural Lander` for cutoff/resource rules and historical records. It uses `task_type = "policy"`, `mode = "standard"`, protocol `eai-policy/1.0`, simulator `mujoco`, robot `intel-aero-partial`, family `quadrotor-landing/random-pad`. The two instances have separate frozen adaptation/held-out banks. They evaluate nominal training, bounded deployment-feedback iteration and final unseen placements on the same hidden plant. They have no privileged twins. Nominal mass and thrust are calibrated from the released aircraft data; inertia/contact assumptions are explicitly documented. This is simulation-to-simulation adaptation using a learned real-flight residual, not physical hardware deployment.

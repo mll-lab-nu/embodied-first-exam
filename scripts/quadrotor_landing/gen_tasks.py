@@ -126,6 +126,8 @@ keywords = ["robotics", "mujoco", "quadrotor", "policy", "system-identification"
 [metadata]
 author_name = "Robotic Engineering Bench contributors"
 author_org = "Robotic Engineering Bench"
+collection = "roboEngineer"
+embodiment = "drone"
 task_type = "policy"
 simulator = "mujoco"
 robot = "intel-aero-partial"
@@ -176,6 +178,8 @@ Seal a completed round to select it. If you finish or time out without sealing, 
         task,
         "README.md",
         f"""# {task.name}
+
+**roboEngineer → Drone → Neural Landing.** See the [collection roadmap](../../docs/benchmarks/roboengineer.md).
 
 Randomized aerial landing with bounded sensor-only policy adaptation and a private held-out bank. Native Harbor 0.23.0 Docker CPU oracle/nop validation passed on both instances with resource enforcement; see the benchmark documentation for evidence and build instructions.
 

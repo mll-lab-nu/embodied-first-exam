@@ -1,0 +1,46 @@
+# roboEngineer
+
+roboEngineer evaluates a coding agent's ability to engineer controllers across robot embodiments: train or tune in a nominal simulator, diagnose deployment failures from permitted observations, update the training or control pipeline, and generalize to held-out conditions. It is a collection within Robot Coding Bench, using native Harbor tasks and the repository's isolation and resource rules.
+
+## Embodiments and tasks
+
+| Embodiment | Task | Intended objective | Status in this collection |
+|---|---|---|---|
+| Drone | Neural Fly | Track flight trajectories while adapting to a mismatch between nominal and deployment dynamics. | Planned |
+| Drone | [Neural Landing](quadrotor-landing.md) | Land safely and promptly on an independently randomized pad from randomized initial x/y and height, with a hidden real-flight learned force residual. | Implemented; two native Harbor instances validated with scripted oracle and nop |
+| Racing car | Multi-surface Tracking | Track a driving trajectory across surfaces with differing tire–ground interaction. | Planned |
+| Humanoid | Walking over Terrain | Maintain commanded walking while traversing varied terrain. | Planned |
+| Quadruped | Weave Pole Navigation | Navigate a slalom between poles; follow SPI-Active's open-loop weave-pole setting when specifying the task. | Planned; SPI-Active reference |
+| Quadruped | Attitude Tracking | Track commanded body attitude. | Planned; SPI-Active reference |
+| Quadruped | Forward Jump | Execute a forward jump and recover a stable landing. | Planned; SPI-Active reference |
+| Quadruped | Yaw Jump | Execute a jump with a change in heading and recover a stable landing. | Planned; SPI-Active reference |
+
+The quadruped reference is [SPI-Active: Sampling-Based System Identification with Active Exploration for Legged Robot Sim2Real Learning](https://lecar-lab.github.io/spi-active_/). Its project page presents forward jump, yaw jump, and attitude tracking among its performance tasks, plus a separate **open-loop weave pole navigation** demonstration. These four tasks define this roadmap's quadruped scope; their implementations, numeric targets and evaluation rules have not yet been ported. Open-loop refers to the eventual execution setting, distinct from feedback between engineering iterations.
+
+The seven planned entries do not yet create runnable Harbor tasks. Platform choices, training simulators, deployment dynamics, randomization ranges, observation channels, controller interfaces, budgets and success thresholds will be specified and validated when each task is added. Existing similarly named tasks elsewhere in the repository are not automatically members of this collection.
+
+## Shared evaluation structure
+
+The intended collection workflow is:
+
+1. **Nominal training:** the agent develops a controller or policy with a public model and declared compute/time limits.
+2. **Deployment and improvement:** a separate evaluator runs a submitted artifact on hidden dynamics. The agent receives only the task's permitted camera/video observations and noisy measurements, records a short diagnosis and proposed change, and may improve its artifact for a bounded number of rounds.
+3. **Held-out evaluation:** freeze the selected artifact before evaluation on a private bank. Held-out states, scores and videos are withheld until the agent's work is complete.
+4. **Traceable reporting:** retain artifact versions, the exact feedback delivered at each round, submitted diagnoses, budgets, and final per-case metrics and recordings. Agent-visible feedback and operator-only evaluation records must be labeled separately.
+
+Use [policy adaptation](../POLICY_MODE.md) where its contract applies. Each task must declare its actual controller interface, round count, sensor channels, privacy boundary and scoring rule; this roadmap does not imply that arbitrary agent code may execute inside the deployment service. Report results by task and embodiment. No cross-embodiment aggregate score is defined yet.
+
+## First implementation: Neural Landing
+
+- **Packaging:** `quadrotor-landing-random-pad-i00-standard` and `quadrotor-landing-random-pad-i01-standard`; generator: `scripts/quadrotor_landing/gen_tasks.py`.
+- **Metadata:** `collection = "roboEngineer"`, `embodiment = "drone"`, `robot = "intel-aero-partial"`, `family = "quadrotor-landing/random-pad"`. Existing task IDs, the internal `Neural Lander` benchmark label, and cutoff/resource rules remain stable.
+- **Plant:** CPU MuJoCo with partial Intel Aero calibration and the authors' released Neural Lander force network, private to the deployment evaluator. This is simulation-to-simulation adaptation informed by real-flight data, not a hardware evaluation or a fully calibrated aircraft model.
+- **Randomization:** independent initial x/y and pad x/y in [-1, 1] m, at least 0.5 m horizontal separation, and initial body-origin height in [0.8, 1.5] m. Dynamics are the same hidden plant across cases; placements and measurement noise vary.
+- **Adaptation:** three deployment-feedback rounds, each with three adaptation cases. The current submission interface is numeric controller parameters and force-correction coefficients; the agent may write its own training and analysis code, but cannot replace the evaluator's controller implementation.
+- **Feedback:** noisy sensor trajectories and 16 sampled camera images per case. Full evaluation videos are retained for operator review; the scripted reference learner uses the sensors, not image analysis.
+- **Verification:** six held-out cases per instance, each replayed twice in fresh processes. Binary success requires all six safe landings; a separate 0–100 engineering score rewards safety and time relative to a private finite controller search, not a certified global optimum.
+- **Evidence:** native Harbor Docker CPU oracle/nop validation passed for both instances. Oracle engineering scores were 82.29 and 84.94, with 6/6 safe cases each; nop scored zero. These are scripted integration checks, not LLM model scores. Full details and limitations are in the [task specification](quadrotor-landing.md#native-harbor-packaging-and-validation).
+
+## Adding a task
+
+Add a task-specific specification, generator and image/asset provenance; declare `collection = "roboEngineer"` and one of `drone`, `racing-car`, `humanoid`, or `quadruped` as its `embodiment`. Preserve a separate `robot` identifier for the actual platform and a `family` for the objective. Freeze public/adaptation/held-out definitions before comparing agents, and validate the task's isolation, replay, baseline and nop behavior through native Harbor. Update this roadmap to implemented only when runnable task packages and their validation evidence exist. Follow [CONTRIBUTING.md](../../CONTRIBUTING.md) for the repository's review requirements.

@@ -6715,9 +6715,9 @@ digest = "sha256:b78369488c008ecc71ea40aba410e621e3f1c9dd140a576c5b2bcc1c7262bc2
 
 [[tasks]]
 name = "robot-coding-bench/quadrotor-landing-random-pad-i00-standard"
-digest = "sha256:e3c9ad5cdded18d96e987fb0e0593666c580dee14e551adf66cc9cb7a62d2be1"
+digest = "sha256:cd65bc4044fa76a2d90a847c3b1d014163351235eb20c3e014495c3affb030a4"
 
 [[tasks]]
 name = "robot-coding-bench/quadrotor-landing-random-pad-i01-standard"
-digest = "sha256:6d6c98e3e8d34fbeff45309a14e9977ab646134d38860ff674b8275569255404"
+digest = "sha256:8348fb8e418c5f33063cf665d3499250609665b3bcf71351c44c673a80b11751"
 

@@ -35,6 +35,10 @@ drives it from a controller program of its own. It is offered where a benchmark'
 > `eai-standard/2.1`. Every task directory ends in its mode, `-privileged` or `-standard` (since v1.1 also `-standard-realtime`). Base images are
 > `ghcr.io/mll-lab-nu/eai-<name>` (formerly `rcb-<sim>` under several registries), one per benchmark (PROTOCOL D5).
 
+## roboEngineer
+
+[roboEngineer](docs/benchmarks/roboengineer.md) groups control-engineering tasks by embodiment: **drone**, **racing car**, **humanoid**, and **quadruped**. The agent trains or tunes a controller in a nominal simulator, improves it over bounded deployment-feedback rounds, and submits it for private held-out evaluation. **Neural Landing** is the first implemented task; Neural Fly, Multi-surface Tracking, Walking over Terrain, and four SPI-Active quadruped tasks are planned. See the collection roadmap for task scope and implementation status.
+
 ## Benchmarks
 
 | Benchmark | Simulator / robot | Tasks (per mode) | Oracle |
@@ -44,7 +48,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda; quadrupeds: Unitree Go1, Boston Dynamics Spot, Google Barkour vB | 4 manipulation + 9 quadruped | full (manipulation: scripted IK; quadrupeds: Playground's Go1 policy or policies trained on its rewards) |
 | KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 5 | full on 1, none on 4 (human review) |
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 10 (+ 10 standard-realtime, `-standard-realtime`: time does not stop) | full on 1, none on 9 (human review), in each mode |
-| Neural Lander (`quadrotor-landing-random-pad-i{00,01}`) | MuJoCo CPU · partially calibrated Intel Aero quadrotor | 2 standard policy tasks, three adaptation rounds each | full; native Harbor oracle/nop validated on both instances |
+| [roboEngineer — Neural Landing](docs/benchmarks/roboengineer.md) (`quadrotor-landing-random-pad-i{00,01}`) | MuJoCo CPU · partially calibrated Intel Aero quadrotor | 2 standard policy tasks, three adaptation rounds each | full; native Harbor oracle/nop validated on both instances |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
