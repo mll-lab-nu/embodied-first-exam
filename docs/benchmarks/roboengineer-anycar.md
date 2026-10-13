@@ -240,3 +240,13 @@ Full-lap tasks remain `oracle="none"`. Three local positive laps and a video rep
 establish all-layout, multi-round, native Harbor or coding-agent acceptance. The broader
 catalog remains scaled planar schematics, including flattened crossovers; these are not
 surveyed F1 circuits or competitive racing lap times.
+### F1TENTH-style visual bodywork
+
+The car uses original procedural GT-style RC bodywork: beveled shell, dark glazing,
+roof, rear wing, splitter, lamps, mirrors and spoke wheels. This is an
+F1TENTH-style visual profile, not a licensed commercial chassis asset or a new
+calibration. Every added visual geom has zero mass and disabled collisions.
+Original chassis/sensor collision geometry remains present but invisible; the
+AnyCar mass, inertia, suspension, wheel contacts, steering and actuator model are
+retained. Rendered bodywork is cosmetic; collision checking uses the retained
+physical primitives. No additional external assets or packages are required.
