@@ -21,11 +21,13 @@ from scripts.control_transfer.trusted.verify import verdict
 
 class NeuralFlyTests(unittest.TestCase):
     def test_plant_is_fixed_and_banks_disjoint(self):
-        for index in [0, 1]:
+        for index in [0, 1, 999]:
             spec = make_spec(index)
+            self.assertEqual(spec["schema"], "control-transfer-instance/2")
+            self.assertEqual(spec["transfer_track"], "same-plant")
             a, b = spec["bank"]["adaptation"], spec["bank"]["held_out"]
             self.assertEqual((len(a), len(b)), (5, 10))
-            self.assertEqual(len({c["plant_seed"] for c in a + b}), 1)
+            self.assertEqual({c["plant_seed"] for c in a + b}, {10000 + index * 1000 + 100})
             self.assertFalse({c["episode_seed"] for c in a} & {c["episode_seed"] for c in b})
             self.assertEqual(sorted(c["stratum"] for c in b), sorted(list(range(5)) * 2))
             self.assertEqual(parameters(a[0]["plant_seed"]), parameters(b[-1]["plant_seed"]))

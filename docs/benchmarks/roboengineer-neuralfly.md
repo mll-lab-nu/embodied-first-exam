@@ -20,7 +20,7 @@ The inherited surrogate clips each force axis to ±12 N. This is an explicit ben
 
 ## Cases, plant and time
 
-`neuralfly_spec.make_spec(index)` returns a private instance plus its public specification. Each instance has **one plant seed**, five adaptation cases (one per wind stratum), and ten disjoint held-out cases (two per stratum). The physical plant draws persist across both banks:
+`neuralfly_spec.make_spec(index)` returns a `control-transfer-instance/2` private instance with `transfer_track="same-plant"` plus its public specification. The persistent plant seed is `10000 + index * 1000 + 100`. Each instance has **one plant seed**, five adaptation cases (one per wind stratum), and ten disjoint held-out cases (two per stratum). The physical plant draws persist across both banks:
 
 | Item | Definition |
 |---|---|

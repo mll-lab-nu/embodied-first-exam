@@ -18,7 +18,8 @@ def make_spec(index):
         ]
 
     return {
-        "schema": "control-transfer-instance/1",
+        "schema": "control-transfer-instance/2",
+        "transfer_track": "same-plant",
         "family": "neural-fly",
         "name": "neural-fly",
         "index": index,
