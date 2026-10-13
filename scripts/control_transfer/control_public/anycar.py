@@ -2,7 +2,6 @@
 
 import json
 import math
-import numpy as np
 
 SCHEMA = "anycar-controller/1"
 DT = 0.02
@@ -62,11 +61,13 @@ def validate(policy):
 
 
 def wrap(a):
-    return (a + np.pi) % (2 * np.pi) - np.pi
+    return (a + math.pi) % (2 * math.pi) - math.pi
 
 
 def reference(t, command):
     """One ellipse lap, prescribed in time, including a 1 s smooth acceleration."""
+    import numpy as np
+
     a, b, phase, direction = (command[k] for k in ("a", "b", "phase", "direction"))
     rate = 2 * np.pi / (HORIZON - 0.5)
     effective = 0.5 * t * t if t < 1 else t - 0.5
@@ -87,6 +88,8 @@ class Controller:
         self.integral = 0.0
 
     def step(self, observation, target):
+        import numpy as np
+
         p = self.p
         x, y, yaw, speed = observation[:4]
         # Predict the measured pose to the previewed command time; preview never advances only the target.

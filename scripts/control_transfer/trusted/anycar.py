@@ -7,7 +7,8 @@ import os
 from pathlib import Path
 import subprocess
 import numpy as np
-from ..control_public.anycar import CHANNELS, UNITS, DEFAULT, BOUNDS, DT, HORIZON, Controller, reference, validate, wrap
+from ..control_public.anycar import DT, HORIZON, Controller, reference, validate, wrap
+from .anycar_spec import make_spec as make_spec
 from ..components.anycarbench.model import Vehicle, mujoco
 
 NOISE = np.array([0.008, 0.008, 0.005, 0.035, 0.02, 0.012, 0.15, 0.15, 0.15, 0.15, 0.002])
@@ -49,41 +50,6 @@ def episode_parameters(seed):
     surfaces = [(boundaries[i], boundaries[i + 1], float(mus[i])) for i in range(4)]
     offset = rng.uniform(-0.08, 0.08, 2)
     return command, surfaces, offset, float(rng.uniform(-0.05, 0.05))
-
-
-def make_spec(index):
-    plant_seed = 91000 + index
-
-    def cases(start, n):
-        return [dict(plant_seed=plant_seed, episode_seed=92000 + index * 1000 + start + i) for i in range(n)]
-
-    public = dict(
-        schema="control-transfer/1",
-        protocol="eai-policy/1.1",
-        name="anycar",
-        goal="Track one prescribed-time lap of a randomized ellipse across rigid traction patches; avoid barriers, rollover and offtrack excursions.",
-        score="Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.",
-        max_rounds=3,
-        adaptation_cases=3,
-        held_out_cases=10,
-        training_backend="nominal MuJoCo CPU",
-        evaluation_backend="native MuJoCo CPU + OSMesa + NumPy CPU",
-        policy_abi="anycar-controller/1 bounded numeric JSON",
-        default_policy=DEFAULT,
-        bounds=BOUNDS,
-        channels=CHANNELS,
-        units=UNITS,
-        image_interval_s=1.0,
-        limitations="Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No AnyCar learned transformer is evaluated.",
-    )
-    return dict(
-        schema="control-transfer-instance/1",
-        family="anycar",
-        name="anycar",
-        index=index,
-        public=public,
-        bank=dict(adaptation=cases(0, 3), held_out=cases(100, 10)),
-    )
 
 
 class Video:
@@ -268,8 +234,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--policy", required=True)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--plant-seed", type=int, default=91000)
-    parser.add_argument("--episode-seed", type=int, default=92100)
+    parser.add_argument("--plant-seed", type=int, default=10100)
+    parser.add_argument("--episode-seed", type=int, default=10300)
     parser.add_argument("--no-render", action="store_true")
     a = parser.parse_args()
     r = rollout(a.policy, dict(plant_seed=a.plant_seed, episode_seed=a.episode_seed), a.out, not a.no_render)

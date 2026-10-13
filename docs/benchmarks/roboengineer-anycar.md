@@ -22,6 +22,8 @@ The pinned upstream README declares **Apache-2.0**, but that checkout contains n
 
 Track one prescribed-time ellipse lap in 24 s. Position, heading and speed commands are indexed by elapsed simulation time; progress cannot be slowed by the agent. The first second ramps angular velocity from zero. Per-episode semiaxes are uniform in [4.2, 4.8] m and [3.2, 3.7] m, with randomized starting phase and direction. Initial x/y offsets are each within ±0.08 m and heading offset within ±0.05 rad. A public nominal simulator exposes editable plant parameters for training and identification experiments.
 
+The family hook emits `control-transfer-instance/2` with `transfer_track = "same-plant"`. For index `i`, base is `10000 + 1000*i`; every case uses plant seed `base + 100`, adaptation episode seeds `base + 0..2`, and held-out episode seeds `base + 300..309`. Earlier family-specific seed banks are historical evidence and do not count toward this schema's final acceptance.
+
 Each instance has one **persistent private vehicle plant** shared by its three adaptation cases and ten held-out cases. Plant parameters are independently sampled once from:
 
 | Parameter | Range |
@@ -61,7 +63,7 @@ Stationary, reverse, crawling and chord-cutting trajectories are negative tests.
 ## Integration contract
 
 - `control_public.anycar.validate(policy) -> bytes`: canonical numeric JSON. The generic adapter must not JSON-encode these bytes again.
-- `trusted.anycar.make_spec(index) -> dict`: private instance specification with public description and separate case banks. Family identifier: `anycar`.
+- `trusted.anycar_spec.make_spec(index) -> dict` (stdlib-only; also re-exported as `trusted.anycar.make_spec`): private instance specification with public description and separate case banks. Family identifier: `anycar`.
 - `trusted.anycar.rollout(policy_path, case, out, render) -> record`: record has `state_sha256`, numeric/boolean `metrics` including `success` and `score`, `feedback.telemetry`, operator-only `dynamics`, policy hash and backend metadata. It writes `record.json`, exact `feedback.json`, and `video.mp4` if rendering.
 - Package public `control_public/anycar.py`, `control_public/anycar_nominal.py` and `components/anycarbench/{__init__,model}.py`. Do not package `trusted/anycar*.py` into the agent image. The nominal component has no private draws, case bank or private locations.
 - Install the reference fitting/iteration utility from `trusted/anycar_reference.py` only under `solution/` (adjust relative imports during generation). Shared native `Client` retains exact HTTP bytes. Its `iterate` helper accepts that client.

@@ -3,6 +3,8 @@
 import json
 import unittest
 import tempfile
+import subprocess
+import sys
 import numpy as np
 from scripts.control_transfer.control_public.anycar import DEFAULT, HORIZON, reference, validate
 from scripts.control_transfer.components.anycarbench.model import Vehicle, NOMINAL
@@ -28,14 +30,31 @@ class ContractTests(unittest.TestCase):
 
     def test_private_bank_has_persistent_plant_and_disjoint_episodes(self):
         spec = make_spec(0)
+        self.assertEqual(spec["schema"], "control-transfer-instance/2")
+        self.assertEqual(spec["transfer_track"], "same-plant")
         cases = sum(spec["bank"].values(), [])
         self.assertEqual(len(spec["bank"]["held_out"]), 10)
-        self.assertEqual(len({c["plant_seed"] for c in cases}), 1)
+        self.assertEqual({c["plant_seed"] for c in cases}, {10100})
+        self.assertEqual([c["episode_seed"] for c in spec["bank"]["adaptation"]], [10000, 10001, 10002])
+        self.assertEqual([c["episode_seed"] for c in spec["bank"]["held_out"]], list(range(10300, 10310)))
+        self.assertEqual({c["plant_seed"] for c in sum(make_spec(1)["bank"].values(), [])}, {11100})
         self.assertEqual(len({c["episode_seed"] for c in cases}), len(cases))
         for key in ("plant_seed", "episode_seed", "surfaces", "motor_gain", "steering_gain"):
             self.assertNotIn(key, json.dumps(spec["public"]))
         self.assertEqual(plant_parameters(1), plant_parameters(1))
         self.assertNotEqual(episode_parameters(1)[1], episode_parameters(2)[1])
+
+    def test_spec_hook_uses_only_standard_library(self):
+        value = subprocess.check_output(
+            [
+                sys.executable,
+                "-S",
+                "-c",
+                "import json; from scripts.control_transfer.trusted.anycar_spec import make_spec; print(json.dumps(make_spec(0)))",
+            ],
+            text=True,
+        )
+        self.assertEqual(json.loads(value), json.loads(json.dumps(make_spec(0))))
 
     def test_scoring_stationary_slow_reverse_shortcuts(self):
         c = dict(a=4.5, b=3.5, phase=0, direction=1)
