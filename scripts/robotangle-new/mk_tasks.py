@@ -170,6 +170,32 @@ SAFETY_NEW = ('Every response\'s `meta["safety"]` reports, since the\n  previous
               'reported.')
 
 
+REGIONS_RX = re.compile(r"(?m)^- (?:Grasp regions|Soft grasp patches)[ (:].*$")
+GRASP_ROW_RX = re.compile(r"(?m)^\| Grasping \| [^|\n]* \|$")
+DIFFICULTY_GRASP_RX = re.compile(r"(?m)^((?:Two|A) \d+-dof .* Grasping: )(?:assisted grasping \([a-z0-9_]+\)|physical grasping)\.$")
+
+
+def instance_facts(s: str, rec: dict, mode: str) -> str:
+    """A MuJoCo base's statements of its instance's grasp, from the instance (release.json, read in the release image by
+    release_rebuild.py: grasp = the [metadata] grasp words, grasp_regions = the grader-details line per mode, grasp_rules):
+    a port whose grasp model changed on MuJoCo (rope_threading: the released IPC soft band -> contact_weld_v1) must not keep
+    the released line. Records without these facts keep the released lines."""
+    if not is_mujoco(rec):
+        return s
+    if rec.get("grasp"):
+        s = re.sub(r'(?m)^grasp = ".*"$', lambda m: f"grasp = {json.dumps(rec['grasp'])}", s)
+    new = rec.get("grasp_regions", {}).get(mode)
+    if new:                 # only a line of the other grasp form (soft patches <-> rigid regions): a released line of the
+        form = new.split(" ")[0]           # same form keeps its own words (e.g. hedgehog cast_cage's rod "box handle")
+        s, n = REGIONS_RX.subn(lambda m: m[0] if m[0][2:].split(" ")[0] == form else "- " + new, s)
+        assert n <= 2, f"{n} grasp-region lines"
+    if rec.get("grasp_rules"):
+        head = rec["grasp_rules"].split(":")[0]
+        s = GRASP_ROW_RX.sub(lambda m: f"| Grasping | {head} |", s)
+        s = DIFFICULTY_GRASP_RX.sub(lambda m: m[1] + head + ".", s)
+    return s
+
+
 def safety_text(s: str) -> str:
     """The standard instruction's meta["safety"] paragraph: RoboTangle-New publishes only what the robot feels itself
     (user decision 2026-10-12; the sim service's robot_felt, SAFETY_PUBLISHED)."""
@@ -453,7 +479,7 @@ def mujoco_provenance(base: str, rec: dict) -> str:
 
 
 def rewrite_toml(s: str, base: str, rec: dict) -> str:
-    s = mujoco_text(text(s), rec)
+    s = mujoco_text(text(instance_facts(s, rec, "privileged")), rec)
     s = re.sub(r'(?m)^simulator = "topogym"', 'simulator = "robotangle"', s)
     s = re.sub(r'(?m)^robot = "([a-z_]+)"', lambda m: f'robot = "{ROBOT.get(m.group(1), m.group(1))}"', s)
     s = re.sub(r'(?m)^author_name = "jianwen"', 'author_name = "Jianwen Lyu"', s)
@@ -494,7 +520,7 @@ def mujoco_changes(mode: str, rec: dict) -> list[str]:
 
 
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
-    s = grasp_text(contact_text(mujoco_text(text(s), rec), rec), rec).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
+    s = grasp_text(contact_text(mujoco_text(text(instance_facts(s, rec, mode)), rec), rec), rec).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
                         "checked against `tests/runtime_binding.json`)")
     s = re.sub(r"(?ms)^## Reference solution\n.*?(?=^## )", "## Reference solution\n" + ref_solution(mode, rec) + "\n\n", s)
     nop = nop_words(base, mode, rec)
@@ -740,7 +766,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
-        ins = grasp_text(contact_text(mujoco_text(text(rd("instruction.md")), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
+        ins = grasp_text(contact_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode)
         put(t / "instruction.md", (safety_text(ins) if mode == "standard" else ins).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
