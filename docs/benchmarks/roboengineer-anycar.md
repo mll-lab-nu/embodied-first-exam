@@ -63,7 +63,7 @@ Stationary, reverse, crawling and chord-cutting trajectories are negative tests.
 ## Integration contract
 
 - `control_public.anycar.validate(policy) -> bytes`: canonical numeric JSON. The generic adapter must not JSON-encode these bytes again.
-- `trusted.anycar_spec.make_spec(index) -> dict` (stdlib-only; also re-exported as `trusted.anycar.make_spec`): private instance specification with public description and separate case banks. Family identifier: `anycar`.
+- `anycar_spec.make_spec(index) -> dict` (stdlib-only; also re-exported as `trusted.anycar.make_spec`): private instance specification with public description and separate case banks. Family identifier: `anycar`.
 - `trusted.anycar.rollout(policy_path, case, out, render) -> record`: record has `state_sha256`, numeric/boolean `metrics` including `success` and `score`, `feedback.telemetry`, operator-only `dynamics`, policy hash and backend metadata. It writes `record.json`, exact `feedback.json`, and `video.mp4` if rendering.
 - Package public `control_public/anycar.py`, `control_public/anycar_nominal.py` and `components/anycarbench/{__init__,model}.py`. Do not package `trusted/anycar*.py` into the agent image. The nominal component has no private draws, case bank or private locations.
 - Install the reference fitting/iteration utility from `trusted/anycar_reference.py` only under `solution/` (adjust relative imports during generation). Shared native `Client` retains exact HTTP bytes. Its `iterate` helper accepts that client.
@@ -82,3 +82,5 @@ MUJOCO_GL=osmesa OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 LP_NUM_THREADS=2 CUDA_
 ```
 
 Run the campaign separately with `--index 0` and `--index 1` to validate distinct persistent plants against one frozen source snapshot. Each campaign starts from the nominal policy and fits only its own adaptation feedback. The campaign writes three adaptation rounds, ten held-out rollouts with videos, ten fresh-process replays, two negative controller rollouts, policy/feedback history, a seal record and a validation summary outside the repository. All recorded video streams are fully decoded and checked for frame count and dimensions. This family-level test is **not a native Harbor/container isolation test or a real coding-agent evaluation**. The orchestrator owns those integration checks and shared resource declarations. Local videos and raw results must remain outside Git.
+
+Generation imports `scripts.control_transfer.anycar_spec.make_spec` directly; this module and its public constants import with the Python standard library alone (including under `python -S`). Compatibility re-exports remain in `trusted.anycar_spec` and `trusted.anycar`. The top-level spec contains private instance seed banks and must stay outside the public image allowlist. Include it in operator-side packaging and source hash snapshots.

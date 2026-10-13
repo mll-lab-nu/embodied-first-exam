@@ -50,11 +50,14 @@ class ContractTests(unittest.TestCase):
                 sys.executable,
                 "-S",
                 "-c",
-                "import json; from scripts.control_transfer.trusted.anycar_spec import make_spec; print(json.dumps(make_spec(0)))",
+                "import json, sys; from scripts.control_transfer.anycar_spec import make_spec; "
+                "assert not any(k.startswith(('mujoco', 'numpy', 'scripts.control_transfer.trusted')) for k in sys.modules); "
+                "from scripts.control_transfer.trusted.anycar_spec import make_spec as legacy; "
+                "assert legacy is make_spec; print(json.dumps([make_spec(0), make_spec(1)]))",
             ],
             text=True,
         )
-        self.assertEqual(json.loads(value), json.loads(json.dumps(make_spec(0))))
+        self.assertEqual(json.loads(value), json.loads(json.dumps([make_spec(0), make_spec(1)])))
 
     def test_scoring_stationary_slow_reverse_shortcuts(self):
         c = dict(a=4.5, b=3.5, phase=0, direction=1)

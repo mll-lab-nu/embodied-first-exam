@@ -8,7 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 from ..control_public.anycar import DEFAULT, validate
-from .anycar import make_spec
+from ..anycar_spec import make_spec
 from .anycar_reference import fit, public_feedback
 
 
@@ -72,7 +72,8 @@ def main():
     a.out.mkdir(parents=True, exist_ok=False)
     source_root = Path(__file__).resolve().parents[1]
     source_files = (
-        list((source_root / "trusted").glob("anycar*.py"))
+        list(source_root.glob("anycar_spec.py"))
+        + list((source_root / "trusted").glob("anycar*.py"))
         + list((source_root / "control_public").glob("anycar*.py"))
         + list((source_root / "components/anycarbench").glob("*.py"))
     )
