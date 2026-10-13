@@ -8,7 +8,7 @@
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `fruits_green_limes_on_plate` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-fruits-green-limes-on-pl__3NH9BN4 (robolab-fruits-green-limes-on-plate-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/fruits_green_limes_on_plate/limited/). Human review per family (PROTOCOL §2.7). |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.2` |
 
 ## Task

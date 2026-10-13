@@ -8,7 +8,7 @@
 | Simulator / robot | `myosuite` / `myoarm` |
 | Family / instance | `arm_reach` / seed 0 |
 | Oracle | `full` |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task

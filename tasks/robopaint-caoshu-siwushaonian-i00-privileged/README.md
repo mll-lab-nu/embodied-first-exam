@@ -8,7 +8,7 @@
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_caoshu_siwushaonian` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (a new family, generated on 2026-10-09 with the current tooling): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 641 and mark_width_mm 2.66, against the colouring-in limits 1930 mm and 0.79 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Caoshu). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task

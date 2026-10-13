@@ -8,7 +8,7 @@
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `spraying_fruit_trees` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (278 s on average); demonstration video (278 s): https://player.vimeo.com/video/1114060748 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7). |
-| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task

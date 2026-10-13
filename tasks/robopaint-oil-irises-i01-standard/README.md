@@ -8,7 +8,7 @@
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_oil_irises` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; the hi-res version of 2026-10-09, README Change Log). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (2026-10-09): path_mm 18503 of the 55600 mm budget; its strokes are sweeps. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Oil: the pointed brush). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task

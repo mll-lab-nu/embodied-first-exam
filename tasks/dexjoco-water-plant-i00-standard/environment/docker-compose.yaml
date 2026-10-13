@@ -25,7 +25,7 @@ services:
       RCB_INSTANCE: /srv/instance.npz
       RCB_TOOL: /srv/rcb_dexjoco.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "5400"
+      RCB_WALL_CLOCK_S: "3600"
       RCB_COLLECT_BUDGET_S: "7200"   # the collect hook's timeout_sec (task.toml): finalize.sh fits its replays and video in
       OPENBLAS_NUM_THREADS: "4"       # the service, a resume and the collect hook's replays: one thread count (the result depends on it below 4; with fewer than 4 CPUs visible the service starts no episode: too_few_cpus)
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds

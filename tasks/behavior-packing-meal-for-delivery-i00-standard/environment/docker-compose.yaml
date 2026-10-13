@@ -35,7 +35,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_behavior.py
       RCB_DATA: /out
-      RCB_WALL_CLOCK_S: "14400"
+      RCB_WALL_CLOCK_S: "7200"
       RCB_CAM_SIZE: "224"           # the robot's own cameras at 224x224: what the agent sees
       RCB_STARTUP_TIMEOUT_S: "1800" # startup watchdog: scene builds measured 130-404 s warm, +~250 s on this trial's cold Kit cache
       PYTHONPATH: /srv

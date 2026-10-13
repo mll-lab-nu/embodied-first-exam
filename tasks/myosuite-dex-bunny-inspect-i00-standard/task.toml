@@ -83,7 +83,7 @@ command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice 
 timeout_sec = 1800
 
 [agent]
-timeout_sec = 5400.0
+timeout_sec = 3600.0
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
 # trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable
 # since 2026-10-11, left to the instruction's honour rule (PROTOCOL §2.11).

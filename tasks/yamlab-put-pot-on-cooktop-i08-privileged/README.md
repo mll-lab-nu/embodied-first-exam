@@ -8,7 +8,7 @@
 | Simulator / robot | `yamlab` / `i2rt-yam-bimanual` |
 | Family / instance | `put_pot_on_cooktop` |
 | Oracle | `full` |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-yamlab:0.1.0` |
 
 ## Task

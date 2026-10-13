@@ -8,7 +8,7 @@
 | Simulator / robot | `robowits` / `marvin-bimanual` |
 | Family / instance | `dominos` / seed 0 |
 | Oracle | `partial` — Reference solution solution/oracle_replay.py, which streams the privileged oracle's recorded joint rows (solution/oracle_qpos.npy) through the client. It scored 1 under Harbor -a oracle on an earlier version of this task: job robowits-dominos-i00-limited-oracle-v2b-0924-2125, trial robowits-dominos-i00-limited__pnfVz4w, 2026-09-25 (laptop, Intel; the protocol's 2.0 service, then named rcb-limited; success=1, live 1, replay 1, deterministic 1; an uncommitted tree just before dev/qineng f15dbdb7). Same since then: the frozen instance (state hash 4f933a76ce2ce34b) and the joint rows (equal to that run's recorded trajectory). Changed since then, so the label is partial: the grader (dev/qineng 82d76c61; this PR: the crash-recovery fields and infra_error), the sim adapter server.py (dev/qineng 6c0b439e: protocol 2.2; this PR: crash recovery), the shared layer rcb_limited.py / rcb_client.py (dev/qineng 42813008; this PR: the eai-standard/2.2 layer with crash recovery), the tooling rcb_robowits.py (as in the privileged twin), the collect hook, the client image and pins, and the oracle player (this PR: it recovers from a crash). Not re-run on this version (static validation only, 2026-10-01). |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robowits:0.1.1` |
 
 ## Task

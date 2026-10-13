@@ -8,7 +8,7 @@
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `picking_up_trash` / seed 301 |
 | Oracle | `partial` — Reference solution solution/oracle_picking_up_trash.py on the frozen task-level primitives solution/rcb_behavior_ref.py. Recorded Harbor oracle runs (laptop, pre-v1.0 uncommitted trees): 2026-09-24 behavior-picking-up-trash-i00__FKLU2nS (job behavior-picking-up-trash-i00-oracle-0924-230430) scored 1 (5115 control steps, deterministic 1, instance_exact 1); the run before it, behavior-picking-up-trash-i00__MjRvy7Y (an older placement routine), scored 0; the 2026-10-01 review counts 1 success in 3 runs of that version. Model trial behavior-picking-up-trash-i00__JRcB9fb (behavior-lunaxh-0925-2057, ws) scored 1. The tooling and verifier files changed since; not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (board 0067 oracle sweep, AWS 8-vCPU L40S host rcb-gpu9, Harbor oracle agent, twice): the reference solution's own run put 2 of the 3 cans in (the third grasp closed on nothing; q_score 0.667, 4390 control steps), the verifier replayed it faithfully (deterministic 1) and scored 0; both runs were bit-identical. The frozen scene rebuilt there within tolerance but not bit-exactly (instance_exact 0), so the solution's online planning took another path than on the recording host: this reference solution does not succeed on that host class. |
-| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
