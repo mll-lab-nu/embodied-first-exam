@@ -143,16 +143,20 @@ CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by us
 CUTOFF_HEADING = "## Time limit"
 CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text names the limit: never a duration
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
+# owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
+# high and stopped early; every agent gets the same way to know it (a command, not a guess).
+_CUTOFF_CLOCK = (" Your session started when you received this task: run `date` now, and again before you decide that time "
+                 "is short; work out the time left from those readings, never from a guess.")
 CUTOFF_NOTE = {
     "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
                    "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
                    "graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better "
-                   "one." + _CUTOFF_CLOSE),
+                   "one." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
     "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
                  "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
                  "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
                  "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
-                 "spent before that request. Plan by it." + _CUTOFF_CLOSE),
+                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 # A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
@@ -162,7 +166,7 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service "
     "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOSE)
+    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {("RoboTangle", "standard"): _CUTOFF_NOTE_OWN_CLOCK}   # (benchmark label, mode) -> its note
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
