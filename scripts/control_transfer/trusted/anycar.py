@@ -74,7 +74,7 @@ class Video:
     def __init__(self, vehicle, out):
         if os.environ.get("MUJOCO_GL") != "osmesa":
             raise RuntimeError("Evaluation video requires OSMesa")
-        self.renderer = mujoco.Renderer(vehicle.model, height=480, width=640)
+        self.renderer = mujoco.Renderer(vehicle.model, height=480, width=640, max_geom=max(10000, vehicle.model.ngeom + 4096))
         self.render_shadows = "track_id" not in vehicle.command
         from OpenGL.GL import glGetString, GL_RENDERER, GL_VENDOR
 
@@ -93,12 +93,22 @@ class Video:
         # The line is derived only from the public command, never robot state.
         if "track_id" in vehicle.command:
             route = get_route(vehicle.command["track_id"], vehicle.command.get("route_revision", "circuit-sector/1"))
-            xy = route.at(np.linspace(0, route.length, 257))[:, :2]
+            xy = route.at(np.linspace(0, route.length, max(257, int(route.length / .04) + 1)))[:, :2]
         else:
             command = vehicle.command
             phase = command["phase"] + command["direction"] * np.linspace(0, 2 * np.pi, 257)
             xy = np.column_stack((command["a"] * np.cos(phase), command["b"] * np.sin(phase)))
-        self.reference_line = np.column_stack((xy, np.full(len(xy), .018)))
+        # Fixed spatial dash pattern from public route arc length, independent of state.
+        arc = np.r_[0, np.cumsum(np.linalg.norm(np.diff(xy, axis=0), axis=1))]
+        pitch = max(.60, arc[-1] / 900)
+        starts = np.arange(0, arc[-1], pitch)
+        ends = np.minimum(starts + .58 * pitch, arc[-1])
+        self.reference_dashes = []
+        for start, end in zip(starts, ends):
+            distances = np.linspace(start, end, 4)
+            points = np.column_stack((np.interp(distances, arc, xy[:, 0]),
+                                      np.interp(distances, arc, xy[:, 1]), np.full(4, .018)))
+            self.reference_dashes.extend(zip(points[:-1], points[1:]))
         self.camera.azimuth = 90
         self.camera.elevation = -70
         # Fixed orientation; center uses the already-delivered noisy position only.
@@ -144,7 +154,7 @@ class Video:
         # RC close-up; disable it for this public visual profile.
         scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = self.render_shadows
         # Render the public commanded centerline in both views, without a target dot.
-        for start, end in zip(self.reference_line[:-1], self.reference_line[1:]):
+        for start, end in self.reference_dashes:
             geom = scene.geoms[scene.ngeom]
             mujoco.mjv_initGeom(
                 geom, mujoco.mjtGeom.mjGEOM_LINE, np.zeros(3), np.zeros(3),

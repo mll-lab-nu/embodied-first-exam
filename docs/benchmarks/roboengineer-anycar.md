@@ -336,3 +336,12 @@ This changes image observations; physical trajectories, noisy numeric feedback, 
 scoring and task geometry are unchanged. The line is computed from the public commanded
 route, with 257 points covering the loop, and drawn in both panels. Historical native
 reference results predate this image revision; they are not new visual-agent evaluations.
+
+### Dashed line and traffic-cone appearance
+
+The latest renderer uses a dashed cyan commanded centerline in both panels.
+Tapered orange-and-white cone meshes have dark square bases. These visual geoms
+have zero mass and disabled collisions. The original fixed barrier collision
+cylinders remain at their original positions, invisible, preserving contact
+dynamics. Dash spacing depends only on public route arc length. Earlier video
+artifacts are retained under their original observation revision.
