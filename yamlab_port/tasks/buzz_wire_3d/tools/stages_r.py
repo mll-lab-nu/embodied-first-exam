@@ -85,13 +85,14 @@ class StagesR:
             self.ex.run(side, densify([a, b], 0.01), w_max=w_max)
             self.ex.converge(side)
 
-    def release(self, side, G, d=0.05, park=True, fq_open=OPEN):
+    def release(self, side, G, d=0.05, park=True, fq_open=OPEN, from_tcp=False):
+        """from_tcp: retreat relative to the gripper itself (after a drop the wand is no longer at the grasp)."""
         self.ex.grip(side, fq_open, 15)
         self.ex.detach(side)
         self.ex.hold(5)
-        T = self.ex.wand() @ G
         q0 = self.ex.q(side)
         T_now = self.P.ik[side].fk(q0[None])[0][0]
+        T = T_now if from_tcp else self.ex.wand() @ G
         last = None
         opts = [(d, 0, 0), (0.03, 0, 0), (0.04, 0, -0.015), (0.03, 0, -0.025), (0.05, 0, -0.03), (0.02, 0, 0),
                 (0.03, 0, 0.02), (0.02, -0.03, 0.0), (0.03, -0.05, 0.0), (0.01, -0.04, 0.005), (0.04, -0.06, 0.0)]

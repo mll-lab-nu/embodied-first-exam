@@ -43,11 +43,18 @@ def gdown_grip(roll_deg, yaw_deg=0.0, xc=0.043, tilt_deg=0.0, x_tip=0.036):
     return Ty @ Rr @ G0, -(half + 0.001), -(half + 0.0046)
 
 
-# finish pen grip per tier. easier: tips on the outer handle end (62 mm), rolled 10 deg about the handle and tilted
-# -8 deg about the closing axis, so that the left wrist clears the bent/dipped easier span at the finish yaw
-# (tools/finish_grip_map.py, results/fgm2/); handover-2 at 90 mm (lower, this grip's fingers meet the deck)
-GD_TIER = {"very_easy": (0.0, 0.0), "easier": (10.0, 0.0)}            # (roll, yaw)
+# finish pen grip per tier. easier: tips on the outer handle end (62 mm), tilted -8 deg about the closing axis
+# (tools/finish_grip_map.py, results/fgm2/); handover-2 at 105 mm (at 90 mm the left elbow keeps only 9 mm from the
+# deck, lost to a 2.3 deg handle sag in the ring grip in Isaac). No grip roll: the pads align with the flat handle faces
+# when they close (Isaac ea_o1: a 10 deg grip roll became 0.5 deg), so the roll that keeps the left wrist camera off
+# the easier dip at the finish yaw is put on the wand itself (FINISH_ATT_TIER).
+GD_TIER = {"very_easy": (0.0, 0.0), "easier": (0.0, 0.0)}             # (roll, yaw)
 GD_TILT_TIER = {"very_easy": (0.0, 0.036), "easier": (-8.0, 0.062)}   # (tilt about the closing axis, x_tip)
+# release attitudes per tier, tried in order: (wand roll about the handle, yaw stopped short of the finish yaw), deg.
+# The wand settles flat on the deck, so only the yaw offset stays (finish tolerance 10 deg). easier wire clearance of
+# the left arm at the release (finish_grip_map, tilt -8, tips 62 mm): (5, 2) 6 mm, (3, 4) 9 mm, (7, 2) 7.6 mm,
+# (10, 0) 6.5 mm; (0, 0) <= 0.3 mm (wrist camera at the dip).
+FINISH_ATT_TIER = {"easier": ((5.0, 2.0), (3.0, 4.0), (7.0, 2.0), (10.0, 0.0))}
 
 
 def ring_clamp(phi_deg, cam_sign=1.0, tip_past=0.002):
@@ -89,7 +96,7 @@ FQ_RING, FQ_RING_OPEN = -0.0023, -0.0053
 H1 = (30.0, -30.0, 0.055)      # handover-1 pose on the start post (tools/optA_h1c.py: pinch 35 mm, ring 7 mm clear)
 H_CARRY = 90.0                 # handle +y during the carry (ring-grip camera points up on the span)
 HZ_FINISH = 0.060
-HZ_FINISH_TIER = {"easier": 0.090}
+HZ_FINISH_TIER = {"easier": 0.105}
 H_START = 60.0                 # new start rest yaw of the handle (deg, world)
 
 
@@ -250,21 +257,41 @@ class StagesA(StagesR):
                 G_C, fqh, fqo = ring_clamp(phi, cs)
                 for dh in (0.010, 0.012, 0.015, 0.020, 0.008):
                     cands.append(((phi, cs), self.g(G_C), fqh, fqo, rest + dh))
-        for key, G_D, FQ_PEN, FQ_PEN_OPEN, hzr in cands:
-            Wlow = T_from(Rz(yaw_of(Wm) - self.ang_f) @ Rfd, np.r_[self.p1, s.deck_top + hzr])
-            Wy = P.wand_yaw(Wlow, self.p1, wrap(self.ang_f - yaw_of(Wlow)))
-            Wd = Wy[-1]
-            try:
-                follow = [Wm] + interp_T(Wm, Wlow, n_steps(Wm, Wlow)) + Wy
-                Gl = self.grasp(self.A, Wm @ G_D, [W @ G_D for W in follow], FQ_PEN_OPEN, FQ_PEN, kind,
-                                follow_ignore=("stops",))
-                self.notes["release_height_mm"] = float(hzr * 1000)
-                self.notes["finish_grip"] = [kind, list(key)]
+        Gl = None
+        for dz in (0.0, 0.015, 0.030):
+            if dz:  # the ring grip lets the handle sag (easier_oracle3: -2.3 deg pitch, the left elbow then meets the
+                # deck): re-measure the ring grasp, level the loop and raise it along the vertical finish post, retry
+                W = ex.wand()
+                Wt = T_from(route[-1][:3, :3], route[-1][:3, 3] + [0.0, 0.0, dz])
+                Gr = ex.grasp_meas(self.C)
+                self.held_track(self.C, interp_T(W, Wt, n_steps(W, Wt, lin=0.001)), Gr, FQ_RING, lin=0.006)
+                ex.hold(10)
+                Wm = ex.wand()
+                self.notes["handover2_raise_mm"] = dz * 1000
+            fa = _os.environ.get("BUZZ_FINISH_ATT")  # e.g. "3:4,10:0"
+            atts = FINISH_ATT_TIER.get(s.tier, ((0.0, 0.0),)) if not fa else \
+                [tuple(float(v) for v in a.split(":")) for a in fa.split(",")]
+            for (roll_w, dyaw), (key, G_D, FQ_PEN, FQ_PEN_OPEN, hzr) in [(a, c) for a in atts for c in cands]:
+                # release pose: finish pose rolled about the handle, yaw stopped dyaw short of the finish yaw
+                Rd = Rz(-np.sign(wrap(self.ang_f - yaw_of(Wm))) * dyaw) @ Rfd @ \
+                    Rotation.from_euler("x", roll_w, degrees=True).as_matrix()
+                Wlow = T_from(Rz(yaw_of(Wm) - yaw_of(Rd)) @ Rd, np.r_[self.p1, s.deck_top + hzr])
+                Wy = P.wand_yaw(Wlow, self.p1, wrap(yaw_of(Rd) - yaw_of(Wlow)))
+                Wd = Wy[-1]
+                try:
+                    follow = [Wm] + interp_T(Wm, Wlow, n_steps(Wm, Wlow)) + Wy
+                    Gl = self.grasp(self.A, Wm @ G_D, [W @ G_D for W in follow], FQ_PEN_OPEN, FQ_PEN, kind,
+                                    follow_ignore=("stops",))
+                    self.notes["release_height_mm"] = float(hzr * 1000)
+                    self.notes["release_roll_yaw_short_deg"] = [roll_w, dyaw]
+                    self.notes["finish_grip"] = [kind, list(key)]
+                    break
+                except PlanError as e:
+                    last = e
+                    print("   finish grip rejected:", kind, key, (roll_w, dyaw), round(hzr * 1000, 1), e, flush=True)
+            if Gl is not None:
                 break
-            except PlanError as e:
-                last = e
-                print("   finish grip rejected:", kind, key, round(hzr * 1000, 1), e, flush=True)
-        else:
+        if Gl is None:
             raise PlanError(f"finish handover ({kind}): {last}")
         self.ph("5b_right_release")
         self.release(self.C, Gr, fq_open=-0.007)
@@ -274,11 +301,11 @@ class StagesA(StagesR):
         self.held_track(self.A, [W] + interp_T(W, Wlow, n_steps(W, Wlow)) + Wy, Gl, FQ_PEN, lin=0.008, ignore=("stops",))
         for _ in range(2):  # aim the measured loop centre over the finish point
             W = ex.wand()
-            Wt = T_from(Rfd, np.r_[self.p1, Wd[2, 3]])
+            Wt = T_from(Rd, np.r_[self.p1, Wd[2, 3]])
             self.held_track(self.A, interp_T(W, Wt, n_steps(W, Wt, lin=0.0005)), Gl, FQ_PEN, lin=0.004, ignore=("stops",))
             ex.hold(10)
         self.ph("6b_left_release_drop")
-        self.release(self.A, Gl, fq_open=FQ_PEN_OPEN)
+        self.release(self.A, Gl, fq_open=FQ_PEN_OPEN, from_tcp=True)  # the wand has dropped onto the deck
         self.ph("7_settle")
         ex.hold(60)
 

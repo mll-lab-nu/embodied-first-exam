@@ -1,0 +1,123 @@
+{
+ "name": "naive_skip_traverse",
+ "success": false,
+ "success_step": null,
+ "termination": "touch",
+ "steps": 2334,
+ "sim_time_s": 77.79999999996889,
+ "wall_time_s": 1152.0537586212158,
+ "touched": true,
+ "first_touch_step": 2333,
+ "min_metal_wire_gap_mm": 0.0038265964627268254,
+ "max_rail_force_n": 1.6043121814727783,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.04592977609830231,
+ "route_length_m": 0.6457751658709897,
+ "final": {
+  "distance_to_finish_m": 0.3413517694654617,
+  "finish_angle_deg": 78.36985906569666,
+  "supported": false,
+  "released": false,
+  "quiet": false,
+  "lin_speed_m_s": 0.0435548759996891,
+  "ang_speed_rad_s": 6.007374286651611
+ },
+ "state_sha256": "88cc4727e90c1471284551f7be411467812989d690e9bca84c4999ea2fd55112",
+ "phases": [
+  "init",
+  "1_left_pick_start",
+  "2_left_lift_tilt",
+  "3_right_ring_handover",
+  "3b_left_release",
+  "4_right_carry"
+ ],
+ "mode": "naive_skip_traverse",
+ "tier": "easier",
+ "status": "plan_error: right track IK failed at 0/369 (ep 9.42e-04 er 2.61e-03)",
+ "notes": {
+  "mirror": false,
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "pick_in_hand_error": {
+   "pos_mm": 0.12775042206892,
+   "rot_deg": 0.12850264497725108
+  },
+  "ring_approach_m": 0.04,
+  "ring_staging": null,
+  "handover1_pose": null,
+  "carry_worst_clear_mm": {
+   "stops": 38.21475935149626,
+   "frame": 69.32488674276571,
+   "table": 67.62488674276568,
+   "arm": 100.0
+  },
+  "gdown_roll_yaw_deg": [
+   0.0,
+   0.0
+  ],
+  "gdown_tilt_deg_xtip": [
+   -8.0,
+   0.062
+  ],
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 32.8,
+     "any_link": 5.4
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "2_left_lift_tilt": {
+    "left": {
+     "fingers": 32.9,
+     "any_link": 6.1
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "3_right_ring_handover": {
+    "left": {
+     "fingers": 31.5,
+     "any_link": 23.0
+    },
+    "right": {
+     "fingers": 11.2,
+     "any_link": 11.2
+    }
+   },
+   "3b_left_release": {
+    "left": {
+     "fingers": 34.3,
+     "any_link": 24.1
+    },
+    "right": {
+     "fingers": 10.4,
+     "any_link": 10.4
+    }
+   },
+   "4_right_carry": {
+    "left": {
+     "fingers": 263.7,
+     "any_link": 263.7
+    },
+    "right": {
+     "fingers": 10.2,
+     "any_link": 10.2
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}
