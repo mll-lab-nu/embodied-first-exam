@@ -6635,11 +6635,11 @@ digest = "sha256:8f92f9d94dda58356d39595aa75a9c5eb3e3703286b6c2aee8961f15fc3437a
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-set-i00-privileged"
-digest = "sha256:1003c85ce2191c84ebe0d867b1b84b029a131c40ac7a0e694225246a74bad82d"
+digest = "sha256:352d924c608c435c1014e04e0c8af0aea300adff09fc1a14d4b6a690f51e3a7a"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-set-i00-standard"
-digest = "sha256:0715d248e5ac567f4b07863f7fa39a1314bca6e53e3a07449526b179db69bfca"
+digest = "sha256:1b62a227cc72a12ffb6fc352240ce4664f0fa80552907656d45aa67dc0007e7b"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-spike-i00-privileged"

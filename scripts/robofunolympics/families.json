@@ -104,9 +104,9 @@
   },
   "volleyball-set": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (the real toss onto really raised fists, the ball's velocity set at the contact: apex 4.50 m, 0.35 m from the target's centre); negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held"
+   "evidence": "Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held"
   },
   "volleyball-serve": {
    "seed": 0,
