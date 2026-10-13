@@ -30,8 +30,8 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 8.0
-oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_volleyball_serve.py: positive by injection (a real release and a real raised fist, the ball put above the fist and sent off at 13.9 m/s: over the net, into the court); negatives: a throw brushing the fist, a throw that touches nothing, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held. The slowest legal serve needs about 11 m/s; a full arm swing reaches a 7 m/s fist; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle = "full"
+oracle_evidence = "Reference: an underarm serve (left fist tosses, straight right arm and the trunk's turn hit) from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 2.2 m/s in, 11.4 m/s out, over the net into the court 1.8 m beyond it. Referee test negatives: a throw brushing the fist, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held The privileged twin's reference rows (328 control steps, success after 3.28 s) streamed through the client."
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)

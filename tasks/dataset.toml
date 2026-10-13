@@ -6387,11 +6387,11 @@ digest = "sha256:e92ce854e31892f351bcd66863b6e0cbf18ea5f895d2409abf71a2530e8c759
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-discus-i00-privileged"
-digest = "sha256:9ac14a53ed28669268aa0c06883ded0bee766945c337468754fd0cf863fe8d28"
+digest = "sha256:443f1aa9d8302f7a1dbab70b463d9766cc50fa85928e14c4c23bc76f0a3f1176"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-discus-i00-standard"
-digest = "sha256:c96f6e4a3c87a138e9f68177da374f8a57c29948ebaf249be90e2cf116b6e4ca"
+digest = "sha256:19b6221b45d500228a3b9041556a0dd8e4b644cc4b40eb1444ff47772a72efc2"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-dribble-slalom-i00-privileged"
@@ -6459,11 +6459,11 @@ digest = "sha256:35162c3543adb22a2745b6338db9e0a0690ff4a02d486beda3f8dee6c7d55e5
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-javelin-i00-privileged"
-digest = "sha256:519aa3bd255e6b32f77f281ae86022717f720896f4736e4ceee5f22dc423ab8a"
+digest = "sha256:8807b9caf23cdecdc7a6ac6131ffd7eabec65a1528fbd06315eeda103e99d72b"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-javelin-i00-standard"
-digest = "sha256:7b81ad9abdc1942117211d3e1dccbef0d527a765d9b7e59493826d78030e68aa"
+digest = "sha256:5077dd23f6a3409ba24cc919952460c4021a271a99997d945786f197ee2467ad"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-juggling-i00-privileged"
@@ -6531,11 +6531,11 @@ digest = "sha256:7101f7d86a3cb1472fca94d2968ac3ad779ecd4154a06d05405130f6569f4c7
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-shot-put-i00-privileged"
-digest = "sha256:e64d677622c0e0389a95bed9b5ab8ecc058b11004f74281a3924242779620f92"
+digest = "sha256:ae943ba48d48bdc0ab30bf8ffe4588c129b3b74f310c24ce732e361cc00c0b22"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-shot-put-i00-standard"
-digest = "sha256:bd4cb4e4f6392e9e45e35a71ccc60142041c3535205bd025aa9d435e1c86ca97"
+digest = "sha256:a091815a8877f2c8b68f4ae336516f81019f90774974f1bd281f9994863baff5"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-shuttle-run-i00-privileged"
@@ -6627,11 +6627,11 @@ digest = "sha256:3737b794d31aa6212bba7f42bec3e2d23ffc85aefb2c965befc68c7c4b2c209
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-serve-i00-privileged"
-digest = "sha256:b5ad36ad681276b56478c88675491eac323dc2b3ddb3f9d4280233e2c83e01dd"
+digest = "sha256:0fa9fb57125cf03e14eee947b8db0ec7728dcb8841e66a6b3df8b0f7c902d67b"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-serve-i00-standard"
-digest = "sha256:8040468a67eaa259d9bba9373d185c6d500898168684e91484dd7fc25d8faedf"
+digest = "sha256:8f92f9d94dda58356d39595aa75a9c5eb3e3703286b6c2aee8961f15fc3437ae"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-volleyball-set-i00-privileged"
