@@ -72,6 +72,8 @@ NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource st
 POLICY_TASK = "quadrotor-landing-random-pad-i00-standard"
 POLICY_CHECK = [sys.executable, str(ROOT / "ci_checks/check-policy.py")]
 MUTATIONS = [
+    ("control transfer verifier drops its complete input cache identity", "control-transfer-anycar-i01-standard", "tests/Dockerfile",
+     sub(r'^LABEL roboengineer.verifier_inputs_sha256=.*\n', ''), POLICY_CHECK, "generated contract differs"),
     ("control transfer verifier drops its frozen-instance cache identity", "control-transfer-anycar-i01-standard", "tests/Dockerfile",
      sub(r'^LABEL roboengineer.instance_sha256=.*\n', ''), POLICY_CHECK, "generated contract differs"),
     ("control transfer verifier omits copied-instance checksum", "control-transfer-anycar-i01-standard", "tests/Dockerfile",

@@ -21,6 +21,8 @@ Neural Landing is the only task with completed native Harbor validation. The sev
 
 The imported Control Transfer sources also contain earlier Linearbot, spacecraft and YAM prototypes. They remain available for development, but are not generated as members of this eight-task collection. Existing similarly named tasks elsewhere in the repository are not automatically members.
 
+See the [integration validation record](roboengineer-validation.md) for the tested boundaries, native build incident, trace audits and remaining acceptance gates.
+
 ## Shared evaluation structure
 
 The collection workflow is:

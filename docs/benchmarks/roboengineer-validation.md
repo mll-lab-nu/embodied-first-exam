@@ -1,0 +1,55 @@
+# roboEngineer integration validation
+
+This record covers the October 13, 2026 development integration of the eight-objective collection. The runs use scripted engineering references and Harbor's `nop` agent. They are **not LLM model scores**. Raw trial outputs, video, feedback, policies and operator diagnostics are retained outside Git; task directories contain only reproducible inputs.
+
+## Validation layers
+
+| Layer | What was checked | Limits |
+|---|---|---|
+| Family physics and control | Randomized fixed-plant banks, fresh-process replay, controller admission, contact-based predicates, negative controls and video decoding | Local success alone does not establish container isolation or complete reference solvability |
+| Generated packages | Explicit public allowlists; separate private simulator and no-network verifier; matching instance copies; numeric-only deployed policies; Python `-S` generation | Nominal geometry and training code are intentionally public |
+| Shared service | Three adaptation rounds, artifact and feedback history, frozen selection, deadline persistence, interrupted-finalization recovery and verifier diagnostics | Reference scripts do not assess a model's visual reasoning |
+| Native Harbor | Docker execution with `RCB_LIMITS_ENFORCE=1`, separate verifier, exact CPU replay and actual software-renderer receipts | G1's full GPU-training container run remains unperformed |
+| Trace audit | Match delivered JSON and JPEG bytes to private service records; verify policy hashes, replay state, feedback and metric equality; fully decode recorded video | Stored public diagnoses describe intended changes; private model reasoning is not collected |
+
+The new evaluators require MuJoCo **3.5.0**, NumPy CPU inference and OSMesa software rendering. Their runtime records verify that no GPU devices are exposed and identify the actual software renderer. Each development instance preserves one plant across adaptation and held-out cases; the second instance uses a different plant. These are reproducible development banks, not a claim that public repository seeds remain secret from a future competition participant.
+
+## Current acceptance boundaries
+
+Neural Landing has its own completed native validation described in [its specification](quadrotor-landing.md#native-harbor-packaging-and-validation). The Control Transfer acceptance receipt selects a single final native run per task and per reference/no-op agent; earlier diagnostic runs are retained separately, including failed verifiers.
+
+G1's schema-v2 banks have local trained-reference success **17/24** (6/12 and 11/12) versus released-reference **16/24** (6/12 and 10/12). Both plants remain incompletely solved. Real local PPO training and numeric export were exercised; public-package configuration and an actual staged-assets CPU rollout also passed. The AWS account's G/VT quota is zero, so no cloud GPU training or native GPU-device isolation result is claimed.
+
+Go2 weave, forward jump and yaw jump remain **development-only** until successful references are established. A bounded search of 60 candidates over 180 adaptation episodes found no passing candidate; it used no held-out feedback and did not change success predicates. This result does not prove that the tasks are impossible. The current fixed-phase, 17-knot and linear attitude/rate controller interface may constrain future reference development.
+
+## Isolation checks and fixes
+
+The agent and private simulator occupy separate containers. Agent-container probes checked private model/instance/grade paths, evaluator imports, GPU devices, the Docker socket and AWS credential environment variables. Private HTTP routes return 404. During active adaptation, a package-registry request succeeds while non-allowlisted AWS and instance-metadata requests fail. Harbor temporarily uses its setup network policy before `agent.run()`; a startup probe is therefore retained separately from the active-agent probe. These bounded tests support the intended boundary; they are not a proof against every possible container exploit.
+
+The shared review found and fixed:
+
+- Signed integer minimum values could overflow `abs` during NPZ magnitude validation. Direct comparisons now enforce the same inclusive numeric bounds without overflow.
+- An interrupted held-out finalization could fail on an existing output directory. Recovery preserves the interrupted directory and repeats the same frozen bank and artifact; a completed final result remains idempotent.
+- Early termination could be lost when the runtime restarted. The service now persists its cutoff and rejects subsequent adaptation calls.
+- A public AnyCar alias import failed outside the checkout. Both the top-level and qualified public entry points now pass an isolated nominal rollout.
+
+## Verifier build incident
+
+Native diagnostics found a second-instance verifier reading the first instance's baked JSON, even though the simulator and host source were correct. A plain Docker reproduction using separate build contexts showed the same stale copy. The transferred equal-size files had identical zero mtimes. Harbor 0.23.0 hashes all environment file paths and bytes; its local context-hash algorithm was not itself a Dockerfile-only cache key.
+
+The generator now adds deterministic literal labels **before COPY**, containing the instance file hash and a hash of all copied verifier inputs (`grade.py`, normalized `test.sh`, `instance.json`, `rcb_limits.py`, `rcb_limits.json`). Build-time checks verify every copied file. Source transfers preserve mtimes. No random nonce, host path or relaxed verifier predicate is used. Corrected Docker builds distinguish both instances, and supported Harbor regrades retain the original simulator evidence. Full affected-instance reruns are recorded separately from regrades.
+
+Private verifier diagnostics identify the rejection stage, exact bytes read, expected and actual digests, and file-read errors. The public score schema is unchanged. Original infrastructure failures remain in the archive rather than being presented as control failures or silently overwritten.
+
+## Reproduction and review
+
+Prepare the pinned nominal and private assets using `scripts/control_transfer/prepare_assets.py` and `images/control-transfer/prepare_assets.py`; the public G1 source subset must contain only the G1 dependency closure. The training image declares EGL and pins the tested W&B version, but its full CUDA wheel/driver combination still requires a GPU-container test. Private weights, model manifests, policies and held-out banks must not enter the nominal image.
+
+```bash
+python3 -S -m scripts.control_transfer.gen_tasks check
+bash ci_checks/run_all.sh tasks/control-transfer-*/
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a oracle -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a nop -e docker
+```
+
+Repeat native oracle/no-op checks for both instances of each admitted family. An infrastructure verdict must be resolved separately from a controller failure. Changes to task inputs require regenerated task copies and Harbor manifest digests. Benchmarks with incomplete references require the repository's human review; successful integration does not remove that gate. All new tasks still need actual coding-agent evaluations before model comparisons are reported.

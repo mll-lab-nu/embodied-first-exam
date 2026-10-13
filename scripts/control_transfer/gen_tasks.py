@@ -403,6 +403,28 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
         put(task, "solution/reference.py", solve)
         put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
     normalize(task)
+    # normalize adds the resource-limit grader and rewrites test.sh. Bind every
+    # copied input after that step, before Docker evaluates either COPY layer.
+    inputs = {
+        name: hashlib.sha256((task / "tests" / name).read_bytes()).hexdigest()
+        for name in ("grade.py", "test.sh", "instance.json", "rcb_limits.py", "rcb_limits.json")
+    }
+    payload_sha = hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest()
+    dockerfile = task / "tests/Dockerfile"
+    lines = dockerfile.read_text().splitlines()
+    lines.insert(1, f'LABEL roboengineer.verifier_inputs_sha256="{payload_sha}"')
+    checks = " && ".join(f"echo '{sha}  /tests/{name}' | sha256sum -c -" for name, sha in inputs.items())
+    # Copy the checked inputs together. Keep normalize's monitor COPY last so
+    # another normalization is a no-op; its duplicate files have identical bytes.
+    lines = [
+        line.replace(
+            "COPY grade.py test.sh instance.json /tests/",
+            "COPY grade.py test.sh instance.json rcb_limits.py rcb_limits.json /tests/",
+        )
+        for line in lines
+    ]
+    lines.insert(next(i for i, line in enumerate(lines) if line.startswith("# resource limits:")), "RUN " + checks)
+    dockerfile.write_text("\n".join(lines) + "\n")
 
 
 def main():
