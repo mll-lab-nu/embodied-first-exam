@@ -1,6 +1,8 @@
 """CPU-only software video utility for the nominal and deployment simulators."""
 
 import os
+import json
+from pathlib import Path
 import subprocess
 
 import mujoco
@@ -16,9 +18,37 @@ class Video:
         if gl_context.GLContext.__module__ != "mujoco.osmesa":
             raise RuntimeError("MuJoCo was initialized with a non-OSMesa context")
         self.model = model
+        self.visual_style = os.environ.get("NEURALFLY_VISUAL_STYLE", "primitive")
+        if self.visual_style not in ("primitive", "skydio-x2/1"):
+            raise ValueError("Unknown Neural Fly visual profile")
+        self.visual_data = None
+        if self.visual_style == "skydio-x2/1":
+            try:
+                from .neuralfly_visual import COMMIT, FILES, render_model
+            except ImportError:
+                from neuralfly_visual import COMMIT, FILES, render_model
+            model = render_model()
+            self.visual_data = mujoco.MjData(model)
+            Path(path).with_suffix(".visual.json").write_text(
+                json.dumps(
+                    {
+                        "profile": self.visual_style,
+                        "source_commit": COMMIT,
+                        "asset_sha256": FILES,
+                        "description": "Skydio appearance; Neural Fly surrogate physics unchanged",
+                        "resolution": [960, 720],
+                        "fps": 10,
+                    },
+                    sort_keys=True,
+                )
+                + "\n"
+            )
+        self.render_model = model
+        width, height = (960, 720) if self.visual_data is not None else (640, 480)
+        model.vis.global_.offwidth, model.vis.global_.offheight = width, height
         model.vis.quality.offsamples = 0
         model.vis.quality.shadowsize = 256
-        self.renderer = mujoco.Renderer(model, 480, 640)
+        self.renderer = mujoco.Renderer(model, height, width)
         self.renderer.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = False
         self.camera = mujoco.MjvCamera()
         self.camera.lookat[:] = center
@@ -38,7 +68,7 @@ class Video:
                 "-pix_fmt",
                 "rgb24",
                 "-s",
-                "640x480",
+                f"{width}x{height}",
                 "-r",
                 "10",
                 "-i",
@@ -56,6 +86,13 @@ class Video:
         )
 
     def frame(self, data):
+        visual_data = getattr(self, "visual_data", None)
+        if visual_data is not None:
+            # Copy pose only. Never step or write back to the physical model/data.
+            visual_data.qpos[:] = data.qpos
+            visual_data.time = data.time
+            mujoco.mj_forward(self.render_model, visual_data)
+            data = visual_data
         self.renderer.update_scene(data, camera=self.camera)
         scene = self.renderer.scene
         # Static world-body sites are cached by MuJoCo. Render the current public
