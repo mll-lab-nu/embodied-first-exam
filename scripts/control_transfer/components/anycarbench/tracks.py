@@ -103,3 +103,20 @@ class Route:
 @lru_cache(maxsize=8)
 def get_route(name):
     return Route(name)
+
+
+@lru_cache(maxsize=1)
+def route_metadata_catalog():
+    """Frozen lengths for stdlib-only generation and worker budgeting; no physics imports."""
+    import hashlib
+
+    data = json.loads(Path(__file__).with_name("route_lengths.json").read_text())
+    actual = hashlib.sha256(Path(__file__).with_name("circuits.json").read_bytes()).hexdigest()
+    if data["catalog_sha256"] != actual:
+        raise ValueError("Route length metadata does not match circuit catalog")
+    return data
+
+
+def route_metadata(name):
+    """Return a copy of the public length and full-lap budget for one layout."""
+    return dict(route_metadata_catalog()["routes"][resolve_track(name)])

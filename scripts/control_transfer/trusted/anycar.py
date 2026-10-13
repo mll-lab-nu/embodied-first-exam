@@ -221,9 +221,7 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
     )
     quality = float(np.exp(-rmse / 0.35 - mae_heading / 0.3 - mae_speed / 0.4))
     score = 0.0 if unsafe else 100 * completion * quality
-    return dict(
-        lap_time_s=lap_time,
-        full_lap_completed=bool(full_lap and completion == 1.0),
+    result = dict(
         success=success,
         score=score,
         tracking_rmse_m=rmse,
@@ -235,6 +233,10 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
         body_contact=bool(body_contact),
         rollover=bool(rollover),
     )
+
+    if full_lap:
+        result.update(lap_time_s=lap_time, full_lap_completed=bool(completion == 1.0))
+    return result
 
 
 def rollout(policy_path, case, out, render=True):
@@ -322,7 +324,8 @@ def main():
         parser.error("--full-lap requires --track")
     if a.track:
         case["track_id"] = a.track
-        case["full_lap"] = a.full_lap
+        if a.full_lap:
+            case["full_lap"] = True
     if a.start_fraction is not None:
         if not a.track or not 0 <= a.start_fraction < 1:
             parser.error("--start-fraction requires --track and a value in [0,1)")

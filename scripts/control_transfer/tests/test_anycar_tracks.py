@@ -44,7 +44,7 @@ class CircuitTests(unittest.TestCase):
                 "-S",
                 "-c",
                 "import json,sys; from scripts.control_transfer.anycar_spec import make_circuit_spec; "
-                "s=make_circuit_spec(1,'monaco'); assert 'numpy' not in sys.modules and 'mujoco' not in sys.modules; print(json.dumps(s))",
+                "s=make_circuit_spec(1,'monaco',revision='circuit-lap/2'); assert 'numpy' not in sys.modules and 'mujoco' not in sys.modules; print(json.dumps(s))",
             ],
             text=True,
         )
@@ -54,6 +54,38 @@ class CircuitTests(unittest.TestCase):
         self.assertTrue(all(c["full_lap"] for bank in spec["bank"].values() for c in bank))
         self.assertEqual({c["plant_seed"] for bank in spec["bank"].values() for c in bank}, {11100})
         self.assertTrue(all(c["track_id"] == "monaco-6" for bank in spec["bank"].values() for c in bank))
+
+    def test_sector_specs_match_frozen_pre_lap_revision(self):
+        import hashlib
+        from scripts.control_transfer.anycar_spec import make_circuit_spec
+
+        # Canonical spec digests from pre-lap commit 1cac5b65fb65.
+        frozen = [(0, 'zigzag', 'a5d8529f45ac48ede51fe727385837c20105c96d55198b67c2fda2e2cbd91d9e'), (1, 'monaco', 'c85cbd743e7e8b2ee83e9ea341371eb7bc5994d1b06c6d70f87b2a2bae49b6c5'), (0, 'silverstone', '7b387fd01574245fb036032e15cd332fcac608f0f3558063cf3f6e0b71a2974d')]
+        for index, name, expected in frozen:
+            spec = make_circuit_spec(index, name)
+            raw = json.dumps(spec, sort_keys=True, separators=(",", ":")).encode()
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected)
+            self.assertEqual(spec, make_circuit_spec(index, name, revision="circuit-sector/1"))
+            self.assertTrue(all("full_lap" not in c for bank in spec["bank"].values() for c in bank))
+        with self.assertRaises(ValueError):
+            make_circuit_spec(0, "silverstone", revision="circuit-lap/3")
+
+    def test_stdlib_metadata_matches_every_physics_route(self):
+        import math
+        from scripts.control_transfer.components.anycarbench.tracks import route_metadata, route_metadata_catalog
+
+        rows = route_metadata_catalog()["routes"]
+        self.assertEqual(set(rows), set(track_ids()))
+        for name in track_ids():
+            length = get_route(name).length
+            self.assertEqual(route_metadata(name)["scaled_length_m"], length)
+            self.assertEqual(rows[name]["horizon_s"], math.ceil((length / .85 + 2.5) / .02) * .02)
+        self.assertEqual(max(rows, key=lambda n: rows[n]["horizon_s"]), "valencia-1")
+        result = subprocess.check_output([sys.executable, "-S", "-c",
+            "import sys; from scripts.control_transfer.components.anycarbench.tracks import route_metadata_catalog; "
+            "r=route_metadata_catalog()['routes']; assert 'numpy' not in sys.modules; "
+            "assert 'mujoco' not in sys.modules; print(max(v['horizon_s'] for v in r.values()))"], text=True)
+        self.assertEqual(float(result), 3878.76)
 
     def test_full_lap_requires_finish_and_measures_crossing(self):
         from scripts.control_transfer.control_public.anycar import DT

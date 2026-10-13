@@ -144,8 +144,9 @@ Current circuit evidence is local CPU sector smoke, not native Harbor circuit ac
 
 ### Complete F1 laps (`circuit-lap/2`)
 
-`make_circuit_spec(index, track_id)` now generates complete-lap cases for every
-available historical layout. The previous 24-second sector evidence remains
+`make_circuit_spec(index, track_id, revision="circuit-lap/2")` generates complete-lap cases for every
+available historical layout. The default `revision="circuit-sector/1"` preserves the
+legacy sector spec and bank exactly. The previous 24-second sector evidence remains
 sector evidence. Legacy ellipse instances and explicit CLI sector previews are
 unchanged. Circuit geometry retains uniform downscaling per layout and the
 steering-feasibility constraint; shrinking every circuit to a fixed small length
@@ -165,6 +166,20 @@ Operator CLI: `python -m scripts.control_transfer.trusted.anycar --track silvers
 --full-lap --policy POLICY --out FRESH_DIRECTORY` (one shell line). Public training
 uses `python -m scripts.control_transfer.control_public.anycar_nominal --track
 silverstone --full-lap --out FRESH_DIRECTORY`.
+
+The stdlib-only `route_metadata(name)` / `route_metadata_catalog()` helpers in
+`components.anycarbench.tracks` load `route_lengths.json` without NumPy/MuJoCo.
+The frozen metadata covers 159 runnable historical layouts plus zigzag and binds
+to the existing circuit catalog SHA-256. Every recorded length and horizon is
+checked against the unchanged physics Route implementation. Rebuild offline with
+`python -m scripts.control_transfer.trusted.anycar_route_metadata --out PATH`.
+The longest full-lap horizon is Valencia-1: 3,878.76 seconds (193,938 control
+steps, 3,294.8199857283616 m). The unavailable Buenos Aires layout stays excluded.
+Copy `route_lengths.json` alongside `tracks.py` in explicit allowlists. Register
+lap tasks separately from `anycar-circuit-v1`; do not regenerate sector tasks as
+laps. Sector and ellipse records retain their original metric fields when
+`full_lap` is absent. Sampling, budgets and registry changes remain root-owned.
+
 
 Integration must select `circuit-lap/2`, preserve variable-length telemetry/video,
 and size worker deadlines, response limits and sampled-image budgets for complete

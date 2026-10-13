@@ -40,22 +40,38 @@ def make_spec(index):
     )
 
 
-def make_circuit_spec(index, track_id="zigzag"):
-    """Versioned full-lap circuit bank; legacy ellipse instances remain unchanged."""
+def make_circuit_spec(index, track_id="zigzag", revision="circuit-sector/1"):
+    """Versioned circuit-sector bank; legacy ellipse instances remain unchanged."""
     from .components.anycarbench.tracks import resolve_track
 
+    if revision not in ("circuit-sector/1", "circuit-lap/2"):
+        raise ValueError(f"Unknown circuit revision: {revision}")
     spec = make_spec(index)
     layout = resolve_track(track_id)
     for bank in spec["bank"].values():
         for case in bank:
             case["track_id"] = layout
-            case["full_lap"] = True
-    spec["task_variant"] = "circuit-lap/2"
+    spec["task_variant"] = "circuit-sector/1"
     spec["public"].update(
         track_id=layout,
-        horizon_rule="ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
-        completion="All ordered gates, spaced at most 0.5 m, including the finish line",
-        goal="Track one complete lap of a scaled circuit at the prescribed speed; cross every ordered gate and finish line, avoiding collisions/offtrack. Record actual finish-crossing time.",
+        horizon_s=24.0,
+        goal="Track a prescribed-time 24-second sector of a scaled circuit; cross ordered gates and avoid collisions/offtrack. Public nominal supports full-lap training.",
         geometry="Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
     )
+    if revision == "circuit-lap/2":
+        from .components.anycarbench.tracks import route_metadata
+
+        metadata = route_metadata(layout)
+        for bank in spec["bank"].values():
+            for case in bank:
+                case["full_lap"] = True
+        spec["task_variant"] = revision
+        spec["public"].update(
+            task_variant=revision,
+            scaled_length_m=metadata["scaled_length_m"],
+            horizon_s=metadata["horizon_s"],
+            horizon_rule="ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
+            completion="All ordered gates, spaced at most 0.5 m, including the finish line",
+            goal="Track one complete lap of a scaled circuit at the prescribed speed; cross every ordered gate and finish line, avoiding collisions/offtrack. Record actual finish-crossing time.",
+        )
     return spec
