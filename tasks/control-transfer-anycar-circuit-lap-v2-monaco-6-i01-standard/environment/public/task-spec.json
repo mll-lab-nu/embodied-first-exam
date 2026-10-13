@@ -1,0 +1,119 @@
+{
+  "schema": "control-transfer/1",
+  "protocol": "eai-policy/1.1",
+  "name": "anycar-circuit-lap-v2-monaco-6",
+  "goal": "Track one complete lap of a scaled circuit at the prescribed speed; cross every ordered gate and finish line, avoiding collisions/offtrack. Record actual finish-crossing time.",
+  "score": "Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.",
+  "max_rounds": 3,
+  "adaptation_cases": 3,
+  "held_out_cases": 10,
+  "training_backend": "nominal MuJoCo CPU",
+  "evaluation_backend": "native MuJoCo CPU + OSMesa + NumPy CPU",
+  "policy_abi": "anycar-controller/1 bounded numeric JSON",
+  "default_policy": {
+    "schema": "anycar-controller/1",
+    "position_gain": 1.2,
+    "heading_gain": 1.0,
+    "speed_gain": 0.25,
+    "integral_gain": 0.08,
+    "drive_scale": 1.0,
+    "steering_scale": 1.0,
+    "steering_bias": 0.0,
+    "preview": 0.06
+  },
+  "bounds": {
+    "position_gain": [
+      0.1,
+      4.0
+    ],
+    "heading_gain": [
+      0.1,
+      4.0
+    ],
+    "speed_gain": [
+      0.0,
+      3.0
+    ],
+    "integral_gain": [
+      0.0,
+      1.0
+    ],
+    "drive_scale": [
+      0.0,
+      2.0
+    ],
+    "steering_scale": [
+      0.2,
+      2.0
+    ],
+    "steering_bias": [
+      -0.12,
+      0.12
+    ],
+    "preview": [
+      0.0,
+      0.3
+    ]
+  },
+  "channels": [
+    "x",
+    "y",
+    "yaw",
+    "forward_speed",
+    "lateral_speed",
+    "yaw_rate",
+    "wheel_fl",
+    "wheel_fr",
+    "wheel_bl",
+    "wheel_br",
+    "steering",
+    "target_x",
+    "target_y",
+    "target_yaw",
+    "target_speed",
+    "target_curvature",
+    "requested_speed",
+    "requested_steering"
+  ],
+  "units": [
+    "m",
+    "m",
+    "rad",
+    "m/s",
+    "m/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad",
+    "m",
+    "m",
+    "rad",
+    "m/s",
+    "1/m",
+    "m/s",
+    "rad"
+  ],
+  "limitations": "Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No AnyCar learned transformer is evaluated. Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
+  "track_id": "monaco-6",
+  "horizon_s": 598.72,
+  "geometry": "Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
+  "task_variant": "circuit-lap/2",
+  "scaled_length_m": 506.7824340798761,
+  "runtime_budget": {
+    "schema": "anycar-lap-budget/1",
+    "track_id": "monaco-6",
+    "horizon_upper_bound_s": 600,
+    "control_steps_upper_bound": 30000,
+    "telemetry_rows_upper_bound": 6001,
+    "decoded_frames_upper_bound": 6001,
+    "render_wall_time_estimate_s": 1260,
+    "wall_time_estimate_basis": "CPU OSMesa planning estimate: 2 wall seconds per simulated second plus 60 seconds; validate on deployment hardware",
+    "wall_time_is_guaranteed_bound": false
+  },
+  "horizon_rule": "ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
+  "completion": "All ordered gates, spaced at most 0.5 m, including the finish line",
+  "image_sampling": "Up to 128 equally spread video frame indices, including first and last; full 10 Hz telemetry.",
+  "request_timeout_s": 6681
+}

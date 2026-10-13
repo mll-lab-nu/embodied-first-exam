@@ -11,7 +11,7 @@ The shared `eai-policy/1.1` service supports repeated nominal-training → deplo
 | [Unitree G1 terrain](roboengineer-g1.md) | Blind-terrain PPO in mjlab/MuJoCo Warp; fixed numeric MLP export | 29 noisy joint angles, three public velocity commands and images | 4 / 12 |
 | [Unitree Go2](roboengineer-go2.md) | Nominal MuJoCo tuning; bounded numeric controller | 37 noisy proprioceptive/public-command channels and images | 3 / 10 per objective |
 
-The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces two instances of each of eight variants (16 tasks), including separate fixed-eight and general-eight Neural Fly tasks. Neural Landing has its own generator and validated service; this service does not replace it.
+The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 20 tasks: two instances of eight existing variants plus full-lap Silverstone and Monaco tasks. Neural Landing has its own generator and validated service; this service does not replace it.
 
 Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. They are not generated members of the original eight-objective collection. Their old twelve-instance release must not be confused with the current task bank.
 
@@ -50,3 +50,5 @@ RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a
 ```
 
 The supplied reference candidates are scripted engineering baselines, not LLM scores. Fixed-eight Neural Fly, ellipse AnyCar and Go2 attitude declare full scripted references after both native instance banks and no-submission controls passed. General-eight Neural Fly, G1 and the other Go2 objectives remain `oracle=none` and require human review. See the [integration validation record](roboengineer-validation.md). Family documents identify source pins, model assumptions, exact score semantics, training initialization and reference failures. Neural Fly uses a heavily clipped flight-data quadratic surrogate rather than the paper's DAIML controller or a calibrated digital twin; AnyCar uses rigid Coulomb contacts rather than deformable soil; G1 and Go2 results are simulation transfer, not hardware tests.
+
+Full historical circuit laps use separately versioned `anycar-circuit-lap-v2-<layout>` IDs and a declared 129600-second long-budget track. Default generation includes Silverstone and Monaco; other layouts, including Suzuka and every runnable historical layout, are available through `--lap-circuit` / `--all-lap-circuits`. Original ellipse and sector cutoffs and semantics are unchanged.

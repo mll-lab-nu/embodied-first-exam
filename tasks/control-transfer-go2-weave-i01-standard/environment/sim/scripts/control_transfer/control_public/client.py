@@ -1,12 +1,17 @@
 """Agent-side policy client. Preserve the exact service bytes plus concise revision diagnoses."""
 
-import base64, json, hashlib, urllib.request, urllib.error
+import base64, json, hashlib, os, urllib.request, urllib.error
 from pathlib import Path
 
 
 class Client:
-    def __init__(self, url="http://127.0.0.1:8000", out="/app/output/trace"):
+    def __init__(self, url="http://127.0.0.1:8000", out="/app/output/trace", timeout_s=None):
         self.url = url
+        self.timeout_s = float(
+            timeout_s if timeout_s is not None else os.environ.get("CONTROL_DEPLOY_TIMEOUT_S", "1800")
+        )
+        if not 0 < self.timeout_s <= 129600:
+            raise ValueError("Client request timeout")
         self.out = Path(out)
         self.out.mkdir(parents=True, exist_ok=True)
 
@@ -23,7 +28,7 @@ class Client:
         prefix = self.out / f"{index:03d}-{operation}"
         prefix.with_suffix(".request.json").write_bytes(request)
         try:
-            with urllib.request.urlopen(req, timeout=1800) as response:
+            with urllib.request.urlopen(req, timeout=self.timeout_s) as response:
                 raw = response.read()
         except urllib.error.HTTPError as error:
             raw = error.read()

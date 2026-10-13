@@ -9,7 +9,8 @@ SRC = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.control_transfer.specs import FAMILIES, spec
-from task_conventions import normalize, cutoff_sec
+from task_conventions import normalize, cutoff_sec, cutoff_overrides
+from scripts.control_transfer.trusted.runtime_limits import runtime_limits, LAP_FAMILY
 from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0"
@@ -122,6 +123,7 @@ def copy_package(task, where, private, family):
                     "model.py",
                     "tracks.py",
                     "circuits.json",
+                    "route_lengths.json",
                     "LICENSE.anycar",
                     "LICENSE.f1db",
                     "NOTICE",
@@ -150,7 +152,16 @@ def copy_package(task, where, private, family):
     if packages:
         put(task, where + "/control_assets.py", (SRC / "components/control_assets.py").read_text())
     if private:
-        names = ("__init__.py", "adapter.py", "session.py", "service.py", "verify.py", "collect.py", "cpu_runtime.py")
+        names = (
+            "__init__.py",
+            "adapter.py",
+            "session.py",
+            "service.py",
+            "verify.py",
+            "collect.py",
+            "cpu_runtime.py",
+            "runtime_limits.py",
+        )
         family_files = {
             "neural-fly": ("fly.py",),
             "g1": (),
@@ -182,10 +193,21 @@ def render(task, name, index):
         "gpu_devices": [],
         "device_isolation_verified": True,
     }
+    lap = instance.get("task_variant") == "circuit-lap/2"
+    limits = runtime_limits(instance)
+    metadata_family = LAP_FAMILY if lap else "control-transfer/" + name
+    if lap:
+        instance["public"].pop("image_interval_s", None)
+        instance["public"].update(
+            image_sampling="Up to 128 equally spread video frame indices, including first and last; full 10 Hz telemetry.",
+            request_timeout_s=limits["request_seconds"],
+        )
     native_full = name in ("neural-fly", "anycar", "go2-attitude")
     oracle = "full" if native_full else "none"
     if native_full:
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
+    elif lap:
+        reference_note = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
     elif name == "neural-fly-general-v1":
         reference_note = "Development-only general-eight/1 revision. The frozen earlier scripted controller passes 18 of 20 local held-out cases (one RMSE failure and one crash); no new adaptation, native Harbor acceptance or LLM evaluation is established. No full oracle; human review required."
     elif instance.get("task_variant") == "circuit-sector/1":
@@ -196,6 +218,8 @@ def render(task, name, index):
         reference_note = "Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required."
     gpu = family in ("linearbot", "g1")
     seconds = cutoff_sec("Control Transfer", "standard")
+    if lap:
+        seconds = cutoff_overrides()[0]["Control Transfer"][LAP_FAMILY]["standard"]
     if family == "neural-fly":
         instance.update(
             private_asset="/opt/private-fly/forces.npz",
@@ -212,7 +236,7 @@ def render(task, name, index):
         f"""FROM {IMAGE}-{"train" if gpu else "nominal"}
 WORKDIR /app
 COPY public/ /app/
-ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa
+ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if lap else ""}
 RUN mkdir -p /app/output
 """,
     )
@@ -277,7 +301,7 @@ embodiment = "{EMBODIMENTS[family]}"
 task_type = "policy"
 simulator = "mujoco"
 robot = "{ROBOTS[family]}"
-family = "control-transfer/{name}"
+family = "{metadata_family}"
 mode = "standard"
 protocol = "eai-policy/1.1"
 oracle = "{oracle}"
@@ -285,13 +309,13 @@ oracle_evidence = "{reference_note}"
 instance_seed = {index}
 expert_time_estimate_hours = 4.0
 [verifier]
-timeout_sec = 1800.0
+timeout_sec = {limits["collect_seconds"] + 60 if lap else 1800}.0
 environment_mode = "separate"
 network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "python -m scripts.control_transfer.trusted.collect"
-timeout_sec = 1800
+timeout_sec = {limits["collect_seconds"] + 60 if lap else 1800}
 [agent]
 timeout_sec = {seconds}.0
 network_mode = "allowlist"
@@ -318,6 +342,8 @@ build_timeout_sec = 600.0
         training += " Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`."
     if instance.get("task_variant") == "circuit-sector/1":
         training += f" Use `--track {public['track_id']}` to train on this task's public route, and `--full-lap` for nominal full-lap practice. Deployment evaluates 24-second sectors; full-lap practice does not change that horizon."
+    if lap:
+        training += f" Use `--track {public['track_id']} --full-lap` for nominal training. Deployment covers a complete lap. Feedback retains every 10 Hz noisy row and up to 128 images spread over the whole recording, including the finish. Full operator videos retain 10 fps. Long episodes count against the declared time limit; preserve the complete response traces."
     if family == "neural-fly":
         training += " The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`."
     put(
@@ -467,6 +493,12 @@ def main():
         action="store_true",
         help="Opt-in all 159 runnable historical layouts plus zigzag (320 self-contained tasks)",
     )
+    selection.add_argument(
+        "--lap-circuit", action="append", help="Opt-in full-lap layout or venue alias; repeat to select several"
+    )
+    selection.add_argument(
+        "--all-lap-circuits", action="store_true", help="Generate all 160 runnable full-lap routes, two plants each"
+    )
     p.add_argument(
         "--output-root", type=Path, default=ROOT / "tasks", help="Task directory parent; defaults to repository tasks/"
     )
@@ -476,22 +508,29 @@ def main():
 
         print(json.dumps(track_ids(), indent=2))
         return
-    if a.circuit or a.all_circuits:
+    if a.circuit or a.all_circuits or a.lap_circuit or a.all_lap_circuits:
         from scripts.control_transfer.components.anycarbench.tracks import resolve_track, track_ids
 
         try:
-            circuits = track_ids() if a.all_circuits else sorted({resolve_track(name) for name in a.circuit})
+            circuits = (
+                track_ids()
+                if (a.all_circuits or a.all_lap_circuits)
+                else sorted({resolve_track(name) for name in (a.circuit or a.lap_circuit)})
+            )
         except ValueError as error:
             p.error(str(error))
-        names = ["anycar-circuit-v1-" + name for name in circuits]
+        prefix = "anycar-circuit-lap-v2-" if (a.lap_circuit or a.all_lap_circuits) else "anycar-circuit-v1-"
+        names = [prefix + name for name in circuits]
     else:
         names = list(FAMILIES)
         # Optional tasks, if materialized, are still covered by the default check.
         names += sorted(
             {
                 path.name.removeprefix("control-transfer-").removesuffix("-standard").rsplit("-i", 1)[0]
-                for path in a.output_root.glob("control-transfer-anycar-circuit-v1-*-i??-standard")
+                for path in a.output_root.glob("control-transfer-anycar-circuit-*-i??-standard")
                 if path.is_dir()
+                and path.name.removeprefix("control-transfer-").removesuffix("-standard").rsplit("-i", 1)[0]
+                not in FAMILIES
             }
         )
     os.umask(0o022)

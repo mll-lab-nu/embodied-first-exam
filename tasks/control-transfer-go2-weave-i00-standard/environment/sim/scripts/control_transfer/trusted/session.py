@@ -3,6 +3,7 @@
 import hashlib, json, os, subprocess, sys, time, uuid
 from pathlib import Path
 from .adapter import validate, feedback
+from .runtime_limits import runtime_limits
 
 
 def digest(value):
@@ -24,6 +25,7 @@ class Session:
         self.render = render
         self.wall = wall_clock_s
         self.family = instance["family"]
+        self.limits = runtime_limits(instance)
         self.sha = digest(instance)
         self.path = self.root / "state.json"
         bank = instance["bank"]
@@ -119,7 +121,7 @@ class Session:
                 for j, case in enumerate(self.instance["bank"]["adaptation"]):
                     target = folder / f"case-{j}"
                     record = self.episode(policy, case, target, self.render)
-                    observations.append(feedback(self.family, record, target))
+                    observations.append(feedback(self.family, record, target, sampling=self.limits))
                 row.update(status="completed", completed_at=time.time())
                 self.persist()
                 result = {
@@ -171,7 +173,7 @@ class Session:
                 stdout=log,
                 stderr=log,
                 check=True,
-                timeout=600,
+                timeout=self.limits["worker_seconds"] if render else self.limits["replay_seconds"],
                 env={
                     **os.environ,
                     "MUJOCO_GL": "osmesa",

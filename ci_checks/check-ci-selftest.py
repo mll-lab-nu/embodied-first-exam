@@ -72,6 +72,13 @@ NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource st
 POLICY_TASK = "quadrotor-landing-random-pad-i00-standard"
 POLICY_CHECK = [sys.executable, str(ROOT / "ci_checks/check-policy.py")]
 MUTATIONS = [
+    ("full lap cannot inherit full oracle readiness", "control-transfer-anycar-circuit-lap-v2-silverstone-8-i00-standard", TOML,
+     sub(r'oracle = "none"', 'oracle = "full"'), POLICY_CHECK, "generated contract differs"),
+    ("full lap cannot remove collection deadline", "control-transfer-anycar-circuit-lap-v2-monaco-6-i01-standard", TOML,
+     sub(r'command = "python -m scripts.control_transfer.trusted.collect"', 'command = "true"'), POLICY_CHECK, "generated contract differs"),
+    ("full-lap budget exception does not extend ellipse tasks", "control-transfer-anycar-i00-standard", TOML,
+     sub(r'timeout_sec = 14400.0', 'timeout_sec = 129600.0'),
+     ["bash", str(ROOT / "ci_checks/check-task-fields.sh")], "14400 s cap"),
     ("circuit attribution does not permit unrelated repositories", "control-transfer-anycar-i00-standard", "environment/public/anycarbench/NOTICE",
      append("\nhttps://github.com/example/controller-solution\n"),
      [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")], "locates upstream material"),

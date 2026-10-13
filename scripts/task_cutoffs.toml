@@ -49,7 +49,7 @@
 "VLABench"          = { privileged =  1800, standard =  1800 }
 "YAMLab"            = { privileged =  3600, standard =  3600 }
 
-# Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
+# Exceptions (optional). The most specific entry wins: task > family > the benchmark's row above.
 # - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboTangle"` lists a
 #   benchmark's). A family's entry gives a number per mode; a mode it leaves out keeps the benchmark's number.
 # - A task is its directory name under tasks/ (the mode is in the name).
@@ -60,6 +60,9 @@
 #
 # [task_cutoff_sec]
 # "robotangle-cast-coil-hard-i00-standard" = 10800             # this one task directory
+
+[family_cutoff_sec."Control Transfer"]
+"control-transfer/anycar-circuit-lap-v2" = { standard = 129600 }
 
 # History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
 # shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
@@ -250,3 +253,13 @@ from_sec = 0
 to_sec = 14400
 decided_by = "benchmark author, task expansion requested by owner"
 note = "Owner requested multi-round GPU training and CPU deployment; provisional four-hour budget, convergence calibration pending."
+
+[[history]]
+date = "2026-10-13"
+benchmark = "Control Transfer"
+family = "control-transfer/anycar-circuit-lap-v2"
+modes = ["standard"]
+from_sec = 0
+to_sec = 129600
+decided_by = "owner request for full historical F1 laps; orchestrator implementation"
+note = "Full-lap-only budget: frozen catalog reaches 3878.76 simulation seconds; three rounds of three CPU-rendered laps need a separate long-budget track. Original sector/ellipse and other Control Transfer cutoffs stay unchanged; no cloud run implied."

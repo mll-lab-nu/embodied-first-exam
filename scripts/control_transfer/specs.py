@@ -13,6 +13,8 @@ FAMILIES = [
     "neural-fly-general-v1",
     "g1",
     "anycar",
+    "anycar-circuit-lap-v2-silverstone-8",
+    "anycar-circuit-lap-v2-monaco-6",
     "go2-weave",
     "go2-attitude",
     "go2-forward-jump",
@@ -21,10 +23,14 @@ FAMILIES = [
 
 
 def spec(name, index):
-    if name.startswith("anycar-circuit-v1-"):
+    if name.startswith(("anycar-circuit-v1-", "anycar-circuit-lap-v2-")):
         from .anycar_spec import make_circuit_spec
 
-        value = make_circuit_spec(index, name.removeprefix("anycar-circuit-v1-"))
+        lap = name.startswith("anycar-circuit-lap-v2-")
+        prefix = "anycar-circuit-lap-v2-" if lap else "anycar-circuit-v1-"
+        value = make_circuit_spec(
+            index, name.removeprefix(prefix), revision="circuit-lap/2" if lap else "circuit-sector/1"
+        )
         value["name"] = name
         value["public"].update(name=name, task_variant=value["task_variant"])
         value["public"]["limitations"] += " " + value["public"]["geometry"]

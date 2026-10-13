@@ -45,7 +45,7 @@ def main():
     p.add_argument("--out", type=Path)
     p.add_argument("--track", help="Historical layout ID, circuit alias, or zigzag")
     p.add_argument(
-        "--full-lap", action="store_true", help="Nominal full-lap training; benchmark feedback uses24s sectors"
+        "--full-lap", action="store_true", help="Nominal full-lap training for the circuit-lap benchmark"
     )
     p.add_argument("--list-tracks", action="store_true")
     a = p.parse_args()

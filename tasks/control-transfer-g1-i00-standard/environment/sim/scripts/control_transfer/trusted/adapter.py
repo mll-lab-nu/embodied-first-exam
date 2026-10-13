@@ -98,7 +98,7 @@ def run(family, policy, case, out, render, asset=None):
     return record
 
 
-def feedback(family, record, folder):
+def feedback(family, record, folder, sampling=None):
     value = record["feedback"]
     allowed = (
         {"telemetry", "targets"}
@@ -150,6 +150,10 @@ def feedback(family, record, folder):
             if not all(type(v) in (int, float) and math.isfinite(v) for v in command["values"]):
                 raise ValueError("Command values")
     folder = Path(folder)
+    if sampling and sampling["uniform_images"] and (folder / "video.mp4").exists():
+        if family != "anycar":
+            raise ValueError("Uniform lap sampling only supports AnyCar")
+        return {**value, "images": whole_lap_images(folder, sampling)}
     frames = []
     if (folder / "video.mp4").exists():
         # A fixed schedule, independent of launch state, contacts, reward or failure labels.
@@ -188,6 +192,82 @@ def feedback(family, record, folder):
                 }
             )
     return {**value, "images": frames}
+
+
+def whole_lap_images(folder, limits):
+    """Select fixed, evenly spread video indices; never use metrics or private state."""
+    from fractions import Fraction
+
+    video = Path(folder) / "video.mp4"
+    probe = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=nb_frames,avg_frame_rate",
+            "-of",
+            "json",
+            str(video),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    stream = json.loads(probe.stdout)["streams"][0]
+    count, fps = int(stream["nb_frames"]), Fraction(stream["avg_frame_rate"])
+    if fps != 10 or not 1 <= count <= limits["max_video_frames"]:
+        raise ValueError("Unexpected full-lap video length/rate")
+    limit = limits["max_images"]
+    if limit != 128:
+        raise ValueError("Unexpected full-lap image bound")
+    n = min(count, limit)
+    indices = [i * (count - 1) // (n - 1) for i in range(n)] if n > 1 else [0]
+    expression = "+".join("eq(n\\,%d)" % i for i in indices)
+    # A separate prefix prevents accidental reuse of a legacy first-48-seconds extraction.
+    for old in Path(folder).glob("lap-frame-*.jpg"):
+        old.unlink()
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            str(video),
+            "-vf",
+            "select=" + expression,
+            "-vsync",
+            "vfr",
+            "-frames:v",
+            str(n),
+            "-threads",
+            "1",
+            "-q:v",
+            "3",
+            str(Path(folder) / "lap-frame-%03d.jpg"),
+        ],
+        check=True,
+        capture_output=True,
+        timeout=limits["extract_seconds"],
+    )
+    paths = sorted(Path(folder).glob("lap-frame-*.jpg"))
+    if len(paths) != n:
+        raise ValueError("Incomplete full-lap video extraction")
+    frames = []
+    for index, path in zip(indices, paths):
+        raw = path.read_bytes()
+        frames.append(
+            dict(
+                time_s=float(index / fps),
+                mime_type="image/jpeg",
+                sha256=hashlib.sha256(raw).hexdigest(),
+                base64=base64.b64encode(raw).decode(),
+            )
+        )
+    return frames
 
 
 def worker():

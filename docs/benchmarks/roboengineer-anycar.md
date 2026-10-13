@@ -121,7 +121,7 @@ The all-venue validation executes one bend-focused24s CPU rollout per latest rac
 
 ## Generating optional circuit tasks
 
-The standard 14-task control-transfer suite keeps its existing identities and ellipse instances.
+Existing control-transfer task identities and ellipse instances are preserved.
 The catalog and nominal trainer support all 159 runnable historical layouts plus zigzag.
 Create self-contained circuit tasks on demand, two independent plant instances per selected route:
 
@@ -205,3 +205,38 @@ and size worker deadlines, response limits and sampled-image budgets for complet
 laps. Do not truncate a lap to the legacy 241 telemetry rows/25 images or label
 legacy sector results as lap results. Shared generator/runtime changes belong to
 the orchestrator; this hook remains standard-library-only under `python -S`.
+
+
+## Full-lap task generation and runtime contract
+
+The shared registry keeps `anycar-circuit-v1-<layout>` as 24-second sectors and registers
+`anycar-circuit-lap-v2-<layout>` separately. Default generation includes both plants for
+Silverstone-8 and Monaco-6. All 159 runnable historical layouts plus zigzag can be selected:
+
+```bash
+python3 -S -m scripts.control_transfer.gen_tasks render --lap-circuit suzuka
+python3 -S -m scripts.control_transfer.gen_tasks render --all-lap-circuits --output-root /operator/full-lap-tasks
+python3 -S -m scripts.control_transfer.gen_tasks check --all-lap-circuits --output-root /operator/full-lap-tasks
+```
+
+The private CPU evaluator keeps the full 10 fps, 1280×480 video and every 10 Hz noisy
+telemetry row. The shared adapter delivers up to 128 equally spread decoded-frame indices,
+including the first and last frame, with their actual timestamps. It does not return only
+an initial clip. Full operator recordings and exact delivered response/JPEG bytes are retained;
+no scores, true state, contacts or hidden parameters enter adaptation feedback.
+
+The pinned catalog's simulated full-lap horizons range from 96.62 to 3878.76 seconds.
+This is a **separate 129600-second (36-hour) agent-budget track**, allowing three rounds
+of three long CPU-rendered laps plus training/analysis time. Existing task budgets do not
+change. These are declared maximum limits, not measured completion times or a cloud-cost
+estimate; compare results only within the same budget. Worker rendering allows
+`max(600, ceil(3*horizon+180))` wall seconds; non-render replay and FFmpeg extraction have
+separate bounded limits. The private collector allows an in-flight round to drain, then
+ten rendered cases and ten fresh-process replays. Client request timeouts and Harbor's
+collection timeout are generated from the same frozen public duration. None is supplied by
+the submitted controller. Actual deployment hardware must still validate these estimates.
+
+Full-lap tasks remain `oracle="none"`. Three local positive laps and a video replay do not
+establish all-layout, multi-round, native Harbor or coding-agent acceptance. The broader
+catalog remains scaled planar schematics, including flattened crossovers; these are not
+surveyed F1 circuits or competitive racing lap times.

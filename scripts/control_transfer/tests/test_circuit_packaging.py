@@ -55,7 +55,16 @@ assert len(names) == 320
             geometry = public / "scripts/control_transfer/components/anycarbench"
             self.assertEqual(
                 {p.name for p in geometry.iterdir()},
-                {"__init__.py", "model.py", "tracks.py", "circuits.json", "LICENSE.anycar", "LICENSE.f1db", "NOTICE"},
+                {
+                    "__init__.py",
+                    "model.py",
+                    "tracks.py",
+                    "circuits.json",
+                    "route_lengths.json",
+                    "LICENSE.anycar",
+                    "LICENSE.f1db",
+                    "NOTICE",
+                },
             )
             self.assertFalse(any("trusted" in p.parts or p.name.endswith("spec.py") for p in public.rglob("*")))
             public_spec = json.loads((public / "task-spec.json").read_text())

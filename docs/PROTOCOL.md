@@ -137,6 +137,14 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[metadata.resources.limits]` and `[metadata.resources.caps]`: the agent phase's resource limits and the docker caps (§2.10) | MUST | [CI] (v1.1.5) |
 | `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
 
+**Full-lap Control Transfer exception (owner-requested, 2026-10-13).** Only
+`control-transfer-anycar-circuit-lap-v2-*` tasks use the 129600-second cap and
+family cutoff. The frozen scaled catalog reaches 3878.76 simulated seconds per lap;
+three rounds each contain three CPU-rendered laps. Worker, replay, HTTP and collection
+deadlines are separately bounded from public route duration. This is a long-budget
+development track, reported separately from the existing 14400-second Control Transfer
+tasks; their budgets are unchanged. Native runtime acceptance remains pending.
+
 **Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
 decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in the exception table of
 `ci_checks/check-task-fields.sh` (the cutoff table refuses a number above the cap, `scripts/task_conventions.py`

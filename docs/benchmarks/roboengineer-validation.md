@@ -129,3 +129,38 @@ or LLM model scores. Source compatibility tests retain exact old specification
 fingerprints and require explicit revision tags on new cases. The operator evidence
 is under `neuralfly/general-eight-v1`, `neuralfly/revision-dispatch-v1` and
 `neuralfly/integration-general-v1`; old fixed-eight evidence remains separately archived.
+
+
+## Historical-circuit full laps
+
+The new `circuit-lap/2` variant requires every ordered gate (spacing at most 0.5 m)
+and an actual interpolated finish crossing. It retains the complete route and traction
+patches, with a route-length-dependent horizon. Existing ellipse and 24-second sector
+banks remain separate. The 159 runnable historical layouts plus zigzag have frozen
+public duration metadata; no claim is made that every layout has been physically
+validated for a full lap.
+
+The worker's frozen nominal-controller examples completed Silverstone, Monaco and
+Suzuka in 395.5598, 596.7122 and 474.8703 simulated seconds. These are scaled,
+prescribed-speed tracking times, not competitive F1 lap times. Its full Silverstone
+video replay is exact and its no-op scores zero. Integration independently executed
+the generated Silverstone/i00 and Monaco/i01 held-out case 0 twice each: both pairs
+match complete records exactly and pass every gate and all four traction surfaces.
+Their lap times are 395.5598 and 596.7986 seconds; Monaco/i01 is a different plant
+from the worker's earlier example and its score is kept separate.
+
+The new adapter was run on the complete frozen Silverstone recording: all 3,976 noisy
+rows are preserved, 128 JPEG byte hashes verify, image timestamps span 0 through 397.5 s,
+and the full 397.6-second video decodes with unchanged bytes. This is an imported,
+previously recorded full video used to validate the new feedback path, not a new
+native Harbor recording. Public feedback contains only permitted noisy measurements,
+commands and images. The private record is not delivered.
+
+Full-lap tasks declare a separate 129600-second agent cap to accommodate long
+CPU-rendered episodes over three rounds; it is not an estimated cloud bill or a claim
+that every run takes 36 hours. Worker, replay, extraction, HTTP and collection deadlines
+are bounded from the frozen public route duration. Legacy task cutoffs and frame
+schedules are preserved. The new tasks remain `oracle="none"`; native Harbor,
+all-layout physical acceptance, complete multi-round campaigns and LLM evaluation
+remain unperformed. Operator receipts and exact generated-source/artifact hashes are
+under `anycar/integration-full-laps-v1`.
