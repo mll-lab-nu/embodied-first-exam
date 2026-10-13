@@ -58,12 +58,14 @@ class Task(TaskBase):
              "degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your "
              "pelvis lower than {fall_z_m} m, or any part of you other than your feet on the ground. You fail on a "
              "step or shuffle before the take-off, a foot that leaves the ground before the other, a touch of the "
-             "vane that is not in the jump's flight or not with a hand, any touch of the stand's post, a jump that "
+             "vane that is not in the jump's flight or not with a hand, any touch of the stand (its post or its base "
+             "plate on the floor, also after the landing), a jump that "
              "lands without having touched the vane, a flight that is not a jump, a landing that is not on the "
              "feet, a fall, or after {time_limit_s} s.")
     venue = ("You stand facing +x on a level, firm floor. The vane's middle line is {vane_ahead_m} m ahead of your "
              "pelvis, where your raised hand is; it reaches 0.45 m to each side of you. The stand's post is "
-             "0.60 m to your left, 0.07 m ahead; the vane is yellow, the post grey.")
+             "0.60 m to your left, 0.07 m ahead; it stands on a base plate 0.02 m high that covers x from -0.18 to "
+             "0.32 m and y from 0.55 to 0.95 m (your pelvis is at x = 0, y = 0). The vane is yellow, the stand grey.")
     difficulty = ("Neither built-in gait can jump. The robot has to raise its hand 0.30 m beyond its reach: a "
                   "take-off at more than 2 m/s straight up from legs with real torque limits, an arm that is over "
                   "the right place at the top, and a landing from that height that ends standing.")

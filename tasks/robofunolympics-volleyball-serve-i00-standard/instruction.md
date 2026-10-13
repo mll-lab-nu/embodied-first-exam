@@ -17,7 +17,7 @@ Directions are from the robot at the start: +x is the way you face, +y is to you
 - Rule 12.4.3 (the server's feet) is judged at the first contact of the hit, or at the take-off before it when the robot is in the air; the whistle is the start of the episode.
 - No opponents (nobody receives the serve), no wind.
 
-You stand behind the end line of an official volleyball court (9.0 m by 9.0 m on each side of the net), facing the net, midway between the side lines; the end line's outer edge is 0.5 m ahead of your pelvis and the net is 9.0 m beyond it, its top 2.43 m high, with an antenna above each side line. A volleyball (0.21 m across, 0.27 kg, in air) starts gripped on your left fist. In order: (1) the toss: no hand grips the ball any more; a hand may still touch it for 0.1 s while it leaves (nothing else may). (2) the hit: the next contact of the ball, with one hand or one arm of yours (hand, forearm or upper arm of the same side), within 8.0 s of the start. The ball must have been clear of you for at least 0.1 s before the hit, moving at most 5.0 m/s just before it; the hit's contacts last at most 0.1 s (it is over when the ball has been clear of you for 0.03 s), and the ball leaves the hit faster than it arrived. At the first contact of the hit no foot of yours touches the court (the end line included) or the floor beyond the extensions of the side lines; if you are in the air, this holds for where you took off. (3) the ball crosses the net's plane above the net and between the antennas; it may touch the net. (4) the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included): that is the success. You fail if the hit does not come within 8.0 s, if after the toss the ball touches the floor or any other part of you before the hit, if it is hit before it has been clear for 0.1 s, if it moves faster than 5.0 m/s just before the hit, if the hit is made with more than one arm or another part, lasts longer than 0.1 s or does not add speed, if you touch the ball again or grip it again, at a foot fault, if the ball crosses the net's plane under the net or outside the antennas or touches an antenna, if it lands anywhere else, if you fall (your pelvis lower than 0.35 m above the floor, or any part of you other than the feet on the floor), or after 12 s.
+You stand behind the end line of an official volleyball court (9.0 m by 9.0 m on each side of the net), facing the net, midway between the side lines; the end line's outer edge is 0.5 m ahead of your pelvis and the net is 9.0 m beyond it, its top 2.43 m high, with an antenna above each side line. A volleyball (0.21 m across, 0.27 kg, in air) starts gripped on your left fist. In order: (1) the toss: no hand grips the ball any more; for 0.1 s from the release the hand that held it may still touch it (it follows the toss up; any other touch in that time is already the hit), and the ball must be clear of that hand when that time ends. (2) the hit: the next contact of the ball, with one hand or one arm of yours (hand, forearm or upper arm of the same side), within 8.0 s of the start. The ball must have been clear of you for at least 0.1 s before the hit (counted from the end of the last touch of the toss), moving at most 5.0 m/s just before it; the hit's contacts last at most 0.1 s (it is over when the ball has been clear of you for 0.03 s), and the ball leaves the hit faster than it arrived. At the first contact of the hit no foot of yours touches the court (the end line included) or the floor beyond the extensions of the side lines; if you are in the air, this holds for where you took off. (3) the ball crosses the net's plane above the net and between the antennas; it may touch the net. (4) the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included): that is the success. You fail if the hit does not come within 8.0 s, if after the toss the ball touches the floor or any other part of you before the hit, if it is hit before it has been clear for 0.1 s, if it moves faster than 5.0 m/s just before the hit, if the hit is made with more than one arm or another part, lasts longer than 0.1 s or does not add speed, if you touch the ball again or grip it again, at a foot fault, if the ball crosses the net's plane under the net or outside the antennas or touches an antenna, if it lands anywhere else, if you fall (your pelvis lower than 0.35 m above the floor, or any part of you other than the feet on the floor), or after 12 s.
 
 A referee in the service decides this from the simulator's state. The events that must happen, in order, are
 **toss → hit → over the net → in the court**. An attempt (an episode) ends at the success, at the first rule violation, or after 12 s
@@ -32,7 +32,8 @@ A referee in the service decides this from the simulator's state. The events tha
   no seconds is free.
 - **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
   `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
-  motor torques and two IMUs (below), and the venue's fixed camera (`venue`). Not where you or any object is, not the
+  motor torques and two IMUs (below), and the venue's fixed cameras (`venue`; `spec()["cameras"]` says
+  where each is mounted). Not where you or any object is, not the
   referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
   (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
 - There is nothing to hand in: the service records your last attempt, replays it in a fresh simulator and grades the
@@ -65,7 +66,7 @@ command in force to the row; `"hold"` applies the row as it is.
 ```python
 from rcb_client import Robot
 r = Robot()
-res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, 22) rows of the `walk` type
+res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, 20) rows of the `walk` type
 ```
 
 ## Actions
@@ -79,7 +80,7 @@ One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` sprea
 | `joints` | all 27 joint targets | 29 | you give all 27 joint targets (rad); the default PD gains, no feed-forward |
 | `lowcmd` | all 27 joints × (`q`, `dq`, `tau`, `kp`, `kd`): 27 targets, then 27 velocities, 27 torques, 27 kp, 27 kd | 137 | Unitree's LowCmd for all 27 joints: position targets (rad), velocity targets (rad/s), feed-forward torques (N m), kp, kd; the motor torque is kp (q - q_measured) + kd (dq - dq_measured) + tau, evaluated at 1 kHz |
 
-Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's rest angles keeps it there.
+Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot is in `stand` mode, but not with the arms at rest (the venue text says how it starts): the joint table's last column has the angles in force. The left grip is closed at the start. The `stand` row that keeps the start as it is: `[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]` (`spec()["start_command"]` has it, and `get_obs(seconds=...)` keeps the command in force); a `stand` row with other angles or grips moves the arms or lets go.
 
 Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains
 (also in `spec()["robot_facts"]`):
@@ -130,7 +131,9 @@ What the platform does and does not do for you:
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1500 / 800 / 400 and kd up to
   30 / 20 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
 - **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets.
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
 - **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
   10 cm along the forearm) with a grip: while `grip_left` / `grip_right` ≥ 0.5 the hand holds the nearest grippable
   object whose surface is within 3.5 cm of the palm point (the middle of the pad, 4.5 cm beyond the wrist flange along
@@ -150,7 +153,7 @@ force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation qua
 sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
 `holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
 4 joints / lowcmd), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
-real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
+real H1-2 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material
 The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. The one thing not to look up is a solution to this exact task: this benchmark's own source code and reference solutions. This is an honour rule; trials are reviewed.

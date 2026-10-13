@@ -162,6 +162,14 @@ class Referee:
             self.failed = reason
             self.event("fail", reason=reason, **kw)
 
+    def void(self, reason: str, keep_success: bool = False) -> None:
+        """The attempt is void (the physics diverged): a failure, also over a success unless it stood before
+        (`keep_success`: the success was latched in an earlier control step)."""
+        if self.success and not keep_success:
+            self.success = False
+            self.event("success withdrawn", reason=reason)
+        self.fail(reason)
+
     def succeed(self) -> None:
         """The success: only with every stage latched (a task that calls it earlier has a bug, and gets no success)."""
         if self.failed is None and not self.success and len(self.stages) == len(self.w.task.stages):
@@ -304,21 +312,30 @@ class Touch:
         self.active = False
         self.t_start = self.t_end = None          # of the latest touch
         self.longest = 0.0
+        self._was = self._rearmed = False
+
+    def rearm(self) -> None:
+        """Something happened that separates touches (the ball was struck): the next contact that begins is a new
+        touch, however soon after the last one it comes."""
+        self._rearmed = True
 
     def update(self) -> bool:
         ref = self.ref
         now = ref.touching(self.A, self.B)
         new = False
         if now:
-            if not self.active and (self.t_end is None or ref.time - self.t_end >= self.gap):
+            if (not self.active and (self.t_end is None or ref.time - self.t_end >= self.gap)) \
+                    or (self._rearmed and not self._was):
                 self.count += 1
                 self.t_start = ref.time
                 new = True
+                self._rearmed = False
             self.active = True
             self.t_end = ref.time
             self.longest = max(self.longest, ref.time - self.t_start)
         elif self.active and ref.time - self.t_end >= self.gap:
             self.active = False
+        self._was = now
         return new
 
     @property
@@ -327,7 +344,7 @@ class Touch:
         return 0.0 if self.t_start is None else self.t_end - self.t_start
 
     def state(self) -> list:
-        return [self.count, self.active, self.t_start, self.t_end, self.longest]
+        return [self.count, self.active, self.t_start, self.t_end, self.longest, self._was, self._rearmed]
 
 
 class Flights:

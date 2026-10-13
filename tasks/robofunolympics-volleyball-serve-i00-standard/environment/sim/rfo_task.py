@@ -152,10 +152,12 @@ class Task(TaskBase):
              "line's outer edge is {end_line_m} m ahead of your pelvis and the net is {court_half_length_m} m beyond "
              "it, its top {net_height_m} m high, with an antenna above each side line. A volleyball (0.21 m across, "
              "0.27 kg, in air) starts gripped on your left fist. In order: (1) the toss: no hand grips the ball any "
-             "more; a hand may still touch it for {release_grace_s} s while it leaves (nothing else may). (2) the hit: the next contact of "
-             "the ball, with one hand or one arm of yours (hand, forearm or upper arm of the same side), within "
+             "more; for {release_grace_s} s from the release the hand that held it may still touch it (it follows "
+             "the toss up; any other touch in that time is already the hit), and the ball must be clear of that "
+             "hand when that time ends. (2) the "
+             "hit: the next contact of the ball, with one hand or one arm of yours (hand, forearm or upper arm of the same side), within "
              "{service_time_s} s of the start. The ball must have been clear of you for at least {toss_free_s} s "
-             "before the hit, moving at most {toss_max_speed_m_s} m/s just before it; the hit's contacts last at "
+             "before the hit (counted from the end of the last touch of the toss), moving at most {toss_max_speed_m_s} m/s just before it; the hit's contacts last at "
              "most {strike_max_s} s (it is over when the ball has been clear of you for {clear_s} s), and the ball "
              "leaves the hit faster than it arrived. At the first contact of the hit no foot of yours touches the "
              "court (the end line included) or the floor beyond the extensions of the side lines; if you are in the "
@@ -211,7 +213,7 @@ class Task(TaskBase):
         self.net = ref.geoms(body="net")
         self.antennas = ref.geoms(prefix="net_antenna")
         self.feet = ref.part("feet")
-        self.trackers = {"released": None, "free_t": None, "strike": None, "flights": Flights(ref, min_air=0.0, also_allowed=self.ball),
+        self.trackers = {"released": None, "tosser": ["left_hand"], "free_t": None, "strike": None, "flights": Flights(ref, min_air=0.0, also_allowed=self.ball),
                          "plane": Crossing((1, 0, 0), g["centre"][0], direction=1)}
 
     def _foot_fault(self, w, ref):
@@ -230,23 +232,28 @@ class Task(TaskBase):
         p, g, tr = self.p, self.geometry(), self.trackers
         tr["flights"].update()
         if tr["released"] is None:
-            if not w.holder("ball"):
+            if w.holder("ball"):
+                tr["tosser"] = sorted(f"{s}_hand" for s in w.holder("ball"))
+            else:
                 tr["released"] = ref.time
                 ref.stage("toss")
             return
         b, v = w.pos("ball"), w.vel("ball")
         on = ref.touching(self.ball, ref.robot_mask)
         st = tr["strike"]
-        if st is None:                                       # released, the ball not yet clear of the hand
-            if not on:
-                tr["free_t"] = ref.time
-                st = tr["strike"] = Strike(ref, self.ball, p["clear_s"])
-            elif not ref.parts_touching(self.ball) <= {"left_hand", "right_hand"}:
-                return ref.fail("the ball was not hit with one hand or arm", parts=sorted(ref.parts_touching(self.ball)))
-            elif ref.time - tr["released"] > p["release_grace_s"]:
-                return ref.fail("the ball was not tossed: it stayed on the hand", after_s=round(ref.time - tr["released"], 3))
-            else:
+        if st is None:                                       # released: the toss leaves the hand
+            tossing = on and ref.parts_touching(self.ball) <= set(tr["tosser"])
+            if ref.time - tr["released"] <= p["release_grace_s"] and (tossing or not on):
+                # for release_grace_s the hand that held the ball may still touch it (it follows the toss up);
+                # the ball is clear from the end of its last such touch. Any other touch is the hit.
+                tr["free_t"] = None if on else (ref.time if tr["free_t"] is None else tr["free_t"])
                 return
+            if tr["free_t"] is None:
+                if tossing:
+                    return ref.fail("the ball was not tossed: it stayed on the hand",
+                                    after_s=round(ref.time - tr["released"], 3))
+                tr["free_t"] = ref.time
+            st = tr["strike"] = Strike(ref, self.ball, p["clear_s"])
         if ref.touching(self.ball, self.antennas):
             return ref.fail("the ball touched an antenna")
         if st.phase == 2 and on:

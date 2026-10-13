@@ -17,6 +17,7 @@ to your left, +z is up; the floor is z = 0.
 
 - Law 14 (the goalkeeper): the goalkeeper is a dummy, a rigid board 1.9 m high and 0.6 m wide standing on the goal line. It starts at the centre and, from 0.25 s after the kick, slides along the line at up to 3.0 m/s towards the point where the ball's velocity of that moment would take it over the goal line; it stays between the posts and neither dives, jumps nor uses hands. An opponent cannot be simulated otherwise.
 - Law 14 (the kick): the referee takes every contact of a foot with the ball within 0.15 s of the first as the one kick; any later contact is a second touch. A referee's eye is replaced by this number.
+- Law 14 says the ball is kicked; the Laws do not name the part of the leg. Here the kick is made with a foot or an ankle (the parts below the shin): a contact of the ball with a shin or any other part is a failure.
 - Law 1: only the goal end of the field is there (the penalty area, the goal area, the mark and the arc are painted); the goal's net is a rigid cage 2.0 m deep; there is no wind and no other player.
 
 A size-5 football (0.22 m across, 0.43 kg, in air) lies at rest on the penalty mark, 3.0 m straight ahead of you; the goal line is 11.0 m beyond the mark. The goal is 7.32 m wide between the posts and 2.44 m high under the crossbar (posts and bar 0.12 m thick), centred on the line through you and the mark. A goalkeeper dummy, a board 1.9 m high, 0.6 m wide and 0.3 m thick, stands on the goal line at the centre of the goal; from 0.25 s after your kick it slides along the goal line at up to 3.0 m/s towards the point where the ball, going on as it moves at that moment, would cross the line, and it blocks the ball. The kick is a contact of a foot or an ankle of yours with the ball (the parts below the shin); every such contact within 0.15 s of the first belongs to the one kick. You succeed at the moment the whole ball is over the goal line between the posts and under the bar; it may touch the posts, the bar, the dummy and the ground on the way. You fail if any other part of you touches the ball at any time, if a foot touches the ball again later than 0.15 s after the first contact (a second touch), if the ball is not moving towards the goal line at the end of the kick, if the whole ball crosses the goal line outside the goal, if after the kick the ball has been slower than 0.1 m/s for 1.0 s, if you fall (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground), or after 15 s.
@@ -32,7 +33,7 @@ afterwards, so keep them short and factual.
 
 | file | what goes in it |
 |---|---|
-| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of 151 floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most 1500 rows are used |
+| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of 151 floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most 1500 rows are used; every one of them must be finite, also those after the attempt's end (a file with a NaN or an infinite value scores 0) |
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
 | `NOTES.md` | **at most 20 lines**: your final approach and why it works, the approaches that failed and what each told you, and what you downloaded or installed, if anything |
 
@@ -81,7 +82,7 @@ One row is one control step (10 ms; the physics runs at 1 kHz). Every row ends w
 | `joints` | all 29 joint targets | 31 | you give all 29 joint targets (rad); the default PD gains, no feed-forward |
 | `lowcmd` | all 29 joints × (`q`, `dq`, `tau`, `kp`, `kd`): 29 targets, then 29 velocities, 29 torques, 29 kp, 29 kd | 147 | Unitree's LowCmd for all 29 joints: position targets (rad), velocity targets (rad/s), feed-forward torques (N m), kp, kd; the motor torque is kp (q - q_measured) + kd (dq - dq_measured) + tau, evaluated at 1 kHz |
 
-Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's rest angles keeps it there.
+Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's start angles and both grips open keeps it there.
 
 Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains:
 
@@ -138,7 +139,9 @@ What the platform does and does not do for you:
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1000 / 500 / 400 and kd up to
   20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
 - **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets.
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
 - **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
   10 cm along the forearm) with a grip: while `grip_left` / `grip_right` ≥ 0.5 the hand holds the nearest grippable
   object whose surface is within 3.5 cm of the palm point (the middle of the pad, 4.5 cm beyond the wrist flange along

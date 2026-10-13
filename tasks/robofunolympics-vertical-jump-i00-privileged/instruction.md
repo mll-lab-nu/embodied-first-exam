@@ -7,7 +7,7 @@ This is a *fixed instance*: the same venue and start every time. You may reset a
 Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## The venue
-You stand facing +x on a level, firm floor. The vane's middle line is 0.04 m ahead of your pelvis, where your raised hand is; it reaches 0.45 m to each side of you. The stand's post is 0.60 m to your left, 0.07 m ahead; the vane is yellow, the post grey.
+You stand facing +x on a level, firm floor. The vane's middle line is 0.04 m ahead of your pelvis, where your raised hand is; it reaches 0.45 m to each side of you. The stand's post is 0.60 m to your left, 0.07 m ahead; it stands on a base plate 0.02 m high that covers x from -0.18 to 0.32 m and y from 0.55 to 0.95 m (your pelvis is at x = 0, y = 0). The vane is yellow, the stand grey.
 
 Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
 to your left, +z is up; the floor is z = 0. 
@@ -21,7 +21,7 @@ to your left, +z is up; the floor is z = 0.
 - the test ends at the touch; here the robot must also land on its feet and stand for 1.0 s (FAMILIES.md: land and stand)
 - the qualifying height, 0.3 m, is a round number below the adult average of the test (about 0.4 to 0.5 m for men, 0.3 to 0.4 m for women)
 
-Your standing reach (the top of a hand, flat-footed, legs straight, arm stretched up) is 1.66 m. A vane hangs over you with its underside 0.3 m above that: a light plate (0.05 kg) 0.9 m long from your left to your right and 0.08 m wide, on a hinge at its left end, so that it swings away when it is touched. Your jump is your first flight (nothing of you touches the ground or the stand) of at least 0.1 s. Until then: no step and no run-up: every point where a foot touches the ground must lie within 0.03 m of the place where that foot's sole stood at t = 0, and neither foot may be off the ground for more than 0.05 s while the other is on it (so both feet leave the ground within 0.05 s of each other: a two-foot take-off). Rising on the toes is allowed. The flight must be a jump: your pelvis has to rise at least 0.05 m above its height at lift-off. The touch: during that flight a hand (the fist or the wrist beyond the forearm) touches the vane. The first contact after the flight must be with your feet only. After the landing you may step; you succeed once you stand for 1.0 s without a break: only your feet on the ground, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your pelvis lower than 0.35 m, or any part of you other than your feet on the ground. You fail on a step or shuffle before the take-off, a foot that leaves the ground before the other, a touch of the vane that is not in the jump's flight or not with a hand, any touch of the stand's post, a jump that lands without having touched the vane, a flight that is not a jump, a landing that is not on the feet, a fall, or after 20 s.
+Your standing reach (the top of a hand, flat-footed, legs straight, arm stretched up) is 1.66 m. A vane hangs over you with its underside 0.3 m above that: a light plate (0.05 kg) 0.9 m long from your left to your right and 0.08 m wide, on a hinge at its left end, so that it swings away when it is touched. Your jump is your first flight (nothing of you touches the ground or the stand) of at least 0.1 s. Until then: no step and no run-up: every point where a foot touches the ground must lie within 0.03 m of the place where that foot's sole stood at t = 0, and neither foot may be off the ground for more than 0.05 s while the other is on it (so both feet leave the ground within 0.05 s of each other: a two-foot take-off). Rising on the toes is allowed. The flight must be a jump: your pelvis has to rise at least 0.05 m above its height at lift-off. The touch: during that flight a hand (the fist or the wrist beyond the forearm) touches the vane. The first contact after the flight must be with your feet only. After the landing you may step; you succeed once you stand for 1.0 s without a break: only your feet on the ground, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your pelvis lower than 0.35 m, or any part of you other than your feet on the ground. You fail on a step or shuffle before the take-off, a foot that leaves the ground before the other, a touch of the vane that is not in the jump's flight or not with a hand, any touch of the stand (its post or its base plate on the floor, also after the landing), a jump that lands without having touched the vane, a flight that is not a jump, a landing that is not on the feet, a fall, or after 20 s.
 
 A referee decides this from the simulator's state after every physics step (1 ms): the events that must happen, in
 order, are **take-off → touch → landing → stand**. The attempt ends at the success (that moment is the success), at the first rule violation,
@@ -34,7 +34,7 @@ afterwards, so keep them short and factual.
 
 | file | what goes in it |
 |---|---|
-| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of 151 floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most 2000 rows are used |
+| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of 151 floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most 2000 rows are used; every one of them must be finite, also those after the attempt's end (a file with a NaN or an infinite value scores 0) |
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
 | `NOTES.md` | **at most 20 lines**: your final approach and why it works, the approaches that failed and what each told you, and what you downloaded or installed, if anything |
 
@@ -83,7 +83,7 @@ One row is one control step (10 ms; the physics runs at 1 kHz). Every row ends w
 | `joints` | all 29 joint targets | 31 | you give all 29 joint targets (rad); the default PD gains, no feed-forward |
 | `lowcmd` | all 29 joints × (`q`, `dq`, `tau`, `kp`, `kd`): 29 targets, then 29 velocities, 29 torques, 29 kp, 29 kd | 147 | Unitree's LowCmd for all 29 joints: position targets (rad), velocity targets (rad/s), feed-forward torques (N m), kp, kd; the motor torque is kp (q - q_measured) + kd (dq - dq_measured) + tau, evaluated at 1 kHz |
 
-Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's rest angles keeps it there.
+Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's start angles and both grips open keeps it there.
 
 Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains:
 
@@ -140,7 +140,9 @@ What the platform does and does not do for you:
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1000 / 500 / 400 and kd up to
   20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
 - **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets.
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
 - **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
   10 cm along the forearm) with a grip: while `grip_left` / `grip_right` ≥ 0.5 the hand holds the nearest grippable
   object whose surface is within 3.5 cm of the palm point (the middle of the pad, 4.5 cm beyond the wrist flange along

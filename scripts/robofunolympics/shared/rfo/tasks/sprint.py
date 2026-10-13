@@ -64,6 +64,8 @@ class Task(TaskBase):
         "TR 19 (photo finish): the time is the instant the leading point of the torso link's collision mesh reaches "
         "the plane of the finish line's near edge, interpolated between 1 ms physics steps",
         "TR 14 (the track): a flat straight of three 1.22 m lanes, the robot alone in the middle one; no wind",
+        "a race has no time to beat; here the run counts only if it finishes within {finish_limit_s} s of robot time after the gun "
+        "(this benchmark's qualifying time: a mean of about 1.7 m/s, beyond the walking gait)",
     ]
     time_limit_s = 34.2              # "set" at 2.0 s, the gun at most 2.2 s later, 30 s to finish
     start = (-(0.05 + 0.02 + G1_FOOT_FRONT), 0.0, 0.0)

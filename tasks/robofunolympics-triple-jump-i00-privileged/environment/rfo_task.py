@@ -69,6 +69,9 @@ class Task(TaskBase):
         "TR 31.2, note (a touch of the ground by the 'sleeping' leg is no failure): not applied: between the hop's "
         "landing and the step's take-off, and between the step's landing and the jump's take-off, only the foot the "
         "phase landed on may touch the ground; a referee without eyes cannot tell a scrape from a supporting step",
+        "TR 31.1 (the event is one hop, one step and one jump): between a phase's landing and the next take-off the "
+        "landing foot is on one place: a touch of it more than {foot_move_m} m from where it landed is a failure "
+        "(hops too short to be flights, or a slide, would otherwise cover the distance)",
         "the take-off of the hop from one foot (implied by TR 31.2) is judged by a number: the other foot must have "
         "left the ground at least {single_support_s} s before the take-off foot does",
         "TR 30.1.3 (somersaulting) and TR 30.1.6 / 30.2 (how the athlete leaves the landing area) are not judged; "
@@ -87,7 +90,7 @@ class Task(TaskBase):
     fall_rule = False                # no rule of the event says a fall is a failure; the contacts below judge it
     params = dict(runway_m=40.0, runway_width_m=1.22, board_length_m=0.20, board_to_pit_m=7.0, pit_length_m=9.0,
                   pit_width_m=2.75, sand_timeconst_s=0.05, sand_give_m=0.04, sand_friction=1.5, min_air_s=0.05,
-                  rise_min_m=0.05, single_support_s=0.05, mark_window_s=2.0)
+                  rise_min_m=0.05, single_support_s=0.05, foot_move_m=0.30, mark_window_s=2.0)
 
     sentence = ("Do a triple jump: run up, hop from behind the take-off line and land on the same foot, step onto "
                 "the other foot, and jump from it into the sand pit.")
@@ -105,7 +108,10 @@ class Task(TaskBase):
              "alone, on the runway. (2) The step is the next flight: until it starts only the foot you landed on "
              "may touch the ground, and its first contact must be the other foot alone, on the runway. (3) The "
              "jump is the next flight: until it starts only the foot the step landed on may touch the ground, and "
-             "its first contact must be with the sand (any part of your body). On the runway means: every point of "
+             "its first contact must be with the sand (any part of your body). Between the landing of the hop or "
+             "of the step and the next flight the landing foot stays where it came down: it fails to touch the "
+             "ground with its centre more than {foot_move_m} m from where it was at the landing (no sliding along "
+             "and no travelling in hops shorter than a flight). On the runway means: every point of "
              "that contact within the runway's width and before the pit. The mark is the point nearest the "
              "take-off line at which any part of you touches the sand in the first {mark_window_s} s after the "
              "jump's first contact; in that time you may not touch the ground outside the pit nearer the take-off "
@@ -139,7 +145,8 @@ class Task(TaskBase):
         self.below = ref.geoms(names=["floor"])              # the lowered plane under the slabs: off the venue
         # phases: how many of hop, step, jump have landed; foot: the foot the last phase landed on
         self.trackers = {"flights": Flights(ref, min_air=self.p["min_air_s"]), "phases": 0, "foot": None,
-                         "last_on": {"left": -1.0, "right": -1.0}, "at_t0": None, "landed_at": None, "mark": None}
+                         "last_on": {"left": -1.0, "right": -1.0}, "at_t0": None, "anchor": None, "landed_at": None,
+                         "mark": None}
 
     def _on_runway(self, pts) -> bool:
         p = self.p
@@ -199,6 +206,14 @@ class Task(TaskBase):
                 if parts - {f"{foot}_foot"}:
                     return ref.fail(f"another part than the landing foot touched the ground before the {name}",
                                     landing_foot=foot, parts=sorted(parts))
+                if parts:                                # the landing foot is down: on the place it landed on
+                    at = w.d.geom_xpos[self.foot_ids[foot]].mean(axis=0)[:2]
+                    if tr["anchor"] is None:
+                        tr["anchor"] = at.tolist()
+                    moved = float(np.linalg.norm(at - tr["anchor"]))
+                    if moved > p["foot_move_m"]:
+                        return ref.fail(f"the landing foot moved along the ground before the {name}",
+                                        landing_foot=foot, moved_m=round(moved, 3))
                 return
             ref.metrics[f"{name}_air_s"] = done["air_s"]
             if n == 1:
@@ -206,7 +221,7 @@ class Task(TaskBase):
                 if done["landing_parts"] != [f"{other}_foot"] or in_sand or not self._on_runway(hard):
                     return ref.fail("the step did not land on the other foot on the runway", hop_foot=foot,
                                     landed_on=done["landing_parts"], in_the_sand=bool(in_sand))
-                tr["phases"], tr["foot"] = 2, other
+                tr["phases"], tr["foot"], tr["anchor"] = 2, other, None
                 ref.metrics["step_m"] = round(float(hard[:, 0].min()), 3)
                 return ref.stage("step", foot=other, air_s=done["air_s"])
             if len(hard) or not in_sand:

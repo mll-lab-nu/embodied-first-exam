@@ -1,5 +1,5 @@
-"""backflip: the referee says no to standing still, to a jump without the turn, to a forward flip, to three quarters
-of a turn, to a backward roll on the ground, to a flip that comes down on the head, to a flip whose landing falls, to
+"""backflip: the referee says no to standing still, to a jump without the turn, to a forward flip, to two thirds
+of a turn, to a spin about the vertical with the pelvis rolled on its side, to a backward roll on the ground, to a flip that comes down on the head, to a flip whose landing falls, to
 a flip that does not start from the feet (thrown up from lying on the ground).
 
 The positive is an INJECTION (no controller of this robot flips yet): the standing robot is given a velocity
@@ -46,8 +46,19 @@ def main():
     w.reset(); ghost_flip(w, A, f=-0.99)                                                      # a forward flip
     v = verdict(w)
     assert v["failed"] == "not a full backward turn" and v["metrics"]["turn_deg"] < -300, v
-    w.reset(); ghost_flip(w, A, f=0.75)                                                       # three quarters of a turn
+    w.reset(); ghost_flip(w, A, f=0.66)                                                       # two thirds of a turn
     assert verdict(w)["failed"] == "not a full backward turn", verdict(w)
+    w.reset(); ghost_flip(w, A, f=0.86)                                  # a salto that comes down on its feet 36 degrees
+    v = verdict(w)                                                       # short of upright: the turn and the landing
+    assert v["stages"] == ["take-off", "full turn", "landing"], v        # count (the ghost's stance then falls: the
+    assert 300 < v["metrics"]["turn_deg"] < 330 and v["failed"] == "fell", v   # rest of the turn is the landing's work)
+    w.reset(); hold(w, A, 0.3)                                           # the pelvis on its side in the air, spinning
+    r = w.robot                                                          # about the vertical: a rotation about its own
+    w.d.qpos[r.fq + 2] += 1.5                                            # left-right axis that is no backward turn
+    w.d.qpos[r.fq + 3:r.fq + 7] = [math.cos(math.pi / 4), math.sin(math.pi / 4), 0, 0]
+    kick_robot(w, vel=(0.0, 0.0, 2.0), angvel=(0.0, -3 * SPIN, 0.0)); hold(w, A, 1.5)
+    v = verdict(w)
+    assert "full turn" not in v["stages"] and abs(w.task.trackers["turn_rad"]) < 0.5, (v, w.task.trackers["turn_rad"])
     w.reset(); ghost_flip(w, A, f=1.10)                                                       # over-rotated: head first
     assert verdict(w)["failed"] == "did not land on the feet" and "full turn" in verdict(w)["stages"], verdict(w)
     w.reset(); ghost_flip(w, A, vz=0.0, f=0.5)                                                # a backward roll on the ground
@@ -65,7 +76,7 @@ def main():
     assert not w2.ref.parts_touching(w2.ref.ground) <= {"left_foot", "right_foot"}
     kick_robot(w2, vel=(0.0, 0.0, VZ), angvel=(0.0, -SPIN, 0.0)); hold(w2, A2, 2.0)
     assert verdict(w2)["failed"] == "did not take off from the feet", verdict(w2)
-    assert p["turn_deg"] == 330.0 and p["stand_s"] == 2.0
+    assert p["turn_deg"] == 300.0 and p["stand_s"] == 2.0
     print("PASS backflip")
 
 

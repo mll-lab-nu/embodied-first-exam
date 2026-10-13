@@ -134,7 +134,14 @@ def main():
     w.put("ball", w.d.geom_xpos[w.m.geom("racket_head").id] + [-0.3, 0.0, 0.0125 + R - 0.004], vel=V_IN)   # way: no serve
     P.keep()
     v = verdict(w)
+    assert v["failed"] == "the ball was thrown, not tossed" and w.ref.events[-1]["speed_before_m_s"] > 12.0, v
+    w2, A2 = make(FAMILY, toss_max_speed_m_s=99.0)                          # (without the toss's speed limit the
+    P2 = Play(w2, A2); P2.new().ready(); P2.toss(); P2.keep(0.12)           # second rule says no: no speed added)
+    w2.put("ball", w2.d.geom_xpos[w2.m.geom("racket_head").id] + [-0.3, 0.0, 0.0125 + R - 0.004], vel=V_IN)
+    P2.keep()
+    v = verdict(w2)
     assert v["failed"] == "the racket did not speed the ball up" and v["metrics"]["strike_speed_m_s"] > 12.0, v
+    w2.close()
 
     # ---- the positive (injection, see the docstring)
     v = P.new().serve(V_IN)
@@ -157,9 +164,9 @@ def main():
     for (x, y), why in (((0.45, 0.0), "a foot touched the baseline or the court"),
                         ((0.0, cy), "a foot touched the centre mark's extension"),
                         ((0.0, cy - T.HALF_WIDTH), "a foot touched the ground outside the sideline's extension")):
-        P.new(); move_robot(w, x=x, y=y); P.keep(0.8); P.toss()
+        P.new(); move_robot(w, x=x, y=y, held=True); P.keep(0.8); P.toss()
         assert verdict(w)["failed"] == PLACE + why, (x, y, verdict(w))
-    P.new(); move_robot(w, y=cy - 0.30); P.keep(0.8); P.toss()              # close to the mark, but right of it: legal
+    P.new(); move_robot(w, y=cy - 0.30, held=True); P.keep(0.8); P.toss()              # close to the mark, but right of it: legal
     assert w.ref.stages == ["toss"] and not w.done, verdict(w)
 
     # ---- Rule 18: the feet between the release and the strike (the ball is kept in the air by hand meanwhile)
@@ -168,10 +175,10 @@ def main():
         P.new().keep(0.7); P.toss()
         w.put("ball", (0.5, 0.2, 2.5), vel=(0.0, 0.0, 3.0)); P.keep(0.05)
         assert not w.done, verdict(w)
-        move_robot(w, x=x, y=y); P.keep(0.3)
+        move_robot(w, x=x, y=y, held=True); P.keep(0.3)
         assert verdict(w)["failed"] == why, (x, y, verdict(w))
     P.new().ready().strike(); P.shoot(V_IN); P.keep(0.05)                   # after the strike the feet are free
-    move_robot(w, x=0.45); P.keep()
+    move_robot(w, x=0.45, held=True); P.keep()
     assert verdict(w)["success"], verdict(w)
 
     # ---- the toss and the strike
@@ -258,9 +265,9 @@ def main():
     assert verdict(w)["failed"] == "the tossed ball reached the ground unstruck", verdict(w)
 
     # ---- the robot
-    P.new().keep(0.2); move_robot(w, x=nx - 0.10, y=cy); P.keep(0.5)        # at the net: the legs in it
+    P.new().keep(0.2); move_robot(w, x=nx - 0.10, y=cy, held=True); P.keep(0.5)        # at the net: the legs in it
     assert verdict(w)["failed"] == "you touched the net", verdict(w)
-    P.new().keep(0.2); move_robot(w, z=0.30); P.keep(0.5)                   # on the ground
+    P.new().keep(0.2); move_robot(w, z=0.30, held=True); P.keep(0.5)                   # on the ground
     assert verdict(w)["failed"] == "fell", verdict(w)
     print(f"PASS {FAMILY}")
 

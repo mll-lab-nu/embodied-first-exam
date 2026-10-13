@@ -2,9 +2,12 @@
 
 One module, copied unchanged into every RoboFunOlympics task: the privileged environment (`Session`), the privileged
 verifier (`replay`) and the standard sim service (`Episode`, driven by sim/server.py). The world is the `rfo` package
-next to it (the RoboOlympics Unitree G1 in a sports venue, rfo/world.py) with the family's own rules, `rfo_task.py`.
+next to it (the RoboOlympics Unitree G1 or H1-2 in a sports venue, rfo/world.py) with the family's own rules,
+`rfo_task.py`.
 
-A control step is 10 ms (10 physics steps of 1 ms). An action is a row of one of the action types (`Session.action_types`):
+A control step is 10 ms (10 physics steps of 1 ms). An action is a row of one of the action types
+(`Session.action_types`; the widths below are the G1's, 29 joints with a 3-joint waist; the H1-2 has 27 joints, a
+1-joint waist and no running policy, so no `run` / `run_arms`):
 
     stand     waist 3 + arms 14 joint targets + grips 2                      the platform holds the legs in the stance
     walk      vx, vy, wz + waist 3 + arms 14 + grips 2                       Unitree's walking policy drives the legs
@@ -13,7 +16,7 @@ A control step is 10 ms (10 physics steps of 1 ms). An action is a row of one of
     joints    29 joint targets + grips 2                                     you drive every joint (default PD gains)
     lowcmd    29 x (q, dq, tau, kp, kd) + grips 2                            Unitree's LowCmd for every joint
 
-Joint order (Unitree's SDK): left leg 6 (hip pitch, roll, yaw, knee, ankle pitch, roll), right leg 6, waist yaw, roll,
+Joint order (Unitree's SDK; the G1's, the H1-2 has waist yaw only): left leg 6 (hip pitch, roll, yaw, knee, ankle pitch, roll), right leg 6, waist yaw, roll,
 pitch, left arm 7 (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw), right arm 7. grip_left / grip_right:
 >= 0.5 closes that hand's grip (it holds an object whose surface is within 3.5 cm of the palm), < 0.5 opens it.
 

@@ -26,7 +26,8 @@ A referee in the service decides this from the simulator's state. The events tha
   no seconds is free.
 - **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
   `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
-  motor torques and two IMUs (below), and the venue's fixed camera (`venue`). Not where you or any object is, not the
+  motor torques and two IMUs (below), and the venue's fixed cameras (@@VENUE_CAMERAS@@; `spec()["cameras"]` says
+  where each is mounted). Not where you or any object is, not the
   referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
   (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
 - There is nothing to hand in: the service records your last attempt, replays it in a fresh simulator and grades the
@@ -59,7 +60,7 @@ command in force to the row; `"hold"` applies the row as it is.
 ```python
 from rcb_client import Robot
 r = Robot()
-res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, 22) rows of the `walk` type
+res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, @@WALK_DIM@@) rows of the `walk` type
 ```
 
 ## Actions
@@ -82,4 +83,4 @@ force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation qua
 sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
 `holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
 4 joints / lowcmd), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
-real G1 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
+real @@ROBOT_SHORT@@ has no sensor for its position in the venue, and neither do you: that is what the cameras are for.

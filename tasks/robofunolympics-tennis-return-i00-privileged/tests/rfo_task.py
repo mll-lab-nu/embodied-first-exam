@@ -271,6 +271,7 @@ class Task(TaskBase):
                 return ref.fail("the racket hit the ball twice")
             if not ref.stage("racket", speed_in_m_s=came):
                 return ref.fail("the racket hit the ball before it bounced")
+            tr["ground"].rearm()                             # a contact with the ground that begins now is a new one
         if rk.active and rk.duration > p["max_touch_s"]:
             return ref.fail("the racket carried the ball", touch_s=round(rk.duration, 3))
         x = tr["net"].update(b)

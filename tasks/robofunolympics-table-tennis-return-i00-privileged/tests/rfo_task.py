@@ -240,6 +240,7 @@ class Task(TaskBase):
                                 handle=ref.touching(self.ball, ref.geoms(names=["paddle_handle"])))
             if tr["strike_t"] is None:
                 tr["strike_t"] = ref.time
+                tr["table"].rearm()                           # a contact with the table that begins now is a new one
                 ref.stage("strike", x=round(float(b[0]), 3), y=round(float(b[1]), 3), z=round(float(b[2]), 3),
                           with_hand=not ref.touching(self.ball, self.blade))
             elif ref.time - tr["strike_t"] > p["strike_window_s"]:

@@ -44,7 +44,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Category | throwing-catching-striking |
 | Rule book | No rule book: a wall-ball drill (throw and catch against a wall, as used in baseball, cricket and handball training) with this benchmark's numbers. The ball is the ITF's (Rules of Tennis 2024, Rule 3 and Appendix I: size, mass, rebound); deviations: The hand throws and catches by a grip switched on and off: it holds a ball whose surface is within 3.5 cm of the palm and that moves no faster than 6 m/s relative to it; the ball is released when the grip is switched off. · The wall is rigid and smooth; the ball's rebound from it is the ITF ball's rebound from a hard floor (0.745 of the speed across the wall). · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model: drag and Magnus lift), still air. |
 | Stages | release → target → catch → hold |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `cb5c39a567dedda7e6ae3febc40c37c0cf9e0aa8a259ec0af7dfa3767c7c5396` |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `d75590760f8bc78abe384bf56b43dfb3eb9a782e3077dc296fb1b9e6aee0372d` |
 | Episode | 1500 control steps (15 s at 100 Hz) |
 | Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
 | Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |

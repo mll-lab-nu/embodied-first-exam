@@ -3,7 +3,7 @@
 A family is one sport task for one Unitree G1: a venue, a start, and a referee. It is one Python module,
 `shared/rfo/tasks/<family_snake>.py`, defining `Task(TaskBase)`, plus a referee test `tests/test_<family_snake>.py`
 and, where one exists, a reference solution `oracles/<family>/oracle.py`. The generator copies the core package
-(`shared/rfo/{__init__,scene,world,referee,task}.py`; `testing.py` stays here, for the tests) and the family's module (as `rfo_task.py`) into the task
+(`shared/rfo/{__init__,scene,looks,world,referee,task}.py`; `testing.py` stays here, for the tests) and the family's module (as `rfo_task.py`) into the task
 directories; a task directory never holds another family's module.
 
 Read first: `shared/rfo/task.py` (the hooks), `shared/rfo/scene.py` (venue building, collision classes, balls; how a

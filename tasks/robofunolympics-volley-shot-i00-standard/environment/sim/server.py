@@ -75,6 +75,7 @@ class RoboFun:
             "episode": (f"one attempt: it ends at the success, at a rule violation (a fall, a foul; the rules say "
                         f"which), or after {self.instance['time_limit_s']:g} s ({self.max_control_steps} control steps)"),
             "action_types": types,
+            "start_command": self.instance["t0"]["hold"],     # the command in force at t = 0 (type and row)
             "units": "vx, vy: m/s in the robot's own frame (x forward, y left); wz: rad/s (+ turns left); joint targets: "
                      "rad; *_dq: rad/s; *_tau: N m; *_kp: N m/rad; *_kd: N m s/rad; grip_left, grip_right: >= 0.5 "
                      "closes the hand's grip, < 0.5 opens it",

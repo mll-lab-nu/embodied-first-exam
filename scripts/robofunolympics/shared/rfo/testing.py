@@ -41,12 +41,17 @@ def kick_robot(w, vel=(0.0, 0.0, 0.0), angvel=(0.0, 0.0, 0.0)) -> None:
     w.d.qvel[r.fv + 3:r.fv + 6] = angvel
 
 
-def move_robot(w, x=None, y=None, z=None, yaw=None) -> None:
-    """Teleport the standing robot (its joints and velocities kept)."""
+def move_robot(w, x=None, y=None, z=None, yaw=None, held=False) -> None:
+    """Teleport the standing robot (its joints and velocities kept). held: what its hands grip is moved with it (over
+    metres a grip's weld would otherwise throw the object after the robot, faster than the simulator's sanity bound)."""
     r, d = w.robot, w.d
+    p0 = d.qpos[r.fq:r.fq + 3].copy()
     for i, v in enumerate((x, y, z)):
         if v is not None:
             d.qpos[r.fq + i] = v
+    for name in {n for n in w.held.values() if held and n in w.free}:
+        qa, _ = w.free[name]
+        d.qpos[qa:qa + 3] += d.qpos[r.fq:r.fq + 3] - p0
     if yaw is not None:
         d.qpos[r.fq + 3:r.fq + 7] = [np.cos(yaw / 2), 0.0, 0.0, np.sin(yaw / 2)]
 

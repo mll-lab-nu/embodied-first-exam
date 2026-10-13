@@ -21,7 +21,6 @@ class TaskBase:
     fall_rule = True                # a fall fails the episode: the pelvis below fall_z, or a part of the robot that
     fall_z = 0.35                   # is not in legal_ground touching the ground
     legal_ground = ("left_foot", "right_foot")
-    cameras: tuple[str, ...] = ()   # venue cameras the agent also gets in standard mode (declared in build())
     params: dict = {}               # the numbers of the rules (the instruction quotes them; an instance may override)
 
     def __init__(self):

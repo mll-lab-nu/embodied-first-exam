@@ -42,6 +42,7 @@
   "The head: the Unitree H1-2's trunk and head are one rigid shell, so the head is judged by where the ball touches that shell: at or above its neck, 0.53 m above the waist joint along the trunk (about 1.56 m above the ground when the robot stands upright; the top of the head is 0.76 m above the waist joint). A contact lower on the shell is the shoulders or the chest.",
   "A header is judged by numbers instead of a referee's eye: every contact within 0.15 s of the first is the one header, and a header is a ball that leaves the head at least 1.0 times as fast as it arrived (a ball that only rebounds from a head held in its path leaves slower).",
   "Law 13's distance is applied to the robot itself: until the cross is played it stays 9.15 m from the ball, so that the cross is played, not met at the kicker.",
+  "The Laws allow any number of touches and any part but the arms; the task is narrower than the Laws: one touch, with the head only, before the cross touches the ground (the task is a header, not open play).",
   "Law 1: only the goal end of the field is there; the goal's net is a rigid cage 2.0 m deep; no wind, no other player."
  ],
  "texts": {

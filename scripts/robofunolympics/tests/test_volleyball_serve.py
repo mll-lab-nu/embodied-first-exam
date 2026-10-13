@@ -101,8 +101,8 @@ def main():
     assert v["failed"] == "the ball was hit out of the hand" and v["stages"] == ["toss"], v
 
     w.reset(); serve(w, A, on_fist=True)                                   # real: the forearm upright, the grip opened:
-    v = verdict(w)                                                         # the ball drops 5 mm back onto the fist
-    assert v["failed"] == "the ball was hit out of the hand" and v["stages"] == ["toss"], v
+    v = verdict(w)                                                         # the ball drops 5 mm back onto the fist,
+    assert v["failed"] == "the ball was hit out of the hand" and v["stages"] == ["toss"], v   # still bouncing after 0.1 s
 
     w3, A3 = make(FAMILY, release_grace_s=0.0)                             # the ball lying on the fist when the grip opens
     serve(w3, A3, on_fist="rest")                                          # (without the 0.1 s the hand has to let go)

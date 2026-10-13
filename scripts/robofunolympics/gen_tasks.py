@@ -83,7 +83,9 @@ NOTE_REST = """- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to @@KP_MAX@@ and kd up to
   @@KD_MAX@@ for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
 - **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets.
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
 - **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
   10 cm along the forearm) with a grip: while `grip_left` / `grip_right` ≥ 0.5 the hand holds the nearest grippable
   object whose surface is within 3.5 cm of the palm point (the middle of the pad, 4.5 cm beyond the wrist flange along
@@ -135,7 +137,7 @@ def toml_str(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
-def action_table(t0: dict) -> str:
+def action_table(t0: dict, mode: str) -> str:
     rows = ["| type | row (then `grip_left`, `grip_right`) | floats | who drives what |", "|---|---|---|---|"]
     n = len(t0["robot"]["joints"])
     for name, t in t0["action_types"].items():
@@ -148,15 +150,44 @@ def action_table(t0: dict) -> str:
         f"rad/s). Bounds: `walk` |vx| ≤ {walk[0]:g}, |vy| ≤ {walk[1]:g}, |wz| ≤ {walk[2]:g}{runs}. Joint targets are absolute "
         "angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, "
         "< 0.5 opens it. " + (
-            "At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's rest "
-            "angles keeps it there." if t0["hold"]["type"] == "stand" else
-            f"At the start the robot is not in the plain standing pose (the venue text says how it starts): it is held in "
-            f"`{t0['hold']['type']}` mode, and the row that keeps the command in force is `spec`'s / `s.hold()`'s."))
+            start_note(t0, mode)))
+
+
+def start_row(t0: dict) -> list:
+    """The joint targets in force at t = 0, one per joint (the instance's hold row; the legs' stance in `stand`)."""
+    r, h = t0["robot"], t0["hold"]
+    n = len(r["joints"])
+    if h["type"] == "stand":
+        return list(r["stance_legs_rad"]) + list(h["row"][:-2])
+    if h["type"] in ("joints", "lowcmd"):
+        return list(h["row"][:n])
+    return list(r["stance_legs_rad"]) + list(h["row"][3:-2])     # walk, run_arms: a velocity command, then the upper body
+
+
+def start_note(t0: dict, mode: str) -> str:
+    r, h = t0["robot"], t0["hold"]
+    row = "[" + ", ".join(f"{x:g}" for x in h["row"]) + "]"
+    where = ("`s.hold()` returns it" if mode == "privileged" else
+             "`spec()[\"start_command\"]` has it, and `get_obs(seconds=...)` keeps the command in force")
+    grips = [side for side, g in zip(("left", "right"), h["row"][-2:]) if g >= 0.5]
+    held = f" The {' and the '.join(grips)} grip{'s are' if len(grips) > 1 else ' is'} closed at the start." if grips else ""
+    if h["type"] == "stand":
+        rest = list(r["rest_upper_rad"])
+        if max(abs(a - b) for a, b in zip(h["row"][:-2], rest)) < 1e-3 and not grips:
+            return ("At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the "
+                    "table's start angles and both grips open keeps it there.")
+        return ("At the start the robot is in `stand` mode, but not with the arms at rest (the venue text says how it "
+                "starts): the joint table's last column has the angles in force." + held + " The `stand` row that "
+                f"keeps the start as it is: `{row}` ({where}); a `stand` row with other angles or grips moves the "
+                "arms or lets go.")
+    return (f"At the start the robot is not in the plain standing pose (the venue text says how it starts): it is held "
+            f"in `{h['type']}` mode." + held + f" The row that keeps the command in force: {where}.")
 
 
 def joint_table(t0: dict) -> str:
     r = t0["robot"]
-    rest = list(r["stance_legs_rad"]) + list(r["rest_upper_rad"])
+    rest = start_row(t0)
+    assert len(rest) == len(r["joints"]), (len(rest), len(r["joints"]), t0["hold"]["type"])
     rows = ["| # | joint | range (rad) | speed (rad/s) | torque (N m) | kp | kd | at the start (rad) |", "|---|---|---|---|---|---|---|---|"]
     for i, j in enumerate(r["joints"]):
         lo, hi = r["range_rad"][i]
@@ -198,7 +229,11 @@ def values(fam: str, spec: dict, inst: dict, version: str) -> dict:
         "HORIZON_S": f"{inst['time_limit_s']:g}",
         "RAW_DIM": t0["raw_dim"],
         "CAMERAS": ", ".join(f"`{c}`" for c in t0["cameras"]),
-        "ACTION_TABLE": action_table(t0),
+        "ACTION_TABLE": action_table(t0, "privileged"),
+        "ACTION_TABLE_STD": action_table(t0, "standard"),
+        "VENUE_CAMERAS": ", ".join(f"`{c}`" for c in t0["cameras"] if not c.startswith("head_")),
+        "WALK_DIM": t0["action_types"]["walk"]["dim"],
+        "ROBOT_SHORT": {"unitree_g1": "G1", "unitree_h1": "H1-2"}[rob["name"]],
         "JOINT_TABLE": joint_table(t0),
         "CONTROL_NOTES": control_notes(t0),
         "RULEBOOK": rulebook_block(inst),
@@ -281,7 +316,7 @@ def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes,
                 files["solution/run_oracle.py"] = ((sol / "run_oracle.py").read_bytes(), 0o644)
                 files["solution/oracle.py"] = ((orc / "oracle.py").read_bytes(), 0o644)
         else:
-            v = dict(vals, REFERENCE=vals["REFERENCE_STD"])
+            v = dict(vals, REFERENCE=vals["REFERENCE_STD"], ACTION_TABLE=vals["ACTION_TABLE_STD"])
             files = files_of(HERE / "templates/standard", v)
             files["environment/rcb_client.py"] = ((std / "rcb_client.py").read_bytes(), 0o644)
             files["environment/rcb1.py"] = ((std / "rcb1.py").read_bytes(), 0o644)

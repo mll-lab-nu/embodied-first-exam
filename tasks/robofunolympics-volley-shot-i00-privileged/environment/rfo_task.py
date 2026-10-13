@@ -78,6 +78,9 @@ class Task(TaskBase):
         "arrived (a ball that only rebounds from a leg held in its path leaves slower: it is not a shot).",
         "Law 13's distance is applied to the robot itself: until the cross is played it stays {keep_away_m} m from "
         "the ball, so that the cross is played, not met at the kicker.",
+        "The Laws allow any number of touches and any part but the arms; the task is narrower than the Laws: one "
+        "touch, with a foot or an ankle only, before the cross touches the ground (the task is a volley, not open "
+        "play).",
         "Law 1: only the goal end of the field is there; the goal's net is a rigid cage {goal_depth_m} m deep; no "
         "wind, no other player.",
     ]

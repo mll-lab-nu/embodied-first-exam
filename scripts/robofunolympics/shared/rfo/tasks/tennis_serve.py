@@ -146,7 +146,8 @@ class Task(TaskBase):
         "racket strikes it",
         "Rule 16 ('hit the ball with the racket'): so that a ball thrown past the racket is not a serve, the hit "
         "must add speed: {retouch_gap_s} s after its last contact with the racket the ball must be faster than it "
-        "was when it reached the racket",
+        "was when it reached the racket; and the ball may move at most {toss_max_speed_m_s} m/s when it reaches the "
+        "racket (the speed of a ball that has fallen about 1.3 m: a toss, not a throw)",
         "Rule 4 (the racket in the hand): the racket is clamped to the right hand with its handle along the forearm "
         "(the hand has no fingers to change the grip); it cannot be dropped or thrown",
         "Rule 12 (a ball touching a line is in): the ball's footprint is one point, the point under its centre at "
@@ -167,7 +168,8 @@ class Task(TaskBase):
         court_length_m=23.77, court_width_m=8.23, service_line_m=6.40, net_centre_m=NET_CENTRE, net_post_m=NET_POST,
         post_outside_m=POST_OUT, line_width_m=LINE,
         net_x_m=12.385, centre_y_m=1.0,                               # the court in the robot's starting frame
-        rest_s=0.5, rest_move_m=0.02, foot_move_m=0.30, toss_free_s=0.10, max_touch_s=0.05, retouch_gap_s=0.05,
+        rest_s=0.5, rest_move_m=0.02, foot_move_m=0.30, toss_free_s=0.10, toss_max_speed_m_s=5.0, max_touch_s=0.05,
+        retouch_gap_s=0.05,
         bounce_gap_s=0.02, lets_replayed=1, spare_x_m=0.25, spare_y_m=0.60, spare_z_m=1.05, fall_z_m=0.35)
 
     sentence = ("Serve: from behind your baseline, release the tennis ball in your left hand, strike it with the "
@@ -186,7 +188,8 @@ class Task(TaskBase):
         "on the ground behind the baseline, between the extension of the centre mark and the extension of the "
         "right sideline, neither foot having left the ground or moved more than {rest_move_m} m in the last "
         "{rest_s} s (so not before {rest_s} s after the start); (2) the strike: your racket hits the ball before it reaches the ground (any part of the "
-        "racket counts), the ball having touched nothing of you for the last {toss_free_s} s, and the hit speeds "
+        "racket counts), the ball having touched nothing of you for the last {toss_free_s} s and moving at most "
+        "{toss_max_speed_m_s} m/s when it reaches the racket (a toss, not a throw), and the hit speeds "
         "the ball up ({retouch_gap_s} s after its last contact with the racket it is faster than it was when it "
         "reached the racket); (3) the ball's centre passes the net's plane between the posts above the net's top "
         "edge; (4) its first contact with the ground is inside that service box, the lines included (the point "
@@ -198,7 +201,8 @@ class Task(TaskBase):
         "under the same rules, with the spare ball (your left hand's grip can take it from then on); this happens "
         "at most {lets_replayed} time(s), a further let fails. You fail on any fault: releasing the ball when not "
         "at rest in the server's position, a foot fault, the tossed ball reaching the ground or passing the net "
-        "unstruck, the racket striking the ball before it is clear of you or not speeding it up, the racket "
+        "unstruck, the racket striking the ball before it is clear of you, a ball that reaches the racket faster "
+        "than {toss_max_speed_m_s} m/s, a hit that does not speed it up, the racket "
         "touching the struck ball again (contacts less than {retouch_gap_s} s apart are one hit) or staying on it "
         "longer than {max_touch_s} s, the served ball touching you, a net post, the ground on your side or the "
         "ground outside the service box, or passing the net's plane anywhere but over the net. You also fail if "
@@ -355,6 +359,8 @@ class Task(TaskBase):
                 clear = ref.time - tr["last_touch"]
                 if clear < p["toss_free_s"]:
                     return ref.fail("the racket struck the ball before it was clear of you", clear_s=round(clear, 3))
+                if came > p["toss_max_speed_m_s"]:
+                    return ref.fail("the ball was thrown, not tossed", speed_before_m_s=came)
                 tr["phase"], tr["came"] = "served", came
                 ref.stage("strike", ball_height_m=round(float(b[2]), 3), speed_before_m_s=came)
             elif ref.touching(ball, ref.ground):

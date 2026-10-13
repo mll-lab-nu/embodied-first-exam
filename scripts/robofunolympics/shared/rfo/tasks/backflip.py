@@ -2,6 +2,8 @@
 turn before the feet land, then stand."""
 import math
 
+import numpy as np
+
 from rfo.referee import Flights
 from rfo.task import TaskBase
 
@@ -18,22 +20,27 @@ class Task(TaskBase):
         "surface, because the simulator's ground is rigid (a sprung floor would give energy back: this is not easier)",
         "FIG Code of Points (execution is scored): the salto is judged pass or fail on the rotation, the feet-first "
         "landing and the stand, because the task is a single action without a judging panel",
+        "the Code of Points has no number for a completed salto; here the pelvis must have turned {turn_deg} degrees "
+        "backwards between lift-off and the first touch (a full turn less the backward lean at lift-off and the "
+        "forward lean a salto still has when its feet touch down); the feet-first landing and the stand judge the rest",
     ]
     time_limit_s = 20.0
     start = (0.0, 0.0, 0.0)
     stages = ["take-off", "full turn", "landing", "stand"]
-    params = dict(turn_deg=330.0, min_air_s=0.20, stand_s=2.0, fall_pelvis_m=0.20, stand_tilt_deg=20.0,
+    params = dict(turn_deg=300.0, min_air_s=0.20, stand_s=2.0, fall_pelvis_m=0.20, stand_tilt_deg=20.0,
                   still_m_s=0.35, area_m=12.0)
 
     sentence = "Do a standing backflip: jump, turn backwards through a full turn in the air, land on your feet and stand."
     rules = ("The flip is one flight phase (nothing of you touches the ground) of at least {min_air_s} s that starts "
              "from your feet (at lift-off the last things on the ground were your feet, nothing else); shorter hops "
              "are ignored, and your first flight of at least {min_air_s} s is your attempt. The turn is measured on "
-             "your pelvis: the angle it rotates backwards (head going back, feet coming forward) about its own "
-             "left-right axis, added up from lift-off while you are in the air; a rotation on the ground does not "
-             "count. It must reach {turn_deg} degrees before anything touches the ground (a full turn less the "
-             "backward lean a standing take-off already has when the feet leave the ground). The first touch after "
-             "the flight must be with the feet only. You then stand for {stand_s} s without a break: only your feet "
+             "your pelvis: the angle it rotates backwards (head going back, feet coming forward) about the "
+             "horizontal axis that was its left-right axis at lift-off, added up from lift-off while you are in the "
+             "air; a rotation on the ground and a twist about the vertical do not count. It must reach {turn_deg} "
+             "degrees before anything touches the ground (a full turn less the backward lean a standing take-off "
+             "already has when the feet leave the ground and the lean a salto still has when its feet touch down: "
+             "the landing and the stand have to finish the turn). The first touch after the flight must be with the "
+             "feet only. You then stand for {stand_s} s without a break: only your feet "
              "on the ground, your torso within {stand_tilt_deg} degrees of vertical, your pelvis slower than "
              "{still_m_s} m/s. You fail if the attempt did not start from the feet alone, if it lands with less than "
              "{turn_deg} degrees turned, if it lands on anything but the feet, if you fall at any time (a fall is: a "
@@ -57,7 +64,8 @@ class Task(TaskBase):
 
     def referee_reset(self, w, ref):
         self.min_upright = math.cos(math.radians(self.p["stand_tilt_deg"]))
-        self.trackers = {"flights": Flights(ref, min_air=self.p["min_air_s"]), "turn_rad": 0.0, "landed": False}
+        self.trackers = {"flights": Flights(ref, min_air=self.p["min_air_s"]), "turn_rad": 0.0, "axis": [0.0, 1.0, 0.0],
+                         "landed": False}
 
     def substep(self, w, ref):
         tr, p = self.trackers, self.p
@@ -69,7 +77,12 @@ class Task(TaskBase):
         if fl.air:
             if not was_air:
                 tr["turn_rad"] = 0.0                                          # a new flight: the count starts again
-            tr["turn_rad"] -= float(w.d.qvel[w.robot.fv + 4]) * w.PHYS_DT     # the pelvis' own y axis; backwards is -y
+                left = w.d.xmat[w.robot.pelvis].reshape(3, 3)[:, 1] * (1.0, 1.0, 0.0)
+                n = float(np.linalg.norm(left))                               # the pelvis' left-right axis, levelled
+                tr["axis"] = (left / n).tolist() if n > 1e-6 else [0.0, 1.0, 0.0]
+            R = w.d.xmat[w.robot.pelvis].reshape(3, 3)                        # the free joint's angular velocity is in
+            omega = R @ w.d.qvel[w.robot.fv + 3:w.robot.fv + 6]               # the pelvis' frame; backwards is -left
+            tr["turn_rad"] -= float(omega @ np.asarray(tr["axis"])) * w.PHYS_DT
             if ref.time - fl.cur["t0"] >= p["min_air_s"] and not ref.has("take-off"):
                 parts = set(fl.cur["takeoff"].get("parts", []))
                 if not parts or not parts <= {"left_foot", "right_foot"}:

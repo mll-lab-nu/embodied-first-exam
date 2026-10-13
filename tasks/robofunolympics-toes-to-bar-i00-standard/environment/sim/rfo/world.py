@@ -96,6 +96,7 @@ GRIP_REACH = 0.035                             # m: a hand grips an object whose
 GRIP_SPEED = 6.0                               # m/s: ... and that moves no faster than this relative to the palm
 FALL_Z = 0.35                                  # m: the pelvis below this is down (tasks that allow it say so)
 UNSTABLE = "the simulation became unstable"    # the referee's reason when the physics diverges (an attempt's failure)
+MAX_SPEED = 150.0                              # m/s: the robot or a prop faster than this is a divergence too
 GRIPS = ["grip_left", "grip_right"]
 VEL = ["vx", "vy", "wz"]
 
@@ -176,6 +177,8 @@ class World:
         for j in range(m.njnt):
             if m.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE and m.jnt_bodyid[j] != self.robot.pelvis:
                 self.free[m.body(int(m.jnt_bodyid[j])).name] = (int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j]))
+        self._lin_dofs = np.array([self.robot.fv + i for i in range(3)]
+                                  + [va + i for _, va in self.free.values() for i in range(3)])
         self.cameras = ["head_left", "head_right"] + list(sc.cameras)
         self._eq_data0 = m.eq_data.copy()           # a grip writes its weld's pose into the model: reset restores it
         self.tool_hands = set(sc.hand_tools)        # a hand that carries a tool has no fist to grip with
@@ -313,17 +316,19 @@ class World:
         self._grips(raw[L.R_GRIP] >= 0.5)
         self._control(raw)
         a.begin_step(d)
+        won = self.ref.success
         for j in range(1, SUB + 1):
             a.apply(d, j)
             mujoco.mj_step(m, d)
-            if d.warning[mujoco.mjtWarning.mjWARN_BADQACC].number or not np.all(np.isfinite(d.qpos)):
+            if (d.warning[mujoco.mjtWarning.mjWARN_BADQACC].number or not np.all(np.isfinite(d.qpos))
+                    or float(np.abs(d.qvel[self._lin_dofs]).max()) > MAX_SPEED):
                 self.unstable = True                # the physics diverged: the attempt ends here, as a failure
                 break
             self.ref.substep()
         self.k += 1
         self.last_raw = raw.copy()
         if self.unstable:
-            self.ref.fail(UNSTABLE)
+            self.ref.void(UNSTABLE, keep_success=won)   # (also a success latched earlier in this control step)
             self.ref.done = True
         else:
             self.ref.step()
@@ -408,7 +413,9 @@ class World:
     def _grips(self, req) -> None:
         m, d = self.m, self.d
         if self.grippables:
-            mujoco.mj_kinematics(m, d)              # positions as they are now (a task may just have placed a prop)
+            mujoco.mj_kinematics(m, d)              # positions and velocities as they are now (a task may just
+            mujoco.mj_comPos(m, d)                  # have placed or launched a prop: the speed test below must
+            mujoco.mj_comVel(m, d)                  # not read the step before)
         for i, side in enumerate(SIDES):
             want = bool(req[i])
             self.grip_req[side] = want

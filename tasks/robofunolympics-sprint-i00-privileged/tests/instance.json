@@ -32,7 +32,8 @@
   "TR 17.3 (lanes): the lane is judged by the pelvis: its centre more than half a lane width from the lane's centre line disqualifies at once; feet on the lines are not judged",
   "TR 17 (a fallen athlete): a robot whose pelvis is below 0.4 m is down; it may get up and run on, but 10.0 s down in a row end the race (did not finish)",
   "TR 19 (photo finish): the time is the instant the leading point of the torso link's collision mesh reaches the plane of the finish line's near edge, interpolated between 1 ms physics steps",
-  "TR 14 (the track): a flat straight of three 1.22 m lanes, the robot alone in the middle one; no wind"
+  "TR 14 (the track): a flat straight of three 1.22 m lanes, the robot alone in the middle one; no wind",
+  "a race has no time to beat; here the run counts only if it finishes within 30.0 s of robot time after the gun (this benchmark's qualifying time: a mean of about 1.7 m/s, beyond the walking gait)"
  ],
  "texts": {
   "sentence": "Run the 50 m: wait for the starter's gun, then sprint down your lane until your torso reaches the finish line.",

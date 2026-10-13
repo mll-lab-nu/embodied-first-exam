@@ -15,8 +15,9 @@ Directions are from the robot at the start: +x is the way you face, +y is to you
 
 - FIG Apparatus Norms, floor: the floor is rigid and level, not the norm's sprung floor with its elastic surface, because the simulator's ground is rigid (a sprung floor would give energy back: this is not easier)
 - FIG Code of Points (execution is scored): the salto is judged pass or fail on the rotation, the feet-first landing and the stand, because the task is a single action without a judging panel
+- the Code of Points has no number for a completed salto; here the pelvis must have turned 300.0 degrees backwards between lift-off and the first touch (a full turn less the backward lean at lift-off and the forward lean a salto still has when its feet touch down); the feet-first landing and the stand judge the rest
 
-The flip is one flight phase (nothing of you touches the ground) of at least 0.2 s that starts from your feet (at lift-off the last things on the ground were your feet, nothing else); shorter hops are ignored, and your first flight of at least 0.2 s is your attempt. The turn is measured on your pelvis: the angle it rotates backwards (head going back, feet coming forward) about its own left-right axis, added up from lift-off while you are in the air; a rotation on the ground does not count. It must reach 330.0 degrees before anything touches the ground (a full turn less the backward lean a standing take-off already has when the feet leave the ground). The first touch after the flight must be with the feet only. You then stand for 2.0 s without a break: only your feet on the ground, your torso within 20.0 degrees of vertical, your pelvis slower than 0.35 m/s. You fail if the attempt did not start from the feet alone, if it lands with less than 330.0 degrees turned, if it lands on anything but the feet, if you fall at any time (a fall is: a part of you other than a foot touches the ground, or your pelvis is lower than 0.2 m; a crouch above that is not a fall), or after 20 s.
+The flip is one flight phase (nothing of you touches the ground) of at least 0.2 s that starts from your feet (at lift-off the last things on the ground were your feet, nothing else); shorter hops are ignored, and your first flight of at least 0.2 s is your attempt. The turn is measured on your pelvis: the angle it rotates backwards (head going back, feet coming forward) about the horizontal axis that was its left-right axis at lift-off, added up from lift-off while you are in the air; a rotation on the ground and a twist about the vertical do not count. It must reach 300.0 degrees before anything touches the ground (a full turn less the backward lean a standing take-off already has when the feet leave the ground and the lean a salto still has when its feet touch down: the landing and the stand have to finish the turn). The first touch after the flight must be with the feet only. You then stand for 2.0 s without a break: only your feet on the ground, your torso within 20.0 degrees of vertical, your pelvis slower than 0.35 m/s. You fail if the attempt did not start from the feet alone, if it lands with less than 300.0 degrees turned, if it lands on anything but the feet, if you fall at any time (a fall is: a part of you other than a foot touches the ground, or your pelvis is lower than 0.2 m; a crouch above that is not a fall), or after 20 s.
 
 A referee in the service decides this from the simulator's state. The events that must happen, in order, are
 **take-off → full turn → landing → stand**. An attempt (an episode) ends at the success, at the first rule violation, or after 20 s
@@ -31,7 +32,8 @@ A referee in the service decides this from the simulator's state. The events tha
   no seconds is free.
 - **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
   `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
-  motor torques and two IMUs (below), and the venue's fixed camera (`venue`). Not where you or any object is, not the
+  motor torques and two IMUs (below), and the venue's fixed cameras (`venue`; `spec()["cameras"]` says
+  where each is mounted). Not where you or any object is, not the
   referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
   (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
 - There is nothing to hand in: the service records your last attempt, replays it in a fresh simulator and grades the
@@ -80,7 +82,7 @@ One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` sprea
 | `joints` | all 29 joint targets | 31 | you give all 29 joint targets (rad); the default PD gains, no feed-forward |
 | `lowcmd` | all 29 joints × (`q`, `dq`, `tau`, `kp`, `kd`): 29 targets, then 29 velocities, 29 torques, 29 kp, 29 kd | 147 | Unitree's LowCmd for all 29 joints: position targets (rad), velocity targets (rad/s), feed-forward torques (N m), kp, kd; the motor torque is kp (q - q_measured) + kd (dq - dq_measured) + tau, evaluated at 1 kHz |
 
-Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's rest angles keeps it there.
+Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57; `run` and `run_arms` 0 ≤ vx ≤ 5, |vy| ≤ 0.12, |wz| ≤ 0.5. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the table's start angles and both grips open keeps it there.
 
 Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains
 (also in `spec()["robot_facts"]`):
@@ -138,7 +140,9 @@ What the platform does and does not do for you:
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1000 / 500 / 400 and kd up to
   20 / 15 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
 - **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
-  from the target in force. Joints a type does not name keep their targets.
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
 - **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
   10 cm along the forearm) with a grip: while `grip_left` / `grip_right` ≥ 0.5 the hand holds the nearest grippable
   object whose surface is within 3.5 cm of the palm point (the middle of the pad, 4.5 cm beyond the wrist flange along

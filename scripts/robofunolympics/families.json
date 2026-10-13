@@ -46,7 +46,7 @@
    "seed": 0,
    "oracle": "none",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (three take-offs with the legs swapped in the air by the robot's own motors: hop 2.64 m, step 5.87 m, mark 8.65 m); negatives: a foot over the line, a two-foot hop, the hop or the step on the wrong foot, another part on the ground, not into the sand. No single-leg take-off exists for this robot"
+   "evidence": "positive by injection (three take-offs with the legs swapped in the air by the robot's own motors: hop 2.64 m, step 5.87 m, mark 8.65 m); negatives: a foot over the line, a two-foot hop, the hop or the step on the wrong foot, another part on the ground, the landing foot down again half a metre on (travelling between two phases), not into the sand. No single-leg take-off exists for this robot"
   },
   "vertical-jump": {
    "seed": 0,
@@ -160,7 +160,7 @@
    "seed": 0,
    "oracle": "none",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (a real rest and release, a 0.3 m fall onto the level racket, the ball's velocity set at the contact: 20 m/s at 11 degrees, into the diagonal box; the let is played out with a real net cord); negatives: unstruck, no added speed, not at rest, a foot fault, struck before clear, a throw past the net, a double hit, carried, the own side, into the net, outside the box, a second let. The slowest legal serve needs 12 m/s; the H1-2 stays up to a head speed of about 9.6 m/s"
+   "evidence": "positive by injection (a real rest and release, a 0.3 m fall onto the level racket, the ball's velocity set at the contact: 20 m/s at 11 degrees, into the diagonal box; the let is played out with a real net cord); negatives: unstruck, no added speed, a ball thrown at the racket (faster than a toss), not at rest, a foot fault, struck before clear, a throw past the net, a double hit, carried, the own side, into the net, outside the box, a second let. The slowest legal serve needs 12 m/s; the H1-2 stays up to a head speed of about 9.6 m/s"
   },
   "table-tennis-return": {
    "seed": 0,
@@ -268,7 +268,7 @@
    "seed": 0,
    "oracle": "none",
    "expert_hours": 10.0,
-   "evidence": "positive by injection (3.4 m/s up and 9 rad/s backwards: 360 degrees in 0.70 s of flight, the rotation stopped at touchdown, the stand is the robot's own); negatives: no turn, a forward flip, three quarters of a turn, a head-first landing, a roll on the ground, a hop shorter than the minimum flight, not from the feet. An open-loop squat jump of the G1 has 2.7 m/s and 0.55 s of air"
+   "evidence": "positive by injection (3.4 m/s up and 9 rad/s backwards: 360 degrees in 0.70 s of flight, the rotation stopped at touchdown, the stand is the robot's own); a salto that lands on its feet 36 degrees short of upright has its turn and landing counted; negatives: no turn, a forward flip, two thirds of a turn, a spin about the vertical with the pelvis on its side, a head-first landing, a roll on the ground, a hop shorter than the minimum flight, not from the feet. An open-loop squat jump of the G1 has 2.7 m/s and 0.55 s of air"
   },
   "crawl": {
    "seed": 0,

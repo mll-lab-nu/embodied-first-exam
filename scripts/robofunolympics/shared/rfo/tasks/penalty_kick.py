@@ -32,6 +32,9 @@ class Task(TaskBase):
         "uses hands. An opponent cannot be simulated otherwise.",
         "Law 14 (the kick): the referee takes every contact of a foot with the ball within {kick_max_s} s of the "
         "first as the one kick; any later contact is a second touch. A referee's eye is replaced by this number.",
+        "Law 14 says the ball is kicked; the Laws do not name the part of the leg. Here the kick is made with a "
+        "foot or an ankle (the parts below the shin): a contact of the ball with a shin or any other part is a "
+        "failure.",
         "Law 1: only the goal end of the field is there (the penalty area, the goal area, the mark and the arc are "
         "painted); the goal's net is a rigid cage {goal_depth_m} m deep; there is no wind and no other player.",
     ]

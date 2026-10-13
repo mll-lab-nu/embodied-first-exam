@@ -1,7 +1,8 @@
 """triple-jump (TR 31, the pit 7 m beyond the take-off line): the referee says no to standing still, to walking over
 the line, to a hop from both feet, to a hop that lands on both feet, to a "step" that lands on the hop's foot again,
 to the other ("sleeping") foot touching the ground after the hop, to a jump that comes down before the pit, to one long jump from the
-line into a (nearer) pit, and to coming back out of the pit behind the mark.
+line into a (nearer) pit, to coming back out of the pit behind the mark, and to travelling on the landing foot between
+two phases (the foot down again half a metre on, as after a hop too short to be a flight).
 
 The positive is an INJECTION, not a solution: the robot is put at the board by hand, really lifts its left foot with
 its own motors (`joints` rows) and stands on the right one; then it is given a velocity by hand three times
@@ -106,6 +107,20 @@ def main():
     hold(w, A, 0.2); move_robot(w, x=-1.0, z=0.4); hold(w, A)            # a hop, then back behind the line: no step
     assert verdict(w)["failed"] == "another part than the landing foot touched the ground before the step", verdict(w)
     assert verdict(w)["stages"] == ["hop"], verdict(w)
+    for n in (1, 2):                                                     # after the hop (the step): the landing foot
+        at_board(w, A, "left")                                           # down again half a metre further on
+        fly(w, A, (4.9, 0, 3.0), one_leg(w, "left"))
+        act(w, A, "joints", np.r_[one_leg(w, "left"), 0, 0], 5)
+        if n == 2:
+            fly(w, A, (4.9, 0, 3.0), one_leg(w, "right"))
+            act(w, A, "joints", np.r_[one_leg(w, "right"), 0, 0], 1)
+        lifted = "left" if n == 1 else "right"
+        assert w.task.trackers["anchor"] is not None, w.task.trackers
+        move_robot(w, x=float(w.pelvis()[0]) + 0.5)
+        act(w, A, "joints", np.r_[one_leg(w, lifted), 0, 0], 20)
+        v = verdict(w)
+        assert v["failed"] == f"the landing foot moved along the ground before the {('step', 'jump')[n - 1]}", v
+        assert len(v["stages"]) == n and 0.45 < w.ref.events[-1]["moved_m"] < 0.60, (v, w.ref.events[-1])
     w.close()
     w, A = make("triple-jump", board_to_pit_m=1.0)                       # one long jump from the line into a nearer pit
     at_board(w, A, "left"); fly(w, A, (3.6, 0, 2.5), one_leg(w, "left"), stop=False)

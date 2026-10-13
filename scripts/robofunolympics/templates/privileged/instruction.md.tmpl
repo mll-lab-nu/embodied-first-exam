@@ -26,7 +26,7 @@ afterwards, so keep them short and factual.
 
 | file | what goes in it |
 |---|---|
-| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of @@RAW_DIM@@ floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most @@HORIZON_STEPS@@ rows are used |
+| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of @@RAW_DIM@@ floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most @@HORIZON_STEPS@@ rows are used; every one of them must be finite, also those after the attempt's end (a file with a NaN or an infinite value scores 0) |
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
 | `NOTES.md` | **at most 20 lines**: your final approach and why it works, the approaches that failed and what each told you, and what you downloaded or installed, if anything |
 

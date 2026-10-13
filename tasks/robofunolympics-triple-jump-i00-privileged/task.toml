@@ -19,7 +19,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_triple_jump.py: positive by injection (three take-offs with the legs swapped in the air by the robot's own motors: hop 2.64 m, step 5.87 m, mark 8.65 m); negatives: a foot over the line, a two-foot hop, the hop or the step on the wrong foot, another part on the ground, not into the sand. No single-leg take-off exists for this robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_triple_jump.py: positive by injection (three take-offs with the legs swapped in the air by the robot's own motors: hop 2.64 m, step 5.87 m, mark 8.65 m); negatives: a foot over the line, a two-foot hop, the hop or the step on the wrong foot, another part on the ground, the landing foot down again half a metre on (travelling between two phases), not into the sand. No single-leg take-off exists for this robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
