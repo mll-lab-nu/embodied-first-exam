@@ -104,7 +104,7 @@ def xml_model(plant, surfaces, command):
           </body>''')
     tendon = "".join(f'<joint joint="{n}_spin" coef=".25"/>' for n in WHEELS)
     return f"""<mujoco model="contact_vehicle"><compiler angle="radian"/><option timestep=".002" integrator="implicitfast" cone="elliptic" iterations="50"/><size njmax="2000" nconmax="300"/>
-    <visual><global offwidth="640" offheight="480"/><quality shadowsize="1024" offsamples="0"/><headlight ambient=".5 .5 .5" diffuse=".65 .65 .65"/></visual>
+    <visual>{'<map znear=".0001" zfar="5"/>' if circuit else ""}<global offwidth="640" offheight="480"/><quality shadowsize="1024" offsamples="0"/><headlight ambient=".5 .5 .5" diffuse=".65 .65 .65"/></visual>
     <default><geom solref=".01 1"/><default class="steering"><joint type="hinge" axis="0 0 1" limited="true" range="-.38 .38" frictionloss=".01" damping=".001" armature=".0002"/></default><default class="spin"><joint type="hinge" axis="0 1 0" frictionloss=".001" damping=".01" armature=".01"/></default></default>
     <asset>{"".join(assets)}</asset>
     <worldbody><light pos="0 0 10" dir="0 0 -1" directional="true"/>{"".join(road)}

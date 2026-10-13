@@ -68,6 +68,7 @@ class Video:
         if os.environ.get("MUJOCO_GL") != "osmesa":
             raise RuntimeError("Evaluation video requires OSMesa")
         self.renderer = mujoco.Renderer(vehicle.model, height=480, width=640)
+        self.render_shadows = "track_id" not in vehicle.command
         from OpenGL.GL import glGetString, GL_RENDERER, GL_VENDOR
 
         self.gl_renderer = glGetString(GL_RENDERER).decode()
@@ -123,6 +124,9 @@ class Video:
     def view(self, v, target, camera):
         self.renderer.update_scene(v.data, camera=camera)
         scene = self.renderer.scene
+        # A single whole-circuit shadow map produces meter-sized artifacts in the
+        # RC close-up; disable it for this public visual profile.
+        scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = self.render_shadows
         # Public commanded target marker, no privileged trajectory/score overlays.
         geom = scene.geoms[scene.ngeom]
         mujoco.mjv_initGeom(

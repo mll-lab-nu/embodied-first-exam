@@ -78,7 +78,34 @@ def main():
                 check=True,
                 timeout=60,
             )
-            write(folder / "delivered-feedback.json", public_feedback(record, folder))
+            public = public_feedback(record, folder)
+            # Large circuits must not push the fixed close-up behind a scene-scaled near plane.
+            raw = subprocess.check_output(
+                [
+                    "ffmpeg",
+                    "-v",
+                    "error",
+                    "-threads",
+                    "1",
+                    "-i",
+                    str(folder / "video.mp4"),
+                    "-vf",
+                    "select=eq(n\\,70)",
+                    "-frames:v",
+                    "1",
+                    "-f",
+                    "rawvideo",
+                    "-pix_fmt",
+                    "rgb24",
+                    "-",
+                ],
+                timeout=60,
+            )
+            frame = np.frombuffer(raw, dtype=np.uint8).reshape(480, 1280, 3)
+            for panel in (frame[:, :640], frame[:, 640:]):
+                if float(panel.mean()) < 5 or float(panel.std()) < 5:
+                    raise ValueError("Clipped or blank diagnostic video panel")
+            write(folder / "delivered-feedback.json", public)
         return dict(
             name=name,
             case=case,
