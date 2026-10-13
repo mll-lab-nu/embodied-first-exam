@@ -95,6 +95,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
     `## Resource limits` ("You have N seconds to complete this task. Do not cheat by using online solutions or hints
     specific to this task.", then what the cutoff means in the task's mode), and states the limit nowhere else; a
     standard-mode `sim` service is told the same number (§2.12). [CI]
+21. `[metadata.seeds]` names the default seed, the allowed seeds (each a frozen instance; another seed's instance only
+    under `tests/seeds/<seed>/`) and the seeds the reference solution is for (§2.13). [CI]
 
 ## 2. Task contract
 
@@ -114,8 +116,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Item | Level | Basis |
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
-| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
-| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13) (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
+| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13); its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
 ### 2.3 `task.toml`
@@ -128,7 +130,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Standard tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
 | `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [CI] |
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
-| `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| `instance_seed` (where present, equal to the default seed, §2.13); benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| `[metadata.seeds]`: `default`, `allowed`, `oracle` (§2.13) | MUST | [CI] (2026-10-13) |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
 | `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark); the number is the cutoff table's for the task (its benchmark and mode, unless the table gives its family or the task an exception), written by `scripts/task_conventions.py` (§2.12) | MUST / SHOULD / MUST | [CI] / [new] / [CI] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
@@ -225,7 +228,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
 | Agent egress allowlisted in `task.toml` (the model APIs and, since 2026-10-11, the package registries), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were open) |
 | `nop` scores 0 | MUST | [current] |
-| `oracle = "full"`: the oracle scores 1 | MUST | [current] |
+| `oracle = "full"`: the oracle scores 1 (on each seed in `seeds.oracle`, §2.13) | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
 
 **Human review** (any task whose `oracle` is not `full`): the PR is labelled `needs-human-review` and needs an approval
@@ -603,6 +606,31 @@ estimate of a trial's length reads `task.toml`. Not derived from the cutoff: the
 episode as long as the agent's time (RoboCasa's three benchmarks, RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K) hold for any
 shorter cutoff and are looked at when one is raised.
 
+### 2.13 Seeds (2026-10-13)
+
+The owner, 2026-10-13: "every task needs a default seed, but may also allow a change of seed, or name a list of seeds
+it allows, so that the task's submitter verifies which seeds are reasonable"; "we do not want the agent to memorise
+the answer: a reference solution can be the solution of one seed; from now on the answers are per seed"; "the seeds
+can be a list, a range, or any seed"; official batches draw a seed from the allowed ones for each trial. A seed names
+one instance of the task (its scene and start, replayed bit for bit as before); where an upstream has no seed of its
+own, seed 0 names the task's one frozen instance.
+
+| Item | Level | Basis |
+|---|---|---|
+| `[metadata.seeds]` in `task.toml`: `default` (an integer); `allowed`, the seeds a trial may run from, `default` among them: a list of distinct integers (`[0, 3, 7]`), a range with both ends included (`{ from = 0, to = 100 }`; TOML's `[0, 100]` would be the two seeds 0 and 100), or `"any"` (every seed; TOML has no null); `oracle` (the seeds the reference solution under `solution/` is for, a list of allowed seeds: not empty for `oracle = "full"` or `"partial"`, empty for `"none"`); `build`, `"frozen"` (the default: every seed in `allowed` is a committed instance) or `"runtime"` (the task builds a seed's instance itself; required for a range and for `"any"`, which cannot all be committed). A generator writes what it has; `scripts/task_conventions.py` completes the rest: `default` = `instance_seed` (0 without one), `allowed = [default]`, `oracle = [default]` or `[]` | MUST | [CI] (`ci_checks/check-seeds.py`) |
+| `instance_seed`, where present, equals `default`; a standard or standard-realtime task has its privileged twin's `default`, `allowed` and `build` | MUST | [CI] |
+| The default seed's frozen instance is the task's instance, where §2.2 and §3 put it. With `build = "frozen"`, every other allowed seed's frozen instance is `tests/seeds/<seed>/instance.json` (or `.npz`, the same kind as the default's) of the task that holds the pair's instance (the privileged twin; a task without one: itself); `tests/seeds/` holds nothing else (a `"runtime"` task may commit some seeds' instances there too) | MUST | [CI] |
+| `build = "runtime"`: given a file `seed` (the integer) next to its instance, the task's environment builds that seed's instance deterministically, and its verifier builds the same instance from its own copy of the file (never from anything the agent's container wrote) and grades on it; the same seed gives the same start hash in a fresh process. The benchmark's doc says how, and its generator's tests show it on a sample of seeds | MUST | [new] |
+| Another seed's instance, or a `seeds` directory, anywhere under `environment/` (where the agent's image, or a sidecar's that the agent's container could share, is built from); in privileged mode the agent reads the instance of its own trial's seed only, as before | MUST NOT | [CI] |
+| The runner chooses the seed, never the agent: `scripts/task_seed.py materialize <task> --seed <S> --out <dir>` writes a copy of the task whose instance copies are seed S's (a committed instance; else, for a `"runtime"` task, the file `seed` in each of those places) and whose `[metadata.seeds] default` says S, and refuses a seed that is not allowed; Harbor runs the copy. Results record the seed | MUST | [new] |
+| Official batches draw a seed uniformly from `allowed` for each trial (owner, 2026-10-13; `"any"`: from 0 to 2^31 - 1); a run on the default seed only says so | SHOULD | [new] |
+| The submitter allows only seeds they checked: the start is valid and the instruction holds for it (`nop` scores 0 on it; the oracle, a positive example or the human review of §2.7 covered it). For a range or `"any"`, they check the generator rather than each seed (its rule gives a valid start for every seed: say how in the benchmark's doc, and show it on a sample). A change of `allowed` is a new digest, recorded in the README's Change Log | MUST | [new] |
+| Reference solutions are per seed: `solution/` may hold a different solution per seed (it reads the seed of the instance it runs on), and scores 1 on every seed in `seeds.oracle`; it need not on the other allowed seeds. The oracle check (§2.7) runs on each seed in `seeds.oracle` | MUST | [new] |
+| Standard and standard-realtime modes: the seed and its instance stay in the service and the verifier, never in the agent's container (§4.5) | MUST | [current] |
+
+Until a benchmark's generator writes more, every task allows its default seed only (`allowed = [default]`): the 2026-10-13
+migration changed `task.toml` only (the instances, the instructions and the READMEs are unchanged).
+
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
 | Item | Level | Basis |
@@ -958,4 +986,6 @@ Decided (owner, 2026-10-02):
    (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
    image (§2.4) and to read the trajectory (§4.8).
 3. Kept as they are: one frozen instance per task (no per-run seeds), and what each benchmark exposes to the agent in
-   privileged mode (no hiding of reward or success checks).
+   privileged mode (no hiding of reward or success checks). Changed for seeds on 2026-10-13 (owner, §2.13): a task has
+   a default seed and may allow others, each a frozen instance; the runner draws one per trial; reference solutions
+   are per seed.
