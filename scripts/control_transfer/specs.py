@@ -8,10 +8,16 @@ sys.path.insert(0, str(SRC / "components"))
 sys.path.insert(0, str(SRC))
 # Only the current roboEngineer work packages are generated. The other prototypes
 # remain available to explicit local development calls, without published tasks.
-FAMILIES = ["neural-fly", "g1", "anycar"]
+FAMILIES = ["neural-fly", "g1", "anycar", "go2-weave", "go2-attitude", "go2-forward-jump", "go2-yaw-jump"]
 
 
 def spec(name, index):
+    if name.startswith("go2-"):
+        from .trusted.go2_spec import make_spec
+
+        value = make_spec(index, name)
+        value["family"] = "go2"
+        return value
     if name == "neural-fly":
         from .neuralfly_spec import make_spec
 
@@ -163,7 +169,7 @@ def spec(name, index):
         public["command_channels"] = ["forward_velocity", "lateral_velocity", "yaw_rate"]
         public["command_units"] = ["m/s", "m/s", "rad/s"]
         public["limitations"] = (
-            "Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant."
+            "Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on both development plants."
         )
     public["image_interval_s"] = 0.2 if family == "yam" else 10.0 if family == "spacecraft" else 1.0
     return {

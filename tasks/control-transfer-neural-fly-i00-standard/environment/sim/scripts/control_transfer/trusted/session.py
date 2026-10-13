@@ -1,6 +1,6 @@
 """Persistent bounded adaptation, strict feedback projection, and fresh-process held-out replay."""
 
-import hashlib, json, os, subprocess, sys, time
+import hashlib, json, os, subprocess, sys, time, uuid
 from pathlib import Path
 from .adapter import validate, feedback
 
@@ -50,6 +50,15 @@ class Session:
             }
         self.persist()
 
+    def close(self, cutoff=None):
+        """Persist an operator cutoff separately from adaptation's mutable state."""
+        path = self.root / "cutoff.json"
+        if path.exists():
+            return json.loads(path.read_text())["cutoff"]
+        cutoff = time.time() if cutoff is None else cutoff
+        atomic(path, {"cutoff": cutoff})
+        return cutoff
+
     def persist(self):
         atomic(self.path, self.state)
 
@@ -71,7 +80,7 @@ class Session:
         if s["deadline"] is None:
             s["deadline"] = time.time() + self.wall
             self.persist()
-        if s["sealed"] or s["infra_error"] or time.time() > s["deadline"]:
+        if (self.root / "cutoff.json").exists() or s["sealed"] or s["infra_error"] or time.time() > s["deadline"]:
             raise ValueError("Closed")
         if op == "describe" and args == {}:
             return {
@@ -179,7 +188,7 @@ class Session:
         if final_path.exists():
             return json.loads(final_path.read_text())
         s = self.state
-        cutoff = min(cutoff or time.time(), s["deadline"] or time.time())
+        cutoff = min(self.close(cutoff), s["deadline"] or time.time())
         rows = [r for r in s["rounds"] if r["status"] == "completed" and r["completed_at"] <= cutoff]
         selected = (
             next((r for r in rows if r["id"] == s["selected"]), None) if s["sealed"] else (rows[-1] if rows else None)
@@ -199,6 +208,12 @@ class Session:
                     raise ValueError("Changed policy")
                 final["policy_sha256"] = selected["policy_sha256"]
                 held = self.root / "held-out"
+                if held.exists():
+                    # Preserve interrupted evidence and replay the frozen policy/bank.
+                    # The persisted cutoff prevents new submissions during recovery.
+                    archived = self.root / ("held-out-interrupted-" + uuid.uuid4().hex)
+                    held.rename(archived)
+                    self.audit({"operation": "finalize_restart", "archived": archived.name})
                 held.mkdir()
                 for i, case in enumerate(self.instance["bank"]["held_out"]):
                     a = self.episode(policy, case, held / f"case-{i}-a", self.render)

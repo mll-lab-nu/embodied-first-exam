@@ -6,6 +6,7 @@ from pathlib import Path
 p = argparse.ArgumentParser()
 p.add_argument("--assets", type=Path, required=True)
 p.add_argument("--fly", type=Path, required=True)
+p.add_argument("--go2", type=Path, required=True, help="Prepared evaluator-only Go2 assets")
 a = p.parse_args()
 out = Path(__file__).parent / "assets"
 out.mkdir(exist_ok=False)
@@ -24,3 +25,4 @@ manifest = {
 }
 (public / "manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n")
 shutil.copytree(a.fly, out / "private-fly")
+shutil.copytree(a.go2, out / "private-go2")

@@ -8,3 +8,6 @@ FROM nominal AS train
 RUN pip install --no-cache-dir torch==2.11.0 mujoco-warp==3.5.0 warp-lang==1.12.0 mjlab==1.2.0 onnx==1.23.0 onnxruntime==1.23.2
 FROM nominal AS evaluator
 COPY images/control-transfer/assets/private-fly/ /opt/private-fly/
+# Evaluator stage only; main uses the separate nominal/train stages above.
+COPY images/control-transfer/assets/private-go2/ /opt/private-go2/
+ENV GO2_ASSET_DIR=/opt/private-go2

@@ -25,7 +25,6 @@ class Runtime:
         self.lock = threading.Lock()
         self.stop = threading.Event()
         self.cutoff = None
-        signal.signal(signal.SIGUSR1, lambda *_: self.request_finalize())
         root = Path(root)
         root.mkdir(parents=True, exist_ok=True)
         (root / "server.pid").write_text(str(os.getpid()))
@@ -36,10 +35,14 @@ class Runtime:
             if hashlib.sha256(Path(spec["private_asset"]).read_bytes()).hexdigest() != spec["private_asset_sha256"]:
                 raise ValueError("Private asset mismatch")
         self.session = Session(root, spec, wall)
+        if (root / "cutoff.json").exists():
+            self.cutoff = self.session.close()
+            self.stop.set()
+        signal.signal(signal.SIGUSR1, lambda *_: self.request_finalize())
 
     def request_finalize(self):
         if self.cutoff is None:
-            self.cutoff = time.time()
+            self.cutoff = self.session.close()
         self.stop.set()
 
     def call(self, op, args):

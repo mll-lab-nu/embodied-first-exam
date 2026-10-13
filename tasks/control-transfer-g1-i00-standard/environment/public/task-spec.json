@@ -11,7 +11,7 @@
   "training_backend": "mjlab / MuJoCo Warp GPU",
   "evaluation_backend": "native MuJoCo CPU",
   "policy_abi": "numeric fixed MLP NPZ (8 MiB maximum)",
-  "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant.",
+  "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on both development plants.",
   "channels": [
     "left_hip_pitch_joint",
     "left_hip_roll_joint",

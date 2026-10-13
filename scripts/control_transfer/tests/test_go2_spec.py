@@ -6,6 +6,8 @@ import subprocess
 import sys
 import unittest
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
 from scripts.control_transfer.trusted.go2_spec import TASKS, make_spec
 from scripts.control_transfer.control_public.go2_data import default_policy, validate
 

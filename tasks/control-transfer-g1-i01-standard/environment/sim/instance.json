@@ -4,28 +4,28 @@
       {
         "duration": 20.0,
         "episode_seed": 171003,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.5,
         "terrain": "flat"
       },
       {
         "duration": 20.0,
         "episode_seed": 171004,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.6,
         "terrain": "slope"
       },
       {
         "duration": 20.0,
         "episode_seed": 171005,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.65,
         "terrain": "rough"
       },
       {
         "duration": 20.0,
         "episode_seed": 171006,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.5,
         "terrain": "steps"
       }
@@ -34,84 +34,84 @@
       {
         "duration": 20.0,
         "episode_seed": 171103,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.5,
         "terrain": "flat"
       },
       {
         "duration": 20.0,
         "episode_seed": 171104,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.6,
         "terrain": "slope"
       },
       {
         "duration": 20.0,
         "episode_seed": 171105,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.65,
         "terrain": "rough"
       },
       {
         "duration": 20.0,
         "episode_seed": 171106,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.5,
         "terrain": "steps"
       },
       {
         "duration": 20.0,
         "episode_seed": 171107,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.6,
         "terrain": "flat"
       },
       {
         "duration": 20.0,
         "episode_seed": 171108,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.65,
         "terrain": "slope"
       },
       {
         "duration": 20.0,
         "episode_seed": 171109,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.5,
         "terrain": "rough"
       },
       {
         "duration": 20.0,
         "episode_seed": 171110,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.6,
         "terrain": "steps"
       },
       {
         "duration": 20.0,
         "episode_seed": 171111,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.65,
         "terrain": "flat"
       },
       {
         "duration": 20.0,
         "episode_seed": 171112,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.5,
         "terrain": "slope"
       },
       {
         "duration": 20.0,
         "episode_seed": 171113,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.6,
         "terrain": "rough"
       },
       {
         "duration": 20.0,
         "episode_seed": 171114,
-        "plant_seed": 38664,
+        "plant_seed": 11100,
         "speed": 0.65,
         "terrain": "steps"
       }
@@ -176,7 +176,7 @@
     "goal": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5\u20130.65 m/s for 18 s.",
     "held_out_cases": 12,
     "image_interval_s": 1.0,
-    "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant.",
+    "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on both development plants.",
     "max_rounds": 3,
     "name": "g1",
     "policy_abi": "numeric fixed MLP NPZ (8 MiB maximum)",

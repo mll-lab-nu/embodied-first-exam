@@ -20,7 +20,7 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]
     echo "ok scripts/$t${*:+ $*}: ${out##*$'\n'}"
   else echo "FAIL scripts/$t${*:+ $*}:"; echo "$out" | tail -n 40; rc=1; fi
 }
-for t in control_transfer/tests/test_neuralfly_spec.py quadrotor_landing/tests/test_native.py robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
+for t in control_transfer/tests/test_verifier_diagnostics.py control_transfer/tests/test_go2_spec.py control_transfer/tests/test_g1_spec_lightweight.py control_transfer/tests/test_neuralfly_spec.py quadrotor_landing/tests/test_native.py robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
          tests/test_codex_tools_off.py; do
@@ -34,7 +34,7 @@ if [ "${1:-}" = "--all" ]; then run 900 robolab/tests/test_finalize.py; fi
 
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
-  for t in control_transfer/tests/test_boundary.py control_transfer/tests/test_http.py eai_standard/selftest.py eai_standard/v2_4/selftest.py \
+  for t in control_transfer/tests/test_tensor_magnitude_boundary.py control_transfer/tests/test_boundary.py control_transfer/tests/test_http.py eai_standard/selftest.py eai_standard/v2_4/selftest.py \
            humanoidbench/tests/test_standard_service.py humanoidbench/tests/test_realtime_service.py \
            kinder/tests/test_standard_service.py \
            behavior/tests/test_fall.py behavior/tests/test_grading.py behavior/tests/test_standard_service.py \

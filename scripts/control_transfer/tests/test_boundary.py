@@ -137,6 +137,61 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(r["infra_error"], 0)
             self.assertEqual(r["success"], 0)
 
+    def test_operator_cutoff_survives_service_restart(self):
+        from scripts.control_transfer.trusted.service import Runtime
+
+        with tempfile.TemporaryDirectory() as d, patch("signal.signal"):
+            root = Path(d)
+            instance = root / "instance.json"
+            atomic(instance, spec("spacecraft", 0))
+            runtime = Runtime(root / "data", instance, 3600)
+            self.assertNotIn("error", runtime.call("describe", {}))
+            runtime.request_finalize()
+            cutoff = runtime.cutoff
+            restored = Runtime(root / "data", instance, 3600)
+            self.assertEqual(restored.cutoff, cutoff)
+            self.assertIn("error", restored.call("describe", {}))
+            self.assertIn("error", restored.session.call("describe", {}))
+            self.assertEqual(restored.session.close(cutoff + 100), cutoff)
+
+    def test_interrupted_finalization_replays_frozen_bank_and_preserves_partial_evidence(self):
+        with tempfile.TemporaryDirectory() as d:
+            value = spec("spacecraft", 0)
+            session = Session(d, value, render=False)
+            fake = {
+                "metrics": {"score": 80.0, "success": True},
+                "feedback": {"telemetry": [{"t": 0.0, "values": [0.0] * 13}]},
+                "state_sha256": "a" * 64,
+            }
+            with patch.object(session, "episode", return_value=fake):
+                deployed = session.call(
+                    "deploy", {"policy": value["public"]["default_policy"], "diagnosis": "baseline"}
+                )
+            calls = []
+
+            def interrupted(policy, case, out, render):
+                out.mkdir()
+                (out / "partial.txt").write_text("retained")
+                calls.append(case)
+                if len(calls) == 3:
+                    raise KeyboardInterrupt()
+                return fake
+
+            with patch.object(session, "episode", side_effect=interrupted), self.assertRaises(KeyboardInterrupt):
+                session.finalize()
+            cutoff = session.close()
+            restored = Session(d, value, render=False)
+            self.assertIn("error", restored.call("describe", {}))
+            with patch.object(restored, "episode", return_value=fake) as episode:
+                final = restored.finalize()
+                self.assertEqual(episode.call_count, 2 * len(value["bank"]["held_out"]))
+            self.assertFalse(final["infra_error"])
+            self.assertEqual(final["policy_sha256"], deployed["policy_sha256"])
+            self.assertEqual(restored.close(), cutoff)
+            self.assertEqual(len(list(Path(d).glob("held-out-interrupted-*/case-*/partial.txt"))), 3)
+            with patch.object(restored, "episode", side_effect=AssertionError("must not replay completed final")):
+                self.assertEqual(restored.finalize(), final)
+
     def test_interrupted_round_is_not_reset(self):
         with tempfile.TemporaryDirectory() as d:
             v = spec("spacecraft", 0)

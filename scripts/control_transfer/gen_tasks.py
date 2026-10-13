@@ -77,17 +77,9 @@ PUBLIC_MODULES = {
     "neural-fly": ("fly.py",),
     "g1": ("g1.py", "g1_training.py"),
     "anycar": ("anycar.py", "anycar_nominal.py"),
-    "go2": ("go2.py", "go2_nominal.py", "go2_train.py"),
+    "go2": ("go2.py", "go2_data.py", "go2_nominal.py", "go2_train.py"),
 }
-G1_PUBLIC = {
-    "__init__.py",
-    "g1/__init__.py",
-    "g1/actuator_abi.json",
-    "g1/assets.py",
-    "g1/contract.py",
-    "g1/policy.py",
-    "g1/train.py",
-}
+G1_PUBLIC = set()
 
 
 def copy_package(task, where, private, family):
@@ -111,6 +103,12 @@ def copy_package(task, where, private, family):
                 continue
             relative = source.relative_to(SRC / "components" / package).as_posix()
             if source.suffix not in (".py", ".json") and source.name not in ("LICENSE.anycar", "NOTICE"):
+                continue
+            if (
+                private
+                and family == "go2"
+                and source.name in ("reference.py", "search_reference.py", "validate_cpu.py")
+            ):
                 continue
             if not private:
                 if family == "g1" and relative not in G1_PUBLIC:
@@ -145,7 +143,7 @@ def copy_package(task, where, private, family):
             "neural-fly": ("fly.py",),
             "g1": (),
             "anycar": ("anycar.py", "anycar_spec.py"),
-            "go2": ("go2.py",),
+            "go2": ("go2.py", "go2_spec.py"),
         }
         for name in (*names, *family_files[family]):
             put(task, where + "/scripts/control_transfer/trusted/" + name, (SRC / "trusted" / name).read_text())
@@ -288,6 +286,10 @@ build_timeout_sec = 600.0
         if gpu
         else """Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python."""
     )
+    if family == "g1":
+        training = "Train the public terrain curriculum with `python -m control_public.g1_training --upstream /opt/control-assets/unitree_rl_mjlab --out /app/output/trained --gpu 0`. You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The fixed actor architecture and PD wrapper are the deployment ABI. Record actual training steps, logs and hardware."
+    if family == "go2":
+        training += f" Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task {name[4:]} --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`."
     if family == "anycar":
         training += " Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`."
     if family == "neural-fly":
@@ -370,6 +372,18 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
             "    iterate(client, DEFAULT, '/app/output/reference')\n"
         )
         put(task, "solution/reference.py", reference)
+        put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
+    if family == "go2":
+        from scripts.control_transfer.components.quadrupedbench.reference import policy
+
+        candidate = policy(name[4:])
+        solve = (
+            "from control_public.client import Client\nc = Client()\nc.describe()\npolicy = "
+            + repr(candidate)
+            + "\nfor i in range(3):\n    r = c.deploy(policy, 'Fixed scripted reference candidate; repeated for lifecycle validation.')\n"
+            + "c.seal(r['round_id'], 'Reference candidate; full success is not assumed.')\n"
+        )
+        put(task, "solution/reference.py", solve)
         put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
     if family == "spacecraft":
         from nonlinearbench.contract import REFERENCE

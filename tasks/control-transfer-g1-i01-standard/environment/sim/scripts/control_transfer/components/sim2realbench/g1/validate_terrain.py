@@ -115,6 +115,9 @@ def validate_run(policy, out, instances=(0, 1), video_cases=4):
     if any(r["metrics"]["success"] for r in negatives.values()):
         raise RuntimeError("Negative control passed")
     summary = {
+        "schema": "control-transfer-instance/2",
+        "transfer_track": "same-plant",
+        "instance_specs": [make_spec(index) for index in instances],
         "policy_sha256": hashlib.sha256(Path(policy).read_bytes()).hexdigest(),
         "unique_cases": len(runs),
         "fresh_process_replays": len(runs),

@@ -7,7 +7,7 @@ partial controls, retained to expose unresolved physical solvability gaps.
 import argparse
 from pathlib import Path
 
-from ...control_public.go2 import default_policy, validate
+from ...control_public.go2_data import default_policy, validate
 
 SETTINGS = {
     "weave": {

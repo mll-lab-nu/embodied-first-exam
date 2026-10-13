@@ -10,7 +10,7 @@ from pathlib import Path
 UNITREE_PIN = "1425b15f73bd4095f0df53709d7c389c3eb9e790"
 
 
-def prepare(workspace, out, go2_source=None):
+def prepare(workspace, out, go2_source=None, private_go2_out=None):
     workspace, out = Path(workspace), Path(out)
     unitree = workspace / "sim2realbench/vendor/unitree_rl_mjlab"
     actual = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=unitree, text=True).strip()
@@ -45,7 +45,16 @@ def prepare(workspace, out, go2_source=None):
     )
     from .components.quadrupedbench.assets import prepare as prepare_go2
 
-    prepare_go2(out / "go2", checkout=go2_source)
+    private_go2 = Path(private_go2_out) if private_go2_out else out.parent / (out.name + "-private-go2")
+    prepare_go2(private_go2, checkout=go2_source)
+    public_go2 = out / "go2"
+    public_go2.mkdir()
+    for name in ("go2.xml", "LICENSE"):
+        shutil.copy2(private_go2 / name, public_go2 / name)
+    shutil.copytree(private_go2 / "assets", public_go2 / "assets")
+    (out / "unitree_rl_mjlab/src/assets/robots/__init__.py").write_text(
+        "from .unitree_g1.g1_constants import G1_ACTION_SCALE, get_g1_robot_cfg\n"
+    )
     manifest = {
         str(path.relative_to(out)): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in sorted(out.rglob("*"))
@@ -66,5 +75,6 @@ if __name__ == "__main__":
     parser.add_argument("--workspace", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--go2-source", help="Pinned Menagerie checkout containing unitree_go2")
+    parser.add_argument("--private-go2-out", help="Evaluator-only pinned Go2 assets including integrity manifest")
     args = parser.parse_args()
-    prepare(args.workspace, args.out, args.go2_source)
+    prepare(args.workspace, args.out, args.go2_source, args.private_go2_out)

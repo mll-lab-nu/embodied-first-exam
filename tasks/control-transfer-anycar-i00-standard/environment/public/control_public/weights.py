@@ -32,7 +32,14 @@ def arrays(source, shapes):
     with np.load(io.BytesIO(raw), allow_pickle=False) as z:
         result = {k: z[k].copy() for k in shapes}
     for k, v in result.items():
-        if v.shape != shapes[k] or v.dtype.kind not in "fi" or not np.isfinite(v).all() or np.max(np.abs(v)) > 10000:
+        # abs(min_signed_integer) overflows; compare in the original supported dtype.
+        if (
+            v.shape != shapes[k]
+            or v.dtype.kind not in "fi"
+            or not np.isfinite(v).all()
+            or (v < -10000).any()
+            or (v > 10000).any()
+        ):
             raise ValueError("Invalid tensor " + k)
     if (result["std"] < 1e-5).any():
         raise ValueError("Invalid standard deviation")

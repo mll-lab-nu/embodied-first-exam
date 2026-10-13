@@ -9,9 +9,9 @@ roboEngineer evaluates a coding agent's ability to engineer controllers across r
 | Drone | [Neural Fly](roboengineer-neuralfly.md) | Track a timed figure-eight trajectory while adapting to hidden aerodynamic disturbances. | Implemented locally; 20/20 reference cases; native Harbor validation running |
 | Drone | [Neural Landing](quadrotor-landing.md) | Land safely and promptly on an independently randomized pad from randomized initial x/y and height, with a hidden real-flight learned force residual. | Implemented; two native Harbor instances validated with scripted oracle and nop |
 | Racing car — AnyCar | [Multi-surface Tracking](roboengineer-anycar.md) | Track a driving trajectory across surfaces with differing tire–ground interaction. | Implemented locally; native Harbor validation running |
-| Humanoid — Unitree G1 | [Walking over Terrain](roboengineer-g1.md) | Maintain commanded walking while traversing varied terrain. | Implemented locally; trained reference 17/24; incomplete solvability on plant 1 |
+| Humanoid — Unitree G1 | [Walking over Terrain](roboengineer-g1.md) | Maintain commanded walking while traversing varied terrain. | Implemented locally; trained reference 17/24; incomplete solvability on both plants |
 | Quadruped — Unitree Go2 | Weave Pole Navigation | Navigate a slalom between poles; follow SPI-Active's open-loop weave-pole setting when specifying the task. | Implemented development component; positive reference not established |
-| Quadruped — Unitree Go2 | Attitude Tracking | Track commanded body attitude. | Implemented locally; attitude reference 10/10 on MuJoCo 3.8; 3.5 alignment pending |
+| Quadruped — Unitree Go2 | Attitude Tracking | Track commanded body attitude. | Implemented locally; attitude reference 10/10 on MuJoCo 3.5; native Harbor pending |
 | Quadruped — Unitree Go2 | Forward Jump | Execute a forward jump and recover a stable landing. | Implemented development component; positive reference not established |
 | Quadruped — Unitree Go2 | Yaw Jump | Execute a jump with a change in heading and recover a stable landing. | Implemented development component; positive reference not established |
 

@@ -11,7 +11,7 @@ The shared `eai-policy/1.1` service supports repeated nominal-training → deplo
 | [Unitree G1 terrain](roboengineer-g1.md) | Blind-terrain PPO in mjlab/MuJoCo Warp; fixed numeric MLP export | 29 noisy joint angles, three public velocity commands and images | 4 / 12 |
 | [Unitree Go2](roboengineer-go2.md) | Nominal MuJoCo tuning; bounded numeric controller | 37 noisy proprioceptive/public-command channels and images | 3 / 10 per objective |
 
-The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator registers families only when their shared integration is wired. Neural Landing has its own generator and validated service; this service does not replace it.
+The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces two instances of each of these seven objectives (14 tasks). Neural Landing has its own generator and validated service; this service does not replace it.
 
 Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. They are not generated members of the current eight-task collection. Their old twelve-instance release must not be confused with the current task bank.
 
@@ -19,7 +19,7 @@ Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. 
 
 Instance schema `control-transfer-instance/2` fixes one hidden plant across all adaptation and held-out cases. Each task has two independently randomized development instances. Episode initial conditions, commands, terrain/surface arrangements and sensor noise vary; those variations are distinct from persistent vehicle/actuator parameters. A bank that changes its plant within a same-plant instance is rejected. Source-visible development seeds must be replaced by operator-frozen undisclosed banks for official model comparisons.
 
-The service allows three `deploy(policy, diagnosis)` calls. Rounds are charged before simulation, survive service restarts and cannot be reset. An interrupted round is an infrastructure failure. A completed round returns only its allowed feedback; deployment metrics and held-out feedback are withheld. `seal(round_id, summary)` irreversibly selects a completed round. Otherwise, the latest eligible completed round at cutoff is selected. No eligible submission yields zero reward.
+The service allows three `deploy(policy, diagnosis)` calls. Rounds are charged before simulation, survive service restarts and cannot be reset. An interrupted adaptation round is an infrastructure failure. The operator cutoff persists across restarts. Interrupted held-out finalization archives partial evidence and replays the same frozen policy and bank; completed final evidence is never rerun. A completed round returns only its allowed feedback; deployment metrics and held-out feedback are withheld. `seal(round_id, summary)` irreversibly selects a completed round. Otherwise, the latest eligible completed round at cutoff is selected. No eligible submission yields zero reward.
 
 Every held-out case runs in two fresh processes. Full physical-state hashes, numeric metrics and exact noisy observations must match. Binary success requires every held-out case to satisfy its physical task predicates; `final_reward` is the continuous mean engineering score. Infrastructure failures are distinct from bad control.
 
@@ -39,14 +39,14 @@ Private records include realized parameters, true state, contacts, task metrics,
 
 ## Reproduction and status
 
-Prepare nominal robot assets with `python -m scripts.control_transfer.prepare_assets --workspace /path/to/workspace --go2-source /path/to/pinned-menagerie --out /operator/assets`; this requires the pinned Unitree checkout and excludes reference policies and unrelated robot archives. Stage them with `python images/control-transfer/prepare_assets.py --assets /operator/assets --fly /operator/fly-calibration`, then build the `nominal`, `train` and `evaluator` targets with `images/control-transfer/build.sh`. Only the evaluator target contains the private flight-force artifact. Images are `BUILD_ONLY`; neither restricted flight-derived assets nor user-provided robot archives are published by these scripts.
+Prepare nominal robot assets with `python -m scripts.control_transfer.prepare_assets --workspace /path/to/workspace --go2-source /path/to/pinned-menagerie --out /operator/assets --private-go2-out /operator/private-go2`; this requires the pinned Unitree checkout and excludes reference policies and unrelated robot archives. Stage them with `python images/control-transfer/prepare_assets.py --assets /operator/assets --fly /operator/fly-calibration --go2 /operator/private-go2`, then build the `nominal`, `train` and `evaluator` targets with `images/control-transfer/build.sh`. Only the evaluator target contains the flight-force artifact and the full prepared Go2 integrity directory; nominal/train stages contain only nominal robot assets. Images are `BUILD_ONLY`; neither restricted flight-derived assets nor user-provided robot archives are published by these scripts.
 
 ```bash
 python -m scripts.control_transfer.gen_tasks render
 python -S -m scripts.control_transfer.gen_tasks check
 # Refresh task digests from tasks/ with: harbor add --scan .
-harbor run -p tasks/control-transfer-anycar-i00-standard -a oracle -e docker
-harbor run -p tasks/control-transfer-anycar-i00-standard -a nop -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a oracle -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a nop -e docker
 ```
 
 The supplied reference candidates are scripted engineering baselines, not LLM scores. `oracle=none` remains until the corresponding full native reference and no-submission runs pass. Family documents identify source pins, model assumptions, exact score semantics, training initialization and reference failures. Neural Fly uses a heavily clipped flight-data quadratic surrogate rather than the paper's DAIML controller or a calibrated digital twin; AnyCar uses rigid Coulomb contacts rather than deformable soil; G1 and Go2 results are simulation transfer, not hardware tests.

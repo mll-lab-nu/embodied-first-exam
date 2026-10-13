@@ -10,7 +10,7 @@ def make_spec(index):
     """Separate placements/noise on one fixed hidden plant, including twelve held-out cases."""
     if type(index) is not int or not 0 <= index <= 999:
         raise ValueError("Invalid instance")
-    plant_seed = 38471 + 193 * index
+    plant_seed = 10000 + index * 1000 + 100
 
     def bank(count, offset):
         return [
@@ -24,7 +24,15 @@ def make_spec(index):
             for i in range(count)
         ]
 
-    return {"family": "g1", "index": index, "rounds": 3, "adaptation": bank(4, 0), "held_out": bank(12, 100)}
+    return {
+        "schema": "control-transfer-instance/2",
+        "transfer_track": "same-plant",
+        "family": "g1",
+        "index": index,
+        "rounds": 3,
+        "adaptation": bank(4, 0),
+        "held_out": bank(12, 100),
+    }
 
 
 def terrain_parameters(kind, episode_seed):
