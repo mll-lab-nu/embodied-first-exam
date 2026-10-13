@@ -214,6 +214,66 @@ def instance_facts(s: str, rec: dict, mode: str) -> str:
     return s
 
 
+FEM_RX = re.compile(r"(?m)^- The (rope|cord)'s Young's modulus is ([0-9.]+) kPa\.[^\n]*$")
+CHAIN_ANCHOR = "- Robot safety (this benchmark's tooling):"
+
+
+def chain_words(c: dict, name: str, young_kpa: float | None) -> str:
+    """The rope / cord sentence of a MuJoCo chain base, from its profile and frozen scene (release.json chain, read in the
+    release image by release_rebuild.py): rigid capsule links on joints, their springs, bend stops, plasticity, speed
+    clamp and tension guard as the profile has them. It replaces the released FEM sentence (Young's modulus, inverted
+    volume elements), whose rule never fires on a chain (topogym/world/mujoco/profiles.py)."""
+    size = f"{c['link_mm']:g} mm long, {2 * c['radius_mm']:g} mm thick" if c.get("link_mm") and c.get("radius_mm") else None
+    links = f"a chain of {c['links']} rigid capsule links" if c.get("links") else "a chain of rigid capsule links"
+    if c["kind"] == "rope":
+        spring = (f"; each joint bends and twists against a spring set by the {name}'s material"
+                  + (f" (Young's modulus {young_kpa:g} kPa)" if young_kpa else "") + ", with damping")
+        stop = (f", and stops bending at {c['bend_stop_rad']:g} rad, where neighbouring links touch"
+                if c.get("bend_stop_rad") else "")
+    else:
+        k = float(c.get("stiffness_nm_rad") or 0.)
+        spring = (f" on ball joints that bend and twist against springs (about {k:.2g} N m/rad per joint), with damping" if k > 0
+                  else " on ball joints that bend and twist freely (no spring), with damping")
+        stop = ""
+    plastic = c.get("plastic")
+    plastic = (f"; past {plastic['yield_angle_deg']:g} deg a joint's rest angle follows its bend (the {name} stays bent)"
+               if plastic else "")
+    out = (f"- The {name} is {links}" + (f" ({size})" if size else "") + (" joined end to end" if c["kind"] == "rope" else "")
+           + spring + stop + plastic + f". The links do not deform: nothing about the {name}'s shape or volume ends the "
+           "episode.")
+    sc = c.get("speed_clamp")
+    if sc:
+        who = {"slotted_chain": "A part of the chain (a link, bead, end disc or the ring)", "cord": "A cord link or the handle"
+               }.get(c.get("entity"), "A link")
+        out += (f" {who} moving faster than {sc['v_m_s']:g} m/s or spinning faster than {sc['w_rad_s']:g} rad/s is slowed by "
+                "extra damping (a speed clamp); this is not reported and does not end the episode.")
+    tg = c.get("tension_guard")
+    if tg and young_kpa and c.get("radius_mm") and c.get("link_mm"):
+        r, l = c["radius_mm"] / 1000, c["link_mm"] / 1000
+        t = tg["t_on"] * young_kpa * 1000 * math.pi * r ** 4 / 4 / l ** 2
+        out += (f" Pulled harder than about {t:.3g} N, the {name}'s links get extra rotational inertia (a tension guard), "
+                "which only removes energy and is not reported.")
+    return out
+
+
+def chain_text(s: str, rec: dict) -> str:
+    """The released FEM sentence of a chain family replaced by its chain's own (chain_words), or the sentence added
+    before the robot-safety line of a text that has none (a new design drafted without it)."""
+    c = rec.get("chain") if is_mujoco(rec) else None
+    if not c:
+        return s
+    s = (s.replace("Simulator breakdown (an invalid soft-body solver state)",
+                   "Simulator breakdown (a MuJoCo instability: a non-finite or diverging acceleration, position or velocity)")
+          .replace("every vertex of its simulated volume", "every vertex of its links (capsules)"))
+    m = FEM_RX.search(s)
+    if m:
+        return FEM_RX.sub(lambda m: chain_words(c, m[1], float(m[2])), s, count=1)
+    if "rigid capsule links" not in s and CHAIN_ANCHOR in s:
+        name = "rope" if c["kind"] == "rope" else "cord"
+        return s.replace(CHAIN_ANCHOR, chain_words(c, name, None) + "\n" + CHAIN_ANCHOR, 1)
+    return s
+
+
 def safety_text(s: str) -> str:
     """The standard instruction's meta["safety"] paragraph: RoboTangle-New publishes only what the robot feels itself
     (user decision 2026-10-12; the sim service's robot_felt, SAFETY_PUBLISHED)."""
@@ -542,7 +602,7 @@ def mujoco_changes(mode: str, rec: dict) -> list[str]:
 
 
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
-    s = grasp_text(contact_text(mujoco_text(text(instance_facts(s, rec, mode)), rec), rec), rec).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
+    s = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(s, rec, mode)), rec), rec), rec), rec).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
                         "checked against `tests/runtime_binding.json`)")
     s = re.sub(r"(?ms)^## Reference solution\n.*?(?=^## )", "## Reference solution\n" + ref_solution(mode, rec) + "\n\n", s)
     nop = nop_words(base, mode, rec)
@@ -788,7 +848,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
-        ins = grasp_text(contact_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
+        ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode)
         put(t / "instruction.md", (safety_text(ins) if mode == "standard" else ins).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
