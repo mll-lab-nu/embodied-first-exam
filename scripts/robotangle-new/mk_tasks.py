@@ -569,8 +569,14 @@ def run_words(e: dict) -> str:
     return f"{e['release']} (source {e['source']}, tooling {e['tooling']}; lab run {pathlib.Path(e['attempt']).name.removeprefix('attempt-')})"
 
 
+NO_REFERENCE = ("No reference solution in this release. Physics accepted on the family's acceptance rounds plus a smoke "
+                "stress round on this instance (see release notes).")   # release.json oracle "none" (user 2026-10-13)
+
+
 def evidence_text(base: str, rec: dict) -> str:
     ev = rec["evidence"]
+    if rec.get("oracle") == "none":
+        return NO_REFERENCE
     if not ev:
         return ("Oracle pending: the author is fixing this tier's oracle; it follows in a later pull request. "
                 "Human review (PROTOCOL §2.7); nop pending.")
@@ -606,6 +612,8 @@ def ref_solution(mode: str, rec: dict) -> str:
                 "(`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`; the same rows as the "
                 "privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and "
                 f"fresh replay) on {run_words(ev)}.")
+    if rec.get("oracle") == "none":
+        return NO_REFERENCE + " `oracle = \"none\"`; Harbor checks the nop agent only."
     if not ev:
         return ("None in this release: the author is fixing this tier's oracle (it follows in a later pull request). "
                 "`oracle = \"none\"`, human review (PROTOCOL §2.7).")
