@@ -69,7 +69,29 @@ VOL = r"^    volumes:.*$"
 VAR = "a variable in a volume source must be the whole source"
 NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource step's trap dropped again one line later
 # (name, task, file, mutation, check, what the check must say)
+POLICY_TASK = "quadrotor-landing-random-pad-i00-standard"
+POLICY_CHECK = [sys.executable, str(ROOT / "ci_checks/check-policy.py")]
 MUTATIONS = [
+    ("policy client waits for calibration before monitor can discover it", POLICY_TASK, COMPOSE,
+     sub(r"^  main:\n", "  main:\n    depends_on: [sim]\n"), POLICY_CHECK, 'health-gate the agent'),
+    ("policy task pretends to use a trajectory protocol", POLICY_TASK, TOML,
+     sub(r'eai-policy/1.0', 'eai-standard/2.1'), POLICY_CHECK, 'policy task must declare'),
+    ("policy agent image copies the hidden simulator", POLICY_TASK, "environment/Dockerfile",
+     append("COPY sim /app/hidden\n"), POLICY_CHECK, 'agent COPY sources'),
+    ("policy image uses a lowercase ADD to import an undeclared payload", POLICY_TASK, "environment/Dockerfile",
+     append("  add https://example.invalid/private.npz /app/model.npz\n"), POLICY_CHECK, 'agent COPY sources'),
+    ("policy agent public model is replaced", POLICY_TASK, "environment/public/scripts/quadrotor_landing/public/model.py",
+     append("\nPRIVATE_SEED = 123\n"), POLICY_CHECK, 'public payload differs'),
+    ("policy private evidence comes from agent", POLICY_TASK, TOML,
+     sub(r'\{ source = "/data/", service = "sim" \}', '"/data/"'), POLICY_CHECK, 'evidence must be collected'),
+    ("policy trusted collect hook removed", POLICY_TASK, TOML,
+     sub(r'command = "python -m scripts.quadrotor_landing.native.collect"', 'command = "true"'),
+     POLICY_CHECK, 'trusted collect hook missing'),
+    ("policy verifier instance changed", POLICY_TASK, "tests/instance.json",
+     sub(r'"instance": 0', '"instance": 9'), POLICY_CHECK, 'instance copies differ'),
+    ("policy verifier changed", POLICY_TASK, "tests/grade.py", append("\n# changed verifier\n"),
+     POLICY_CHECK, 'verifier identity differs'),
+
     # ---- the agent's container and the trusted volumes (the M5 class: every way of writing the same mount)
     ("the agent container mounts the sim's trusted volume (short form, under the generated `volumes:   # rcb-monitor`)",
      STD, COMPOSE, in_service("main", "      - rcb_behavior_cache_trusted:/cache", VOL), ISOLATION, "mounts trusted volume"),

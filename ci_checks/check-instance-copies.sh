@@ -14,6 +14,11 @@ set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
 NO_TWIN=(roboolympics-)   # PROTOCOL §4b: RoboOlympics (owner, 2026-10-08), standard-realtime only
 STANDARD_ONLY=(robodojo-fold-clothes-i00-standard robodojo-fold-clothes-random-i00-standard robodojo-make-toast-random-i00-standard robodojo-pour-by-language-i00-standard robodojo-pour-liquid-into-cup-i00-standard robodojo-pour-liquid-into-cup-random-i00-standard)   # PROTOCOL §4.8 exception (owner, 2026-10-11)
+# Policy tasks have no privileged twin; their verifier and simulator still share a frozen instance (§4p).
+if [[ "$n" == quadrotor-landing-*-standard ]]; then
+  cmp -s "$t/environment/sim/instance.json" "$t/tests/instance.json" || { echo "FAIL $t: policy instance copies differ or are missing"; exit 1; }
+  exit 0
+fi
 case "$n" in
   *-standard-realtime) base="${n%-standard-realtime}"; ref="$base-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too
   *-standard) base="${n%-standard}"; ref="$base-privileged/tests"; copy="environment/sim" ;;

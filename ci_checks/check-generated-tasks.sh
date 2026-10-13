@@ -14,7 +14,7 @@
 set -uo pipefail
 umask 022   # the renders these checks compare with: never the caller's umask (a checkout is made with umask 022)
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
-for gen in "kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behavior/mk_tasks.py --check" \
+for gen in "quadrotor_landing/gen_tasks.py check" "kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behavior/mk_tasks.py --check" \
            "robolab/mk_tasks.py --check" "robowits/mk_tasks.py --check" "vlabench/generate.py --check" \
            "robocasa/generate.py --check" "robocasa365/generate.py --check" "robocasa-gr1/generate.py --check" \
            "maniguard/mk_tasks.py --check" "robopaint_strict/mk_tasks.py --check" \

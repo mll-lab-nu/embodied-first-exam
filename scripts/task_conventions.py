@@ -55,6 +55,7 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
     ("unlimited oracle", "privileged-mode oracle"), ("unlimited expert", "privileged-mode expert"),
 ]
 BENCHMARKS = [  # (directory prefix, label)
+    ("quadrotor-landing-", "Neural Lander"),
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
     ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
     ("metaworldplus-", "MetaWorld+"),
@@ -77,7 +78,8 @@ BENCHMARKS = [  # (directory prefix, label)
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
 # STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
 # does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard only, graded by the live episode.
-NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
+NO_TWIN = {"quadrotor-landing-": "— (policy adaptation is standard only, PROTOCOL §4p)",
+           "roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
            "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",

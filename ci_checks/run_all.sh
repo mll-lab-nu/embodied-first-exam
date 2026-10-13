@@ -13,6 +13,7 @@ for t in "${tasks[@]}"; do
            check-instance-copies check-standard-agent-image; do
     bash "$root/ci_checks/$c.sh" "$t" || rc=1
   done
+  python3 "$root/ci_checks/check-policy.py" "$t" || rc=1
   bash "$root/ci_checks/check-robopaint-leak.sh" "$t" || rc=1     # RoboPaint tasks only (the script skips others)
   bash "$root/ci_checks/check-maniguard-leak.sh" "$t" || rc=1     # ManiGuard tasks only (the script skips others)
   bash "$root/ci_checks/check-standard-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboTangle, YAMLab, LabUtopia, AutoBio: no world coordinates
