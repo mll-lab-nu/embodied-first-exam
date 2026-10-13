@@ -5,6 +5,7 @@ tasks/ has, PROTOCOL §2.11), or, for a run's own copy of a task, `only <hosts>`
     scripts/set_agent_egress.py allowlist    [task dirs...]     # default: all tasks/*
     scripts/set_agent_egress.py only <host>[,<host>]  <task dirs...>   # a run's copy: exactly these hosts
     scripts/set_agent_egress.py package-hosts                   # prints PACKAGE_HOSTS, comma-separated (for the runner)
+    scripts/set_agent_egress.py open-prefixes                   # prints the open-egress benchmarks' prefixes, |-separated
     scripts/set_agent_egress.py public       <task dirs...>     # a run's copy with no restriction: Harbor's default, open
 
 HOSTS below is the one list, and the one switch: every task ships with it, ci_checks/check-verifier-isolation.sh requires
@@ -47,8 +48,14 @@ assert not PACKAGE_HOSTS or HOSTS[-len(PACKAGE_HOSTS):] == PACKAGE_HOSTS
 COMMENT = "# model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11"
 root = pathlib.Path(__file__).resolve().parents[1]
 mode = sys.argv[1] if len(sys.argv) > 1 else ""
+# Benchmarks whose agents have open egress by a documented exception (PROTOCOL §2.11; the same prefixes:
+# ci_checks/check-verifier-isolation.sh OPEN_EGRESS, scripts/task_conventions.py EXTERNAL_OPEN): `allowlist` leaves
+# their tasks alone, and a runner does not narrow their copies to the gateway (`open-prefixes` prints the list).
+OPEN_EGRESS = ("robofunolympics-",)
 if mode == "package-hosts":
     print(",".join(PACKAGE_HOSTS)); sys.exit(0)
+if mode == "open-prefixes":
+    print("|".join(OPEN_EGRESS)); sys.exit(0)
 if mode not in ("public", "allowlist", "only"):
     sys.exit(__doc__)
 args = sys.argv[2:]
@@ -63,6 +70,8 @@ if mode != "allowlist":      # a run's or an experiment's copy, never the reposi
     if not dirs or inside:
         sys.exit(f"`{mode}` takes copies of task directories, outside {root / 'tasks'}" + (f": {inside[0]}" if inside else ""))
 dirs = dirs or sorted(p for p in (root / "tasks").iterdir() if (p / "task.toml").is_file())
+if mode == "allowlist":
+    dirs = [d for d in dirs if not d.name.startswith(OPEN_EGRESS)]
 done = 0
 for d in dirs:
     p = d / "task.toml"; s = p.read_text()
