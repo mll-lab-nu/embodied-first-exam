@@ -35,6 +35,7 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
+OPEN = "robofunolympics-sprint-i00-standard"                   # open egress by a documented exception (PROTOCOL §2.11)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -135,6 +136,9 @@ MUTATIONS = [
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("... a task of a benchmark that was open until 2026-10-10",
      TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
+    ("a task of an open-egress benchmark sets a network policy of its own (its egress is the exception's, not the task's)",
+     OPEN, TOML, sub(r'^\[agent\]\n', '[agent]\nnetwork_mode = "allowlist"\nallowed_hosts = ["pypi.org"]\n'), ISOLATION,
+     "sets a network policy"),
     ("the instruction no longer states the external-material rule",
      STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
     ("the frozen instance the agent reads names where its scene came from",
