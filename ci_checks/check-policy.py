@@ -18,6 +18,11 @@ BASE = next(
 
 
 def check(task):
+    if task.name.startswith("control-transfer-"):
+        sys.path.insert(0, str(ROOT))
+        from scripts.control_transfer.check_contract import check as check_transfer
+
+        return check_transfer(task)
     data = tomllib.loads((task / "task.toml").read_text())
     meta = data["metadata"]
     if not (

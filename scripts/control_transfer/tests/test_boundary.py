@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-import io, tempfile, unittest, zipfile
+import io, os, tempfile, unittest, zipfile
 from unittest.mock import patch
 import numpy as np
 from scripts.control_transfer.control_public.weights import Network, shapes
@@ -11,9 +11,24 @@ from scripts.control_transfer.trusted.session import Session, atomic
 from scripts.control_transfer.trusted.verify import verdict
 from scripts.control_transfer.trusted.service import parse
 from scripts.control_transfer.specs import spec, FAMILIES
+from scripts.control_transfer.trusted.cpu_runtime import inspect_runtime
 
 
 class BoundaryTests(unittest.TestCase):
+    def test_cpu_evaluator_rejects_hardware_rendering_and_exposed_devices(self):
+        for settings, devices in [
+            ({"MUJOCO_GL": "egl", "CUDA_VISIBLE_DEVICES": ""}, []),
+            ({"MUJOCO_GL": "osmesa", "CUDA_VISIBLE_DEVICES": "0"}, []),
+            (
+                {"MUJOCO_GL": "osmesa", "CUDA_VISIBLE_DEVICES": "", "ROBOENGINEER_ENFORCE_CPU_ISOLATION": "1"},
+                ["/dev/nvidia0"],
+            ),
+        ]:
+            with self.subTest(settings=settings), patch.dict(os.environ, settings, clear=True):
+                with patch("scripts.control_transfer.trusted.cpu_runtime.gpu_devices", return_value=devices):
+                    with self.assertRaises(RuntimeError):
+                        inspect_runtime()
+
     def test_strict_json(self):
         for raw in [b'{"a":1,"a":2}', b'{"a":NaN}', b'{"a":Infinity}']:
             with self.assertRaises(ValueError):
@@ -54,6 +69,20 @@ class BoundaryTests(unittest.TestCase):
             self.assertFalse(a & b)
             if f == "yam":
                 self.assertEqual({x["episode_seed"] % 9 for x in banks["adaptation"]}, set(range(9)))
+
+    def test_hidden_plant_persists_across_rounds_and_held_out(self):
+        for family in FAMILIES:
+            first, second = spec(family, 0), spec(family, 1)
+            plants = {c["plant_seed"] for cases in first["bank"].values() for c in cases}
+            self.assertEqual(len(plants), 1)
+            self.assertEqual(first["transfer_track"], "same-plant")
+            self.assertNotIn(second["bank"]["adaptation"][0]["plant_seed"], plants)
+
+    def test_same_plant_bank_cannot_silently_change_dynamics(self):
+        v = spec("neural-fly", 0)
+        v["bank"]["held_out"][0]["plant_seed"] += 1
+        with tempfile.TemporaryDirectory() as d, self.assertRaises(ValueError):
+            Session(d, v, render=False)
 
     def test_feedback_excludes_privileged_fields(self):
         with tempfile.TemporaryDirectory() as d:
@@ -103,6 +132,35 @@ class BoundaryTests(unittest.TestCase):
             v["index"] = 9
             atomic(p, v)
             self.assertEqual(verdict(s.root, p)["infra_error"], 1)
+
+    def test_official_verifier_requires_cpu_evidence(self):
+        v = spec("spacecraft", 0)
+        v["bank"]["held_out"] = v["bank"]["held_out"][:1]
+        v["evaluation_requirements"] = {"physics": "mujoco-cpu", "device_isolation_verified": True, "gpu_devices": []}
+        with tempfile.TemporaryDirectory() as directory:
+            data = Path(directory)
+            atomic(data / "instance.json", v)
+            session = Session(data / "session", v, render=False)
+            fake = {
+                "metrics": {"score": 80.0, "success": True},
+                "feedback": {"telemetry": [{"t": 0.0, "values": [0.0] * 13}]},
+                "state_sha256": "a" * 64,
+            }
+            with patch.object(session, "episode", return_value=fake):
+                session.call("deploy", {"policy": v["public"]["default_policy"], "diagnosis": "baseline"})
+                session.finalize()
+            self.assertEqual(verdict(session.root, data / "instance.json")["infra_error"], 1)
+            for replay in ("a", "b"):
+                atomic(
+                    session.root / "held-out" / f"case-0-{replay}.runtime.json",
+                    {**v["evaluation_requirements"], "software_renderer_verified": replay == "a"},
+                )
+            self.assertEqual(verdict(session.root, data / "instance.json")["success"], 1)
+            atomic(
+                session.root / "held-out" / "case-0-a.runtime.json",
+                {**v["evaluation_requirements"], "gpu_devices": ["/dev/nvidia0"], "software_renderer_verified": True},
+            )
+            self.assertEqual(verdict(session.root, data / "instance.json")["infra_error"], 1)
 
     def test_no_shell_paths_as_policy(self):
         for family in ("g1", "linearbot"):

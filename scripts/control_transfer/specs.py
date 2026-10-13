@@ -6,7 +6,9 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent
 sys.path.insert(0, str(SRC / "components"))
 sys.path.insert(0, str(SRC))
-FAMILIES = ["neural-fly", "linearbot-fixed", "linearbot-moving", "spacecraft", "yam", "g1"]
+# Only the current roboEngineer work packages are generated. The other prototypes
+# remain available to explicit local development calls, without published tasks.
+FAMILIES = ["neural-fly", "g1"]
 
 
 def spec(name, index):
@@ -20,7 +22,7 @@ def spec(name, index):
             episode = base + (300 if held else 0) + i
             if family == "yam":
                 episode = episode * 9 + i % 9
-            c = {"plant_seed": base + (600 if held else 100) + i, "episode_seed": episode}
+            c = {"plant_seed": base + 100, "episode_seed": episode}
             if family == "linearbot":
                 c["mode"] = "fixed" if name.endswith("fixed") else ["coordinated", "world_lock", "height_sweep"][i % 3]
             if family == "neural-fly":
@@ -143,7 +145,8 @@ def spec(name, index):
         }
     public["image_interval_s"] = 0.2 if family == "yam" else 10.0 if family == "spacecraft" else 1.0
     return {
-        "schema": "control-transfer-instance/1",
+        "schema": "control-transfer-instance/2",
+        "transfer_track": "same-plant",
         "family": family,
         "name": name,
         "index": index,

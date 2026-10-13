@@ -34,7 +34,7 @@ if [ "${1:-}" = "--all" ]; then run 900 robolab/tests/test_finalize.py; fi
 
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
-  for t in eai_standard/selftest.py eai_standard/v2_4/selftest.py \
+  for t in control_transfer/tests/test_boundary.py control_transfer/tests/test_http.py eai_standard/selftest.py eai_standard/v2_4/selftest.py \
            humanoidbench/tests/test_standard_service.py humanoidbench/tests/test_realtime_service.py \
            kinder/tests/test_standard_service.py \
            behavior/tests/test_fall.py behavior/tests/test_grading.py behavior/tests/test_standard_service.py \

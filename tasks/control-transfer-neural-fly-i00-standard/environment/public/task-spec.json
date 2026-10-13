@@ -1,0 +1,83 @@
+{
+  "schema": "control-transfer/1",
+  "protocol": "eai-policy/1.1",
+  "name": "neural-fly",
+  "goal": "Track six laps of x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized center and initial phase, in constant and time-varying wind.",
+  "score": "Crash or escape: 0. Otherwise 100 exp(-max(0,tracking_RMSE_m-0.03)/0.25); success requires full horizon and RMSE<0.25 m. Tracking uses prescribed timestamps; slowing the reference is impossible.",
+  "max_rounds": 3,
+  "adaptation_cases": 5,
+  "held_out_cases": 10,
+  "feedback": "Video frames and noisy measurements only; no deployment scores, contacts, parameters, seeds or true state. Diagnosis is a short observation/change/prediction, not private reasoning.",
+  "training_backend": "nominal MuJoCo CPU",
+  "evaluation_backend": "native MuJoCo CPU",
+  "policy_abi": "bounded JSON controller coefficients",
+  "default_policy": {
+    "kp": 6.0,
+    "kd": 4.0,
+    "ki": 0.4,
+    "attitude_gain": 80.0,
+    "rate_gain": 16.0,
+    "residual": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ]
+  },
+  "bounds": {
+    "kp": [
+      0.5,
+      20.0
+    ],
+    "kd": [
+      0.5,
+      12.0
+    ],
+    "ki": [
+      0.0,
+      5.0
+    ],
+    "attitude_gain": [
+      20.0,
+      180.0
+    ],
+    "rate_gain": [
+      5.0,
+      40.0
+    ]
+  },
+  "limitations": "Flight-log-fitted force surrogate; approximate attitude/actuator dynamics, not PX4 SITL or a DAIML reproduction.",
+  "channels": {
+    "position": "world m",
+    "velocity": "world m/s",
+    "quaternion": "wxyz body-to-world",
+    "omega": "body rad/s",
+    "target_position": "world m",
+    "target_velocity": "world m/s",
+    "target_acceleration": "world m/s\u00b2"
+  },
+  "image_interval_s": 1.0
+}

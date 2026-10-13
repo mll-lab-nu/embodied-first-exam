@@ -30,6 +30,9 @@ class Session:
         ids = [(c["plant_seed"], c["episode_seed"]) for x in bank.values() for c in x]
         if set(bank) != {"adaptation", "held_out"} or not all(bank.values()) or len(ids) != len(set(ids)):
             raise ValueError("Invalid case bank")
+        if instance.get("transfer_track") == "same-plant":
+            if len({c["plant_seed"] for cases in bank.values() for c in cases}) != 1:
+                raise ValueError("Same-plant adaptation requires persistent hidden dynamics")
         if self.path.exists():
             self.state = json.loads(self.path.read_text())
             if self.state["instance_sha256"] != self.sha:
@@ -160,7 +163,14 @@ class Session:
                 stderr=log,
                 check=True,
                 timeout=600,
-                env={**os.environ, "MUJOCO_GL": os.environ.get("MUJOCO_GL", "osmesa"), "OPENBLAS_NUM_THREADS": "1"},
+                env={
+                    **os.environ,
+                    "MUJOCO_GL": "osmesa",
+                    "OPENBLAS_NUM_THREADS": "1",
+                    "CUDA_VISIBLE_DEVICES": "",
+                    "NVIDIA_VISIBLE_DEVICES": "void",
+                    "LIBGL_ALWAYS_SOFTWARE": "1",
+                },
             )
         return json.loads((out / "record.json").read_text())
 

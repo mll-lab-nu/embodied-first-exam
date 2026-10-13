@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from scripts.control_transfer.specs import spec
+from scripts.control_transfer.control_public.client import Client
 
 
 class HttpTests(unittest.TestCase):
@@ -59,6 +60,19 @@ class HttpTests(unittest.TestCase):
                         with self.assertRaises(urllib.error.HTTPError) as err:
                             urllib.request.urlopen(req)
                         self.assertEqual(err.exception.code, 400)
+                    client = Client(f"http://127.0.0.1:{port}", td / "client-trace")
+                    with self.assertRaises(urllib.error.HTTPError):
+                        client.call("private", {})
+                    self.assertEqual((td / "client-trace/000-private.request.json").read_bytes(), b"{}")
+                    self.assertEqual(
+                        json.loads((td / "client-trace/000-private.error.json").read_text())["http_status"], 400
+                    )
+                    self.assertEqual(
+                        json.loads((td / "client-trace/000-private.response.json").read_bytes()),
+                        {"error": "Request rejected"},
+                    )
+                    client.describe()
+                    self.assertTrue((td / "client-trace/001-describe.response.json").exists())
                     p.send_signal(signal.SIGUSR1)
                     for _ in range(100):
                         if (td / "data/final.json").exists():

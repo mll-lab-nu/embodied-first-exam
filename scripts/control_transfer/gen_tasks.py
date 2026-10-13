@@ -13,6 +13,8 @@ from task_conventions import normalize, cutoff_sec
 from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0"
+EMBODIMENTS = {"neural-fly": "drone", "g1": "humanoid", "anycar": "racing-car", "go2": "quadruped"}
+ROBOTS = {"neural-fly": "neural-fly-partial", "g1": "unitree-g1", "anycar": "anycar", "go2": "unitree-go2"}
 
 
 def copy_package(task, where, private, family):
@@ -72,6 +74,14 @@ def copy_package(task, where, private, family):
 def render(task, name, index):
     instance = spec(name, index)
     family = instance["family"]
+    instance["evaluation_requirements"] = {
+        "physics": "mujoco-cpu",
+        "mujoco_version": "3.5.0",
+        "policy_inference": "numpy-cpu",
+        "render_backend": "osmesa",
+        "gpu_devices": [],
+        "device_isolation_verified": True,
+    }
     gpu = family in ("linearbot", "g1")
     seconds = cutoff_sec("Control Transfer", "standard")
     if family == "neural-fly":
@@ -123,6 +133,10 @@ RUN mkdir -p /app/output
     environment:
       PYTHONPATH: /srv
       MUJOCO_GL: osmesa
+      CUDA_VISIBLE_DEVICES: ""
+      NVIDIA_VISIBLE_DEVICES: void
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      ROBOENGINEER_ENFORCE_CPU_ISOLATION: "1"
       RCB_INSTANCE: /srv/instance.json
       RCB_WALL_CLOCK_S: "{seconds}"
     healthcheck:
@@ -146,9 +160,11 @@ keywords = ["robotics", "policy", "adaptation", "mujoco"]
 [metadata]
 author_name = "Robotic Engineering Bench contributors"
 author_org = "Robotic Engineering Bench"
+collection = "roboEngineer"
+embodiment = "{EMBODIMENTS[family]}"
 task_type = "policy"
 simulator = "mujoco"
-robot = "{family}"
+robot = "{ROBOTS[family]}"
 family = "control-transfer/{name}"
 mode = "standard"
 protocol = "eai-policy/1.1"
@@ -241,7 +257,10 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
     )
     if family == "neural-fly":
         s = (SRC / "trusted/fly.py").read_text().replace("from ..control_public.fly", "from control_public.fly")
-        s = s.replace("    weights = None\n    if asset:", "    asset = None  # Public simulator has nominal dynamics only.\n    weights = None\n    if asset:")
+        s = s.replace(
+            "    weights = None\n    if asset:",
+            "    asset = None  # Public simulator has nominal dynamics only.\n    weights = None\n    if asset:",
+        )
         put(task, "environment/public/nominal_fly.py", s)
     if family == "spacecraft":
         from nonlinearbench.contract import REFERENCE
@@ -279,7 +298,7 @@ def main():
                     bad.append(ident)
     if bad:
         raise SystemExit("Generated tasks differ: " + ", ".join(bad))
-    print("control transfer: 12 tasks " + a.action)
+    print(f"control transfer: {2 * len(FAMILIES)} tasks " + a.action)
 
 
 if __name__ == "__main__":

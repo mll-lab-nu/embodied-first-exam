@@ -6721,3 +6721,19 @@ digest = "sha256:cd65bc4044fa76a2d90a847c3b1d014163351235eb20c3e014495c3affb030a
 name = "robot-coding-bench/quadrotor-landing-random-pad-i01-standard"
 digest = "sha256:8348fb8e418c5f33063cf665d3499250609665b3bcf71351c44c673a80b11751"
 
+[[tasks]]
+name = "robot-coding-bench/control-transfer-neural-fly-i00-standard"
+digest = "sha256:6934723f0f8dcdb5fb391d61296a893d5e5a6b127f0e9490210d656478ea544e"
+
+[[tasks]]
+name = "robot-coding-bench/control-transfer-neural-fly-i01-standard"
+digest = "sha256:48569a81a9f3e240100bbfc2a8d07f4f8261377d99b16f848dcf9bca9be708f4"
+
+[[tasks]]
+name = "robot-coding-bench/control-transfer-g1-i00-standard"
+digest = "sha256:fb381bd45bfc0766cfaea3aaeb3e08edd01b505d225a934e83f606105f1111da"
+
+[[tasks]]
+name = "robot-coding-bench/control-transfer-g1-i01-standard"
+digest = "sha256:61d70701cab04d5829e14169e904dabed298d9d52cb5ee8b7641beb6945378d7"
+

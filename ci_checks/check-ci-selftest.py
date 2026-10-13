@@ -72,6 +72,14 @@ NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource st
 POLICY_TASK = "quadrotor-landing-random-pad-i00-standard"
 POLICY_CHECK = [sys.executable, str(ROOT / "ci_checks/check-policy.py")]
 MUTATIONS = [
+    ("control transfer agent imports the private simulator", "control-transfer-neural-fly-i00-standard", "environment/Dockerfile",
+     append("COPY sim /app/private\n"), POLICY_CHECK, "generated contract differs"),
+    ("control transfer evaluator switches to hardware rendering", "control-transfer-g1-i00-standard", COMPOSE,
+     sub(r"MUJOCO_GL: osmesa", "MUJOCO_GL: egl"), POLICY_CHECK, "generated contract differs"),
+    ("control transfer evaluator requests a GPU", "control-transfer-g1-i00-standard", COMPOSE,
+     in_service("sim", "    gpus: all"), POLICY_CHECK, "generated contract differs"),
+    ("control transfer finalization is exposed to the agent", "control-transfer-neural-fly-i00-standard", TOML,
+     sub(r'command = "python -m scripts.control_transfer.trusted.collect"', 'command = "true"'), POLICY_CHECK, "generated contract differs"),
     ("policy client waits for calibration before monitor can discover it", POLICY_TASK, COMPOSE,
      sub(r"^  main:\n", "  main:\n    depends_on: [sim]\n"), POLICY_CHECK, 'health-gate the agent'),
     ("policy task pretends to use a trajectory protocol", POLICY_TASK, TOML,

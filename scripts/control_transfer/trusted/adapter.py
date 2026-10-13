@@ -164,6 +164,10 @@ def worker():
     p.add_argument("--request", required=True)
     a = p.parse_args()
     v = json.loads(Path(a.request).read_text())
+    from .cpu_runtime import inspect_runtime
+
+    runtime = inspect_runtime(render=v["render"])
+    Path(v["out"]).with_suffix(".runtime.json").write_text(json.dumps(runtime, sort_keys=True))
     run(**v)
 
 

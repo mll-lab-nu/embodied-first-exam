@@ -1,6 +1,6 @@
 """Agent-side policy client. Preserve the exact service bytes plus concise revision diagnoses."""
 
-import base64, json, hashlib, urllib.request
+import base64, json, hashlib, urllib.request, urllib.error
 from pathlib import Path
 
 
@@ -15,14 +15,31 @@ class Client:
         req = urllib.request.Request(
             self.url + "/" + operation, data=request, headers={"Content-Type": "application/json"}
         )
-        with urllib.request.urlopen(req, timeout=1800) as response:
-            raw = response.read()
-        index = len(list(self.out.glob("*.response.json")))
+        # Allocate by requests so failed calls also retain distinct trace entries.
+        indices = [
+            int(p.name.split("-", 1)[0]) for p in self.out.glob("*.request.json") if p.name.split("-", 1)[0].isdigit()
+        ]
+        index = max(indices, default=-1) + 1
         prefix = self.out / f"{index:03d}-{operation}"
         prefix.with_suffix(".request.json").write_bytes(request)
+        try:
+            with urllib.request.urlopen(req, timeout=1800) as response:
+                raw = response.read()
+        except urllib.error.HTTPError as error:
+            raw = error.read()
+            prefix.with_suffix(".response.json").write_bytes(raw)
+            prefix.with_suffix(".error.json").write_text(json.dumps({"http_status": error.code}))
+            raise
+        except urllib.error.URLError as error:
+            prefix.with_suffix(".error.json").write_text(json.dumps({"transport_error": str(error.reason)}))
+            raise
         prefix.with_suffix(".response.json").write_bytes(raw)
         result = json.loads(raw)
-        for i, episode in enumerate(result.get("feedback", [])):
+        # describe.feedback is documentation; only deploy returns episode payloads.
+        episodes = result.get("feedback", []) if operation == "deploy" else []
+        if not isinstance(episodes, list):
+            raise ValueError("Invalid deployment feedback")
+        for i, episode in enumerate(episodes):
             for j, frame in enumerate(episode["images"]):
                 b = base64.b64decode(frame["base64"], validate=True)
                 if hashlib.sha256(b).hexdigest() != frame["sha256"]:

@@ -47,6 +47,15 @@ def verdict(data, instance):
                 return empty
             if not isinstance(r["state_sha256"], str) or len(r["state_sha256"]) != 64:
                 return empty
+        requirements = spec.get("evaluation_requirements")
+        if requirements:
+            for i in range(n):
+                for replay in ("a", "b"):
+                    evidence = json.loads((Path(data) / "held-out" / f"case-{i}-{replay}.runtime.json").read_text())
+                    if any(evidence.get(key) != value for key, value in requirements.items()):
+                        return empty
+                    if replay == "a" and evidence.get("software_renderer_verified") is not True:
+                        return empty
         score = sum(r["score"] for r in rows) / n
         rate = sum(r["success"] for r in rows) / n
         return {

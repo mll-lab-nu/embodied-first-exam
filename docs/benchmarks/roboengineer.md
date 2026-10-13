@@ -6,18 +6,20 @@ roboEngineer evaluates a coding agent's ability to engineer controllers across r
 
 | Embodiment | Task | Intended objective | Status in this collection |
 |---|---|---|---|
-| Drone | Neural Fly | Track flight trajectories while adapting to a mismatch between nominal and deployment dynamics. | Planned |
+| Drone | Neural Fly | Track a timed figure-eight trajectory while adapting to hidden aerodynamic disturbances. | In development; imported CPU prototype |
 | Drone | [Neural Landing](quadrotor-landing.md) | Land safely and promptly on an independently randomized pad from randomized initial x/y and height, with a hidden real-flight learned force residual. | Implemented; two native Harbor instances validated with scripted oracle and nop |
-| Racing car | Multi-surface Tracking | Track a driving trajectory across surfaces with differing tire–ground interaction. | Planned |
-| Humanoid | Walking over Terrain | Maintain commanded walking while traversing varied terrain. | Planned |
-| Quadruped | Weave Pole Navigation | Navigate a slalom between poles; follow SPI-Active's open-loop weave-pole setting when specifying the task. | Planned; SPI-Active reference |
-| Quadruped | Attitude Tracking | Track commanded body attitude. | Planned; SPI-Active reference |
-| Quadruped | Forward Jump | Execute a forward jump and recover a stable landing. | Planned; SPI-Active reference |
-| Quadruped | Yaw Jump | Execute a jump with a change in heading and recover a stable landing. | Planned; SPI-Active reference |
+| Racing car — AnyCar | Multi-surface Tracking | Track a driving trajectory across surfaces with differing tire–ground interaction. | In development |
+| Humanoid — Unitree G1 | Walking over Terrain | Maintain commanded walking while traversing varied terrain. | In development; extending the walking prototype |
+| Quadruped — Unitree Go2 | Weave Pole Navigation | Navigate a slalom between poles; follow SPI-Active's open-loop weave-pole setting when specifying the task. | In development; SPI-Active reference |
+| Quadruped — Unitree Go2 | Attitude Tracking | Track commanded body attitude. | In development; SPI-Active reference |
+| Quadruped — Unitree Go2 | Forward Jump | Execute a forward jump and recover a stable landing. | In development; SPI-Active reference |
+| Quadruped — Unitree Go2 | Yaw Jump | Execute a jump with a change in heading and recover a stable landing. | In development; SPI-Active reference |
 
 The quadruped reference is [SPI-Active: Sampling-Based System Identification with Active Exploration for Legged Robot Sim2Real Learning](https://lecar-lab.github.io/spi-active_/). Its project page presents forward jump, yaw jump, and attitude tracking among its performance tasks, plus a separate **open-loop weave pole navigation** demonstration. These four tasks define this roadmap's quadruped scope; their implementations, numeric targets and evaluation rules have not yet been ported. Open-loop refers to the eventual execution setting, distinct from feedback between engineering iterations.
 
-The seven planned entries do not yet create runnable Harbor tasks. Platform choices, training simulators, deployment dynamics, randomization ranges, observation channels, controller interfaces, budgets and success thresholds will be specified and validated when each task is added. Existing similarly named tasks elsewhere in the repository are not automatically members of this collection.
+Neural Landing is the only task with completed native Harbor validation. The other seven entries are under development; generated prototype packages or local smoke runs do not establish successful control or container isolation. Training may use Isaac, mjlab/MuJoCo Warp or CPU simulation. **Every deployment and held-out evaluator must use native CPU MuJoCo, CPU numeric inference and software OSMesa rendering**, even where the source paper uses Isaac. The actual robot, actor inputs, hidden dynamics, budgets and scoring must be frozen and validated separately for each task.
+
+The imported Control Transfer sources also contain earlier Linearbot, spacecraft and YAM prototypes. They remain available for development, but are not generated as members of this eight-task collection. Existing similarly named tasks elsewhere in the repository are not automatically members.
 
 ## Shared evaluation structure
 

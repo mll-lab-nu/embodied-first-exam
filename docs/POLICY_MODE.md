@@ -40,3 +40,11 @@ These artifacts are available to the operator after the run, not mounted into th
 `reward.txt` is 1 iff all six cases succeed safely with verified replay, otherwise 0. `reward.json` contains numeric fields only: `success`, `deterministic`, `infra_error`, `progress`, `final_reward`, `success_rate`, `episodes`. `final_reward` is the mean per-case 0–100 score; `progress = final_reward / 100`. Invalid trusted evidence is `infra_error=1`; no submitted candidate is `infra_error=0`, score zero.
 
 See [the benchmark specification](benchmarks/quadrotor-landing.md) for physics, observation noise, randomization, scoring and paper-calibration limitations.
+
+## Control-transfer extension: eai-policy/1.1
+
+Control Transfer retains the same lifecycle with family-specific case counts and feedback schemas. `/deploy` accepts either bounded controller JSON or a fixed-shape numeric NPZ actor encoded in base64. Request bodies are capped at 12 MiB; actor archives at 8 MiB compressed/decompressed, with headers validated before loading. Actor architectures, joint mapping and low-level wrappers are fixed. Neither arbitrary code nor arbitrary ONNX graphs execute in the target service.
+
+Each family freezes development and disjoint held-out banks before interaction. Its numeric score and success predicate are task-specific; final replay requires exact state hashes, observations and metrics. Persistent round accounting, trusted cutoff collection, agent-only noisy/video feedback, and offline verification remain required. See [the task taxonomy and fidelity notes](benchmarks/control-transfer.md).
+
+All roboEngineer deployment and held-out simulators use native CPU MuJoCo, CPU numeric policy inference, and OSMesa software rendering. GPU training is independent of the evaluator. Hidden physical parameters are fixed within each adaptation instance; held-out commands, initial conditions and noise vary. Unseen-plant transfer is a separately labeled track.

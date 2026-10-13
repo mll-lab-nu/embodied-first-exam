@@ -19,6 +19,7 @@
 # no number.
 
 [cutoff_sec]
+"Control Transfer" = { standard = 14400 }
 "Neural Lander" = { standard = 3600 }
 "AutoBio"           = { privileged =  3600, standard =  3600 }
 "BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
@@ -240,3 +241,12 @@ from_sec = 0
 to_sec = 3600
 decided_by = "benchmark author, native integration requested by owner"
 note = "First policy-adaptation task: bounded deployments and private held-out evaluation."
+
+[[history]]
+date = "2026-10-13"
+benchmark = "Control Transfer"
+modes = ["standard"]
+from_sec = 0
+to_sec = 14400
+decided_by = "benchmark author, task expansion requested by owner"
+note = "Owner requested multi-round GPU training and CPU deployment; provisional four-hour budget, convergence calibration pending."

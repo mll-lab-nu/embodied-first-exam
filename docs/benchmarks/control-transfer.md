@@ -1,4 +1,6 @@
-# Robotic Engineering Bench: control transfer
+# roboEngineer: control-transfer prototypes
+
+**Development status:** this document describes the imported prototype families. The [roboEngineer roadmap](roboengineer.md) defines the active eight-task scope. The generator currently includes Neural Fly and G1 while AnyCar/Go2 integration is in progress; the twelve-instance bank described below is the earlier prototype release, not a claim that all those tasks are in the current suite. Instance schema `control-transfer-instance/2` keeps one hidden plant per instance across adaptation and held-out cases. Historical `/1` results used different banks and are not relabeled. Native Harbor validation remains pending for Control Transfer.
 
 The current landing family is named **Neural Lander**, keeping `quadrotor-landing-*` IDs stable so existing evidence stays attributable. Five new families use the same engineering loop: train or optimize locally, deploy into a hidden plant, inspect noisy observations and video, revise within three rounds, then seal one policy for disjoint held-out evaluation.
 

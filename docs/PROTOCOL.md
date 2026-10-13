@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Trajectory tasks use `eai-standard/2.x`; policy adaptation uses `eai-policy/1.0` (§4p). Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Trajectory tasks use `eai-standard/2.x`; policy adaptation uses `eai-policy/1.0` or `eai-policy/1.1` (§4p). Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -125,7 +125,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[task].description`, `authors`, `keywords` | SHOULD | [current] |
 | `[metadata]`: `author_name`, `task_type ∈ {trajectory, policy}`, `simulator`, `robot`, `family`, `mode ∈ {privileged, standard, standard-realtime}`, `expert_time_estimate_hours` | MUST | [CI] |
 | `tier` | MUST NOT | [CI] (`privileged` → `mode = "privileged"`, `perception` → `mode = "standard"`) |
-| Standard trajectory tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard policy tasks: `protocol = "eai-policy/1.0"` (§4p); standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
+| Standard trajectory tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard policy tasks: `protocol = "eai-policy/1.0"` or `"eai-policy/1.1"` (§4p); standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
 | `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [CI] |
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
 | `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
@@ -618,7 +618,7 @@ shorter cutoff and are looked at when one is raised.
 | Unlimited resets, privileged state, planning primitives, self-replay | MAY | [current] |
 | Tool API shape | task-defined | [current] (recommended: `Session` with `reset` / `replay` / `status` / `save_trajectory`) |
 | Self-reported cost (resets, simulation steps) in `agent_*` fields | SHOULD | [current] |
-| `task_type = "policy"` | MAY | standard-mode adaptation contract: §4p, `eai-policy/1.0` |
+| `task_type = "policy"` | MAY | standard-mode adaptation contract: §4p, `eai-policy/1.0` / `1.1` |
 
 ## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
 
@@ -819,7 +819,7 @@ settings.
   The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
   stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
 
-## 4p. Standard policy adaptation (`task_type = "policy"`, `eai-policy/1.0`)
+## 4p. Standard policy adaptation (`task_type = "policy"`, `eai-policy/1.x`)
 
 The first policy task, Neural Lander, defines the contract in [POLICY_MODE.md](POLICY_MODE.md).
 This is a separate protocol; declaring it does not claim compatibility with `/observe`, `/submit`, or RCB1.
@@ -832,6 +832,8 @@ This is a separate protocol; declaring it does not claim compatibility with `/ob
 - `reward.txt` remains binary success (all held-out cases safe). Numeric-only `reward.json` also reports `final_reward` on 0–100, `progress` on 0–1, success rate, replay determinism and infrastructure status.
 - Neural Lander is standard only: it has no privileged twin. Its sidecar and verifier carry byte-identical frozen `instance.json` files. The agent receives neither copy.
 - The agent and verifier use the common digest-pinned client base. Policy tasks may add their benchmark's pinned nominal simulator dependencies; Neural Lander's pins and public source allowlist are enforced by `check-policy.py`. Trajectory-task dependency rules are unchanged.
+
+The `eai-policy/1.1` extension supports family-specific numeric controller or bounded fixed-network policies and feedback schemas; see [POLICY_MODE.md](POLICY_MODE.md). Its public nominal and GPU training images may derive from the benchmark's pinned base, while the verifier uses the common client base. All roboEngineer deployment/held-out sidecars use CPU MuJoCo, NumPy policy inference and software rendering, without GPU devices. Runtime evidence is private to the operator. Local runs on a GPU host are explicitly not device-isolation evidence. The standard-only instance-copy and separate-verifier requirements apply to every policy family.
 
 Reference sources: `scripts/quadrotor_landing/native/`; generated examples: `tasks/quadrotor-landing-random-pad-i0{0,1}-standard/`.
 Checks: `ci_checks/check-policy.py`, its mutations in `check-ci-selftest.py`, generator reproducibility, instance-copy and common isolation checks. Native Harbor oracle/nop validation remains a release requirement; local contract tests do not prove container isolation.
