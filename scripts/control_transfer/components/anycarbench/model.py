@@ -42,6 +42,7 @@ def xml_model(plant, surfaces, command):
         a, b = command["a"], command["b"]
         extent = 12
     road = []
+    assets = []
     for i, surface in enumerate(surfaces):
         left, right, mu = surface
         road.append(
@@ -49,13 +50,32 @@ def xml_model(plant, surfaces, command):
         )
     if circuit:
         samples = route.at(np.linspace(0, route.length, min(1500, max(128, int(route.length / 0.7))), endpoint=False))
-        # Surface geoms alone supply tire contact. Asphalt/paint are visual only.
+        # One non-overlapping visual ribbon, split into surface-colored meshes.
+        # The physics floor above is unchanged and is the only tire-contact road.
+        normals = np.column_stack((-np.sin(samples[:, 2]), np.cos(samples[:, 2])))
+        vertices = np.empty((2 * len(samples), 3))
+        vertices[0::2, :2] = samples[:, :2] + 0.8 * normals
+        vertices[1::2, :2] = samples[:, :2] - 0.8 * normals
+        vertices[:, 2] = 0.004
+        faces = [[] for _ in surfaces]
         for i, (x, y, yaw, _) in enumerate(samples):
-            surface_index = next((j for j, (lo, hi, _) in enumerate(surfaces) if lo <= x < hi), 0)
-            shade = 0.17 + 0.035 * surface_index
+            j = (i + 1) % len(samples)
+            surface_index = next((k for k, (lo, hi, _) in enumerate(surfaces) if lo <= x < hi), 0)
+            faces[surface_index].extend([(2 * i, 2 * i + 1, 2 * j), (2 * i + 1, 2 * j + 1, 2 * j)])
+        for index, triangles in enumerate(faces):
+            if not triangles:
+                continue
+            vertex_text = " ".join(str(float(v)) for v in vertices.ravel())
+            face_text = " ".join(str(v) for triangle in triangles for v in triangle)
+            assets.append(f'<mesh name="road{index}" inertia="shell" vertex="{vertex_text}" face="{face_text}"/>')
+            shade = 0.17 + 0.035 * index
             road.append(
-                f'<geom type="box" pos="{x} {y} .001" size="{route.length / len(samples) * 0.55} .8 .001" euler="0 0 {yaw}" contype="0" conaffinity="0" rgba="{shade} {shade + 0.01} {shade + 0.03} 1"/>'
+                f'<geom type="mesh" mesh="road{index}" contype="0" conaffinity="0" rgba="{shade} {shade + 0.01} {shade + 0.03} 1"/>'
             )
+        road.append(
+            '<geom type="plane" size="0 0 .1" pos="0 0 -.11" contype="0" conaffinity="0" rgba=".53 .46 .34 1"/>'
+        )
+        for i, (x, y, yaw, _) in enumerate(samples):
             for side in (-1, 1):
                 bx, by = x - side * 0.9 * np.sin(yaw), y + side * 0.9 * np.cos(yaw)
                 # Avoid placing barriers inside another route branch at crossovers.
@@ -86,6 +106,7 @@ def xml_model(plant, surfaces, command):
     return f"""<mujoco model="contact_vehicle"><compiler angle="radian"/><option timestep=".002" integrator="implicitfast" cone="elliptic" iterations="50"/><size njmax="2000" nconmax="300"/>
     <visual><global offwidth="640" offheight="480"/><quality shadowsize="1024" offsamples="0"/><headlight ambient=".5 .5 .5" diffuse=".65 .65 .65"/></visual>
     <default><geom solref=".01 1"/><default class="steering"><joint type="hinge" axis="0 0 1" limited="true" range="-.38 .38" frictionloss=".01" damping=".001" armature=".0002"/></default><default class="spin"><joint type="hinge" axis="0 1 0" frictionloss=".001" damping=".01" armature=".01"/></default></default>
+    <asset>{"".join(assets)}</asset>
     <worldbody><light pos="0 0 10" dir="0 0 -1" directional="true"/>{"".join(road)}
     <body name="car" pos="0 0 .08"><freejoint/>
     <geom name="chassis" type="box" pos="-.01 0 .094655" size=".20 .09 .035" mass="3.542137" rgba=".12 .38 .51 1"/>
