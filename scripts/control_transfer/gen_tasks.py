@@ -186,6 +186,8 @@ def render(task, name, index):
     oracle = "full" if native_full else "none"
     if native_full:
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
+    elif name == "neural-fly-general-v1":
+        reference_note = "Development-only general-eight/1 revision. The frozen earlier scripted controller passes 18 of 20 local held-out cases (one RMSE failure and one crash); no new adaptation, native Harbor acceptance or LLM evaluation is established. No full oracle; human review required."
     elif instance.get("task_variant") == "circuit-sector/1":
         reference_note = "Development-only circuit-sector variant. Local nominal-controller sector smoke covers all 78 historical venues plus zigzag, but full multi-round/held-out native Harbor acceptance is not established for these circuit tasks. No verified full oracle or LLM score is claimed."
     elif family == "g1":

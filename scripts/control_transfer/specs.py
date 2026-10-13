@@ -8,7 +8,16 @@ sys.path.insert(0, str(SRC / "components"))
 sys.path.insert(0, str(SRC))
 # Only the current roboEngineer work packages are generated. The other prototypes
 # remain available to explicit local development calls, without published tasks.
-FAMILIES = ["neural-fly", "g1", "anycar", "go2-weave", "go2-attitude", "go2-forward-jump", "go2-yaw-jump"]
+FAMILIES = [
+    "neural-fly",
+    "neural-fly-general-v1",
+    "g1",
+    "anycar",
+    "go2-weave",
+    "go2-attitude",
+    "go2-forward-jump",
+    "go2-yaw-jump",
+]
 
 
 def spec(name, index):
@@ -26,10 +35,14 @@ def spec(name, index):
         value = make_spec(index, name)
         value["family"] = "go2"
         return value
-    if name == "neural-fly":
+    if name in ("neural-fly", "neural-fly-general-v1"):
         from .neuralfly_spec import make_spec
 
-        value = make_spec(index)
+        value = make_spec(index, revision="general-eight/1" if name == "neural-fly-general-v1" else "fixed-eight/1")
+        value["name"] = name
+        value["public"]["name"] = name
+        if "task_revision" in value:
+            value["public"]["task_revision"] = value["task_revision"]
         value.update(schema="control-transfer-instance/2", transfer_track="same-plant")
         return value
     if name == "anycar":

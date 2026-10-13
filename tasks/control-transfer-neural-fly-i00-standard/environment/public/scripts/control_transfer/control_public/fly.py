@@ -30,13 +30,31 @@ def validate(p):
     return p
 
 
-def target(t, phase=0.0, yaw=0.0, center=(0.0, 0.0, 1.8)):
-    a = t + phase
+def target(
+    t,
+    phase=0.0,
+    yaw=0.0,
+    center=(0.0, 0.0, 1.8),
+    *,
+    tilt=0.0,
+    amplitude_x=1.25,
+    amplitude_z=0.75,
+    rate=1.0,
+    direction=1,
+):
+    """World-frame figure eight with exact derivatives; tilt rotates its plane about local x.
+
+    Amplitudes are half extents, rate is rad/s, direction is +1 or -1.
+    tilt=0 is vertical; tilt=pi/2 is horizontal. No deployment draws here.
+    """
+    w = direction * rate
+    a = w * t + phase
     c, s = np.cos(yaw), np.sin(yaw)
-    R = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-    p = np.array([1.25 * np.sin(a), 0, 0.75 * np.sin(2 * a)])
-    v = np.array([1.25 * np.cos(a), 0, 1.5 * np.cos(2 * a)])
-    acc = np.array([-1.25 * np.sin(a), 0, -3 * np.sin(2 * a)])
+    ct, st = np.cos(tilt), np.sin(tilt)
+    R = np.array([[c, -s * ct, s * st], [s, c * ct, -c * st], [0, st, ct]])
+    p = np.array([amplitude_x * np.sin(a), 0, amplitude_z * np.sin(2 * a)])
+    v = w * np.array([amplitude_x * np.cos(a), 0, 2 * amplitude_z * np.cos(2 * a)])
+    acc = w * w * np.array([-amplitude_x * np.sin(a), 0, -4 * amplitude_z * np.sin(2 * a)])
     return R @ p + center, R @ v, R @ acc
 
 

@@ -8,7 +8,7 @@ import numpy as np
 
 
 class Video:
-    def __init__(self, model, path, center):
+    def __init__(self, model, path, center, *, curve=None):
         if os.environ.get("MUJOCO_GL") != "osmesa":
             raise RuntimeError("Video requires MUJOCO_GL=osmesa before importing MuJoCo")
         from mujoco import gl_context
@@ -26,6 +26,7 @@ class Video:
         self.camera.azimuth = 110
         self.camera.elevation = -18
         self.center = np.asarray(center)
+        self.curve = curve
         self.writer = subprocess.Popen(
             [
                 "ffmpeg",
@@ -71,9 +72,14 @@ class Video:
         geom.emission = 0.5
         scene.ngeom += 1
         # World-frame public reference curve; contains no private-state overlays.
-        for a in np.linspace(0.0, 2 * np.pi, 100, endpoint=False):
+        curve = getattr(self, "curve", None)
+        if curve is None:
+            curve = [
+                self.center + [1.25 * np.sin(a), 0.0, 0.75 * np.sin(2 * a)]
+                for a in np.linspace(0.0, 2 * np.pi, 100, endpoint=False)
+            ]
+        for pos in curve:
             geom = scene.geoms[scene.ngeom]
-            pos = self.center + [1.25 * np.sin(a), 0.0, 0.75 * np.sin(2 * a)]
             mujoco.mjv_initGeom(
                 geom,
                 mujoco.mjtGeom.mjGEOM_SPHERE,

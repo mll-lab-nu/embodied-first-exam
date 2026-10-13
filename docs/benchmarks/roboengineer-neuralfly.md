@@ -20,7 +20,7 @@ The inherited surrogate clips each force axis to ±12 N. This is an explicit ben
 
 ## Cases, plant and time
 
-`neuralfly_spec.make_spec(index)` returns a `control-transfer-instance/2` private instance with `transfer_track="same-plant"` plus its public specification. The persistent plant seed is `10000 + index * 1000 + 100`. Each instance has **one plant seed**, five adaptation cases (one per wind stratum), and ten disjoint held-out cases (two per stratum). The physical plant draws persist across both banks:
+`neuralfly_spec.make_spec(index, revision="general-eight/1")` returns a `control-transfer-instance/2` private instance with `transfer_track="same-plant"` plus its public specification. The persistent plant seed is `10000 + index * 1000 + 100`. Each instance has **one plant seed**, five adaptation cases (one per wind stratum), and ten disjoint held-out cases (two per stratum). The physical plant draws persist across both banks:
 
 | Item | Definition |
 |---|---|
@@ -66,12 +66,12 @@ Owned entry points:
 
 | Purpose | Entry point |
 |---|---|
-| Frozen bank and public contract | `neuralfly_spec.make_spec(index)` |
+| Frozen general bank and public contract | `neuralfly_spec.make_spec(index, revision="general-eight/1")`; omit revision only for legacy fixed-eight |
 | Numeric policy validation | `control_public.fly.validate(policy) -> normalized dict`; shared adapter serializes canonical JSON bytes |
 | Private deployment | `trusted.fly.rollout(policy_or_path, case, out, asset, render) -> record` |
 | Public nominal training | `neuralfly_nominal.rollout(policy, phase=..., center=..., initial_offset=..., noise_seed=..., out=..., render=...)` |
 | Reference adaptation | `neuralfly_reference.solve(client, out)` |
-| Full local validation | `python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.npz --out /path/to/evidence --workers 2` |
+| Full local validation | `python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.npz --out /path/to/evidence --workers 2 --revision general-eight/1` |
 
 The orchestrator owns the shared generator, protocol, task metadata, bank integration and native Harbor validation. It must copy `neuralfly_video.py` into the task-local private package and public root; copy `neuralfly_nominal.py` as public `nominal_fly.py`; and import this family's `make_spec` instead of the old case generator. Canonical policy submission still uses the shared adapter. No family module requires an evaluator GPU.
 
@@ -79,7 +79,7 @@ Run with the evaluator's pinned Python 3.12, NumPy 2.3.1, MuJoCo 3.5.0 and SciPy
 
 ```bash
 python -m unittest scripts.control_transfer.tests.test_neuralfly -v
-python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.npz --out /path/to/new-evidence --workers 2
+python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.npz --out /path/to/new-evidence --workers 2 --revision general-eight/1
 ```
 
 The family checks cover randomized initialization, disjoint fixed-plant banks, analytic reference derivatives, numeric validation, observation-only adaptation, public/private separation, OSMesa enforcement and no-submission behavior. The local runner executes both complete held-out banks after three adaptation rounds, checks fresh-process replay, decodes every video and records source/runtime hashes. This is local integration evidence, **not a container-isolation proof, native Harbor certification or an LLM model score**. Final numeric results and any remaining gaps are retained in the external validation receipt and worker handoff; raw run artifacts are not committed to Git.
@@ -100,7 +100,7 @@ This evaluates held-out trajectory tracking within the declared command distribu
 
 Existing `neural-fly` IDs retain `make_spec(index)` / `make_spec(index, revision="fixed-eight/1")`: the original spec and three-field case bank are returned unchanged. Three-field cases dispatch to the original fixed-eight phase/center/offset RNG sequence and 1,885-tick horizon, with `neuralfly-cpu/2` records. Explicit `trajectory_revision="fixed-eight/1"` is also accepted. Unknown revisions fail admission.
 
-Root should register `neural-fly-general-v1` separately using `make_spec(index, revision="general-eight/1")`. Family remains `neural-fly` for existing policy and feedback adapters; the new name/task revision distinguishes scoring. Each general case includes `trajectory_revision="general-eight/1"`. No extra public or private module is required: retain existing allowlists, including public constants/nominal/video modules and private trusted fly. Keep the new task oracle=none pending acceptance. The operator validation CLI accepts `--revision general-eight/1`; default remains legacy.
+The shared registry generates `control-transfer-neural-fly-general-v1-i00-standard` and `control-transfer-neural-fly-general-v1-i01-standard` separately using `make_spec(index, revision="general-eight/1")`. Family remains `neural-fly` for existing policy and feedback adapters; the new name/task revision distinguishes scoring. Each general case includes `trajectory_revision="general-eight/1"`. No extra public or private module is required: retain existing allowlists, including public constants/nominal/video modules and private trusted fly. Both new task packages declare `oracle="none"` pending acceptance. The operator validation CLI accepts `--revision general-eight/1`; default remains legacy.
 
 Both instance banks cover three plane classes and both senses overall, and each of five wind strata has both senses among its ten held-out cases. This is **not** the full 3×2×5 Cartesian product (which requires at least 30 cases). Trajectory draws are unchanged from commit 662208446, frozen before the prior fixed-reference checks; no reference tuning has occurred. Existing failures are retained. Adaptation and held-out trajectory sets remain disjoint.
 

@@ -20,7 +20,7 @@ The final selection contains **24 native Harbor trials**: one scripted reference
 
 | Task | i00 success / score | i01 success / score | Reference status |
 |---|---|---|---|
-| Neural Fly | 10/10 · 90.32 | 10/10 · 94.30 | Full scripted reference |
+| Neural Fly fixed eight | 10/10 · 90.32 | 10/10 · 94.30 | Full scripted reference |
 | AnyCar multi-surface | 10/10 · 73.21 | 10/10 · 72.87 | Full scripted reference |
 | Go2 attitude | 10/10 · 91.06 | 10/10 · 91.24 | Full scripted reference |
 | Go2 weave | 0/10 · 0.00 | 0/10 · 0.00 | Development-only |
@@ -102,3 +102,30 @@ Evidence is in the separate `anycar/historical-circuits-v3` and
 `anycar/integration-circuits-v1` operator directories, with source manifests and receipts.
 The prior native archive and videos remain unchanged. See the [AnyCar task guide](roboengineer-anycar.md#generating-optional-circuit-tasks)
 for listing or generating any historical layout, or the full optional 320-task suite.
+
+
+## General-eight Neural Fly extension
+
+`control-transfer-neural-fly-general-v1-i{00,01}-standard` is a separate revision from
+fixed-eight native acceptance above. Commands vary yaw, plane (vertical, horizontal,
+inclined), traversal sense, amplitudes, rate, phase and center. Both held-out banks
+include all three plane classes and both senses for each wind stratum; ten cases do
+not cover the full 30-combination plane/sense/wind product. Plant draws, controller
+ABI, feedback fields, score thresholds and the private clipped force surrogate are unchanged.
+
+The frozen earlier scripted controller succeeds in **18/20** new cases, with mean
+score **79.5960**. Instance i01 retains a tracking failure (case 3, RMSE 0.27468 m)
+and a crash (case 6, 1.72 s); there was no reference retuning. The generated private
+packages independently reproduce all 20 whole records exactly, including both
+failures. One legacy case per plant also matches its archived record exactly.
+Four new generated-package videos decode; their delivered feedback contains 130
+hash-verified images and 1,287 noisy rows with the physical timestamp offset preserved.
+Both generated public-only nominal packages complete a reverse horizontal six-lap
+rollout at rate 0.8, without importing trusted code (472 rows, RMSE 0.08151 m).
+
+The new task metadata is `oracle="none"`. These are local CPU integration checks,
+not a new three-round adaptation campaign, native Harbor/device-isolation acceptance,
+or LLM model scores. Source compatibility tests retain exact old specification
+fingerprints and require explicit revision tags on new cases. The operator evidence
+is under `neuralfly/general-eight-v1`, `neuralfly/revision-dispatch-v1` and
+`neuralfly/integration-general-v1`; old fixed-eight evidence remains separately archived.
