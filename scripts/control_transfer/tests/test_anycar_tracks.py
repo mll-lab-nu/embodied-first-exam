@@ -50,8 +50,32 @@ class CircuitTests(unittest.TestCase):
         )
         spec = json.loads(result)
         self.assertEqual(spec["public"]["track_id"], "monaco-6")
+        self.assertEqual(spec["task_variant"], "circuit-lap/2")
+        self.assertTrue(all(c["full_lap"] for bank in spec["bank"].values() for c in bank))
         self.assertEqual({c["plant_seed"] for bank in spec["bank"].values() for c in bank}, {11100})
         self.assertTrue(all(c["track_id"] == "monaco-6" for bank in spec["bank"].values() for c in bank))
+
+    def test_full_lap_requires_finish_and_measures_crossing(self):
+        from scripts.control_transfer.control_public.anycar import DT
+
+        route = get_route("silverstone")
+        command = dict(track_id="silverstone", start_fraction=0.23, speed=0.85, full_lap=True)
+        expected = route.length / 0.85 + 0.5
+        targets = np.array([reference(t, command) for t in np.arange(0, expected + 0.1, DT)])
+        states = np.zeros((len(targets), 11))
+        states[:, :4] = targets[:, :4]
+        result = score_trajectory(states, targets, command)
+        self.assertTrue(result["success"], result)
+        self.assertTrue(result["full_lap_completed"])
+        self.assertAlmostEqual(result["lap_time_s"], expected, delta=DT)
+        # Almost a lap is insufficient, even if tracking was perfect until stopping.
+        incomplete = score_trajectory(states[:-20], targets[:-20], command)
+        self.assertFalse(incomplete["success"])
+        self.assertFalse(incomplete["full_lap_completed"])
+        self.assertIsNone(incomplete["lap_time_s"])
+        standing = np.repeat(states[:1], len(states), axis=0)
+        self.assertFalse(score_trajectory(standing, targets, command)["success"])
+        self.assertFalse(score_trajectory(states[::-1], targets, command)["success"])
 
     def test_ordered_gates_reject_standing_reverse_and_shortcuts(self):
         for name in ["zigzag", "monaco", "suzuka"]:

@@ -41,7 +41,7 @@ def make_spec(index):
 
 
 def make_circuit_spec(index, track_id="zigzag"):
-    """Versioned circuit-sector bank; legacy ellipse instances remain unchanged."""
+    """Versioned full-lap circuit bank; legacy ellipse instances remain unchanged."""
     from .components.anycarbench.tracks import resolve_track
 
     spec = make_spec(index)
@@ -49,11 +49,13 @@ def make_circuit_spec(index, track_id="zigzag"):
     for bank in spec["bank"].values():
         for case in bank:
             case["track_id"] = layout
-    spec["task_variant"] = "circuit-sector/1"
+            case["full_lap"] = True
+    spec["task_variant"] = "circuit-lap/2"
     spec["public"].update(
         track_id=layout,
-        horizon_s=24.0,
-        goal="Track a prescribed-time 24-second sector of a scaled circuit; cross ordered gates and avoid collisions/offtrack. Public nominal supports full-lap training.",
+        horizon_rule="ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
+        completion="All ordered gates, spaced at most 0.5 m, including the finish line",
+        goal="Track one complete lap of a scaled circuit at the prescribed speed; cross every ordered gate and finish line, avoiding collisions/offtrack. Record actual finish-crossing time.",
         geometry="Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
     )
     return spec

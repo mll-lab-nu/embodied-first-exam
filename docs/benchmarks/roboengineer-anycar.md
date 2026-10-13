@@ -140,3 +140,34 @@ Refresh `tasks/dataset.toml` with Harbor if optional tasks are added under repos
 The trusted adapter passes the route ID unchanged; only public geometry/nominal modules and license
 attribution enter the agent package. Converter, evaluator, plant draws and case banks stay private.
 Current circuit evidence is local CPU sector smoke, not native Harbor circuit acceptance.
+
+
+### Complete F1 laps (`circuit-lap/2`)
+
+`make_circuit_spec(index, track_id)` now generates complete-lap cases for every
+available historical layout. The previous 24-second sector evidence remains
+sector evidence. Legacy ellipse instances and explicit CLI sector previews are
+unchanged. Circuit geometry retains uniform downscaling per layout and the
+steering-feasibility constraint; shrinking every circuit to a fixed small length
+would make sharp corners infeasible with the retained RC wheelbase and steering.
+
+The target travels at 0.85 m/s after a one-second speed ramp. The CPU evaluator
+runs for `ceil_50Hz(length / 0.85 + 2.5)` seconds, including a two-second bounded
+finish allowance. All forward gate crossings, at most 0.5 m apart, must occur in
+order within 0.45 m of their centers; the final gate is the start/finish line.
+Success requires every gate plus the existing tracking and safety thresholds.
+`lap_time_s` is interpolated from the actual final forward crossing, or null if
+unfinished. This is prescribed-speed tracking, not fastest-lap optimization.
+Traction bands span the full circuit. Telemetry remains noisy at 10 Hz and video
+remains the exact 10 fps dual-view stream; neither contains private metrics.
+
+Operator CLI: `python -m scripts.control_transfer.trusted.anycar --track silverstone
+--full-lap --policy POLICY --out FRESH_DIRECTORY` (one shell line). Public training
+uses `python -m scripts.control_transfer.control_public.anycar_nominal --track
+silverstone --full-lap --out FRESH_DIRECTORY`.
+
+Integration must select `circuit-lap/2`, preserve variable-length telemetry/video,
+and size worker deadlines, response limits and sampled-image budgets for complete
+laps. Do not truncate a lap to the legacy 241 telemetry rows/25 images or label
+legacy sector results as lap results. Shared generator/runtime changes belong to
+the orchestrator; this hook remains standard-library-only under `python -S`.

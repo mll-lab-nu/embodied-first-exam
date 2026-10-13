@@ -30,7 +30,7 @@ def plant_parameters(seed):
     )
 
 
-def episode_parameters(seed, track_id=None):
+def episode_parameters(seed, track_id=None, full_lap=False):
     rng = np.random.default_rng(seed)
     command = dict(
         a=float(rng.uniform(4.2, 4.8)),
@@ -56,6 +56,9 @@ def episode_parameters(seed, track_id=None):
         command = dict(track_id=route.name, start_fraction=float(rng.uniform(0, 1)), speed=0.85)
         extent = route.half_extent
         sector = route.at(command["start_fraction"] * route.length + np.linspace(0, 0.85 * (HORIZON - 0.5), 241))
+        if full_lap:
+            sector = route.points
+            command["full_lap"] = True
         low, high = float(sector[:, 0].min()), float(sector[:, 0].max())
         center, span = (low + high) / 2, max(high - low, 0.5)
         boundaries = [-extent, center - 0.25 * span, center, center + 0.25 * span, extent]
@@ -160,18 +163,23 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
     errors = np.linalg.norm(states[:, :2] - targets[:, :2], axis=1)
     heading = np.abs(wrap(states[:, 2] - targets[:, 2]))
     speed = np.abs(states[:, 3] - targets[:, 3])
+    lap_time = None
+    full_lap = command.get("full_lap", False)
     if "track_id" in command:
         from ..components.anycarbench.tracks import get_route
 
         route = get_route(command["track_id"])
         start = command.get("start_fraction", 0.0) * route.length
         distance = command.get("speed", 0.85) * (HORIZON - 0.5)
-        gates = route.at(start + np.linspace(distance / 24, distance, 24))
+        if full_lap:
+            distance = route.length
+        gate_count = max(24, int(np.ceil(distance / 0.5))) if full_lap else 24
+        gates = route.at(start + np.linspace(distance / gate_count, distance, gate_count))
         gate = 0
         # Cross each prescribed gate plane forward, near its center, in order.
         # A global nearest-waypoint jump cannot skip a bend or crossover.
-        for previous, current in zip(states[:-1], states[1:]):
-            if gate == 24:
+        for step, (previous, current) in enumerate(zip(states[:-1], states[1:])):
+            if gate == gate_count:
                 break
             x, y, yaw, _ = gates[gate]
             normal = np.array([np.cos(yaw), np.sin(yaw)])
@@ -182,7 +190,9 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
                 crossing = previous[:2] + alpha * (current[:2] - previous[:2])
                 if abs(np.dot(crossing - [x, y], tangent)) < 0.45:
                     gate += 1
-        completion = gate / 24
+                    if full_lap and gate == gate_count:
+                        lap_time = float((step + alpha) * DT)
+        completion = gate / gate_count
         offtrack = bool(np.max(route.distance(states[:, :2])) > 0.70)
     else:
         phase = np.unwrap(np.arctan2(states[:, 1] / command["b"], states[:, 0] / command["a"]))
@@ -203,7 +213,7 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
     unsafe = bool(collision or body_contact or rollover or offtrack)
     success = bool(
         not unsafe
-        and completion >= 23 / 24
+        and completion >= (1.0 if full_lap else 23 / 24)
         and rmse < 0.30
         and mae_heading < 0.18
         and mae_speed < 0.25
@@ -212,6 +222,8 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
     quality = float(np.exp(-rmse / 0.35 - mae_heading / 0.3 - mae_speed / 0.4))
     score = 0.0 if unsafe else 100 * completion * quality
     return dict(
+        lap_time_s=lap_time,
+        full_lap_completed=bool(full_lap and completion == 1.0),
         success=success,
         score=score,
         tracking_rmse_m=rmse,
@@ -229,9 +241,15 @@ def rollout(policy_path, case, out, render=True):
     policy = json.loads(Path(policy_path).read_text())
     raw = validate(policy)
     plant = plant_parameters(case["plant_seed"])
-    command, surfaces, offset, angle = episode_parameters(case["episode_seed"], case.get("track_id"))
+    command, surfaces, offset, angle = episode_parameters(case["episode_seed"], case.get("track_id"), case.get("full_lap", False))
     if "start_fraction" in case:
         command["start_fraction"] = float(case["start_fraction"])
+    horizon = HORIZON
+    if command.get("full_lap"):
+        from ..components.anycarbench.tracks import get_route
+
+        # A bounded two-second allowance lets a lagging car cross the finish gate.
+        horizon = np.ceil((get_route(command["track_id"]).length / command["speed"] + 2.5) / DT) * DT
     rng = np.random.default_rng(case["episode_seed"] + 300000)
     v = Vehicle(plant, surfaces, command)
     start = reference(0, command)
@@ -246,12 +264,12 @@ def rollout(policy_path, case, out, render=True):
     sha = hashlib.sha256()
     rollover = False
     try:
-        for i in range(round(HORIZON / DT) + 1):
+        for i in range(round(horizon / DT) + 1):
             t = i * DT
             state = v.state()
             target = reference(t, command)
             observation = state + rng.normal(0, NOISE)
-            action = controller.step(observation, reference(min(t + policy["preview"], HORIZON), command))
+            action = controller.step(observation, reference(min(t + policy["preview"], horizon), command))
             states.append(state)
             targets.append(target)
             sha.update(np.asarray(np.r_[t, v.data.qpos, v.data.qvel, v.data.act, v.applied], dtype="<f8").tobytes())
@@ -260,7 +278,7 @@ def rollout(policy_path, case, out, render=True):
                 telemetry.append(dict(t=t, values=[*observation.tolist(), *target.tolist(), *action.tolist()]))
                 if video:
                     video.frame(v, target, observation)
-            if i < round(HORIZON / DT):
+            if i < round(horizon / DT):
                 v.advance(action)
     finally:
         if video:
@@ -295,12 +313,16 @@ def main():
     parser.add_argument("--plant-seed", type=int, default=10100)
     parser.add_argument("--episode-seed", type=int, default=10300)
     parser.add_argument("--no-render", action="store_true")
+    parser.add_argument("--full-lap", action="store_true", help="Complete circuit lap with measured finish crossing")
     parser.add_argument("--track", help="Historical layout ID, circuit alias (latest raced layout), or zigzag")
     parser.add_argument("--start-fraction", type=float, help="Operator-only public route start override for previews")
     a = parser.parse_args()
     case = dict(plant_seed=a.plant_seed, episode_seed=a.episode_seed)
+    if a.full_lap and not a.track:
+        parser.error("--full-lap requires --track")
     if a.track:
         case["track_id"] = a.track
+        case["full_lap"] = a.full_lap
     if a.start_fraction is not None:
         if not a.track or not 0 <= a.start_fraction < 1:
             parser.error("--start-fraction requires --track and a value in [0,1)")
