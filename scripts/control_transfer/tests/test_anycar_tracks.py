@@ -109,6 +109,40 @@ class CircuitTests(unittest.TestCase):
         self.assertEqual(largest["horizon_upper_bound_s"], 3880)
         self.assertEqual(largest["render_wall_time_estimate_s"], 7820)
 
+    def test_compact_catalog_is_closed_steerable_and_fixed_duration(self):
+        from scripts.control_transfer.components.anycarbench.tracks import compact_catalog, compact_route_budget
+
+        self.assertEqual(set(compact_catalog()["routes"]), set(track_ids()))
+        for name in track_ids():
+            route = get_route(name, "compact-30s/1")
+            np.testing.assert_allclose(route.at(0), route.at(route.length), atol=1e-10)
+            self.assertAlmostEqual(route.length, 45.0, places=6)
+            self.assertLessEqual(np.max(np.abs(route.at(np.linspace(0,route.length,8192))[:,3])), .81)
+            self.assertEqual(compact_route_budget(name)["horizon_upper_bound_s"], 30)
+        with self.assertRaises(ValueError):
+            get_route("silverstone", "unknown")
+
+    def test_compact_spec_stdlib_and_completed_lap_scoring(self):
+        code = ("import json,sys; from scripts.control_transfer.anycar_spec import make_circuit_spec; "
+                "s=make_circuit_spec(0,'monaco',revision='circuit-compact-lap/3'); "
+                "assert 'numpy' not in sys.modules and 'mujoco' not in sys.modules; print(json.dumps(s))")
+        spec = json.loads(subprocess.check_output([sys.executable, "-S", "-c", code], text=True))
+        self.assertEqual(spec["public"]["horizon_s"], 30)
+        self.assertTrue(all(c["full_lap"] and c["route_revision"]=="compact-30s/1"
+                            for bank in spec["bank"].values() for c in bank))
+        for name in ("silverstone", "monaco", "suzuka"):
+            route = get_route(name, "compact-30s/1")
+            command = dict(track_id=name, route_revision="compact-30s/1", start_fraction=.23,
+                           speed=route.length/27.5, full_lap=True)
+            targets = np.array([reference(t,command) for t in np.arange(1501)*.02])
+            states = np.zeros((1501,11)); states[:,:4]=targets[:,:4]
+            result = score_trajectory(states,targets,command)
+            self.assertTrue(result["success"], result)
+            self.assertAlmostEqual(result["lap_time_s"],28.0,delta=.02)
+            self.assertFalse(score_trajectory(states[:1351],targets[:1351],command)["success"])
+            stationary = np.repeat(states[:1],1501,axis=0)
+            self.assertEqual(score_trajectory(stationary,targets,command)["score"],0)
+
     def test_full_lap_requires_finish_and_measures_crossing(self):
         from scripts.control_transfer.control_public.anycar import DT
 

@@ -142,6 +142,36 @@ attribution enter the agent package. Converter, evaluator, plant draws and case 
 Current circuit evidence is local CPU sector smoke, not native Harbor circuit acceptance.
 
 
+### Compact 30-second laps (`circuit-compact-lap/3`)
+
+The user-approved compact revision is a separate task: `make_circuit_spec(index,
+track_id, revision="circuit-compact-lap/3")`. Each of the 160 runnable routes has a
+45 m derived layout, a target finish at 28 s and a strict 30 s simulation horizon.
+The two seconds after the target finish allow tracking lag. Full ordered-gate,
+tracking and safety thresholds are unchanged. The unchanged data-only controller
+runs at 50 Hz, CPU MuJoCo at 500 Hz; output contains exactly 301 noisy 10 Hz rows
+and (when rendered) 301 video frames at 10 fps. Wall time is separate from the
+30-second simulated episode.
+
+These are **compact F1-inspired layouts**, not faithful scaled circuit outlines.
+The offline builder uses periodic Gaussian smoothing, widens the minor principal
+axis when needed to limit aspect ratio to 2, resamples to 512 points and normalizes
+to 45 m. It selects the first preset smoothing level whose interpolated curvature
+is at most 0.8/m. This can heavily simplify corners and remove crossovers. Every
+layout records smoothing sigma and widening factor in public metadata. The car's
+wheelbase, mass, steering, contact, controller bounds and hidden dynamics draws
+are unchanged. Existing sector and long-lap layouts/specs remain unchanged.
+
+New public allowlist asset: `components/anycarbench/compact_routes.json` alongside
+`tracks.py` and `circuits.json`. The operator-only offline builder is
+`trusted/anycar_compact_routes.py`; rebuild with `--out PATH`. The public trainer
+supports `--track NAME --compact-30s`; the trusted evaluator uses the same flags.
+Cases set `full_lap=true, route_revision="compact-30s/1"`. Root owns separate
+registration, sampling, and task budgets; the stdlib `compact_route_budget(name)`
+and public spec report the fixed horizon/row/frame bounds. No held-out data was
+used to tune a policy or relax scoring thresholds.
+
+
 ### Complete F1 laps (`circuit-lap/2`)
 
 `make_circuit_spec(index, track_id, revision="circuit-lap/2")` generates complete-lap cases for every

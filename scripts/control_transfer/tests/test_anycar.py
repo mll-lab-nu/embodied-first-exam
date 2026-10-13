@@ -72,6 +72,7 @@ class ContractTests(unittest.TestCase):
                 "components/anycarbench/model.py",
                 "components/anycarbench/tracks.py",
                 "components/anycarbench/circuits.json",
+                "components/anycarbench/compact_routes.json",
             )
             for name in files:
                 destination = app / "scripts/control_transfer" / name
@@ -103,6 +104,8 @@ assert policies[0] == policies[1]
 a = importlib.import_module('control_public.anycar_nominal')
 b = importlib.import_module('scripts.control_transfer.control_public.anycar_nominal')
 command = dict(track_id='zigzag', start_fraction=0., speed=.85)
+np.testing.assert_array_equal(a.train_rollout(a.DEFAULT, command, horizon=.2), b.train_rollout(b.DEFAULT, command, horizon=.2))
+command = dict(track_id='silverstone', route_revision='compact-30s/1', start_fraction=0., speed=45/27.5)
 np.testing.assert_array_equal(a.train_rollout(a.DEFAULT, command, horizon=.2), b.train_rollout(b.DEFAULT, command, horizon=.2))
 assert not any(name.startswith('scripts.control_transfer.trusted') for name in sys.modules)
 print(json.dumps({'shape': list(trajectories[0].shape), 'identical': True}))

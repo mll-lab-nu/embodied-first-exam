@@ -30,7 +30,7 @@ def plant_parameters(seed):
     )
 
 
-def episode_parameters(seed, track_id=None, full_lap=False):
+def episode_parameters(seed, track_id=None, full_lap=False, route_revision=None):
     rng = np.random.default_rng(seed)
     command = dict(
         a=float(rng.uniform(4.2, 4.8)),
@@ -52,8 +52,12 @@ def episode_parameters(seed, track_id=None, full_lap=False):
     if track_id is not None:
         from ..components.anycarbench.tracks import get_route
 
-        route = get_route(track_id)
+        route = get_route(track_id, route_revision or "circuit-sector/1")
         command = dict(track_id=route.name, start_fraction=float(rng.uniform(0, 1)), speed=0.85)
+        if route_revision == "compact-30s/1":
+            if not full_lap:
+                raise ValueError("Compact routes require full_lap")
+            command.update(route_revision=route_revision, speed=route.length / 27.5)
         extent = route.half_extent
         sector = route.at(command["start_fraction"] * route.length + np.linspace(0, 0.85 * (HORIZON - 0.5), 241))
         if full_lap:
@@ -85,7 +89,7 @@ class Video:
         if "track_id" in vehicle.command:
             from ..components.anycarbench.tracks import get_route
 
-            self.camera.distance = get_route(vehicle.command["track_id"]).half_extent * 3.1
+            self.camera.distance = get_route(vehicle.command["track_id"], vehicle.command.get("route_revision", "circuit-sector/1")).half_extent * 3.1
         self.camera.azimuth = 90
         self.camera.elevation = -70
         # Fixed orientation; center uses the already-delivered noisy position only.
@@ -168,7 +172,7 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
     if "track_id" in command:
         from ..components.anycarbench.tracks import get_route
 
-        route = get_route(command["track_id"])
+        route = get_route(command["track_id"], command.get("route_revision", "circuit-sector/1"))
         start = command.get("start_fraction", 0.0) * route.length
         distance = command.get("speed", 0.85) * (HORIZON - 0.5)
         if full_lap:
@@ -243,7 +247,7 @@ def rollout(policy_path, case, out, render=True):
     policy = json.loads(Path(policy_path).read_text())
     raw = validate(policy)
     plant = plant_parameters(case["plant_seed"])
-    command, surfaces, offset, angle = episode_parameters(case["episode_seed"], case.get("track_id"), case.get("full_lap", False))
+    command, surfaces, offset, angle = episode_parameters(case["episode_seed"], case.get("track_id"), case.get("full_lap", False), case.get("route_revision"))
     if "start_fraction" in case:
         command["start_fraction"] = float(case["start_fraction"])
     horizon = HORIZON
@@ -251,7 +255,9 @@ def rollout(policy_path, case, out, render=True):
         from ..components.anycarbench.tracks import get_route
 
         # A bounded two-second allowance lets a lagging car cross the finish gate.
-        horizon = np.ceil((get_route(command["track_id"]).length / command["speed"] + 2.5) / DT) * DT
+        horizon = np.ceil((get_route(command["track_id"], command.get("route_revision", "circuit-sector/1")).length / command["speed"] + 2.5) / DT) * DT
+    if command.get("route_revision") == "compact-30s/1":
+        horizon = 30.0
     rng = np.random.default_rng(case["episode_seed"] + 300000)
     v = Vehicle(plant, surfaces, command)
     start = reference(0, command)
@@ -315,17 +321,20 @@ def main():
     parser.add_argument("--plant-seed", type=int, default=10100)
     parser.add_argument("--episode-seed", type=int, default=10300)
     parser.add_argument("--no-render", action="store_true")
+    parser.add_argument("--compact-30s", action="store_true", help="Smoothed F1-inspired full lap in a 30-second episode")
     parser.add_argument("--full-lap", action="store_true", help="Complete circuit lap with measured finish crossing")
     parser.add_argument("--track", help="Historical layout ID, circuit alias (latest raced layout), or zigzag")
     parser.add_argument("--start-fraction", type=float, help="Operator-only public route start override for previews")
     a = parser.parse_args()
     case = dict(plant_seed=a.plant_seed, episode_seed=a.episode_seed)
-    if a.full_lap and not a.track:
+    if (a.full_lap or a.compact_30s) and not a.track:
         parser.error("--full-lap requires --track")
     if a.track:
         case["track_id"] = a.track
-        if a.full_lap:
+        if a.full_lap or a.compact_30s:
             case["full_lap"] = True
+        if a.compact_30s:
+            case["route_revision"] = "compact-30s/1"
     if a.start_fraction is not None:
         if not a.track or not 0 <= a.start_fraction < 1:
             parser.error("--start-fraction requires --track and a value in [0,1)")
