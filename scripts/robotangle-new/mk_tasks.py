@@ -378,6 +378,17 @@ def r5_words(s: str, mode: str) -> str:
     return s.replace(R5_ANCHOR, R5_ANCHOR + R5_SENTENCE.format(report=R5_REPORT[mode]), 1)
 
 
+def family_words(name: str, s: str, rec: dict) -> str:
+    """A new base templated on another family's package (slotted / orbits on horseshoe_ring, blanket_fold on
+    blanket_flatten): its grader and its standard sim name its own family, never the template's."""
+    fam = rec["family"]
+    if name == "tests/test.sh":
+        s = re.sub(r"--family \S+", f"--family {fam}", s)      # privileged's grader; standard's reads its sim's result
+    elif name.endswith("docker-compose.yaml"):
+        s = re.sub(r"RCB_TASK: \S+", f"RCB_TASK: {fam}", s)
+    return s
+
+
 def flat_words(s: str, fence: bool) -> str:
     """The cloth families' flat condition led by the user's words (a no-op on texts without it)."""
     new = FLAT_NEW.format(fence=" (cloth resting on the fence does not count)" if fence else "")
@@ -949,9 +960,9 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
                 text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode)
-                put(t / n, (mujoco_lines(n, text_n, rec) if mujoco else text_n).encode())
+                put(t / n, family_words(n, mujoco_lines(n, text_n, rec) if mujoco else text_n, rec).encode())
         goal_images(up, t, (t / "instruction.md").read_text())
-        put(t / "tests/test.sh", (up / "tests/test.sh").read_bytes(), exe=True)
+        put(t / "tests/test.sh", family_words("tests/test.sh", (up / "tests/test.sh").read_text(), rec).encode(), exe=True)
         lock = binding(base, inst_src, mujoco, direct) if dev is None else dev_binding(inst_src, dev, mujoco, direct)
         tool = (SHARED / "rcb_topogym.py").read_bytes()
         extra = ([("render_bridge.py", (SHARED / "render_bridge.py").read_bytes())] if mujoco else []) + \
