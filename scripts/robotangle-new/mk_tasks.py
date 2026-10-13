@@ -378,6 +378,19 @@ def r5_words(s: str, mode: str) -> str:
     return s.replace(R5_ANCHOR, R5_ANCHOR + R5_SENTENCE.format(report=R5_REPORT[mode]), 1)
 
 
+CLOCK_OLD = "The episode starts when the service comes up and ends on"
+
+
+def clock_words(s: str, mode: str) -> str:
+    """Standard mode: the service's clock starts at the agent's first request (main's #163 rule; server.py touch()), so the
+    body no longer says the episode starts when the service comes up; the Time limit section states the clock."""
+    if mode != "standard":
+        return s
+    s = s.replace(CLOCK_OLD, "The episode ends on", 1)
+    assert "service comes up" not in s, "standard text still dates the episode from the service start"
+    return s
+
+
 def family_words(name: str, s: str, rec: dict) -> str:
     """A new base templated on another family's package (slotted / orbits on horseshoe_ring, blanket_fold on
     blanket_flatten): its grader and its standard sim name its own family, never the template's."""
@@ -962,7 +975,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         put(t / "README.md", r5_words(frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode).encode())
         ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
-        ins = r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode)
+        ins = clock_words(r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode), mode)
         put(t / "instruction.md", ins.encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
