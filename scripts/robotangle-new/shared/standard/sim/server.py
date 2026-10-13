@@ -172,6 +172,54 @@ def joint_limits() -> dict:
 LIMITS = joint_limits(); LIM_ARR = np.array([LIMITS[n] for n in LAYOUT], dtype=np.float64)
 
 R_SPEC = S.robot_spec(); K_SPEC = S.kinematics_spec()
+
+# The agent-facing frame (user 2026-10-13: the table height is never disclosed): the robot frame, origin at the robot's
+# kinematic root link on its mounting, axes as the simulator's world (+z up). Everything this service gives or takes (proprio
+# TCP poses, ee_pose targets, /kinematics, camera extrinsics) is in it; the simulator's own world frame (origin on the floor)
+# stays in this process. Physics, the recorded joint rows, graders and state hashes do not depend on it.
+BASE_LINK = S.robot.entity.links[0].name
+T_WR = M._T(R_SPEC["base"]["pose"][:3], R_SPEC["base"]["pose"][3:])        # robot frame -> world (the root link's pose)
+T_RW = np.eye(4); T_RW[:3, :3] = T_WR[:3, :3].T; T_RW[:3, 3] = -T_WR[:3, :3].T @ T_WR[:3, 3]
+Q_WR = M.mat_to_quat(T_WR[:3, :3]); Q_RW = Q_WR * np.array([1.0, -1.0, -1.0, -1.0])
+R_SPEC["base"] = {"type": "fixed", "pose": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                  "note": f"the origin of the robot frame (its kinematic root link {BASE_LINK}; x y z qw qx qy qz)"}
+
+
+def _qmul(a, b) -> np.ndarray:
+    w1, x1, y1, z1 = a; w2, x2, y2, z2 = b
+    return np.array([w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2, w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+                     w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2, w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2])
+
+
+def _moved(T, pos, quat, q_T) -> tuple[np.ndarray, np.ndarray]:
+    return T[:3, :3] @ np.asarray(pos, dtype=np.float64) + T[:3, 3], _qmul(q_T, np.asarray(quat, dtype=np.float64))
+
+
+def to_robot(pos, quat):
+    """A world pose (position, quaternion wxyz) -> the robot frame."""
+    return _moved(T_RW, pos, quat, Q_RW)
+
+
+def to_world(pos, quat):
+    """A robot-frame pose (position, quaternion wxyz) -> the simulator's world frame."""
+    return _moved(T_WR, pos, quat, Q_WR)
+
+
+def camera_to_robot(info: dict) -> dict:
+    """A camera_info entry (or a static mount) with its world extrinsics re-expressed in the robot frame: extrinsic_cv
+    (world -> camera) becomes robot -> camera, cam2world_gl (camera -> world) camera -> robot. Intrinsics and a link
+    mount's link_T_cam_cv are relative already."""
+    out = dict(info)
+    if "extrinsic_cv" in out:
+        E = np.eye(4); E[:3] = np.asarray(out["extrinsic_cv"], dtype=np.float64)
+        out["extrinsic_cv"] = M._r((E @ T_WR)[:3])
+    if "cam2world_gl" in out:
+        out["cam2world_gl"] = M._r(T_RW @ np.asarray(out["cam2world_gl"], dtype=np.float64))
+    if isinstance(out.get("mount"), dict):
+        out["mount"] = camera_to_robot(out["mount"])
+    return out
+
+
 EE = [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz")]
 N = len(LAYOUT)
 PROPRIO_LAYOUT = (LAYOUT + EE + [f"{n}_cmd" for n in LAYOUT] + [f"{n}_vel" for n in LAYOUT]
@@ -189,7 +237,7 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
                         + (f"its gripper's native drive coordinate, in the unit and direction of the gripper command ({GRIP_WORDS}; "
                            "robot_spec.grippers). It is a drive coordinate, not an opening width: see the gripper_opening group"
                            if NATIVE else "its gripper opening (m)")],
-    "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, world frame; "
+    "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, robot frame (spec world.frame); "
                                    f"the ee_pose action's frame (kinematics tcp_frames {K_SPEC['tcp_frames']})"],
     "joint_cmd": [N + 7 * len(ARMS), N, "the commanded joint targets being tracked (joint_position layout): the last streamed row step"],
     "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: "
@@ -203,8 +251,8 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
     "joint_effort": [3 * N + 8 * len(ARMS), N, "the force each PD drive applied (N m; gripper entries: the actuated finger drive): a "
                                                "motor-current analogue that rises when the arm pushes against something"],
 }
-WORLD_FRAME = (f"TopoGym world frame: +z up, the table top horizontal; the robot base at "
-               f"({', '.join(f'{v:.3f}' for v in R_SPEC['base']['pose'][:3])}) (robot_spec.base)")
+WORLD_FRAME = (f"robot frame: origin at the robot's root link ({BASE_LINK}) on its mounting, +z up, the table top horizontal; "
+               "every pose, camera extrinsic and kinematics answer of this service is in it (robot_spec.base)")
 SPEC = {
     "gripper_space": S.gripper_space,
     "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
@@ -212,7 +260,7 @@ SPEC = {
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
-                    "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": CAM_INFO[c]["mount"], "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
+                    "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": camera_to_robot(CAM_INFO[c]["mount"]), "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
     "default_cameras": list(CAMS),
     "action_types": {
         "joint_position": {"dim": N, "layout": LAYOUT, "units": ("rad for arm joints; native gripper drive targets (ALOHA m, Robotiq rad), see robot_spec.grippers" if S.gripper_space == "native" else "rad for the arm joints; gripper opening width in metres, 0 = closed .. the limit = open"),
@@ -276,7 +324,7 @@ def check_success() -> bool:
 
 def proprio_row() -> np.ndarray:
     q = S.joint_positions()
-    ep = [np.concatenate(S.ee_pose(a)) for a in ARMS]
+    ep = [np.concatenate(to_robot(*S.ee_pose(a))) for a in ARMS]
     # gripper_opening: the measured pad gap (m) in both gripper spaces. Session.gripper_width only reads the finger links'
     # collision vertices (topogym.robot.grasp_geometry: "never issue robot commands"); q's gripper entry is that gap only in
     # the width space, and the native drive coordinate otherwise
@@ -291,11 +339,12 @@ def grab(cameras: list[str], want_depth: bool) -> tuple[dict, dict]:
 
 def extrinsics(cameras: list[str]) -> dict:
     meta = S.env.sensor_frame().camera_metadata
-    return {c: np.asarray(meta[c]["T_camera_cv_from_world"], dtype=np.float64)[:3] for c in cameras}
+    return {c: (np.asarray(meta[c]["T_camera_cv_from_world"], dtype=np.float64) @ T_WR)[:3] for c in cameras}
 
 
 def calib(cameras: list[str]) -> dict:
-    return {c: {k: v[k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")} for c, v in S.camera_info(cameras).items()}
+    return {c: camera_to_robot({k: v[k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")})
+            for c, v in S.camera_info(cameras).items()}
 
 
 def frames_ok(cams: list, steps: int, fps: int, meta: dict) -> None:
@@ -449,7 +498,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             sl, gi = ARM[arm]; off = 8 * i
             q = row[off + 3:off + 7]; q = q / max(1e-9, float(np.linalg.norm(q)))
             try:
-                qa, ep, er = S.ik(arm, row[off:off + 3], q)
+                qa, ep, er = S.ik(arm, *to_world(row[off:off + 3], q))   # the row is in the robot frame
                 if ep > 0.02 or er > 0.35:
                     raise ValueError(f"no IK solution within 2 cm / 20 deg (residual {ep * 1000:.0f} mm / {math.degrees(er):.0f} deg)")
                 qa = np.clip(qa, LIM_ARR[sl, 0], LIM_ARR[sl, 1])
@@ -560,8 +609,14 @@ def do_observe(meta: dict) -> tuple[dict, list]:
 
 
 def do_kinematics(req: dict) -> dict:
-    """/kinematics (validated by rcb_limited.parse_kinematics): the tooling's stateless FK / IK, never the simulator."""
-    return S.kinematics(req)
+    """/kinematics (validated by rcb_limited.parse_kinematics): the tooling's stateless FK / IK, never the simulator; poses
+    in the robot frame (world.frame), mapped to and from the simulator's world here."""
+    if req.get("op") == "ik":
+        req = {**req, "targets": {f: np.r_[to_world(p[:3], p[3:])] for f, p in req["targets"].items()}}
+    out = S.kinematics(req)
+    if out.get("op") == "fk":
+        out["poses"] = {l: [float(v) for v in np.r_[to_robot(p[:3], p[3:])]] for l, p in out["poses"].items()}
+    return out
 
 
 def status() -> dict:
