@@ -335,6 +335,34 @@ FOLD_FLAT_NEW = ("Flat: the folded cloth must lie flat on the tabletop, its bott
 GOAL_DIR = "environment/goal"   # a package's goal-state images (fold: the target shape is shown, never given as coordinates)
 
 
+# The world frame without the table height or the robot base's position (user 2026-10-13: "in the wild nobody tells you
+# how tall the table is"; the base sits on the table top, so its z is the table height). Text only: the axes stay.
+FRAME_PRIV = re.compile(r"- World frame: robot base at \([^)]*\)(?:, table top at z = [-0-9.]+)?, \+z up\. Quaternions are \*\*WXYZ\*\*\.")
+FRAME_PRIV_NEW = ("- World frame: +z up. Quaternions are **WXYZ**. The ee_pose action and the proprio TCP pose are given in this "
+                  "world frame.")
+FRAME_STD = re.compile(r"world frame \(robot base at \([^)]*\),\s*\+z up\)")
+FRAME_STD_NEW = ("robot frame (origin at the robot's root link on its mounting, +z up; the frame of the proprio TCP pose and the "
+                 "camera extrinsics)")   # standard mode's frame (user 2026-10-13, option B: the service speaks the robot frame)
+FRAME_STD_RX = ((re.compile(r"world frame \(\+z up; the frame of the proprio TCP pose\)"), FRAME_STD_NEW),   # 10-13 first wording
+                (re.compile(r"# \(N,3,4\) world -> camera at every frame"), "# (N,3,4) robot frame -> camera at every frame"),
+                (re.compile(r"`spec\[\"world\"\]` the frame conventions\."), "`spec[\"world\"]` the frame conventions (the robot "
+                 "frame: origin at the robot's root link on its mounting, +z up)."),
+                (re.compile(r"world_T_cam = FK\(link\)"), "robot_T_cam = FK(link)"))
+FRAME_LEAKS = ("robot base at", "table top at z")
+
+
+def frame_words(s: str, where: str, mode: str = "privileged") -> str:
+    """The frame lines without the table height and the base position (privileged: the sim's world frame, +z up; standard:
+    the robot frame the service speaks); no text may still name either."""
+    s = FRAME_STD.sub(FRAME_STD_NEW, FRAME_PRIV.sub(FRAME_PRIV_NEW, s))
+    if mode == "standard":
+        for rx, new in FRAME_STD_RX:
+            s = rx.sub(new, s)
+    left = [w for w in FRAME_LEAKS if w in s]
+    assert not left, f"{where}: still names {left} (the table height is never disclosed)"
+    return s
+
+
 def flat_words(s: str, fence: bool) -> str:
     """The cloth families' flat condition led by the user's words (a no-op on texts without it)."""
     new = FLAT_NEW.format(fence=" (cloth resting on the fence does not count)" if fence else "")
@@ -897,10 +925,11 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         fence = "`fence`" in rd("instruction.md")
-        put(t / "README.md", flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence).encode())
+        put(t / "README.md", frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode).encode())
         ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
-        put(t / "instruction.md", (safety_text(ins) if mode == "standard" else ins).encode())
+        ins = frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode)
+        put(t / "instruction.md", ins.encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
