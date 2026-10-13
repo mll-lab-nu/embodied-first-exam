@@ -264,7 +264,15 @@ def chain_text(s: str, rec: dict) -> str:
         return s
     s = (s.replace("Simulator breakdown (an invalid soft-body solver state)",
                    "Simulator breakdown (a MuJoCo instability: a non-finite or diverging acceleration, position or velocity)")
-          .replace("every vertex of its simulated volume", "every vertex of its links (capsules)"))
+          .replace("every vertex of its simulated volume", "every vertex of its links (capsules)")
+          # knot_untying's release check (topogym_rules.knot_release_words): the rope's volume mesh is carried rigidly by
+          # its capsule links on MuJoCo (rope_chain.RopeChain.fem_state); the check bounds that mesh, not FEM tetrahedra
+          .replace("The release check bounds every rope tetrahedron against",
+                   "The release check bounds the rope's volume mesh (carried rigidly by its capsule links), element by element, against")
+          .replace("(refined per tetrahedron where they are close)",
+                   "(refined per element of the volume mesh its capsule links carry where they are close)"))
+    ent = c.get("entity") or "rope"        # the scene object list: the chain is not an FEM body on MuJoCo
+    s = s.replace(f"`{ent}` (deformable, fem)", f"`{ent}` (a chain of rigid capsule links)")
     m = FEM_RX.search(s)
     if m:
         return FEM_RX.sub(lambda m: chain_words(c, m[1], float(m[2])), s, count=1)
