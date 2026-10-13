@@ -5,7 +5,8 @@ COPY images/control-transfer/assets/public/ /opt/control-assets/
 ENV CONTROL_ASSETS=/opt/control-assets MUJOCO_GL=osmesa OPENBLAS_NUM_THREADS=1 LP_NUM_THREADS=4 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /srv
 FROM nominal AS train
-RUN pip install --no-cache-dir torch==2.11.0 mujoco-warp==3.5.0 warp-lang==1.12.0 mjlab==1.2.0 onnx==1.23.0 onnxruntime==1.23.2
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends libegl1 && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir torch==2.11.0 mujoco-warp==3.5.0 warp-lang==1.12.0 mjlab==1.2.0 onnx==1.23.0 onnxruntime==1.23.2 wandb==0.30.0
 FROM nominal AS evaluator
 COPY images/control-transfer/assets/private-fly/ /opt/private-fly/
 # Evaluator stage only; main uses the separate nominal/train stages above.

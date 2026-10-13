@@ -21,28 +21,35 @@ def prepare(workspace, out, go2_source=None, private_go2_out=None):
     if not (go2_source / "unitree_go2/go2.xml").is_file():
         raise ValueError("Provide --go2-source with the pinned Menagerie unitree_go2 tree checked out")
     out.mkdir(parents=True, exist_ok=False)
-    # Keep training code, nominal model assets and licenses. Never stage deployment
-    # examples, released actors, simulation binaries or user-supplied robot archives.
-    shutil.copytree(
-        unitree,
-        out / "unitree_rl_mjlab",
-        ignore=shutil.ignore_patterns(
-            ".git",
-            "__pycache__",
-            "*.pyc",
-            "deploy",
-            "simulate",
-            "docs",
-            ".github",
-            "logs",
-            "outputs",
-            "*.onnx",
-            "*.onnx.data",
-            "*.pt",
-            "*.pth",
-            "*.ckpt",
-        ),
+    # Preserve only the public G1 training dependency closure. src.tasks performs
+    # recursive discovery, so unrelated configs would import excluded robots.
+    nominal = out / "unitree_rl_mjlab"
+    files = (
+        "src/__init__.py",
+        "src/assets/__init__.py",
+        "src/assets/robots/__init__.py",
+        "src/tasks/__init__.py",
+        "src/tasks/velocity/__init__.py",
+        "src/tasks/velocity/velocity_env_cfg.py",
+        "src/tasks/velocity/config/__init__.py",
     )
+    for name in files:
+        target = nominal / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(unitree / name, target)
+    for name in (
+        "src/assets/robots/unitree_g1",
+        "src/tasks/velocity/config/g1",
+        "src/tasks/velocity/mdp",
+        "src/tasks/velocity/rl",
+    ):
+        shutil.copytree(
+            unitree / name,
+            nominal / name,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.onnx", "*.pt", "*.pth", "*.ckpt"),
+        )
+    for source in unitree.glob("LICENSE*"):
+        shutil.copy2(source, nominal / source.name)
     from .components.quadrupedbench.assets import prepare as prepare_go2
 
     private_go2 = Path(private_go2_out) if private_go2_out else out.parent / (out.name + "-private-go2")
