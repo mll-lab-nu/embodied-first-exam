@@ -11,32 +11,32 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | Benchmark | privileged | standard | standard-realtime | Tasks (P / S / RT) |
 |---|---|---|---|---|
 | AutoBio | 3600 s (60 min) | 3600 s (60 min) | — | 9 / 9 / — |
-| BEHAVIOR-1K | 14400 s (240 min) | 14400 s (240 min) | — | 100 / 100 / — |
+| BEHAVIOR-1K | 7200 s (120 min) | 7200 s (120 min) | — | 100 / 100 / — |
 | BiGym 2.0 | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 13 / 13 / 13 |
-| DexJoCo | 5400 s (90 min) | 5400 s (90 min) | — | 11 / 11 / — |
+| DexJoCo | 3600 s (60 min) | 3600 s (60 min) | — | 11 / 11 / — |
 | DexToolBench | 3600 s (60 min) | 3600 s (60 min) | — | 21 / 21 / — |
 | HumanoidBench | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 10 / 10 / 10 |
 | KinDER | 3600 s (60 min) | 3600 s (60 min) | — | 5 / 5 / — |
-| LabUtopia | 5400 s (90 min) | 5400 s (90 min) | — | 9 / 9 / — |
-| LIBERO-MAX | 3600 s (60 min) | 3600 s (60 min) | — | 64 / 64 / — |
-| ManiGuard | 7200 s (120 min) | 7200 s (120 min) | — | 30 / 30 / — |
-| MetaWorld+ | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
+| LabUtopia | 3600 s (60 min) | 3600 s (60 min) | — | 9 / 9 / — |
+| LIBERO-MAX | 1800 s (30 min) | 1800 s (30 min) | — | 64 / 64 / — |
+| ManiGuard | 3600 s (60 min) | 3600 s (60 min) | — | 30 / 30 / — |
+| MetaWorld+ | 1800 s (30 min) | 1800 s (30 min) | — | 50 / 50 / — |
 | MolmoSpaces | 3600 s (60 min) | 3600 s (60 min) | — | 8 / 8 / — |
-| MuJoCo Playground | 3600 s (60 min) | 3600 s (60 min) | — | 13 / 13 / — |
-| MyoSuite | 5400 s (90 min) | 5400 s (90 min) | — | 22 / 22 / — |
+| MuJoCo Playground | 1800 s (30 min) | 1800 s (30 min) | — | 13 / 13 / — |
+| MyoSuite | 3600 s (60 min) | 3600 s (60 min) | — | 22 / 22 / — |
 | RoboCasa | 3600 s (60 min) | 3600 s (60 min) | — | 29 / 29 / — |
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
 | RoboDojo | 3600 s (60 min) | 3600 s (60 min) | — | 48 / 54 / — |
 | RoboFunOlympics | 7200 s (120 min) | 7200 s (120 min) | — | 50 / 50 / — |
-| RoboLab | 5400 s (90 min) | 5400 s (90 min) | — | 53 / 53 / — |
+| RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
-| RoboPaint | 7200 s (120 min) | 7200 s (120 min) | — | 43 / 43 / — |
-| RoboTangle | 21600 s (360 min) | 21600 s (360 min) | — | 52 / 52 / — |
-| RoboTwin 2.0 | 3600 s (60 min) | 3600 s (60 min) | — | 47 / 47 / — |
-| RoboWits | 5400 s (90 min) | 5400 s (90 min) | — | 15 / 15 / — |
-| VLABench | 3600 s (60 min) | 3600 s (60 min) | — | 36 / 36 / — |
-| YAMLab | 5400 s (90 min) | 5400 s (90 min) | — | 10 / 10 / — |
+| RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
+| RoboTangle | 7200 s (120 min) | 7200 s (120 min) | — | 52 / 52 / — |
+| RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
+| RoboWits | 3600 s (60 min) | 3600 s (60 min) | — | 15 / 15 / — |
+| VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
+| YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
 1676 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
@@ -95,3 +95,18 @@ The table started on 2026-10-11 with the number every task had on that day; each
 |---|---|---|---|---|
 | 2026-10-11 | RoboDojo, privileged, standard | 5400 s -> 3600 s | owner | #155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart |
 | 2026-10-12 | RoboFunOlympics, privileged, standard | (none) -> 7200 s | owner | the benchmark's first tasks (#161): the agent may go online and is asked to find, download and adapt controllers, or to build one, which an hour does not hold |
+| 2026-10-12 | BEHAVIOR-1K, privileged, standard | 14400 s -> 7200 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 14400 s are kept and reported as such |
+| 2026-10-12 | ManiGuard, privileged, standard | 7200 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such |
+| 2026-10-12 | RoboPaint, privileged, standard | 7200 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such |
+| 2026-10-12 | RoboLab, privileged, standard | 5400 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such |
+| 2026-10-12 | MyoSuite, privileged, standard | 5400 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such |
+| 2026-10-12 | DexJoCo, privileged, standard | 5400 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such |
+| 2026-10-12 | RoboWits, privileged, standard | 5400 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such |
+| 2026-10-12 | YAMLab, privileged, standard | 5400 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such |
+| 2026-10-12 | LabUtopia, privileged, standard | 5400 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 5400 s are kept and reported as such |
+| 2026-10-12 | RoboTwin 2.0, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
+| 2026-10-12 | VLABench, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
+| 2026-10-12 | MetaWorld+, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
+| 2026-10-12 | LIBERO-MAX, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
+| 2026-10-12 | MuJoCo Playground, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
+| 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |

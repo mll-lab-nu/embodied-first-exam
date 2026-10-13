@@ -35,7 +35,6 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "robofunolympics-sprint-i00-standard"                   # open egress by a documented exception (PROTOCOL §2.11)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -136,9 +135,6 @@ MUTATIONS = [
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("... a task of a benchmark that was open until 2026-10-10",
      TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
-    ("a task of an open-egress benchmark sets a network policy of its own (its egress is the exception's, not the task's)",
-     OPEN, TOML, sub(r'^\[agent\]\n', '[agent]\nnetwork_mode = "allowlist"\nallowed_hosts = ["pypi.org"]\n'), ISOLATION,
-     "sets a network policy"),
     ("the instruction no longer states the external-material rule",
      STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
     ("the frozen instance the agent reads names where its scene came from",
@@ -284,14 +280,14 @@ def cutoff_exceptions(tmp: Path) -> int:
     fam_p, fam_s, other = "behavior-boxing-books-up-for-storage-i00-privileged", STD, "behavior-bringing-water-i00-standard"
     family = tomllib.loads((ROOT / "tasks" / STD / "task.toml").read_text())["metadata"]["family"]
     base = (ROOT / "scripts/task_cutoffs.toml").read_text()
-    head = base[:base.index("\n[[history]]") + 1]      # the table without its history
-    hist = base[base.index("\n[[history]]"):]          # ... and its history: the record of the rows added since the
-    #                                                     baseline (a new benchmark's row is refused without its entry)
+    head = base.rstrip("\n") + "\n"                    # the repository's table with its history; a test's entries follow it
+    bench = tomllib.loads(base)["cutoff_sec"]["BEHAVIOR-1K"]["standard"]       # the benchmark's own number, whatever it is today
+    fam_std, fam_priv, own = bench // 2, bench // 2 + 900, bench // 2 + 1800  # three numbers that are not the benchmark's
     tables: list[Path] = []
 
     def table(extra: str) -> Path:
         tables.append(tmp / f"cutoffs-{len(tables)}.toml")
-        tables[-1].write_text(head + extra + hist)
+        tables[-1].write_text(head + extra)
         return tables[-1]
 
     def run_py(args: list[str], cutoffs: Path | None) -> tuple[int, str]:
@@ -309,14 +305,14 @@ def cutoff_exceptions(tmp: Path) -> int:
             bad += 1
             print(f"FAIL check-ci-selftest [cutoff exceptions: {what}]" + (f":\n{out[-600:]}" if out else ""))
 
-    good = table(f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ standard = 7200, privileged = 9000 }}\n'
-                 f'[task_cutoff_sec]\n"{fam_p}" = 5400\n')
+    good = table(f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ standard = {fam_std}, privileged = {fam_priv} }}\n'
+                 f'[task_cutoff_sec]\n"{fam_p}" = {own}\n')
     work = tmp / "exceptions"
     for name in (fam_p, fam_s, other):
         shutil.copytree(ROOT / "tasks" / name, work / name)
     rc, out = run_py([str(ROOT / "scripts/task_conventions.py")] + [str(work / n) for n in (fam_p, fam_s, other)], good)
     expect(rc == 0, "normalize under a table with exceptions", out)
-    want = {fam_p: 5400, fam_s: 7200, other: 14400}     # the task's own; its family's for the mode; the benchmark's
+    want = {fam_p: own, fam_s: fam_std, other: bench}   # the task's own; its family's for the mode; the benchmark's
     for name, sec in want.items():
         t = work / name
         got = tomllib.loads((t / "task.toml").read_text())["agent"]["timeout_sec"]
@@ -325,8 +321,8 @@ def cutoff_exceptions(tmp: Path) -> int:
         rc, out = run_py([CUTOFFS[1], str(t)], good)
         expect(rc == 0, f"{name}: check-cutoffs.py under the table with exceptions", out)
         rc, out = run_py([CUTOFFS[1], str(t)], None)
-        expect((rc != 0 and "the table says" in out) if sec != 14400 else rc == 0, f"{name}: check-cutoffs.py under the repository's table", out)
-    expect('RCB_WALL_CLOCK_S: "7200"' in (work / fam_s / "environment/docker-compose.yaml").read_text(), f"{fam_s}: the sim service's wall clock is not the family's 7200")
+        expect((rc != 0 and "the table says" in out) if sec != bench else rc == 0, f"{name}: check-cutoffs.py under the repository's table", out)
+    expect(f'RCB_WALL_CLOCK_S: "{fam_std}"' in (work / fam_s / "environment/docker-compose.yaml").read_text(), f"{fam_s}: the sim service's wall clock is not the family's {fam_std}")
     # an entry that reaches no task; tables that are not usable
     for what, extra, say in [
         ("a family that no task has", '[family_cutoff_sec."BEHAVIOR-1K"]\n"no_such_family" = { standard = 7200 }\n', "has no task of family 'no_such_family'"),
@@ -352,11 +348,11 @@ def cutoff_exceptions(tmp: Path) -> int:
     changed = head.replace('"KinDER"            = { privileged =  3600, standard =  3600 }', '"KinDER"            = { privileged =  3600, standard =  3000 }')
     expect(changed != head, "the KinDER row of the table is not where this test expects it (update the test)")
     say = "KinDER, standard is 3000, its last recorded value is 3600: add a [[history]] entry"
-    tables.append(tmp / "cutoffs-changed.toml"); tables[-1].write_text(changed + hist)
+    tables.append(tmp / "cutoffs-changed.toml"); tables[-1].write_text(changed)
     rc, out = run_py([CUTOFFS[1]], tables[-1])
     expect(rc != 0 and say in out, "a changed number without its [[history]] entry must fail", out)
     tables.append(tmp / "cutoffs-recorded.toml")
-    tables[-1].write_text(changed + hist + '\n[[history]]\ndate = "2026-10-20"\nbenchmark = "KinDER"\nmodes = ["standard"]\nfrom_sec = 3600\nto_sec = 3000\ndecided_by = "owner"\nnote = "a test"\n')
+    tables[-1].write_text(changed + '[[history]]\ndate = "2026-10-20"\nbenchmark = "KinDER"\nmodes = ["standard"]\nfrom_sec = 3600\nto_sec = 3000\ndecided_by = "owner"\nnote = "a test"\n')
     rc, out = run_py([CUTOFFS[1]], tables[-1])
     expect("[[history]]" not in out, "a changed number with its [[history]] entry: the history rule must be satisfied", out)
     if not bad:

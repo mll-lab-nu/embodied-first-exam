@@ -8,7 +8,7 @@
 | Simulator / robot | `robotangle` / `franka-robotiq-2f85` |
 | Family / instance | `fiber_bundling` / seed 0 |
 | Oracle | `full` |
-| Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.22` |
 
 ## Task

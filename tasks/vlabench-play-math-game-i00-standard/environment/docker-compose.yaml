@@ -21,7 +21,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Please give the answer of the following question by rearrange the number cube in placemat_seen:A mechanic charges different rates to repair the tires of trucks and cars.  For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40.  On Thursday, the mechanic repairs 6 truck tires and 4 car tires.  On Friday, the mechanic repairs 12 car tries and doesn't repair any truck tires.  How much more revenue did the mechanic earn on the day with higher revenue? Put the number cubes that spell the answer on placemat_seen, side by side, read from left to right as seen from the robot."
       RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
-      RCB_WALL_CLOCK_S: "3600.0"
+      RCB_WALL_CLOCK_S: "1800.0"
       RCB_MAX_CONTROL_STEPS: "9000"
       RCB_IMAGE_HW: "320"
       # One episode, no reset, as instruction.md tells the agent: pinned, not a knob (a `${RCB_RESET_BUDGET:-0}` here

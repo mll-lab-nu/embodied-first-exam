@@ -113,6 +113,8 @@ it: the second point.
   container has no simulator image, and the verifier's image is not the agent's.
 
 ## Time budget (D8)
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+
 The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
 every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
 2026-10-11: 5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac

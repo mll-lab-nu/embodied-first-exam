@@ -8,7 +8,7 @@
 | Simulator / robot | `dexjoco` / `franka-allegro-bimanual` |
 | Family / instance | `bimanual_hanoi` |
 | Oracle | `full` |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
