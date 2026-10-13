@@ -11,6 +11,7 @@ sys.path.insert(0, str(SRC))
 FAMILIES = [
     "neural-fly",
     "neural-fly-general-v1",
+    "neural-fly-general-skydio-v1",
     "g1",
     "anycar",
     "anycar-circuit-lap-v2-silverstone-8",
@@ -41,14 +42,26 @@ def spec(name, index):
         value = make_spec(index, name)
         value["family"] = "go2"
         return value
-    if name in ("neural-fly", "neural-fly-general-v1"):
+    if name in ("neural-fly", "neural-fly-general-v1", "neural-fly-general-skydio-v1"):
         from .neuralfly_spec import make_spec
 
-        value = make_spec(index, revision="general-eight/1" if name == "neural-fly-general-v1" else "fixed-eight/1")
+        value = make_spec(index, revision="fixed-eight/1" if name == "neural-fly" else "general-eight/1")
         value["name"] = name
         value["public"]["name"] = name
         if "task_revision" in value:
             value["public"]["task_revision"] = value["task_revision"]
+        if name == "neural-fly-general-skydio-v1":
+            value["observation_revision"] = "neuralfly-skydio/1"
+            value["visual_profile"] = "skydio-x2/1"
+            value["public"].update(
+                observation_revision="neuralfly-skydio/1",
+                visual_profile="skydio-x2/1",
+                video_resolution=[960, 720],
+                video_fps=10,
+            )
+            value["public"]["limitations"] += (
+                " Skydio X2 appearance only; the underlying Neural Fly surrogate is not calibrated Skydio dynamics."
+            )
         value.update(schema="control-transfer-instance/2", transfer_track="same-plant")
         return value
     if name == "anycar":

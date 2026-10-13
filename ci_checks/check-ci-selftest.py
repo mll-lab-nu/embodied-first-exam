@@ -72,6 +72,10 @@ NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource st
 POLICY_TASK = "quadrotor-landing-random-pad-i00-standard"
 POLICY_CHECK = [sys.executable, str(ROOT / "ci_checks/check-policy.py")]
 MUTATIONS = [
+    ("Skydio evaluator cannot silently use primitive visuals", "control-transfer-neural-fly-general-skydio-v1-i00-standard", COMPOSE,
+     sub(r'NEURALFLY_VISUAL_STYLE: skydio-x2/1', 'NEURALFLY_VISUAL_STYLE: primitive'), POLICY_CHECK, "generated contract differs"),
+    ("Skydio nominal profile cannot differ from deployment", "control-transfer-neural-fly-general-skydio-v1-i01-standard", "environment/Dockerfile",
+     sub(r'NEURALFLY_VISUAL_STYLE=skydio-x2/1', 'NEURALFLY_VISUAL_STYLE=primitive'), POLICY_CHECK, "generated contract differs"),
     ("full lap cannot inherit full oracle readiness", "control-transfer-anycar-circuit-lap-v2-silverstone-8-i00-standard", TOML,
      sub(r'oracle = "none"', 'oracle = "full"'), POLICY_CHECK, "generated contract differs"),
     ("full lap cannot remove collection deadline", "control-transfer-anycar-circuit-lap-v2-monaco-6-i01-standard", TOML,

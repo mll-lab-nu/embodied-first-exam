@@ -2,11 +2,13 @@
 
 import argparse, json, shutil, hashlib
 from pathlib import Path
+from stage_skydio import stage
 
 p = argparse.ArgumentParser()
 p.add_argument("--assets", type=Path, required=True)
 p.add_argument("--fly", type=Path, required=True)
 p.add_argument("--go2", type=Path, required=True, help="Prepared evaluator-only Go2 assets")
+p.add_argument("--skydio", type=Path, required=True, help="Prepared pinned public Skydio visual assets")
 a = p.parse_args()
 out = Path(__file__).parent / "assets"
 out.mkdir(exist_ok=False)
@@ -18,6 +20,7 @@ for name in ["unitree_rl_mjlab", "go2"]:
         public / name,
         ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc", "deploy", "docs", ".github"),
     )
+stage(a.skydio, public / "skydio_x2")
 manifest = {
     str(p.relative_to(public)): hashlib.sha256(p.read_bytes()).hexdigest()
     for p in sorted(public.rglob("*"))

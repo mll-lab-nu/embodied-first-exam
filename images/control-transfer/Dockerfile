@@ -2,6 +2,8 @@ FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c3
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends libgl1 libosmesa6 ffmpeg git && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir numpy==2.3.1 mujoco==3.5.0 Pillow==12.2.0 scipy==1.17.0
 COPY images/control-transfer/assets/public/ /opt/control-assets/
+COPY images/control-transfer/skydio-assets.sha256 /tmp/skydio-assets.sha256
+RUN cd /opt/control-assets/skydio_x2 && sha256sum -c /tmp/skydio-assets.sha256
 ENV CONTROL_ASSETS=/opt/control-assets MUJOCO_GL=osmesa OPENBLAS_NUM_THREADS=1 LP_NUM_THREADS=4 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /srv
 FROM nominal AS train

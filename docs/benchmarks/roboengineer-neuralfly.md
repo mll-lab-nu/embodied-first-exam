@@ -113,3 +113,14 @@ At rate 0.8, six laps round to 2,356 ticks (47.12 s). Telemetry and video contai
 Prepare the public assets outside Git with `python -m scripts.control_transfer.neuralfly_visual --out /path/to/skydio_x2`. Bake that directory, including LICENSE and README.md, into the existing public asset image at `/opt/control-assets/skydio_x2`; runtime never downloads anything. An explicit `NEURALFLY_VISUAL_ASSETS` directory overrides the default. All four source files are SHA-256 checked before model construction; absent or mismatched assets fail visibly instead of falling back. These are public visual assets, not hidden dynamics assets.
 
 Root packaging addition: copy `neuralfly_visual.py` alongside `neuralfly_video.py` into both repository-style and top-level public/private package layouts. Set the profile only on the intended new task revision, consistently for nominal and deployment video. No controller, mass, inertia, collision, motor or scoring changes are required. The helper is safe to export publicly; spec banks and reference modules remain private. Preserve the Apache license and pinned provenance when redistributing assets. Renderer enablement/image preparation remains orchestrator-owned.
+
+The shared registry exposes the new appearance only as
+`neural-fly-general-skydio-v1` (observation revision `neuralfly-skydio/1`).
+Legacy fixed/general task packages retain their frozen primitive renderer and
+original image tags. A frozen `neuralfly_video_primitive.py` supplies those exact
+runtime bytes; changes to the new renderer cannot silently alter old observations.
+Public and private new-task packages include the render helper in both import
+layouts, with the operator download function and CLI removed. Runtime requires
+pre-baked, checksum-verified assets and fails closed if they are missing/modified.
+The benchmark remains the original Neural Fly surrogate physically; the mesh is
+appearance only. Prior reference scores are not new Skydio agent results.

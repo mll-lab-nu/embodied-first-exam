@@ -6801,3 +6801,11 @@ digest = "sha256:3a9dc5b2a2b20e9427b2496b26ef85f05c62891292a21989edb26a7d53b6342
 name = "robot-coding-bench/control-transfer-anycar-circuit-lap-v2-silverstone-8-i01-standard"
 digest = "sha256:84f913ea77ad52e339708a1cbdb3790b1ba7cd30af96a5943b65e36648e992a1"
 
+[[tasks]]
+name = "robot-coding-bench/control-transfer-neural-fly-general-skydio-v1-i00-standard"
+digest = "sha256:9e35ce56928eafc71127d679f3df9d05a7f16fefc8a920791cab51706bf9449a"
+
+[[tasks]]
+name = "robot-coding-bench/control-transfer-neural-fly-general-skydio-v1-i01-standard"
+digest = "sha256:8888f84baf3f63213b0f1b0ccb836975a76fb0663ccfcbefad98274a11661782"
+

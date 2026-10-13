@@ -191,3 +191,36 @@ pinned numerical environment above. The separate
 operator evidence is `anycar/integration-f1tenth-visual-v1`; the worker preview is
 `anycar/f1tenth-visual-v1`. This is a visual integration smoke test, not a new full-lap,
 multi-round, native Harbor or coding-agent campaign.
+
+
+## Explicit Skydio appearance revision
+
+`neural-fly-general-skydio-v1` adds two tasks with observation revision
+`neuralfly-skydio/1`. All 1,512 files in the preceding 20 Control Transfer task
+directories remain byte-identical, including their primitive renderer and image
+references. The new tasks use 0.1.1 image tags and explicitly enable the same
+Skydio profile in nominal training and private deployment. Pinned Apache-2.0 mesh,
+texture and attribution assets are staged outside Git, checked before copying, and
+verified again by Docker's build instructions. The agent's helper omits operator
+download code; runtime requires local matching assets and has no fallback.
+
+Generated private packages reproduced a successful i00/case1 flight and the retained
+i01/case6 crash in separate rendered/non-rendered processes. All four entire records
+match the pre-visual general-eight records, including state, telemetry, metrics and
+private scenario/dynamics. The success retains score 87.6987 and the crash remains
+zero at 1.72 seconds. These are frozen-controller compatibility checks, not new
+agent scores. The two 960×720 videos decode into 378 and 18 frames; all 40 delivered
+JPEG hashes and 396 noisy rows verify, with the existing +0.02-second timestamp
+origin preserved. A public-only reverse-horizontal nominal rollout at rate 0.8
+produces a decoded 472-frame video and the prior RMSE 0.0815133 m without trusted
+imports. The evaluation preview was visually inspected.
+
+All 79 pre-existing Neural Fly video hashes remain unchanged. Thirty distinct
+family/spec/visual/packaging tests pass, including separation of render and physics
+models and rejection of corrupt assets. Repository CI passes all 22 task contracts
+and 115 mutation checks; the optional system-Python NumPy/requests tier is skipped,
+with the affected numerical/visual suites executed separately in the pinned runtime.
+The operator receipts are under
+`neuralfly/integration-skydio-v1`. The 0.1.1 Docker build, container isolation and
+native Harbor/LLM campaign have not been run; this appearance does not constitute
+a calibrated Skydio dynamics model or establish full-bank solvability.

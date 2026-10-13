@@ -14,6 +14,7 @@ from scripts.control_transfer.trusted.runtime_limits import runtime_limits, LAP_
 from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0"
+SKYDIO_IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:0.1.1"
 EMBODIMENTS = {"neural-fly": "drone", "g1": "humanoid", "anycar": "racing-car", "go2": "quadruped"}
 ROBOTS = {"neural-fly": "neural-fly-partial", "g1": "unitree-g1", "anycar": "anycar", "go2": "unitree-go2"}
 
@@ -83,7 +84,7 @@ PUBLIC_MODULES = {
 G1_PUBLIC = set()
 
 
-def copy_package(task, where, private, family):
+def copy_package(task, where, private, family, visual_profile=None):
     if family not in PUBLIC_MODULES:
         return copy_legacy_package(task, where, private, family)
     for path in (
@@ -174,8 +175,23 @@ def copy_package(task, where, private, family):
             if family == "anycar" and (SRC / name).exists():
                 put(task, where + "/scripts/control_transfer/" + name, (SRC / name).read_text())
     if family == "neural-fly" and (SRC / "neuralfly_nominal.py").exists():
-        for name in ("neuralfly_nominal.py", "neuralfly_video.py", "neuralfly_constants.py"):
-            content = (SRC / name).read_text()
+        names = ("neuralfly_nominal.py", "neuralfly_video.py", "neuralfly_constants.py")
+        if visual_profile == "skydio-x2/1":
+            names += ("neuralfly_visual.py",)
+        for name in names:
+            source_name = (
+                "neuralfly_video_primitive.py" if name == "neuralfly_video.py" and visual_profile is None else name
+            )
+            content = (SRC / source_name).read_text()
+            if name == "neuralfly_visual.py":
+                # Runtime packages have no asset downloader or upstream location.
+                tree = ast.parse(content)
+                tree.body = [
+                    n
+                    for n in tree.body
+                    if not (isinstance(n, ast.FunctionDef) and n.name == "prepare") and not isinstance(n, ast.If)
+                ]
+                content = ast.unparse(tree) + "\n"
             put(task, where + "/scripts/control_transfer/" + name, content)
             put(task, where + "/" + name, content)
         if not private:
@@ -185,6 +201,8 @@ def copy_package(task, where, private, family):
 def render(task, name, index):
     instance = spec(name, index)
     family = instance["family"]
+    skydio = instance.get("visual_profile") == "skydio-x2/1"
+    image = SKYDIO_IMAGE if skydio else IMAGE
     instance["evaluation_requirements"] = {
         "physics": "mujoco-cpu",
         "mujoco_version": "3.5.0",
@@ -208,7 +226,7 @@ def render(task, name, index):
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
     elif lap:
         reference_note = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
-    elif name == "neural-fly-general-v1":
+    elif name in ("neural-fly-general-v1", "neural-fly-general-skydio-v1"):
         reference_note = "Development-only general-eight/1 revision. The frozen earlier scripted controller passes 18 of 20 local held-out cases (one RMSE failure and one crash); no new adaptation, native Harbor acceptance or LLM evaluation is established. No full oracle; human review required."
     elif instance.get("task_variant") == "circuit-sector/1":
         reference_note = "Development-only circuit-sector variant. Local nominal-controller sector smoke covers all 78 historical venues plus zigzag, but full multi-round/held-out native Harbor acceptance is not established for these circuit tasks. No verified full oracle or LLM score is claimed."
@@ -216,6 +234,8 @@ def render(task, name, index):
         reference_note = "No full oracle. The local trained reference passes 17 of 24 held-out cases; both plants remain incompletely solved. Native GPU training validation remains outstanding. Human review required."
     else:
         reference_note = "Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required."
+    if skydio:
+        reference_note += " The cited reference result predates this appearance revision; Skydio-profile native/model acceptance is pending."
     gpu = family in ("linearbot", "g1")
     seconds = cutoff_sec("Control Transfer", "standard")
     if lap:
@@ -227,16 +247,16 @@ def render(task, name, index):
         )
     for folder in ("environment/sim", "tests"):
         put(task, folder + "/instance.json", json.dumps(instance, sort_keys=True, indent=2) + "\n")
-    copy_package(task, "environment/public", False, family)
-    copy_package(task, "environment/sim", True, family)
+    copy_package(task, "environment/public", False, family, instance.get("visual_profile"))
+    copy_package(task, "environment/sim", True, family, instance.get("visual_profile"))
     put(task, "environment/public/task-spec.json", json.dumps(instance["public"], indent=2) + "\n")
     put(
         task,
         "environment/Dockerfile",
-        f"""FROM {IMAGE}-{"train" if gpu else "nominal"}
+        f"""FROM {image}-{"train" if gpu else "nominal"}
 WORKDIR /app
 COPY public/ /app/
-ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if lap else ""}
+ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if lap else ""}{" NEURALFLY_VISUAL_STYLE=skydio-x2/1" if skydio else ""}
 RUN mkdir -p /app/output
 """,
     )
@@ -261,7 +281,7 @@ RUN mkdir -p /app/output
       sim:
         condition: service_healthy
 {reservation}  sim:
-    image: {IMAGE}
+    image: {image}
     volumes:
       - ./sim:/srv:ro
     working_dir: /srv
@@ -274,7 +294,7 @@ RUN mkdir -p /app/output
       LIBGL_ALWAYS_SOFTWARE: "1"
       ROBOENGINEER_ENFORCE_CPU_ISOLATION: "1"
       RCB_INSTANCE: /srv/instance.json
-      RCB_WALL_CLOCK_S: "{seconds}"
+{chr(10).join(["      NEURALFLY_VISUAL_STYLE: skydio-x2/1", ""]) if skydio else ""}      RCB_WALL_CLOCK_S: "{seconds}"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
       interval: 5s
@@ -346,6 +366,8 @@ build_timeout_sec = 600.0
         training += f" Use `--track {public['track_id']} --full-lap` for nominal training. Deployment covers a complete lap. Feedback retains every 10 Hz noisy row and up to 128 images spread over the whole recording, including the finish. Full operator videos retain 10 fps. Long episodes count against the declared time limit; preserve the complete response traces."
     if family == "neural-fly":
         training += " The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`."
+    if skydio:
+        training += " This observation revision uses Skydio X2 appearance at 960 by 720 pixels, with unchanged surrogate dynamics and noisy-sensor/controller interfaces. Public mesh assets are preinstalled; no download is required."
     put(
         task,
         "instruction.md",

@@ -13,7 +13,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | AutoBio | 3600 s (60 min) | 3600 s (60 min) | — | 9 / 9 / — |
 | BEHAVIOR-1K | 7200 s (120 min) | 7200 s (120 min) | — | 100 / 100 / — |
 | BiGym 2.0 | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 13 / 13 / 13 |
-| Control Transfer | — | 14400 s (240 min) | — | — / 20 / — |
+| Control Transfer | — | 14400 s (240 min) | — | — / 22 / — |
 | DexJoCo | 3600 s (60 min) | 3600 s (60 min) | — | 11 / 11 / — |
 | DexToolBench | 3600 s (60 min) | 3600 s (60 min) | — | 21 / 21 / — |
 | HumanoidBench | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 10 / 10 / 10 |
@@ -40,7 +40,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1698 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; Control Transfer's exception: 129600; RoboTangle's exception: 21600).
+1700 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; Control Transfer's exception: 129600; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
