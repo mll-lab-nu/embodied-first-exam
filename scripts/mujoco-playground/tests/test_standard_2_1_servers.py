@@ -8,7 +8,8 @@ Covers, for each service: a negative or non-numeric Content-Length is a 400 and 
 read without a bound); a camera named many times is rendered once, before the frame budget is counted; a port held by
 another process at start is waited for, not a crash; the agent's clock (meta time_s / time_left_s) is not started by
 the service's start or by a probe that only connects to the port, starts at the first request, and is not set back by
-a resume. RoboTwin's service has the same tests in scripts/robotwin/tests/test_standard_service.py.
+a resume (RoboTwin's service has these tests in scripts/robotwin/tests/test_standard_service.py); a camera's reported
+pose is the viewpoint its image is rendered from, not MuJoCo's left-eye camera.
 """
 from __future__ import annotations
 
@@ -39,8 +40,12 @@ import numpy as np
 CONTROL_DT = 0.02; N = 2; JOINT_NAMES = ACTION_NAMES = ["a", "b"]; CAMERAS = ("cam",); GOAL_TIMEOUT_STEPS = 0; MAX_STEPS = 3000
 ACTION_TYPE = {"name": "ee_delta"}; CAMERA_VIEWS = {"cam": {"camera": "cam"}}; PROPRIO_LAYOUT = ["a_pos", "b_pos"]
 def scene_option(): return None
-class _Cam: name = "cam"; id = 0; forward = (1.0, 0.0, 0.0); up = (0.0, 0.0, 1.0); pos = (0.0, 0.0, 0.0)
-class _Scene: camera = [_Cam(), _Cam()]
+class _Cam:
+    name = "cam"; id = 0; forward = (1.0, 0.0, 0.0); up = (0.0, 0.0, 1.0); pos = (0.5, 0.2, 1.0)
+    def __init__(self, pos=(0.5, 0.2, 1.0)): self.pos = pos
+# MuJoCo's two eye cameras (left, right) sit ipd/2 = 3.4 cm to either side of the viewpoint (data.cam_xpos), which is
+# what the mono image is rendered from; looking along +x with +z up, the camera's left is +y.
+class _Scene: camera = [_Cam((0.5, 0.234, 1.0)), _Cam((0.5, 0.166, 1.0))]
 class _Model:
     ncam = 1; cam_mode = [0]; cam_bodyid = [0]; cam_fovy = [45.0]; body_jntnum = [0]; body_mocapid = [-1]; body_parentid = [0]
     cam_sensorsize = [[0.0, 0.0]]; cam_intrinsic = [[0.01, 0.01, 0.0, 0.0]]      # a camera given by its fovy (MuJoCo's defaults)
@@ -48,7 +53,7 @@ class _Model:
         _v = [float(x) for x in os.environ["STUB_SENSOR"].split()]
         cam_intrinsic = [_v[:4]]; cam_sensorsize = [_v[4:6]]; cam_fovy = [_v[6]]
     def camera(self, i): return _Cam()
-class _Data: cam_xmat = [np.eye(3).ravel()]; cam_xpos = [np.zeros(3)]
+class _Data: cam_xmat = [np.array([0.0, 0, -1, -1, 0, 0, 0, 1, 0])]; cam_xpos = [np.array([0.5, 0.2, 1.0])]   # x right = -y, y up = +z, looks along +x
 class _Renderer:
     scene = _Scene()
     def __init__(self, model, h, w): self.h, self.w, self.depth = h, w, False
@@ -194,6 +199,17 @@ class ServerCase:
         K = self.intrinsic()                                         # fx = 320 * 2 / 4, fy = 240 * 2.5 / 3, cx = 160 - 320 * 0.4 / 4, cy = 120 + 240 * -0.25 / 3
         for got, want in zip(sum(K, []), [160, 0, 128, 0, 200, 100, 0, 0, 1]):
             self.assertAlmostEqual(got, want, places=6)
+
+    def test_the_calibration_is_the_rendered_viewpoint(self):
+        """cam2world_gl is the pose the mono image is rendered from (data.cam_xpos / cam_xmat of a model camera), not
+        MuJoCo's left-eye camera scene.camera[0], 3.4 cm to its left: the services reported that one until #135
+        (2026-10-10: server_mj.py, server_mw.py) and 2026-10-13 (server_casa.py, board 0093)."""
+        self.start(); self.wait_up()
+        T = self.meta()["cameras"]["cam"]["cam2world_gl"]
+        want = [[0, 0, -1, 0.5], [-1, 0, 0, 0.2], [0, 1, 0, 1.0], [0, 0, 0, 1]]
+        for got_row, want_row in zip(T, want):
+            for got, w in zip(got_row, want_row):
+                self.assertAlmostEqual(got, w, places=9)
 
     def test_a_repeated_camera_is_rendered_once(self):
         self.start(); self.wait_up()

@@ -113,6 +113,17 @@ CHANGES_STANDARD = [
     "Time limit` tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the "
     "scene, the frozen instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier "
     "results stand.",
+    "2026-10-13 (board 0093; found in board 0086): the camera calibration (`environment/sim/server_casa.py`). "
+    "`cam2world_gl` held the pose of MuJoCo's left-eye camera (`scene.camera[0]`), 3.4 cm (half the model's 0.068 m "
+    "interpupillary distance) to the camera's left of the viewpoint the mono RGB and depth images are rendered from; it "
+    "now is that viewpoint (`data.cam_xpos` / `data.cam_xmat`). Checked against MuJoCo's own renders of marker spheres "
+    "at known world points, every served camera, before and after the robot moved: the reprojection error was 10.5-10.7 px "
+    "median (up to 28 px for near points, always to the same side), now 0.15 px median and at most 0.4 px. The "
+    "intrinsics were right (every camera here is given by its `fovy`, none by a sensor size) and are unchanged, as are "
+    "the images, the scene, the frozen instance, the pass rule and the grader, so the task keeps its name. **Standard-"
+    "mode results from before this date used the offset calibration**: a point located from the images and the "
+    "reported calibration came out about 3.4 cm to the side (agents missed a microwave button by 3.5 cm), so they are "
+    "not strictly comparable with later ones.",
 ]
 
 
