@@ -87,6 +87,28 @@ class CircuitTests(unittest.TestCase):
             "assert 'mujoco' not in sys.modules; print(max(v['horizon_s'] for v in r.values()))"], text=True)
         self.assertEqual(float(result), 3878.76)
 
+    def test_stdlib_budget_covers_all_160_runnable_routes(self):
+        import math
+        from scripts.control_transfer.components.anycarbench.tracks import route_budget
+
+        for name in track_ids():
+            steps = math.ceil((get_route(name).length / .85 + 2.5) / .02)
+            budget = route_budget(name)
+            self.assertGreaterEqual(budget["horizon_upper_bound_s"], steps * .02)
+            self.assertGreaterEqual(budget["control_steps_upper_bound"], steps)
+            self.assertGreaterEqual(budget["telemetry_rows_upper_bound"], steps // 5 + 1)
+            self.assertGreaterEqual(budget["decoded_frames_upper_bound"], steps // 5 + 1)
+            self.assertFalse(budget["wall_time_is_guaranteed_bound"])
+        result = subprocess.check_output([sys.executable, "-S", "-c",
+            "import json,sys; from scripts.control_transfer.components.anycarbench.tracks import track_ids,route_budget; "
+            "r=[route_budget(n) for n in track_ids()]; assert len(r)==160; "
+            "assert 'numpy' not in sys.modules and 'mujoco' not in sys.modules; "
+            "print(json.dumps(max(r,key=lambda x:x['horizon_upper_bound_s'])))"], text=True)
+        largest = json.loads(result)
+        self.assertEqual(largest["track_id"], "valencia-1")
+        self.assertEqual(largest["horizon_upper_bound_s"], 3880)
+        self.assertEqual(largest["render_wall_time_estimate_s"], 7820)
+
     def test_full_lap_requires_finish_and_measures_crossing(self):
         from scripts.control_transfer.control_public.anycar import DT
 

@@ -120,3 +120,26 @@ def route_metadata_catalog():
 def route_metadata(name):
     """Return a copy of the public length and full-lap budget for one layout."""
     return dict(route_metadata_catalog()["routes"][resolve_track(name)])
+
+
+def route_budget(name):
+    """Public stdlib budgets from frozen geometry, never from policy/request values.
+
+    Simulation/row bounds are conservative; wall time is a hardware-specific
+    planning estimate, not a guaranteed limit or an agent time-cap decision.
+    """
+    import math
+
+    metadata = route_metadata(name)
+    horizon_bound = math.ceil(metadata["horizon_s"]) + 1
+    return dict(
+        schema="anycar-lap-budget/1",
+        track_id=resolve_track(name),
+        horizon_upper_bound_s=horizon_bound,
+        control_steps_upper_bound=horizon_bound * 50,
+        telemetry_rows_upper_bound=horizon_bound * 10 + 1,
+        decoded_frames_upper_bound=horizon_bound * 10 + 1,
+        render_wall_time_estimate_s=2 * horizon_bound + 60,
+        wall_time_estimate_basis="CPU OSMesa planning estimate: 2 wall seconds per simulated second plus 60 seconds; validate on deployment hardware",
+        wall_time_is_guaranteed_bound=False,
+    )

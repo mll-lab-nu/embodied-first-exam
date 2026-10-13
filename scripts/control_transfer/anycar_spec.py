@@ -59,7 +59,7 @@ def make_circuit_spec(index, track_id="zigzag", revision="circuit-sector/1"):
         geometry="Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
     )
     if revision == "circuit-lap/2":
-        from .components.anycarbench.tracks import route_metadata
+        from .components.anycarbench.tracks import route_metadata, route_budget
 
         metadata = route_metadata(layout)
         for bank in spec["bank"].values():
@@ -69,6 +69,7 @@ def make_circuit_spec(index, track_id="zigzag", revision="circuit-sector/1"):
         spec["public"].update(
             task_variant=revision,
             scaled_length_m=metadata["scaled_length_m"],
+            runtime_budget=route_budget(layout),
             horizon_s=metadata["horizon_s"],
             horizon_rule="ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
             completion="All ordered gates, spaced at most 0.5 m, including the finish line",

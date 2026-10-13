@@ -181,6 +181,25 @@ laps. Sector and ellipse records retain their original metric fields when
 `full_lap` is absent. Sampling, budgets and registry changes remain root-owned.
 
 
+`route_budget(name)` provides a stdlib-only conservative simulation horizon
+bound (`ceil(frozen_horizon_s) + 1`), control-step, 10 Hz telemetry-row and 10 fps
+decoded-frame bounds. It covers all 160 runnable routes, including old layouts.
+The lap public spec includes this `runtime_budget`; sectors are unchanged. The
+trusted runtime still computes exact horizon from the NumPy Route. Root must use
+the frozen operator instance's budget, never a submitted policy or request.
+
+The helper's wall-time **estimate**, `2 * horizon_bound_s + 60`, is a CPU OSMesa
+planning estimate, not a hardware-independent upper bound. Maximum Valencia-1
+bounds are 3,880 simulation seconds, 194,000 control steps, 38,801 telemetry rows
+and video frames, and an estimated 7,820 wall seconds per rendered case.
+Three such feedback cases estimate 23,460 seconds; nine across three rounds
+estimate 70,380 seconds before agent training overhead. These exceed the existing
+14,400-second agent cap. Root owns protocol exceptions and separate lap-family
+budgets; this helper does not raise or override any cap. Final held-out work has
+its own verifier budget. Root's fixed 128 whole-video samples must retain the
+first/last decoded-frame indices, all telemetry rows, and the full MP4, while
+leaving the legacy sampler unchanged.
+
 Integration must select `circuit-lap/2`, preserve variable-length telemetry/video,
 and size worker deadlines, response limits and sampled-image budgets for complete
 laps. Do not truncate a lap to the legacy 241 telemetry rows/25 images or label
