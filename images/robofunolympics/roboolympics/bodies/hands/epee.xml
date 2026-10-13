@@ -1,0 +1,12 @@
+<mujoco model="hand_epee">
+  <!-- Draft: an epee (FIE: blade at most 90 cm, bell guard at most 13.5 cm across). Blade along +z. -->
+  <worldbody>
+    <body name="hand">
+      <geom name="grip" type="capsule" fromto="0 0 0 0 0 0.10" size="0.015" mass="0.15" rgba="0.15 0.15 0.15 1" group="2"/>
+      <geom name="guard" type="cylinder" fromto="0 0 0.10 0 0 0.11" size="0.0675" mass="0.15" rgba="0.8 0.8 0.85 1" group="2"/>
+      <geom name="blade" type="capsule" fromto="0 0 0.11 0 0 1.01" size="0.005" mass="0.45" rgba="0.75 0.77 0.8 1" group="2"/>
+      <geom name="tip" type="sphere" pos="0 0 1.01" size="0.007" mass="0.01" rgba="0.2 0.2 0.2 1" group="2"/>
+      <site name="tip" pos="0 0 1.017" size="0.004" group="4"/>
+    </body>
+  </worldbody>
+</mujoco>

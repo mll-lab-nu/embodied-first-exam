@@ -794,6 +794,62 @@ verifier_min_memory_gb = 15.0
 verifier_min_gpu_memory_gb = 5.0
 measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10)"
 
+# robofunolympics, privileged: 50 task(s)
+[[rule]]
+match = "^robofunolympics-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author estimate (ws-1, 2026-10-11): CPU-only MuJoCo with OSMesa rendering; one world steps 5 times faster than real time on one core and holds about 0.4 GB; the verifier runs two replays and a filmed one"
+
+# robofunolympics, standard: 50 task(s)
+[[rule]]
+match = "^robofunolympics-.*-standard$"
+min_cpus = 3.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author estimate (ws-1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
+
+[[limit]]
+match = "^robofunolympics-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 13.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 13.0
+measured = "author estimate: no trials yet; memory under the 16 GiB cap by the margin the monitor needs (an agent may run several worlds at once or train a controller); disk 20 GiB for downloaded tools and controllers; processes 512: design default"
+
+[[limit]]
+match = "^robofunolympics-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Resource LIMITS and CAPS (docs/PROTOCOL.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
 # [[limit]] -> [metadata.resources.limits]: the most the agent phase may use. normalize writes it into task.toml and
@@ -1962,3 +2018,12 @@ main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 match = "^yamlab-.*-standard$"
 main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
 sim = { cpus = 16.0, memory_gb = 23.0, pids = 16384 }
+
+[[cap]]
+match = "^robofunolympics-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
+
+[[cap]]
+match = "^robofunolympics-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }

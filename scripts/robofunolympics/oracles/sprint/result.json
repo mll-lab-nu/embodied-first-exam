@@ -1,0 +1,12 @@
+{
+ "family": "sprint",
+ "steps": 1959,
+ "time_s": 19.59,
+ "time_limit_s": 34.2,
+ "metrics": {
+  "distance_m": 50.0,
+  "reaction_s": 0.29,
+  "time_s": 15.841
+ },
+ "deterministic": true
+}
