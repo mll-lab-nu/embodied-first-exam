@@ -102,6 +102,24 @@ MUJOCO_WORDS = (("(ALOHA 2, Genesis)", "(ALOHA 2, MuJoCo)"),
                 ("`topogym`) on Genesis 1.2.1 physics", "`topogym`) on MuJoCo 3.14.0 physics"),
                 ('"genesis",', '"mujoco",'), ("(Genesis initialises once)", "(one simulator per process)"))
 STEP_RX = re.compile(r"One control step takes about ([0-9.]+) s of wall clock")
+# The released texts of the families graded with grading replays (topogym_rules.grading_replay_words, README's
+# determinism sentence) say their physics runs on the GPU and is not bit-deterministic; on MuJoCo it runs on the CPU in
+# float64 (a cloth's step on a deterministic GPU solver) and a fresh-process replay reproduces the run on the same host.
+# The grading-replay rule itself (the hold, its tolerances) is unchanged in the tooling and stays in the text.
+def determinism_words(gpu: bool) -> tuple:
+    phys = ("Its cloth step runs on the GPU on a deterministic solver and the rest on the CPU (MuJoCo, float64)" if gpu else
+            "This family's physics runs on the CPU (MuJoCo, float64)")
+    return (("This family's physics runs on the GPU, which is not bit-deterministic, so a replay can differ slightly from "
+             "your own run:", phys + ", so a replay reproduces your own run on the same host; the rule is kept as a margin:"),
+            ("This family's physics runs on the GPU, which is not bit-deterministic, so that replay can differ slightly from "
+             "the live episode:", phys + ", so that replay reproduces the live episode on the same host; the rule is kept as "
+             "a margin:"),
+            ("if this GPU family's episode has not ended", "if this family's episode has not ended"),
+            ("(GPU physics is not bit-deterministic; the CPU rigid families' is, on one host)",
+             "(the deterministic GPU cloth step and MuJoCo replay bit for bit on one host; the rule does not rely on it)" if gpu
+             else "(MuJoCo on the CPU replays bit for bit on one host; the rule does not rely on it)"))
+README_GPU_RX = re.compile(r"The physics runs on the GPU, which is not bit-deterministic: the\s+final-state hashes \(`deterministic`\) "
+                           r"are diagnostic")
 
 
 def tooling_constant(name: str):
@@ -212,8 +230,12 @@ def mujoco_text(s: str, rec: dict) -> str:
     (release.json step_s: its reference's oracle run) where the released text stated Genesis'."""
     if not is_mujoco(rec):
         return s
-    for a, b in MUJOCO_WORDS:
+    for a, b in MUJOCO_WORDS + determinism_words(bool(rec.get("gpu_physics"))):
         s = s.replace(a, b)
+    s = README_GPU_RX.sub(lambda m: ("The physics (a deterministic GPU cloth step, the rest on the CPU) replays bit for bit on "
+                                     "one host; the\nfinal-state hashes (`deterministic`) are still diagnostic" if rec.get("gpu_physics")
+                                     else "The physics runs on the CPU and is bit-deterministic on one host; the\nfinal-state "
+                                     "hashes (`deterministic`) are still diagnostic"), s)
     s = s.replace("RoboTangle on MuJoCo 3.14.0 (CUDA physics, Nyx RGB)", "RoboTangle on MuJoCo 3.14.0 ("
                   + ("CPU physics, CUDA cloth step" if rec.get("gpu_physics") else "CPU physics") + ", Nyx RGB)")
     if rec.get("step_s"):
