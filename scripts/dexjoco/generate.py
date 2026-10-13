@@ -454,6 +454,16 @@ def std_changes(F: dict) -> str:
             "  pose, which standard mode must not give (PROTOCOL §4.5). It now gives images and depth only: no mount,\n"
             "  `extrinsic_cv` / `cam2world_gl` null in `meta[\"cameras\"]`, NaN per frame. Standard-mode results of this task\n"
             "  from before this date could read the object's pose and are reported separately.")
+    out.append(
+        "- 2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`,\n"
+        "  `environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and\n"
+        "  `meta[\"time_left_s\"]` count from the agent's first request to the service (any endpoint), and a restarted service\n"
+        "  keeps that moment; before, they counted from the service's own start of the episode (when its scene was ready).\n"
+        "  Where the service is ready before the agent's phase begins (the harness is installed in between: a median of 79 s\n"
+        "  over the recorded standard trials), that clock ran ahead of the agent's and `time_left_s` reached 0 while the agent\n"
+        "  still had that time. `/spec` says what the clock counts from (`budget.clock`), and the instruction's `## Time limit`\n"
+        "  tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the scene, the frozen\n"
+        "  instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier results stand.")
     return "\n".join(out) + "\n"
 
 

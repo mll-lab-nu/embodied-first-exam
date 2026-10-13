@@ -95,7 +95,13 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
    (PROTOCOL §4.6); `null` means "not given". Only an error while the simulator executes is a 500 and ends the
    episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
    "last frame only". `dt = 0` used to mean `control_dt` and is now a 400.
-9. `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
+9. Since 2026-10-13 `time_s` and `time_left_s` count from the agent's first request to the service (any endpoint;
+   logged as `first_request` in `episode.jsonl`, which a resume reads back), as in every other benchmark
+   (STANDARD_MODE.md, "The agent's clock"). The rule of 2026-10-10 below started the clock too early: Harbor counts
+   the agent's cutoff around the agent's run only, and the sidecar starts with the environment, before the harness
+   is installed (a median of 79 s earlier over the recorded trials, board 0085), so `time_left_s` reached 0 while the
+   agent still had that time. 2026-10-10 to 2026-10-13:
+   `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
    sidecar starts together with the agent's container, so this is the agent's own clock to within a second or two
    (oracle trial: 1.1 s after it; earlier when the harness sets the agent up first). Before, it counted from the end
    of the scene build (27 s later in that trial, more after a failed start) and overstated what was left by that

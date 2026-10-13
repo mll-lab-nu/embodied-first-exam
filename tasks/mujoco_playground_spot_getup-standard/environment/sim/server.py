@@ -204,9 +204,7 @@ SPEC = {
     "world": {"frame": "z up; the robot starts where the episode puts it (no world coordinates are given)", "up": "+z",
               "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S,
-               "clock": "meta time_s / time_left_s are counted from your first call to the service (observe, submit, kinematics "
-                        "or status); approximate - the harness's own deadline is authoritative"},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},   # + "clock" (rcb_limited.CLOCK_NOTE): what time_left_s counts from
     "max_control_steps": S.horizon,
     "episode": TASK_EPISODE,
     "command_schedule": schedule_text(),
