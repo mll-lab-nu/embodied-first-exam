@@ -238,7 +238,11 @@ SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("te
                          "not_yet": ["ee_pose", "joint_delta"]},
         "proprio_layout": PROPRIO_LAYOUT,
         "budget": {"reset": 0, "wall_clock_s": WALL_CLOCK_S,
-                   "clock": "meta time_s / time_left_s are counted from your first request to the service; approximate - the harness's own deadline is authoritative"},
+                   "clock": ("meta time_s / time_left_s count from your first request to the service (any endpoint), not from the "
+                             "service's start, and keep running through a restart of the service; time_left_s = budget.wall_clock_s - "
+                             "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
+                             "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
+                             "first request. Plan by time_left_s.")},
         "episode": (("ends when every goal is reached" + (f", when a goal is not reached within {TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT:g} s" if TOOL.GOAL_TIMEOUT_STEPS else "")
                      + (f", after {MAX_CONTROL_STEPS} control steps" if MAX_CONTROL_STEPS else "") + ", or when your time is up; the recorded trajectory is scored")
                     if KIND == "dtb" else "runs until the agent phase ends; the final state is graded")}

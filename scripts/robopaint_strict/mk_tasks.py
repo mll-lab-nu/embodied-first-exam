@@ -86,6 +86,16 @@ CODE_CHANGES = {
         "killed, so a trial that ended `sim_crashed*` or with `resource_service_oom` right after such a request before this "
         "date was that. An `ee_pose` position too large for a finite distance is a 400 as well (it ended the episode with a "
         "500 in the middle of the chunk). The collect hook, the grader, the scene and the pass rule are unchanged.",
+        "2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, "
+        "`environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and "
+        "`meta[\"time_left_s\"]` count from the agent's first request to the service (any endpoint), and a restarted "
+        "service keeps that moment; before, they counted from the service's own start of the episode (when its scene "
+        "was ready). Where the service is ready before the agent's phase begins (the harness is installed in "
+        "between: 79 s in the typical recorded standard trial), that clock ran ahead of the agent's and "
+        "`time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from "
+        "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
+        "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
+        "are unchanged, so the task keeps its name and earlier results stand.",
     ],
 }
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code

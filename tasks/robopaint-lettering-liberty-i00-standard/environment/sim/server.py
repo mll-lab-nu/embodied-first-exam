@@ -264,7 +264,7 @@ def recorder(cams, fps: int, meta: dict) -> L.Recorder:
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS, "sim_time_s": round(n / CTRL_HZ, 3),
-            "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
+            "time_s": round(L.agent_time(E), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - L.agent_time(E), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             **({"cameras": {c: CALIB[c] for c in cams}} if OBS_CALIBRATION else {})}
 
