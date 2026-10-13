@@ -173,14 +173,17 @@ def end_episode() -> None:
         r = Toy(live=False)
         for a in acts:                                      # a fresh replay of the recorded episode
             r.step(a)
-        E["deterministic"] = r.state_sha() == live; E["finalized"] = True
+        # the replay's fields first, the verdict (finalized + deterministic) last: the collect hook stops waiting at the
+        # verdict, so it must never see one without them (the main thread's write_final can run in between)
         fin = L._read_json(os.path.join(DATA, "final.json")); fin.update({"replay_success": r.success(), "n_actions": len(acts), "live_sha": live})
-        L._write_json(os.path.join(DATA, "final.json"), fin); write_final()
+        L._write_json(os.path.join(DATA, "final.json"), fin)
+        E["deterministic"] = r.state_sha() == live; E["finalized"] = True; write_final()
 
 
 S.rec = []                                                  # record_start: the resume replay is recorded too
 EP.begin(state=E, step=S.step, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, start_event={"task": "toy"}, on_end=end_episode)
-E["ready"] = True; write_final()
+with LOCK:                                                  # a SIGUSR1 kept during the resume is being served already
+    E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} toy sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=lambda req: {"ok": True, "op": req["op"]},
