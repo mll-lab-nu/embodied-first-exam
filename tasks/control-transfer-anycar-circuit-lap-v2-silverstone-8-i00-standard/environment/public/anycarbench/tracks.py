@@ -30,10 +30,13 @@ def resolve_track(name):
 
 
 class Route:
-    def __init__(self, name):
+    def __init__(self, name, revision="circuit-sector/1"):
         import numpy as np
 
         self.name = resolve_track(name)
+        if revision not in ("circuit-sector/1", "circuit-lap/2", "compact-30s/1"):
+            raise ValueError(f"Unknown route revision: {revision}")
+        self.revision = revision
         if self.name == "zigzag":
             t = np.linspace(0, 2 * np.pi, 1024, endpoint=False)
             points = np.column_stack((12 * np.cos(t), 6 * np.sin(t) + 1.8 * np.sin(5 * t)))
@@ -41,6 +44,8 @@ class Route:
         else:
             self.metadata = catalog()["circuits"][self.name]
             points = np.asarray(self.metadata["points"], dtype=float)
+        if revision == "compact-30s/1":
+            points = np.asarray(compact_catalog()["routes"][self.name]["points"], dtype=float)
         # Uniform scaling preserves aspect ratio; account for fixed RC steering limit.
         derivative = (np.roll(points, -1, axis=0) - np.roll(points, 1, axis=0)) / 2
         second = np.roll(points, -1, axis=0) - 2 * points + np.roll(points, 1, axis=0)
@@ -49,6 +54,8 @@ class Route:
         )
         perimeter = np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1).sum()
         factor = max(80 / perimeter, float(np.max(np.abs(curvature))) / 0.85)
+        if revision == "compact-30s/1":
+            factor = 1.0
         self.points = points * factor
         self.delta = np.roll(self.points, -1, axis=0) - self.points
         self.segment_lengths = np.linalg.norm(self.delta, axis=1)
@@ -101,8 +108,8 @@ class Route:
 
 
 @lru_cache(maxsize=8)
-def get_route(name):
-    return Route(name)
+def get_route(name, revision="circuit-sector/1"):
+    return Route(name, revision)
 
 
 @lru_cache(maxsize=1)
@@ -143,3 +150,27 @@ def route_budget(name):
         wall_time_estimate_basis="CPU OSMesa planning estimate: 2 wall seconds per simulated second plus 60 seconds; validate on deployment hardware",
         wall_time_is_guaranteed_bound=False,
     )
+
+
+@lru_cache(maxsize=1)
+def compact_catalog():
+    """Public, precomputed compact geometry; loaded without NumPy."""
+    import hashlib
+
+    data = json.loads(Path(__file__).with_name("compact_routes.json").read_text())
+    actual = hashlib.sha256(Path(__file__).with_name("circuits.json").read_bytes()).hexdigest()
+    if data["source_catalog_sha256"] != actual:
+        raise ValueError("Compact geometry does not match source circuit catalog")
+    return data
+
+
+def compact_route_budget(name):
+    layout = resolve_track(name)
+    if layout not in compact_catalog()["routes"]:
+        raise ValueError("Unavailable compact layout")
+    return dict(schema="anycar-lap-budget/1", track_id=layout, route_revision="compact-30s/1",
+                horizon_upper_bound_s=30, control_steps_upper_bound=1500,
+                telemetry_rows_upper_bound=301, decoded_frames_upper_bound=301,
+                render_wall_time_estimate_s=120,
+                wall_time_estimate_basis="CPU OSMesa planning estimate; validate on deployment hardware",
+                wall_time_is_guaranteed_bound=False)

@@ -44,7 +44,7 @@ def make_circuit_spec(index, track_id="zigzag", revision="circuit-sector/1"):
     """Versioned circuit-sector bank; legacy ellipse instances remain unchanged."""
     from .components.anycarbench.tracks import resolve_track
 
-    if revision not in ("circuit-sector/1", "circuit-lap/2"):
+    if revision not in ("circuit-sector/1", "circuit-lap/2", "circuit-compact-lap/3"):
         raise ValueError(f"Unknown circuit revision: {revision}")
     spec = make_spec(index)
     layout = resolve_track(track_id)
@@ -74,5 +74,22 @@ def make_circuit_spec(index, track_id="zigzag", revision="circuit-sector/1"):
             horizon_rule="ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
             completion="All ordered gates, spaced at most 0.5 m, including the finish line",
             goal="Track one complete lap of a scaled circuit at the prescribed speed; cross every ordered gate and finish line, avoiding collisions/offtrack. Record actual finish-crossing time.",
+        )
+    if revision == "circuit-compact-lap/3":
+        from .components.anycarbench.tracks import compact_catalog, compact_route_budget
+
+        row = compact_catalog()["routes"][layout]
+        for bank in spec["bank"].values():
+            for case in bank:
+                case.update(full_lap=True, route_revision="compact-30s/1")
+        spec["task_variant"] = revision
+        spec["public"].update(
+            task_variant=revision, route_revision="compact-30s/1",
+            horizon_s=30.0, target_lap_time_s=28.0, scaled_length_m=row["length_m"],
+            runtime_budget=compact_route_budget(layout),
+            completion="Every ordered forward gate and the finish line within 30 simulated seconds",
+            goal="Track a complete compact F1-inspired lap, targeted at 28 seconds within a 30-second episode, avoiding collisions/offtrack.",
+            geometry=compact_catalog()["geometry"],
+            geometry_modifications={key: row[key] for key in ("smoothing_sigma_samples", "source_samples", "minor_axis_widening")},
         )
     return spec

@@ -16,6 +16,8 @@ FAMILIES = [
     "anycar",
     "anycar-circuit-lap-v2-silverstone-8",
     "anycar-circuit-lap-v2-monaco-6",
+    "anycar-circuit-compact-v3-silverstone-8",
+    "anycar-circuit-compact-v3-monaco-6",
     "go2-weave",
     "go2-attitude",
     "go2-forward-jump",
@@ -24,14 +26,16 @@ FAMILIES = [
 
 
 def spec(name, index):
-    if name.startswith(("anycar-circuit-v1-", "anycar-circuit-lap-v2-")):
+    circuit_revisions = {
+        "anycar-circuit-v1-": "circuit-sector/1",
+        "anycar-circuit-lap-v2-": "circuit-lap/2",
+        "anycar-circuit-compact-v3-": "circuit-compact-lap/3",
+    }
+    prefix = next((key for key in circuit_revisions if name.startswith(key)), None)
+    if prefix:
         from .anycar_spec import make_circuit_spec
 
-        lap = name.startswith("anycar-circuit-lap-v2-")
-        prefix = "anycar-circuit-lap-v2-" if lap else "anycar-circuit-v1-"
-        value = make_circuit_spec(
-            index, name.removeprefix(prefix), revision="circuit-lap/2" if lap else "circuit-sector/1"
-        )
+        value = make_circuit_spec(index, name.removeprefix(prefix), revision=circuit_revisions[prefix])
         value["name"] = name
         value["public"].update(name=name, task_variant=value["task_variant"])
         value["public"]["limitations"] += " " + value["public"]["geometry"]

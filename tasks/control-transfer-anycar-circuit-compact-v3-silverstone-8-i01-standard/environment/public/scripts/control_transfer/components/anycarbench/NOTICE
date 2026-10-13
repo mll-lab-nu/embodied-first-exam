@@ -1,0 +1,24 @@
+This component's wheel, suspension, steering and actuator mechanism is derived from
+LeCAR-Lab/anycar at commit 20fc50a60d3dfff5e6e002a9cdbbb02d604d1b1f.
+The upstream README declares Apache License 2.0. See LICENSE.anycar.
+
+Source: car_dynamics/car_dynamics/envs/mujoco_sim/models/cars/base_car/turbo_boingg.xml
+SHA-256: 0b12cb5dacebdf3ee623ebae3a38bee56ebc9178a66673c7ec09f3fcdcd4f750
+
+Modifications: procedural chassis replacing omitted meshes; duplicate visual wheel
+mass consolidated; exact pi/2 tire alignment; new track, contact priorities, surface
+layout, model parameter interface, CPU solver settings and stepping wrapper.
+No upstream mesh or pretrained checkpoint is included.
+
+The pinned repository has no standalone LICENSE/NOTICE file. The README declaration
+is the recorded license provenance; omitted third-party asset licenses are not inferred.
+
+Historical circuit outlines and metadata derive from F1DB contributors:
+https://github.com/f1db/f1db at7cf634e8e0dadd6d3bfdbbe880e34f8cae5698fa.
+Licensed CC BY4.0; full terms in LICENSE.f1db. Each source SVG path/hash is
+recorded in circuits.json. Changes: SVG transforms, small gap bridging,
+arc-length resampling, Gaussian smoothing, y-axis inversion, normalization.
+These are unofficial planar schematic approximations, not surveyed geometry.
+One malformed Buenos Aires1953-layout outline is explicitly unavailable;
+all78 historical venues remain represented by runnable raced layouts.
+Formula1 names identify source circuits; no affiliation or endorsement implied.

@@ -224,3 +224,58 @@ The operator receipts are under
 `neuralfly/integration-skydio-v1`. The 0.1.1 Docker build, container isolation and
 native Harbor/LLM campaign have not been run; this appearance does not constitute
 a calibrated Skydio dynamics model or establish full-bank solvability.
+
+## Compact 30-second circuit laps
+
+`circuit-compact-lap/3` uses separate public `compact-30s/1` geometry. All 160 runnable
+routes are precomputed at 45 m, with recorded smoothing and aspect widening. They are
+F1-inspired approximations, not preserved historical outlines. The target lap is 28 s;
+the CPU deployment always runs to the hard 30 s horizon. The car dynamics, numeric ABI,
+scoring thresholds and persistent-plant randomization are unchanged. The four default
+compact tasks cover Silverstone and Monaco on plants 10100 and 11100; all other routes are
+available through the compact generator options. The ordinary four-hour agent budget
+applies; the older long-lap track retains its separate budget and geometry.
+
+Worker commit `319ecc464299e752548fdcc7562aed3f694340f9` reports 160/160 adaptation-only
+nominal-controller laps, alternating the two plants, with actual finish times
+28.0147–28.1447 s. All four traction surfaces are contacted. This is broad geometry and
+controller smoke coverage, not all-layout held-out or coding-agent acceptance. Its source
+and artifact hashes were checked during integration.
+
+Integration independently ran the exact generated private packages on Silverstone i00
+and Monaco i01, using the unchanged default policy on the first held-out case. Both pass,
+with finish times 28.0483 and 28.1290 s and scores 60.0126 and 37.6700. Each physical state,
+noisy trajectory and metric matches a fresh-process non-rendered replay exactly; expected
+render-backend metadata differs. Both no-op controls score zero. These two probes are not
+complete held-out bank results. Both public-only nominal CLI runs finish with finite
+1501×19 trajectories and no trusted imports.
+
+The two real CPU OSMesa/llvmpipe recordings decode fully at 1280×480, 301 frames each.
+The generated feedback adapter delivers 31 images at exactly 0–30 s per case and preserves
+all 301 noisy rows. All 62 delivered JPEG byte hashes and 602 noisy rows are audited;
+the Silverstone frame at 7 s was visually inspected. Measured render wall times are
+25.22 and 33.09 s on this host, not universal hardware bounds.
+
+All 22 pre-existing canonical task specifications remain unchanged. Generated ellipse and
+long-lap replay probes match their earlier physical records and feedback exactly. All 129
+prior AnyCar MP4 hashes remain intact. Shared source copies and task digests are refreshed;
+this is not a claim that old task package bytes are unchanged. The subsequent optional
+reference-line and cone appearance commits are not included in this revision.
+
+Thirty-six focused numerical/runtime/packaging tests pass, including all 320 compact
+route/plant specifications, rejection of mismatched private route revisions, and separation
+from the long-lap budget. Optional zigzag and Valencia generation/check runs pass without
+site packages. Root evidence is `anycar/integration-compact-v3`; worker evidence is
+`anycar/compact-30s-v1`. The initial integration driver's final spec comparison exposed
+Python tuple-versus-JSON-list representation differences; canonical JSON comparison and
+an independent artifact audit pass. No rollout, controller or success predicate was
+changed to address that audit-only issue.
+
+Compact tasks remain `oracle="none"`. Native Harbor, local GPU-device isolation, full
+multi-round held-out acceptance and LLM evaluation have not been established for this
+revision. No cloud resources or published site were changed by this integration.
+
+Repository CI passes all 26 Control Transfer task contracts and all 117 deliberate
+mutation checks, including compact revision/cutoff violations. The optional global
+NumPy/requests service-test tier is skipped by system Python; the affected numerical and
+runtime checks were run separately in the pinned MuJoCo 3.5 environment above.

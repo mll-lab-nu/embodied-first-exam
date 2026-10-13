@@ -71,7 +71,7 @@ def reference(t, command):
     if "track_id" in command:
         from scripts.control_transfer.components.anycarbench.tracks import get_route
 
-        return get_route(command["track_id"]).reference(t, command)
+        return get_route(command["track_id"], command.get("route_revision", "circuit-sector/1")).reference(t, command)
 
     a, b, phase, direction = (command[k] for k in ("a", "b", "phase", "direction"))
     rate = 2 * np.pi / (HORIZON - 0.5)

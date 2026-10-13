@@ -11,7 +11,7 @@ The shared `eai-policy/1.1` service supports repeated nominal-training → deplo
 | [Unitree G1 terrain](roboengineer-g1.md) | Blind-terrain PPO in mjlab/MuJoCo Warp; fixed numeric MLP export | 29 noisy joint angles, three public velocity commands and images | 4 / 12 |
 | [Unitree Go2](roboengineer-go2.md) | Nominal MuJoCo tuning; bounded numeric controller | 37 noisy proprioceptive/public-command channels and images | 3 / 10 per objective |
 
-The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 22 tasks: two instances of eight existing variants, full-lap Silverstone and Monaco, and the explicit Skydio appearance revision of general-eight Neural Fly. Neural Landing has its own generator and validated service; this service does not replace it.
+The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 26 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, and the explicit Skydio appearance revision of general-eight Neural Fly. Neural Landing has its own generator and validated service; this service does not replace it.
 
 Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. They are not generated members of the original eight-objective collection. Their old twelve-instance release must not be confused with the current task bank.
 
@@ -64,3 +64,12 @@ explicitly select the profile in version 0.1.1 images; earlier task directories 
 0.1.0 image references remain unchanged. These two tasks use `oracle="none"`;
 native/model validation of this appearance is pending. Asset staging and license
 checks are described in the [image guide](../../images/control-transfer/README.md).
+
+Compact 30-second laps use `anycar-circuit-compact-v3-<layout>` / `circuit-compact-lap/3`,
+with a separately versioned `compact-30s/1` route. Default generation includes both plants
+for Silverstone and Monaco; `--compact-circuit` / `--all-compact-circuits` select other
+layouts. These public 45 m routes target a 28 s lap within a hard 30 s episode. They are
+F1-inspired approximations with recorded smoothing and aspect widening; sharp turns and
+crossovers may be removed. The car physics and controller ABI are unchanged. Compact tasks
+use the ordinary 14400-second agent cutoff, with all 301 noisy samples and 31 images spanning
+0–30 s per deployment. Existing sector and long-lap variants retain their geometry and budgets.

@@ -280,3 +280,43 @@ Original chassis/sensor collision geometry remains present but invisible; the
 AnyCar mass, inertia, suspension, wheel contacts, steering and actuator model are
 retained. Rendered bodywork is cosmetic; collision checking uses the retained
 physical primitives. No additional external assets or packages are required.
+
+
+### Compact-lap task generation and runtime contract
+
+The registry name is `anycar-circuit-compact-v3-<layout>`. Default generation includes
+Silverstone-8 and Monaco-6, each with two persistent plants. The full 160-route catalog is
+available without changing either earlier circuit revision:
+
+```bash
+python3 -S -m scripts.control_transfer.gen_tasks render --compact-circuit suzuka
+python3 -S -m scripts.control_transfer.gen_tasks render --all-compact-circuits --output-root /operator/compact-tasks
+python3 -S -m scripts.control_transfer.gen_tasks check --all-compact-circuits --output-root /operator/compact-tasks
+```
+
+Public geometry is precomputed in `compact_routes.json`; the offline builder remains
+operator-only. Each task declares its smoothing and minor-axis widening, 45 m route,
+28 s target lap and hard 30 s horizon. These are **F1-inspired approximations, not exact
+scaled outlines**. Strong smoothing may reduce a complex circuit to a rounded loop and
+remove crossovers. The nominal command is
+`python -m scripts.control_transfer.control_public.anycar_nominal --track silverstone --compact-30s --out /app/output/nominal`.
+
+The numeric controller ABI, vehicle dynamics, hidden fixed-plant parameters, safety
+predicates and accuracy score are unchanged. The car must cross every ordered forward gate
+and the finish within the episode; actual interpolated finish time is retained privately.
+Three adaptation cases are reused over up to three rounds, followed by ten private held-out
+cases. The public response contains all 301 noisy rows and 31 images at 0, 1, …, 30 s.
+Full 1280×480 operator video retains 301 frames at 10 fps. Images and noisy trajectories
+carry no scores, seeds, contact flags or true-state fields.
+
+Compact tasks use the ordinary 14400-second agent limit. Operator-owned wall deadlines are
+300 s for a rendered case, 120 s for a non-rendered replay and 60 s for extraction;
+a three-case request allows 1200 s. Final collection allows 5520 s to drain an in-flight
+request and execute ten rendered/replayed cases, with 60 s extra in Harbor's collection
+wrapper. These are limits, not measured hardware guarantees, and do not extend the
+agent's cutoff. The 36-hour exception remains exclusive to `circuit-lap/2`.
+
+The worker's frozen default controller passed one adaptation-only case per compact route
+(160/160), with finish times 28.0147–28.1447 s and all four traction surfaces. This broad
+smoke sweep is not a held-out model comparison. Compact tasks remain `oracle="none"`
+until native multi-round acceptance and reference solvability are established separately.

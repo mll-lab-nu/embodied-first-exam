@@ -92,7 +92,7 @@ def xml_model(plant, surfaces, command):
     if circuit:
         from .tracks import get_route
 
-        route = get_route(command["track_id"])
+        route = get_route(command["track_id"], command.get("route_revision", "circuit-sector/1"))
         extent = route.half_extent
     else:
         a, b = command["a"], command["b"]

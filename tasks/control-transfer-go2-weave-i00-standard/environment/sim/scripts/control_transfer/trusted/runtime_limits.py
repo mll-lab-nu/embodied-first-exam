@@ -7,6 +7,36 @@ LAP_FAMILY = "control-transfer/anycar-circuit-lap-v2"
 
 
 def runtime_limits(instance):
+    if instance.get("task_variant") == "circuit-compact-lap/3":
+        public, bank = instance["public"], instance["bank"]
+        if (
+            instance["family"] != "anycar"
+            or type(public.get("horizon_s")) not in (int, float)
+            or public["horizon_s"] != 30
+            or public.get("route_revision") != "compact-30s/1"
+            or len(bank["adaptation"]) != 3
+            or len(bank["held_out"]) != 10
+            or any(
+                c.get("full_lap") is not True
+                or c.get("track_id") != public["track_id"]
+                or c.get("route_revision") != "compact-30s/1"
+                for cases in bank.values()
+                for c in cases
+            )
+        ):
+            raise ValueError("Compact lap requires the frozen 30-second route and case bank")
+        # Generous CPU wall deadlines, not simulated time or hardware guarantees.
+        # Three cases per request; drain one request before ten rendered/replayed cases.
+        return dict(
+            worker_seconds=300,
+            replay_seconds=120,
+            extract_seconds=60,
+            request_seconds=1200,
+            collect_seconds=5520,
+            uniform_images=False,
+            max_images=48,
+            max_video_frames=None,
+        )
     if instance.get("task_variant") != "circuit-lap/2":
         return dict(
             worker_seconds=600,

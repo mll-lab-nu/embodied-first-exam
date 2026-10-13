@@ -125,6 +125,7 @@ def copy_package(task, where, private, family, visual_profile=None):
                     "tracks.py",
                     "circuits.json",
                     "route_lengths.json",
+                    "compact_routes.json",
                     "LICENSE.anycar",
                     "LICENSE.f1db",
                     "NOTICE",
@@ -212,6 +213,8 @@ def render(task, name, index):
         "device_isolation_verified": True,
     }
     lap = instance.get("task_variant") == "circuit-lap/2"
+    compact = instance.get("task_variant") == "circuit-compact-lap/3"
+    bounded_lap = lap or compact
     limits = runtime_limits(instance)
     metadata_family = LAP_FAMILY if lap else "control-transfer/" + name
     if lap:
@@ -220,12 +223,19 @@ def render(task, name, index):
             image_sampling="Up to 128 equally spread video frame indices, including first and last; full 10 Hz telemetry.",
             request_timeout_s=limits["request_seconds"],
         )
+    if compact:
+        instance["public"].update(
+            image_sampling="31 images at fixed one-second times from 0 through 30 s; all 301 noisy 10 Hz rows.",
+            request_timeout_s=limits["request_seconds"],
+        )
     native_full = name in ("neural-fly", "anycar", "go2-attitude")
     oracle = "full" if native_full else "none"
     if native_full:
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
     elif lap:
         reference_note = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
+    elif compact:
+        reference_note = "Development-only circuit-compact-lap/3. A fixed nominal controller completes one local adaptation-only case on each of 160 compact layouts. These are heavily smoothed F1-inspired approximations, not exact scaled outlines. Multi-round held-out native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
     elif name in ("neural-fly-general-v1", "neural-fly-general-skydio-v1"):
         reference_note = "Development-only general-eight/1 revision. The frozen earlier scripted controller passes 18 of 20 local held-out cases (one RMSE failure and one crash); no new adaptation, native Harbor acceptance or LLM evaluation is established. No full oracle; human review required."
     elif instance.get("task_variant") == "circuit-sector/1":
@@ -256,7 +266,7 @@ def render(task, name, index):
         f"""FROM {image}-{"train" if gpu else "nominal"}
 WORKDIR /app
 COPY public/ /app/
-ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if lap else ""}{" NEURALFLY_VISUAL_STYLE=skydio-x2/1" if skydio else ""}
+ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if bounded_lap else ""}{" NEURALFLY_VISUAL_STYLE=skydio-x2/1" if skydio else ""}
 RUN mkdir -p /app/output
 """,
     )
@@ -329,13 +339,13 @@ oracle_evidence = "{reference_note}"
 instance_seed = {index}
 expert_time_estimate_hours = 4.0
 [verifier]
-timeout_sec = {limits["collect_seconds"] + 60 if lap else 1800}.0
+timeout_sec = {limits["collect_seconds"] + 60 if bounded_lap else 1800}.0
 environment_mode = "separate"
 network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "python -m scripts.control_transfer.trusted.collect"
-timeout_sec = {limits["collect_seconds"] + 60 if lap else 1800}
+timeout_sec = {limits["collect_seconds"] + 60 if bounded_lap else 1800}
 [agent]
 timeout_sec = {seconds}.0
 network_mode = "allowlist"
@@ -364,6 +374,8 @@ build_timeout_sec = 600.0
         training += f" Use `--track {public['track_id']}` to train on this task's public route, and `--full-lap` for nominal full-lap practice. Deployment evaluates 24-second sectors; full-lap practice does not change that horizon."
     if lap:
         training += f" Use `--track {public['track_id']} --full-lap` for nominal training. Deployment covers a complete lap. Feedback retains every 10 Hz noisy row and up to 128 images spread over the whole recording, including the finish. Full operator videos retain 10 fps. Long episodes count against the declared time limit; preserve the complete response traces."
+    if compact:
+        training += f" Use `--track {public['track_id']} --compact-30s` for nominal training. The public route is a compact 45 m F1-inspired approximation, targeted at a 28 s lap with a hard 30 s episode. Every ordered gate and the finish must be crossed. Feedback includes all 301 noisy rows and 31 one-second images covering 0 through 30 s; operator videos retain all 301 frames. Smoothing and aspect widening can remove sharp turns and crossovers; the original F1 outline is not preserved."
     if family == "neural-fly":
         training += " The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`."
     if skydio:
@@ -521,6 +533,12 @@ def main():
     selection.add_argument(
         "--all-lap-circuits", action="store_true", help="Generate all 160 runnable full-lap routes, two plants each"
     )
+    selection.add_argument(
+        "--compact-circuit", action="append", help="30-second compact F1-inspired layout or venue alias; repeat to select several"
+    )
+    selection.add_argument(
+        "--all-compact-circuits", action="store_true", help="Generate all 160 compact 30-second routes, two plants each"
+    )
     p.add_argument(
         "--output-root", type=Path, default=ROOT / "tasks", help="Task directory parent; defaults to repository tasks/"
     )
@@ -530,18 +548,22 @@ def main():
 
         print(json.dumps(track_ids(), indent=2))
         return
-    if a.circuit or a.all_circuits or a.lap_circuit or a.all_lap_circuits:
+    if a.circuit or a.all_circuits or a.lap_circuit or a.all_lap_circuits or a.compact_circuit or a.all_compact_circuits:
         from scripts.control_transfer.components.anycarbench.tracks import resolve_track, track_ids
 
         try:
             circuits = (
                 track_ids()
-                if (a.all_circuits or a.all_lap_circuits)
-                else sorted({resolve_track(name) for name in (a.circuit or a.lap_circuit)})
+                if (a.all_circuits or a.all_lap_circuits or a.all_compact_circuits)
+                else sorted({resolve_track(name) for name in (a.circuit or a.lap_circuit or a.compact_circuit)})
             )
         except ValueError as error:
             p.error(str(error))
-        prefix = "anycar-circuit-lap-v2-" if (a.lap_circuit or a.all_lap_circuits) else "anycar-circuit-v1-"
+        prefix = (
+            "anycar-circuit-compact-v3-" if (a.compact_circuit or a.all_compact_circuits)
+            else "anycar-circuit-lap-v2-" if (a.lap_circuit or a.all_lap_circuits)
+            else "anycar-circuit-v1-"
+        )
         names = [prefix + name for name in circuits]
     else:
         names = list(FAMILIES)

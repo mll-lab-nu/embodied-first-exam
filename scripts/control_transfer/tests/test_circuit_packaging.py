@@ -61,6 +61,7 @@ assert len(names) == 320
                     "tracks.py",
                     "circuits.json",
                     "route_lengths.json",
+                    "compact_routes.json",
                     "LICENSE.anycar",
                     "LICENSE.f1db",
                     "NOTICE",
