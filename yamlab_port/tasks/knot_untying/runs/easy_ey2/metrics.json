@@ -1,0 +1,341 @@
+{
+ "task": "KnotUntying-Easy-v0",
+ "variant": "oracle",
+ "success": true,
+ "success_step": 4370,
+ "steps": 4370,
+ "sim_time_s": 145.66666666666666,
+ "wall_time_s": 262.23203325271606,
+ "plan": {
+  "iterations": [
+   {
+    "step": 0,
+    "crossings": 2,
+    "over_under": [
+     "O",
+     "O",
+     "U",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.17224733094704833
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.39314179375397423,
+     0.11749693193975788,
+     0.75400035919118
+    ],
+    "crossing_xy": [
+     0.46722474559575455,
+     -0.00299908870619306
+    ],
+    "target": [
+     0.47058968836110504,
+     -0.12386248760930334
+    ],
+    "over_tail_angle_deg": 121.58389009380711,
+    "under_tail_angle_deg": -123.40524732534634,
+    "target_angle_deg": 271.59475267465365,
+    "tail_len": 0.17224733094704833,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 1.6482161967398348e-11
+   },
+   {
+    "step": 630,
+    "crossings": 3,
+    "over_under": [
+     "O",
+     "O",
+     "O",
+     "U",
+     "U",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.146621701101334
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.4469531170909282,
+     -0.16691186312913078,
+     0.754000195394591
+    ],
+    "crossing_xy": [
+     0.4305992551446512,
+     -0.06329103448024126
+    ],
+    "target": [
+     0.3388762077535702,
+     -0.10088533419451348
+    ],
+    "over_tail_angle_deg": -81.0313232960279,
+    "under_tail_angle_deg": -122.71286840261102,
+    "target_angle_deg": -157.712868402611,
+    "tail_len": 0.146621701101334,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 1.883513919145809e-09
+   },
+   {
+    "step": 1143,
+    "crossings": 2,
+    "over_under": [
+     "O",
+     "O",
+     "U",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.20801790784766355
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.32492566990040345,
+     -0.09653591184645724,
+     0.7539997437297005
+    ],
+    "crossing_xy": [
+     0.46099939214592417,
+     -0.009643583531493926
+    ],
+    "target": [
+     0.47371615784185406,
+     -0.16042348994952965
+    ],
+    "over_tail_angle_deg": -147.43899995483795,
+    "under_tail_angle_deg": -120.17908750729853,
+    "target_angle_deg": -85.17908750729853,
+    "tail_len": 0.20801790784766355,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 2.5741740337951857e-09
+   },
+   {
+    "step": 1695,
+    "crossings": 1,
+    "over_under": [
+     "O",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.2857781731569617
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.48380603354951013,
+     -0.18146801136420906,
+     0.7540005591761465
+    ],
+    "crossing_xy": [
+     0.5303807816893514,
+     0.02654713358043955
+    ],
+    "target": [
+     0.31322725482744224,
+     0.01596020117194696
+    ],
+    "over_tail_angle_deg": -102.62042216487193,
+    "under_tail_angle_deg": -142.2088565894573,
+    "target_angle_deg": -177.20885658945733,
+    "tail_len": 0.2857781731569617,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 1.124441570469561e-09
+   },
+   {
+    "step": 2286,
+    "crossings": 2,
+    "over_under": [
+     "O",
+     "O",
+     "U",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.23326089105295927
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.29583864824686656,
+     0.03125773531065387,
+     0.7540005683402988
+    ],
+    "crossing_xy": [
+     0.4771528435467607,
+     0.01597275342961803
+    ],
+    "target": [
+     0.4884486773504651,
+     -0.1564293471725531
+    ],
+    "over_tail_angle_deg": 175.18129752391977,
+    "under_tail_angle_deg": -121.25132263087589,
+    "target_angle_deg": 273.74867736912415,
+    "tail_len": 0.23326089105295927,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 3.214343903908286e-09
+   },
+   {
+    "step": 2880,
+    "crossings": 1,
+    "over_under": [
+     "O",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.2529493281606019
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.5139888881623096,
+     -0.1742059898904249,
+     0.7540002414605321
+    ],
+    "crossing_xy": [
+     0.4990642959879805,
+     0.01616226836341665
+    ],
+    "target": [
+     0.3230049380139733,
+     -0.05395177149115481
+    ],
+    "over_tail_angle_deg": -85.51726405989977,
+    "under_tail_angle_deg": -123.285529504107,
+    "target_angle_deg": -158.28552950410702,
+    "tail_len": 0.2529493281606019,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 1.0334196330265911e-09
+   },
+   {
+    "step": 4363,
+    "crossings": 0,
+    "over_under": []
+   },
+   {
+    "step": 4363,
+    "kind": "spread",
+    "gap_mm": 19.671631824327466,
+    "s_pair": [
+     0.6956639292880828,
+     0.7256925881062735
+    ]
+   }
+  ],
+  "held_spreads": [
+   {
+    "step": 3281,
+    "kind": "spread",
+    "gap_mm": 7.89076368594409,
+    "s_pair": [
+     0.2752627058334141,
+     0.8658263292578298
+    ],
+    "s_grasp": 0.8358263292578297,
+    "clearance_mm": 26.289609538222166,
+    "grasp_point": [
+     0.5521183268453225,
+     0.01823508952598064,
+     0.7539987563070522
+    ],
+    "target": [
+     0.581407063146461,
+     0.011741251994722828
+    ],
+    "arm": "left_arm",
+    "worst_ik_err_mm": 2.3045699136598514e-09,
+    "held_by": "right_arm"
+   },
+   {
+    "step": 3727,
+    "kind": "spread",
+    "gap_mm": 12.016980779848758,
+    "s_pair": [
+     0.3052913646516047,
+     0.8558167763184329
+    ],
+    "s_grasp": 0.8258167763184329,
+    "clearance_mm": 33.84107675725071,
+    "grasp_point": [
+     0.5896635333760001,
+     0.0069617667666867665,
+     0.7539999388728672
+    ],
+    "target": [
+     0.6166193923105964,
+     -0.006205680559888933
+    ],
+    "arm": "left_arm",
+    "worst_ik_err_mm": 2.4400379595309387e-09,
+    "held_by": "right_arm"
+   },
+   {
+    "step": 4173,
+    "kind": "spread",
+    "gap_mm": 16.318305258350943,
+    "s_pair": [
+     0.02502388234849219,
+     0.05505254116668282
+    ],
+    "held_by": "right_arm"
+   }
+  ]
+ },
+ "final": {
+  "step": 4370,
+  "success": true,
+  "goal_now": false,
+  "hold": 0,
+  "planar_clear": true,
+  "on_table": true,
+  "quiet": true,
+  "intact": true,
+  "n_crossings": 0,
+  "minimum_nonlocal_distance_m": 0.019671518752285604,
+  "maximum_speed_m_s": 0.0006951019840011575,
+  "z_min_surface_above_table_m": 1.1056633253403447e-07,
+  "z_max_surface_above_table_m": 0.00800200918616123
+ },
+ "min_nonlocal_final_m": 0.019671518752285604,
+ "latch_min_nonlocal_m": 0.019671518752285604,
+ "latch_goal": {
+  "planar_clear": true,
+  "on_table": true,
+  "quiet": true,
+  "intact": true,
+  "minimum_nonlocal_distance_m": 0.019671518752285604,
+  "projected_degenerate": false,
+  "z_min_surface_above_table_m": 1.1056633253403447e-07,
+  "z_max_surface_above_table_m": 0.00800200918616123,
+  "maximum_speed_m_s": 0.0006951019840011575,
+  "p99_speed_m_s": 0.0005519815805528187,
+  "reported_velocity_max_m_s": 0.003019927912975263,
+  "max_joint_gap_m": 4.193412247051044e-08,
+  "n_crossings": 0,
+  "over_under": []
+ },
+ "end_reason": "terminated",
+ "rope_state_sha16": "193862bdb3bc286e",
+ "action_sha16": "a08cd6b2735f760e"
+}

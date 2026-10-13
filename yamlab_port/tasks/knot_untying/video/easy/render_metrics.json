@@ -1,0 +1,11 @@
+{
+ "task": "KnotUntying-Easy-v0",
+ "states": "ey2_dump/states_full.npz",
+ "frames": 2185,
+ "max_pose_readback_err_m": 3.5762786865234375e-07,
+ "wall_s": 230.820219039917,
+ "cameras": [
+  "top",
+  "rope"
+ ]
+}
