@@ -14,11 +14,30 @@ This record covers the October 13, 2026 development integration of the eight-obj
 
 The new evaluators require MuJoCo **3.5.0**, NumPy CPU inference and OSMesa software rendering. Their runtime records verify that no GPU devices are exposed and identify the actual software renderer. Each development instance preserves one plant across adaptation and held-out cases; the second instance uses a different plant. These are reproducible development banks, not a claim that public repository seeds remain secret from a future competition participant.
 
+## Native reference outcomes
+
+The final selection contains **24 native Harbor trials**: one scripted reference and one no-submission control for each of 12 CPU instances. Every selected verifier accepted its evidence with `infra_error=0`, resource enforcement enabled, no observed limit violation, and no monitor or emergency-kill failure. All 12 no-submission controls score zero.
+
+| Task | i00 success / score | i01 success / score | Reference status |
+|---|---|---|---|
+| Neural Fly | 10/10 · 90.32 | 10/10 · 94.30 | Full scripted reference |
+| AnyCar multi-surface | 10/10 · 73.21 | 10/10 · 72.87 | Full scripted reference |
+| Go2 attitude | 10/10 · 91.06 | 10/10 · 91.24 | Full scripted reference |
+| Go2 weave | 0/10 · 0.00 | 0/10 · 0.00 | Development-only |
+| Go2 forward jump | 0/10 · 0.00 | 0/10 · 24.50 | Development-only |
+| Go2 yaw jump | 0/10 · 9.80 | 0/10 · 14.70 | Development-only |
+
+The selected references include **120 held-out cases**, each with an exact fresh-process replay, **36 adaptation rounds**, **2,346 delivered JPEGs**, **30,768 noisy telemetry rows**, and **240 fully decoded videos**. The audit matches delivered JSON/JPEG bytes to simulator records, checks every policy hash, compares replay states/metrics/feedback, verifies frame dimensions and sampling timestamps, and checks actual CPU/software-renderer receipts. A local HTML index connects every iteration, submitted diagnosis, policy change, delivered frame and held-out video. The reference scripts use numeric feedback; these runs do not measure an LLM's visual reasoning.
+
+Historical diagnostics and superseded runs remain in the operator archive: 37 native jobs including diagnostic campaigns, plus separate regrades and G1 deployment-only evidence. All 20,115 archived files passed SHA-256/size verification. All 522 MP4 file copies represent 196 unique payloads, every one decoded successfully. The archive `native-validation.tar.gz` has SHA-256 `b53517150e6a5542a2d7b4acbc792477d29fe2096ba061e64db6dd728c0c69bb`. `acceptance.json` defines the selected trials; `independent-audit.json`, `media-completeness.json` and `artifact-manifest.json` retain the audit details. Counts from historical runs are not additional independent benchmark cases.
+
+These runs used Harbor 0.23.0 on an AWS c7i.2xlarge CPU host. The run-scoped instance, security group, IAM profile/role and encrypted transfer bucket were removed after local evidence verification. No cloud GPU instance was created.
+
 ## Current acceptance boundaries
 
 Neural Landing has its own completed native validation described in [its specification](quadrotor-landing.md#native-harbor-packaging-and-validation). The Control Transfer acceptance receipt selects a single final native run per task and per reference/no-op agent; earlier diagnostic runs are retained separately, including failed verifiers.
 
-G1's schema-v2 banks have local trained-reference success **17/24** (6/12 and 11/12) versus released-reference **16/24** (6/12 and 10/12). Both plants remain incompletely solved. Real local PPO training and numeric export were exercised; public-package configuration and an actual staged-assets CPU rollout also passed. The AWS account's G/VT quota is zero, so no cloud GPU training or native GPU-device isolation result is claimed.
+G1's schema-v2 banks have local trained-reference success **17/24** (6/12 and 11/12) versus released-reference **16/24** (6/12 and 10/12). Both plants remain incompletely solved. Real local PPO training and numeric export were exercised. The final CPU image and minimal public asset subset were also built on AWS. Four deployment-only adaptation cases (flat, slope, rough, steps) ran twice in separate Docker containers with networking disabled and no GPU devices: all state/feedback/metric pairs matched exactly, and all four videos decoded. Flat and steps passed; slope and rough fell. This is deployment packaging evidence, not a full Harbor training trial or a new held-out score. The AWS account's G/VT quota is zero, so no cloud GPU training or native GPU-device isolation result is claimed.
 
 Go2 weave, forward jump and yaw jump remain **development-only** until successful references are established. A bounded search of 60 candidates over 180 adaptation episodes found no passing candidate; it used no held-out feedback and did not change success predicates. This result does not prove that the tasks are impossible. The current fixed-phase, 17-knot and linear attitude/rate controller interface may constrain future reference development.
 

@@ -170,6 +170,14 @@ def render(task, name, index):
         "gpu_devices": [],
         "device_isolation_verified": True,
     }
+    native_full = name in ("neural-fly", "anycar", "go2-attitude")
+    oracle = "full" if native_full else "none"
+    if native_full:
+        reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
+    elif family == "g1":
+        reference_note = "No full oracle. The local trained reference passes 17 of 24 held-out cases; both plants remain incompletely solved. Native GPU training validation remains outstanding. Human review required."
+    else:
+        reference_note = "Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required."
     gpu = family in ("linearbot", "g1")
     seconds = cutoff_sec("Control Transfer", "standard")
     if family == "neural-fly":
@@ -256,8 +264,8 @@ robot = "{ROBOTS[family]}"
 family = "control-transfer/{name}"
 mode = "standard"
 protocol = "eai-policy/1.1"
-oracle = "none"
-oracle_evidence = "Implementation validation is separate from a successful reference. Native Harbor oracle/nop validation and reference calibration pending."
+oracle = "{oracle}"
+oracle_evidence = "{reference_note}"
 instance_seed = {index}
 expert_time_estimate_hours = 4.0
 [verifier]
@@ -327,7 +335,7 @@ The selected policy is tested on {public["held_out_cases"]} disjoint cases in tw
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-No verified full oracle yet. Reference implementation checks are not model scores.
+{reference_note}
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.

@@ -17,7 +17,7 @@ family = "control-transfer/g1"
 mode = "standard"
 protocol = "eai-policy/1.1"
 oracle = "none"
-oracle_evidence = "Implementation validation is separate from a successful reference. Native Harbor oracle/nop validation and reference calibration pending."
+oracle_evidence = "No full oracle. The local trained reference passes 17 of 24 held-out cases; both plants remain incompletely solved. Native GPU training validation remains outstanding. Human review required."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 

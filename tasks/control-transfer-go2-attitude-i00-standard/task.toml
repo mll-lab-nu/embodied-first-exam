@@ -16,8 +16,8 @@ robot = "unitree-go2"
 family = "control-transfer/go2-attitude"
 mode = "standard"
 protocol = "eai-policy/1.1"
-oracle = "none"
-oracle_evidence = "Implementation validation is separate from a successful reference. Native Harbor oracle/nop validation and reference calibration pending."
+oracle = "full"
+oracle_evidence = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 

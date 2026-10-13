@@ -17,7 +17,7 @@ family = "control-transfer/go2-forward-jump"
 mode = "standard"
 protocol = "eai-policy/1.1"
 oracle = "none"
-oracle_evidence = "Implementation validation is separate from a successful reference. Native Harbor oracle/nop validation and reference calibration pending."
+oracle_evidence = "Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 

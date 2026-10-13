@@ -7,7 +7,7 @@
 | Twin | — (policy adaptation is standard only, PROTOCOL §4p) |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `control-transfer/g1` / seed 0 |
-| Oracle | `none` — Implementation validation is separate from a successful reference. Native Harbor oracle/nop validation and reference calibration pending. |
+| Oracle | `none` — No full oracle. The local trained reference passes 17 of 24 held-out cases; both plants remain incompletely solved. Native GPU training validation remains outstanding. Human review required. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
 
@@ -18,7 +18,7 @@ Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU 
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-No verified full oracle yet. Reference implementation checks are not model scores.
+No full oracle. The local trained reference passes 17 of 24 held-out cases; both plants remain incompletely solved. Native GPU training validation remains outstanding. Human review required.
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.

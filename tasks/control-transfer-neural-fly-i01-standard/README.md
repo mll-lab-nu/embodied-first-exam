@@ -7,7 +7,7 @@
 | Twin | — (policy adaptation is standard only, PROTOCOL §4p) |
 | Simulator / robot | `mujoco` / `neural-fly-partial` |
 | Family / instance | `control-transfer/neural-fly` / seed 1 |
-| Oracle | `none` — Implementation validation is separate from a successful reference. Native Harbor oracle/nop validation and reference calibration pending. |
+| Oracle | `full` — Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
 
@@ -18,7 +18,7 @@ Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-No verified full oracle yet. Reference implementation checks are not model scores.
+Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores.
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.
