@@ -105,7 +105,7 @@ def check_task(task: Path) -> list[str]:
     if have is None or float(have) != sec:
         errs.append(f"[agent] timeout_sec = {have!r}, the table says {sec} ({task_cutoffs.source_of(task)})")
     ins = (task / "instruction.md").read_text(encoding="utf-8") if (task / "instruction.md").is_file() else ""
-    want = tc.render_cutoff(sec, mode)
+    want = tc.render_cutoff(sec, mode, bench)
     if not ins.startswith("# "):
         errs.append("instruction.md does not start with its `# ` title line")
     if not ins.endswith("\n\n" + want):

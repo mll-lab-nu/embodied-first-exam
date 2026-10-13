@@ -521,6 +521,66 @@ def client_accepts_both_names():
         expect(p.startswith(rcb_client.ACCEPTED) == ok, p)
 
 
+@case
+def agent_clock_starts_at_the_first_request_and_survives_a_resume():
+    """meta time_s / time_left_s (rcb_limited.agent_time): not started by the service's start or by a probe that only
+    connects to the port, started by the agent's first request (any endpoint), and not set back by a resume."""
+    c = Compose("agent_clock")
+    try:
+        c.pid()                                   # the service is ready (the PID file is written just before it serves)
+        idle = 3.0; t_ready = time.time()
+        while time.time() - t_ready < idle:       # what a healthcheck may do: connect to the port, send nothing
+            with contextlib.suppress(OSError), socket.create_connection(("127.0.0.1", c.port), timeout=2):
+                pass
+            time.sleep(0.5)
+        expect(not any(e["ev"] == "first_request" for e in c.events()), "a connect without a request started the clock")
+        t_req = time.time()
+        r = c.robot()                             # GET /spec: the agent's first request
+        expect("first request" in r.spec()["budget"].get("clock", ""), f"spec.budget.clock {r.spec()['budget']}")
+        m0 = r.get_obs(cameras=[]).meta; lag = time.time() - t_req
+        expect(0.0 <= m0["time_s"] <= lag + 0.1, f"time_s {m0['time_s']} counts from the first request ({lag:.2f} s ago), "
+                                                 f"not from the service's start ({time.time() - t_ready:.1f} s ago)")
+        expect(m0["time_left_s"] >= 3600.0 - lag - 0.2, f"time_left_s {m0['time_left_s']} is short by the idle time")
+        first = [e for e in c.events() if e["ev"] == "first_request"]
+        expect(len(first) == 1 and abs(first[0]["t_first"] - t_req) <= lag + 0.1, f"first_request logged once: {first}")
+        time.sleep(2.0)
+        c.kill_service()
+        st = r.wait_ready(60)
+        expect(st["resumes"] == 1, f"resumed {st}")
+        m1 = r.get_obs(cameras=[]).meta; since = time.time() - t_req
+        expect(since - lag - 0.3 <= m1["time_s"] <= since + 0.1 and m1["time_s"] >= m0["time_s"] + 2.0,
+               f"time_s after the resume {m1['time_s']} (first request {since:.2f} s ago): the clock was set back")
+        expect(m1["time_left_s"] <= m0["time_left_s"] - 2.0, f"time_left_s went back up: {m0['time_left_s']} -> {m1['time_left_s']}")
+        expect(len([e for e in c.events() if e["ev"] == "first_request"]) == 1, "a resume logged a second first_request")
+    finally:
+        c.down()
+
+
+@case
+def every_adapter_reports_the_agents_clock():
+    """Each eai-standard/2.2 adapter (tasks/*/environment/sim/server.py next to a copy of this layer) computes meta
+    time_s and time_left_s from the agent's first request: from rcb_limited.agent_time (or the first-request time the
+    layer keeps in E["t_first"]), never from the service's start or the episode's own t0."""
+    import glob, hashlib, re
+    tasks = os.path.join(os.path.dirname(os.path.dirname(HERE)), "tasks")
+    layer = hashlib.sha256(open(os.path.join(HERE, "rcb_limited.py"), "rb").read()).hexdigest()
+    seen, bad = {}, []
+    for f in sorted(glob.glob(os.path.join(tasks, "*", "environment", "sim", "server.py"))):
+        lay = os.path.join(os.path.dirname(f), "rcb_limited.py")
+        if not os.path.isfile(lay) or hashlib.sha256(open(lay, "rb").read()).hexdigest() != layer:
+            continue                               # another protocol's service, or a task not yet on this layer
+        src = open(f, encoding="utf-8").read(); h = hashlib.sha256(src.encode()).hexdigest()
+        if h in seen:
+            continue
+        seen[h] = f
+        for key in ("time_s", "time_left_s"):
+            lines = [x for x in src.splitlines() if re.search(rf'"{key}":', x)]
+            if not lines or not all(re.search(r"agent_time\(", x) for x in lines) or any('E["t0"]' in x or "T_FIRST" in x or "T_BOOT" in x for x in lines):
+                bad.append(f"{os.path.relpath(f, tasks)}: {key} {[x.strip()[:120] for x in lines]}")
+    expect(os.path.isdir(tasks) and len(seen) >= 10, f"found only {len(seen)} eai-standard/2.2 adapters under {tasks}")
+    expect(not bad, "adapters whose clock does not start at the agent's first request:\n  " + "\n  ".join(bad))
+
+
 def main() -> int:
     sel = sys.argv[1:]
     todo = [f for f in CASES if not sel or any(s in f.__name__ for s in sel)]

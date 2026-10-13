@@ -62,9 +62,8 @@ unpack f dir`) is shipped with the client.
 the response ends in (the `last` frame, the final sample of `frames` / `depth`): static cameras never move, the wrist
 cameras move with the arms, and for each requested wrist camera the response carries the part `cam2world_gl/<cam>`
 (float64 [N,4,4], one pose per returned frame; `spec.camera_calibration`). Until 2026-10-10 the service sent the
-calibration of its start, which was wrong for the wrist cameras once an arm had moved. `time_s` / `time_left_s` count from the agent's first
-request to the service (any endpoint; `spec.budget.wall_clock_note`), not from the service's start, and are
-approximate: the harness's own deadline is authoritative. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
+calibration of its start, which was wrong for the wrist cameras once an arm had moved. `time_s` / `time_left_s` are the agent's clock
+(below; RoboTwin's `/spec` states it in `budget.wall_clock_note`, the other services in `budget.clock`). `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
 [{row,index,reason}], n_clipped, plan [{row,left,right}] (ee_pose), ok`; `/observe` adds `obs_id, seconds, physics_steps_watch`.
 
 ### `/submit` semantics
@@ -99,6 +98,23 @@ the wall clock; the simulated time is recorded as cost.
 ### Episode semantics
 The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
 when the agent phase ends (`timeout`) or on an error. The predicate is evaluated once more at episode end. No reset.
+
+**The agent's clock (every 2.x service, since 2026-10-13).** `meta.time_s` is the wall time since the agent's **first
+request** to the service, whatever the endpoint (`GET /spec`, which the shipped clients send first, counts), and
+`meta.time_left_s` = `spec.budget.wall_clock_s` − `time_s`, never below 0. The clock does not start with the service,
+when the scene is ready, or with a probe that only connects to the port; the first request is logged in
+`episode.jsonl` (`first_request`) and a resumed service reads it back, so a restart never sets the clock back to
+full. `GET /status` `elapsed_s` and the `elapsed_s` of `final.json` are the episode's own time, from the service's
+start of the episode. Why: Harbor counts the agent's cutoff around the agent's run only (PROTOCOL §2.12), and the
+sidecar starts with the environment, before the harness is installed; a clock started with the service, or at the
+end of a scene build that finished before the agent began, ran ahead of the agent's (a median of 79 s over 2,322
+recorded trials, board 0085) and `time_left_s` reached 0 that much too early. With this rule the service's clock is
+never ahead of the harness's: `time_left_s` never runs out before the agent is stopped, and the agent's real time left
+is `time_left_s` minus what it spent before its first request (seconds, where the service is up before the agent; the
+part of a slow start-up that falls inside the agent's phase otherwise). No service ends an episode on this clock, with
+one exception: RoboTangle's (Part 4) still counts from its own first start and ends the episode at 0 until its next
+task update (`docs/benchmarks/robotangle.md`). A readiness probe added to a compose file or a runner must not send a
+request to the service before the agent runs: connecting to the port is enough.
 
 **Service crashes (no reset, no lost episode).** Every executed physics step is journaled (`trajectory_live.f64`) and every
 completed call logs a checkpoint (step count + state hash) in `episode.jsonl`. If the service dies mid-episode, compose
@@ -172,7 +188,7 @@ Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 
 the response ends in (`spec.camera_calibration`; until 2026-10-10 the position was MuJoCo's left-eye camera, 3.4 cm to
 the side, and the pose was the one at service start). Cameras carry `moving` (true for ALOHA's wrist cameras); for a
 requested moving camera the response also has the part `cam2world_gl/<cam>` (float64 [N,4,4], one pose per returned
-frame). `time_s` / `time_left_s` count from the agent's first request (`spec.budget.clock`). `final.json` is `finalized`
+frame). `time_s` / `time_left_s` are the agent's clock (above; `spec.budget.clock`). `final.json` is `finalized`
 as soon as the replay's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the
 collect hook waits for, so the video never decides or delays a verdict (the MetaWorld+ service,
 `images/metaworld/standard/server_mw.py`, follows the same rules; docs/benchmarks/metaworldplus.md). DexToolBench's own eval gives each goal 10 s; here the
@@ -287,7 +303,9 @@ stopped the call early (§12).
 ### 5. `/spec`
 2.0/2.1 keys, unchanged: `protocol` (`"eai-standard/2.2"`), `simulator`, `robot`, `task_text`, `control_hz`,
 `physics_substeps`, `max_chunk_s`, `max_watch_s`, `cameras`, `action_types`, `proprio_layout`, `proprio_groups`, `static`
-(scene facts: names, sizes, colours; never a position), `budget` (`{"reset": 0, "steps": null, "wall_clock_s"}`). 2.2 adds:
+(scene facts: names, sizes, colours; never a position), `budget` (`{"reset": 0, "steps": null, "wall_clock_s",
+"clock"}`; `clock` says what `time_s` / `time_left_s` count from: the agent's first request, Part 1 "The agent's clock";
+the shared layer fills it in and keeps the clock, `rcb_limited.agent_time`). 2.2 adds:
 
 | key | content |
 |---|---|
@@ -404,8 +422,8 @@ The 2.2 implementation of PROTOCOL §4.7, with the semantics of the RoboTwin and
   (`restart: on-failure:6`, same container and record). The new process finds the episode's `start` event and resumes:
   it replays the journal up to the last checkpoint (no rendering), truncates the journal there (the call in flight is lost
   as a whole: its caller got a connection error, not a result), checks the state (below), restores the counters, the
-  episode end if one was logged, and the `persist` keys, and continues the SAME episode, never a reset. The wall clock
-  keeps running from the first start. `spec.on_service_error` tells the agent to wait for `GET /status` (client:
+  episode end if one was logged, and the `persist` keys, and continues the SAME episode, never a reset. The agent's
+  clock keeps running from its first request (the logged `first_request`), the episode's `elapsed_s` from the first start. `spec.on_service_error` tells the agent to wait for `GET /status` (client:
   `Robot.wait_ready()`) and check `calls` / `control_steps`.
 - **Limits.** At most `RCB_MAX_RESUMES` (2) resumes; a third crash ends the episode: `sim_crashed_on_call` if every crash
   happened while a call was being served (the agent's failure), else `sim_crashed` (`infra_error = 1`). A journal shorter
