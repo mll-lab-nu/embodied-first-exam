@@ -1,5 +1,5 @@
 """Unit tests of the RoboTwin tooling's gripper state (rcb_traj.Session.gripper_opening and the gripper clauses it
-installs on the robot) on a stub robot: no simulator, no GPU.
+installs on the robot) on a stub robot, and of its hand-in row cap (RowCap): no simulator, no GPU.
 
     python3 -m unittest discover -s scripts/robotwin/tests          # needs numpy
 
@@ -187,6 +187,66 @@ class GripperState(unittest.TestCase):
     def test_bad_gripper_state(self):
         with self.assertRaises(ValueError):
             M.Session("stack_blocks_two", gripper_state="flag")
+
+
+class RowCap(unittest.TestCase):
+    """The hand-in cap: the verifier grades at most MAX_T rows (tests/grade.py), so the tool refuses to save or to replay
+    more. Before 2026-10-13 it did both, and a 209,233-row trajectory that replayed to success here was graded 0."""
+
+    def session(self):
+        s, _ = session()                                  # the stub robot's 16 joints (34 columns); no scene: reset / step / status are stand-ins
+        s.task, s.seed, s.expected_sha = "stack_blocks_two", 0, ""
+        s.calls = []
+        s.reset = lambda: s.calls.append("reset")
+        s.step = lambda row=None: s.calls.append("step")
+        s.status = lambda: {"success": False, "sim_steps": s.calls.count("step"), "state_sha": "0" * 12}
+        s._trace_kind = "rollout"
+        return s
+
+    def test_the_cap_is_the_verifiers(self):
+        import re
+        grade = (TOOL.parent / "grade.py").read_text()
+        self.assertEqual(int(re.search(r"MAX_T = ([0-9_]+)", grade).group(1).replace("_", "")), M.MAX_T)
+        self.assertEqual(M.MAX_T, 200_000)
+
+    def test_save_refuses_a_trajectory_the_verifier_would_reject(self):
+        import tempfile
+        s = self.session()
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "trajectory.npz")
+            with self.assertRaises(ValueError) as e:
+                s.save_trajectory(np.zeros((M.MAX_T + 1, 34)), path)
+            self.assertIn("200,000 rows", str(e.exception)); self.assertIn("200,001 rows", str(e.exception))
+            self.assertFalse(os.path.exists(path))        # nothing was written: no file that looks like a deliverable
+            s.max_rows = 5
+            s.save_trajectory(np.zeros((5, 34)), path)    # at the cap: saved
+            self.assertEqual(np.load(path)["actions"].shape, (5, 34))
+            with self.assertRaises(ValueError):
+                s.save_trajectory(np.zeros((6, 34)), path)
+
+    def test_replay_refuses_it_before_anything_runs(self):
+        s = self.session()
+        with self.assertRaises(ValueError) as e:
+            s.replay(np.zeros((M.MAX_T + 1, 34)))
+        self.assertIn("200,000 rows", str(e.exception))
+        self.assertEqual(s.calls, [])                     # no reset, no step: no "success" for a file that cannot count
+        out = s.replay(np.zeros((M.MAX_T, 34)))           # exactly the cap replays
+        self.assertEqual((s.calls.count("reset"), out["sim_steps"]), (1, M.MAX_T))
+
+    def test_record_stop_returns_the_rows_and_warns(self):
+        import contextlib, io
+        s = self.session(); s.max_rows = 3
+        s.env = types.SimpleNamespace(check_success=lambda: False)
+        s._recording = [np.zeros(34)] * 4
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            acts = s.record_stop()
+        self.assertEqual(acts.shape, (4, 34))
+        self.assertIn("at most 3 rows", err.getvalue()); self.assertIn("will refuse", err.getvalue())
+
+    def test_no_cap_for_a_session_that_lifts_it(self):
+        s = self.session(); s.max_rows = None             # the standard-mode service: an episode is not a hand-in
+        self.assertEqual(s.replay(np.zeros((M.MAX_T + 1, 34)))["sim_steps"], M.MAX_T + 1)
 
 
 if __name__ == "__main__":
