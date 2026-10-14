@@ -556,7 +556,9 @@ def run_submit(q: dict):
     prev = np.asarray(S.targets, float).copy()
     n_clip = 0
     done = False
+    executed = 0  # rows begun: fewer than the chunk's when the step limit ends the episode inside it
     for row in A:
+        executed += 1
         tgt = np.clip(row, S.lower, S.upper)
         n_clip += int(np.any(tgt != row))
         for j in range(1, k + 1):
@@ -569,13 +571,13 @@ def run_submit(q: dict):
             break
     rec.tick(force=True)
     E["calls"] += 1
-    E["rows"] += int(A.shape[0])
+    E["rows"] += executed
     RECF.flush()
     out = {
         **meta_common(),
         "chunk_id": E["calls"],
         "type": ACTION_NAME,
-        "executed_rows": int(A.shape[0]),
+        "executed_rows": executed,
         "clipped": n_clip,
         "n_clipped_rows": n_clip,
         "ok": True,
@@ -880,7 +882,9 @@ def _resume_or_start() -> None:
     first = [e for e in ev if e.get("ev") == "first_request"]
     if first:
         E["t_first"] = float(first[0]["ts"])  # the agent's clock keeps running through a crash, never back to full
-    ended = [e for e in ev if e.get("ev") == "end"]
+    # the episode's end, if it is within the last completed call: an end past it (the step limit hit by the call that was
+    # in flight) was lost with that call, as the call itself
+    ended = [e for e in ev if e.get("ev") == "end" and int(e.get("control_steps") or 0) <= n]
     if ended:
         E["done"] = True
         E["reason"] = ended[-1].get("reason")

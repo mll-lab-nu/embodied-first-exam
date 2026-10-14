@@ -38,7 +38,11 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
   global RNG and its restorers edit the MuJoCo model (table height, fixed bodies), so the instance is a snapshot, not a
   seed: `instance.npz` holds the full physics state (`mjSTATE_INTEGRATION`), mocap targets, controls, every numeric
   `MjModel` array a task can change, and the env's Python-side task state (counters, flags). Its hash is checked
-  whenever a task rebuilds it (privileged verifier, standard service, every replay).
+  whenever a task rebuilds it (privileged verifier, standard service, every replay). Its `meta` entry never says which
+  demonstration the scene came from (the reference is that demonstration's actions, and the agent reads
+  `/app/instance.npz`; PROTOCOL §2.7): `rcb_dexjoco.save_instance` refuses such keys and values, `generate.py` refuses
+  an instance that carries them, and `ci_checks/check-agent-pointers.py` reads the archive's string members. The
+  demonstration is named in `facts.json` (`demo`) and the task READMEs, which the agent does not read.
 - **Action.** DexJoCo's own row per control step (50 Hz, 10 physics substeps of 2 ms): per arm the tcp target pose
   (xyz, quaternion wxyz, world frame), which DexJoCo's operational-space controller tracks, and 16 Allegro joint targets.
   Single arm 23 values, bimanual 46 (right first; the left hand's fingers in DexJoCo's mirrored order).
@@ -80,7 +84,9 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 `rcb_dexjoco.Session` on the frozen instance: unlimited exact resets, live object poses (`s.objects()`), DexJoCo's state
 dict, thin primitives (tcp-target moves, hand-joint interpolation, hold), rendering, recording and self-replay. The
 deliverable is `/app/output/trajectory.npz`; the verifier replays it twice in a fresh process from its own copy of the
-instance: success = both replays succeed ∧ same final-state hash ∧ the instance rebuilt exactly.
+instance: success = both replays succeed ∧ same final-state hash. An instance that does not rebuild exactly (its hash
+differs: the image no longer builds the scene) is no verdict: nothing is replayed, `instance_mismatch`, `grader_error`
+and `infra_error` = 1.
 - **Hand-in cap.** A trajectory has at most 50,000 rows (`rcb_dexjoco.MAX_TRAJECTORY_ROWS`: 1000 s of robot time; the
   longest reference has 1085). `save_trajectory` refuses a longer one and the verifier scores it 0 (`bad_trajectory`).
   The cap is what the verifier can replay: the slowest family (`bimanual_hanoi`) runs about 140 control steps/s, so two
@@ -163,6 +169,22 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
 ```
 
 ## Change log
+- 2026-10-14 (review of board 0105, B-M3 and B6-3; the scenes, the success checks and the references are unchanged, so
+  the tasks keep their names):
+  - all 22 tasks: the committed instances (`instances/<family>/instance.npz` and its copies in `environment/`,
+    `tests/` and `environment/sim/`) had `meta` = `{"source": "DexJoCo-Datasets-Raw demo initial state …", "demo":
+    "<demonstration id>", "dexjoco": "8d23b0f"}`. The reference solution is that demonstration's own actions, so a
+    privileged agent could read at `/app/instance.npz` where a solution was (PROTOCOL §2.7); `ci_checks/check-agent-
+    pointers.py` skipped binary files and did not see it. `meta` is now `{"dexjoco": "8d23b0f"}`, rewritten by
+    `make_instances.py --strip-meta` (every other array is written back as loaded; all 11 rebuild to their recorded
+    instance sha). The tooling refuses to save such a `meta`, the generator refuses such an instance, and the pointer
+    check reads `.npz` string members and keys that name a demonstration or episode.
+  - privileged `tests/grade.py`: an instance that does not rebuild exactly is no verdict (`instance_mismatch`,
+    `grader_error`, `infra_error` = 1, nothing replayed); before, it was the agent's 0 (`instance_ok = 0`,
+    `infra_error = 0`). `scripts/dexjoco/tests/test_grade_privileged.py` covers both.
+  - Past results: under the egress allowlist the demonstration itself was out of reach (Hugging Face is not on it), so
+    a privileged result stands unless the trial had open network and fetched it. A past privileged 0 with
+    `instance_ok = 0` was an infrastructure failure.
 - 2026-10-10 (review of 2026-10-10, board 0067; verifiers, the collect hook and the tooling's hand-in checks only: the
   instances, the success checks and the reference trajectories are unchanged, so the tasks keep their names):
   - standard: `final.json` missing / unreadable / without a verdict is `infra_error = 1` (a missing file used to be the
