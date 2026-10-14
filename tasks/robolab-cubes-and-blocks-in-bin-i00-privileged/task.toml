@@ -52,6 +52,13 @@ measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_p
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = []
+
 [verifier]
 timeout_sec = 29100.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
                                   # (replay_timeout(100,000 rows) = 900 s + rows / 7.5 = 14,234 s each) + 600 s; a usual

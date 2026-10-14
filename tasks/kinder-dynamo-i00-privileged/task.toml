@@ -53,6 +53,13 @@ measured = "memory: the [environment] cap 16 GiB, which every past trial ran und
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 16.0, memory_gb = 20.0, pids = 8192 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
+
 [verifier]
 timeout_sec = 900.0
 # grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §2.6): the agent's container,
