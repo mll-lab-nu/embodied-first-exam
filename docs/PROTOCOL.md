@@ -732,12 +732,13 @@ depends on it (the agent is judged, or its success is held for review, on a read
 `docs/benchmarks/<bench>.md` declares exactly which fields are published and why. Nothing but the declared fields is
 published; object poses, scene files, seeds, the success predicate and segmentation stay MUST NOT, and a reading that
 gives an object's pose is not covered. Benchmarks that use it are listed here.
-- **RoboTangle** (standard tasks; the MuJoCo release's reduced reading, user 2026-10-12, owner confirmation PENDING; the Genesis release published more: task-contact depths, review events with part names, soft-body readings): `meta["safety"]` reduced to what the robot feels itself: the
-  forcing record (the largest force an arm or a part it holds pressed with, the drive load meanwhile, the longest forcing
-  run, the forcing events, task parts named only "a held part" / "the environment"), the table-guard stops of its gripper
-  targets, its IK jumps, and the rules / scope of the reading; no task-contact depth, review event, soft-body reading or
-  task-part name ([`benchmarks/robotangle.md`](benchmarks/robotangle.md), "Safety readings in standard mode").
-  The agent can be judged on its own forcing (a breakdown it forced is its failure), so it must see it.
+- **RoboTangle** (standard tasks): `meta["safety"]` of every response: the forcing record (the largest force an arm
+  or a part it holds pressed with, the drive load meanwhile, forcing events), the deepest task contact and
+  held-finger contact with their review limits, the review events (with the names of the parts in contact), the lowest soft-body volume ratio and the worst cord
+  attachment stretch, the table-guard stops and IK jumps
+  ([`benchmarks/robotangle.md`](benchmarks/robotangle.md), "Safety readings in standard mode"). The benchmark's
+  physical-validity policy holds a success with a deep contact for human review and ends an episode on a collapsed soft
+  body, so the agent must be able to see the reading it is judged on.
 
 **Per-benchmark reset defaults.** A benchmark's standard or standard-realtime tasks may default to a reset budget N > 0 only by owner
 decision, recorded here and in `docs/benchmarks/<bench>.md`; the capability is the one above (`POST /reset`, only the
