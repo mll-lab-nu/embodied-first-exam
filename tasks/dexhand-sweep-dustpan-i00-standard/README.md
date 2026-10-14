@@ -66,3 +66,6 @@ a documented mirror of the manufacturer right hand). The broom has 54 passive hi
 bristle-bundle capsules; the dustpan has a collision entrance ramp; the debris are rigid shape proxies of packaging
 pieces, caps, a wood chip and crumpled paper. Tools start pre-held: no pickup, fine dust, paper deformation or
 hardware identification is claimed. The arm and hand meshes are baked into the `eai-dexhand` image.
+
+### Change Log
+- 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.

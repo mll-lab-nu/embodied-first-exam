@@ -29,7 +29,7 @@ Only the 28 hand/wrist targets are actuated; all six wrist targets are fixed. Th
 `solution/wuji/trajectory.npz` (146 x 26 rows, `hand` = `wuji`, sha256 `eb0c14ee...`) completes all five cardinal
 checkpoints and the terminal hold with the Wuji Hand 2.2 (success at control 146, the last row; float32-rounded rows
 also succeed at control 146). Wrist targets stay at the locked pose in every row; only Wuji finger position targets
-change. Peaks: body rotation 0.071 rad (limit 0.24), body drift 0.8 mm (20 mm), force 2.2 N (80 N). The generator
+change. Peaks: body rotation 0.071 rad (limit 0.35; 0.24 before 2026-10-14), body drift 0.8 mm (20 mm), force 2.2 N (80 N). The generator
 packages it as `solution/wuji/` of both task directories, and the oracle uses it when the run selects the Wuji hand.
 Authoring code (never copied into a task): `tools/ctrl.py` places the thumb pad on the stick cap (60 rows; middle and
 ring MCP curl to 0.3 rad to prop the shell), `tools/mpc.py` then picks thumb targets by short physics rollouts from

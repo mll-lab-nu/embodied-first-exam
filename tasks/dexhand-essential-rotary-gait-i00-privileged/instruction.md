@@ -57,7 +57,7 @@ s.hand, s.action_dim          # "sharpa", 28 (or "wuji", 26)
 s.actuator_names              # action order; s.joint_names: the joint each target drives
 s.state()                     # privileged qpos, qvel, ctrl, object poses and checker features
 s.status()                    # success, done, reason, steps, stage, total_stages, state_sha
-s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: overview, side, palm
+s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: s.cameras()
 s.reset()                     # exact frozen reset; unlimited during development
 s.step(row)                   # execute one position-target row
 s.save_trajectory(actions, "/app/output/trajectory.npz")

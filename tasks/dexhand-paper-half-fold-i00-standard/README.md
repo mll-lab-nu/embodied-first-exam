@@ -81,3 +81,6 @@ Modelling scope: a 9 x 5 triangular MuJoCo flex shell (160 x 100 mm, 1.28 g) wit
 bending-memory law; uncalibrated material coefficients; the left half is adhered to a visible backing (pinned
 vertices); effective 0.7 mm contact thickness; finite contact compliance. This is a reduced passive-paper model, not a
 fibre or adhesive-peel model.
+
+### Change Log
+- 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.

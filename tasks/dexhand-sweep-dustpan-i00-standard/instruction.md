@@ -25,11 +25,26 @@ differs only in the finger joints and their targets: both Wuji hands start close
 (the arm, tool, debris and bristle coordinates and the arm targets are those of the Sharpa start), and
 the targets at the start keep them. The task, predicate and fail-fast rules are the same for both hands.
 
+## Episodes and resets
+You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
+and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
+starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
+returns the start's images and proprioception:
+```python
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
+res.meta["episode"], res.meta["resets_left"]
+```
+Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
+episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
+the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
+`meta["control_steps_total"]` all of them).
+
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
 positions, velocities, actuator efforts, both palm poses (`l_hand_palm`, `r_hand_palm`) and current targets. Object poses, contacts and the predicate
-state are not published. One trial is one episode; there is no reset. The service records every executed row and
-replays the episode in two fresh processes for grading. Leave your controller at `/app/output/gen.py`; no trajectory
+state are not published. A failure ends the episode; a reset starts a new one (see `## Episodes and resets`). The
+service records every executed row and replays the graded episode in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory
 hand-in is needed.
 
 ```python

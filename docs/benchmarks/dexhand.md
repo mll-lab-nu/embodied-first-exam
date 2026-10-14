@@ -196,7 +196,7 @@ fingers and no external support.
 3. `repeat_quarter_turn`: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `1 <= mechanism_contacts <= 5`; 5 consecutive controls.
 4. Terminal hold: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `0 <= speed <= 0.12`; 15 consecutive controls.
 
-Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.24`. Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
+Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35` (0.24 before 2026-10-14, see below). Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
 
 ### `essential_held_joystick` (held Joy-Con thumbstick sequence)
 A free right Joy-Con (80 % scale, about 81 x 29 x 25 mm, three convex shell pieces) with a passive spring-centred
@@ -210,7 +210,7 @@ steady.
 5. `center`: `-0.1 <= joystick_x <= 0.1`, `-0.1 <= joystick_y <= 0.1`, `1 <= base_contacts <= 5`; 5 consecutive controls.
 6. Terminal hold: `-0.08 <= joystick_x <= 0.08`, `-0.08 <= joystick_y <= 0.08`, `1 <= base_contacts <= 5`, `0 <= speed <= 0.12`; 15 consecutive controls.
 
-Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.24`. Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
+Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35` (0.24 before 2026-10-14, see below). Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
 
 ### `essential_pen_regrasp` (palm-to-tripod pen regrasp)
 A free 150 mm x 12 mm ballpoint pen (Paper Mate source mesh, fitted capsule shaft and convex tip and tail) resting on
@@ -390,9 +390,10 @@ hand_wuji`); text diagnostics go to `/logs/verifier/details.json`.
 **Standard** (`eai-standard/2.2`, docs/STANDARD_MODE.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer
 `scripts/eai_standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
-robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. There is
-no reset; every action and watch step is journaled, and a crashed service resumes the same episode from its journal
-(resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
+robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
+reset budget is 20 (`budget.reset`, `RCB_RESET_BUDGET` in the compose file; see "Standard-mode resets" below); every
+action, watch step and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
+where the committed resets did (resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
 (`meta["time_left_s"]`) counts from its first request. The collect hook (`finalize.sh` / `finalize.py`) ends the
 episode, replays `/data/trajectory.npz` twice in fresh processes with the recorded hand, seals `final.json` and then
 renders an evidence video; the separate verifier reads only `final.json` and needs live success, both replay successes,
@@ -423,6 +424,49 @@ solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference s
 | `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 
 The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`).
+
+### Standard-mode resets (owner, 2026-10-14, board 0109)
+
+`budget.reset = 20`, DexToolBench's value (PROTOCOL §4.5): an essential family starts with the object already in the
+hand, every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound exceeded), and
+the agent has no simulator of its own in standard mode, so with one episode the first slip decided the trial. The
+capability is the one of docs/STANDARD_MODE.md ("Optional reset capability"), implemented in the DexHand adapter
+`scripts/dexhand/shared/standard/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
+no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
+`Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
+the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
+episode is graded: `trajectory.npz` holds its rows, the collect hook replays them from the frozen start as before, and
+`reward.json` adds `resets` and `reset_budget`. `Session.reset()` restores the frozen start exactly in all ten families
+(checked 2026-10-14 for both hands where offered: after k rows and a reset, the state hash equals a fresh process's, and
+the same rows then end in the same hash as in a fresh process). `RCB_RESET_BUDGET=0` still runs one episode.
+Results with a different budget are reported separately.
+
+### In-hand cameras of the essential families (2026-10-14, board 0109)
+
+Standard mode serves no object state, and the in-hand pose decides every essential predicate (joystick, layer, knob,
+sphere and pen angles within 0.1-0.16 rad windows). The object was 40-60 px wide in `overview`, and `palm` (mounted
+behind the wrist) sees the back of the hand. The essential scenes therefore add two cameras mounted on the locked hand
+body like `palm`: `inhand_top` (from above the palm) and `inhand_side` (from the thumb side), both about 0.2 m from the
+grasp region, `fovy` 45, 640 x 480. The standard service returns `overview` and `inhand_top` by default. Calibration:
+the published `intrinsic_cv` / extrinsics project known world points to within the review's tolerance (see the board
+0109 report). The cameras do not change physics or state hashes, so the oracles are unchanged.
+
+### Held-object rotation bound (2026-10-14, board 0109)
+
+`essential_held_joystick` and `essential_cube_layer` share the invariant "keep the held object steady",
+`body_rotation <= 0.24` rad. The Sharpa reference solutions peak at 0.2396 rad (joystick) and 0.218 rad (cube layer),
+so the bound was the joystick reference's own peak (0.0004 rad of margin). The bound is now 0.35 rad (20 degrees) in
+both families; the task's intent is unchanged. Perturbation checks of the references (finger targets +-0.001 rad
+uniform jitter, six seeds; the bound relaxed to measure its peak): the joystick reference's peak rotation within its
+own 415 rows is 0.27-0.29 rad (below 0.35), but the open-loop rows then miss the first checkpoint, so it still fails
+under jitter for reasons the bound does not decide; the Wuji joystick reference succeeds 4/6 (peak 0.07 rad); the cube
+layer reference 1/6 (peak 0.21-0.25 rad; the other five stall at the second or third stage, also with 100 extra held
+controls). `essential_cube_reorient` (the review's "6/6 fail at 0.001
+rad"): its reference ends on the very control that completes the terminal hold, so a perturbed copy runs out of rows
+one to nine controls short; with the last row held for 100 more controls all six jittered copies succeed (no bound is
+approached: contacts >= 1, displacement <= 0.021 m, speed <= 11.7 of 12). Its Wuji reference is fragile at the start
+(four of six jittered copies drop the sphere within 31 controls, the other two never complete the first stage). Open-loop references are not robust controllers;
+with resets and closed-loop observation an agent can retry, which is what the reset budget is for.
 
 ## Generator
 

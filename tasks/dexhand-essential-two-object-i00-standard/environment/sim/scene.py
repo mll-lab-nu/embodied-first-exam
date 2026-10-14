@@ -673,6 +673,14 @@ def build(spec, asset_dir=None, hand="sharpa"):
         xyaxes="0 -1 0 0 0 1",
         fovy="60",
     )
+    if essential.is_essential(spec):
+        # Close-up views of the held object (standard mode publishes no object state): both look at the grasp
+        # region about 0.1 m along the fingers from the mount and 0.04 m above the palm, from about 0.2 m away;
+        # `inhand_top` from above the palm, `inhand_side` from the thumb side. They are mounted on the hand body like
+        # `palm` (frame: x along the palm normal, z along the fingers), which the essential families lock in place.
+        node(hand, "camera", name="inhand_top", pos="0.21 0.09 0.04", xyaxes="0 0.6 0.8 0.507 -0.6895 0.5172",
+             fovy="45")
+        node(hand, "camera", name="inhand_side", pos="0.12 0.2 0.1", xyaxes="0 0 1 0.9216 -0.3881 0", fovy="45")
     if hand_id == "wuji":
         records = hands.replace_wave_hands(source, "wuji")
         if essential.is_essential(spec):

@@ -2,9 +2,10 @@
 
 A fixed dual-arm robot (two 7-joint arms, a dexterous hand on each wrist) stands at a kitchen worktop. A freely moving 1 kg two-handle stockpot (286 mm vessel diameter, 438 mm across its two loop handles) rests on the worktop; an open kitchen shelf is to the robot's left. Grasp the pot by its two handles, lift it with both hands, carry it into the shelf compartment and set it down upright on the shelf board at the target, then open both hands and withdraw them. The pot must never be dropped, tipped over, knocked against the furniture, the floor or a non-hand robot link, or leave its support while no hand carries it. Only the robot's position-controlled joint targets act on the world: there are no attachments, object actuators, scripted object motion or applied forces.
 
-One trial is one episode with no reset: the service executes and records every row you submit, and the first
-failure ends the episode for good, so check each chunk before you send it. Grading replays the recorded episode;
-there is no trajectory to hand in. Keep working until the episode has succeeded.
+The service executes and records every row you submit, and the first failure ends the episode, so check each chunk
+before you send it: a reset starts a new episode from the same start, 20 times at most, and only the last episode is
+graded (see `## Episodes and resets`). Grading replays the recorded episode; there is no trajectory to hand in. Keep
+working until an episode has succeeded.
 
 ## Robot, scene and control
 The robot is a fixed Tianji Marvin stand with two 7-joint arms and a dexterous hand on each wrist. Every arm and finger
@@ -84,10 +85,25 @@ down on the worktop (or rest on it with one side while a hand still holds the ot
 board again, and be regrasped any number of times, provided none of the conditions above occurs; the 0.5 s of
 bimanual carry is counted over the whole episode, and the 2 s released hold must be consecutive.
 
+## Episodes and resets
+You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
+and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
+starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
+returns the start's images and proprioception:
+```python
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
+res.meta["episode"], res.meta["resets_left"]
+```
+Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
+episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
+the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
+`meta["control_steps_total"]` all of them).
+
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
-positions, velocities, actuator efforts, both wrist poses and current targets. One trial is one episode; there is no
-reset. The service records every executed step and replays the episode in two fresh processes for grading. Leave your
+positions, velocities, actuator efforts, both wrist poses and current targets. The service records every executed
+step and replays the graded episode in two fresh processes. Leave your
 controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python

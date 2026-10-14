@@ -21,11 +21,12 @@ differs only in the finger joints and their targets: both Wuji hands start close
 (the arm, tool, debris and bristle coordinates and the arm targets are those of the Sharpa start), and
 the targets at the start keep them. The task, predicate and fail-fast rules are the same for both hands.
 
+{{RESETS}}
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
 positions, velocities, actuator efforts, both palm poses (`l_hand_palm`, `r_hand_palm`) and current targets. Object poses, contacts and the predicate
-state are not published. One trial is one episode; there is no reset. The service records every executed row and
-replays the episode in two fresh processes for grading. Leave your controller at `/app/output/gen.py`; no trajectory
+state are not published. A failure ends the episode; a reset starts a new one (see `## Episodes and resets`). The
+service records every executed row and replays the graded episode in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory
 hand-in is needed.
 
 ```python

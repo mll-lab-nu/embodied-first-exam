@@ -2,9 +2,10 @@
 
 {{TASK_TEXT}}
 
-One trial is one episode with no reset: the service executes and records every row you submit, and the first
-failure ends the episode for good, so check each chunk before you send it. Grading replays the recorded episode;
-there is no trajectory to hand in. Keep working until the episode has succeeded.
+The service executes and records every row you submit, and the first failure ends the episode, so check each chunk
+before you send it: a reset starts a new episode from the same start, 20 times at most, and only the last episode is
+graded (see `## Episodes and resets`). Grading replays the recorded episode; there is no trajectory to hand in. Keep
+working until an episode has succeeded.
 
 ## Robot, scene and control
 The robot is a fixed Tianji Marvin stand with two 7-joint arms and a dexterous hand on each wrist. Every arm and finger
@@ -80,10 +81,11 @@ down on the worktop (or rest on it with one side while a hand still holds the ot
 board again, and be regrasped any number of times, provided none of the conditions above occurs; the 0.5 s of
 bimanual carry is counted over the whole episode, and the 2 s released hold must be consecutive.
 
+{{RESETS}}
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
-positions, velocities, actuator efforts, both wrist poses and current targets. One trial is one episode; there is no
-reset. The service records every executed step and replays the episode in two fresh processes for grading. Leave your
+positions, velocities, actuator efforts, both wrist poses and current targets. The service records every executed
+step and replays the graded episode in two fresh processes. Leave your
 controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python

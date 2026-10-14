@@ -8,12 +8,13 @@ grasping, carrying and releasing require physical contact. The controller runs a
 substeps.
 
 {{HANDS}}
+{{RESETS}}
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets. One trial is one episode; there is no
-reset. The episode ends at the first success or the first failure (see the task text); after that the service
-accepts no more actions. The service records every action and watch step, then replays the episode with the recorded
-hand in two fresh processes for grading. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+joint positions, velocities, actuator efforts, wrist pose and current targets. An episode ends at the first success
+or the first failure (see the task text); after that the service accepts no more actions until a reset (see
+`## Episodes and resets`). The service records every action and watch step, then replays the graded episode with the
+recorded hand in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
 needed.
 
 ```python

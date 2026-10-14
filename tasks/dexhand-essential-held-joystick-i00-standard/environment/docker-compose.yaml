@@ -19,6 +19,7 @@ services:
       RCB_TASK: essential_held_joystick
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "3600"
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-20}"
       RCB_STARTUP_TIMEOUT_S: "300"
       DEXHAND_HAND: ${DEXHAND_HAND:-sharpa}
       MUJOCO_GL: osmesa

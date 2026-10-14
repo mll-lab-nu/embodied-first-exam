@@ -26,9 +26,9 @@ The verifier evaluates these conditions on features it computes from simulator s
 3. Stage `repeat_quarter_turn`: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `1 <= mechanism_contacts <= 5`, for 5 consecutive control samples.
 4. Terminal hold after the last stage: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `0 <= speed <= 0.12`, for 15 consecutive control samples.
 
-Invariants, checked at every physics substep for the whole episode (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.24`.
+Invariants, checked at every physics substep for the whole episode (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35`.
 
-The first violated invariant or guard, a non-finite feature or unstable physics fails the episode immediately and permanently: the episode ends there and later rows are not executed, so a dropped, slipped or knocked-away object can never be recovered. Success is reached when the terminal hold completes; the episode ends there too. Completing only some stages is a failure.
+The first violated invariant or guard, a non-finite feature or unstable physics fails the episode immediately and permanently: the episode ends there and later rows are not executed, so a dropped, slipped or knocked-away object can never be recovered in that episode (a reset starts a new one: `## Episodes and resets`). Success is reached when the terminal hold completes; the episode ends there too. Completing only some stages is a failure.
 
 Feature definitions:
 - `top_turn`: angle of the cube's top layer relative to its body, rad
@@ -42,17 +42,33 @@ Feature definitions:
 - `body_drift`: displacement of the free object's body from its reset position, m
 - `body_rotation`: rotation of the free object's body from its reset orientation, rad
 
+## Episodes and resets
+You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
+and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
+starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
+returns the start's images and proprioception:
+```python
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
+res.meta["episode"], res.meta["resets_left"]
+```
+Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
+episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
+the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
+`meta["control_steps_total"]` all of them).
+
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets. One trial is one episode; there is no
-reset. The service records every action and watch step, then replays the episode in two fresh processes for grading.
-Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+joint positions, velocities, actuator efforts, wrist pose and current targets. A failure ends an episode at once; a
+reset starts a new one (see `## Episodes and resets`). The service records every action and watch step, then replays
+the graded episode in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+needed.
 
 ```python
 from rcb_client import Robot
 r = Robot()
 spec = r.spec()
-obs = r.get_obs(cameras=["overview"], depth=True)
+obs = r.get_obs(cameras=["overview", "inhand_top"], depth=True)
 obs.last["overview"]           # RGB uint8 (480, 640, 3)
 obs.last_depth["overview"]     # z-depth in metres
 obs.meta["proprio"]            # named robot measurements
@@ -67,7 +83,9 @@ three serial XYZ rotational joints (radians), then the 22 or 20 finger joints (r
 published joint limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk
 covers at most 10 s. Hold interpolation holds each row for `dt`; linear interpolation starts from the previous target.
 The robot has no scalar gripper opening. Quaternions in measured poses use WXYZ; world z is up. Cameras are overview,
-side and palm, at 640 x 480. Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call
+side, palm (behind the hand), and two close-ups of the held object, `inhand_top` (from above the palm)
+and `inhand_side` (from the thumb side), at 640 x 480; the default is overview and inhand_top. No object state is
+published: the close-ups (with depth and their calibration) are how you see the object in the hand. Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call
 returns at most 1,000 camera images, counting per-frame depth; reduce cameras, fps or duration for larger chunks.
 `get_obs(seconds=...)` holds the current targets for up to 30 s and records those steps. Calling it without seconds
 only observes the current state. Forward kinematics uses only the robot's own links; no IK primitive is supplied.

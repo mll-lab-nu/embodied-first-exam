@@ -46,6 +46,24 @@ CLIENT_IMAGE = next(
 # number in a family or a text: normalize writes it into task.toml, the instruction's closing `## Time limit`
 # section, the README row and the sim service's RCB_WALL_CLOCK_S.
 CUTOFF = {mode: cutoff_sec("DexHand", mode) for mode in ("privileged", "standard")}
+# Standard mode's reset budget (owner, 2026-10-14, board 0109; PROTOCOL §4.5, DexToolBench's value): the compose
+# default of RCB_RESET_BUDGET, which a run may override; the service's /spec budget.reset is authoritative.
+RESET_BUDGET = 20
+RESETS_SECTION = f"""## Episodes and resets
+You have **{RESET_BUDGET} resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
+and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
+starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
+returns the start's images and proprioception:
+```python
+res = r._post("/reset", {{"cameras": ["overview"]}}, [], 900)   # POST /reset (the 2.2 client has no reset())
+res.meta["episode"], res.meta["resets_left"]
+```
+Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
+episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
+the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
+`meta["control_steps_total"]` all of them).
+"""
 TOOLING = (
     "runtime.py",
     "scene.py",
@@ -109,7 +127,7 @@ PLUGIN_KEYS = {
     "instruction", "readme", "solution", "metadata", "timeouts", "compose_env", "notes", "control_hz",
 }
 PLACEHOLDERS = ("{{TITLE}}", "{{TASK_TEXT}}", "{{HANDS}}", "{{FAMILY}}", "{{MAX_ROWS}}", "{{AGENT_MINUTES}}",
-                "{{NAME}}", "{{MODE}}", "{{TWIN}}", "{{IMAGE}}", "{{CONTROL_HZ}}")
+                "{{NAME}}", "{{MODE}}", "{{TWIN}}", "{{IMAGE}}", "{{CONTROL_HZ}}", "{{RESETS}}")
 
 
 def plugin_folders() -> dict[str, Path]:
@@ -254,6 +272,7 @@ def plugin_texts(folder: Path, manifest: dict, spec: dict, mode: str, name: str)
         "MODE": mode,
         "TWIN": twin,
         "IMAGE": IMAGE,
+        "RESETS": RESETS_SECTION if mode == "standard" else "",
     }
     instruction_text = fill(_family_file(folder, manifest["instruction"][mode]).read_text(), values)
     readme = manifest["readme"]
@@ -511,7 +530,9 @@ def predicate_section(spec: dict, mode: str = "privileged") -> str:
               + ", ".join(_bound(k, v) for k, v in spec.get("invariants", {}).items()) + ".", "",
               "The first violated invariant or guard, a non-finite feature or unstable physics fails the episode "
               "immediately and permanently: the episode ends there and later rows are not executed, so a dropped, "
-              "slipped or knocked-away object can never be recovered. Success is reached when the terminal hold "
+              "slipped or knocked-away object can never be recovered"
+              + (" in that episode (a reset starts a new one: `## Episodes and resets`)" if mode == "standard" else "")
+              + ". Success is reached when the terminal hold "
               "completes; the episode ends there too. Completing only some stages is a failure.", "",
               "Feature definitions:"]
     used = list(dict.fromkeys(
@@ -852,7 +873,7 @@ s = Session("{spec["id"]}")
 s.joint_names                 # action/proprioception order, 28 joint names
 s.state()                     # privileged qpos, qvel, ctrl, object poses and checker features
 s.status()                    # success, done, reason, steps, stage, total_stages, state_sha
-s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: overview, side, palm
+s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: s.cameras()
 s.reset()                     # exact frozen reset; unlimited during development
 s.step(action28)              # execute one position-target row
 s.save_trajectory(actions, "/app/output/trajectory.npz")
@@ -908,12 +929,13 @@ The last replay state must satisfy the complete released-hold predicate; later r
         return text
     text = (
         intro
-        + """
+        + "\n" + RESETS_SECTION + """
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets. One trial is one episode; there is no
-reset. The service records every action and watch step, then replays the episode in two fresh processes for grading.
-Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+joint positions, velocities, actuator efforts, wrist pose and current targets. A failure ends an episode at once; a
+reset starts a new one (see `## Episodes and resets`). The service records every action and watch step, then replays
+the graded episode in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+needed.
 
 ```python
 from rcb_client import Robot
@@ -944,10 +966,21 @@ resumes the same journaled episode, without a reset, and the wall-clock budget k
     )
     if spec["id"] == "assemble_hamburger":
         text = text.replace("Cameras are overview,\nside and palm", "Cameras are overview and closeup")
+    if essential_family:
+        text = _swap(text, "Cameras are overview,\nside and palm, at 640 x 480.", ESSENTIAL_CAMERAS)
+        text = _swap(text, 'obs = r.get_obs(cameras=["overview"], depth=True)',
+                     'obs = r.get_obs(cameras=["overview", "inhand_top"], depth=True)')
     if essential_family and not only_sharpa:
         text = _swap(text, "`rows` is `(T, 28)` in", "`rows` is `(T, 28)` (Sharpa) or `(T, 26)` (Wuji) in")
         text = _swap(text, "then 22 finger joints (radians).", "then the 22 or 20 finger joints (radians).")
     return text
+
+
+ESSENTIAL_CAMERAS = (
+    "Cameras are overview,\nside, palm (behind the hand), and two close-ups of the held object, `inhand_top` (from above "
+    "the palm)\nand `inhand_side` (from the thumb side), at 640 x 480; the default is overview and inhand_top. No "
+    "object state is\npublished: the close-ups (with depth and their calibration) are how you see the object in the "
+    "hand.")
 
 
 def _swap(text: str, old: str, new: str) -> str:
@@ -1178,6 +1211,7 @@ def compose(spec: dict, manifest: dict | None = None) -> str:
         "RCB_TASK": spec["id"],
         "RCB_DATA": "/data",
         "RCB_WALL_CLOCK_S": f'"{CUTOFF["standard"]}"',
+        "RCB_RESET_BUDGET": f'"${{RCB_RESET_BUDGET:-{RESET_BUDGET}}}"',
         "RCB_STARTUP_TIMEOUT_S": '"300"',
         "DEXHAND_HAND": "${DEXHAND_HAND:-sharpa}",
         "MUJOCO_GL": "osmesa",
@@ -1232,6 +1266,36 @@ def all_specs(only: set[str] | None = None) -> list[tuple[dict, dict | None, Pat
     return specs
 
 
+# The held-object rotation bound before 2026-10-14 (board 0109), for the README's change log.
+HELD_ROTATION_BEFORE = {"essential_held_joystick": 0.24, "essential_cube_layer": 0.24}
+
+
+def change_log(spec: dict, mode: str) -> str:
+    """The README's change log: what changed after the tasks were first proposed (pull request #185)."""
+    lines = []
+    if mode == "standard":
+        lines.append(
+            f"- 2026-10-14 (board 0109, before the first scored run): {RESET_BUDGET} resets in standard mode (owner; "
+            "PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same "
+            "state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` "
+            "adds `resets` and `reset_budget`. Before, one trial was one episode.")
+    if spec["id"].startswith("essential_"):
+        lines.append(
+            "- 2026-10-14 (board 0109): two close-up cameras of the held object, `inhand_top` (above the palm) and "
+            "`inhand_side` (thumb side), mounted on the locked hand like `palm`; the standard service returns "
+            "`overview` and `inhand_top` by default. Before, the object was 40-60 px wide in the overview and the palm "
+            "camera saw the back of the hand, so its in-hand pose could hardly be observed in standard mode.")
+    if spec["id"] in HELD_ROTATION_BEFORE:
+        bound = spec["invariants"]["body_rotation"][1]
+        lines.append(
+            f"- 2026-10-14 (board 0109): the held object's rotation bound (invariant `body_rotation`) "
+            f"{HELD_ROTATION_BEFORE[spec['id']]} -> {bound} rad (20 degrees, both held-object families). The reference "
+            "solution peaked at 0.2396 rad (joystick) and 0.218 rad (cube layer), within 0.0004 / 0.022 rad of the "
+            "old bound, so the bound was effectively the reference's own peak; finger targets perturbed by +-0.001 rad "
+            "peak at 0.25-0.30 rad. The task's intent (keep the held object steady) is unchanged.")
+    return "\n### Change Log\n" + "\n".join(lines) + "\n" if lines else ""
+
+
 def task_name(family: str, mode: str) -> str:
     return f"dexhand-{family.replace('_', '-')}-i00-{mode}"
 
@@ -1252,11 +1316,12 @@ def render(destination: Path, only: set[str] | None = None) -> list[Path]:
             if manifest is not None:
                 instruction_text, readme_text = plugin_texts(folder, manifest, spec, mode, name)
                 write(task / "instruction.md", with_archive_note(instruction_text) if mode == "privileged" else instruction_text)
-                write(task / "README.md", with_hand_solutions(readme_text, manifest.get("hand_solutions", {}), mode))
+                write(task / "README.md", with_hand_solutions(readme_text, manifest.get("hand_solutions", {}), mode)
+                      + change_log(spec, mode))
             else:
                 text = instruction(spec, mode)
                 write(task / "instruction.md", with_archive_note(text) if mode == "privileged" else text)
-                write(task / "README.md", readme(spec, mode, name))
+                write(task / "README.md", readme(spec, mode, name) + change_log(spec, mode))
             runtime_dirs = (
                 [task / "environment", task / "tests"] if mode == "privileged" else [task / "environment/sim"]
             )

@@ -26,7 +26,7 @@ The verifier evaluates these conditions on features it computes from simulator s
 3. Stage `repeat_quarter_turn`: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `1 <= mechanism_contacts <= 5`, for 5 consecutive control samples.
 4. Terminal hold after the last stage: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `0 <= speed <= 0.12`, for 15 consecutive control samples.
 
-Invariants, checked at every physics substep for the whole episode (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.24`.
+Invariants, checked at every physics substep for the whole episode (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35`.
 
 The first violated invariant or guard, a non-finite feature or unstable physics fails the episode immediately and permanently: the episode ends there and later rows are not executed, so a dropped, slipped or knocked-away object can never be recovered. Success is reached when the terminal hold completes; the episode ends there too. Completing only some stages is a failure.
 
@@ -60,7 +60,7 @@ s.hand, s.action_dim          # "sharpa", 28 (or "wuji", 26)
 s.actuator_names              # action order; s.joint_names: the joint each target drives
 s.state()                     # privileged qpos, qvel, ctrl, object poses and checker features
 s.status()                    # success, done, reason, steps, stage, total_stages, state_sha
-s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: overview, side, palm
+s.render_frame("overview")    # uint8 RGB 480 x 640; cameras: s.cameras()
 s.reset()                     # exact frozen reset; unlimited during development
 s.step(row)                   # execute one position-target row
 s.save_trajectory(actions, "/app/output/trajectory.npz")

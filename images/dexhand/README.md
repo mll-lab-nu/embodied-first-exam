@@ -16,7 +16,7 @@ run time.
 
 ```bash
 # prepare_assets.py runs on the host; the Tianji conversion needs these exact versions (tianji/source-manifest.json):
-python3 -m pip install trimesh==4.11.2 mujoco==3.4.0 numpy==2.3.5 scipy==1.16.3
+python3 -m pip install -r images/dexhand/requirements-assets.txt   # trimesh==4.11.2 mujoco==3.4.0 numpy==2.3.5 scipy==1.16.3
 python3 images/dexhand/prepare_assets.py      # fetch the pinned sources into the git-ignored assets/ and verify them
 sudo docker build -t ghcr.io/mll-lab-nu/eai-dexhand:$(cat images/dexhand/VERSION) images/dexhand
 ```

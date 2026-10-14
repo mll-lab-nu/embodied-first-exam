@@ -35,6 +35,8 @@ def verdict(data: dict) -> dict:
         "resumes": int(data.get("resumes") or 0),
         "resume_state_mismatch": int(data.get("resume_state_mismatch") or 0),
         "hand_wuji": int(data.get("hand") == "wuji"),
+        "resets": int(data.get("resets") or 0),
+        "reset_budget": int(data.get("reset_budget") or 0),
     }
 
 

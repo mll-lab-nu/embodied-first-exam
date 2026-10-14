@@ -54,3 +54,7 @@ modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes
 from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in
 the same wrist frame; its collision geoms are renamed to the predicate's finger/palm roles only. Object assets carry
 their own licenses and checksums under `object_assets/`. Renderer output is evidence; it never determines the verdict.
+
+### Change Log
+- 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.
+- 2026-10-14 (board 0109): two close-up cameras of the held object, `inhand_top` (above the palm) and `inhand_side` (thumb side), mounted on the locked hand like `palm`; the standard service returns `overview` and `inhand_top` by default. Before, the object was 40-60 px wide in the overview and the palm camera saw the back of the hand, so its in-hand pose could hardly be observed in standard mode.

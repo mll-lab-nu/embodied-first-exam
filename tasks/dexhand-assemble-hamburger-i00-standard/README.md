@@ -64,3 +64,6 @@ tomato have rigid cylinder contacts; cheese and lettuce have three passive elast
 approximation of thin-sheet bending, not continuum soft-food, crushing or tearing simulation. The bottom bun starts on
 the plate; preparation supports give access to the other ingredients. This is assembly feasibility on a floating wrist
 stage, not a gripper-superiority, full-arm or zero-shot claim.
+
+### Change Log
+- 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.

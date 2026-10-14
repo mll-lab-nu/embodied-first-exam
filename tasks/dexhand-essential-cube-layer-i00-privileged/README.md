@@ -54,3 +54,7 @@ modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes
 from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in
 the same wrist frame; its collision geoms are renamed to the predicate's finger/palm roles only. Object assets carry
 their own licenses and checksums under `object_assets/`. Renderer output is evidence; it never determines the verdict.
+
+### Change Log
+- 2026-10-14 (board 0109): two close-up cameras of the held object, `inhand_top` (above the palm) and `inhand_side` (thumb side), mounted on the locked hand like `palm`; the standard service returns `overview` and `inhand_top` by default. Before, the object was 40-60 px wide in the overview and the palm camera saw the back of the hand, so its in-hand pose could hardly be observed in standard mode.
+- 2026-10-14 (board 0109): the held object's rotation bound (invariant `body_rotation`) 0.24 -> 0.35 rad (20 degrees, both held-object families). The reference solution peaked at 0.2396 rad (joystick) and 0.218 rad (cube layer), within 0.0004 / 0.022 rad of the old bound, so the bound was effectively the reference's own peak; finger targets perturbed by +-0.001 rad peak at 0.25-0.30 rad. The task's intent (keep the held object steady) is unchanged.

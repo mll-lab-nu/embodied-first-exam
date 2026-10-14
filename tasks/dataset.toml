@@ -6719,55 +6719,55 @@ digest = "sha256:f9e6c76932aa7c0b61e5aea55b36a389134262ac88e5f0ea1237b5327724042
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-assemble-hamburger-i00-standard"
-digest = "sha256:db0039698953b4026107a7912b214a53fd9e72c621434674134aa30f3a6959ce"
+digest = "sha256:0df35d41db60de3549072684630fd77a71fc27ae12e977cd27cb601db0c4beff"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-cube-layer-i00-privileged"
-digest = "sha256:5f89a9766b798103c2335eab6051f7c19b39b944347bcab1acc4f007a8ebfd0a"
+digest = "sha256:41269de9bbc15e49630e628ca67ca0863218df9fee6865a3455b07a50c8d430d"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-cube-layer-i00-standard"
-digest = "sha256:2e109bac0ef25109aab64346c7c21a75bc3c45b333e3880a1c6fd2b2cc3ca5b5"
+digest = "sha256:d4ef5ec3a19c2907d48aa3415fe03c44b92e8c3b3bf2025abdcb178147f79b51"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-cube-reorient-i00-privileged"
-digest = "sha256:c22fd5f332407daec1aa3c08ed67fce2a73d08ba8d1bbe4440d43eed56410dea"
+digest = "sha256:ba4fceadebc6e6ac46a8147d9a410f445d5f4dc7e2f1f080f0e83f7689245309"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-cube-reorient-i00-standard"
-digest = "sha256:8fdffb3f289806bec5d8b0b022465e1b925bfa85ba7ed1f1b524b610d9061413"
+digest = "sha256:26dd24be430172238d3e121f9edfa46fa9459fa4b31086a346658f3958feebaf"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-held-joystick-i00-privileged"
-digest = "sha256:3fc5eab5125fe2884eb2f9ffddcf847eb1db3326b4055a4500d9b5a2805c80f0"
+digest = "sha256:873bce12f8196f13dbdf7dfd2cbd493227caa2a6077043d1964dcf48c441df1d"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-held-joystick-i00-standard"
-digest = "sha256:51b9f6af03bdd36a2c35cadaa734a245830fa32ac5840e838d2955e5c9a0d077"
+digest = "sha256:7efab2a2bfcc7f7c0fe25059f8d1e14f8ae52dc9cdf525fc9af8b07880339aa2"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-pen-regrasp-i00-privileged"
-digest = "sha256:3b9afd82c3d8b2249dcaecbd44ae63082a2e407cb73af3abdf3c919edfba74e4"
+digest = "sha256:ad65f2e9cbc99ab7dc4afc28acb6b61960b0fb084d4120a2a7ec67cfb865b9ec"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-pen-regrasp-i00-standard"
-digest = "sha256:d3583fa37c85a2c2d47ff6ec025de6c1c35f3a48f7eabfbbf255cbbb46bc2d72"
+digest = "sha256:45f2b289e33ae7b80d81a309c58504919ccf03755defe2c9b3b3e9da4a39bb70"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-rotary-gait-i00-privileged"
-digest = "sha256:4bd40dac78ab3aeaf2e2a91e558c2ccd6ada4d52b215ab4f380cb7d60cbd52cd"
+digest = "sha256:da41b79d43f845a7ccb0661e02548aedc95195de4b2abbf7f405e5a0d78946c9"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-rotary-gait-i00-standard"
-digest = "sha256:b57af6aa1c4950319b4ec59cbd32caf93d58c58f64fa264acf250dd4df4251df"
+digest = "sha256:530936907bec87af5a49f2601cce1ae4d8efac0ad649375ed2657a19c159cddd"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-two-object-i00-privileged"
-digest = "sha256:3ec92d859f69678ed81426f9c0e33ea53515ce131294d1e0fe4bc676b02eb69d"
+digest = "sha256:3c79cd17fbdca5f28d2e9c464770081de3b38cac3c381907766b8b3de5ee8cf6"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-essential-two-object-i00-standard"
-digest = "sha256:703235b4dd1cacba059abc2e95568a1aa59860d10db1af00c8474648bfbb83fd"
+digest = "sha256:f88ced8fbf799d10951f8e514e7001f6f8fe518508a2e3829f41821b223a23c2"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-paper-half-fold-i00-privileged"
@@ -6775,7 +6775,7 @@ digest = "sha256:c9109f4d1b73cd2bd2bff6bd27e320f297c669bd59e8728eb9fb92be1378d7b
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-paper-half-fold-i00-standard"
-digest = "sha256:f286c584c8e671d2b3c927b06189ba919209053dc21f4c0eb89e66f46ec49880"
+digest = "sha256:e7a921dfb136cc7735baac878b032fec0c90c6ca753fc841fb0a90078fddd94f"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-pot-shelf-transfer-i00-privileged"
@@ -6783,7 +6783,7 @@ digest = "sha256:339d01cde4e0168d59afc2ab19d703fad9169ca818ae0be0e9ea85cab46e33e
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-pot-shelf-transfer-i00-standard"
-digest = "sha256:0a042246b99f04c98861694ad3687b0cde4ef76fd2c9ef396830bd8c9d000180"
+digest = "sha256:7ecd8a2e9f5e7418148b9a36cbb593682fe7d6a08c92964f6c270b98b32dd826"
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-sweep-dustpan-i00-privileged"
@@ -6791,5 +6791,5 @@ digest = "sha256:fac61da645b057c7683c11549423029ea554d154abebe12b20a609493ece384
 
 [[tasks]]
 name = "robot-coding-bench/dexhand-sweep-dustpan-i00-standard"
-digest = "sha256:002ca1c0e02dfe94e6a32fcc8f6277d6e2c1f5c8a90ffea5ae3b1b2da20d10ac"
+digest = "sha256:ca25a00c0f10c862e1d3719c630c864aebba056fa3d8e8f98a3dfc4867094f0d"
 

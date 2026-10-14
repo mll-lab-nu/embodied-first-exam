@@ -24,13 +24,27 @@ Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 fi
 The first six targets of a row drive the wrist stage that carries the hand: `wrist_x`, `wrist_y`, `wrist_z` (metres, world frame) and `wrist_rx`, `wrist_ry`, `wrist_rz` (radians, serial XYZ joints); the finger targets follow in the hand's native actuator order. Sharpa starts in a near-edge pregrasp; Wuji starts at the same six wrist targets with its fingers curled clear of the paper.
 The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
 
+## Episodes and resets
+You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
+and the one episode is the run). A reset puts the robot and every object back in the same frozen starting state and
+starts a new episode, either abandoning the running one or after one has ended; it takes no simulated time and
+returns the start's images and proprioception:
+```python
+res = r._post("/reset", {"cameras": ["overview"]}, [], 900)   # POST /reset (the 2.2 client has no reset())
+res.meta["episode"], res.meta["resets_left"]
+```
+Once an episode has ended, `submit` raises `EpisodeOver` until you reset. **Only the last episode is graded**: an
+episode you reset away is never graded, a success ends the run at once (no reset after it), and when your time is up
+the episode then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+`meta["resets_left"]` count the episodes (`meta["control_steps"]` is the current episode's,
+`meta["control_steps_total"]` all of them).
 
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets; paper state is not published. One
-trial is one episode; there is no reset. The episode ends at the first success or failure, and after at most 1500
-controls. The service records every action and watch step, then replays the episode in two fresh processes for
-grading. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+joint positions, velocities, actuator efforts, wrist pose and current targets; paper state is not published. An
+episode ends at the first success or failure, and after at most 1500 controls; a reset starts a new one (see
+`## Episodes and resets`). The service records every action and watch step, then replays the graded episode in two
+fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python
 from rcb_client import Robot

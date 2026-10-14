@@ -20,13 +20,13 @@ and the controller runs at 50 Hz.
   that is merely held springs partly back when released. Contact compliance gives it an effective thickness of 0.7 mm.
 
 {{HANDS}}
-
+{{RESETS}}
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
-joint positions, velocities, actuator efforts, wrist pose and current targets; paper state is not published. One
-trial is one episode; there is no reset. The episode ends at the first success or failure, and after at most 1500
-controls. The service records every action and watch step, then replays the episode in two fresh processes for
-grading. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+joint positions, velocities, actuator efforts, wrist pose and current targets; paper state is not published. An
+episode ends at the first success or failure, and after at most 1500 controls; a reset starts a new one (see
+`## Episodes and resets`). The service records every action and watch step, then replays the graded episode in two
+fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python
 from rcb_client import Robot

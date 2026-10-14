@@ -82,3 +82,6 @@ self-contact is not judged. Open kitchen shelf, not a narrow-cupboard challenge.
 board's depth direction, so at the target the front handle reaches about 32 mm past the board's open front edge; the
 compartment test therefore admits at most 50 mm of overhang at the open front (all other faces are strict). Wuji Hand
 2.2 composes on the same arm mounts with neutral fingers.
+
+### Change Log
+- 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.

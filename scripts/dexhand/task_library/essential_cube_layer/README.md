@@ -21,7 +21,7 @@ layer turns (+90 deg, back to 0, +90 deg) and the terminal hold with the Wuji Ha
 last row; float32-rounded rows also succeed at control 940). The cube rests on the open Wuji palm; the thumb pad lands
 on the passive layer's top face and drags it about the layer axis, lifting and landing again at the end of its reach.
 Wrist targets stay at the locked pose; only Wuji finger position targets change. Peaks: body rotation 0.055 rad
-(limit 0.24), body drift 1.6 mm (20 mm), force 0.51 N (80 N). The generator packages it as `solution/wuji/` of both
+(limit 0.35; 0.24 before 2026-10-14), body drift 1.6 mm (20 mm), force 0.51 N (80 N). The generator packages it as `solution/wuji/` of both
 task directories, and the oracle uses it when the run selects the Wuji hand. Authoring code (never copied into a
 task): `tools/run_turn.py` (thumb-drag controller with an integral law on the measured layer angle), `tools/thumb_turn.py`
 (thumb IK) and `tools/wuji_gen.py`, which runs the accepted parameters and rewrites the identical archive.
