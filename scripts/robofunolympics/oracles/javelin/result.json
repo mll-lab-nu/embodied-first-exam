@@ -1,0 +1,15 @@
+{
+ "family": "javelin",
+ "steps": 1533,
+ "time_s": 15.33,
+ "time_limit_s": 60.0,
+ "metrics": {
+  "release_speed_m_s": 15.0,
+  "release_height_m": 1.789,
+  "release_elevation_deg": 36.6,
+  "release_attitude_deg": -12.4,
+  "distance_m": 21.579,
+  "head_first": 1.0
+ },
+ "deterministic": true
+}

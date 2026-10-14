@@ -4,7 +4,8 @@ exploit), to a ball hit out of the hand or carried on it, to a ball that only bo
 the head, to a serve into the net, outside the antennas or beyond the court, to a foot on the court at the hit, to a
 held ball and to a second touch; yes to toss, hit, over the net between the antennas, into the opponent's court.
 
-The positive is an INJECTION: no serving controller exists for the H1-2. Real: the left hand really lets go of the ball
+The positive is an INJECTION (the family's reference controller, oracles/volleyball-serve, serves for real; this test
+does not depend on it). Real: the left hand really lets go of the ball
 (the toss), the right fist is really held up (stand mode), the ball really falls onto it, then really flies 9 m in air
 over the net and lands in the opponent's court. Injected: 0.15 s after the toss the ball is put 0.3 m above the right
 fist, falling at 1.5 m/s (a toss to there), and at the contact its velocity is set to 13.9 m/s forward and upward

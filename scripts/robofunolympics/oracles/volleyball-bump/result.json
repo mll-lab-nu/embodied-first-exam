@@ -1,0 +1,16 @@
+{
+ "family": "volleyball-bump",
+ "steps": 581,
+ "time_s": 5.81,
+ "time_limit_s": 10.0,
+ "metrics": {
+  "ball_height_m": 0.091,
+  "pass_apex_m": 3.084,
+  "speed_in_m_s": 11.38,
+  "speed_out_m_s": 7.27,
+  "landing_x_m": 5.122,
+  "landing_y_m": -1.532,
+  "from_target_centre_m": 0.126
+ },
+ "deterministic": true
+}
