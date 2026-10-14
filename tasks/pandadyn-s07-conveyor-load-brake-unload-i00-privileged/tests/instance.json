@@ -1,0 +1,34 @@
+{
+ "task": "S07-ConveyorLoadBrakeUnload",
+ "env_id": "PandaMultiStage/S07-ConveyorLoadBrakeUnload-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.07,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.08,
+  "fixture_speed": 0.035,
+  "restitution": 0.1,
+  "table_friction": 0.08,
+  "tool_friction": 0.3
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "single"
+ },
+ "action_dim": 8,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "moving_acquisition",
+  "loaded_carriage_release",
+  "handle_braking",
+  "payload_regrasp",
+  "dock_deposit"
+ ],
+ "initial_sha": "143b42d5a40897e6f9dc769b65899c35dff8450310a7595bb501a3c2ed6c0ee6"
+}

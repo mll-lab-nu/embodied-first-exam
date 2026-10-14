@@ -1,0 +1,49 @@
+# @@STD@@
+
+| | |
+|---|---|
+| Benchmark | Panda Dynamic Scenes |
+| Mode | standard (`eai-standard/2.2`) |
+| Twin | `@@PRIV@@` |
+| Simulator / robot | `maniskill` / `@@ROBOT@@` |
+| Family / instance | `@@FAMILY@@` / @@INST@@ (nominal parameters, seed @@SEED@@) |
+| Oracle | `full` |
+| Agent time budget | @@AGENT_TIMEOUT_S@@ s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `@@IMAGE@@` |
+
+## Task
+Standard-mode twin of `@@PRIV@@` (same frozen instance): the agent gets only the `eai-standard/2.2` client
+(docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar
+for SAPIEN's renderer), which owns the scene and records the episode as a (T, @@DIM@@) trajectory of the environment's own
+joint-target actions. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the
+trajectory in two fresh processes and writes `final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over
+those artifacts. Compare against the privileged task to measure the cost of losing resets, privileged state and
+self-replay. @@README_GOAL@@
+
+## Difficulty
+That of `@@PRIV@@` (its README), without resets, object poses or the success signal: the moving objects are seen only
+through two static cameras (RGB, depth) and the robot's own proprioception, the simulated clock advances only with the
+agent's calls (so the agent can look between control steps, at a cost in calls), and a missed catch stays missed.
+
+## Reference solution
+`solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step,
+`hold`) as one-second `joint_position` chunks through the client; after a service crash it waits for the resumed episode
+and continues from the control step the service reports.
+
+## Verification
+`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar's
+collect hook; `tests/grade.py` reads `final.json` with no network and writes the reward fields (with `infra_error` and the
+crash-recovery fields), plus `/logs/verifier/replay.mp4`. The task's success check is evaluated after every physics step;
+the episode ends at the first control step where the task has succeeded or failed, live and in the replays. Oracle: the
+live episode and both replays end in the privileged oracle's final state (hash `@@ORACLE_SHA@@`). `nop`: no control step
+is executed; the episode ends at the collect hook with no phase complete, reward 0.
+
+## Details
+| | |
+|---|---|
+| Episode | one episode, no reset, no step budget: it ends at the first control step where the task has succeeded or failed (the task's horizon, @@HORIZON@@ s of simulated time, is a failure), when the agent's time is up, or on a simulator error; the wall clock is the only budget |
+| Action space | `submit` chunks of `joint_position` (@@DIM@@: per arm 7 joint targets + the aperture, executed at 100 Hz with the agent's `dt`, a multiple of 0.01 s); `observe` frames or a watch window; `/kinematics` (FK / IK, stateless); binary RCB1 responses |
+| Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
+| Images | the `sim` sidecar runs eai-pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
+| Crash recovery | resume class `exact`: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/STANDARD_MODE.md §13) |
+| Generator | `scripts/pandadyn/mk_tasks.py` (`scripts/pandadyn/descr/`, `frozen/`, `template/standard/`, `shared/`, `scripts/eai_standard/`); docs/benchmarks/pandadyn.md |
