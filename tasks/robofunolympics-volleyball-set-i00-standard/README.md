@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_set` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_volleyball_set.py: positive by injection (the real toss onto really raised fists, the ball's velocity set at the contact: apex 4.50 m, 0.35 m from the target's centre); negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Set the pass: with one overhead contact of your hands, send the volleyball that comes down above you at least a metre above the net and into the outside hitter's target along the net. (RoboFunOlympics `volleyball-set`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

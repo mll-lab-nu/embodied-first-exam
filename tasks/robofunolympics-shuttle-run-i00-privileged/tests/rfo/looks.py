@@ -1,6 +1,7 @@
 """How a venue looks: sunlight with shadows, a painted sky, surfaces with a material instead of a flat colour (grass,
 a rubber track, a wooden court, sand, an acrylic hard court), balls with their patterns, and perimeter boards and
-grandstands round the venue (drawn only: no collision class). Looks only: nothing here touches a collision
+stepped grandstands with a seated crowd, floodlights, a scoreboard and trees round the venue (drawn only: no
+collision class). Looks only: nothing here touches a collision
 class, a friction, a mass or a pose, so the physics and the state hash are what they were.
 
 Two steps, both called by World: `dress(scene)` on the MJCF tree after the family has built its venue (lights, the
@@ -24,7 +25,6 @@ MATERIALS = {
     "rfo_hard": (512, 2.0, 0.15, 0.20, 0.0),        # an acrylic court, a mat, a wall
     "rfo_paving": (512, 2.0, 0.08, 0.10, 0.0),      # the open ground around a court or a gym floor (in colour)
     "rfo_boards": (1024, 16.0, 0.20, 0.30, 0.0),    # the perimeter boards: 16 m of panels (in colour)
-    "rfo_seats": (512, 8.0, 0.05, 0.05, 0.0),       # a grandstand: ten rows of seats, some taken (in colour)
 }
 ARENA_MARGIN_M = 8.0         # the perimeter boards stand this far outside everything the venue has (cameras too)
 ARENA_MIN_HALF_M = 14.0
@@ -155,9 +155,51 @@ def _quat(*rots) -> str:
     return f"{w:.6g} {x:.6g} {y:.6g} {z:.6g}"
 
 
+class _Batch:
+    """Decoration merged into one mesh per colour (a software renderer pays per geom, not per triangle; after
+    RoboOlympics' beach-volleyball venue): add() boxes, then emit() the meshes and their geoms, drawn only."""
+
+    def __init__(self, sc, prefix: str):
+        self.sc, self.prefix, self.parts = sc, prefix, {}
+
+    def add(self, rgb, centre, half, turn: float = 0.0, tilt: float = 0.0) -> None:
+        """A box of half sizes `half` at `centre`, turned by `turn` about z (after tilting it by `tilt` about its x)."""
+        hx, hy, hz = half
+        corners = np.array([[sx * hx, sy * hy, sz * hz] for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)])
+        ct, st = np.cos(tilt), np.sin(tilt)
+        corners = corners @ np.array([[1, 0, 0], [0, ct, st], [0, -st, ct]])
+        c, s_ = np.cos(turn), np.sin(turn)
+        corners = corners @ np.array([[c, s_, 0], [-s_, c, 0], [0, 0, 1]]) + np.asarray(centre, float)
+        self.parts.setdefault(tuple(round(float(x), 3) for x in rgb), []).append(corners)
+
+    def emit(self) -> None:
+        faces = np.array([[0, 2, 1], [1, 2, 3], [4, 5, 6], [5, 7, 6], [0, 1, 4], [1, 5, 4],    # (no underside:
+                          [2, 6, 3], [3, 6, 7], [1, 3, 5], [3, 7, 5]])                            # nothing sees it)
+        asset = self.sc.root.find("asset")
+        for k, (rgb, boxes) in enumerate(sorted(self.parts.items())):
+            v = np.concatenate(boxes)
+            f = np.concatenate([faces + 8 * b for b in range(len(boxes))])
+            name = f"{self.prefix}{k}"
+            ET.SubElement(asset, "mesh", name=name, inertia="shell", maxhullvert="4",
+                          vertex=" ".join(f"{x:.3f}" for x in v.ravel()), face=" ".join(str(int(x)) for x in f.ravel()))
+            ET.SubElement(self.sc.wb, "geom", name=name, type="mesh", mesh=name, contype="0", conaffinity="0",
+                          group="2", rgba=f"{rgb[0]:g} {rgb[1]:g} {rgb[2]:g} 1")
+
+
+# The crowd's shirts: muted colours, none of them white, yellow or orange (the colours of the balls: scenery must not
+# look like a ball to a camera); faces and hair.
+SHIRTS = [(0.55, 0.12, 0.14), (0.14, 0.24, 0.52), (0.12, 0.38, 0.30), (0.36, 0.20, 0.46), (0.30, 0.30, 0.33),
+          (0.18, 0.44, 0.58), (0.50, 0.24, 0.36), (0.22, 0.22, 0.26), (0.40, 0.42, 0.22), (0.62, 0.36, 0.36)]
+SKIN = [(0.80, 0.62, 0.50), (0.62, 0.45, 0.33), (0.42, 0.29, 0.21), (0.88, 0.72, 0.60)]
+STEPS, STEP_RUN_M, STEP_RISE_M = 8, 1.0, 0.6       # a stand's rows: their depth and height
+SEAT_M, CROWD_FILL = 0.62, 0.5                     # a seat's width, the share of seats taken
+
+
 def _arena(sc, ground) -> None:
-    """Perimeter boards and a grandstand on each side, round everything the venue has: they give the place an edge
-    instead of a plain to the horizon. Drawn only (no collision class): a ball flies through them. Not built where
+    """Perimeter boards and a stepped grandstand with spectators on each side, a roof over the far one, floodlight
+    towers at the corners, a scoreboard and a line of trees, round everything the venue has: they give the place an
+    edge instead of a plain to the horizon (after RoboOlympics' venues of the throws and of beach volleyball). Drawn
+    only (no collision class): a ball flies through them. Seeded: the same crowd in every process. Not built where
     the family has lowered the ground plane (a sand pit, a water jump)."""
     if abs(float((ground.get("pos") or "0 0 0").split()[2])) > 1e-9:
         return
@@ -178,21 +220,82 @@ def _arena(sc, ground) -> None:
         lo, hi = np.zeros(2), np.zeros(2)
     c = (lo + hi) / 2
     half = np.maximum((hi - lo) / 2 + ARENA_MARGIN_M, ARENA_MIN_HALF_M)
-    th = float(np.arctan2(STAND_RISE_M, STAND_RUN_M))
-    slope = float(np.hypot(STAND_RISE_M, STAND_RUN_M))
     quarter = np.pi / 2
+    rs = np.random.RandomState(int(1000 * (half[0] + 3 * half[1])) % (2 ** 31))
+    deco = _Batch(sc, "rfo_deco")
+    concrete, seat_rgb = (0.62, 0.62, 0.60), (0.20, 0.27, 0.42)
+    depth = STEPS * STEP_RUN_M
     # side: (centre of the boards, their length, the turn about z that brings local +y to point outwards)
     sides = {"n": ((c[0], c[1] + half[1]), 2 * half[0], 0.0), "s": ((c[0], c[1] - half[1]), 2 * half[0], np.pi),
              "e": ((c[0] + half[0], c[1]), 2 * half[1], -quarter), "w": ((c[0] - half[0], c[1]), 2 * half[1], quarter)}
     for tag, ((x, y), length, turn) in sides.items():
         out = np.array([-np.sin(turn), np.cos(turn)])                       # the outward direction on the ground
-        common = dict(type="box", contype="0", conaffinity="0", rgba="1 1 1 1")
-        ET.SubElement(sc.wb, "geom", name=f"rfo_boards_{tag}", material="rfo_boards", pos=f"{x:.4g} {y:.4g} {BOARD_H_M / 2:g}",
-                      size=f"{length / 2:.4g} {BOARD_H_M / 2:g} 0.05", quat=_quat(("z", turn), ("x", quarter)), **common)
-        mid = np.array([x, y]) + out * (STAND_GAP_M + STAND_RUN_M / 2)
-        ET.SubElement(sc.wb, "geom", name=f"rfo_stand_{tag}", material="rfo_seats",
-                      pos=f"{mid[0]:.4g} {mid[1]:.4g} {BOARD_H_M + 0.2 + STAND_RISE_M / 2:.4g}",
-                      size=f"{length / 2 + STAND_GAP_M:.4g} {slope / 2:.4g} 0.05", quat=_quat(("z", turn), ("x", th)), **common)
+        along = np.array([np.cos(turn), np.sin(turn)])
+        ET.SubElement(sc.wb, "geom", name=f"rfo_boards_{tag}", material="rfo_boards", type="box", contype="0",
+                      conaffinity="0", rgba="1 1 1 1", pos=f"{x:.4g} {y:.4g} {BOARD_H_M / 2:g}",
+                      size=f"{length / 2:.4g} {BOARD_H_M / 2:g} 0.05", quat=_quat(("z", turn), ("x", quarter)))
+        L = length / 2 + STAND_GAP_M                                        # the stand's half length
+        base = np.array([x, y]) + out * STAND_GAP_M
+        for k in range(STEPS):                                              # the rows: solid steps, a seat strip on each
+            d = (k + 0.5) * STEP_RUN_M
+            h = BOARD_H_M + 0.2 + (k + 1) * STEP_RISE_M
+            p = base + out * d
+            deco.add(concrete, (p[0], p[1], h / 2), (L, STEP_RUN_M / 2, h / 2), turn)
+            q = base + out * (d + 0.15)
+            deco.add(seat_rgb, (q[0], q[1], h + 0.06), (L, 0.18, 0.06), turn)
+            for u in np.arange(-L + SEAT_M / 2, L, SEAT_M):                 # the spectators
+                if rs.random_sample() > CROWD_FILL:
+                    continue
+                sp = q + along * (u + rs.uniform(-0.05, 0.05))
+                shirt, skin = SHIRTS[rs.randint(len(SHIRTS))], SKIN[rs.randint(len(SKIN))]
+                deco.add(shirt, (sp[0], sp[1], h + 0.12 + 0.30), (0.20, 0.12, 0.30), turn)
+                deco.add(skin, (sp[0], sp[1], h + 0.12 + 0.72), (0.10, 0.10, 0.12), turn + rs.uniform(-0.3, 0.3))
+        top = BOARD_H_M + 0.2 + STEPS * STEP_RISE_M
+        back = base + out * depth
+        deco.add(concrete, (back[0], back[1], (top + 1.2) / 2), (L, 0.15, (top + 1.2) / 2), turn)   # the back wall
+        if tag == "n":                                                      # a roof over the far stand, on posts
+            for u in np.linspace(-L + 1, L - 1, max(2, int(2 * L // 18) + 1)):
+                pp = back + along * u
+                deco.add((0.75, 0.75, 0.77), (pp[0], pp[1], (top + 5.0) / 2), (0.15, 0.15, (top + 5.0) / 2), turn)
+            rp = base + out * (depth * 0.45)
+            deco.add((0.80, 0.81, 0.83), (rp[0], rp[1], top + 4.0), (L, depth * 0.62, 0.12), turn, tilt=-0.10)
+        if tag == "e":                                                      # a scoreboard above the stand's back
+            sb = back + out * 0.6
+            deco.add((0.10, 0.10, 0.12), (sb[0], sb[1], top + 4.5), (min(6.0, L * 0.4), 0.25, 2.2), turn)
+            deco.add((0.20, 0.36, 0.30), (sb[0] - out[0] * 0.3, sb[1] - out[1] * 0.3, top + 4.6),
+                     (min(5.4, L * 0.36), 0.02, 1.7), turn)
+            deco.add((0.55, 0.55, 0.57), (sb[0], sb[1], (top + 2.3) / 2), (0.25, 0.25, (top + 2.3) / 2), turn)
+    reach = half + STAND_GAP_M + depth + 2.0
+    for sx in (-1, 1):                                                      # floodlight towers at the corners
+        for sy in (-1, 1):
+            t = c + np.array([sx * reach[0], sy * reach[1]])
+            deco.add((0.55, 0.56, 0.58), (t[0], t[1], 14.0), (0.35, 0.35, 14.0))
+            face = -np.arctan2(sx, sy)
+            deco.add((0.85, 0.86, 0.80), (t[0], t[1], 28.8), (2.4, 0.3, 1.2), face, tilt=0.5)
+    ring = reach + 8.0                                                      # a line of trees beyond it all
+    per = 2 * (2 * ring[0] + 2 * ring[1])
+    trees = []
+    for s_ in np.arange(0.0, per, 7.0) + rs.uniform(0, 7.0):
+        s_ %= per
+        a, b = 2 * ring[0], 2 * ring[1]
+        if s_ < a:
+            pt = (-ring[0] + s_, ring[1])
+        elif s_ < a + b:
+            pt = (ring[0], ring[1] - (s_ - a))
+        elif s_ < 2 * a + b:
+            pt = (ring[0] - (s_ - a - b), -ring[1])
+        else:
+            pt = (-ring[0], -ring[1] + (s_ - 2 * a - b))
+        trees.append(c + np.array(pt) + rs.uniform(-3, 3, 2))
+    for k, t in enumerate(trees):
+        hgt, rad = rs.uniform(7, 12), rs.uniform(2.5, 4.0)
+        green = (0.12 + rs.uniform(0, 0.06), 0.26 + rs.uniform(0, 0.10), 0.10 + rs.uniform(0, 0.04))
+        deco.add((0.30, 0.22, 0.15), (t[0], t[1], hgt * 0.3), (0.25, 0.25, hgt * 0.3))
+        ET.SubElement(sc.wb, "geom", name=f"rfo_tree{k}", type="ellipsoid", contype="0", conaffinity="0", group="2",
+                      pos=f"{t[0]:.4g} {t[1]:.4g} {hgt * 0.6 + rad * 0.5:.4g}",
+                      size=f"{rad:.3g} {rad:.3g} {rad * 1.25:.3g}",
+                      rgba=f"{green[0]:.3f} {green[1]:.3f} {green[2]:.3f} 1")
+    deco.emit()
 
 
 # ---------------------------------------------------------------------- the pixels
@@ -271,21 +374,6 @@ def _texture(name: str, n: int) -> np.ndarray:
         rgb[:6] *= 0.7
         rgb[-6:] *= 0.7
         return rgb
-    if name == "rfo_seats":                          # rows of seats 0.5 m wide, 0.8 m apart; about a third are taken
-        rs = np.random.RandomState(111)
-        rgb = np.full((n, n, 3), 0.20)                                    # the steps between the rows
-        rows, cols, rh, cw = 10, 16, n // 10, n // 16
-        seat = np.array([0.12, 0.28, 0.60])
-        clothes = np.array([[0.80, 0.15, 0.15], [0.95, 0.95, 0.95], [0.15, 0.15, 0.18], [0.95, 0.80, 0.20],
-                            [0.20, 0.55, 0.30], [0.55, 0.35, 0.65], [0.30, 0.45, 0.75]])
-        for r in range(rows):
-            for k in range(cols):
-                y0, x0 = r * rh + rh // 4, k * cw + 2
-                rgb[y0:y0 + rh // 2, x0:x0 + cw - 4] = seat * rs.uniform(0.85, 1.1)
-                if rs.random_sample() < 0.35:                             # somebody: a body and a head
-                    rgb[y0 + 2:y0 + rh // 2 + 6, x0 + 4:x0 + cw - 8] = clothes[rs.randint(len(clothes))]
-                    rgb[y0 + rh // 2 + 6:y0 + rh // 2 + 14, x0 + cw // 2 - 6:x0 + cw // 2 + 4] = (0.80, 0.62, 0.50)
-        return rgb + 0.02 * _fbm(n, 0.3, 112)[:, :, None]
     raise KeyError(name)
 
 

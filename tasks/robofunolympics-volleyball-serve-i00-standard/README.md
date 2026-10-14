@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_serve` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_volleyball_serve.py: positive by injection (a real release and a real raised fist, the ball put above the fist and sent off at 13.9 m/s: over the net, into the court); negatives: a throw brushing the fist, a throw that touches nothing, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held. The slowest legal serve needs about 11 m/s; a full arm swing reaches a 7 m/s fist; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Serve the volleyball: from behind the end line, toss it out of your left hand and hit it with one hand or arm over the net into the opponent's court. (RoboFunOlympics `volleyball-serve`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
