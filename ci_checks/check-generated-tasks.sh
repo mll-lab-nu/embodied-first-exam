@@ -52,3 +52,11 @@ for g in "${gens[@]}"; do
 done
 [ -z "$cmds" ] && { echo "ok check-generated-tasks.sh: no generator in scope (${only[*]})"; exit 0; }
 cd "$root" && printf %s "$cmds" | python3 ci_checks/parallel.py
+if [ -f "$root/scripts/robosafe/gen_tasks.py" ]; then   # RoboSafeBench (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/robosafe/gen_tasks.py" check 2>&1); then echo "ok scripts/robosafe/gen_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/robosafe/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/robosafe/gen_realtime.py" ]; then   # RoboSafeBench's standard-realtime tasks
+  if out=$(python3 "$root/scripts/robosafe/gen_realtime.py" check 2>&1); then echo "ok scripts/robosafe/gen_realtime.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/robosafe/gen_realtime.py check:"; echo "$out" | tail -n 40; rc=1; fi
+fi

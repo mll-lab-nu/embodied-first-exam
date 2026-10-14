@@ -47,6 +47,10 @@ done
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
 # grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
+# RoboSafeBench's standard grader (its tasks pull request adds the test)
+if [ -f "$root/scripts/robosafe/tests/test_grade.py" ]; then run 300 robosafe/tests/test_grade.py; run 300 robosafe/tests/test_score.py; fi
+# ... and its standard-realtime grader (the realtime tasks' commit adds the test)
+if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe/tests/test_grade_rt.py; fi
 # DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
 if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
@@ -68,6 +72,8 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            robodojo/tests/test_privileged_grading.py; do
     run 900 "$t"
   done
+  # RoboSafeBench's adapter serves the control interface only (its tasks pull request adds the test)
+  if [ -f "$root/scripts/robosafe/tests/test_interface_guard.py" ]; then run 300 robosafe/tests/test_interface_guard.py; fi
   # Panda Dynamic Scenes' graders, privileged and standard (its tasks pull request adds the test)
   if [ -f "$root/scripts/pandadyn/tests/test_grading.py" ]; then run 300 pandadyn/tests/test_grading.py; fi
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared

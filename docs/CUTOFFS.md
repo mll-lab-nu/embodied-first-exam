@@ -36,12 +36,13 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
+| RoboSafeBench | — | 3600 s (60 min) | 3600 s (60 min) | — / 294 / 15 |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
 | RoboWits | 3600 s (60 min) | 3600 s (60 min) | — | 15 / 15 / — |
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1855 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
+2164 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
 
 ## Exceptions (per family, per task)
 
@@ -118,6 +119,8 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-13 | Panda Dynamic Scenes, privileged, standard | (none) -> 3600 s | proposal #177 (D8 default) | the benchmark's first tasks: the protocol's default; a scene builds in seconds and simulates at 60-150 control steps per second, so the hour is the agent's own work |
 | 2026-10-13 | RoboTangle, privileged, standard | 7200 s -> (removed) | owner | removed: the benchmark is renamed RoboARC (next entry) and its Genesis tasks are deleted; RoboARC's MuJoCo release replaces them, and results recorded under this row are not carried over |
 | 2026-10-13 | RoboARC, privileged, standard | (none) -> 10800 s | owner | new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap |
+| 2026-10-13 | RoboSafeBench, standard | (none) -> 3600 s | owner | the benchmark's first tasks: the protocol's default (D8); RoboSafeBench's own trials gave agents 40 minutes |
+| 2026-10-14 | RoboSafeBench, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the benchmark's first standard-realtime tasks: the standard tasks' number (D8 default); the episode's robot-time budget under the realtime clock (1800 s for the realtime set, RoboSafeBench 0.5.1) runs in real time from the first submit, so 3600 s leaves 1800 s for looking and planning before the clock starts (the harness's set-up and the service's start are outside or before it); the collect hook's finalize is outside the agent's time |
 | 2026-10-14 | MyoSuite, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the first standard-realtime task (table_tennis): the standard twin's number |
 | 2026-10-14 | DexHand, privileged, standard | (none) -> 3600 s | DexHand tasks pull request (D8 default; team meeting 2026-10-14) | the benchmark's first tasks: the protocol's default; a scene builds in 1-12 s and the recorded reference episodes replay in seconds to 10 minutes on one core (the longest, sweep_dustpan, is 66 s of robot time at 2 kHz), so the hour is mostly the agent's own work |
 | 2026-10-14 | Panda Dynamic Scenes, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the standard-realtime twins of the 19 dynamic families: the standard twin's number |
