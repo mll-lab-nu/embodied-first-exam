@@ -10,7 +10,7 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 | simulator | MuJoCo 3.3.7, CPU physics (bit-exact replay); EGL rendering on a GPU, else OSMesa |
 | robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
 | score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
-| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`) |
+| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-standard-realtime` (`eai-standard/2.3`, since 2026-10-14) |
 | image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
 | oracle | full, both modes |
 
@@ -68,6 +68,7 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 |---|---|---|---|
 | privileged | the simulator (`rcb_quadruped.Session`) and its full state | unlimited | its `trajectory.npz`, replayed in two fresh processes |
 | standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`, from 2026-10-14; before: none) | the service's record of the last episode: live check, two fresh-process replays, determinism |
+| standard-realtime (2.3; BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the service's record of the last episode: live check, a fresh replay, determinism |
 
 ## Reference solutions
 - **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
@@ -219,6 +220,25 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   Scene, instances, success checks and the grader's pass rule unchanged; earlier quadruped standard results ran with
   one episode and are reported separately.
 
+## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`)
+get a `-standard-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
+frozen moments: an external force that is neither the robot's nor gravity).
+- **Service.** The shared realtime layer, unchanged (`shared/realtime/rcb_realtime.py`, `rcb_service.py`,
+  `rcb_client.py`, `grade.py`: byte-identical copies of `scripts/humanoidbench/shared/`; `check-tooling-identity.sh`),
+  with `shared/realtime/server.py`, which implements `rcb_service.Sim` on `rcb_quadruped.Session`: the standard twin's
+  instance, schedule, pushes, termination rule, check and replay; the proprioception adds `cmd_vx`, `cmd_vy`, `cmd_wz`
+  (the command in force; standard mode has it in `meta["command_now"]`). Not served: the 2.2 additions (`/kinematics`,
+  per-frame camera poses, depth modes) and the `done` action. Graded on the live episode, a replay in a fresh `Session`
+  and their final states being equal; the clock's record is evidence only. The `sim` service reserves a GPU for EGL
+  rendering (`server.py` writes the NVIDIA EGL ICD manifest when the image has none and `rcb_quadruped` probes EGL).
+- **Slowdown S = 1, resets 10, cutoff 1800 s** (the standard twin's). RTF of the service (ws-1 at load 44, 4 CPUs;
+  board 0112): 31.6 with the clock flat out (`RCB_SLOWDOWN=0.01`, the reference's 1000 rows planned from step 0).
+- **Checked at S = 1** (board 0112): the reference (`solution/oracle_plan.py`, the privileged rows planned from step 0
+  in one `submit(at=0)`) succeeds live and in the fresh replay, deterministic, no stall, graded 1 by `tests/grade.py`;
+  the same rows streamed one per call with a camera image every 0.25 s (7.7 ms each over EGL) succeed with no stall;
+  nop (no request) ends `timeout`, not a success; 11 episodes with 10 resets replay deterministically.
+
 ## Files
 | | |
 |---|---|
@@ -227,4 +247,5 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
 | `make_instances.py`, `select_instances.py`, `oracle.py` | candidates (Playground's code, JAX), selection and freezing, references |
 | `instances/`, `oracles/`, `selection/` | the frozen instances, the reference rows, every candidate tried |
 | `train/` | the reference-policy training (CPU PPO), not used by any task |
+| `shared/realtime/` | the standard-realtime twin's service (`server.py`, the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
 | `generate.py`, `templates/` | the task directories (`--check` compares) |
