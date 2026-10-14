@@ -7253,3 +7253,79 @@ digest = "sha256:71fcd2a9cec5e927de4bbd71116f3d366f256c45bd016462687c4c493e7a7c5
 name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
 digest = "sha256:2b4a1f23b409a8a84a0a19684412ac27f61ac7ee69d460842bb4bf8063261cac"
 
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d01-reciprocal-cup-relay-i00-standard-realtime"
+digest = "sha256:52467b95015e52fea09032d718533fcee2c9fdab508994973e5e7416637bec26"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d02-strike-catch-merge-i00-standard-realtime"
+digest = "sha256:791026b2fd2a1ccf3e4e96f775411048a3567889e5fef6535b34c354f1e11fd7"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d03-cooperative-puck-course-i00-standard-realtime"
+digest = "sha256:80289c97c5df197e890ddf5c9e614a641eed4d4f42a2dd6bae9175827c6fe721"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d04-shared-tray-transport-discharge-i00-standard-realtime"
+digest = "sha256:8b7c30da0d7bf3385f06c1e085a8bc53a2345adbfa1080dde1c7d9ef44590bf6"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d06-moving-bank-relay-i00-standard-realtime"
+digest = "sha256:329ad6896c2a0bc9d7c5e35799ef0be06dc6c2958763e02cb40750af64a07d65"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d07-spring-gate-switchyard-i00-standard-realtime"
+digest = "sha256:a228d9e515449ecc98ab270f8b63ba33cd7d5835ce6fd57c83fed308ea2d8a83"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d09-lever-launch-catch-reload-i00-standard-realtime"
+digest = "sha256:9633a0aca28140211ada22dfc785bfec4e67d9c775936a63fef35a556bb6124c"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-d10-moving-grasp-handover-i00-standard-realtime"
+digest = "sha256:50e4d1f4ad78d62f529b6d71e5dda9478981b83629c9eb51ed72995c8499258c"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s01-cup-route-delivery-i00-standard-realtime"
+digest = "sha256:a06146bcd006299281baab0b23e7abc5e9e62721a067bdfe1599be7e2d3d14c8"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s02-plate-catch-transport-release-i00-standard-realtime"
+digest = "sha256:e7c3c538b779aff5dad2f63b4627f2b512a458a56a0d22aa1d7ea66d38701a53"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s03-clear-gate-hockey-i00-standard-realtime"
+digest = "sha256:754de152c38348b9067433660d80508d72d0ee3357bb7608163d20f0988d7812"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s04-impact-release-relay-i00-standard-realtime"
+digest = "sha256:6420ad32f3569b8bc4a502246dafc145bdbee29ed7bcf2d6b4751bc4bfeabdf2"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s05-sliding-receive-align-deliver-i00-standard-realtime"
+digest = "sha256:e9d4872c307f3b9e40f1f2fbe8d7258e090994d674799545b4f74d7949ae8660"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s07-conveyor-load-brake-unload-i00-standard-realtime"
+digest = "sha256:2c59b0331b51b411c551c7968496b990aed808707ab129f72d6d3ab708068b82"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s08-load-switch-recover-i00-standard-realtime"
+digest = "sha256:bc7ecb221238e76e0144ea3b08f6555e13e75554fea30f4ba90cd5934c26bae2"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s09-toss-recatch-delivery-i00-standard-realtime"
+digest = "sha256:e51a6482aabdb48d736194ddeef8212b27185d394ff9a6e37d17b1205c9b7caa"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s10-swinging-load-transit-dock-i00-standard-realtime"
+digest = "sha256:0d71626ab064e194cd136460945e2a0ea2fd07c714ea1895feeb51e50967e775"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s11-cylinder-rescue-route-deliver-i00-standard-realtime"
+digest = "sha256:eb706a582297eb88cffcf9009fe07a6f9c8bf85aeabc7de27d70144419aa7bf8"
+
+[[tasks]]
+name = "robot-coding-bench/pandadyn-s12-moving-bridge-puck-relay-i00-standard-realtime"
+digest = "sha256:2df6b07b47723bf784936297b83bece818c7e8d58af1a8ae7e4bdcd50bb7e6f8"
+
