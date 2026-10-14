@@ -159,7 +159,8 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
     priv = {"GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),
             "DIFFICULTY": F["difficulty"], "OBJECTS_BLOCK": objects_block(F), **per_mode("privileged"),
             "REFERENCE_SOLUTION": reference("privileged", F.get("reference_solution", ""))}
-    std = {"INSTANCE_TEXT": toml_str(I["text"]), "STANDARD_GOAL": F["standard_goal"], "STANDARD_OBJECTS": F["standard_objects"].rstrip() + "\n",
+    std = {"INSTANCE_TEXT": toml_str(I["text"]), "STANDARD_GOAL": F["standard_goal"],
+           "CHANGE_LOG_EXTRA": "".join(f"- {x}\n" for x in F.get("change_log", [])), "STANDARD_OBJECTS": F["standard_objects"].rstrip() + "\n",
            **per_mode("standard"),
            "REFERENCE_SOLUTION": reference("standard", "`solution/oracle_replay.py` streams the privileged oracle's joint targets "
                                            "(`oracle_qpos.npy`, one row per control step, `hold`) as one-second `joint_position` chunks "

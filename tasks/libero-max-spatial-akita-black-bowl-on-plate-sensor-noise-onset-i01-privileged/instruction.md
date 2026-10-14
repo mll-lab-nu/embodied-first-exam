@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_spatial · sensor-noise onset — instance i01
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the akita black bowl on the cookies box and place it on the plate.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the akita black bowl on the cookies box and place it on the plate.** LIBERO-PRO's initial-pose variant moved the target bowl (`akita_black_bowl_1`, the goal's) 0.17 m away from the robot and 0.06 m to the robot's right of where the sentence puts it, and turned it 45 degrees: it starts on the table, not on the cookies box (no bowl is on the box). The bowl to move is still that one; the other black bowl stands on top of the wooden cabinet.
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_spatial task (initial_pose_position_angle), with one online
 event: the first time the gripper comes within 0.18 m of `akita_black_bowl_1`, LIBERO-MAX changes the scene
 once (the camera images get noise (std 36 on 0..255) and a blocked patch (16% of the image)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

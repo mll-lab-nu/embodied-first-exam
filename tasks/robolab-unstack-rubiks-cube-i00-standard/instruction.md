@@ -1,7 +1,7 @@
 # RoboLab · unstack_rubiks_cube — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Unstack the rubiks cube tower. Success: The three Rubik's cubes of the tower must end outside the grey bin and standing on the table, and the gripper must touch none of them. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Unstack the rubiks cube tower. Success: The three Rubik's cubes of the tower must end outside the grey bin and standing on the table, and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
