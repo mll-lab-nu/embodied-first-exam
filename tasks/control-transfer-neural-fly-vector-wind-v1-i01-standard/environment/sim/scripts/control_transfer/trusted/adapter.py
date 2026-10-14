@@ -25,6 +25,10 @@ def validate(family, policy):
         from ..control_public.anycar import validate as check
 
         return check(policy)
+    if family == "anycar-drift-v3":
+        from ..control_public.anycar_drift_v3 import validate as check
+
+        return check(policy)
     if family == "anycar-drift":
         from ..control_public.anycar_drift import validate as check
 
@@ -50,9 +54,11 @@ def run(family, policy, case, out, render, asset=None):
         from .fly import rollout
 
         return rollout(json.loads(Path(policy).read_text()), case, out, asset, render)
-    if family in ("anycar", "anycar-drift", "go2"):
+    if family in ("anycar", "anycar-drift", "anycar-drift-v3", "go2"):
         if family == "anycar":
             from .anycar import rollout
+        elif family == "anycar-drift-v3":
+            from .anycar_drift_v3 import rollout
         elif family == "anycar-drift":
             from .anycar_drift import rollout
         else:
@@ -117,7 +123,7 @@ def feedback(family, record, folder, sampling=None):
         else {"telemetry", "commands"}
         if family == "g1"
         else {"telemetry", "command"}
-        if family == "anycar-drift"
+        if family in ("anycar-drift", "anycar-drift-v3")
         else {"telemetry"}
     )
     if set(value) != allowed:
@@ -152,6 +158,7 @@ def feedback(family, record, folder, sampling=None):
                 "yam": 11,
                 "anycar": 18,
                 "anycar-drift": 14,
+                "anycar-drift-v3": 14,
                 "go2": 37,
             }
             if len(row["values"]) != dimensions[family]:
@@ -159,12 +166,16 @@ def feedback(family, record, folder, sampling=None):
             vals = [row["t"]] + row["values"]
         if not all(type(x) in (int, float) and math.isfinite(x) for x in vals):
             raise ValueError("Observation values")
-    if family == "anycar-drift":
+    if family in ("anycar-drift", "anycar-drift-v3"):
         command = value["command"]
         fields = {"radius", "park_x", "park_y", "slot_length", "slot_width"}
+        if family == "anycar-drift-v3":
+            fields |= {"start_x", "target_yaw", "revision"}
         if not isinstance(command, dict) or set(command) != fields:
             raise ValueError("Course command fields")
-        if not all(type(v) in (int, float) and math.isfinite(v) for v in command.values()):
+        if family == "anycar-drift-v3" and command["revision"] != "drift-park/3":
+            raise ValueError("Course revision")
+        if not all(type(v) in (int, float) and math.isfinite(v) for k, v in command.items() if k != "revision"):
             raise ValueError("Course command values")
     if family == "g1":
         commands = value["commands"]
@@ -185,7 +196,7 @@ def feedback(family, record, folder, sampling=None):
     frames = []
     if (folder / "video.mp4").exists():
         # A fixed schedule, independent of launch state, contacts, reward or failure labels.
-        fps = 10 if family == "anycar-drift" else 5 if family == "yam" else 0.1 if family == "spacecraft" else 1
+        fps = 10 if family in ("anycar-drift", "anycar-drift-v3") else 5 if family == "yam" else 0.1 if family == "spacecraft" else 1
         subprocess.run(
             [
                 "ffmpeg",
@@ -198,7 +209,7 @@ def feedback(family, record, folder, sampling=None):
                 "-vsync",
                 "vfr",
                 "-frames:v",
-                "161" if family == "anycar-drift" else "48",
+                "161" if family in ("anycar-drift", "anycar-drift-v3") else "48",
                 "-threads",
                 "1",
                 "-q:v",

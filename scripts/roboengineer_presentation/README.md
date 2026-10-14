@@ -53,6 +53,8 @@ The user-requested `wide-gap-showcase/2` changes the gap from 0.5620 m to 1.40 m
 
 ## Scope and interpretation
 
+The optional `anycar-drift-v3` clip is captured with `capture_drift --evidence <drift-feedback-v1> --out <presentation-root>` and rendered with `render_all --only anycar-drift-v3`. Its entire nominal record must replay exactly before exporting 400 frames at 25 Hz. Both the overlay and gallery retain the frozen limitations: 0/6 adaptation, 1/20 held-out and 1/10 additional nominal-noise trials, despite the selected nominal score of 64.70. The original 50 fps MuJoCo replay remains separately available; neither presentation replaces the canonical 10 fps observations.
+
 - These clips show scripted or trained reference policies, not Astra/Luna/Sol or other coding-agent scores.
 - Neural Fly's selected vector-wind case uses the benchmark's synthetic drag extension. Skydio appearance does not make the model paper-calibrated directional aerodynamics.
 - AnyCar's selected compact Silverstone-inspired route includes documented smoothing and shape changes; it is not an exact historical F1 outline.

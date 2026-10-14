@@ -424,3 +424,13 @@ No tuning used the held-out results. Three family replays and both generated pri
 package replays match exactly. A 500-step driven comparison also confirms the added
 optional scene/substep hooks preserve the original AnyCar state trajectory. The task
 remains `oracle=none`; these checks do not establish robust transfer or an LLM score.
+
+## Tight drift parking (drift-park/3)
+
+The separate `anycar-drift-v3` family integrates worker source `16c269a352e5db4e49ce5aa97c610cca15c5ab8d` under versioned module names. The original `anycar-drift` task and ABI /1 remain intact. The new course has a nominal 0.69 × 0.43 m bay for a 0.49 × 0.27 m car and a 1 m approach. It additionally requires a net post-route turn of pi radians within 0.25 rad, with at least 120 degrees accumulated while sliding. Physical rear braking, collision predicates, containment and scoring remain those of the worker's tight-bay revision.
+
+The public entry point `control_public.anycar_drift_v3` accepts bounded numeric ABI /2 and /3. Its legacy constants remain /2; the stdlib spec and nominal trainer default to the /3 policy in `control_public.anycar_drift_feedback`. That controller uses early acceleration, bay-relative initiation, heading/rate preview and countersteering from the declared noisy sensors. No monitor flags or hidden plant parameters are inputs. Both public layouts include `anycar_drift_v3.py`, `anycar_drift_v3_nominal.py` and `anycar_drift_feedback.py`, plus the allowlisted `anycarbench/{model,drift_v3}.py` component. The spec and evaluator remain private.
+
+Generated IDs are `control-transfer-anycar-drift-v3-i{00,01}-standard`. There are three adaptation cases, ten held-out cases and three feedback rounds per persistent plant. The response includes the full public course, including `start_x`, `target_yaw` and the fixed `drift-park/3` revision, all 161 noisy rows and all 161 images at 10 Hz. The 50 fps presentation video is an additional operator replay, not the canonical agent video.
+
+The frozen nominal example scores **64.70**, with no contact and full containment. It turns about 184 degrees, including 129 degrees while sliding, and stops for over seven seconds. However, frozen results are **0/6 adaptation, 1/20 held-out and 1/10 additional nominal-noise trials**; 18 of 20 held-out cases collide. All failures are retained and no fitting occurred after the bank evaluation. A positive nominal clip does not establish robust parking. The family remains `oracle=none`, requires human review, and has no native Harbor or coding-agent result.

@@ -329,7 +329,7 @@ def collection(root):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", type=Path, required=True)
-    p.add_argument("--only", choices=ORDER + ["anycar-jump"])
+    p.add_argument("--only", choices=ORDER + ["anycar-jump", "anycar-drift-v3"])
     p.add_argument("--collection-only", action="store_true")
     a = p.parse_args()
     if not a.collection_only:

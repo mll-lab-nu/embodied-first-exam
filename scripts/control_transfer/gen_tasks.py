@@ -29,6 +29,8 @@ ROBOTS = {
 }
 EMBODIMENTS["anycar-drift"] = "racing-car"
 ROBOTS["anycar-drift"] = "anycar"
+EMBODIMENTS["anycar-drift-v3"] = "racing-car"
+ROBOTS["anycar-drift-v3"] = "anycar"
 
 
 def copy_legacy_package(task, where, private, family):
@@ -104,6 +106,7 @@ PUBLIC_MODULES = {
     "g1": ("g1.py", "g1_training.py"),
     "anycar": ("anycar.py", "anycar_nominal.py"),
     "anycar-drift": ("anycar_drift.py", "anycar_drift_nominal.py"),
+    "anycar-drift-v3": ("anycar_drift_v3.py", "anycar_drift_v3_nominal.py", "anycar_drift_feedback.py"),
     "go2": ("go2.py", "go2_data.py", "go2_nominal.py", "go2_train.py"),
 }
 G1_PUBLIC = set()
@@ -119,7 +122,7 @@ def copy_package(task, where, private, family, visual_profile=None):
     ):
         put(task, where + "/" + path, "")
     names = ("__init__.py", "client.py", "weights.py", *PUBLIC_MODULES[family])
-    if private and family == "anycar-drift":
+    if private and family in ("anycar-drift", "anycar-drift-v3"):
         names += ("anycar.py",)  # Private shared plant/noise sampler imports this ABI.
     for name in names:
         source = SRC / "control_public" / name
@@ -130,6 +133,7 @@ def copy_package(task, where, private, family, visual_profile=None):
         "g1": ["sim2realbench"],
         "anycar": ["anycarbench"],
         "anycar-drift": ["anycarbench"],
+        "anycar-drift-v3": ["anycarbench"],
         "go2": ["quadrupedbench"],
     }[family]
     for package in packages:
@@ -150,6 +154,10 @@ def copy_package(task, where, private, family, visual_profile=None):
             ):
                 continue
             if not private:
+                if family == "anycar-drift-v3" and relative not in (
+                    "__init__.py", "model.py", "drift_v3.py", "LICENSE.anycar",
+                ):
+                    continue
                 if family == "anycar-drift" and relative not in (
                     "__init__.py",
                     "model.py",
@@ -213,6 +221,7 @@ def copy_package(task, where, private, family, visual_profile=None):
             "g1": (),
             "anycar": ("anycar.py", "anycar_spec.py"),
             "anycar-drift": ("anycar_drift.py", "anycar.py", "anycar_spec.py"),
+            "anycar-drift-v3": ("anycar_drift_v3.py", "anycar.py", "anycar_spec.py"),
             "go2": ("go2.py", "go2_spec.py"),
         }
         for name in (*names, *family_files[family]):
@@ -221,8 +230,13 @@ def copy_package(task, where, private, family, visual_profile=None):
                 where + "/scripts/control_transfer/trusted/" + name,
                 (SRC / "trusted" / name).read_text(),
             )
-        for name in ("anycar_spec.py", "anycar_drift_spec.py"):
-            if (family == "anycar-drift" or family == "anycar" and name == "anycar_spec.py") and (SRC / name).exists():
+        spec_files = {
+            "anycar": ("anycar_spec.py",),
+            "anycar-drift": ("anycar_spec.py", "anycar_drift_spec.py"),
+            "anycar-drift-v3": ("anycar_spec.py", "anycar_drift_v3_spec.py"),
+        }.get(family, ())
+        for name in spec_files:
+            if (SRC / name).exists():
                 put(
                     task,
                     where + "/scripts/control_transfer/" + name,
@@ -295,6 +309,8 @@ def render(task, name, index):
     oracle = "full" if native_full else "none"
     if native_full:
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
+    elif family == "anycar-drift-v3":
+        reference_note = "Development-only drift-park/3 with feedback ABI /3 (legacy /2 accepted). A nominal example succeeds at 64.70 with no contact and full tight-bay containment. Frozen results are 0/6 adaptation, 1/20 held-out and 1/10 additional nominal-noise cases. Three exact fresh-process replays and local video checks pass. No post-bank tuning, native Harbor or coding-agent run is claimed. No full oracle; human review required."
     elif family == "anycar-drift":
         reference_note = "Development-only drift-park/1. A scripted nominal example succeeds, but the frozen controller passes 0/26 randomized cases across two plants (6 adaptation and 20 held-out). Three exact fresh-process and rendered replays pass. Transfer solvability and LLM evaluation remain unverified. Native infrastructure validation is reported separately from control success. No full oracle; human review required."
     elif lap:
@@ -449,6 +465,8 @@ build_timeout_sec = 600.0
         training += " Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`."
     if family == "anycar-drift":
         training += " Run `python -m control_public.anycar_drift_nominal --out /app/output/nominal` for local nominal rollouts. The public numeric ABI is in `control_public.anycar_drift`. Each response preserves the public course in `feedback.command`, all 161 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. Use the course to distinguish changes in the parking target from changes in vehicle response."
+    if family == "anycar-drift-v3":
+        training += " Run `python -m control_public.anycar_drift_v3_nominal --out /app/output/nominal` for local nominal rollouts. The controller entry point is `control_public.anycar_drift_v3`; ABI /3 coefficients are in `control_public.anycar_drift_feedback`, and legacy ABI /2 is also accepted. Each response preserves the public course in `feedback.command`, all 161 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. The course includes the public start position, target heading and fixed revision string."
     if instance.get("task_variant") == "circuit-sector/1":
         training += f" Use `--track {public['track_id']}` to train on this task's public route, and `--full-lap` for nominal full-lap practice. Deployment evaluates 24-second sectors; full-lap practice does not change that horizon."
     if lap:
@@ -559,17 +577,18 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
             "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n",
             True,
         )
-    if family == "anycar-drift":
+    if family in ("anycar-drift", "anycar-drift-v3"):
+        default_module = "anycar_drift_feedback" if family == "anycar-drift-v3" else "anycar_drift"
         put(
             task,
             "solution/reference.py",
             (
                 "from control_public.client import Client\n"
-                "from control_public.anycar_drift import DEFAULT\n"
+                f"from control_public.{default_module} import DEFAULT\n"
                 "c = Client()\nc.describe()\n"
                 "for i in range(3):\n"
                 "    r = c.deploy(DEFAULT, 'Frozen nominal controller; repeated for lifecycle validation only, transfer success is not established.')\n"
-                "c.seal(r['round_id'], 'Unadapted nominal baseline; randomized reference is unsuccessful.')\n"
+                "c.seal(r['round_id'], 'Unadapted nominal baseline; robust randomized success is not established.')\n"
             ),
         )
         put(

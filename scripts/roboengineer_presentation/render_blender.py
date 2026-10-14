@@ -634,6 +634,10 @@ def set_frame(index):
         target = Vector((pos.x + 0.35, 0, 0.25))
         offset = Vector((0.45, -3.8, 1.5))
         camera_data.lens = 46
+    elif name == "anycar-drift-v3":
+        target = pos + Vector((0, 0, 0.05))
+        offset = Vector((0.65, -2.4, 2.6))
+        camera_data.lens = 46
     elif name == "g1":
         target = Vector((pos.x + 0.25, pos.y, 0.86))
         offset = Vector((2.35, -3.5, 1.1))

@@ -30,7 +30,7 @@ def main():
         required=True,
         help="Physical CUDA device visible to this render process only",
     )
-    p.add_argument("--only", choices=ORDER + ["anycar-jump"])
+    p.add_argument("--only", choices=ORDER + ["anycar-jump", "anycar-drift-v3"])
     a = p.parse_args()
     a.root = a.root.resolve()
     tools = Path(__file__).resolve().parent

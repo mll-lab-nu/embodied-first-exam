@@ -4,4 +4,4 @@ c = Client()
 c.describe()
 for i in range(3):
     r = c.deploy(DEFAULT, 'Frozen nominal controller; repeated for lifecycle validation only, transfer success is not established.')
-c.seal(r['round_id'], 'Unadapted nominal baseline; randomized reference is unsuccessful.')
+c.seal(r['round_id'], 'Unadapted nominal baseline; robust randomized success is not established.')
