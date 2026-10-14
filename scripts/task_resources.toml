@@ -102,6 +102,56 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.5
 measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
 
+# dexhand (ready-10 release families), privileged / standard: 8 + 8 task(s); pot_shelf_transfer and sweep_dustpan below
+[[rule]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-privileged$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "30 Harbor 0.23 trials of the six essential families (12 oracle, 12 nop, 6 Wuji smoke; rcb_monitor samples every 5 s, eai-dexhand:0.2.0, CPU-only, 2026-10-14) plus the hamburger and paper oracle/nop trials: agent container peak <= 0.03 GiB; one fresh replay process 0.25-0.32 GiB max RSS (os.wait4; paper 0.31 GiB, hamburger 0.28 GiB), the privileged verifier runs two at once (<= 0.65 GiB); standard sim service peak 0.65 GiB (VmHWM, held_joystick oracle episode), paper 0.51 GiB; one core per replay process; x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3 GiB each)"
+
+[[rule]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-standard$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "30 Harbor 0.23 trials of the six essential families (12 oracle, 12 nop, 6 Wuji smoke; rcb_monitor samples every 5 s, eai-dexhand:0.2.0, CPU-only, 2026-10-14) plus the hamburger and paper oracle/nop trials: agent container peak <= 0.03 GiB; one fresh replay process 0.25-0.32 GiB max RSS (os.wait4; paper 0.31 GiB, hamburger 0.28 GiB), the privileged verifier runs two at once (<= 0.65 GiB); standard sim service peak 0.65 GiB (VmHWM, held_joystick oracle episode), paper 0.51 GiB; one core per replay process; x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3 GiB each)"
+
+# dexhand dual-arm release families (pot_shelf_transfer, sweep_dustpan), privileged / standard: 2 + 2 task(s)
+[[rule]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-privileged$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "pot_shelf_transfer oracle/nop trials (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays"
+
+[[rule]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-standard$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "pot_shelf_transfer oracle/nop trials (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays"
+
 # dexjoco, privileged: 11 task(s)
 [[rule]]
 match = "^dexjoco-.*-privileged$"
@@ -1096,6 +1146,66 @@ trial_max_memory_gb = 16.0
 measured = "GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 8 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks 0.65 GiB, dual-arm 2.53 GiB)"
+
+[[limit]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks 0.65 GiB, dual-arm 2.53 GiB)"
+
+[[limit]]
 match = "^dexjoco-.*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 0.0
@@ -1993,6 +2103,24 @@ sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 match = "^bigym2-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-privileged$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-standard$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-privileged$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-standard$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
 
 [[cap]]
 match = "^dexjoco-.*-privileged$"
