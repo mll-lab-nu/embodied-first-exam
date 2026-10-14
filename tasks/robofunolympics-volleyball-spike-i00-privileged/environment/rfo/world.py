@@ -40,6 +40,8 @@ from bodies import load_body  # noqa: E402
 from bodies.control.arbiter import Arbiter  # noqa: E402
 from bodies.unitree_g1 import body as G1B  # noqa: E402
 import run_policy as RP  # noqa: E402
+from bodies.unitree_g1.agile import Agile  # noqa: E402
+from bodies.unitree_g1.falcon import Falcon  # noqa: E402
 
 from . import looks  # noqa: E402
 from .referee import Referee  # noqa: E402
@@ -48,10 +50,10 @@ from .scene import Scene  # noqa: E402
 # The robots of the library a task may use (Task.robot): the Unitree G1 (1.32 m, 33 kg, 29 joints; a walking and a running
 # policy) and the Unitree H1-2 (1.78 m, 67 kg, 27 joints; a walking policy), each with its real limits and motor curves.
 ROBOTS = {
-    "unitree_g1": dict(title="Unitree G1", height_m=1.32, run=True,
+    "unitree_g1": dict(title="Unitree G1", height_m=1.32, run=True, walkers=True,
                        source="MuJoCo Menagerie's unitree_g1 with Unitree's joint, speed and torque limits and motor "
                               "torque-speed curves"),
-    "unitree_h1": dict(title="Unitree H1-2", height_m=1.78, run=False,
+    "unitree_h1": dict(title="Unitree H1-2", height_m=1.78, run=False, walkers=False,
                        source="Unitree's own h1_2 model with its joint, speed and torque limits; its motor "
                               "torque-speed curves are estimates"),
 }
@@ -68,8 +70,9 @@ GROUP_NAMES = ("legs", "waist", "arms")
 SIDES = ("left", "right")
 
 # ------------------------------------------------------------------------------------------------ the sim row
-MODES = ("stand", "walk", "run", "run_arms", "joints")
-STAND, WALK, RUN, RUN_ARMS, JOINT = range(5)
+MODES = ("stand", "walk", "run", "run_arms", "joints", "walk_falcon", "walk_agile")
+STAND, WALK, RUN, RUN_ARMS, JOINT, WALK_FALCON, WALK_AGILE = range(7)
+WALKERS = (WALK_FALCON, WALK_AGILE)            # the G1's optional walking policies (FALCON, AGILE), from the robot library
 R_MODE, R_CMD, R_Q, R_DQ, R_TAU, R_KP, R_KD, R_GRIP = (0, slice(1, 4), slice(4, 33), slice(33, 62), slice(62, 91),
                                                         slice(91, 120), slice(120, 149), slice(149, 151))
 RAW_DIM = 151                                  # the G1's (the module-level layout names are the G1's; a world has its own: Layout)
@@ -101,6 +104,14 @@ GRIPS = ["grip_left", "grip_right"]
 VEL = ["vx", "vy", "wz"]
 
 
+def walker_cmd(pol, cmd_max) -> tuple[np.ndarray, np.ndarray]:
+    """The command range of an optional walking policy: its training range (FALCON: +-command_max; AGILE: command_min
+    to command_max) within the robot's own walking limits (cmd_max, [limits.walk])."""
+    cmd_max = np.asarray(cmd_max, float)
+    lo = getattr(pol, "cmd_min", -pol.cmd_max)
+    return np.maximum(np.asarray(lo, float)[:3], -cmd_max), np.minimum(np.asarray(pol.cmd_max, float)[:3], cmd_max)
+
+
 def _yaw(quat) -> float:
     w, x, y, z = quat
     return math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
@@ -120,6 +131,14 @@ class Robot:
         self.L = Layout(list(a.JOINTS), len(a.GROUPS["waist"]))
         self.has_run = bool(self.info["run"])
         self.modes = {STAND, WALK, JOINT} | ({RUN, RUN_ARMS} if self.has_run else set())
+        # The G1's two optional walking policies (bodies/unitree_g1/falcon.py, agile.py: numpy ports of the released
+        # FALCON and WBC-AGILE G1 policies), stepped like the running policy: 50 Hz, their 12 leg targets on their
+        # own leg gains; the waist and the arms stay the row's, on the default gains. FALCON also gives its wrist
+        # residual (as torque on the wrists, as the library's rig does).
+        self.walkers = {}
+        if self.info.get("walkers"):
+            self.walkers = {WALK_FALCON: Falcon(self.B.decl), WALK_AGILE: Agile(self.B.decl)}
+            self.modes |= set(WALKERS)
         self.qadr, self.vadr = a.qadr, a.vadr
         self.fq, self.fv = self.rig.fqadr, self.rig.fvadr
         self.lo, self.hi, self.speed, self.tau_max = a.lo.copy(), a.hi.copy(), a.speed.copy(), a.tau_max.copy()
@@ -255,6 +274,11 @@ class World:
         self.mode = STAND
         self.run_k = 0
         self.run_tgt = r.arb.target()
+        for pol in r.walkers.values():
+            pol.reset()
+        self.walk_k = 0
+        self.walk_tgt = r.stance.copy()
+        self.wrist_ff = np.zeros(14)
         self.cmd = np.zeros(3)
         self.held = {s: None for s in SIDES}        # side -> the name of the body its hand grips
         self.grip_req = {s: False for s in SIDES}
@@ -360,6 +384,9 @@ class World:
         if mode in (RUN, RUN_ARMS) and self.mode not in (RUN, RUN_ARMS):
             self.runp.reset()
             self.run_k = 0
+        if mode in WALKERS and self.mode != mode:   # a walker takes over: its memory starts afresh
+            r.walkers[mode].reset()
+            self.walk_k = 0
         self.mode = mode
         q = raw[L.R_Q]
         if mode == WALK:
@@ -371,6 +398,21 @@ class World:
             ff = np.clip(a._support_ff(d), -r.tau_max[L.LEGS], r.tau_max[L.LEGS])
             self._plan(["legs", "waist", "arms"], np.r_[r.stance, q[L.UPPER]], TAU=np.r_[ff, np.zeros(L.NU)],
                        kp=r.kp0, kd=r.kd0, rate=np.r_[np.full(12, STAND_RATE), np.full(L.NU, np.inf)])
+        elif mode in WALKERS:
+            pol = r.walkers[mode]
+            lo, hi = walker_cmd(pol, a.cmd_max)
+            self.cmd = np.clip(raw[R_CMD], lo, hi)
+            up = np.clip(q[L.UPPER], r.lo[L.UPPER], r.hi[L.UPPER])
+            if self.walk_k % 2 == 0:                # the policies run at 50 Hz
+                self.walk_tgt = np.asarray(pol.step(d.qpos[r.fq + 3:r.fq + 7], d.qvel[r.fv + 3:r.fv + 6],
+                                                    d.qpos[r.qadr], d.qvel[r.vadr], self.cmd,
+                                                    up[L.ARMS.start - 12:], float(up[0])), float)[:12]
+                self.wrist_ff = (pol.wrist_torque(r.kp0[L.ARMS]) if mode == WALK_FALCON else np.zeros(14))
+            self.walk_k += 1
+            self._plan(["legs", "waist", "arms"], np.r_[self.walk_tgt, up],
+                       TAU=np.r_[np.zeros(12 + L.NW), np.clip(self.wrist_ff, -r.tau_max[L.ARMS], r.tau_max[L.ARMS])],
+                       kp=np.r_[np.minimum(pol.kp, r.kp_max[:12]), r.kp0[L.UPPER]],
+                       kd=np.r_[np.minimum(pol.kd, r.kd_max[:12]), r.kd0[L.UPPER]])
         elif mode in (RUN, RUN_ARMS):
             self.cmd = np.clip(raw[R_CMD], RUN_CMD[:, 0], RUN_CMD[:, 1])
             if self.run_k % 2 == 0:                 # the policy runs at 50 Hz
@@ -560,10 +602,11 @@ class World:
                  ho.get("kd_from", np.zeros(0)), np.r_[st.get("i", -1)], np.asarray(st.get("w", []), float).ravel(),
                  np.zeros(0) if self.last_raw is None else self.last_raw, *[self.pins[k] for k in sorted(self.pins)]]
         for arr in (d.qpos, d.qvel, d.ctrl, d.act, d.eq_active, m.eq_data, d.qacc_warmstart, a.memory(),
-                    *self.runp.memory(), self.run_tgt, self.cmd, *extra):
+                    *self.runp.memory(), self.run_tgt, self.cmd, *extra,
+                    *[self.robot.walkers[k].state() for k in sorted(self.robot.walkers)], self.walk_tgt, self.wrist_ff):
             h.update(np.nan_to_num(np.ascontiguousarray(arr, dtype=np.float64), nan=1e300, posinf=1e301,
                                    neginf=-1e301).tobytes())
-        h.update(json.dumps([self.k, self.mode, self.run_k, self.refused, self.unstable, self.held, self.grip_req, sorted(self.pins), self.ref.digest()],
+        h.update(json.dumps([self.k, self.mode, self.run_k, self.walk_k, self.refused, self.unstable, self.held, self.grip_req, sorted(self.pins), self.ref.digest()],
                             sort_keys=True, default=_jd).encode())
         return h.hexdigest()
 
@@ -621,6 +664,16 @@ class Actions:
         }
         if not r.has_run:                            # a robot without a running policy
             del self.types["run"], self.types["run_arms"]
+        for mode, name, who in ((WALK_FALCON, "walk_falcon", "FALCON's walking policy (LeCAR-Lab, trained with arm motions "
+                                 "and forces on the hands; it also nudges the wrists)"),
+                                (WALK_AGILE, "walk_agile", "AGILE's velocity-height walking policy (NVIDIA WBC-AGILE, "
+                                 "trained while the arms and the waist moved)")):
+            if mode in r.walkers:
+                self.types[name] = dict(layout=VEL + _names(L.UPPER) + GRIPS,
+                                        bounds=cat(walker_cmd(r.walkers[mode], a.cmd_max), sub(L.UPPER), g01),
+                                        meaning=f"{who} drives the legs from the velocity command (vx forward, vy to "
+                                                "the left, m/s; wz turning left, rad/s; the robot's own frame); you "
+                                                "give the waist and arm joint targets")
         for t in self.types.values():
             t["dim"] = len(t["layout"])
             assert len(t["bounds"][0]) == t["dim"]
@@ -640,8 +693,8 @@ class Actions:
         if typ == "stand":
             raw[R_MODE] = STAND
             raw[L.R_Q][L.UPPER] = row[0:L.NU]
-        elif typ == "walk":
-            raw[R_MODE] = WALK
+        elif typ in ("walk", "walk_falcon", "walk_agile"):
+            raw[R_MODE] = {"walk": WALK, "walk_falcon": WALK_FALCON, "walk_agile": WALK_AGILE}[typ]
             raw[R_CMD] = row[0:3]
             raw[L.R_Q][L.UPPER] = row[3:3 + L.NU]
         elif typ == "run":
@@ -671,14 +724,15 @@ class Actions:
         r, L = self.r, self.L
         tgt = r.arb.target()
         raw = world.last_raw
-        mode = {"stand": STAND, "walk": WALK, "run": RUN, "run_arms": RUN_ARMS, "joints": JOINT, "lowcmd": JOINT}[typ]
+        mode = {"stand": STAND, "walk": WALK, "run": RUN, "run_arms": RUN_ARMS, "joints": JOINT, "lowcmd": JOINT,
+                "walk_falcon": WALK_FALCON, "walk_agile": WALK_AGILE}[typ]
         same = raw is not None and int(raw[R_MODE]) == mode
         grip = raw[L.R_GRIP].copy() if raw is not None else np.array([float(world.grip_req[s]) for s in SIDES])
         q = raw[L.R_Q] if same else tgt
         cmd = raw[R_CMD] if same else np.zeros(3)
         if typ == "stand":
             return np.r_[q[L.UPPER], grip]
-        if typ == "walk":
+        if typ in ("walk", "walk_falcon", "walk_agile"):
             return np.r_[cmd, q[L.UPPER], grip]
         if typ == "run":
             return np.r_[cmd, grip]
@@ -694,9 +748,10 @@ class Actions:
         """Keep the command in force with no velocity: a walking robot stops and keeps its balance on the walking
         policy, a running one is slowed by the running policy, joint targets (with their gains and feed-forward
         torques, as a `lowcmd` row) stay as they are with zero target velocities."""
-        typ = {STAND: "stand", WALK: "walk", RUN: "run", RUN_ARMS: "run_arms", JOINT: "lowcmd"}[world.mode]
+        typ = {STAND: "stand", WALK: "walk", RUN: "run", RUN_ARMS: "run_arms", JOINT: "lowcmd",
+               WALK_FALCON: "walk_falcon", WALK_AGILE: "walk_agile"}[world.mode]
         row = self.current(typ, world)
-        if typ in ("walk", "run", "run_arms"):
+        if typ in ("walk", "run", "run_arms", "walk_falcon", "walk_agile"):
             row[0:3] = 0.0
         elif typ == "lowcmd":
             row[self.L.NJ:2 * self.L.NJ] = 0.0

@@ -9,7 +9,7 @@
 | Family / instance | `discus` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_discus.py: positive by injection (a real release and exit, the discus' velocity set to 13.5 m/s at 38 degrees with spin); negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit. A swing of the H1-2 gives 5.1 m/s (3.3 m); 15 m needs about 12 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Throw the discus in your right hand from inside the circle so that it lands inside the sector at least 15.0 m from the circle, then leave the circle from its rear half and stand. (RoboFunOlympics `discus`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

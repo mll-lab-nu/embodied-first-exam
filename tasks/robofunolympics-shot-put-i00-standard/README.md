@@ -9,7 +9,7 @@
 | Family / instance | `shot_put` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_shot_put.py: positive by injection (the real stance and a real arm push, the shot's velocity set to 8.3 m/s at 40 degrees, a real exit over the rim); negatives: the shot lowered, taken behind the shoulders, a sling, the other hand, out early, toes on the board, outside the sector, short, a front-half exit. The real push gives 2.6 m/s (0.82 m); 6 m needs about 7 m/s. In `stand` mode the robot topples under the 7.26 kg shot within seconds; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Put the shot that your right hand holds at your neck, from the shoulder with that hand alone, so that it lands inside the sector at least 6.0 m from the circle, then leave the circle from its rear half and stand. (RoboFunOlympics `shot-put`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -126,7 +126,9 @@ What the platform does and does not do for you:
   zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
   come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
   steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
-  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find.
+  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The
+  G1's two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name)
+  they keep it upright but do not walk it.
 - **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`, evaluated
   at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit. `joints`
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1500 / 800 / 400 and kd up to
