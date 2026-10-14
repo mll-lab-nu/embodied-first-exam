@@ -82,6 +82,17 @@ for i in range(2):
             self.assertEqual(metadata["metadata"]["oracle"], "none")
             self.assertEqual(metadata["agent"]["timeout_sec"], 14400)
             self.assertEqual(metadata["verifier"]["environment_mode"], "separate")
+            import hashlib
+
+            payload = next((task / "tests").glob("payload-*"))
+            inputs = {
+                name: hashlib.sha256((task / "tests" / name).read_bytes()).hexdigest()
+                for name in ("grade.py", "test.sh", "instance.json", "rcb_limits.py", "rcb_limits.json")
+            }
+            self.assertEqual(payload.name, "payload-" + hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest())
+            self.assertIn(f"COPY {payload.name}/ /tests/", (task / "tests/Dockerfile").read_text())
+            for name in inputs:
+                self.assertEqual((payload / name).read_bytes(), (task / "tests" / name).read_bytes())
             public = task / "environment/public"
             geometry = public / "scripts/control_transfer/components/anycarbench"
             self.assertEqual(

@@ -624,6 +624,12 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
         )
     }
     payload_sha = hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest()
+    # BuildKit may reuse synchronized same-size/same-mtime root files across
+    # contexts. A LABEL changes image metadata, but does not invalidate a COPY
+    # snapshot. Bind the source path itself to all verifier input bytes.
+    payload_directory = "payload-" + payload_sha
+    for name in inputs:
+        put(task, "tests/" + payload_directory + "/" + name, (task / "tests" / name).read_text())
     dockerfile = task / "tests/Dockerfile"
     lines = dockerfile.read_text().splitlines()
     lines.insert(1, f'LABEL roboengineer.verifier_inputs_sha256="{payload_sha}"')
@@ -633,7 +639,7 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
     lines = [
         line.replace(
             "COPY grade.py test.sh instance.json /tests/",
-            "COPY grade.py test.sh instance.json rcb_limits.py rcb_limits.json /tests/",
+            f"COPY {payload_directory}/ /tests/",
         )
         for line in lines
     ]
