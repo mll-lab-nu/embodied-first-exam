@@ -63,6 +63,10 @@ if [ -f "$root/scripts/robosafe/gen_tasks.py" ]; then   # RoboSafeBench (its tas
   if out=$(python3 "$root/scripts/robosafe/gen_tasks.py" check 2>&1); then echo "ok scripts/robosafe/gen_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robosafe/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/dexhand/generate.py" ]; then   # DexHand: the release families of scripts/dexhand/release.json (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/dexhand/generate.py" --check --release 2>&1); then echo "ok scripts/dexhand/generate.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/dexhand/generate.py --check --release:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 if [ -f "$root/scripts/labutopia/generate.py" ]; then   # LabUtopia (its tasks pull request adds the generator)
   if out=$(python3 "$root/scripts/labutopia/generate.py" --check 2>&1); then echo "ok scripts/labutopia/generate.py: ${out##*$'\n'}"
   else echo "FAIL scripts/labutopia/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
