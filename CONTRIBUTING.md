@@ -70,6 +70,7 @@ the expected size of the pull request.
 ## Before opening the pull request
 ```bash
 bash ci_checks/run_all.sh tasks/<your tasks>      # must pass
+bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
 python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: table = task.toml = instruction = sim service (§2.12)
@@ -90,7 +91,16 @@ family, a positive example the verifier scores 1, the `nop` result and a short d
 The checklist is in PROTOCOL §2.7.
 
 ## Review and merge
-1. Static checks run on every pull request (`.github/workflows/static-checks.yml`).
+1. Static checks run on every pull request (`.github/workflows/static-checks.yml`), on what the pull request can
+   affect (`ci_checks/ci_scope.py`, from the diff against `main`): when it changes only one benchmark's own paths (its
+   `tasks/<prefix>*`, `scripts/<bench>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`; plus the benchmarks that
+   share code with it), the per-task checks and `task_conventions.py --check` on that benchmark's tasks, its generator's
+   check and its unit tests; the cheap repo-level checks (dataset digests, cutoffs, resources, protocol, ...) always run
+   on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
+   (`task_conventions.py`, `task_cutoffs.*`, `task_dynamics.toml`, `task_resources.toml`, `eai_standard/`,
+   `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, `docs/PROTOCOL.md` and the other protocol documents, or a
+   path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
+   run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
 2. A maintainer reviews the files, runs the oracle and `nop` on a sample, and, for new benchmarks, an adversarial
    ("cheat") trial and a model trial.
 3. Merge requires: checks passing, a maintainer approval (CODEOWNERS for shared files), human review where required,
