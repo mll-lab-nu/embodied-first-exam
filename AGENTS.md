@@ -45,11 +45,15 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   non-default instances under the privileged task's `tests/seeds/<seed>/` (never under `environment/`); reference solutions
   are per seed. The runner picks the seed (`scripts/task_seed.py materialize`); `ci_checks/check-seeds.py` checks it.
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
-  + `tests/Dockerfile`) and the protocol check (`check-protocol.py`). New check =
-  `check-<thing>.sh <task_dir>`, registered in `run_all.sh`; a rule that guards the trust boundary or the caps also gets a
-  mutation in `ci_checks/check-ci-selftest.py` (a real task broken that way must fail the rule). Run the checks from a
+  + `tests/Dockerfile`) and the protocol check (`check-protocol.py`). New check = `check-<thing>.sh <task_dir>`,
+  registered in `ci_checks/check-task.sh` (a repo-level check: in `run_all.sh`); a rule that guards the trust boundary or
+  the caps also gets a mutation in `ci_checks/check-ci-selftest.py` (a real task broken that way must fail the rule). Run the checks from a
   checkout made with `umask 022` (`run_all.sh` sets it for itself). `ci_checks/check-unit-tests.sh --all` runs the
-  service-layer tests that need numpy + requests (CI job `unit-tests`).
+  service-layer tests that need numpy + requests (CI job `unit-tests`). Everything runs concurrently
+  (`ci_checks/parallel.py`, `RCB_CI_JOBS` caps it). CI on a pull request runs `run_all.sh --changed`: the scope from
+  `ci_checks/ci_scope.py` (one benchmark's own paths -> its tasks, generator check and unit tests; shared code -> the full
+  suite); pushes to main and the nightly run are the full suite. A new benchmark gets its row in `ci_scope.py` `UNITS`
+  (without one, its pull requests run the full suite).
 - `tasks/dataset.toml`: task manifest with a digest per task; refresh with `cd tasks && harbor add --scan .` after any
   change to a task (`ci_checks/check-dataset-manifest.sh` recomputes the digests).
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
