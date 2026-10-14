@@ -21,6 +21,9 @@ python3 images/dexhand/prepare_assets.py      # fetch the pinned sources into th
 sudo docker build -t ghcr.io/mll-lab-nu/eai-dexhand:$(cat images/dexhand/VERSION) images/dexhand
 ```
 
+The published image is `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0`. After a `docker push` of a new version, write its digest
+(`sha256:...`) to `DIGEST`; `scripts/dexhand/generate.py` then pins every task's `FROM` and standard `sim.image` to it.
+
 `prepare_assets.py` reuses files that already match their manifest and rebuilds the Tianji meshes from the pinned
 public archives (`tianji/source-manifest.json`) when no verified copy exists; the conversion must reproduce
 `tianji-asset-manifest.json` byte for byte. Local simulator runs outside the image set `DEXHAND_ASSET_DIR`,

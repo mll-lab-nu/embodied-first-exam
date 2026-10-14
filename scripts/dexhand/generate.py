@@ -34,6 +34,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import cutoff_sec, normalize  # noqa: E402
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-dexhand:" + (ROOT / "images/dexhand/VERSION").read_text().strip()
+# The published image is pinned by digest once pushed (images/dexhand/DIGEST, written after `docker push`).
+if (ROOT / "images/dexhand/DIGEST").exists():
+    IMAGE += "@" + (ROOT / "images/dexhand/DIGEST").read_text().strip()
 CLIENT_IMAGE = next(
     line.split("=", 1)[1]
     for line in (LAYER / "client.env").read_text().splitlines()
