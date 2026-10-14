@@ -18,8 +18,8 @@ mode = "privileged"
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
-oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_volleyball_set.py: positive by injection (the real toss onto really raised fists, the ball's velocity set at the contact: apex 4.50 m, 0.35 m from the target's centre); negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle = "full"
+oracle_evidence = "Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held Measured (make_oracles.py): success after 5.87 s of the 10 s limit, live and in a fresh replay, ending in the same state."
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
@@ -58,7 +58,7 @@ main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
-oracle = []
+oracle = [0]
 
 [verifier]
 timeout_sec = 900.0

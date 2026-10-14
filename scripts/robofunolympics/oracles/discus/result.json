@@ -1,0 +1,14 @@
+{
+ "family": "discus",
+ "steps": 848,
+ "time_s": 8.48,
+ "time_limit_s": 60.0,
+ "metrics": {
+  "release_speed_m_s": 12.92,
+  "release_height_m": 1.824,
+  "release_tilt_deg": 51.1,
+  "release_spin_rad_s": 24.2,
+  "distance_m": 15.868
+ },
+ "deterministic": true
+}

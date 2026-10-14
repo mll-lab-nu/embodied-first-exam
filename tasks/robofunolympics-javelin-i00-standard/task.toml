@@ -30,8 +30,8 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 10.0
-oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_javelin.py: positive by injection (a real arm raise and release above the shoulder, the javelin's velocity set to 15.5 m/s at 38 degrees, a real exit from the runway); negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front. A legal release of the H1-2 gives 4.3 m/s (1.7 m); 20 m needs about 13.5 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle = "full"
+oracle_evidence = "Reference: a standing throw by the trunk's turn, the hand above the shoulder, from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 15.0 m/s at 37 degrees, head first at 21.58 m (the line is 20 m), then back 4 m behind the arc and standing. Open loop on the frozen start, not robust. Referee test negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front The privileged twin's reference rows (1533 control steps, success after 15.33 s) streamed through the client."
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
@@ -71,7 +71,7 @@ sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
-oracle = []
+oracle = [0]
 
 [verifier]
 timeout_sec = 900.0
