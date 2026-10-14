@@ -17,6 +17,7 @@ robot = "unitree-h1hand"
 # HumanoidBench env h1hand-powerlift-v0; paper category manipulation; C5 · whole-body power and momentum
 family = "powerlift"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 # scene = environment/instance.npz (frozen MuJoCo state); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 4.0

@@ -16,6 +16,7 @@ simulator = "yamlab"              # YAMLab @ ec0455d on Isaac Lab @ f4aa17f / Is
 robot = "i2rt-yam-bimanual"
 family = "put_pot_on_cooktop"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 expert_time_estimate_hours = 1.5
 

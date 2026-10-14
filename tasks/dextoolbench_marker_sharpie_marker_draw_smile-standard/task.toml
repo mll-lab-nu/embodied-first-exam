@@ -24,6 +24,7 @@ family = "dextoolbench/marker/sharpie_marker/draw_smile"
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "full"
 

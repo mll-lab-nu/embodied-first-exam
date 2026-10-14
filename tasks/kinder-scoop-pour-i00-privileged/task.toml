@@ -16,6 +16,7 @@ robot = "tidybot-plus-plus"
 # KinDER env kinder/ScoopPour3D-o30-v0
 family = "scoop-pour"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 # scene = environment/instance.json (KinDER's seed + a digest of the scene it builds); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 4.0

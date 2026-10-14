@@ -15,6 +15,7 @@ simulator = "mujoco"
 robot = "sawyer"
 family = "metaworld/door-close"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 0             # Meta-World's reset randomization (object and goal positions)
 expert_time_estimate_hours = 0.5

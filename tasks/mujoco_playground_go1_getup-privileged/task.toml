@@ -16,6 +16,7 @@ simulator = "mujoco"
 robot = "unitree-go1"
 family = "mujoco_playground/Go1Getup"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 5             # the PRNGKey of Playground's reset (and, for the joystick tasks, its command process)
 expert_time_estimate_hours = 2.0

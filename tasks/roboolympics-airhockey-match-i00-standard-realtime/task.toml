@@ -30,6 +30,7 @@ simulator = "mujoco"
 robot = "kuka-iiwa14"
 family = "airhockey_match"
 mode = "standard-realtime"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.3"
 instance_seed = 101
 opponent_level = 1

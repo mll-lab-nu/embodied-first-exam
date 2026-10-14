@@ -28,6 +28,7 @@ simulator = "mujoco"
 robot = "boston-dynamics-spot"
 family = "mujoco_playground/SpotGetup"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 instance_seed = 1

@@ -28,6 +28,7 @@ simulator = "maniskill"
 robot = "franka-panda"
 family = "s07_conveyor_load_brake_unload"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 instance_seed = 0

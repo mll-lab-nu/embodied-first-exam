@@ -14,6 +14,7 @@ simulator = "mujoco"
 robot = "franka-panda"
 family = "mujoco_playground/PandaOpenCabinet"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 60417             # Playground's reset randomization (target x, arm start perturbation) with this seed
 expert_time_estimate_hours = 1.0

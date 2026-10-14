@@ -14,6 +14,7 @@ simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the
 robot = "franka-panda"            # PandaStick with a paint brush: rigid handle + 15 mm collision-free tuft, TCP = the tuft's tip
 family = "robopaint_acrylic_vision"
 mode = "privileged"               # privileged (exact sheets, score, brush state) | standard (RGB only: the -standard twin)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
 oracle_evidence = "Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 10746 of the 32300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation)."
 instance_seed = 0                 # scene = environment/instance.json (sheets, brush preset, paint wells, start joints, instance_sha; the exemplar is target.png)

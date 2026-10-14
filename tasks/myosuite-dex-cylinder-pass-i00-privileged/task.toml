@@ -15,6 +15,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myohand"
 family = "dex_cylinder_pass"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #65"
 instance_seed = 0                 # MyoHandCylindersmallPass-v0: seed(0), then reset(seed=0)

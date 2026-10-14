@@ -14,6 +14,7 @@ simulator = "robowits"            # RoboWits @ 9cc30ae on Genesis 0.4.7 (CPU phy
 robot = "marvin-bimanual"
 family = "hold_cup"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-hold-cup-i00-limited__BiMATyh (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7)."
 instance_seed = 0                 # scene = environment/instance.json (entry 0 of RoboWits' eval_dataset_50/09.json + expected state hash); identity = dataset.toml digest
