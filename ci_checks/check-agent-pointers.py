@@ -9,7 +9,13 @@ files this check refuses:
      datasets, trained policies, project pages, solution videos;
   2. a key that locates a source (KEYS): `source_url`, `source_viewer_url`, `demo_url`, `dataset_url`, ...;
   3. the name of a demonstration or dataset file (FILES): `*.hdf5`, `*.mcap`, `*.parquet`, `*.rlds`, a Hugging Face
-     `datasets/<org>/<name>` id.
+     `datasets/<org>/<name>` id;
+  4. a key that names the demonstration or episode a file was made from (IDS): `"demo": "<demo id>"`, `demo_id`,
+     `episode_id`, `source_demo`, ... (board 0105: DexJoCo's instance.npz `meta` named the demonstration whose actions
+     are the reference solution).
+Binary files are skipped except numpy archives (`.npz`, a zip of `.npy` members): their string members (`<U`, `S`) and
+any text member are read and scanned like a text file (the members' names are reported as `file.npz[member]`); numeric
+members are not read past their header. Images and other binaries are skipped.
 A legitimate mention (a licence notice that must name its source) is listed in ALLOW with its reason. The egress
 allowlist is what stops a download; this check keeps the address out of the task. Board 0072: RoboTangle's
 `reference_scene.json` carried `source_url` of the upstream demonstration, and one trial downloaded and replayed it.
@@ -18,7 +24,7 @@ is built (docs/LEAKAGE.md).
 
 Usage: check-agent-pointers.py [task dirs...]   (default: all of tasks/*)
 """
-import pathlib, re, sys
+import ast, pathlib, re, sys, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIDECAR_DIRS = {"sim", "scorer", "rcb_monitor"}          # other containers' files under environment/
@@ -31,6 +37,8 @@ HOSTS = re.compile(
 KEYS = re.compile(r"""["']?\b((?:source|demo|demonstration|dataset|video|viewer|source_viewer|methods|reference|solution|
                                checkpoint|ckpt|policy|pretrained|repo|download)[_-]?(?:url|uri|link|repo|repo_id)|repo_id)\b["']?\s*[:=]""",
                   re.I | re.X)
+IDS = re.compile(r"""["']((?:source_|reference_)?(?:demo|demo_id|demo_name|demonstration|demonstration_id|episode|episode_id|
+                             episode_name|trajectory_id|recording|recording_id))["']\s*:\s*["']""", re.I | re.X)
 FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrecord)\b|datasets/[\w.-]+/[\w.-]+)""", re.I)
 # (task-name regex, path regex, matched-text regex, reason)
 ALLOW = [
@@ -50,20 +58,58 @@ def agent_files(task: pathlib.Path):
             yield p
 
 
+def npy_text(f) -> str | None:
+    """The text of one `.npy` member (an open binary stream): a string array's contents, or None for a numeric array
+    (only its header is read). Pickled (object) arrays are read as raw bytes: their strings are stored verbatim."""
+    head = f.read(10)
+    if head[:6] != b"\x93NUMPY":
+        rest = f.read(MAX_BYTES)
+        raw = head + rest
+        return None if b"\0" in raw[:4096] else raw.decode("utf-8", "replace")
+    n = int.from_bytes(head[8:10], "little") if head[6] == 1 else int.from_bytes(head[8:10] + f.read(2), "little")
+    try:
+        descr = str(ast.literal_eval(f.read(n).decode("latin-1")).get("descr", ""))
+    except (ValueError, SyntaxError):
+        return None
+    kind = descr.lstrip("<>|=")[:1]
+    if kind == "U":
+        return f.read(MAX_BYTES).decode("utf-32-be" if descr.startswith(">") else "utf-32-le", "replace").replace("\0", "")
+    if kind in ("S", "O") or descr.startswith("[") or descr.startswith("{"):
+        return f.read(MAX_BYTES).decode("utf-8", "replace").replace("\0", " ")
+    return None
+
+
+def texts(p: pathlib.Path, rel: str):
+    """(name, text) of each readable text in one agent file: the file itself, or a numpy archive's string members."""
+    if p.suffix == ".npz":
+        try:
+            with zipfile.ZipFile(p) as z:
+                for i in z.infolist():
+                    if not i.is_dir():
+                        with z.open(i) as f:
+                            t = npy_text(f)
+                        if t:
+                            yield f"{rel}[{i.filename}]", t
+        except (zipfile.BadZipFile, OSError, EOFError) as exc:
+            print(f"WARN {rel}: unreadable numpy archive ({exc!r}), not scanned")
+        return
+    if p.stat().st_size > MAX_BYTES:
+        return
+    raw = p.read_bytes()
+    if b"\0" not in raw[:4096]:
+        yield rel, raw.decode("utf-8", "replace")
+
+
 def findings(task: pathlib.Path):
     for p in agent_files(task):
-        if p.stat().st_size > MAX_BYTES:
-            continue
-        raw = p.read_bytes()
-        if b"\0" in raw[:4096]:
-            continue
-        text = raw.decode("utf-8", "replace").replace("\\/", "/"); rel = p.relative_to(task).as_posix()    # JSON may escape "/"
-        for kind, rx in (("URL", HOSTS), ("key", KEYS), ("file", FILES)):
-            for m in rx.finditer(text):
-                hit = m.group(1) if kind == "key" else m.group(0)
-                if any(re.search(t, task.name) and re.search(pp, rel) and re.search(h, hit) for t, pp, h, _ in ALLOW):
-                    continue
-                yield rel, text.count("\n", 0, m.start()) + 1, kind, hit[:120]
+        for rel, text in texts(p, p.relative_to(task).as_posix()):
+            text = text.replace("\\/", "/")    # JSON may escape "/"
+            for kind, rx in (("URL", HOSTS), ("key", KEYS), ("file", FILES), ("id", IDS)):
+                for m in rx.finditer(text):
+                    hit = m.group(1) if kind in ("key", "id") else m.group(0)
+                    if any(re.search(t, task.name) and re.search(pp, rel) and re.search(h, hit) for t, pp, h, _ in ALLOW):
+                        continue
+                    yield rel, text.count("\n", 0, m.start()) + 1, kind, hit[:120]
 
 
 def main(argv):
