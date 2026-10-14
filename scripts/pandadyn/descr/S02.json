@@ -1,0 +1,40 @@
+{
+ "code": "S02",
+ "task": "S02-PlateCatchTransportRelease",
+ "title": "Plate catch, transport and release",
+ "arms": 1,
+ "summary": "A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds, settle it at the plate's centre, carry it through two waypoints (a turn) without letting it roll off, settle it again, then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.",
+ "robot_setup": "One Panda, base at (-0.55, 0, 0) facing +x. Its hand carries a rigid square plate with no rim, 0.22 m x 0.22 m at this instance (2 x `tool_half`), 8 mm thick, mounted under the hand by a fixed adapter; the tool frame is the centre of the plate's top surface (z up out of the plate). At the start the plate is level, its centre at (0.01, -0.055, 0.22).",
+ "scene": "A small orange ball (radius 18 mm) is thrown upwards beside the plate at the start and falls back down. A basin (an open box, 0.15 m x 0.15 m inside, 0.06 m deep) slides back and forth along a straight rail on the table (along the world's y axis), driven the whole episode: slowly, and slowest where it turns around. The table top is the world's z = 0 plane.",
+ "scene_privileged": "Ball: radius `radius`, mass `object_mass`, restitution `restitution`; released at t = 0 from (0.06, y0, 0.42) m with velocity (`incoming_speed`, 0, `incoming_vertical_speed`) m/s, y0 drawn per instance in [-0.04, 0.01] m. Basin: the moving link of a prismatic fixture whose rail centre is (0.29, -0.23, 0.045), axis +y, limits +-0.5 m; at reset it starts at a seeded offset q0 in [-0.04, 0] m and is then driven (PD, kp 80, kd 8, at most 8 N) to the target q0 + 0.20 sin((`fixture_speed` / 0.20) t) with the target velocity `fixture_speed` cos((`fixture_speed` / 0.20) t): an oscillation of 0.20 m amplitude, peak speed `fixture_speed` (0.04 m/s at this instance, period 2 pi x 0.20 / `fixture_speed` = 31.4 s), so its speed exceeds 0.02 m/s only while |cos| > 0.5 (at this instance t < 5.2 s and 10.5 s < t < 20.9 s). Plate: `tool_half`, `tool_mass`, `tool_friction`; table friction `table_friction`.",
+ "phases": [
+  {
+   "name": "airborne_plate_catch",
+   "text": "the ball has flown free (touching nothing) for more than 0.05 s and then touches the plate."
+  },
+  {
+   "name": "recenter",
+   "text": "the ball rests on the plate (in contact within the last 25 ms; in the plate's frame its centre is at least 2.5 cm inside every edge and between radius - 4 mm and radius + 15 mm above the top surface), within 3.5 cm of the plate's centre, moving at less than 0.08 m/s relative to the plate, for 0.3 s without interruption."
+  },
+  {
+   "name": "turning_transport",
+   "text": "with the ball resting on the plate, the plate's centre (the tool frame) comes within 2.5 cm of waypoint A = (0.00, 0.08, 0.27), then within 2.5 cm of waypoint B = (0.18, 0.13, 0.25), in this order."
+  },
+  {
+   "name": "rolling_recovery",
+   "text": "the ball rests on the plate within 3.5 cm of its centre, moving at less than 0.04 m/s relative to the plate, for 0.4 s without interruption."
+  },
+  {
+   "name": "moving_basin_release",
+   "text": "the ball is inside the basin (its centre at least 0.45 x radius inside the basin's inner walls, resting on the basin, below its rim, moving at less than 0.09 m/s relative to the basin), not touching the plate, while the basin moves at more than 0.02 m/s, for 0.7 s without interruption. This completes the task."
+  }
+ ],
+ "task_failures": [
+  "rimless_plate_spill: during recenter, turning_transport or rolling_recovery, the ball's centre leaves the plate's square in the plate's frame (|x| or |y| > half the plate's width) or drops more than 1 cm below the plate's top surface."
+ ],
+ "contact_rules": "Only the plate may touch the ball, and the plate may touch nothing but the ball (not the basin or its rail, not the table). No other part of the robot, the fingers included, may touch anything.",
+ "world_goals_fixed": "Waypoint A (0.00, 0.08, 0.27) and waypoint B (0.18, 0.13, 0.25), for the plate's centre.",
+ "world_goals_seeded": "`goal_target` (the catch point, at the ball's seeded y0) and `goal_waypoints` are announced at reset in s.state(); `goal_target` reveals the ball's seeded start: privileged mode only.",
+ "difficulty_note": "The catch must absorb a falling ball on a plate with no rim (a bounce or a tilt loses it), the transport turns through two waypoints with the ball free to roll, and the release must time a hand-off into a basin that oscillates on its rail and must be moving fast enough while the ball settles.",
+ "standard_notes": "The ball is already in the air when the episode starts (t = 0): its flight is visible only in the first frames, so watch it in short steps. The basin moves back and forth the whole time and is too slow for the last phase near its turning points, so when the release can succeed depends on how long the earlier phases took."
+}

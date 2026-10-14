@@ -1,7 +1,7 @@
 # RoboLab · tools_picking_drill — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Select the cordless drill and put it on the table. Success: The cordless drill must end outside the left bin and resting on the table, and the gripper must no longer touch it. "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Select the cordless drill and put it on the table. Success: The cordless drill must end outside the left bin and resting on the table, and the gripper must no longer touch it. (RoboLab's term names the left bin although the drill starts in the right bin: the drill has to come out of its bin and rest on the table itself.) "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. "On the table" means the table supports it (its contact force points upwards, within 45 deg of vertical).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the

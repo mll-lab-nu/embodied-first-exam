@@ -17,7 +17,7 @@ the last action**. A success reached earlier and then lost does not count: end t
 achieved. `s.check()` returns the check's latest result.
 
 What `TurnOnSinkFaucet`'s check requires (RoboCasa @ 756598a), all on that final state:
-- The water is on: the faucet handle's angle (mod 360°) is between 0.40 rad (about 23°) and π from its off position.
+- The water is on: the faucet handle's angle on its on / off hinge (mod 360°) is between 0.40 rad (about 23°) and π from its off position (the handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.52 rad (so 0.40 rad is near the end of its travel), and a temperature hinge (about ±0.79 rad) that moves the handle in another direction and never turns the water on or off; which way each hinge turns depends on the sink model).
 
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python

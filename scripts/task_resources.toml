@@ -102,6 +102,56 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.5
 measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
 
+# dexhand (ready-10 release families), privileged / standard: 8 + 8 task(s); pot_shelf_transfer and sweep_dustpan below
+[[rule]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-privileged$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "30 Harbor 0.23 trials of the six essential families (12 oracle, 12 nop, 6 Wuji smoke; rcb_monitor samples every 5 s, eai-dexhand:0.2.0, CPU-only, 2026-10-14) plus the hamburger and paper oracle/nop trials: agent container peak <= 0.03 GiB; one fresh replay process 0.25-0.32 GiB max RSS (os.wait4; paper 0.31 GiB, hamburger 0.28 GiB), the privileged verifier runs two at once (<= 0.65 GiB); standard sim service peak 0.65 GiB (VmHWM, held_joystick oracle episode), paper 0.51 GiB; one core per replay process; x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3 GiB each)"
+
+[[rule]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-standard$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "30 Harbor 0.23 trials of the six essential families (12 oracle, 12 nop, 6 Wuji smoke; rcb_monitor samples every 5 s, eai-dexhand:0.2.0, CPU-only, 2026-10-14) plus the hamburger and paper oracle/nop trials: agent container peak <= 0.03 GiB; one fresh replay process 0.25-0.32 GiB max RSS (os.wait4; paper 0.31 GiB, hamburger 0.28 GiB), the privileged verifier runs two at once (<= 0.65 GiB); standard sim service peak 0.65 GiB (VmHWM, held_joystick oracle episode), paper 0.51 GiB; one core per replay process; x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3 GiB each)"
+
+# dexhand dual-arm release families (pot_shelf_transfer, sweep_dustpan), privileged / standard: 2 + 2 task(s)
+[[rule]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-privileged$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "pot_shelf_transfer oracle/nop trials (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays"
+
+[[rule]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-standard$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "pot_shelf_transfer oracle/nop trials (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays"
+
 # dexjoco, privileged: 11 task(s)
 [[rule]]
 match = "^dexjoco-.*-privileged$"
@@ -468,6 +518,20 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate"
 
+# myosuite, standard-realtime: 1 task(s)
+[[rule]]
+match = "^myosuite-.*-standard-realtime$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.0
+measured = "as the standard twin (sim 1.2-1.4 GB, docker stats, board 0112); the GPU only renders the cameras over EGL (5 ms a frame; board 0112, 2026-10-14, mll-4090-1); the sim keeps the GPU through the collect hook (fresh replay and video)"
+
 # robocasa, privileged: 29 task(s)
 [[rule]]
 match = "^robocasa-(?!gr1-).*-privileged$"
@@ -656,9 +720,8 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
 
-# robotangle, privileged: 52 task(s)
 [[rule]]
-match = "^robotangle-.*-privileged$"
+match = "^roboarc-.*-privileged$"
 min_cpus = 2.0
 min_memory_gb = 7.0
 min_gpu_memory_gb = 7.0
@@ -668,11 +731,10 @@ recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 5.0
 verifier_min_gpu_memory_gb = 7.0
-measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
-# robotangle, standard: 52 task(s)
 [[rule]]
-match = "^robotangle-.*-standard$"
+match = "^roboarc-.*-standard$"
 min_cpus = 2.0
 min_memory_gb = 7.0
 min_gpu_memory_gb = 7.0
@@ -682,7 +744,61 @@ recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 6.0
 verifier_min_gpu_memory_gb = 7.0
-measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+
+# roboarc, rigid (privileged): per-class values (user 2026-10-13)
+[[rule]]
+match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+# roboarc, rigid (standard): per-class values (user 2026-10-13)
+[[rule]]
+match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-standard$"
+min_cpus = 4.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+# roboarc, rope / chain (privileged): per-class values (user 2026-10-13)
+[[rule]]
+match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 7.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+# roboarc, rope / chain (standard): per-class values (user 2026-10-13)
+[[rule]]
+match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-standard$"
+min_cpus = 4.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+# roboarc, cloth (privileged): per-class values (user 2026-10-13)
+[[rule]]
+match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 10.0
+min_gpu_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+# roboarc, cloth (standard): per-class values (user 2026-10-13)
+[[rule]]
+match = "^roboarc-(blanket-flatten|blanket-fold)-.*-standard$"
+min_cpus = 6.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
 
 # robotwin_2_0, privileged: 47 task(s)
 [[rule]]
@@ -847,6 +963,20 @@ verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, the collect hook replays in fresh processes one after the other; CPU: one core per scene + one for the agent"
+
+# ambench, privileged
+[[rule]]
+match = "^ambench-.*-privileged$"
+min_cpus = 8.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "freezing the instances and three oracle trials (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 10 s, rcb_monitor): a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.9 GiB of memory and 3.2 GiB of GPU memory (oracle trials: 2.8 / 3.1); with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) 13.2 GiB and 6.4 GiB; 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on process"
 
 [[limit]]
 match = "^robofunolympics-.*-privileged$"
@@ -1014,6 +1144,66 @@ window_sec = 120.0
 trial_max_gpu_memory_gb = 6.0
 trial_max_memory_gb = 16.0
 measured = "GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 8 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks 0.65 GiB, dual-arm 2.53 GiB)"
+
+[[limit]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks 0.65 GiB, dual-arm 2.53 GiB)"
 
 [[limit]]
 match = "^dexjoco-.*-privileged$"
@@ -1421,6 +1611,21 @@ trial_max_memory_gb = 14.0
 measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
+match = "^myosuite-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 14.0
+measured = "GPU: EGL rendering only, under 1 GiB (board 0112) -> peak + 4; memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
 match = "^robocasa-(?!gr1-).*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 0.0
@@ -1631,7 +1836,7 @@ trial_max_memory_gb = 17.0
 measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
-match = "^robotangle-.*-privileged$"
+match = "^roboarc-.*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 16.0
 max_memory_gb = 16.0
@@ -1643,10 +1848,10 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 16.0
-measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 4.6 GiB over 1 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
 [[limit]]
-match = "^robotangle-.*-standard$"
+match = "^roboarc-.*-standard$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -1658,7 +1863,49 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 21.0
-measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 13 GiB (docker peak 8.4 GiB, 47 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+
+[[limit]]
+match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-privileged$"
+max_gpu_memory_gb = 12.0
+max_memory_gb = 24.0
+trial_max_gpu_memory_gb = 12.0
+trial_max_memory_gb = 24.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+[[limit]]
+match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-standard$"
+trial_max_gpu_memory_gb = 12.0
+trial_max_memory_gb = 16.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+[[limit]]
+match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-privileged$"
+max_gpu_memory_gb = 12.0
+max_memory_gb = 32.0
+trial_max_gpu_memory_gb = 12.0
+trial_max_memory_gb = 32.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+[[limit]]
+match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-standard$"
+trial_max_gpu_memory_gb = 12.0
+trial_max_memory_gb = 16.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+[[limit]]
+match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
+max_gpu_memory_gb = 20.0
+max_memory_gb = 24.0
+trial_max_gpu_memory_gb = 20.0
+trial_max_memory_gb = 24.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+
+[[limit]]
+match = "^roboarc-(blanket-flatten|blanket-fold)-.*-standard$"
+trial_max_gpu_memory_gb = 20.0
+trial_max_memory_gb = 20.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
 
 [[limit]]
 match = "^robotwin_2_0_.*-privileged$"
@@ -1810,6 +2057,21 @@ trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 14.0
 measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the replays' scenes); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
+[[limit]]
+match = "^ambench-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 28.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 28.0
+measured = "a camera-on Isaac process peaks at 13.2 GiB of memory and 6.4 GiB of GPU memory, a camera-free one at 2.9 / 3.2 (the rule's measurement); the agent may run two processes at once (a Session and the replay CLI): at most 26.4 GiB, 12.8 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
 [[cap]]
 match = "^autobio-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
@@ -1841,6 +2103,24 @@ sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 match = "^bigym2-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-privileged$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(essential-cube-layer|essential-held-joystick|essential-pen-regrasp|essential-two-object|essential-rotary-gait|essential-cube-reorient|assemble-hamburger|paper-half-fold)-i00-standard$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-privileged$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(pot-shelf-transfer|sweep-dustpan)-i00-standard$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
 
 [[cap]]
 match = "^dexjoco-.*-privileged$"
@@ -1968,6 +2248,11 @@ main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 [[cap]]
+match = "^myosuite-.*-standard-realtime$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
 match = "^robocasa-(?!gr1-).*-privileged$"
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 
@@ -2033,13 +2318,40 @@ main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 
 [[cap]]
-match = "^robotangle-.*-privileged$"
+match = "^roboarc-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 
 [[cap]]
-match = "^robotangle-.*-standard$"
+match = "^roboarc-.*-standard$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+
+[[cap]]
+match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-privileged$"
+main = { cpus = 16.0, memory_gb = 30.0, pids = 8192 }
+
+[[cap]]
+match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-privileged$"
+main = { cpus = 16.0, memory_gb = 40.0, pids = 8192 }
+
+[[cap]]
+match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
+
+[[cap]]
+match = "^roboarc-(blanket-flatten|blanket-fold)-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 8.0, memory_gb = 12.0, pids = 8192 }
 
 [[cap]]
 match = "^robotwin_2_0_.*-privileged$"
@@ -2094,3 +2406,7 @@ main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
 match = "^pandadyn-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^ambench-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 34.0, pids = 16384 }

@@ -1,0 +1,126 @@
+{
+  "task": "D02-StrikeCatchMerge",
+  "common": {
+    "horizon": 25.0,
+    "object_mass": 0.035,
+    "tool_mass": 0.2,
+    "tool_half": 0.07,
+    "radius": 0.016,
+    "preview": 0.65,
+    "incoming_speed": 0.35,
+    "fixture_speed": 0.04,
+    "restitution": 0.1,
+    "table_friction": 0.08,
+    "tool_friction": 0.3,
+    "first_release": 0.25,
+    "first_release_jitter": 0.0,
+    "second_release": 3.8,
+    "second_release_jitter": 0.12,
+    "lane_end_z": 0.28,
+    "lane_end_jitter": 0.0
+  },
+  "difficulty": {
+    "debug": {
+      "preview": 0.9,
+      "incoming_speed": 0.27999999999999997
+    },
+    "nominal": {},
+    "hard": {
+      "lane_end_z": 0.22,
+      "lane_end_jitter": 0.015,
+      "first_release": 0.65,
+      "first_release_jitter": 0.2,
+      "second_release": 2.8,
+      "second_release_jitter": 0.3
+    }
+  },
+  "ranges": {
+    "horizon": [
+      1,
+      45
+    ],
+    "object_mass": [
+      0.01,
+      0.15
+    ],
+    "tool_mass": [
+      0.1,
+      0.4
+    ],
+    "tool_half": [
+      0.001,
+      2
+    ],
+    "radius": [
+      0.001,
+      1.0
+    ],
+    "preview": [
+      0.001,
+      2
+    ],
+    "incoming_speed": [
+      0.001,
+      2
+    ],
+    "fixture_speed": [
+      0.001,
+      2
+    ],
+    "restitution": [
+      0,
+      1
+    ],
+    "table_friction": [
+      0,
+      1
+    ],
+    "tool_friction": [
+      0,
+      1
+    ],
+    "first_release": [
+      0.05,
+      2
+    ],
+    "first_release_jitter": [
+      0,
+      0.5
+    ],
+    "second_release": [
+      1.5,
+      10
+    ],
+    "second_release_jitter": [
+      0,
+      1
+    ],
+    "lane_end_z": [
+      0.18,
+      0.3
+    ],
+    "lane_end_jitter": [
+      0,
+      0.03
+    ]
+  },
+  "units": {
+    "horizon": "s",
+    "object_mass": "kg",
+    "tool_mass": "kg",
+    "tool_half": "m",
+    "radius": "m",
+    "preview": "s",
+    "incoming_speed": "m/s",
+    "fixture_speed": "m/s",
+    "restitution": "dimensionless",
+    "table_friction": "dimensionless",
+    "tool_friction": "dimensionless",
+    "first_release": "s",
+    "first_release_jitter": "s",
+    "second_release": "s",
+    "second_release_jitter": "s",
+    "lane_end_z": "m",
+    "lane_end_jitter": "m"
+  }
+}

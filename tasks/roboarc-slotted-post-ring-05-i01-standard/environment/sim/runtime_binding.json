@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "4ddd58d326dbf345a8f814eec5e57f4508f73b2fd443e17ffe4295cfa409edd8",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/goal_region_bd3c9ff727235345.obj": "bd3c9ff727235345c21a8cd6ac454197eed9f02ce4439da33acab792251c2e50",
+    "instance_assets/mujoco/meshes/slotted_chain_disc_b6a8509bed44e34b.obj": "b6a8509bed44e34bd8bda2d21938becd1fc9a0faa06ee15ed453fdde4939dfab",
+    "instance_assets/mujoco/scene.json": "a25fd4d2c6b3fd571a61a839cade2008359d92723c34ee9ea3ddc2b52cab9bb4",
+    "instance_assets/mujoco/scene.xml": "41505a18a806e09dcd9ac0fee4d5afd0c29d1f8ad5209b253f266c12c17dd7db",
+    "instance_assets/mujoco_settled.npz": "5b091816be21e70a457ea9edc6ff5f644faa1935b5b9c53584e04c399ba09806"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "eb4db66007e5029491d1ca7ceec98bca7bdc136ab2be58737f5d7bf08df60e51",
+    "files": 444
+  },
+  "runtime": {
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "python": "3.11.15",
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
+  },
+  "render_bridge_sha256": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
+  "nyx_direct_sha256": "5d667130086c340c5e285b12e0d4596d71098f70f6194d198718bfa9b200d5c5"
+}

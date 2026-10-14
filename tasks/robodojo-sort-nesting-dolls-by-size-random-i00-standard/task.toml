@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/robodojo-sort-nesting-dolls-by-size-random-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo sort_nesting_dolls_by_size_random (Generalization (randomised variant: other models, clutter)) on the same frozen layout as the privileged task (arx_x5/0/sort_nesting_dolls_by_size_random_0.json). Task: Arrange the five nesting dolls upright in a straight row, ordered by size, from smallest to largest (left to right as the instruction says), and return the arms to their start pose. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo sort_nesting_dolls_by_size_random (Generalization (randomised variant: other models, clutter)) on the same frozen layout as the privileged task (arx_x5/0/sort_nesting_dolls_by_size_random_0.json). Task: Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
@@ -27,6 +27,7 @@ simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "sort_nesting_dolls_by_size_random"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142"

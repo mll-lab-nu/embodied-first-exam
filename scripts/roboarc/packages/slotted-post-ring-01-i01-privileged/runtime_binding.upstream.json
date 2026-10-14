@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "3245330b6de6b0d3d6fdcb2d86ce76a0555de7fbb0c22ebd8b6a32c4005b6526",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/goal_region_d919155765218bc0.obj": "d919155765218bc04683c4b1c20c94627fd9d36deec264c9529154b49b12589d",
+    "instance_assets/mujoco/meshes/slotted_chain_disc_b6a8509bed44e34b.obj": "b6a8509bed44e34bd8bda2d21938becd1fc9a0faa06ee15ed453fdde4939dfab",
+    "instance_assets/mujoco/scene.json": "52282be896df32dfc0524217682d16df070982f36317f4b7cc0bdc105ab5fc14",
+    "instance_assets/mujoco/scene.xml": "16beeec957360e1683511e4ff74efa09d6169253515b485999fbeb007026754d",
+    "instance_assets/mujoco_settled.npz": "b42f9c0496679dd50c24bea5df5223eb795c84f5ce21ab699a7d57993c47b9a1"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d601866b4c91c858aa4e249b5bf5145b8fe3263b2885048a86016e34c314c208",
+    "files": 444
+  },
+  "runtime": {
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  }
+}

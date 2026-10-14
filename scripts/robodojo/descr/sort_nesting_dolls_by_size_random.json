@@ -1,13 +1,13 @@
 {
   "task": "sort_nesting_dolls_by_size_random",
-  "goal": "Arrange the five nesting dolls upright in a straight row, ordered by size, from smallest to largest (left to right as the instruction says), and return the arms to their start pose.",
+  "goal": "Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose.",
   "instruction_templates": [
     "Arrange the five nesting dolls in a row from left to right, from smallest to largest."
   ],
   "success": [
-    "Define the order of the dolls by their model index mod 5 (0 = smallest, 4 = largest; derived from the yml comments in the config: index 5 smallest half-extent 0.0152 m, index 9 largest 0.0335 m). The code lists the dolls sorted by (index mod 5) DESCENDING: L0 = largest, L1, L2, L3, L4 = smallest.",
+    "Define the order of the dolls by their model index mod 5, as the code does: 0 = the LARGEST doll, 4 = the SMALLEST (measured on the dolls of the frozen layout: their bounding boxes shrink as index mod 5 grows; the comments in RoboDojo's config, index 5 smallest and index 9 largest, have it the wrong way round). The code lists the dolls sorted by (index mod 5) DESCENDING: L0 = the smallest doll, L1, L2, L3, L4 = the largest.",
     "Row straightness: the maximum minus the minimum world Y of the five dolls' root positions is <= 0.035 m.",
-    "Order along X: for each consecutive pair (L_k, L_{k+1}), k=0..3: x(L_{k+1}) - x(L_k) > 0.03 m (strict), i.e. the largest doll has the smallest world x, and x increases by more than 3 cm with each smaller doll; the smallest doll has the largest world x. (The instruction says 'left to right, smallest to largest' while the code compares world/table x with the largest at the smallest x; presumably 'left' is as seen from the front camera, but this is not verifiable statically - use the numeric x rule.)",
+    "Order along X: for each consecutive pair (L_k, L_{k+1}), k=0..3: x(L_{k+1}) - x(L_k) > 0.03 m (strict), i.e. the SMALLEST doll has the smallest world x, and x increases by more than 3 cm with each larger doll; the largest doll has the largest world x. (This matches the instruction's 'left to right, from smallest to largest' with left = smaller world x.)",
     "Upright: each of doll0..doll4 has its local +Z axis within 15 deg (default threshold, strict) of world +Z (standing, not lying).",
     "Both target arms are back at origin: all target arms (left_arm and right_arm; the support arm is not counted) have their end-effector pose within 0.15 m on EACH axis (|dx|,|dy|,|dz| all <= 0.15 m) and within 20 degrees (quaternion angle) of the pose they had at the start of the episode (recorded after the scene settled).",
     "All conditions hold simultaneously after one action."
@@ -22,5 +22,5 @@
   "needs_memory_or_language": "none (the order is by size; sizes can be inferred visually, the instruction is generic).",
   "end_requirements": "Both arms within 0.15 m per axis and 20 deg of their start pose in the same action as the dolls are correctly sorted, upright, and in a row.",
   "physics_kind": "rigid (free-standing dolls)",
-  "notes": "The required X gap between consecutive dolls is only > 0.03 m between root positions (roots, not edges), while the row's Y spread must be <= 3.5 cm for all five, so the dolls need to be tightly aligned in y but only loosely spaced in x. The yml comments suggest the intended target positions are x = -0.24 (largest, index mod 5 = 4), -0.12, 0.0, 0.12, 0.24 (smallest) in the table frame, but any positions satisfying the stated rules succeed. The mapping index->size is inferred from yml comments, not verified from assets. Dolls must stay upright (within 15 deg) - a doll left lying fails. The random variant has different texture models and clutter distractors; reward identical."
+  "notes": "The required X gap between consecutive dolls is only > 0.03 m between root positions (roots, not edges), while the row's Y spread must be <= 3.5 cm for all five, so the dolls need to be tightly aligned in y but only loosely spaced in x. The yml comments place the targets at table-frame x = -0.24 (index mod 5 = 4), -0.12, 0.0, 0.12, 0.24 (index mod 5 = 0) and call index mod 5 = 4 the largest; the dolls' measured sizes say the opposite (index mod 5 = 4 is the smallest), so the smallest doll goes at the smallest x. Any positions satisfying the stated rules succeed. Dolls must stay upright (within 15 deg) - a doll left lying fails. The random variant has different texture models and clutter distractors; reward identical."
 }

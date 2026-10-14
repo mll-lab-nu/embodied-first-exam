@@ -27,6 +27,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myoarm"
 family = "relocate"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2`, 231 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65"

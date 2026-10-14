@@ -9,15 +9,13 @@
 `apply` passes every task (or the named benchmark's: a label of the table, e.g. "RoboLab") through
 scripts/task_conventions.py `normalize`, which writes the task's number (its own exception, else its family's, else its
 benchmark's for the mode) into `[agent] timeout_sec`, the closing `## Time limit` section of instruction.md, the README's
-"Agent time budget" row and the standard modes' `RCB_WALL_CLOCK_S`; then it renders docs/CUTOFFS.md and refreshes the
-changed digests in tasks/dataset.toml. No generator has to run: nothing a generator writes depends on the number
+"Agent time budget" row and the standard modes' `RCB_WALL_CLOCK_S`, and, last, the task's `DIGEST`; then it renders
+docs/CUTOFFS.md. No generator has to run: nothing a generator writes depends on the number
 (ci_checks/check-cutoffs.py keeps instructions free of a second statement of it).
 Standard library only; run it from a checkout made with `umask 022`.
 """
 from __future__ import annotations
 
-import fnmatch
-import hashlib
 import os
 import re
 import subprocess
@@ -32,8 +30,7 @@ import task_conventions as tc  # noqa: E402
 
 DOC = ROOT / "docs/CUTOFFS.md"
 BASELINE = ROOT / "scripts/task_cutoffs.baseline.toml"   # the table on the day it was created: never edited
-MANIFEST = ROOT / "tasks/dataset.toml"
-SHORT = {"privileged": "P", "standard": "S", "standard-realtime": "RT"}
+SHORT = {m: d["short"] for m, d in tc.MODE_REGISTRY.items()}   # the mode registry (PROTOCOL §2.16)
 
 
 def all_tasks() -> list[Path]:
@@ -46,11 +43,12 @@ def _dur(sec: int) -> str:
 
 def table_rows(tasks: list[Path]) -> list[str]:
     n = Counter((tc.bench_of(t), tc.mode_of(t)) for t in tasks)
-    rows = ["| Benchmark | privileged | standard | standard-realtime | Tasks (P / S / RT) |", "|---|---|---|---|---|"]
+    rows = ["| Benchmark | " + " | ".join(tc.MODES) + " | Tasks (" + " / ".join(SHORT[m] for m in tc.MODES) + ") |",
+            "|---|" + "---|" * (len(tc.MODES) + 1)]
     for bench, row in sorted(tc.cutoff_table().items(), key=lambda kv: kv[0].lower()):
         cells = [_dur(row[m]) if m in row else "—" for m in tc.MODES]
         counts = " / ".join(str(n[(bench, m)]) if n[(bench, m)] else "—" for m in tc.MODES)
-        rows.append(f"| {bench} | {cells[0]} | {cells[1]} | {cells[2]} | {counts} |")
+        rows.append(f"| {bench} | " + " | ".join(cells) + f" | {counts} |")
     return rows
 
 
@@ -203,9 +201,8 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         *table_rows(tasks),
         "",
-        f"{len(tasks)} task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number "
-        f"of seconds, at most {tc.CUTOFF_CAP} (PROTOCOL D8"
-        + "".join(f"; {b}'s exception: {c}" for b, c in sorted(tc.CUTOFF_CAP_EXCEPTIONS.items())) + ").",
+        f"{len(tasks)} task directories. {' / '.join(SHORT[m] for m in tc.MODES)}: {', '.join(tc.MODES)}. A cutoff is a whole number "
+        f"of seconds, at most {tc.CUTOFF_CAP} (PROTOCOL D8; no benchmark is excepted).",
         "",
         "## Exceptions (per family, per task)",
         "",
@@ -216,11 +213,11 @@ def render_doc(tasks: list[Path]) -> str:
         "(PROTOCOL D8).",
         "",
         "```toml",
-        "[family_cutoff_sec.\"RoboTangle\"]              # benchmark; then one line per family, a number per mode",
+        "[family_cutoff_sec.\"RoboARC\"]              # benchmark; then one line per family, a number per mode",
         "\"cast_coil\" = { privileged = 14400, standard = 14400 }",
         "",
         "[task_cutoff_sec]                              # one line per task directory",
-        "\"robotangle-cast-coil-hard-i00-standard\" = 10800",
+        "\"roboarc-cast-coil-05-i01-standard\" = 10800",
         "```",
         "",
     ]
@@ -243,9 +240,10 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         "> " + tc.CUTOFF_NOTE["standard"],
         "",
-        "(" + ", ".join(sorted({b for b, _ in tc.CUTOFF_NOTE_OWN})) + ", whose service counts on a clock of its own, keeps "
-        "the earlier sentence there: \"The service's `time_left_s` is its own count of this limit, from the service's "
-        "start or from your first request, so it can differ from the time you really have left.\")",
+        ("(" + ", ".join(sorted({b for b, _ in tc.CUTOFF_NOTE_OWN})) + ", whose service counts on a clock of its own, keeps "
+         "the earlier sentence there: \"The service's `time_left_s` is its own count of this limit, from the service's "
+         "start or from your first request, so it can differ from the time you really have left.\")") if tc.CUTOFF_NOTE_OWN else
+        "(No benchmark keeps the earlier, weaker sentence today: every service counts from the agent's first request.)",
         "",
         "What a benchmark adds about its own time (a simulator's start-up, what its service counts) stands in its own "
         f"text and names no number: it says \"{tc.CUTOFF_REF}\".",
@@ -261,7 +259,7 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         "Never edit the number in a task, a template or a generator. `apply` writes, in every task concerned: "
         "`[agent] timeout_sec`, the number in the closing section of `instruction.md`, the README's `Agent time budget` "
-        "row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's digest in `tasks/dataset.toml`, and this page.",
+        "row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's `DIGEST`, and this page.",
         "",
         "A change of a cutoff changes the task in place: the scene, the frozen instance, the success rule and the "
         "verifier are the same, so the task keeps its name (PROTOCOL §2.8, §2.12). The record of the change is its "
@@ -278,9 +276,9 @@ def render_doc(tasks: list[Path]) -> str:
         "`meta[\"time_left_s\"]`, counted from the agent's first request to the service (any endpoint; kept through a "
         "restart of the service), never from the service's start: the service is up before the agent's phase begins, so a "
         "clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is "
-        "what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, "
-        "running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: "
-        "`docs/benchmarks/robotangle.md`).",
+        "what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its "
+        "MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to "
+        "become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).",
         "- **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that "
         "were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 "
         "`COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the "
@@ -298,47 +296,6 @@ def render_doc(tasks: list[Path]) -> str:
         *history_rows(),
     ]
     return "\n".join(out) + "\n"
-
-
-# The digest Harbor publishes a task under (harbor.publisher.packager.Packager.compute_content_hash, Harbor 0.23.0); the
-# same computation as ci_checks/check-dataset-manifest.sh, which checks what this writes.
-IGNORE_NAMES = ("*.pyc", ".DS_Store", "*.swp", "*.swo", "*~")
-
-
-def digest(task: Path) -> str:
-    files = [task / n for n in ("task.toml", "instruction.md", "README.md", "trajectory.json") if (task / n).exists()]
-    for sub in ("environment", "tests", "solution", "steps"):
-        if (task / sub).exists():
-            files += [p for p in (task / sub).rglob("*") if p.is_file()]
-    rels = sorted({p.relative_to(task).as_posix() for p in files})
-    rels = [r for r in rels if "__pycache__" not in Path(r).parts[:-1]
-            and not any(fnmatch.fnmatchcase(Path(r).name, pat) for pat in IGNORE_NAMES)]
-    outer = hashlib.sha256()
-    for rel in rels:
-        h = hashlib.sha256()
-        with (task / rel).open("rb") as f:
-            for chunk in iter(lambda: f.read(1 << 20), b""):
-                h.update(chunk)
-        outer.update(f"{rel}\0{h.hexdigest()}\n".encode())
-    return "sha256:" + outer.hexdigest()
-
-
-def refresh_manifest(tasks: list[Path]) -> int:
-    """tasks/dataset.toml: the digest of each given task as its files are now. Returns how many changed."""
-    s = MANIFEST.read_text(encoding="utf-8")
-    changed = 0
-    for t in tasks:
-        d = digest(t)
-        pat = re.compile(rf'(name = "robot-coding-bench/{re.escape(t.name)}"\ndigest = ")(sha256:[0-9a-f]+)(")')
-        m = pat.search(s)
-        if m is None:
-            raise SystemExit(f"tasks/dataset.toml does not list {t.name} (cd tasks && harbor add --scan .)")
-        if m.group(2) != d:
-            s = s[:m.start(2)] + d + s[m.end(2):]
-            changed += 1
-    if changed:
-        MANIFEST.write_text(s, encoding="utf-8")
-    return changed
 
 
 def apply(only: str | None) -> int:
@@ -359,8 +316,7 @@ def apply(only: str | None) -> int:
         if k % 200 == 0:
             print(f"  {k} / {len(tasks)} tasks", flush=True)
     DOC.write_text(render_doc(every), encoding="utf-8")
-    n = refresh_manifest(tasks)
-    print(f"applied {tc.CUTOFFS_FILE.name} to {len(tasks)} tasks; {n} digest(s) changed in tasks/dataset.toml; "
+    print(f"applied {tc.CUTOFFS_FILE.name} to {len(tasks)} tasks (normalize also rewrote each task's DIGEST); "
           f"docs/CUTOFFS.md rendered.\nNext: git status, then commit. CI: python3 ci_checks/check-cutoffs.py")
     return 0
 

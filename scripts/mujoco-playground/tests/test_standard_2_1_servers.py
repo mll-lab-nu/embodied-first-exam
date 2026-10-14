@@ -9,7 +9,9 @@ read without a bound); a camera named many times is rendered once, before the fr
 another process at start is waited for, not a crash; the agent's clock (meta time_s / time_left_s) is not started by
 the service's start or by a probe that only connects to the port, starts at the first request, and is not set back by
 a resume (RoboTwin's service has these tests in scripts/robotwin/tests/test_standard_service.py); a camera's reported
-pose is the viewpoint its image is rendered from, not MuJoCo's left-eye camera. server_mj.py's optional reset capability
+pose is the viewpoint its image is rendered from, not MuJoCo's left-eye camera; the step limit cuts a chunk and the
+response says how many of its rows ran; an episode end logged by a call that was lost with a crash is dropped by the
+resume (board 0105: RoboCasa and MetaWorld+ kept it, so the agent lost the episode's rest). server_mj.py's optional reset capability
 (PROTOCOL §4.5; DexToolBench standard grants 20): no /reset without a budget; with one, a reset restores the start state,
 the budget is enforced (409 after it, after the agent's time), a crash resumes the current episode, and only the last
 episode is graded.
@@ -278,6 +280,42 @@ class ServerCase:
         self.assertEqual(len(self.first_requests()), 1, "a resume logged a second first_request")
         self.assertEqual(self.wait_up()["calls"], 2)                 # the same episode: both observes are counted
 
+
+    def chunk(self, rows: list):
+        """A chunk in the service's own action type (server_mj.py: joint_position; the others: the tool's)."""
+        if self.SERVER.name == "server_mj.py":
+            return self.submit(rows)
+        return self.post("/submit", {"dt": 0.02, "actions": rows, "video": "none"})
+
+    def test_the_step_limit_cuts_a_chunk(self):
+        self.ENV = {**self.ENV, "RCB_MAX_CONTROL_STEPS": "5"}
+        self.start(); self.wait_up()
+        w = 12 if self.ENV.get("STUB_CASA") else 2
+        code, m = self.chunk([[0.1] * w] * 3)
+        self.assertEqual((code, m["done"]), (200, False))
+        code, m = self.chunk([[0.2] * w] * 4)                        # the limit falls on the chunk's second row
+        self.assertEqual((code, m["done"], m["reason"]), (200, True, "step limit"))
+        if self.SERVER.name != "server_mj.py":                       # server_mj.py reports the chunk's rows (unchanged)
+            self.assertEqual(m["executed_rows"], 2)
+        self.assertEqual(self.wait_up()["control_steps"], 5)
+        self.assertEqual(self.chunk([[0.2] * w])[0], 409)
+
+    def test_an_end_lost_with_its_call_is_dropped_on_resume(self):
+        """A crash inside the call that hit the step limit, after its end was logged and before its checkpoint: the call
+        is lost whole (the state goes back to the last checkpoint), so its end must go too, or the resumed episode is over
+        at a state that never reached the limit (board 0105, RoboCasa / MetaWorld+)."""
+        self.start(); self.wait_up()
+        w = 12 if self.ENV.get("STUB_CASA") else 2
+        self.assertEqual(self.chunk([[0.1] * w] * 3)[0], 200)
+        n = self.wait_up()["control_steps"]
+        self.proc.kill(); self.proc.wait(); self.log.close()
+        with open(self.data / "episode.jsonl", "a") as f:             # what that crash leaves: call_begin, then the call's end
+            for e in ({"ev": "call_begin", "path": "/submit", "call": 2},
+                      {"ev": "end", "reason": "step limit", "control_steps": n + 4, "journal_rows": n + 4, "ep_start": 0, "resets": 0}):
+                f.write(json.dumps({"ts": time.time(), **e}) + "\n")
+        self.start(); st = self.wait_up()
+        self.assertEqual((st["done"], st["control_steps"]), (False, n))
+        self.assertEqual(self.chunk([[0.2] * w] * 2)[0], 200)        # the episode goes on
 
     # ---- server_mj.py's reset capability
     def post(self, path: str, meta: dict):

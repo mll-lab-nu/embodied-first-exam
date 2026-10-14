@@ -26,6 +26,8 @@ POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
 SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
+DYNAMICS = [sys.executable, str(ROOT / "ci_checks/check-dynamics.py")]
+REALTIME = [sys.executable, str(ROOT / "ci_checks/check-realtime.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -62,6 +64,18 @@ def in_service(service: str, lines: str, after: str = ""):
 
 def append(text: str):
     return lambda s: s + text
+
+
+def npz_text(member: str, text: str) -> bytes:
+    """A numpy archive (no numpy needed) whose one member is a 0-d unicode array holding `text`, as np.savez writes it."""
+    import io, zipfile
+    head = "{'descr': '<U%d', 'fortran_order': False, 'shape': (), }" % len(text)
+    head += " " * (-(10 + len(head) + 1) % 64) + "\n"
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr(member, b"\x93NUMPY\x01\x00" + len(head).to_bytes(2, "little") + head.encode("latin-1")
+                   + text.encode("utf-32-le"))
+    return buf.getvalue()
 
 
 COMPOSE, TOML, TEST_COMPOSE = "environment/docker-compose.yaml", "task.toml", "tests/docker-compose.yaml"
@@ -148,6 +162,12 @@ MUTATIONS = [
     ("... names the recording its reference replays",
      PRIV, "environment/instance.json", sub(r"^\{", '{"source": {"file": "demos/boxing_books_017.hdf5", "demo": 3}, ', count=1, flags=0),
      POINTERS, "file `boxing_books_017.hdf5` locates upstream material"),
+    ("... names the demonstration its scene was restored from (the reference replays that demonstration's actions)",
+     PRIV, "environment/instance.json", sub(r"^\{", '{"demo": "boxing_books_demo_17", ', count=1, flags=0),
+     POINTERS, "id `demo` locates upstream material"),
+    ("... in a string member of a numpy archive the agent reads (DexJoCo's instance.npz `meta`, board 0105)",
+     PRIV, "+environment/extra.npz", lambda s: npz_text("meta.npy", '{"source": "x", "demo": "water_plant_demo_10_2026"}'),
+     POINTERS, "environment/extra.npz[meta.npy]:1: id `demo`"),
     ("a step with a network policy of its own (Harbor would let it override [agent])",
      STD, TOML, append('\n[[steps]]\nname = "s1"\n[steps.agent]\nnetwork_mode = "public"\n'), ISOLATION, "a step sets its own network policy"),
     ("the instruction links the upstream repository",
@@ -274,6 +294,15 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r"^allowed = \[(.*)\]$", r"allowed = [\1, 12345]"), SEEDS, "has no frozen instance"),
     ("another seed's instance in the agent's build context",
      TWIN_P, "+environment/seeds/7/instance.json", append("{}"), SEEDS, "a `seeds` directory where the agent's image"),
+    # PROTOCOL §2.14: scene dynamics, from the one table
+    ("a task.toml that contradicts the dynamics table",
+     TWIN_P, TOML, sub(r'^dynamics = "static"', 'dynamics = "dynamic"'), DYNAMICS, "the table says"),
+    ("a task.toml without dynamics",
+     TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), DYNAMICS, "[metadata] dynamics is missing"),
+    # PROTOCOL §4b: a standard-realtime task states its slowdown S
+    ("a standard-realtime task.toml whose slowdown is not its service's",
+     "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r"^slowdown = [0-9.]+", "slowdown = 2"), REALTIME,
+     "but its service's RCB_SLOWDOWN default is 1"),
 ]
 
 
@@ -385,7 +414,7 @@ def main() -> int:
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS):
+            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS, DYNAMICS):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
@@ -398,7 +427,8 @@ def main() -> int:
                     if r.startswith("+"):                   # a file the mutation adds
                         r = r[1:]
                         (t / r).parent.mkdir(parents=True, exist_ok=True)
-                        (t / r).write_text(f(""))
+                        data = f("")
+                        (t / r).write_bytes(data) if isinstance(data, bytes) else (t / r).write_text(data)
                         continue
                     (t / r).write_text(f((t / r).read_text()))
             except (AssertionError, StopIteration, OSError) as e:

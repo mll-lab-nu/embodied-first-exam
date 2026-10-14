@@ -67,7 +67,7 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator (`rcb_quadruped.Session`) and its full state | unlimited | its `trajectory.npz`, replayed in two fresh processes |
-| standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | none | the service's record of the one episode: live check, two fresh-process replays, determinism |
+| standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`, from 2026-10-14; before: none) | the service's record of the last episode: live check, two fresh-process replays, determinism |
 
 ## Reference solutions
 - **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
@@ -163,6 +163,12 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   installed; the PyPI packages `playground` and `envpool` carry Playground's task sources, PROTOCOL §2.11). Scenes, instances, tooling and pass rules
   are unchanged; results from before this date were obtained with open egress. The quadruped pairs were already on the
   allowlist.
+- 2026-10-14 (review of board 0105, B1-m2), the nine quadruped privileged tasks, `tests/grade.py` only: a replay
+  process that died or timed out (`replay_failed`), a rebuilt start that does not match the instance's hash
+  (`instance_mismatch`) and an exception of the verifier write `infra_error = 1` beside `grader_error = 1` (no verdict
+  on the agent, PROTOCOL: infrastructure vs agent failure); before, `grader_error` alone, which counted as the agent's
+  0. Every `reward.json` carries `infra_error`. Each task README has the entry. Scenes, instances, pass rules and
+  references are unchanged; `scripts/mujoco-playground/tests/test_grade_privileged.py` covers the three paths.
 - 2026-10-13 (board 0086), `mujoco_playground_aloha_single_peg_insertion`, both modes: **the success rule's rear
   bound.** `rcb_aloha.Session.check` required `0 <= t <= 0.75` for the peg tip's axial parameter, and the texts said
   "t ≤ 0.75, t = 0 at the rear wall, at least 25 % of the depth inside". Site `socket_rear` is at the tube's centre:
@@ -198,6 +204,20 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   `reward.json` the fields `resets` and `reset_budget`. DexToolBench's standard twins set 20 resets (owner decision,
   [`dextoolbench.md`](dextoolbench.md)); the two ALOHA and two Panda standard tasks set none: `/reset` is a 404 and
   `budget.reset` 0, so their episodes, observations and verdicts are unchanged.
+- 2026-10-14 (owner decision C1, board 0113), the nine quadruped standard tasks: **10 resets** (PROTOCOL §4.5). The
+  quadrupeds' service (`shared/standard/server.py`) gained the optional reset capability as MyoSuite's has it:
+  `RCB_RESET_BUDGET` (the compose files' default 10; 0 restores the single episode), `POST /reset` (JSON or RCB1
+  `{cameras, video_fps, depth}`, no physics) abandons the running or ended episode and restarts from the frozen start,
+  409 after a success, once the agent's time is up and once the budget is spent; only the last episode is graded
+  (`trajectory.npz` holds its rows; the collect hook's two fresh-process replays are unchanged); `meta` / `/status` add
+  `episode`, `resets_left`, `control_steps_total`; `final.json` and `reward.json` add `resets`, `reset_budget`,
+  `episodes`. Crash recovery replays the journal with the committed resets (checkpoint `persist`: `resets`,
+  `reset_at`). Instruction (rules, `r._post("/reset", ...)`), task.toml description and README updated. Checked in
+  eai-mujoco:0.1.3 (CPU): Go1Getup and BarkourJoystick, 10 resets with random chunks and a service crash between them,
+  each reset back to the start's state hash and proprioception, the 11th refused, the oracle in episode 11 -> reward 1
+  (trajectory = its rows only, deterministic), an idle episode 11 -> reward 0, a reset after a success refused.
+  Scene, instances, success checks and the grader's pass rule unchanged; earlier quadruped standard results ran with
+  one episode and are reported separately.
 
 ## Files
 | | |
