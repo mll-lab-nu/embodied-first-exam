@@ -70,6 +70,13 @@ measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_p
 main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
 sim = { cpus = 12.0, memory_gb = 42.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 29
+allowed = [29]
+oracle = []
+
 [verifier]
 timeout_sec = 1200.0
 environment_mode = "separate"

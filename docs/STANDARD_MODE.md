@@ -184,7 +184,7 @@ Same endpoints and RCB1 frames, served by `images/mujoco/limited/server_mj.py`. 
 is a multiple of `control_dt` (1/60 s DexToolBench, 1/50 s Playground), hold or linear interpolation per control step.
 Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing).
 `meta.task` carries the task definition (DexToolBench: current goal pose and index; Playground: the target) and
-`meta.cameras` each camera's intrinsics and camera-to-world pose: the viewpoint the image is rendered from, in the state
+`meta.cameras` each camera's intrinsics (`intrinsic_cv` = `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the returned image; fx = fy for a camera defined by its field of view, fx ≠ fy for one defined by its sensor size, which MuJoCo renders with the sensor's extent in each direction: ALOHA's overhead and wrist cameras, 158.52 and 216.45 px; until 2026-10-13 the service reported fx = fy = 216.45 for them) and camera-to-world pose: the viewpoint the image is rendered from, in the state
 the response ends in (`spec.camera_calibration`; until 2026-10-10 the position was MuJoCo's left-eye camera, 3.4 cm to
 the side, and the pose was the one at service start). Cameras carry `moving` (true for ALOHA's wrist cameras); for a
 requested moving camera the response also has the part `cam2world_gl/<cam>` (float64 [N,4,4], one pose per returned

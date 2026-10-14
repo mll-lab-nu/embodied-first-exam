@@ -50,6 +50,13 @@ measured = "memory: the [environment] cap 8 GiB, which every past trial ran unde
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
+
 [verifier]
 timeout_sec = 3600.0              # two replays of at most 50000 rows (the hand-in cap), then the video
 environment_mode = "separate"     # the verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
