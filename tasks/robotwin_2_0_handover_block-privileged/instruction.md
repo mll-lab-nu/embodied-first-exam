@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Use the left arm to grasp the red block on the table, handover it to the right arm and place it on the blue pad.
 
-The scene objects are attributes of the task env (`env.block_middle_pose`, `env.box`, `env.target_box`; see `load_actors` in
+The scene objects are attributes of the task env (`env.box`, `env.target_box`; see `load_actors` in
 `/opt/RoboTwin/envs/handover_block.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

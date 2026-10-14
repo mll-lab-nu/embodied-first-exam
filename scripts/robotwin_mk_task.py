@@ -1,23 +1,110 @@
 """Generate tasks/robotwin_2_0_<task>-privileged/ from the stack_blocks_two template (RoboTwin 2.0 tasks only).
 usage: scripts/robotwin_mk_task.py <task> <seed> "<goal text>" "<difficulty paragraph>"
-Then, in the GPU container (docker run --gpus all -v $PWD/tasks:/tasks ghcr.io/mll-lab-nu/eai-robotwin:0.1.1):
+       scripts/robotwin_mk_task.py --refresh <task>...   # rewrite only the oracle, the instruction's scene-object
+                                                         # list and the README's base image of existing tasks
+Then, in the GPU container (docker run --gpus all -v $PWD/tasks:/tasks ghcr.io/mll-lab-nu/eai-robotwin:<images/robotwin/VERSION>):
   make-instance --task <task> --seed <seed> --out /tasks/robotwin_2_0_<task>-privileged/environment/instance.json (copy to tests/),
   run-oracle + replay, then harbor run -a oracle / -a nop, then cd tasks && harbor add --scan .
 Pick the seed with scripts/robotwin_expert_sweep.py (expert must pass on it; avoid the public dataset seeds).
 The oracle is RoboTwin's upstream expert (every task-class method except setup_demo/load_actors/check_success),
-copied verbatim from third_party/RoboTwin/envs/<task>.py and bound onto `env` at run time."""
-import ast, json, pathlib, re, shutil, sys, textwrap
+copied verbatim from third_party/RoboTwin/envs/<task>.py and bound onto `env` at run time. Where the image's scrub
+removed reference poses from `load_actors` (images/robotwin/scrub_oracles.py LEAKS), the oracle first rebuilds the
+scene with upstream's `load_actors` (same scene, hash-checked) so that the expert finds them."""
+import ast, importlib.util, json, pathlib, re, shutil, sys, textwrap
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import normalize  # noqa: E402
 root = pathlib.Path(__file__).resolve().parents[1]
+_spec = importlib.util.spec_from_file_location("scrub_oracles", root / "images/robotwin/scrub_oracles.py")
+scrub = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(scrub)  # the scrub runs only as a script
+IMAGE = f"ghcr.io/mll-lab-nu/eai-robotwin:{(root / 'images/robotwin/VERSION').read_text().strip()}"
+KEEP = {"setup_demo", "load_actors", "check_success"}
+
+
+def upstream(task):
+    up = (root / f"third_party/RoboTwin/envs/{task}.py").read_text(); tree = ast.parse(up)
+    cls = [n for n in tree.body if isinstance(n, ast.ClassDef)][0]
+    fns = {f.name: f for f in cls.body if isinstance(f, ast.FunctionDef)}
+    return up, cls, fns
+
+
+def scene_attrs(task):
+    """The env attributes the instruction lists as the scene objects: what upstream's load_actors sets, minus the
+    reference-solution values the image's scrub removes."""
+    up, cls, fns = upstream(task)
+    la = ast.get_source_segment(up, fns["load_actors"])
+    attrs = set(re.findall(r"self\.(\w+)\s*=\s*(?:create_|rand_create|self\.get_cluttered|\[)", la)) | set(re.findall(r"self\.(\w+)\s*=", la))
+    return sorted(attrs - {"prohibited_area", "size_dict"} - set(scrub.LEAKS.get(task, ())))
+
+
+def oracle_source(task):
+    up, cls, fns = upstream(task)
+    expert = [f for f in cls.body if isinstance(f, ast.FunctionDef) and f.name not in KEEP]
+    fn_src = "\n\n".join(textwrap.dedent(ast.get_source_segment(up, f)) for f in expert)
+    names = [f.name for f in expert]
+    rebuild = ""
+    used = [a for a in scrub.LEAKS.get(task, ()) if re.search(rf"\bself\.{a}\b", fn_src)]
+    if used:  # (stack_blocks_two/three and place_dual_shoes set a pose upstream that their expert never reads)
+        rebuild = f'''
+
+# The agent image's load_actors does not set the reference values this expert reads
+# ({", ".join(used)}; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+{textwrap.dedent(ast.get_source_segment(up, fns["load_actors"]))}
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()'''
+    return f'''# Reference solution for robotwin_2_0_{task}-privileged: RoboTwin 2.0's expert methods from envs/{task}.py upstream
+# ({", ".join(names)}), copied verbatim and bound onto the task env. These methods are scrubbed from the agent image.
+# Runs with `env` (RoboTwin task env) in scope (rcb_traj.Session.exec_code).
+import types
+import numpy as np
+import sapien
+from envs.utils import *
+from envs._GLOBAL_CONFIGS import *
+
+
+{fn_src}{rebuild}
+
+
+for _f in ({", ".join(names)},):
+    setattr(env, _f.__name__, types.MethodType(_f, env))
+env.play_once()
+assert env.plan_success, "a planning step failed"
+''', names
+
+
+OBJECTS_LINE = re.compile(r"^The scene objects are attributes of the task env \((`env\.\w+`(?:, `env\.\w+`)*); see `load_actors` in$", re.M)
+
+
+def refresh(task):
+    """Existing task: rewrite the oracle, the scene-object list and the base image (nothing else is touched)."""
+    dst = root / f"tasks/robotwin_2_0_{task}-privileged"
+    (dst / f"solution/oracle_{task}.py").write_text(oracle_source(task)[0])
+    ins = (dst / "instruction.md").read_text()
+    assert len(OBJECTS_LINE.findall(ins)) == 1, f"{task}: instruction.md has no scene-object line"
+    ins = OBJECTS_LINE.sub("The scene objects are attributes of the task env (`env." + "`, `env.".join(scene_attrs(task))
+                           + "`; see `load_actors` in", ins)
+    (dst / "instruction.md").write_text(ins)
+    for mode in ("privileged", "standard"):
+        p = root / f"tasks/robotwin_2_0_{task}-{mode}/README.md"
+        p.write_text(re.sub(r"ghcr\.io/mll-lab-nu/eai-robotwin:[\w.]+", IMAGE, p.read_text()))
+
+
+if sys.argv[1] == "--refresh":
+    for t in sys.argv[2:]:
+        refresh(t)
+    sys.exit(0)
 task, seed, goal, difficulty = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
 src_dir = root / "tasks/robotwin_2_0_stack_blocks_two-privileged"; dst = root / f"tasks/robotwin_2_0_{task}-privileged"
-up = (root / f"third_party/RoboTwin/envs/{task}.py").read_text(); tree = ast.parse(up)
-cls = [n for n in tree.body if isinstance(n, ast.ClassDef)][0]
-keep = {"setup_demo", "load_actors", "check_success"}
-expert = [f for f in cls.body if isinstance(f, ast.FunctionDef) and f.name not in keep]
-la = ast.get_source_segment(up, [f for f in cls.body if isinstance(f, ast.FunctionDef) and f.name == "load_actors"][0])
-cs = ast.get_source_segment(up, [f for f in cls.body if isinstance(f, ast.FunctionDef) and f.name == "check_success"][0])
-attrs = sorted(set(re.findall(r"self\.(\w+)\s*=\s*(?:create_|rand_create|self\.get_cluttered|\[)", la)) | set(re.findall(r"self\.(\w+)\s*=", la)) - {"prohibited_area", "size_dict"})
+up, cls, _fns = upstream(task)
+cs = ast.get_source_segment(up, _fns["check_success"])
+attrs = scene_attrs(task)
 step_lim = __import__("yaml").safe_load(open(root / "third_party/RoboTwin/env_cfg/task_config/_eval_step_limit.yml")).get(task, "?")
 
 # regenerate everything; results/ does not belong in the repository (PROTOCOL D3) and normalize() removes it
@@ -34,26 +121,7 @@ def sub(path, pairs):
     p.write_text(s)
 
 # oracle: verbatim upstream methods, dedented to module level, bound to env
-fn_src = "\n\n".join(textwrap.dedent(ast.get_source_segment(up, f)) for f in expert)
-names = [f.name for f in expert]
-oracle = f'''# Reference solution for robotwin_2_0_{task}: RoboTwin 2.0's expert methods from envs/{task}.py upstream
-# ({", ".join(names)}), copied verbatim and bound onto the task env. These methods are scrubbed from the agent image.
-# Runs with `env` (RoboTwin task env) in scope (rcb_traj.Session.exec_code).
-import types
-import numpy as np
-import sapien
-from envs.utils import *
-from envs._GLOBAL_CONFIGS import *
-
-
-{fn_src}
-
-
-for _f in ({", ".join(names)},):
-    setattr(env, _f.__name__, types.MethodType(_f, env))
-env.play_once()
-assert env.plan_success, "a planning step failed"
-'''
+oracle, names = oracle_source(task)
 (dst / f"solution/oracle_{task}.py").write_text(oracle)
 sub("solution/solve.sh", [("stack_blocks_two", task)])  # also renames oracle_stack_blocks_two.py
 sub("tests/test.sh", [("--family stack_blocks_two", f"--family {task}")])
@@ -134,7 +202,7 @@ readme = f'''# robotwin_2_0_{task}-privileged
 | Simulator / robot | RoboTwin 2.0 (SAPIEN 3 / PhysX + CuRobo) / aloha-agilex (dual arm) |
 | Family / instance | `{task}` / RoboTwin seed {seed} (deliberately not one of the seeds used by the public RoboTwin dataset) |
 | Task type / tier | trajectory / privileged |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` (needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
+| Base image | `{IMAGE}` (needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
 | RoboTwin eval step limit | {step_lim} (policy-eval budget upstream; indicative of task length) |
 
 ## Goal
