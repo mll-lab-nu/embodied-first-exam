@@ -29,6 +29,8 @@ done
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
 # grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
+# DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
+if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
 if [ "${1:-}" = "--all" ]; then run 900 robolab/tests/test_finalize.py; fi
 

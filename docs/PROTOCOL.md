@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); DexHand standard to N = 20 (owner, 2026-10-14); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -491,7 +491,8 @@ under an unrelated name would be missed.
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
 ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
-(not published at all: its environment package is this repository's `images/pandadyn/`), AM-Bench; Isaac Sim does not install from pypi.org.
+(not published at all: its environment package is this repository's `images/pandadyn/`), DexHand (not published at all: its scenes and tooling are this repository's
+`scripts/dexhand/` and `images/dexhand/`), AM-Bench; Isaac Sim does not install from pypi.org.
 
 **Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
 decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists that implement it (the same directory
@@ -730,7 +731,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | Version | Date | Content |
 |---|---|---|
 | eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
-| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes and MuJoCo Playground's quadruped tasks |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes, DexHand and MuJoCo Playground's quadruped tasks |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0, MyoSuite); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboARC; first RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
@@ -856,6 +857,13 @@ results must state the reset budget and are compared only with results under the
   does (its instruction calls `POST /reset` through `Robot._post`). The ALOHA and Panda standard tasks keep 0.
   `RCB_RESET_BUDGET=0` still runs one episode; quadruped standard results recorded before this change ran with 0 and
   are reported separately ([`benchmarks/mujoco-playground.md`](benchmarks/mujoco-playground.md)).
+- **DexHand** (owner, 2026-10-14, board 0109; standard tasks, from their first release): `budget.reset = 20`,
+  DexToolBench's value. Every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound
+  exceeded), the essential families start with the object already in the hand, and the agent has no simulator to
+  practise in, so with one episode the first slip decided the trial. A reset calls the family's `Session.reset()` (the
+  same state hash as a fresh process). The DexHand 2.2 adapter (`scripts/dexhand/shared/standard/server.py`) implements
+  the capability as MyoSuite's does. `RCB_RESET_BUDGET=0` still runs one episode
+  ([`benchmarks/dexhand.md`](benchmarks/dexhand.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
