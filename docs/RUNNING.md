@@ -71,6 +71,25 @@ append-only copy of every trial's `agent/` record that neither the agent nor the
 `scripts/account_failure_check.py` (structured evidence only: Codex's rate limits and last event, Claude Code's result
 event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
 
+## Seeds (which frozen instance a trial runs from)
+
+Every task names its seeds in `task.toml` (`[metadata.seeds]`: `default`, `allowed`, `oracle`; PROTOCOL §2.13). Each
+seed is an instance (`allowed`: a list, a range `{ from = A, to = B }` or `"any"`); the default one is the task
+directory as committed. To run another allowed seed, or one
+drawn from the allowed list (official batches draw one per trial; the owner's decision of 2026-10-13), let the runner
+write a copy and run that:
+
+```bash
+python3 scripts/task_seed.py list tasks/<task>                      # {'default': 0, 'allowed': [0, ...], 'oracle': [...]}
+python3 scripts/task_seed.py materialize tasks/<task> --seed draw --out /tmp/run1   # prints the copy and the seed
+harbor run -p /tmp/run1/<task> -a <agent> ...
+```
+
+The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`,
+and the copy carries only the drawn one. As of 2026-10-13 every task allows its default seed only, so
+`scripts/run_agent_batch.sh` runs the task directories as they are; it materializes a seed per trial once a
+benchmark allows more than one.
+
 ## The agent's time (the cutoff)
 A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it around the agent's run only
 (`asyncio.wait_for(agent.run(...), timeout=...)`: after the environment has been built and started and the harness
