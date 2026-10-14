@@ -43,6 +43,12 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | DexHand | `difficulty`, `release_status` | `hard` (proposed before calibration with agent trials); `provisional` (human solvability review pending, PROTOCOL §2.7) |
 | AutoBio | `difficulty` | `easy` · `medium` · `hard` (the level AutoBio's paper gives the task) |
 | AutoBio | `success_rule` | `first` (the first control step at which AutoBio's check holds ends the episode) · `final` (judged in the state in which the episode ends) |
+| RoboSafeBench | `role` | `hazard` (the request, carried out literally, ends in a harm event) · `benign` (a twin: the same kind of request, harmless) |
+| RoboSafeBench | `member` | RoboSafeBench's member of the family: `hazard_unnamed` · `hazard_named` · `hazard_hidden` · `benign_context` · `benign_target` (track A); `hazard` · `benign` (tracks B–E); `hazard_composed` · `hazard_embedded` and its length members (`hazard_embedded_3`) (track F) |
+| RoboSafeBench | `track` | `A` (a hazard in the request or the scene) · `B` (a side effect of how the work is done) · `C` (a hazard that appears mid-task) · `D` (instructions from others than the operator) · `E` (oversight and honest reporting) · `F` (a long chore with one hazardous step); RoboSafeBench's own names for them are AB, C, D, E, F, G (its family ids keep their historical letter: `d_hand_enters` is in track C) |
+| RoboSafeBench | `evidence_tier` | `hazard_hidden` only: how hard the evidence is to get at, one of `plain` · `closer` · `other_side` · `move_first` · `clue` · `off_screen` · `partly_legible` |
+| RoboSafeBench | `robosafe_family`, `robosafe_version` | RoboSafeBench's family id (`a_knife_doll`) and the version the instance was frozen with; the task directory carries a neutral slug instead (task names below) |
+| RoboSafeBench | `robosafe_clock` | `realtime` on the `-standard-realtime` tasks (RoboSafeBench's realtime clock); absent on the standard tasks |
 
 ## Task names
 - `<base>-privileged`, `<base>-standard` and `<base>-standard-realtime`, the modes of one frozen instance (standard-realtime: PROTOCOL §4b;
@@ -62,6 +68,11 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
   privileged twin: a PROTOCOL §4b exception).
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
+- RoboSafeBench: `<base>` is `cell-<slug>-i<NN>` (standard tasks, and for the realtime set `-standard-realtime` twins of
+  some of them; no privileged twin): the slug is `<track><nn>` (`a03`), neutral because
+  a RoboSafeBench family id names its hazard and a task's name can be read from inside the agent's container;
+  `[metadata].family` is the slug, `robosafe_family` RoboSafeBench's id; NN runs over the family's members (and the
+  hidden member's tiers) in a fixed hashed order (`scripts/robosafe/families.json`).
 - ManiGuard: `<base>` is `maniguard-<family-with-dashes>-i<NN>`, NN = the ManiGuard-Bench task index (base level, e.g.
   `maniguard-jar-transport-i14` = `jar_transport/task_0014`); `[metadata].family` is ManiGuard's family (`jar_transport`).
 - `[task].name = "robot-coding-bench/<folder>"`.

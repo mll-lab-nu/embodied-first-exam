@@ -2493,6 +2493,76 @@ match = "^robofunolympics-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
+# cell, standard (RoboSafeBench): CPU-only MuJoCo with OSMesa rendering in the sim sidecar
+[[rule]]
+match = "^cell-.*-standard$"
+min_cpus = 4.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 1.0
+verifier_min_memory_gb = 1.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)"
+
+[[limit]]
+match = "^cell-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 6.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 14.0
+measured = "author estimate, with the measurements above: the agent's container held 0.74 GB PSS at most without an agent (oracle, nop) and 0.68 GB in the one agent trial sampled; 6 GiB under its 8 GiB cap leaves room for the harness and the client; whole trial: measured 4.75 GB, 14 GiB with the sim service's 8 GiB cap; processes 512: design default"
+
+[[cap]]
+# sim: p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling
+match = "^cell-.*-standard$"
+main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
+
+# cell, standard-realtime (RoboSafeBench): the standard tasks' simulator, finalize and client; the realtime clock adds a
+# simulator that runs whether or not the agent calls (about 4 ms of physics per 20 ms control step, one core, measured in
+# eai-robosafe on a university HPC cluster node, 2026-10-14) and the pictures it renders on the CPU. Until the sweep has measured these tasks,
+# the standard tasks' values.
+[[rule]]
+match = "^cell-.*-standard-realtime$"
+min_cpus = 4.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 1.0
+verifier_min_memory_gb = 1.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "the standard tasks' measurements (a university HPC cluster, 2026-10-13: sim sidecar CPU p90 4.74 / max 5.28 cores during finalize, PSS max 2.84 GB; main PSS max 0.74 GB; a whole trial's PSS max 4.75 GB), the same simulator and finalize; the realtime clock keeps about a fifth of one core busy while it runs (4 ms of physics per 20 ms step, eai-robosafe on a university HPC cluster node, 2026-10-14)"
+
+[[limit]]
+match = "^cell-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 6.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 14.0
+measured = "author estimate, the standard tasks' (the same client and harness in the agent's container): 6 GiB under its 8 GiB cap; whole trial 14 GiB with the sim service's 8 GiB cap; processes 512: design default"
+
+[[cap]]
+# as the standard tasks: the finalize's two replays side by side and the video
+match = "^cell-.*-standard-realtime$"
+main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
 match = "^pandadyn-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
