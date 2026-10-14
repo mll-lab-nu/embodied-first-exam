@@ -656,7 +656,6 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
 
-# robotangle, privileged: 52 task(s)
 [[rule]]
 match = "^robotangle-.*-privileged$"
 min_cpus = 2.0
@@ -668,22 +667,8 @@ recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 5.0
 verifier_min_gpu_memory_gb = 7.0
-measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
-[[rule]]
-match = "^robotangle-new-.*-privileged$"
-min_cpus = 2.0
-min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
-gpu_required = true
-gpu_class = "any"
-recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
-verifier_min_cpus = 2.0
-verifier_min_memory_gb = 5.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "RoboTangle's (Genesis) numbers, kept until RoboTangle-New's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
-
-# robotangle, standard: 52 task(s)
 [[rule]]
 match = "^robotangle-.*-standard$"
 min_cpus = 2.0
@@ -695,20 +680,7 @@ recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 6.0
 verifier_min_gpu_memory_gb = 7.0
-measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
-
-[[rule]]
-match = "^robotangle-new-.*-standard$"
-min_cpus = 2.0
-min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
-gpu_required = true
-gpu_class = "any"
-recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
-verifier_min_cpus = 2.0
-verifier_min_memory_gb = 6.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "RoboTangle's (Genesis) numbers, kept until RoboTangle-New's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
 # robotwin_2_0, privileged: 47 task(s)
 [[rule]]
@@ -1641,22 +1613,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 16.0
-measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 4.6 GiB over 1 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^robotangle-new-.*-privileged$"
-scope = "trial"
-max_gpu_memory_gb = 16.0
-max_memory_gb = 16.0
-max_processes = 512
-max_disk_gb = 10.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
-trial_max_memory_gb = 16.0
-measured = "RoboTangle's (Genesis) numbers, kept until RoboTangle-New's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
 [[limit]]
 match = "^robotangle-.*-standard$"
@@ -1671,22 +1628,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 21.0
-measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 13 GiB (docker peak 8.4 GiB, 47 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^robotangle-new-.*-standard$"
-scope = "agent"
-max_gpu_memory_gb = 0.0
-max_memory_gb = 8.0
-max_processes = 512
-max_disk_gb = 20.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
-trial_max_memory_gb = 21.0
-measured = "RoboTangle's (Genesis) numbers, kept until RoboTangle-New's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
 [[limit]]
 match = "^robotwin_2_0_.*-privileged$"
@@ -2035,16 +1977,7 @@ match = "^robotangle-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 
 [[cap]]
-match = "^robotangle-new-.*-privileged$"
-main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
-
-[[cap]]
 match = "^robotangle-.*-standard$"
-main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
-sim = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
-
-[[cap]]
-match = "^robotangle-new-.*-standard$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 

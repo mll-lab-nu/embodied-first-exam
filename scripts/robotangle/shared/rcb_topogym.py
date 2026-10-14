@@ -224,6 +224,14 @@ TASKS: dict[str, dict] = {
              "its unfolded footprint without excessive stretching. Release the blanket, withdraw the grippers and let it "
              "settle flat and still on the tabletop.",
         instances=[dict(variation_id="blanket_flatten_easy", seed=0)]),
+    # blanket_fold (2026-10-11, the blanket redesign): blanket_flatten's cloth, robot and birth; the goal is a frozen
+    # target fold (topogym/tasks/blanket_fold). The wording is provisional until the redesign's goal text lands.
+    "blanket_fold": dict(
+        task_id="blanket_fold", robot="aloha",
+        text="Fold the blanket into its target folded shape on the table: the named corners and edges where the target "
+             "puts them, the layers stacked in the target's order, the folded outline in place and flat. Release the "
+             "blanket, withdraw the grippers and let it settle still on the tabletop.",
+        instances=[dict(variation_id="blanket_fold_easy", seed=0)]),
     "buzz_wire_3d": dict(
         task_id="buzz_wire_3d", robot="panda_robotiq",
         text="Guide the handheld metal loop along the entire wire from its starting end to the finish, keeping the wire "
@@ -291,7 +299,7 @@ TASKS: dict[str, dict] = {
              "components outside the area on the puzzle/system side. Holding the target is allowed; placing only the "
              "handle in the area is not completion.",
         # Weld on any link for the rigid-chain tiers only; the FEM tiers' recommendation is none (tasks/orbits/common.py).
-        instances=[dict(variation_id="orbits_reference85", seed=0)], grasp_assist="recommended"),
+        instances=[dict(variation_id="orbits_very_easy", seed=0)], grasp_assist="recommended"),
     "rope_threading": dict(
         task_id="rope_threading", robot="aloha",
         text="Thread the rope through this instance's required rings in the specified material order and direction. "
@@ -305,7 +313,7 @@ TASKS: dict[str, dict] = {
              "components outside the area on the puzzle/system side. Holding the target with the gripper is allowed.",
         # Weld on any link and on the ring for the rigid-chain settings only; the FEM tiers' recommendation is none
         # (tasks/slotted_post_ring/common.py).
-        instances=[dict(variation_id="slotted_post_ring_hard", seed=0)], grasp_assist="recommended"),
+        instances=[dict(variation_id="slotted_post_ring_hard_chain", seed=0)], grasp_assist="recommended"),
 }
 for _name, _t in TASKS.items():
     _t.setdefault("simulator", {}); _t.setdefault("grasp_assist", None); _t.setdefault("fixture", False)
@@ -323,6 +331,46 @@ for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "he
                                  "rigid_options": {"use_contact_island": False}}
 # lock_picking keeps v6's GPU float32 (slower on the CPU).
 TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "precision": "32"}
+# MuJoCo (2026-10-09, the Genesis -> MuJoCo migration; docs/rcb/MUJOCO_CORE.md): these families build new instances on
+# topogym.world.mujoco (CPU float64; the scene frozen with the instance). Released Genesis instances keep their own frozen
+# simulator configuration and still load on Genesis.
+for _name in ("interlocked_claws", "fiber_bundling", "hedgehog_in_cage", "cast_keyhole", "lock_picking", "buzz_wire_3d", "horseshoe_ring", "cast_coil"):
+    TASKS[_name]["simulator"] = {**{k: v for k, v in TASKS[_name]["simulator"].items() if k != "rigid_options"},
+                                 "compute_backend": "cpu", "precision": "64", "physics_engine": "mujoco"}
+# lock_picking on MuJoCo: the stop frames' round slot ends as 1-degree collision wedges (0.15-degree ones are sliver
+# hulls). A task parameter, so the render bridge's Genesis host regenerates the same assets; --task-parameters replaces
+# this dict, so give it there too.
+TASKS["lock_picking"]["simulator"]["task_parameters"] = {"stop_frame_cap_step_deg": 1.}
+# These families build every new instance on MuJoCo (2026-10-09): the rigid-chain variations (slotted_post_ring
+# very_easy, easier, #108 easy / medium / hard_chain; orbits very_easy, easier) as they are, and the FEM variations
+# (slotted easy, medium, hard, clearance36; orbits easy, medium, hard, reference85) with their cord as a rigid chain
+# (task parameter cord_model "chain"). simulator_config routes inside the family's leave-IPC branch, per variation.
+MUJOCO_CHAIN_FAMILIES = ("slotted_post_ring", "orbits")
+# Their settling before the birth (reset_physics_steps, 2.5 ms ticks; frozen with the instance, mujoco_settled_state),
+# measured on MuJoCo 3.14 with the exact constraint diagonal (2026-10-10; runs/robotangle_mujoco/v2/slotted_orbits/settle):
+# each setting held from its authored pose for 150 s of nop, every movable body sampled each second. The value is the
+# shortest settling after which every 10 s window moves every body at most 1 mm (as far as measured), rounded up with a
+# margin. A light chain draped over the post, the ring or the posts keeps sliding slowly after its fall; the windows
+# shrink, with bursts where a link slips off an edge.
+#  - #108 easy / medium / hard_chain: needs 71 / 70 / 57 s (a slip of the right end's links at 50-80 s, up to 1.75 mm
+#    per 10 s); 80 s, then at most 0.6 mm per 10 s.
+#  - slotted very_easy (#108's chain file since dev/jianwen c15011129, held 200 s): needs 54 s (1.1 mm per 10 s at
+#    50-60 s, 0.9 at 70-80 s, 0.3-0.4 mm after 140 s); 70 s.
+#  - slotted easier (#108's chain file since dev/jianwen c15011129, held 400 s): its chain creeps longest, in bursts
+#    where links slip over the post and ring: 1.6-4.0 mm per 10 s up to 70 s, 0.7-0.9 at 90-120 s, a slip of up to
+#    2.8 mm at 130-170 s, 0.7-1.2 mm at 170-310 s, then 0.83, 0.69, 0.58, 0.49, 0.41, 0.35, 0.30, 0.25 mm (310-400 s);
+#    needs 310 s; 330 s.
+#  - slotted easy / medium / hard / clearance36 (the FEM settings' chains): need 5-6 s; 15 s, then at most 0.3 mm.
+#  - orbits easy / medium / hard / reference85: need 24 / 28 / 28 / 14 s; 35 s, then at most 0.7 mm.
+#  - orbits very_easy / easier: need 1 s; 3 s as before (0.03 / 0.1 mm per 10 s).
+MUJOCO_CHAIN_SETTLE_S = {
+    **dict.fromkeys(("slotted_post_ring_easy_chain", "slotted_post_ring_medium_chain", "slotted_post_ring_hard_chain"), 80.),
+    "slotted_post_ring_very_easy": 70., "slotted_post_ring_easier": 330.,
+    **dict.fromkeys(("slotted_post_ring_easy", "slotted_post_ring_medium", "slotted_post_ring_hard",
+                     "slotted_post_ring_clearance36"), 15.),
+    **dict.fromkeys(("orbits_easy", "orbits_medium", "orbits_hard", "orbits_reference85"), 35.),
+    "orbits_very_easy": 3., "orbits_easier": 3.,
+}
 # Tooling v9 (2026-10-02 IPC speed study, robot_coding_bench jobs/journal/2026-10-02/ipc_fast/): one IPC solver substep per
 # 2.5 ms tick (was four) with Newton / PCG tolerances 1e-3 / 1e-5 (were 1e-4 / 1e-6), from a scene settled for N ticks
 # before the instance is frozen (the v5 instances were not at rest at t = 0). Against substeps 4 from the same settled
@@ -353,6 +401,45 @@ TASKS["knot_untying"]["simulator"] = {
     **TASKS["knot_untying"]["simulator"], "physics_dt_s": 0.005, "control_decimation": 5, "reset_physics_steps": 300,
     "ipc_options": {**TASKS["knot_untying"]["simulator"]["ipc_options"], "newton_semi_implicit_enable": True,
                     "newton_min_iterations": 3}}
+# MuJoCo (2026-10-10, the rope agent; docs/rcb/MUJOCO_CORE.md): knot_untying builds new instances on topogym.world.mujoco,
+# the rope a rigid capsule chain (topogym/world/mujoco/rope_chain.py) born from a released instance's frozen IPC state
+# (SimulatorConfig.mujoco_birth). The released control period and tick stay (5 ms x 5 = 25 ms); 8 MuJoCo steps per tick.
+TASKS["knot_untying"]["simulator"] = {
+    **{k: v for k, v in TASKS["knot_untying"]["simulator"].items() if k != "ipc_options"},
+    "compute_backend": "cpu", "precision": "64", "physics_engine": "mujoco", "solver_substeps": 8, "reset_physics_steps": 0}
+# rope_threading likewise, with the release's 40 ms tick and control period (topogym/tasks/release_profile.py), 64 MuJoCo
+# steps per tick; its assisted grasp on MuJoCo welds a hand to the rope link it pinches (contact_weld_v1).
+TASKS["rope_threading"]["simulator"] = {
+    **{k: v for k, v in TASKS["rope_threading"]["simulator"].items() if k != "ipc_options"},
+    "compute_backend": "cpu", "precision": "64", "physics_engine": "mujoco", "physics_dt_s": 0.04, "control_decimation": 1,
+    "solver_substeps": 64, "reset_physics_steps": 0}
+# MuJoCo (2026-10-10, the blanket agent; docs/rcb/MUJOCO_CORE.md): blanket_flatten builds new instances on
+# topogym.world.mujoco, the PBD cloth a 2D flex over contact-sphere vertices (topogym/world/mujoco/cloth.py) born from a
+# released instance's frozen PBD particles (SimulatorConfig.mujoco_birth: that instance.json). The released tick and
+# control period stay (2.5 ms x 10 = 25 ms); one MuJoCo step per tick.
+TASKS["blanket_flatten"]["simulator"] = {**TASKS["blanket_flatten"]["simulator"], "compute_backend": "cpu",
+                                         "precision": "64", "physics_engine": "mujoco", "solver_substeps": 1}
+TASKS["blanket_fold"]["simulator"] = dict(TASKS["blanket_flatten"]["simulator"])     # the same cloth scene
+# Renderer (2026-10-10; docs/rcb/RENDER_BRIDGE.md, "Nyx without Genesis"): the MuJoCo instances of these families render
+# with nyx_direct.py (next to this file), which feeds Nyx from the MuJoCo world without a Genesis host; their binding
+# names it (nyx_direct_sha256). The other families' MuJoCo instances keep the render bridge's Genesis host ("nyx", the
+# default). RCB_RENDER, when set, overrides the field (_render_bridge).
+for _name in ("blanket_flatten", "blanket_fold", "buzz_wire_3d", "fiber_bundling", "hedgehog_in_cage", "horseshoe_ring",
+              "interlocked_claws", "knot_untying", "lock_picking", "rope_threading"):
+    TASKS[_name]["renderer"] = "direct"
+# cast_coil (2026-10-10, Jianwen): every MuJoCo instance of the family, the five released tiers and the v2 design tiers
+# alike. Released tiers at birth: nyx_direct's input buffers equal the host's bit for bit, at most 12 pixels > 8 levels
+# apart (cam_high; runs/robotangle_mujoco/v2/cast_coil/step2_summary.json).
+TASKS["cast_coil"]["renderer"] = "direct"
+# cast_keyhole (2026-10-10, Jianwen): the five released tiers. At birth nyx_direct's input buffers equal the host's bit
+# for bit (runs/robotangle_mujoco/v2/cast_keyhole/step3_summary.json).
+TASKS["cast_keyhole"]["renderer"] = "direct"
+# slotted_post_ring and orbits (2026-10-10, Jianwen): every MuJoCo tier, the chain settings and the FEM settings whose cord
+# is a chain (nyx_direct.chain_cord_host draws those as the FEM setting, as the bridge does). At birth and after a 40-row
+# nop: input buffers bitwise but rounding at birth, RGB within the host's own run-to-run spread (#108's coincident post
+# boxes flicker on the host too); runs/robotangle_mujoco/v2/slotted_orbits/nyxtest.
+for _name in ("orbits", "slotted_post_ring"):
+    TASKS[_name]["renderer"] = "direct"
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,
@@ -381,11 +468,29 @@ def simulator_config(task: str, eval_index: int | None = None, *, variation_id: 
     if "ipc_options" in cfg:
         from topogym.config.registry import task_definition
         definition = task_definition(spec["task_id"], resolved["variation_id"])
+        own = getattr(definition, "simulator_settings", None)
+        if definition.physics_model != "fem_ipc" and own is not None:
+            # A setting leaving IPC that declares its own settings (the Slotted rigid-chain settings, 2026-10-08;
+            # harbor_templates/topogym/common/rcb_topogym.py).
+            cfg.pop("ipc_options")
+            cfg.update(own)
         # Only Orbits very_easy / easier here; another tier leaving IPC brings its own settings.
-        if definition.physics_model != "fem_ipc" and getattr(definition, "difficulty", "") in {"very_easy", "easier"}:
+        elif definition.physics_model != "fem_ipc" and getattr(definition, "difficulty", "") in {"very_easy", "easier"}:
             cfg.pop("ipc_options")
             cfg.update(compute_backend="cpu", precision="64", rigid_options={"use_contact_island": False},
                        reset_physics_steps=1200)
+        if definition.physics_model == "fem_ipc" and spec["task_id"] in MUJOCO_CHAIN_FAMILIES:
+            # A FEM setting of these families on MuJoCo: its cord becomes the rigid chain (task parameter cord_model;
+            # the variation, geometry, goal, rules and the unassisted contract stay). Frozen Genesis instances keep
+            # their own frozen configuration.
+            cfg.pop("ipc_options")
+            task_parameters = {**(task_parameters or {}), "cord_model": "chain"}
+        if "ipc_options" not in cfg and spec["task_id"] in MUJOCO_CHAIN_FAMILIES:
+            # MuJoCo chain settings (MUJOCO_CHAIN_FAMILIES): 2.5 ms ticks of 4 substeps (profiles.py, _CHAIN)
+            cfg.pop("rigid_options", None)
+            cfg.update(compute_backend="cpu", precision="64", physics_engine="mujoco", solver_substeps=4,
+                       reset_physics_steps=int(round(MUJOCO_CHAIN_SETTLE_S[resolved["variation_id"]]
+                                                     / float(cfg.get("physics_dt_s", .0025)))))
     assist = spec["grasp_assist"]
     if assist == "recommended":
         from dataclasses import asdict
@@ -401,7 +506,8 @@ def simulator_config(task: str, eval_index: int | None = None, *, variation_id: 
         # Manager/build input only. Validated values are saved in the instance;
         # a loaded episode cannot accept these overrides.
         allowed = {"physics_dt_s", "solver_substeps", "control_decimation", "reset_physics_steps",
-                   "rigid_options", "ipc_options", "ipc_settled_state", "grasp_assist"}
+                   "rigid_options", "ipc_options", "ipc_settled_state", "grasp_assist", "physics_engine", "mujoco_birth",
+                   "mujoco_profile"}
         if not isinstance(simulator_overrides, dict) or set(simulator_overrides) - allowed:
             raise ValueError(f"simulator_overrides permits only {sorted(allowed)}")
         cfg.update(simulator_overrides)
@@ -832,7 +938,7 @@ class _Robot:
     # kinematics stopped replaying bit for bit (lab BUG 7); _ChainFK is the same model in numpy and never touches the solver.
     def _fk_full(self, q_full) -> dict:
         if getattr(self, "_chain", None) is None:
-            self._chain = _ChainFK(self.entity)
+            self._chain = _chain_fk(self.entity)
         out = self._chain(np.asarray(q_full, dtype=np.float64))
         for name, g in self.groups.items():
             out[self.tcp_frames[name]] = out[g.hand_link] @ self.hand_T_tcp[name]
@@ -1137,7 +1243,7 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
 #  history (task_state[_RULES_KEY], absent while all are zero), so reset and rewind restore them with the rest of the task
 #  state.
 RULES_REVISION = "rules_2026-10-03b"
-CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
+CONTACT_RULE = dict(deep_m=.003, sustained_m=.002, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
 SOFT_RULE = dict(window_s=.25, residual_m=.002)
 # Measured on lab 2026-10-03 (docs/rcb/benchmarks/topogym.md, "Physical-validity policy"): a drive at its cap reads
 # 0.99-1.00 and a working arm well below (free-air saturation: wrist wraps at 0.99 with 1 N of contact); 20 N excludes
@@ -1164,6 +1270,10 @@ ARM_TORQUE_CAPS_NM = {"aloha": (12.9, 80., 59., 12.9, 35., 17.5), "panda_robotiq
 # below a +1.0-1.5 mm pregrasp; stopped at + 2 mm or 0 mm it never converges). - 15 mm keeps those envelopes and still
 # stops the gross below-table targets of the v12 failures (an IK swing to -245 mm, -80 mm, -41 mm).
 TABLE_GUARD_MARGIN_M = -.015
+# The cloth floor of the table guard (profile `cloth_floor`): a non-pad gripper vertex stays above the cloth top under
+# it (highest particle + radius within CLOTH_FLOOR_RADIUS_M, on a CLOTH_FLOOR_CELL_M grid) less about one layer.
+CLOTH_FLOOR_COMPRESSION_M, CLOTH_FLOOR_CELL_M, CLOTH_FLOOR_RADIUS_M = .0025, .004, .006
+CLOTH_FLOOR_PAD_DEPTH_M = .006   # the finger links: the assist's contact distance into the cloth, not through it
 IK_JUMP_LIMIT_RAD = .5           # standard service: an ee_pose row whose IK solution is farther from the measured joints is refused
 JOINT_STEP_LIMIT_RAD = .04       # standard service: joint_position targets move at most this per control step (as ee_pose rows)
 _RULES_KEY = "rcb_rules"
@@ -1179,6 +1289,25 @@ def table_guard_words() -> str:
 def rule_window_ticks(physics_dt_s: float, window_s: float) -> int:
     """First whole tick reaching the window; never fail before its duration."""
     return max(1, int(math.ceil(float(window_s) / float(physics_dt_s) - 1e-12)))
+
+
+def rules_text(text: str) -> str:
+    """A task's public text with TopoGym's rigid-contact sentence ("... may penetrate at most 1 mm. Exceeding either limit
+    ends the episode in failure.", topogym.tasks.goal_description) replaced by the rule this tooling applies instead
+    (CONTACT_RULE: review, never an episode end; BREAKDOWN_PENETRATION_M: a simulator breakdown). Other texts unchanged."""
+    from topogym.tasks.goal_description import _rigid_contact_failure
+    stale = _rigid_contact_failure()
+    if stale not in text:
+        return text
+    c, mm = CONTACT_RULE, (lambda v: f"{v * 1000:g} mm")
+    return text.replace(stale, (
+        "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Contact penetration never "
+        f"ends the episode by itself: a success with a task contact deeper than {mm(c['deep_m'])}, or deeper than "
+        f"{mm(c['sustained_m'])} for at least {c['window_s']:g} s, is held for review instead of credited automatically "
+        f"(a finger contact with a held movable piece: {mm(c['held_deep_m'])}, or {mm(c['held_sustained_m'])} for "
+        f"{c['window_s']:g} s; holding requires both fingers of the same hand to contact the same piece, or an active "
+        f"assisted grasp by that hand). A task contact deeper than {mm(BREAKDOWN_PENETRATION_M)} ends the episode as a "
+        "simulator breakdown."))
 
 
 def contact_rule_tick(counts: dict, nonheld_m: float, held_m: float, window: int, rule: dict = CONTACT_RULE):
@@ -1630,19 +1759,24 @@ def _gripper_context(session) -> str:
 
 
 def _install_torque_caps(session) -> dict:
-    """R3: the arm joints' PD force clamp (Genesis set_dofs_force_range) becomes min(model limit, ARM_TORQUE_CAPS_NM);
-    the gripper drives keep theirs. The world checkpoint (recorded before) restores Genesis' engine buffers, the force
+    """R3: the arm joints' PD force clamp (Genesis set_dofs_force_range) becomes min(model limit, ARM_TORQUE_CAPS_NM,
+    the robot's own joint_torque_limits where it has them: MuJoCo's ALOHA, its real servos); the gripper drives keep theirs. The world checkpoint (recorded before) restores Genesis' engine buffers, the force
     range included, so every rewind applies the caps again (_install_rules' lifecycle sink)."""
     rr = session.env._robot
     caps = ARM_TORQUE_CAPS_NM.get(rr.description.robot_id)
+    robot_limits = getattr(rr, "joint_torque_limits", None)     # the real robot's (MuJoCo robots): the smaller wins
     session._torque_cap_dofs, out = [], {}
-    if caps is None:
+    if caps is None and robot_limits is None:
         return out
     for g in rr.description.groups:
         n = len(g.arm_joints)
-        if len(caps) != n:
+        if caps is not None and len(caps) != n:
             raise ValueError(f"torque caps for {rr.description.robot_id} name {len(caps)} joints, the arm has {n}")
-        limits = np.minimum(np.asarray(g.force[:n], dtype=np.float64), np.asarray(caps, dtype=np.float64))
+        limits = np.asarray(g.force[:n], dtype=np.float64)
+        if caps is not None:
+            limits = np.minimum(limits, np.asarray(caps, dtype=np.float64))
+        if robot_limits is not None:
+            limits = np.minimum(limits, robot_limits[g.name])
         session._torque_cap_dofs.append((list(rr._controlled[g.name][:n]), limits))
         session.robot.drive_force[g.name] = tuple(float(v) for v in limits) + tuple(float(v) for v in g.force[n:])
         out[g.name] = [float(v) for v in limits]
@@ -1724,6 +1858,13 @@ class _ChainFK:
         return out
 
 
+def _chain_fk(entity):
+    """Stateless forward kinematics of the robot entity: the engine's own when it provides one (a MuJoCo entity's
+    chain_fk: the same model on a private MjData), else _ChainFK on Genesis' static data."""
+    own = getattr(entity, "chain_fk", None)
+    return own() if own is not None else _ChainFK(entity)
+
+
 class _TableGuard:
     """R4: before a control step runs, stop each arm's commanded joint targets where any collision vertex of its gripper
     (the subtree of its grasp contact_root_link: fingers and housing, at the commanded opening) would come lower than the
@@ -1766,7 +1907,20 @@ class _TableGuard:
                     pts.append((link.name, local))
             self.points[arm] = pts
         self.count, self.events = 0, []
-        self.fk = _ChainFK(r.entity) if self.points else None
+        self.fk = _chain_fk(r.entity) if self.points else None
+        # The cloth floor (profile `cloth_floor`, the blanket GPU profile; 2026-10-12): a one-way coupled cloth never
+        # pushes back on the robot, so a gripper housing pressed onto a folded stack squeezed it below its own thickness
+        # (227 N, a barrier swing: the easier4 directed_e0 case). Over a cloth, every gripper vertex but the finger
+        # links' is kept above the local cloth top less CLOTH_FLOOR_COMPRESSION_M; the finger links reach
+        # CLOTH_FLOOR_PAD_DEPTH_M into it (the assist's contact distance: a pinch still closes, but a finger no longer
+        # pins the cloth to the table: easier4 cem_e3, 212 N), and keep the table floor where no cloth lies under them.
+        # Derived from the cloth state at the step's start: no new state.
+        world = session.env._world
+        self.cloth = None
+        if self.points and (getattr(world, "profile", None) or {}).get("cloth_floor") and getattr(world, "_cloths", None):
+            self.cloth = next(iter(world._cloths.values()))
+        self.pads = {arm: set(g.grasp.finger_links) for arm, g in r.groups.items() if g.grasp is not None}
+        self._heights = None
 
     def lowest(self, row) -> dict:
         """arm -> the lowest world z of its gripper at the joint row `row` (action layout)."""
@@ -1777,11 +1931,100 @@ class _TableGuard:
         return {arm: min(float((local @ T[name][2, :3] + T[name][2, 3]).min()) for name, local in pts)
                 for arm, pts in self.points.items() if pts}
 
+    def _cloth_heights(self):
+        """The cloth's top surface on a CLOTH_FLOOR_CELL_M grid (highest particle + its radius per cell, spread over the
+        neighbouring cells within CLOTH_FLOOR_RADIUS_M): (origin, grid)."""
+        from scipy.ndimage import maximum_filter
+        c = self.cloth
+        x = np.asarray(c.particles_of(c.vertices()), dtype=np.float64)
+        top = x[:, 2] + float(c.settings["radius_m"])
+        k = int(np.ceil(CLOTH_FLOOR_RADIUS_M / CLOTH_FLOOR_CELL_M))
+        lo = x[:, :2].min(axis=0) - (k + 1) * CLOTH_FLOOR_CELL_M
+        ij = np.floor((x[:, :2] - lo) / CLOTH_FLOOR_CELL_M).astype(np.int64)
+        grid = np.full(tuple(ij.max(axis=0) + k + 2), -np.inf)
+        np.maximum.at(grid, (ij[:, 0], ij[:, 1]), top)
+        return lo, maximum_filter(grid, size=2 * k + 1, mode="constant", cval=-np.inf)
+
+    def clearance(self, row) -> dict:
+        """arm -> the least height of its gripper's vertices above their floor at the joint row `row`: the table limit
+        for the finger links, the cloth top less CLOTH_FLOOR_COMPRESSION_M (at least the table limit) for the rest."""
+        r, row = self.s.robot, np.asarray(row, dtype=np.float64)
+        q = r.q_full(np.concatenate([row[r.arm_slice[a]] for a in r.arms]))
+        q = r._with_fingers(q, {a: r.action_to_native(a, row[r.grip_index[a]]) for a in r.arms})
+        T = self.fk(q)
+        lo, grid = self._heights
+        out = {}
+        for arm, pts in self.points.items():
+            least = np.inf
+            for name, local in pts:
+                v = local @ T[name][:3, :3].T + T[name][:3, 3]
+                ij = np.floor((v[:, :2] - lo) / CLOTH_FLOOR_CELL_M).astype(np.int64)
+                inside = np.all((ij >= 0) & (ij < np.asarray(grid.shape)), axis=1)
+                top = np.full(len(v), -np.inf)
+                top[inside] = grid[ij[inside, 0], ij[inside, 1]]
+                # the finger links reach CLOTH_FLOOR_PAD_DEPTH_M into the cloth (a pinch closes within the assist's
+                # contact distance); the rest of the gripper stops CLOTH_FLOOR_COMPRESSION_M into it
+                depth = CLOTH_FLOOR_PAD_DEPTH_M if name in self.pads.get(arm, ()) else CLOTH_FLOOR_COMPRESSION_M
+                floor = np.maximum(np.full(len(v), self.limit), top - depth)
+                least = min(least, float((v[:, 2] - floor).min()))
+            out[arm] = least
+        return out
+
+    def _apply_cloth(self, target, previous):
+        """apply() with the cloth floor: the same stop along the commanded path, on the clearance above each vertex's
+        floor instead of the height above the table limit."""
+        r = self.s.robot
+        previous = np.asarray(previous, dtype=np.float64)
+        moved = [a for a in self.points if not np.array_equal(target[r.arm_slice[a]], previous[r.arm_slice[a]])]
+        if not moved:
+            return target
+        self._heights = self._cloth_heights()
+        want = self.clearance(target)
+        low = [a for a in moved if want.get(a, np.inf) < -1e-5]
+        if not low:
+            return target
+        base = np.asarray(target, dtype=np.float64).copy()
+        for arm in low:
+            base[r.arm_slice[arm]] = previous[r.arm_slice[arm]]
+        have = self.clearance(base)
+        out, event = np.asarray(target, dtype=np.float64).copy(), {}
+        for arm in low:
+            bound = min(0., have[arm])
+            if want[arm] >= bound - 1e-5:
+                continue
+            idx = list(range(r.arm_slice[arm].start, r.arm_slice[arm].stop))
+            lo, hi = 0., 1.
+            for _ in range(14):
+                mid = (lo + hi) / 2
+                trial = out.copy()
+                trial[idx] = previous[idx] + (out[idx] - previous[idx]) * mid
+                if self.clearance(trial)[arm] >= bound + 1e-6:
+                    lo = mid
+                else:
+                    hi = mid
+            out[idx] = previous[idx] + (out[idx] - previous[idx]) * lo
+            event[arm] = dict(asked_mm=round(want[arm] * 1000, 1), stopped_mm=round(bound * 1000, 1), fraction=round(lo, 4),
+                              floor="cloth")
+        if not event:
+            return target
+        out = out.astype(np.float32).astype(np.float64)
+        self.count += 1
+        self.s.last_guard = dict(step=int(self.s.n_steps) + 1, **event)
+        self.events = (self.events + [self.s.last_guard])[-20:]
+        self.s.monitor.guard(self.s.last_guard)
+        if self.count <= 5 or self.count % 100 == 0:
+            _log("table guard (cloth floor):", "; ".join(f"{a} gripper target {e['asked_mm']:+.1f} mm from its floor, "
+                                                          f"stopped at {e['stopped_mm']:+.1f} mm" for a, e in event.items()),
+                 f"(guarded steps: {self.count})")
+        return out
+
     def apply(self, target, previous):
         """-> the guarded target (the input itself when nothing is stopped); sets the Session's last_guard event."""
         self.s.last_guard = None
         if self.limit is None or not self.points:
             return target
+        if self.cloth is not None:
+            return self._apply_cloth(target, previous)
         r = self.s.robot
         previous = np.asarray(previous, dtype=np.float64)
         moved = [a for a in self.points if not np.array_equal(target[r.arm_slice[a]], previous[r.arm_slice[a]])]
@@ -2960,6 +3203,63 @@ def _install_frozen_assets(instance_dir, identity: dict) -> None:
         module.load_centerline_map = load_centerline_map
 
 
+def _render_bridge(instance_path: str, world=None, renderer: str = "nyx"):
+    """The Nyx render host of a MuJoCo instance (render_bridge.py ships next to this file). RCB_RENDER=off turns
+    rendering off: the same camera rig and calibration without pixels (render_bridge.headless: black RGB, depth without
+    a reading, no GPU), for runs whose frames nobody looks at, e.g. the Harbor oracle / nop checks. Never for agents.
+    A rope instance carries the released Genesis instance it was born from (instance_assets/render_host/): the host is
+    that scene, whose FEM rope the MuJoCo chain then drives (bind_chain, bound at the chain's birth: the frozen scene's
+    body poses). `renderer` is the task's (TASKS renderer): "nyx" is that host; "direct" renders the same frames without
+    the Genesis host: nyx_direct.py (next to this file) feeds Nyx from this world on the same route, MuJoCo's raster draws
+    the depth. RCB_RENDER, when set, overrides it: nyx, direct or off."""
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import render_bridge
+    host = Path(instance_path).resolve().parent / "instance_assets" / "render_host" / "instance.json"
+    source = str(host) if host.is_file() else instance_path
+    mode = os.environ.get("RCB_RENDER", renderer)
+    if mode == "off":
+        _log("rendering off (RCB_RENDER=off): black frames, depth without a reading, the same camera calibration")
+        return render_bridge.headless(source)
+    if mode == "direct":
+        # docs/rcb/RENDER_BRIDGE.md, Nyx without Genesis: Nyx fed from this world by nyx_direct.py (next to this file), no
+        # Genesis host; the camera calibration of the headless rig of the same scene
+        import nyx_direct
+        _log("rendering with nyx_direct: Nyx without a Genesis host, MuJoCo raster depth")
+        return nyx_direct.rig(instance_path, world, render_bridge.headless(source))
+    if mode != "nyx":
+        raise ValueError(f"RCB_RENDER must be nyx, direct or off, not {mode!r}")
+    bridge = render_bridge.build(source)
+    for name, rope in (getattr(world, "_ropes", None) or {}).items():
+        import mujoco
+        birth = mujoco.MjData(world.model)
+        mujoco.mj_kinematics(world.model, birth)
+        bridge.bind_chain(name, world.model, birth, bodies=[int(b) for b in rope.bodies], link_s=rope.s_nodes)
+    for name, cloth in (getattr(world, "_cloths", None) or {}).items():
+        # a cloth's flex drives the host's PBD particles (bind_flex), bound at the cloth's frozen birth: the host shows
+        # the frozen PBD state the birth came from
+        import mujoco
+        birth = mujoco.MjData(world.model)
+        cloth.apply_birth(birth)
+        mujoco.mj_kinematics(world.model, birth)
+        mujoco.mj_flex(world.model, birth)
+        bridge.bind_flex(name, world.model, birth, flex=int(cloth.flex))
+    return bridge
+
+
+def _check_render_bridge(lock: dict) -> None:
+    """A MuJoCo task's binding also names the render bridge shipped next to this file (render_bridge_sha256) and, for a
+    family that renders with nyx_direct (TASKS renderer "direct"), nyx_direct.py (nyx_direct_sha256): the frames and the
+    rendering-off rig come from them, so a changed file is refused like changed tooling."""
+    for key, name, what in (("render_bridge_sha256", "render_bridge.py", "render bridge"),
+                            ("nyx_direct_sha256", "nyx_direct.py", "nyx_direct")):
+        want = lock.get(key)
+        if want is not None and _sha256_file(Path(__file__).resolve().parent / name) != want:
+            from topogym.simulator.frozen_binding import BindingMismatch
+            raise BindingMismatch(f"Loaded {what} differs from the runtime binding")
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -2987,6 +3287,7 @@ class Session:
                 try:
                     lock = json.loads(lock_path.read_text())
                     check_inputs(instance, __file__, lock)
+                    _check_render_bridge(lock)
                     runtime = check_runtime(lock)       # this tooling's: both libuipc builds and the one in use
                 except (OSError, ValueError, KeyError) as exc:
                     raise InstanceMismatch(f"Frozen runtime binding failed: {exc}") from exc
@@ -3000,9 +3301,18 @@ class Session:
             dependency = cfg["task_parameters"].get("initial_state_path")
             if dependency and not Path(dependency).is_absolute():
                 cfg["task_parameters"]["initial_state_path"] = str(Path(instance).resolve().parent / dependency)
+            fold_target = cfg["task_parameters"].get("fold_target_path")
+            if fold_target and not Path(fold_target).is_absolute():
+                cfg["task_parameters"]["fold_target_path"] = str(Path(instance).resolve().parent / fold_target)
             settled = cfg.get("ipc_settled_state")
             if settled and not Path(settled).is_absolute():
                 cfg["ipc_settled_state"] = str(Path(instance).resolve().parent / settled)
+            scene = cfg.get("mujoco_scene")
+            if scene and not Path(scene).is_absolute():
+                cfg["mujoco_scene"] = str(Path(instance).resolve().parent / scene)
+            settled = cfg.get("mujoco_settled_state")
+            if settled and not Path(settled).is_absolute():
+                cfg["mujoco_settled_state"] = str(Path(instance).resolve().parent / settled)
         else:
             cfg = simulator_config(task, eval_index, variation_id=variation_id, seed=seed,
                                    task_parameters=task_parameters, simulator_overrides=simulator_overrides)
@@ -3014,30 +3324,48 @@ class Session:
         from topogym.simulator.env import Env
         t0 = time.time()
         _log(f"building {cfg['task_id']} / {cfg['variation_id']} (seed {cfg['seed']}, eval index {self.eval_index}) ...")
-        if cfg.get("compute_backend") == "cpu":
+        self.physics_engine = cfg.get("physics_engine", "genesis")
+        genesis = self.physics_engine == "genesis"
+        if genesis and cfg.get("compute_backend") == "cpu":
             # Genesis' CPU getters are torch CPU ops, and torch sizes its pool to the host (256 threads on lab), which spins
             # under a container's CPU quota. The results are the same at any count (2026-10-02 study).
             import torch
             torch.set_num_threads(4)
-        self.deterministic_physics = _deterministic_gpu_physics()   # before genesis.init / the first scene build
-        margin = _bound_pbd_rigid_contacts()   # before the scene's first physics step (kernels compile on first use)
-        _register_runtime_physics(margin)
+        # Genesis' kernel replacements; a MuJoCo scene has none of these solvers.
+        self.deterministic_physics = _deterministic_gpu_physics() if genesis else None   # before genesis.init
+        margin = _bound_pbd_rigid_contacts() if genesis else None   # before the scene's first physics step
+        if genesis:
+            _register_runtime_physics(margin)
         self.env = Env(SimulatorConfig(**cfg))
         # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the
         # per-step observation skips the camera pass and a frame is rendered when asked (image 0.2.9; physics identical).
         self.env.defer_rgb = True
         self.env.reset(seed=int(cfg["seed"]))
-        self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
+        if not genesis and instance is not None and cfg.get("enable_rgb", True):
+            # MuJoCo physics, today's Nyx frames: on the first frame the render bridge (render_bridge.py, next to this
+            # file) builds the frozen instance's Genesis scene as a never-stepped Nyx host and shows MuJoCo's state in it,
+            # or nyx_direct.py feeds Nyx from the world without that host (the task's renderer, TASKS "renderer").
+            self.env._world.renderer_factory = lambda path=str(Path(instance).resolve()): _render_bridge(
+                path, self.env._world, self.spec.get("renderer", "nyx"))
+        if not genesis:
+            # where the scene's vendored robot assets came from (the vendored Panda, or the genesis package for all files)
+            sources = (self.env._world.manifest or {}).get("robot_asset_sources") or {}
+            if sources:
+                _log("robot assets: " + ", ".join(f"{k} {v}" for k, v in sorted(sources.items())))
+            if self.runtime_binding is not None:
+                self.runtime_binding["robot_assets"] = sources
+        self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env) if genesis else False
         self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
         self.settle_only_when_reached = _settle_only_when_reached(self.env._task)
         # The bounded PBD-rigid contact applies when this scene couples rigid bodies with PBD particles (blanket_flatten)
-        self.pbd_depenetration_margin_m_s = margin if getattr(self.env._world.scene.sim.coupler, "_rigid_pbd", False) else None
+        self.pbd_depenetration_margin_m_s = (margin if genesis and getattr(self.env._world.scene.sim.coupler, "_rigid_pbd", False)
+                                             else None)
         self.instability: dict | None = None    # the first simulator instability of this episode (None: none)
         self.particle_speed_guard = _guard_particle_speeds(self.env._task, self._on_instability)
         if not self.spec["fixture"]:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.
-            self.spec["text"] = self.env._task.public_instruction()
+            self.spec["text"] = rules_text(self.env._task.public_instruction())
         self.gripper_space = (inst.get("gripper_space", "width") if inst else gripper_space or "width")
         self.robot = _Robot(self.env._robot, self.env.timing_spec, gripper_space=self.gripper_space)
         self.control_hz = 1.0 / float(self.env.timing_spec["control_dt_s"])
@@ -3205,6 +3533,7 @@ class Session:
         self.last_step_ticks = 0
         self._reward = 0.0
         self.instability = None
+        self.last_step_meta = {}
         self.env.privileged.rewind_to(self.S0)
         self._targets = self.robot.targets()
 
@@ -3243,7 +3572,9 @@ class Session:
         if self.episode_end is not None:
             return True
         target = self.robot.clip(a.astype(np.float64))
+        target, limits = self._slew(target)                        # the robot's joint speed limits (MuJoCo robots)
         target = self.table_guard.apply(target, self._targets)   # R4: no gripper vertex below TABLE_GUARD_MARGIN_M
+        self.last_step_meta = {"limits": limits} if limits else {}
         command = self.robot.command(target)
         self._video_begin()
         kwargs = {} if _physics_steps is None else {"_physics_steps": int(_physics_steps)}
@@ -3269,6 +3600,151 @@ class Session:
         if self.n_steps >= self.max_steps:
             self.episode_done = True
         return self.episode_done or self.episode_end is not None
+
+    def _slew(self, target):
+        """Robot speed limits (clamp, never fail), on the arms whose robot has them (MuJoCo robots). Joint speed
+        (topogym.world.mujoco.robot.JOINT_SPEED_LIMITS_RAD_S): an arm moves its joint targets at most limit / control_hz
+        per control step; a larger step is shortened along its own direction (all joints of the arm scaled alike).
+        Cartesian speed (CARTESIAN_SPEED_LIMITS: the Panda's published end-effector limits): the step is then shortened
+        the same way until the arm's TCP moves and turns at most limit / control_hz over the control step (the commanded
+        poses before and after it, by forward kinematics on a private MjData). Command lead (robots with
+        command_lead_bound, the Panda): the step is then shortened the same way so the targets lead the measured arm by
+        no more than its drives can use (_lead_bound). The result is rounded to float32 like every recorded row, so live
+        execution and replays command the same values (a replayed row is within the limits).
+        -> (target, [{"entity": joint, "limit": "joint_velocity" | "tcp_velocity", "cap": rad/s | m/s}, ...]): the
+        robot-limit notices."""
+        speeds = getattr(self.env._robot, "joint_speed_limits", None)
+        cartesian = getattr(self.env._robot, "cartesian_speed_limits", None)
+        if not speeds and not cartesian:
+            return target, []
+        r, out, notes = self.robot, np.asarray(target, dtype=np.float64).copy(), []
+        prev = np.asarray(self._targets, dtype=np.float64)
+        for arm, speed in (speeds or {}).items():
+            sl = r.arm_slice[arm]
+            step, cap = out[sl] - prev[sl], speed / self.control_hz
+            over = np.abs(step) > cap + 1e-6               # float32 rounding of a limited row never re-triggers
+            if over.any():
+                out[sl] = prev[sl] + step * float(np.min(cap / np.maximum(np.abs(step), 1e-12)))
+                notes += [{"entity": j, "limit": "joint_velocity", "cap": float(v)}
+                          for j, v, o in zip(r.groups[arm].arm_joints, speed, over) if o]
+        for arm, (v_max, w_max) in (cartesian or {}).items():
+            sl = r.arm_slice[arm]
+            step = out[sl] - prev[sl]
+            if not step.any():
+                continue
+            scale = 1.
+            for _ in range(4):     # forward kinematics is nonlinear: check the shortened step again
+                v, w = self._tcp_rates(arm, prev, prev[sl] + step * scale)
+                ratio = max(v / v_max, w / w_max)
+                if ratio <= 1 + 1e-4:                     # float32 rounding of a limited row never re-triggers
+                    break
+                scale /= ratio
+            if scale < 1:
+                out[sl] = prev[sl] + step * scale
+                notes += [{"entity": j, "limit": "tcp_velocity", "cap": v_max}
+                          for j, d in zip(r.groups[arm].arm_joints, step) if d]
+        if getattr(self.env._robot, "command_lead_bound", False):
+            notes += self._lead_bound(out, prev, speeds, cartesian)
+        if not notes:
+            return target, []
+        self.slew_count = getattr(self, "slew_count", 0) + 1
+        if self.slew_count <= 5 or self.slew_count % 100 == 0:
+            _log("robot speed limit:", ", ".join(sorted({f"{n['entity']} {n['cap']:g} "
+                                                          f"{'rad/s' if n['limit'] == 'joint_velocity' else 'm/s (TCP)'}"
+                                                          for n in notes})),
+                 f"(limited control steps: {self.slew_count})")
+        return out.astype(np.float32).astype(np.float64), notes
+
+    def _lead_bound(self, out, prev, speeds, cartesian) -> list:
+        """The commanded targets never run further ahead of the measured arm than its drives can use (robots with
+        command_lead_bound: the Panda; clamp, never fail). Joint space: |target - measured| <= cap / kp +
+        v_max (kv / kp + T) per arm joint, the offset at which the drive still presses with its full torque cap through
+        a whole control period while moving at its speed limit, so no push or grip loses force. TCP (Cartesian limits):
+        the commanded TCP pose within v_max (kv / kp + T / 2) and w_max (kv / kp + T / 2) of the measured one, the lag
+        of an arm moving at its Cartesian limit behind a held (zero-order) target, so a released arm catches up no
+        faster than that limit. The step from the previous targets (already speed-limited) is shortened along its own
+        direction (in place on `out`); a previous target already further ahead (a knocked arm) is never pulled back,
+        only kept from moving further out, so a limited row replays unchanged. -> the robot-limit notices
+        (joint_velocity / tcp_velocity, the speed limits these bounds enforce)."""
+        r, notes, T = self.robot, [], 1. / self.control_hz
+        meas = np.asarray(out, dtype=np.float64).copy()
+        qa, k = r.arm_q(), 0
+        for arm in r.arms:
+            sl = r.arm_slice[arm]
+            n = sl.stop - sl.start
+            meas[sl] = qa[k:k + n]
+            k += n
+        limited = False
+        for arm in r.arms:
+            sl = r.arm_slice[arm]
+            n = sl.stop - sl.start
+            step = out[sl] - prev[sl]
+            if not step.any():
+                continue
+            g = r.groups[arm]
+            kp = np.asarray(g.kp[:n], dtype=np.float64)
+            lag = np.asarray(g.kv[:n], dtype=np.float64) / kp
+            gap = prev[sl] - meas[sl]                     # the previous targets' lead
+            scale = 1.
+            speed = (speeds or {}).get(arm)
+            if speed is not None:
+                speed = np.asarray(speed, dtype=np.float64)
+                hold = np.asarray(r.drive_force[arm][:n], dtype=np.float64) / kp     # the lead at the torque cap
+                room = np.maximum(hold + speed * (lag + T), np.abs(gap))
+                over = np.abs(gap + step) > room + 1e-6     # float32 rounding of a limited row never re-triggers
+                if over.any():
+                    reach = (room - np.sign(step) * gap) / np.maximum(np.abs(step), 1e-12)
+                    scale = float(np.clip(np.min(reach[over]), 0., 1.))
+                    notes += [{"entity": j, "limit": "joint_velocity", "cap": float(v)}
+                              for j, v, o in zip(g.arm_joints, speed, over) if o]
+            limits = (cartesian or {}).get(arm)
+            if limits is not None:
+                tau = float(np.max(lag)) + T / 2
+                A = self._tcp_T(arm, meas, meas[sl])
+
+                def gap_tcp(q):
+                    B = self._tcp_T(arm, meas, q)
+                    turn = float(np.arccos(np.clip((np.trace(A[:3, :3].T @ B[:3, :3]) - 1.) / 2., -1., 1.)))
+                    return float(np.linalg.norm(B[:3, 3] - A[:3, 3])), turn
+                lin0, ang0 = gap_tcp(prev[sl])
+                b_lin, b_ang = max(limits[0] * tau, lin0), max(limits[1] * tau, ang0)
+
+                def inside(s, tol):
+                    lin, ang = gap_tcp(prev[sl] + step * s)
+                    return lin <= b_lin * tol and ang <= b_ang * tol
+                if not inside(scale, 1 + 1e-4):              # float32 rounding of a limited row never re-triggers
+                    lo, hi = 0., scale
+                    for _ in range(24):
+                        mid = .5 * (lo + hi)
+                        lo, hi = (mid, hi) if inside(mid, 1.) else (lo, mid)
+                    scale = lo
+                    notes += [{"entity": j, "limit": "tcp_velocity", "cap": float(limits[0])}
+                              for j, d in zip(g.arm_joints, step) if d]
+            if scale < 1.:
+                out[sl] = prev[sl] + step * scale
+                limited = True
+        if limited:
+            self.lead_count = getattr(self, "lead_count", 0) + 1
+        return notes
+
+    def _tcp_T(self, arm, row, q_arm) -> np.ndarray:
+        """`arm`'s TCP pose (4x4, by forward kinematics) with its joints at q_arm and the other arms' at the row's."""
+        r = self.robot
+        full = r.q_full(np.concatenate([np.asarray(q_arm, dtype=np.float64) if a == arm else row[r.arm_slice[a]]
+                                        for a in r.arms]))
+        return r._fk_full(full)[r.tcp_frames[arm]]
+
+    def _tcp_rates(self, arm, row, q_arm) -> tuple[float, float]:
+        """(linear m/s, angular rad/s) of `arm`'s TCP when its joint targets move from those of the action row `row` to
+        q_arm in one control step: the chord between the two commanded TCP poses, per control period."""
+        r = self.robot
+
+        def tcp(q):
+            full = r.q_full(np.concatenate([q if a == arm else row[r.arm_slice[a]] for a in r.arms]))
+            return r._fk_full(full)[r.tcp_frames[arm]]
+        A, B = tcp(row[r.arm_slice[arm]]), tcp(np.asarray(q_arm, dtype=np.float64))
+        turn = float(np.arccos(np.clip((np.trace(A[:3, :3].T @ B[:3, :3]) - 1.) / 2., -1., 1.)))
+        return float(np.linalg.norm(B[:3, 3] - A[:3, 3])) * self.control_hz, turn * self.control_hz
 
     def hold_action(self) -> np.ndarray:
         """The action that keeps the current joint targets (what the robot does when a primitive is idle)."""
@@ -3659,13 +4135,20 @@ class Session:
             d = np.asarray(Image.fromarray(d).resize(tuple(size), Image.NEAREST), dtype=np.float32)
         return d
 
+    def engine_name(self, version: bool = False) -> str:
+        """The physics engine in words: "Genesis" / "Genesis 1.2.1", "MuJoCo" / "MuJoCo 3.15.0"."""
+        if self.physics_engine == "mujoco":
+            import mujoco
+            return f"MuJoCo {mujoco.__version__}" if version else "MuJoCo"
+        return "Genesis 1.2.1" if version else "Genesis"
+
     def kinematics_spec(self) -> dict:
         """What kinematics() answers: joint layout, frames, conventions (the limited service's spec["kinematics"])."""
         tips = list(self.robot.tcp_frames.values())
         return {"endpoint": "/kinematics", "stateless": True, "joint_names": list(self.robot.arm_joints), "frame": "world",
                 "quaternion_order": "wxyz", "links": list(self.robot.links), "tcp_frames": tips, "ee_frames": tips, "ik_targets": tips,
-                "ik": {"solver": "bounded least squares over the robot's Genesis forward kinematics, started from the seed "
-                                 "(default: the reset pose)", "joints": "the arm joints of each arm whose TCP is a target; the other "
+                "ik": {"solver": f"bounded least squares over the robot's {self.engine_name()} forward kinematics, started from "
+                                 "the seed (default: the reset pose)", "joints": "the arm joints of each arm whose TCP is a target; the other "
                                  "arms keep their seed", "collision": "none", "tol_pos_m": 0.002, "tol_rot_rad": 0.02, "max_iters": 200},
                 "note": "q = the arm joints of every arm (the order of joint_names, as proprio); the finger joints do not move "
                         "any listed frame"}
@@ -3726,29 +4209,47 @@ class Session:
                     "Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets")
         held = ("; the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command"
                 if getattr(ga, "initial_intent", "open") == "close" else "")
+        breaks = [f"the fingers open more than {ga.max_finger_opening_fraction * 100:g} %",
+                  f"the part drifts {ga.max_translation_error_m * 100:g} cm / {ga.max_rotation_error_rad:g} rad from its held pose"]
+        example = ""
+        cfg = self.env.config
+        if getattr(cfg, "physics_engine", "genesis") == "mujoco":   # the MuJoCo weld's own limits (world/mujoco/grasp.py)
+            from topogym.world.mujoco.grasp import WELD_CONTACT_LOST_S, WELD_SLIP_FORCE_N, WELD_SLIP_WINDOW_S
+            robot_id = getattr(cfg, "robot_id", None)
+            if robot_id in WELD_SLIP_FORCE_N:
+                breaks.append(f"the hold has to push or pull its part with more than {WELD_SLIP_FORCE_N[robot_id]:g} N "
+                              f"averaged over {WELD_SLIP_WINDOW_S * 1000:g} ms")
+                example = ("; that force is reached when, for example, two held parts that hook into each other are pulled "
+                           "apart, or a held part is pressed into another object")
+            if robot_id in WELD_CONTACT_LOST_S:
+                breaks.append(f"no finger has touched the part for {WELD_CONTACT_LOST_S[robot_id]:g} s")
+        breaks = ", ".join(breaks[:-1]) + ", or " + breaks[-1]
         return (f"assisted grasping ({ga.model}): a gripper whose command moves towards closed takes hold of a graspable "
                 f"part ({parts}) once both fingers touch the same part inside its grasp region, the tool frame within "
                 f"{ga.max_tcp_distance_m * 100:g} cm of it and the penetration at most {ga.max_penetration_m * 1000:g} mm, for "
                 f"{ga.stable_time_s:g} s; the part then follows the gripper rigidly. Any command that opens the gripper (by more "
-                f"than {ga.intent_deadband * 100:g} % of its travel) lets it go. A hold that breaks (the fingers open more than "
-                f"{ga.max_finger_opening_fraction * 100:g} %, or the part drifts {ga.max_translation_error_m * 100:g} cm / "
-                f"{ga.max_rotation_error_rad:g} rad from its held pose) is lost, and the gripper must open before it can take "
-                "hold again. Two grippers never hold the same part; other objects are grasped physically (friction)" + held)
+                f"than {ga.intent_deadband * 100:g} % of its travel) lets it go. A hold that breaks ({breaks}) is lost, and the "
+                f"gripper must open before it can take hold again{example}. Two grippers never hold the same part; other "
+                "objects are grasped physically (friction)" + held)
 
     def robot_spec(self) -> dict:
         """The robot's spec sheet (the limited service's spec["robot_spec"]): joints in order with their limits, grippers,
         controller and gains, tool frames. Only the robot: nothing about the scene."""
         r = self.robot; joints, gains, grip, tcp = [], {}, {}, {}
         home_fk = r._fk_full(r.template)
+        speeds = getattr(self.env._robot, "joint_speed_limits", None) or {}
         for name, g in r.groups.items():
             for i, jn in enumerate(list(g.arm_joints) + list(g.actuated_fingers)):
                 finger = i >= len(g.arm_joints)
                 prismatic = finger and g.gripper_field.endswith("_m")
                 lim = g.gripper_limits if finger else g.arm_limits_rad[i]
+                speed = None if finger or name not in speeds else round(float(speeds[name][i]), 6)
                 joints.append({"name": jn, "type": "prismatic" if prismatic else "revolute", "unit": "m" if prismatic else "rad",
-                               "position_limits": [round(float(lim[0]), 6), round(float(lim[1]), 6)], "velocity_limit": None,
+                               "position_limits": [round(float(lim[0]), 6), round(float(lim[1]), 6)], "velocity_limit": speed,
                                "effort_limit": round(float(r.drive_force[name][i]), 6), "group": f"gripper_{name}" if finger else f"arm_{name}",
-                               "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: "
+                               "note": ("velocity_limit: the simulation enforces none (the PD tracking sets the speed)" if speed is None else
+                                        "velocity_limit: the robot's joint speed limit: the joint target moves at most this fast "
+                                        "(a faster request is shortened and reported in clipped)") + "; effort_limit: "
                                        "the drive force clamp" + ("; the gripper action is the opening width, converted to this "
                                                                   "coordinate" if finger else
                                                                   " (arm joints: capped by this benchmark's safety rules, so an arm "
@@ -3777,11 +4278,11 @@ class Session:
         return {"name": self.env._robot.description.robot_id, "gripper_space": r.gripper_space,
                 "description": {"panda_robotiq": "a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base",
                                 "aloha": "two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base"}.get(
-                                    self.env._robot.description.robot_id, "fixed-base manipulator") + " (TopoGym, Genesis 1.2.1)",
+                                    self.env._robot.description.robot_id, "fixed-base manipulator") + f" (TopoGym, {self.engine_name(True)})",
                 "base": {"type": "fixed", "pose": _pose7(home_fk[base]),
                          "note": f"world pose of the kinematic root link {base} (x y z qw qx qy qz)"},
                 "joints": joints, "grippers": grip,
-                "controller": {"type": "joint position PD per DoF (Genesis), gravity included in the simulation",
+                "controller": {"type": f"joint position PD per DoF ({self.engine_name()}), gravity included in the simulation",
                                "control_hz": self.control_hz, "physics_hz": 1.0 / float(self.env.timing_spec["physics_dt_s"]),
                                "gains": gains,
                                "note": f"targets are applied at the {self.control_hz:g} Hz control rate and held over "
@@ -4004,22 +4505,137 @@ def _build_options(a):
     return read("task_parameters"), read("simulator_overrides")
 
 
+# blanket_flatten on MuJoCo: the settled birth, made by make-instance itself (2026-10-10). A gathered PBD state is not at
+# rest on the MuJoCo flex: born from it, the cloth snaps out of the gathered shape (a vertex at 3.3 m/s in the first
+# 0.1 s) and a nop reads VIOLENT. The simulator override `mujoco_birth_settle` ({"quiet_m_s", "quiet_s", "max_s"}) makes
+# make-instance build the cloth from the released particles (`mujoco_birth`: the released instance; the task
+# parameters default to its own, its frozen PBD archive included), let it relax at rest, the robot holding home
+# (Session.step with the hold action, the instance's own profile), until every flex vertex has stayed under quiet_m_s for
+# quiet_s, write the settled birth source (the released instance with the cloth's settled particles, its particle view,
+# and zero velocity, plus the evidence `mujoco_cloth_settle`, which the cloth record keeps) into the instance's assets,
+# and build the instance from it. One step, deterministic: the same release, profile and arguments make the same birth.
+def _released_task_parameters(release: Path) -> dict:
+    params = dict(json.loads(release.read_text())["simulator"]["task_parameters"])
+    if params.get("initial_state_path"):
+        params["initial_state_path"] = str((release.parent / params["initial_state_path"]).resolve())
+    return params
+
+
+def _settle_cloth_birth(s: "Session", release: Path, cfg: dict, entity: str = "blanket") -> dict:
+    """The settled birth source of `entity` (the released instance, its particles settled on MuJoCo, the evidence)."""
+    import mujoco
+    w, task = s.env._world, s.env._task
+    cloth = w._cloths[entity]
+    control_s = float(w.physics_dt_s) * int(s.env.config.control_decimation)
+    quiet_m_s, quiet_s, max_s = float(cfg["quiet_m_s"]), float(cfg["quiet_s"]), float(cfg.get("max_s", 10.))
+    vbd = getattr(cloth, "steps_outside", False)
+    # a VBD cloth with plastic bending: its rest angles are state and still move while a crease sets, so a quiet control
+    # also has every rest angle within quiet_rest_angle_rad of the control before (default 1e-3 rad: about 0.2 rad/s)
+    quiet_ra = cfg.get("quiet_rest_angle_rad", 1e-3 if vbd else None)
+    released = json.loads(release.read_text())
+    rel = np.asarray(released["soft_state"][entity]["position_m"], dtype=np.float64)
+
+    def metrics(state):
+        _, _, m = task.evaluate_state(state)
+        return dict(coverage_ratio=m.get("coverage_ratio"), maximum_height_m=m.get("maximum_height_m"),
+                    maximum_stretch_ratio=m.get("maximum_stretch_ratio"))
+
+    def vertex_speed():
+        if getattr(cloth, "steps_outside", False):      # a VBD cloth (cloth_vbd.py): its own vertex velocities
+            return cloth.max_vertex_speed()
+        return float(np.linalg.norm(np.asarray(w.data.qvel)[cloth.dadr.reshape(-1)].reshape(-1, 3), axis=1).max())
+
+    state0 = w.read_state()
+    x0 = np.asarray(state0["particles"][entity]["position_m"], dtype=np.float64)
+    before = metrics(state0)
+    need = math.ceil(quiet_s / control_s)
+    hold = s.hold_action()
+    quiet, peak, controls = 0, 0., 0
+    ra = cloth.rest_angles() if quiet_ra is not None else None
+    ra_step = None
+    for _ in range(math.ceil(max_s / control_s)):
+        if s.step(hold):
+            raise RuntimeError(f"the episode ended while settling the birth: {s.status().get('episode_end')}")
+        controls += 1
+        v = vertex_speed()
+        peak = max(peak, v)
+        still = v < quiet_m_s
+        if quiet_ra is not None:
+            ra1 = cloth.rest_angles()
+            ra_step = float(np.abs(ra1 - ra).max())
+            ra = ra1
+            still = still and ra_step < float(quiet_ra)
+        quiet = quiet + 1 if still else 0
+        if quiet >= need:
+            break
+    if quiet < need:
+        raise RuntimeError(f"the birth is not quiet after {max_s} s (vertex speed {vertex_speed():.4g} m/s, "
+                           f"rest-angle change {ra_step} rad per control)")
+    state1 = w.read_state()
+    x1 = np.asarray(state1["particles"][entity]["position_m"], dtype=np.float64)
+
+    def moved(x, y):
+        d = np.linalg.norm(x - y, axis=1)
+        return dict(max=float(d.max()), mean=float(d.mean()))
+    evidence = dict(
+        method="cloth relaxed at rest on MuJoCo, the robot holding home (Session.step, the hold action); "
+               "quiet = every " + ("VBD grid" if getattr(cloth, "steps_outside", False) else "flex") +
+               " vertex under quiet_m_s for quiet_s" +
+               (", every bending rest angle moving less than quiet_rest_angle_rad per control" if quiet_ra is not None
+                else ""),
+        unsettled_instance=None, unsettled_instance_sha=s.instance_sha, profile=w.profile.get("name"),
+        mujoco_version=mujoco.__version__, release_state_sha=released.get("state_sha"),
+        release_sha256=hashlib.sha256(release.read_bytes()).hexdigest(),
+        quiet_m_s=quiet_m_s, quiet_s=quiet_s, settle_s=round(controls * control_s, 4), controls=controls,
+        **({} if quiet_ra is None else dict(quiet_rest_angle_rad=float(quiet_ra), final_rest_angle_change_rad=ra_step)),
+        peak_vertex_speed_m_s=peak, final_vertex_speed_m_s=vertex_speed(),
+        displacement_vs_release_m=moved(x1, rel), displacement_vs_unsettled_birth_m=moved(x1, x0),
+        before=before, after=metrics(state1))
+    source = json.loads(json.dumps(released))
+    source["soft_state"][entity]["position_m"] = x1.tolist()
+    if "velocity_m_s" in source["soft_state"][entity]:
+        source["soft_state"][entity]["velocity_m_s"] = np.zeros_like(x1).tolist()
+    source["mujoco_cloth_settle"] = {entity: evidence}
+    if getattr(cloth, "steps_outside", False):        # a VBD cloth: its bending rest angles are state (plastic bending)
+        source["vbd_cloth_rest_angle"] = {entity: cloth.rest_angles().astype(float).tolist()}
+    return source
+
+
 def cmd_make_instance(a) -> None:
     params, overrides = _build_options(a)
     if a.ipc_settled_state:   # restore the archived settled state instead of settling at every build
         overrides = {**(overrides or {}), "reset_physics_steps": 0,
                      "ipc_settled_state": str(Path(a.ipc_settled_state).resolve())}
+    settle = (overrides or {}).get("mujoco_birth_settle")
+    if settle is not None:    # blanket_flatten on MuJoCo: settle the cloth born from the released particles first
+        overrides = {k: v for k, v in overrides.items() if k != "mujoco_birth_settle"}
+        release = Path(overrides["mujoco_birth"]).resolve()
+        if params is None:
+            params = _released_task_parameters(release)
+        s0 = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed,
+                     task_parameters=params, simulator_overrides=overrides, gripper_space=getattr(a, "gripper_space", "width"))
+        source = _settle_cloth_birth(s0, release, settle)
+        s0.close()
+        birth = Path(a.out).resolve().parent / "instance_assets" / "mujoco_birth" / "settled_birth.json"
+        birth.parent.mkdir(parents=True, exist_ok=True)
+        birth.write_text(json.dumps(source))
+        overrides = {**overrides, "mujoco_birth": str(birth)}
     s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed,
                 task_parameters=params, simulator_overrides=overrides, gripper_space=getattr(a, "gripper_space", "width"))
-    import genesis as gs
     from topogym.tasks.goal_description import TASK_IDS, describe_goal
+    if s.physics_engine == "mujoco":
+        import mujoco
+        engine = {"physics_engine": "mujoco", "mujoco_version": mujoco.__version__}
+    else:
+        import genesis as gs
+        engine = {"genesis_version": gs.__version__}
     out = {"task": a.task, "topogym_task": s.config["task_id"], "variation_id": s.config["variation_id"], "seed": s.config["seed"],
            "eval_index": s.eval_index, "text": s.spec["text"], "simulator": s.config, "state_sha": s.instance_sha,
            "action_dim": s.action_dim, "action_layout": s.action_layout, "gripper_space": s.gripper_space,
            "control_hz": s.control_hz, "backend": s.backend,
            "reset_joint_targets": [round(float(x), 6) for x in s.joint_positions()], "objects": s.objects(),
            "instance_contract_version": 2, "soft_state": s._soft_state(), "asset_identity": s.asset_identity,
-           "genesis_version": gs.__version__, "topogym_source": _source(),
+           **engine, "topogym_source": _source(),
            "resolved_variation_id": s.env._variation["variation_id"],
            "scene_variation": s.env._scene_variation,
            "effective_task_parameters": s.env._task.config,
@@ -4044,6 +4660,46 @@ def cmd_make_instance(a) -> None:
         if source != target:
             shutil.copytree(source, target, dirs_exist_ok=True)
         out["simulator"]["ipc_settled_state"] = "instance_assets/ipc_state/" + settled.name
+    if settle is not None:
+        out["simulator"]["mujoco_birth"] = "instance_assets/mujoco_birth/settled_birth.json"
+    elif s.config.get("mujoco_birth"):
+        # a birth taken as it is (blanket_fold from a redesigned flatten tier's settled birth): packaged likewise
+        import shutil
+        birth = Path(s.config["mujoco_birth"]).resolve()
+        target = Path(a.out).resolve().parent / "instance_assets" / "mujoco_birth" / birth.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if birth != target:
+            shutil.copyfile(birth, target)
+        out["simulator"]["mujoco_birth"] = "instance_assets/mujoco_birth/" + birth.name
+    fold_target = s.config.get("task_parameters", {}).get("fold_target_path")
+    if fold_target:
+        # blanket_fold's frozen target (hash-pinned by fold_target_sha256), packaged as the initial state
+        import shutil
+        source = Path(fold_target).resolve()
+        target = Path(a.out).resolve().parent / "instance_assets" / "fold_target" / source.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source != target:
+            shutil.copyfile(source, target)
+        relative = "instance_assets/fold_target/" + source.name
+        out["simulator"]["task_parameters"]["fold_target_path"] = relative
+        out["effective_task_parameters"]["fold_target_path"] = relative
+    if s.physics_engine == "mujoco":
+        # Freeze the scene this session built (MJCF, meshes, CoACD hulls, scene.json): every later build of the instance
+        # loads these bytes instead of converting and decomposing the generated assets again.
+        import shutil
+        target = Path(a.out).resolve().parent / "instance_assets" / "mujoco"
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(s.env._world.scene_dir, target)
+        out["simulator"]["mujoco_scene"] = "instance_assets/mujoco"
+        ticks = int(s.config.get("reset_physics_steps") or 0)
+        if ticks:
+            # Freeze the settled birth too: every later build restores it instead of settling `ticks` ticks again
+            # (SimulatorConfig.mujoco_settled_state; the restored state has the same state_sha).
+            path = Path(a.out).resolve().parent / "instance_assets" / "mujoco_settled.npz"
+            s.env._world.export_settled_state(path, settled_ticks=ticks)
+            out["simulator"].update(reset_physics_steps=0, mujoco_settled_state="instance_assets/mujoco_settled.npz")
+            out["mujoco_settled_ticks"] = ticks
     from topogym.utils.io import to_jsonable
     out = to_jsonable(out)
     Path(a.out).write_text(json.dumps(out, indent=1))

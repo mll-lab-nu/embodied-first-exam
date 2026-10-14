@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # World-frame information in standard-mode texts (PROTOCOL §2.5, D7: decided per benchmark, consistent within it). This
 # check enforces the declaration of eleven benchmarks only: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboTangle,
-# RoboTangle-New (robotangle-new-*, matched by robotangle-*), YAMLab, LabUtopia and AutoBio
+# YAMLab, LabUtopia and AutoBio
 # (docs/benchmarks/<bench>.md, "World-frame information"; docs/STANDARD_MODE.md §10, Never provided). Their standard tasks never
 # say WHERE things are in the world: no object poses or positions and no world coordinates of workspace items (table /
 # sheet heights, sheet or well centres, a pixel-to-world formula, a camera's distance to the scene), in anything that

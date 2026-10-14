@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""RoboTangle's large files: the private Hugging Face dataset eai-v2-internal/robotangle-assets, pinned by commit and
+"""RoboTangle's large files (the frozen MuJoCo instances; scripts/robotangle/assets.py with this directory's pins): the private Hugging Face dataset eai-v2-internal/robotangle-assets, pinned by commit and
 by the sha256 of every file in scripts/robotangle/assets.json. They are kept out of git (CONTRIBUTING: no files > 2 MB).
 
 usage:

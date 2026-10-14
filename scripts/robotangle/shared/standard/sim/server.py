@@ -38,7 +38,8 @@ TASK = os.environ.get("RCB_TASK", "cube_pick_place"); INSTANCE = os.environ.get(
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 LOCK = threading.Lock()
-E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
+E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
+     "t_first": None}   # t_first: the agent's first request to this service (its clock starts there; main's #163 rule)
 JOBS: queue.Queue = queue.Queue()      # simulator work, executed in order by the main thread
 PID_FILE = os.path.join(DATA, "server.pid")
 # Crash-safe episode bookkeeping, set up before the scene is built (start count, back-off, startup watchdog); the journal row
@@ -172,6 +173,55 @@ def joint_limits() -> dict:
 LIMITS = joint_limits(); LIM_ARR = np.array([LIMITS[n] for n in LAYOUT], dtype=np.float64)
 
 R_SPEC = S.robot_spec(); K_SPEC = S.kinematics_spec()
+
+# The agent-facing frame (user 2026-10-13: the table height is never disclosed), called the world frame in every text the
+# agent sees (as main's other services call theirs) and "the robot frame" in this file's comments: origin at the robot's
+# kinematic root link on its mounting, axes as the simulator's world (+z up). Everything this service gives or takes (proprio
+# TCP poses, ee_pose targets, /kinematics, camera extrinsics) is in it; the simulator's own world frame (origin on the floor)
+# stays in this process. Physics, the recorded joint rows, graders and state hashes do not depend on it.
+BASE_LINK = S.robot.entity.links[0].name
+T_WR = M._T(R_SPEC["base"]["pose"][:3], R_SPEC["base"]["pose"][3:])        # robot frame -> world (the root link's pose)
+T_RW = np.eye(4); T_RW[:3, :3] = T_WR[:3, :3].T; T_RW[:3, 3] = -T_WR[:3, :3].T @ T_WR[:3, 3]
+Q_WR = M.mat_to_quat(T_WR[:3, :3]); Q_RW = Q_WR * np.array([1.0, -1.0, -1.0, -1.0])
+R_SPEC["base"] = {"type": "fixed", "pose": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                  "note": f"the origin of the world frame (the robot's kinematic root link {BASE_LINK}; x y z qw qx qy qz)"}
+
+
+def _qmul(a, b) -> np.ndarray:
+    w1, x1, y1, z1 = a; w2, x2, y2, z2 = b
+    return np.array([w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2, w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+                     w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2, w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2])
+
+
+def _moved(T, pos, quat, q_T) -> tuple[np.ndarray, np.ndarray]:
+    return T[:3, :3] @ np.asarray(pos, dtype=np.float64) + T[:3, 3], _qmul(q_T, np.asarray(quat, dtype=np.float64))
+
+
+def to_robot(pos, quat):
+    """A world pose (position, quaternion wxyz) -> the robot frame."""
+    return _moved(T_RW, pos, quat, Q_RW)
+
+
+def to_world(pos, quat):
+    """A robot-frame pose (position, quaternion wxyz) -> the simulator's world frame."""
+    return _moved(T_WR, pos, quat, Q_WR)
+
+
+def camera_to_robot(info: dict) -> dict:
+    """A camera_info entry (or a static mount) with its world extrinsics re-expressed in the robot frame: extrinsic_cv
+    (world -> camera) becomes robot -> camera, cam2world_gl (camera -> world) camera -> robot. Intrinsics and a link
+    mount's link_T_cam_cv are relative already."""
+    out = dict(info)
+    if "extrinsic_cv" in out:
+        E = np.eye(4); E[:3] = np.asarray(out["extrinsic_cv"], dtype=np.float64)
+        out["extrinsic_cv"] = M._r((E @ T_WR)[:3])
+    if "cam2world_gl" in out:
+        out["cam2world_gl"] = M._r(T_RW @ np.asarray(out["cam2world_gl"], dtype=np.float64))
+    if isinstance(out.get("mount"), dict):
+        out["mount"] = camera_to_robot(out["mount"])
+    return out
+
+
 EE = [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz")]
 N = len(LAYOUT)
 PROPRIO_LAYOUT = (LAYOUT + EE + [f"{n}_cmd" for n in LAYOUT] + [f"{n}_vel" for n in LAYOUT]
@@ -189,7 +239,7 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
                         + (f"its gripper's native drive coordinate, in the unit and direction of the gripper command ({GRIP_WORDS}; "
                            "robot_spec.grippers). It is a drive coordinate, not an opening width: see the gripper_opening group"
                            if NATIVE else "its gripper opening (m)")],
-    "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, world frame; "
+    "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, world frame (spec world.frame); "
                                    f"the ee_pose action's frame (kinematics tcp_frames {K_SPEC['tcp_frames']})"],
     "joint_cmd": [N + 7 * len(ARMS), N, "the commanded joint targets being tracked (joint_position layout): the last streamed row step"],
     "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: "
@@ -203,16 +253,17 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
     "joint_effort": [3 * N + 8 * len(ARMS), N, "the force each PD drive applied (N m; gripper entries: the actuated finger drive): a "
                                                "motor-current analogue that rises when the arm pushes against something"],
 }
-WORLD_FRAME = (f"TopoGym world frame: +z up, the table top horizontal; the robot base at "
-               f"({', '.join(f'{v:.3f}' for v in R_SPEC['base']['pose'][:3])}) (robot_spec.base)")
+WORLD_FRAME = (f"RoboTangle's world frame: origin at the robot's root link ({BASE_LINK}) on its mounting, +z up, the table top horizontal; "
+               "no positions of the scene are given; every pose, camera extrinsic and kinematics answer of this service is in it "
+               "(robot_spec.base)")
 SPEC = {
     "gripper_space": S.gripper_space,
     "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
-    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "topogym (Genesis 1.2.1, Nyx RGB)", "robot": R_SPEC["name"],
+    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
     "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
-                    "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": CAM_INFO[c]["mount"], "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
+                    "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": camera_to_robot(CAM_INFO[c]["mount"]), "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
     "default_cameras": list(CAMS),
     "action_types": {
         "joint_position": {"dim": N, "layout": LAYOUT, "units": ("rad for arm joints; native gripper drive targets (ALOHA m, Robotiq rad), see robot_spec.grippers" if S.gripper_space == "native" else "rad for the arm joints; gripper opening width in metres, 0 = closed .. the limit = open"),
@@ -249,7 +300,8 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, after "
+                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "
+                "counted from your first request to this service, any endpoint; meta time_s / time_left_s), after "
                 f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
                 "simulator error; a simulator "
                 f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
@@ -258,13 +310,13 @@ SPEC = {
                 f"forcing (an arm drive at {M.FORCING['near_cap']:.0%} of its torque cap or more while the gripper, or a part it "
                 f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
                 f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
-                "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
+                "it (meta safety records the forcing), but a success with a deep task contact is held for review (the grader's evidence) "
                 "instead of credited automatically; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
-              "source": "Genesis geometric depth at the same camera rig and pixels as the Nyx RGB (the distance along the optical axis); "
+              "source": f"{S.engine_name()} geometric depth at the same camera rig and pixels as the Nyx RGB (the distance along the optical axis); "
                         "it may differ from the RGB at transparent surfaces"},
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
@@ -276,7 +328,7 @@ def check_success() -> bool:
 
 def proprio_row() -> np.ndarray:
     q = S.joint_positions()
-    ep = [np.concatenate(S.ee_pose(a)) for a in ARMS]
+    ep = [np.concatenate(to_robot(*S.ee_pose(a))) for a in ARMS]
     # gripper_opening: the measured pad gap (m) in both gripper spaces. Session.gripper_width only reads the finger links'
     # collision vertices (topogym.robot.grasp_geometry: "never issue robot commands"); q's gripper entry is that gap only in
     # the width space, and the native drive coordinate otherwise
@@ -291,11 +343,12 @@ def grab(cameras: list[str], want_depth: bool) -> tuple[dict, dict]:
 
 def extrinsics(cameras: list[str]) -> dict:
     meta = S.env.sensor_frame().camera_metadata
-    return {c: np.asarray(meta[c]["T_camera_cv_from_world"], dtype=np.float64)[:3] for c in cameras}
+    return {c: (np.asarray(meta[c]["T_camera_cv_from_world"], dtype=np.float64) @ T_WR)[:3] for c in cameras}
 
 
 def calib(cameras: list[str]) -> dict:
-    return {c: {k: v[k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")} for c, v in S.camera_info(cameras).items()}
+    return {c: camera_to_robot({k: v[k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")})
+            for c, v in S.camera_info(cameras).items()}
 
 
 def frames_ok(cams: list, steps: int, fps: int, meta: dict) -> None:
@@ -326,12 +379,32 @@ def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
     return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
+# RoboTangle (user decision 2026-10-12; docs/benchmarks/robotangle.md, "Safety readings"): meta["safety"] carries
+# only what the robot can feel itself: its forcing record (forces and drive loads of its own arms, a part it holds named
+# only "a held part", what it pressed on only "the environment"), the table-guard stops of its own targets, its IK jumps,
+# and the rules / scope of the reading. Task contacts, review events, soft-body volume ratios and cord stretch stay in the
+# grader's evidence (final.json, the review), never in a response.
+SAFETY_PUBLISHED = ("rules", "scope", "forcing", "table_guard", "ik_jumps")
+
+
+def robot_felt(safety: dict) -> dict:
+    """Session.safety() reduced to the readings the robot can feel itself (SAFETY_PUBLISHED), task-part names removed."""
+    out = {k: v for k, v in safety.items() if k in SAFETY_PUBLISHED}
+    if isinstance(out.get("forcing"), dict):
+        f = dict(out["forcing"])
+        f["recent"] = [dict(e, pressing=("a held part" if str(e.get("pressing", "")).endswith(" it holds")
+                                          else e.get("pressing")), on="the environment")
+                       for e in f.get("recent") or []]
+        out["forcing"] = f
+    return out
+
+
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
-            "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
+            "time_s": round(agent_time(), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - agent_time(), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            "safety": S.safety(), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+            "safety": robot_felt(S.safety()), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
 
 
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
@@ -429,7 +502,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             sl, gi = ARM[arm]; off = 8 * i
             q = row[off + 3:off + 7]; q = q / max(1e-9, float(np.linalg.norm(q)))
             try:
-                qa, ep, er = S.ik(arm, row[off:off + 3], q)
+                qa, ep, er = S.ik(arm, *to_world(row[off:off + 3], q))   # the row is in the robot frame
                 if ep > 0.02 or er > 0.35:
                     raise ValueError(f"no IK solution within 2 cm / 20 deg (residual {ep * 1000:.0f} mm / {math.degrees(er):.0f} deg)")
                 qa = np.clip(qa, LIM_ARR[sl, 0], LIM_ARR[sl, 1])
@@ -540,13 +613,60 @@ def do_observe(meta: dict) -> tuple[dict, list]:
 
 
 def do_kinematics(req: dict) -> dict:
-    """/kinematics (validated by rcb_limited.parse_kinematics): the tooling's stateless FK / IK, never the simulator."""
-    return S.kinematics(req)
+    """/kinematics (validated by rcb_limited.parse_kinematics): the tooling's stateless FK / IK, never the simulator; poses
+    in the robot frame (world.frame), mapped to and from the simulator's world here."""
+    if req.get("op") == "ik":
+        req = {**req, "targets": {f: np.r_[to_world(p[:3], p[3:])] for f, p in req["targets"].items()}}
+    out = S.kinematics(req)
+    if out.get("op") == "fk":
+        out["poses"] = {l: [float(v) for v in np.r_[to_robot(p[:3], p[3:])]] for l, p in out["poses"].items()}
+    return out
 
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
             "elapsed_s": round(time.time() - E["t0"], 1)}
+
+
+def agent_time() -> float:
+    """Seconds since the agent's first request to the service (0 before it): the agent's clock. The service is up before
+    the agent starts (the harness installs the agent first), so the service's own start is not that moment."""
+    return 0.0 if E["t_first"] is None else time.time() - E["t_first"]
+
+
+def start_clock(t_first: float) -> None:
+    E["t_first"] = t_first
+    E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - t_first)
+
+
+def touch() -> None:
+    """Every HTTP request passes here (any endpoint; a port probe that only connects does not): the first one starts the
+    agent's clock and is logged in episode.jsonl, so that a resumed service keeps it (never back to full)."""
+    if E["t_first"] is None:
+        t = time.time()
+        start_clock(t)
+        log({"ev": "first_request", "t_first": t})
+
+
+_make_handler = L.make_handler
+
+
+def _touching_handler(svc):
+    """rcb_limited's handler with touch() before every request (L.serve builds its handler with L.make_handler)."""
+    base = _make_handler(svc)
+
+    class Handler(base):
+        def do_GET(self):
+            touch()
+            return base.do_GET(self)
+
+        def do_POST(self):
+            touch()
+            return base.do_POST(self)
+    return Handler
+
+
+L.make_handler = _touching_handler
 
 
 def deadline_reached():
@@ -585,7 +705,9 @@ E["deadline"] = float("inf")
 S.record_start()                        # before begin(): a resume replay of the journal is recorded too
 EP.begin(step_ticks=lambda row, ticks: S.step(row, _physics_steps=ticks), state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
          start_event={"task": TASK, "eval_index": S.eval_index})
-E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"])   # the wall clock runs from the first start
+_first = [e for e in EP.events() if e.get("ev") == "first_request"]
+if _first:                              # a resumed service: the agent's clock keeps running from its first request
+    start_clock(float(_first[0]["t_first"]))
 write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)

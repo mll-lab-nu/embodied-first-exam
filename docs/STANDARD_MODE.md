@@ -112,8 +112,8 @@ recorded trials, board 0085) and `time_left_s` reached 0 that much too early. Wi
 never ahead of the harness's: `time_left_s` never runs out before the agent is stopped, and the agent's real time left
 is `time_left_s` minus what it spent before its first request (seconds, where the service is up before the agent; the
 part of a slow start-up that falls inside the agent's phase otherwise). No service ends an episode on this clock, with
-one exception: RoboTangle's (Part 4) still counts from its own first start and ends the episode at 0 until its next
-task update (`docs/benchmarks/robotangle.md`). A readiness probe added to a compose file or a runner must not send a
+one exception: RoboTangle's (Part 4) still ends the episode at 0 until its next task update
+(`docs/benchmarks/robotangle.md`); since its MuJoCo release (2026-10-13) it counts from the first request like the others. A readiness probe added to a compose file or a runner must not send a
 request to the service before the agent runs: connecting to the port is enough.
 
 **Service crashes (no reset, no lost episode).** Every executed physics step is journaled (`trajectory_live.f64`) and every

@@ -41,8 +41,7 @@
 "RoboLab"           = { privileged =  3600, standard =  3600 }
 "RoboOlympics"      = { standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
-"RoboTangle"        = { privileged =  7200, standard =  7200 }
-"RoboTangle-New"    = { privileged = 10800, standard = 10800 }
+"RoboTangle"        = { privileged = 10800, standard = 10800 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
 "RoboWits"          = { privileged =  3600, standard =  3600 }
 "VLABench"          = { privileged =  1800, standard =  1800 }
@@ -233,19 +232,10 @@ decided_by = "owner"
 note = "stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used"
 
 [[history]]
-date = "2026-10-12"
-benchmark = "RoboTangle-New"
-modes = ["privileged", "standard"]
-from_sec = 0
-to_sec = 7200
-decided_by = "user (2026-10-12)"
-note = "new benchmark (scripts/robotangle-new/, docs/benchmarks/robotangle-new.md): RoboTangle's families on MuJoCo, kept apart from RoboTangle's results; 2 h, within the default cap"
-
-[[history]]
 date = "2026-10-13"
-benchmark = "RoboTangle-New"
+benchmark = "RoboTangle"
 modes = ["privileged", "standard"]
 from_sec = 7200
 to_sec = 10800
 decided_by = "user (2026-10-13)"
-note = "3 h wall clock for every family, within the default cap; the reasoning-time budget idea is dropped (not measurable reliably, least of all in privileged mode with its resets)"
+note = "RoboTangle is now its MuJoCo release (it replaces the Genesis tasks, which are deleted; until today the release was prepared as RoboTangle-New, whose row and two entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap"

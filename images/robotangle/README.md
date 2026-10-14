@@ -1,5 +1,10 @@
 # eai-robotangle
 
+> **2026-10-13: the MuJoCo release.** `Dockerfile` here now builds RoboTangle's MuJoCo release image
+> (`eai-robotangle:<VERSION>`, 0.3.1 and later), FROM the published Genesis image `eai-robotangle:0.2.22` pinned by
+> digest. The recipe of that base image is kept as `Dockerfile.genesis-0.2.22`; everything below this note describes
+> it (the simulator source, libuipc builds and instance staging the MuJoCo image inherits).
+
 `ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` is a public image: RoboTangle's simulator (the pruned
 `topogym` package of the release commit), Genesis 1.2.1, libuipc (the audited determinism-patched wheel, plus an sm_86 build
 of the same recipe), PyTorch, Nyx and every task's frozen instance. The tasks `FROM` it, and the standard `sim` service runs
