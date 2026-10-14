@@ -63,6 +63,13 @@ measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by c
 main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
 scorer = { cpus = 2.0, memory_gb = 7.0, pids = 8192 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
+
 [verifier]
 timeout_sec = 3600.0              # two fresh replays of at most 72,000 control steps (rcb_brush.MAX_STEPS) at 67-102 steps/s, plus two scene builds
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

@@ -52,6 +52,13 @@ measured = "GPU: 15.1 GiB held for most of the episode by the reference solution
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 301
+allowed = [301]
+oracle = [301]
+
 [verifier]
 timeout_sec = 30600.0             # two fresh-process replays, each capped at 4 h by tests/grade.py (1200 s start + 2 steps/s,
                                   # floor 3600 s), + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start, < 3.5 steps/s
