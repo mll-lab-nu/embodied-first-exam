@@ -403,7 +403,7 @@ Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec(
 
 ### Action type `{atype}` ({f["nu"]})
 {actuation(f)} Columns in `spec()["action_types"]["{atype}"]["layout"]` order; rows `dt` apart, `interpolate="linear"`
-(default: a straight line from the commands in force) or `"hold"`; the client sends them as float32. The control rate
+(default: a straight line from the commands in force) or `"hold"`; the realtime client sends them as float64. The control rate
 is {hz} Hz ({f["frame_skip"]} physics substeps).
 """
 
