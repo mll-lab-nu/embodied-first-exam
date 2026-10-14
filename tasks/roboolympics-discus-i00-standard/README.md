@@ -9,7 +9,7 @@
 | Family / instance | `discus` / seed 0 |
 | Oracle | `full` — Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit The privileged twin's reference rows (848 control steps, success after 8.48 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Throw the discus in your right hand from inside the circle so that it lands inside the sector at least 15.0 m from the circle, then leave the circle from its rear half and stand. (RoboOlympics `discus`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -9,7 +9,7 @@
 | Family / instance | `shuttle_run` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_shuttle_run.py: positive by injection (real running on all four legs, the three about-turns set by hand: 23.0 s); negatives: turning short, a foot only on the line, two legs only, arms over the finish without the torso, down, walking. With the built-in gaits a leg takes about 6 s and an about-turn on the walking policy 3.4 s: about 33 s against the 30 s limit; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Run the 4 x 10 m shuttle: to the far line, back to the start line, to the far line again and back through the start line, putting a foot on the ground beyond the line at each turn, as fast as you can. (RoboOlympics `shuttle-run`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

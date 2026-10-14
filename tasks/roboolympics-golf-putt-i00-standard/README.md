@@ -9,7 +9,7 @@
 | Family / instance | `golf_putt` / seed 0 |
 | Oracle | `full` — Reference: a pendulum stroke from the shoulder that holes the 3 m putt; 16 of 16 perturbed runs when it was written. The hole takes a centred ball up to 1.48 m/s. The privileged twin's reference rows (1718 control steps, success after 17.18 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Hole the 3.0 m putt: with one stroke of the putter in your right hand, roll the golf ball that lies on the green into the hole. (RoboOlympics `golf-putt`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -9,7 +9,7 @@
 | Family / instance | `hurdles` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_hurdles.py: positive by injection (the H1-2 given 2.0 m/s forward and 5.5 m/s up over each standing 1.067 m hurdle, a real walk to the line); negatives: knocked with a hand, arm or trunk, under the top, beside the hurdle, a leg beside it, left the lane, down. The H1-2's pelvis stands at 1.035 m and walks at 0.7 m/s (50 m alone is 71 s of the 140 s); nothing known lifts it over the bar; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Run the 50 m hurdles: go over all four hurdles in your lane, never beside one or under its top, and bring your torso to the finish line. (RoboOlympics `hurdles`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

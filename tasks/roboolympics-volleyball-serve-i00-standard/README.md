@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_serve` / seed 0 |
 | Oracle | `full` — Reference: an underarm serve (left fist tosses, straight right arm and the trunk's turn hit) from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 2.2 m/s in, 11.4 m/s out, over the net into the court 1.8 m beyond it. Referee test negatives: a throw brushing the fist, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held The privileged twin's reference rows (328 control steps, success after 3.28 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Serve the volleyball: from behind the end line, toss it out of your left hand and hit it with one hand or arm over the net into the opponent's court. (RoboOlympics `volleyball-serve`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

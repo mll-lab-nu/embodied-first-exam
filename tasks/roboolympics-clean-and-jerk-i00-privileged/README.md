@@ -9,7 +9,7 @@
 | Family / instance | `clean_and_jerk` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_clean_and_jerk.py: positive by injection (a crane force on the 45 kg barbell and a balance force on the trunk; the final 2 s are carried by the robot's own locked arms and legs); negatives: the bar off the platform without both hands, let go, down before the signal, overhead without a clean, bent elbows or knees, split feet, another part on the platform. At the shoulders the elbows need 34 of their 18 N m; overhead with straight arms the robot holds the bar about 1 s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Clean and jerk the barbell: lift it from the platform to your shoulders, then to locked arms overhead, and hold it there motionless until the down signal. (RoboOlympics `clean-and-jerk`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

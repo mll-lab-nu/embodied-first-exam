@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_set` / seed 0 |
 | Oracle | `full` — Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held Measured (make_oracles.py): success after 5.87 s of the 10 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Set the pass: with one overhead contact of your hands, send the volleyball that comes down above you at least a metre above the net and into the outside hitter's target along the net. (RoboOlympics `volleyball-set`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
