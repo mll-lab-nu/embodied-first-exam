@@ -50,10 +50,12 @@ CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().sp
 CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
 CLIENT_REQUIREMENTS = CLIENT_ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
 PROTOCOL = "eai-standard/2.2"
-# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why: docs/benchmarks/robowits.md,
-# Time budget). No copy of the number here: normalize writes it into task.toml, the instruction's closing `## Time limit` section, the
-# README row and the sim service's wall clock.
-CUTOFF = {m: TC.cutoff_sec("RoboWits", m) for m in ("privileged", "standard")}
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+# (why: docs/benchmarks/robowits.md, Time budget)
+CUTOFF = {"privileged": 3600, "standard": 3600}
 REVIEW = "PR #3"         # where the human review of the no-oracle families is recorded (PROTOCOL §2.7)
 BK_VOLUME = ("${RCB_ROBOWITS_BLENDERKIT:?set RCB_ROBOWITS_BLENDERKIT to your BlenderKit model folder (images/robowits/NOTICE)}"
              ":/opt/robowits/assets/blender_kit:ro")

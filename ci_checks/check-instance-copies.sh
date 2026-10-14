@@ -7,7 +7,7 @@
 # environment/scorer/ copy is compared instead.
 # A benchmark ships any subset of the three modes (PROTOCOL §2.15, owner 2026-10-14). A standard or standard-realtime
 # task without its twin <base>-privileged is accepted when scripts/task_conventions.py no_twin_reason() gives a reason:
-# its benchmark has no privileged mode (no privileged number in scripts/task_cutoffs.toml), or the task is listed in
+# its benchmark has no privileged mode (no privileged task under tasks/), or the task is listed in
 # NO_TWIN (e.g. RoboDojo's six standard-only tasks, PROTOCOL §4.8). Such a task carries its own frozen instance, if it
 # has one: its sim sidecar's copy and its verifier's tests/ copy, where both exist, are byte-identical (a generator's
 # --check compares them with the benchmark's frozen instance). Any other missing twin fails.

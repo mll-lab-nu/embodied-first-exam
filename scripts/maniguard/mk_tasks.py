@@ -61,11 +61,15 @@ def normalizer():
     return normalize
 
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
+
+
 def agent_timeout(mode: str) -> int:
-    """The agent's cutoff of a mode in seconds, from the one table (scripts/task_cutoffs.toml, PROTOCOL §2.12)."""
-    sys.path.insert(0, str(ROOT / "scripts"))
-    from task_conventions import cutoff_sec
-    return cutoff_sec("ManiGuard", mode)
+    return CUTOFF_SEC[mode]
 
 
 def fill(text: str, values: dict) -> str:
@@ -309,7 +313,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str) -> dict[str, dict[str
     def per_mode(mode: str) -> dict:
         lvl = T["oracle"][mode]
         ev = None if lvl == "full" and not T.get("oracle_evidence") else oracle_evidence(T, mode)
-        # BUDGET: the agent's cutoff, from the one table (scripts/task_cutoffs.toml; normalize writes the same number)
+        # BUDGET: the agent's cutoff (CUTOFF_SEC; the task.toml number normalize renders the closing section from)
         return {"BUDGET": str(agent_timeout(mode)), "ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
                 "REFERENCE_SOLUTION": reference_none(mode, T["oracle"].get("privileged") == "full") if lvl == "none"
                 else reference_text(key, T, mode)}

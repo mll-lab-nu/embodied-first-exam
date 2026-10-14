@@ -24,9 +24,10 @@ What it does:
   from `[metadata.resources.limits]` (§2.10).
 - `[metadata] dynamics` (§2.14: `dynamic` when something in the scene other than the robot does work by a force other
   than the robot's and gravity, else `static`) from `scripts/task_dynamics.toml`, the one table.
-- the agent's time cutoff (§2.12) from `scripts/task_cutoffs.toml`, the one table: `[agent] timeout_sec`, the standard
-  modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, and the last section of `instruction.md`, `## Time
-  limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
+- from the agent's time cutoff (§2.12), the task's own `[agent] timeout_sec` (set by its author or generator; no
+  table): the standard modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, the README's "Agent time budget"
+  row and the last section of `instruction.md`, `## Time limit` ("You have N seconds to complete this task. Do not
+  cheat ...", then what the cutoff means in the mode).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 - last, `DIGEST`: the task's content digest (PROTOCOL §2.8; the digest Harbor publishes it under, `digest()`), one line
@@ -36,8 +37,8 @@ What it does:
 from __future__ import annotations
 
 import fnmatch
+import functools
 import hashlib
-import os
 import re
 import shutil
 import sys
@@ -83,7 +84,7 @@ BENCHMARKS = [  # (directory prefix, label)
 ]
 # Modes (PROTOCOL §2.15, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
 # standard-realtime task without a privileged twin is expected when its benchmark has no privileged mode (no privileged
-# number in its row of scripts/task_cutoffs.toml); in a benchmark that has one, the task is listed here with the reason
+# task under tasks/, bench_has_mode); in a benchmark that has one, the task is listed here with the reason
 # its README's Twin row gives (ci_checks/check-instance-copies.sh fails a missing twin that is neither). RoboDojo's six
 # tasks whose physics does not replay bit for bit (PROTOCOL §4.8, owner 2026-10-11): standard only, graded by the live
 # episode.
@@ -107,10 +108,10 @@ NO_TWIN = {**{n: _RO_EXPORTED for n in (
            "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
-# base_of, the cutoff table's columns, the limits' scope, the checks under ci_checks/, which get it once per run through
+# base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
 # `python3 scripts/task_conventions.py modes`). A new mode is one entry here plus its protocol section, by a mode
 # pull request (PROTOCOL §2.16 lists what it must contain). Fields:
-#   short          the column label in docs/CUTOFFS.md
+#   short          the column label in tables of the modes (the generated task list)
 #   section        the PROTOCOL section that defines the mode
 #   sidecar        the simulator runs in a trusted `sim` sidecar the agent's container talks to (robot as a service):
 #                  the instance copy is environment/sim/, the agent's image holds no simulator, the service is told the
@@ -195,14 +196,13 @@ EXTERNAL_OPEN = {
         "is an honour rule; trials are reviewed."),
 }
 
-# PROTOCOL §2.12 (owner, 2026-10-11 / 12, board 0080): the agent's time cutoff. One table, scripts/task_cutoffs.toml
-# (seconds per benchmark and mode, with optional exceptions per family and per task), from which normalize writes
-# `[agent] timeout_sec`, the standard modes' RCB_WALL_CLOCK_S and the last section of every instruction.md, `## Time
+# PROTOCOL §2.12 (owner, 2026-10-11 / 12 / 14; boards 0080, 0120): the agent's time cutoff. Each task sets its own, in
+# `[agent] timeout_sec` of its task.toml (its author decides it in the pull request that adds or changes the task; a
+# generator writes its benchmark's number, a constant of the generator), as in Terminal-Bench. There is no table: normalize
+# writes from the task's own number the standard modes' RCB_WALL_CLOCK_S and the last section of instruction.md, `## Time
 # limit`, the last thing the agent reads (owner: at the end, where Terminal-Bench has it): CUTOFF_SENTENCE (one format in
-# every task, Terminal-Bench's), then CUTOFF_NOTE, what the cutoff means in the task's mode. Generator-owned like the
-# two sections before it: edit the table or these words here, never in a task (ci_checks/check-cutoffs.py compares).
-CUTOFFS_FILE = Path(os.environ.get("RCB_CUTOFFS_FILE") or Path(__file__).resolve().parent / "task_cutoffs.toml")
-#   (RCB_CUTOFFS_FILE: another table, for a dry run of a change: tests and what-if renders only)
+# every task, Terminal-Bench's), then CUTOFF_NOTE, what the cutoff means in the task's mode. Generator-owned like the two
+# sections before it: edit `timeout_sec` or these words here, never the section in a task (ci_checks/check-cutoffs.py).
 CUTOFF_SENTENCE = ("You have {sec} seconds to complete this task. Do not cheat by using online solutions or hints specific "
                    "to this task.")
 CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by using online solutions or hints specific "
@@ -238,7 +238,6 @@ _CUTOFF_NOTE_OWN_CLOCK = (
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
-CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
 
 
@@ -581,79 +580,8 @@ def render_external(task: "Path | str" = "") -> str:
     return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
-_CUTOFFS: tuple[dict, dict, dict] | None = None
-
-
-def _cutoff_value(where: str, sec) -> int:
-    if isinstance(sec, bool) or not isinstance(sec, int) or sec <= 0:
-        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec!r} is not a whole positive number of seconds")
-    if sec > CUTOFF_CAP:
-        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec} s is above the {CUTOFF_CAP} s cap (PROTOCOL D8, §2.3)")
-    return sec
-
-
-def _cutoff_row(where: str, row) -> dict[str, int]:
-    if not isinstance(row, dict) or not row:
-        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: expected {{ <mode> = <seconds>, ... }}")
-    for mode, sec in row.items():
-        if mode not in MODES:
-            raise ValueError(f"{CUTOFFS_FILE.name}: {where}: unknown mode {mode!r} (one of {', '.join(MODES)})")
-        _cutoff_value(f"{where} {mode}", sec)
-    return row
-
-
-def _cutoffs() -> tuple[dict, dict, dict]:
-    """The table, read once and checked: (`[cutoff_sec]` benchmark -> mode -> seconds, `[family_cutoff_sec]` benchmark ->
-    family -> mode -> seconds, `[task_cutoff_sec]` task directory -> seconds). Raises ValueError on a table that is not
-    usable: an unknown benchmark or mode, a value that is not a whole positive number of seconds, one above the cap."""
-    global _CUTOFFS
-    if _CUTOFFS is None:
-        raw = tomllib.loads(CUTOFFS_FILE.read_text(encoding="utf-8"))
-        unknown = sorted(set(raw) - CUTOFF_TABLES)       # a misspelled table would be an exception that silently does nothing
-        if unknown:
-            raise ValueError(f"{CUTOFFS_FILE.name}: unknown table {', '.join('[' + k + ']' for k in unknown)} "
-                             f"(the tables are {', '.join('[' + k + ']' for k in sorted(CUTOFF_TABLES))})")
-        labels = {label for _prefix, label in BENCHMARKS}
-
-        def known(bench: str, where: str) -> None:
-            if bench not in labels:
-                raise ValueError(f"{CUTOFFS_FILE.name}: {where}: unknown benchmark {bench!r} (the names are the labels of "
-                                 f"scripts/task_conventions.py BENCHMARKS: {', '.join(sorted(labels))})")
-        table = raw.get("cutoff_sec", {})
-        for bench, row in table.items():
-            known(bench, "[cutoff_sec]")
-            _cutoff_row(bench, row)
-        families = raw.get("family_cutoff_sec", {})
-        for bench, rows in families.items():
-            known(bench, "[family_cutoff_sec]")
-            if not isinstance(rows, dict):
-                raise ValueError(f"{CUTOFFS_FILE.name}: [family_cutoff_sec.\"{bench}\"]: expected \"<family>\" = {{ <mode> = <seconds> }}")
-            for family, row in rows.items():
-                _cutoff_row(f"{bench}, family {family!r}", row)
-        tasks = raw.get("task_cutoff_sec", {})
-        for name, sec in tasks.items():
-            bench = next((label for prefix, label in BENCHMARKS if name.startswith(prefix)), "")
-            if not bench or not name.endswith(tuple("-" + m for m in MODES)):
-                raise ValueError(f"{CUTOFFS_FILE.name}: [task_cutoff_sec]: {name!r} is not a task directory name")
-            _cutoff_value(f"task {name}", sec)
-        _CUTOFFS = (table, families, tasks)
-    return _CUTOFFS
-
-
-def cutoff_table() -> dict[str, dict[str, int]]:
-    """scripts/task_cutoffs.toml `[cutoff_sec]`: benchmark label -> mode -> seconds, the default of every task of the
-    benchmark and mode."""
-    return _cutoffs()[0]
-
-
-def cutoff_overrides() -> tuple[dict[str, dict[str, dict[str, int]]], dict[str, int]]:
-    """The table's exceptions: (`[family_cutoff_sec]` benchmark -> family -> mode -> seconds, `[task_cutoff_sec]` task
-    directory -> seconds)."""
-    return _cutoffs()[1], _cutoffs()[2]
-
-
 def family_of(task: Path) -> str:
-    """A task's family: `[metadata] family` in its task.toml (what `[family_cutoff_sec]` is keyed by)."""
+    """A task's family: `[metadata] family` in its task.toml."""
     try:
         return str(tomllib.loads((task / "task.toml").read_text()).get("metadata", {}).get("family", ""))
     except (OSError, tomllib.TOMLDecodeError):
@@ -661,20 +589,26 @@ def family_of(task: Path) -> str:
 
 
 def cutoff_for(task: Path) -> int | None:
-    """The agent's time cutoff of a task in seconds, from the table. The most specific entry wins: the task's own
-    (`[task_cutoff_sec]`, by directory name), then its family's for its mode (`[family_cutoff_sec]`, the family being
-    `[metadata] family` in task.toml), then the benchmark's for its mode (`[cutoff_sec]`). None when the table has no
-    number for the task (ci_checks/check-cutoffs.py fails such a task: every task has one)."""
-    table, families, tasks = _cutoffs()
-    if task.name in tasks:
-        return tasks[task.name]
-    bench, mode = bench_of(task), mode_of(task)
-    rows = families.get(bench)
-    if rows:
-        sec = rows.get(family_of(task), {}).get(mode)
-        if sec is not None:
-            return sec
-    return table.get(bench, {}).get(mode)
+    """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (PROTOCOL §2.12), the one source of the
+    number. None when task.toml has none, or one that is not a whole positive number of seconds (ci_checks/check-cutoffs.py
+    fails such a task; normalize then writes nothing from it)."""
+    try:
+        v = tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("timeout_sec")
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0 or float(v) != int(v):
+        return None
+    return int(v)
+
+
+@functools.cache
+def bench_has_mode(bench: str, mode: str) -> bool:
+    """Whether the benchmark (a BENCHMARKS label) ships tasks of the mode: a task directory of it under the repository's
+    tasks/ (PROTOCOL §2.15). Read from the repository, not from the directory a task is rendered in."""
+    prefixes = tuple(p for p, label in BENCHMARKS if label == bench)
+    tasks = Path(__file__).resolve().parents[1] / "tasks"
+    return any(d.name.startswith(prefixes) and mode_of(d) == mode and bench_of(d) == bench
+               for d in tasks.iterdir() if (d / "task.toml").is_file()) if prefixes else False
 
 
 def no_twin_reason(task: Path) -> str | None:
@@ -688,21 +622,9 @@ def no_twin_reason(task: Path) -> str | None:
         if task.name.startswith(prefix):
             return why
     bench = bench_of(task)
-    row = cutoff_table().get(bench)
-    if row and twin not in row:
+    if bench and not bench_has_mode(bench, twin):
         return f"— (none: {bench} has no {twin} mode, PROTOCOL §2.15)"
     return None
-
-
-def cutoff_sec(bench: str, mode: str) -> int:
-    """The benchmark's number for a mode (`[cutoff_sec]`): what a generator that still writes the number (task.toml,
-    the sim service's wall clock) takes it from, so that no generator keeps a copy of its own. A family's or a task's
-    exception is not a generator's business: normalize, which every generator ends with, writes the task's number
-    (cutoff_for) over whatever was rendered."""
-    try:
-        return cutoff_table()[bench][mode]
-    except KeyError:
-        raise KeyError(f"{CUTOFFS_FILE.name} has no cutoff for {bench!r} in {mode} mode") from None
 
 
 def render_cutoff(sec: int, mode: str, bench: str = "") -> str:
@@ -725,23 +647,25 @@ def _set_number(old: str, sec: int) -> str:
     return f"{sec}.0" if "." in old else str(sec)
 
 
-def normalize_cutoff(task: Path) -> None:
-    """`[agent] timeout_sec` and, in the standard modes, the sim service's `RCB_WALL_CLOCK_S` (what its `/spec` budget
-    and `meta["time_left_s"]` report) are the table's number (PROTOCOL §2.12). A task the table has no number for is
-    left as it is."""
-    sec = cutoff_for(task)
-    if sec is None:
-        return
-    p = task / "task.toml"
-    s = p.read_text()
-
+def set_agent_timeout(toml: str, sec: int, name: str = "") -> str:
+    """A task.toml text whose `[agent] timeout_sec` is `sec` (the literal's form kept: `3600.0` stays a float), for a
+    generator that renders a task.toml written for another number (its benchmark's constant wins; PROTOCOL §2.12)."""
     def in_agent(m: re.Match) -> str:
         return re.sub(r"(?m)^(timeout_sec\s*=\s*)([0-9][0-9_.]*)", lambda t: t.group(1) + _set_number(t.group(2), sec),
                       m.group(0), count=1)
-    s2 = re.sub(r"(?ms)^\[agent\][ \t]*(?:#[^\n]*)?\n.*?(?=^\[|\Z)", in_agent, s, count=1)
-    if float(tomllib.loads(s2).get("agent", {}).get("timeout_sec", -1)) != sec:
-        raise RuntimeError(f"{task.name}: task.toml has no `[agent] timeout_sec` line that normalize can set to {sec}")
-    write_if_changed(p, s2)
+    out = re.sub(r"(?ms)^\[agent\][ \t]*(?:#[^\n]*)?\n.*?(?=^\[|\Z)", in_agent, toml, count=1)
+    if float(tomllib.loads(out).get("agent", {}).get("timeout_sec", -1)) != sec:
+        raise RuntimeError(f"{name}: task.toml has no `[agent] timeout_sec` line to set to {sec}")
+    return out
+
+
+def normalize_cutoff(task: Path) -> None:
+    """In the standard modes, the sim service's `RCB_WALL_CLOCK_S` (what its `/spec` budget and `meta["time_left_s"]`
+    report) is the task's own cutoff, `[agent] timeout_sec` (PROTOCOL §2.12). A task without a usable number is left as
+    it is."""
+    sec = cutoff_for(task)
+    if sec is None:
+        return
     c = task / "environment/docker-compose.yaml"
     if mode_of(task) in SIDECAR_MODES and c.is_file():
         write_if_changed(c, set_wall_clock(c.read_text(), sec, task.name))
@@ -750,7 +674,7 @@ def normalize_cutoff(task: Path) -> None:
 def set_wall_clock(compose: str, sec: int, name: str = "") -> str:
     """A standard-mode compose file whose `sim` service is told the agent's cutoff: every `RCB_WALL_CLOCK_S` in the file
     is `sec`, and a `sim` service that does not set it (its code then falls back to a default of its own, which a change
-    of the table would not reach) gets the line at the end of its `environment:` mapping."""
+    of the cutoff would not reach) gets the line at the end of its `environment:` mapping."""
     pat = rf"""({WALL_CLOCK_ENV}:[ \t]*["']?)([0-9][0-9.]*)"""
     if re.search(pat, compose):
         return re.sub(pat, lambda m: m.group(1) + _set_number(m.group(2), sec), compose)
@@ -781,8 +705,8 @@ def set_wall_clock(compose: str, sec: int, name: str = "") -> str:
 def normalize_instruction(task: Path) -> None:
     """instruction.md ends with three generator-owned sections, each replacing an earlier one: `## External material`
     (PROTOCOL §2.11), `## Resource limits` rendered from `[metadata.resources.limits]` (§2.10; left out without limits
-    in task.toml) and, last, `## Time limit` rendered from the cutoff table (§2.12; left out when the table has no
-    number for the task): the last thing the agent reads."""
+    in task.toml) and, last, `## Time limit` rendered from the task's `[agent] timeout_sec` (§2.12; left out when it has
+    no usable number): the last thing the agent reads."""
     p = task / "instruction.md"
     md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     lim = (md.get("resources") or {}).get("limits")

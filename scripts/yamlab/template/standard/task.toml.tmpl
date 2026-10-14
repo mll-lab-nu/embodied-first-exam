@@ -47,7 +47,7 @@ timeout_sec = 15000               # = finalize.sh's HOOK_BUDGET_S (keep them equ
                                   # records it (replay_error, infra_error)
 
 [agent]
-timeout_sec = 5400.0              # YAMLab budget, both modes (docs/benchmarks/yamlab.md)
+timeout_sec = @@AGENT_TIMEOUT_S@@.0              # YAMLab budget, both modes (docs/benchmarks/yamlab.md)
 # YAMLab's teleoperation demonstrations (which solve these exact instances) and its MimicGen datasets are public upstream,
 # so the agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
