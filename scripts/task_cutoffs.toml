@@ -32,12 +32,12 @@
 "ManiGuard"         = { privileged =  3600, standard =  3600 }
 "MetaWorld+"        = { privileged =  1800, standard =  1800 }
 "MolmoSpaces"       = { privileged =  3600, standard =  3600 }
-"MuJoCo Playground" = { privileged =  1800, standard =  1800 }
+"MuJoCo Playground" = { privileged =  1800, standard =  1800, standard-realtime = 1800 }
 "MyoSuite"          = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
-"Panda Dynamic Scenes" = { privileged =  3600, standard =  3600 }
+"Panda Dynamic Scenes" = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "RoboCasa"          = { privileged =  3600, standard =  3600 }
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
-"RoboCasa365"       = { privileged =  3600, standard =  3600 }
+"RoboCasa365"       = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
 "RoboFunOlympics"   = { privileged =  7200, standard =  7200 }
 "RoboLab"           = { privileged =  3600, standard =  3600 }
@@ -268,6 +268,33 @@ from_sec = 0
 to_sec = 3600
 decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
 note = "the first standard-realtime task (table_tennis): the standard twin's number"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "Panda Dynamic Scenes"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the standard-realtime twins of the 19 dynamic families: the standard twin's number"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboCasa365"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the first standard-realtime task (TurnOnToasterOven): the standard twin's number"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "MuJoCo Playground"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 1800
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the first standard-realtime task (BarkourJoystick): the standard twin's number"
 
 [[history]]
 date = "2026-10-14"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generate MuJoCo Playground's quadruped tasks: tasks/mujoco_playground_<env>-privileged and ...-standard.
+"""Generate MuJoCo Playground's quadruped tasks: tasks/mujoco_playground_<env>-privileged and ...-standard, and
+...-standard-realtime for the environments whose scene is dynamic (REALTIME; PROTOCOL §4b, §2.14).
 
     python3 scripts/mujoco-playground/generate.py            # every instance in instances/
     python3 scripts/mujoco-playground/generate.py --check    # exit 1 if tasks/ differs from what this would write
@@ -156,7 +157,7 @@ RUN chmod +x /tests/test.sh
 # The agent's time cutoff per mode: the table's number (scripts/task_cutoffs.toml, PROTOCOL §2.12), written into
 # `[agent] timeout_sec` and the sim service's wall clock; normalize writes the same number again, and the instruction's
 # closing `## Time limit` section. No template states it a second time.
-CUTOFF = {m: cutoff_sec("MuJoCo Playground", m) for m in ("privileged", "standard")}
+CUTOFF = {m: cutoff_sec("MuJoCo Playground", m) for m in ("privileged", "standard", "standard-realtime")}
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and rendering (EGL when a GPU is there, else OSMesa); no GPU reservation.
@@ -182,6 +183,95 @@ services:
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RESET_BUDGET}}}"   # Playground quadrupeds standard: {RESET_BUDGET} resets (PROTOCOL §4.5); 0: one episode
 """
+
+
+# ------------------------------------------------------------------------------------------- standard-realtime twins
+# The dynamic environments (scripts/task_dynamics.toml; PROTOCOL §2.14) get a `-standard-realtime` twin (owner,
+# 2026-10-14, board 0112): the same frozen instance and check, served by shared/realtime/server.py (the rcb_service.Sim
+# adapter on rcb_quadruped.Session) behind the shared eai-standard/2.3 layer (rcb_realtime.py + rcb_service.py, copied
+# unchanged from scripts/humanoidbench/shared/; check-tooling-identity.sh). Per environment: the slowdown S, from the
+# real-time factor RTF of that service measured on the reference workstation (PROTOCOL §4b: S = 1 when RTF >= 3, else
+# ~1.5 / RTF rounded up), and how it was measured (docs/benchmarks/mujoco-playground.md, "Standard-realtime").
+REALTIME = {
+    "BarkourJoystick": {
+        "slowdown": 1,
+        "rtf": "measured RTF 31.6 (2026-10-14, board 0112, ws-1 at load 44, the service capped at 4 CPUs: the "
+               "reference's 1000 rows planned from step 0 with the clock flat out, RCB_SLOWDOWN = 0.01), far above 3, so "
+               "S = 1. At S = 1 the reference succeeds live and in the fresh replay with no stall, also streamed one row "
+               "per call with a camera image every 0.25 s (7.7 ms each over EGL)",
+        "why": "scripted pushes (kicks) apply an external force to the torso at moments the agent is not told",
+    },
+}
+RT_RESET_BUDGET = 10   # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
+RT = SHARED / "realtime"
+RT_ENV_DOCKERFILE = f"""# Standard-realtime mode: the agent container has NO simulator and no MuJoCo, only Python and the realtime client
+# (eai-standard/2.3), on the shared pinned client base with the shared pins (scripts/eai_standard/client.env).
+FROM {CLIENT_IMAGE}
+COPY client-requirements.txt /tmp/client-requirements.txt
+RUN pip install --no-cache-dir -r /tmp/client-requirements.txt
+COPY rcb_client.py rcb1.py /opt/tools/
+ENV PYTHONPATH=/opt/tools
+RUN mkdir -p /app/output
+WORKDIR /app
+"""
+
+
+def rt_compose(env: str) -> str:
+    S = REALTIME[env]["slowdown"]
+    return f"""# Standard-realtime mode (PROTOCOL §4b): the simulator runs in the `sim` sidecar (the agent cannot open it), on its own clock
+# once an episode starts (sim/rcb_realtime.py, the shared eai-standard/2.3 layer, with sim/server.py, this benchmark's
+# adapter); the agent only reaches port 8000. No `expose`/`ports` on sim: under Harbor's egress control it shares
+# main's network namespace (localhost:8000).
+# GPU on sim: the physics is MuJoCo on the CPU, but every image the agent asks for is rendered here, and on a clock that
+# does not stop a render is time the simulator cannot step (EGL on the GPU; OSMesa where EGL does not work).
+# `graphics` is the capability that mounts the EGL driver (server.py writes its ICD manifest).
+# Crash recovery: compose restarts the service, which resumes the same episode, paused, never a reset.
+# Knobs: ${{NAME:-default}} takes NAME from the shell that runs harbor. The defaults are the task's configuration;
+# results under other settings are reported separately.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: {IMAGE}
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: python /srv/rcb_realtime.py
+    restart: on-failure:6          # N >= 3 (PROTOCOL §4.1); a resume continues the episode, paused
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "{CUTOFF['standard-realtime']}"
+      RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in about a second
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+      RCB_SLOWDOWN: "${{RCB_SLOWDOWN:-{S}}}"                # S = {S}: the world runs at 1/S of real speed (this environment's measured RTF; PROTOCOL §4b)
+      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RT_RESET_BUDGET}}}"        # {RT_RESET_BUDGET} resets (PROTOCOL §4b default); 0: one episode
+      RCB_GL: "${{RCB_GL:-auto}}"                     # auto: EGL on the GPU when it works, else OSMesa
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+"""
+
+
+def rt_values(env: str, v: dict) -> dict:
+    rt, e = REALTIME[env], ENVS[env]
+    dt = e.get("dt", 0.02)
+    S = rt["slowdown"]
+    ep = v["episode_md_std"].replace("every response's `meta[\"command_now\"]` is the current command",
+                                     "the proprioception's `cmd_vx`, `cmd_vy`, `cmd_wz` are the command in force")
+    end = (v["std_end"].replace(", when you submit `done`,", ",").replace("when you submit `done`, ", "")
+           .replace(" (before the end of the schedule, both are failures)", " (before the end of the schedule, a failure)"))
+    success = v["std_success"].replace("(`imu_linvel`)", "(`linvel_*`)").replace("(`imu_gyro`)", "(`gyro_*`)")
+    return {**v, "std_success": success, "slowdown": S, "dt_ms": f"{dt * 1000:g}", "control_hz": f"{1 / dt:g}",
+            "real_time_note": " (real time)" if S == 1 else "", "episode_md_rt": ep, "rt_end": end,
+            "rt_resets": RT_RESET_BUDGET, "rt_episodes": RT_RESET_BUDGET + 1, "expert_hours_rt": "6.0",
+            "dynamic_why": rt["why"], "rtf_text": rt["rtf"], "agent_timeout": CUTOFF["standard-realtime"]}
 
 
 def snake(env: str) -> str:
@@ -457,7 +547,7 @@ STD_CHANGES_RESETS = [
 ]
 
 
-def make(env: str, out: Path) -> tuple[Path, Path]:
+def make(env: str, out: Path) -> tuple[Path, ...]:
     inst_path = HERE / "instances" / f"{env}.json"
     inst = json.loads(inst_path.read_text())
     v = values(env, inst)
@@ -507,7 +597,33 @@ def make(env: str, out: Path) -> tuple[Path, Path]:
     put(s / "solution/oracle.npy", src=oracle)
     normalize(p)
     normalize(s)
-    return p, s
+    if env not in REALTIME:
+        return p, s
+
+    r = out / f"{v['name']}-standard-realtime"
+    reset_dir(r)
+    w = rt_values(env, v)
+    put(r / "task.toml", render("realtime/task.toml", w))
+    put(r / "instruction.md", render("realtime/instruction.md", w))
+    put(r / "README.md", render("realtime/README.md", w))
+    put(r / "environment/Dockerfile", RT_ENV_DOCKERFILE)
+    put(r / "environment/docker-compose.yaml", rt_compose(env))
+    put(r / "environment/client-requirements.txt", src=LAYER / _ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip())
+    put(r / "environment/rcb_client.py", src=RT / "rcb_client.py")
+    put(r / "environment/rcb1.py", src=LAYER / "rcb1.py")
+    for name in ("rcb_realtime.py", "rcb_service.py", "server.py"):
+        put(r / "environment/sim" / name, src=RT / name)
+    put(r / "environment/sim/rcb1.py", src=LAYER / "rcb1.py")
+    put(r / "environment/sim/rcb_quadruped.py", src=SHARED / "rcb_quadruped.py")
+    put(r / "environment/sim/instance.json", src=inst_path)
+    put(r / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
+    put(r / "tests/test.sh", src=SHARED / "standard/test.sh", mode=0o755)
+    put(r / "tests/grade.py", src=RT / "grade.py")
+    put(r / "solution/solve.sh", src=RT / "solve.sh", mode=0o755)
+    put(r / "solution/oracle_plan.py", src=RT / "oracle_plan.py")
+    put(r / "solution/oracle.npy", src=oracle)
+    normalize(r)
+    return p, s, r
 
 
 def render_all(out: Path) -> list[str]:
