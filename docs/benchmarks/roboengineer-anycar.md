@@ -352,3 +352,61 @@ revisions: numeric feedback, case banks, vehicle physics and scoring are unchang
 The renderer reserves room for the complete model plus the public dash overlay,
 including the largest legacy route. Native/model acceptance of this appearance
 revision is still pending.
+
+### Drift to Park (`drift-park/1`)
+
+The separate `anycar-drift` family starts an RC car on a straight approach, follows
+ordered gates around a 180-degree U-bend, then requires a sideways slide into a
+parallel-parking bay bounded by two stationary cars. A physical curb bounds its
+outer edge. Parked cars have solid collision envelopes, and cones mark the approach.
+The nominal U-bend radius is 1.5 m. The nominal bay is 1.20 × 0.65 m, centered at
+(-3.0, 2.05) m; target yaw is pi. The car collision envelope used for bay containment
+is 0.49 × 0.27 m. All geometry and commands are public.
+
+This task retains the existing free-body chassis, wheel contact, suspension,
+Ackermann steering and driven-wheel mechanism. It adds a **rear-wheel handbrake**:
+MuJoCo joint friction applies bounded opposing torque at both rear spin joints.
+It never sets lateral velocity, yaw, friction coefficients based on phase, or
+robot position to create a drift. Torque strength, surface friction and vehicle
+response vary privately; this is a rigid Coulomb-contact approximation, not a
+calibrated pneumatic-tire drift model. A real handbrake brake curve and tire
+thermal/load/slip behavior are outside this task's claims.
+
+Episodes are 16 simulated seconds. The trusted monitor observes each 2 ms physics
+step. Completion requires ordered U-route gates, then sideslip near the parking
+bay: body lateral speed >0.2 m/s, total planar speed >0.6 m/s, and sideslip angle
+>10 degrees, sustained at least 0.15 s with ≥0.06 m accumulated lateral sliding.
+A slow conventional parking maneuver cannot satisfy that requirement. Success
+also requires the entire car envelope inside the bay, longitudinal error <0.18 m,
+lateral error <0.12 m, heading error <0.14 rad, speed <0.08 m/s and yaw rate
+<0.1 rad/s for at least 0.5 s. Any collision, rollover, chassis-ground contact or
+approach departure fails. Successful quality is
+`100 * exp(-position_error/0.25 - heading_error/0.3)`; incomplete or unsafe is zero.
+These thresholds are fixed task definitions, not real-vehicle damage limits.
+
+The data-only `anycar-drift-controller/1` policy contains bounded approach,
+steering-pulse, countersteering, brake and stop gains. A controller follows the
+public route using noisy pose estimates, initiates the slide, countersteers and
+brakes; it never observes private gate/drift/success flags. Nominal training is
+`python -m scripts.control_transfer.control_public.anycar_drift_nominal --out DIR`.
+Public feedback is only course geometry, noisy 10 Hz car telemetry, requested
+controls, and the exact 10 fps video (fixed overview plus noisy-position closeup).
+Hidden state, seeds, contact events, plant parameters and scores stay private.
+
+`anycar_drift_spec.make_spec(index)` is stdlib-only and uses the standard same-plant
+bank with 3 adaptation cases and 10 held-out cases, across 3 bounded feedback rounds.
+Vehicle parameters, friction (0.55–0.70) and brake torque (2.5–3.5 Nm per rear
+wheel) persist within an instance. Episode randomization varies bay length
+(1.15–1.30 m), center x (-3.1 to -2.9 m), center y (2.0–2.1 m), initial lateral
+position (±0.02 m), yaw (±0.01 rad) and observation noise. Noise is identical to
+the original AnyCar motion/wheel/steering channels.
+
+Integration: root registers `anycar-drift` separately and dispatches validation to
+`control_public.anycar_drift.validate` and evaluation to
+`trusted.anycar_drift.rollout(policy_path, case, out, render)`. Preserve
+`feedback.command`. Public allowlist adds `control_public/anycar_drift{,_nominal}.py`
+and `components/anycarbench/drift.py`, with the existing public `model.py`.
+Never install the spec, trusted monitor/evaluator or banks in the agent container.
+The renderer is family-local; the operator image also needs the existing trusted
+AnyCar parameter sampler. Shared registry,
+Harbor packaging, budgets and site publication remain integration work owned by root.
