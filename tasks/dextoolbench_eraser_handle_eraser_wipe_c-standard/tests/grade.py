@@ -31,6 +31,7 @@ out = {"success": int(ok), "deterministic": int(det), "finalized": int(bool(d.ge
        "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))),
        "infra_error": int(infra), "grader_error": int(bool(d.get("finalize_error"))), "no_verdict": int(no_verdict)}
 out["sim_error"] = int(d.get("reason") == "error")   # the simulator failed during a call (the episode ended there)
+out.update(resets=int(d.get("resets") or 0), reset_budget=int(d.get("reset_budget") or 0))   # the configuration it ran under (PROTOCOL §4.5)
 if infra:   # reward.json: numbers only
     json.dump({"reason": str(d.get("reason") or ""), "finalize_error": str(d.get("finalize_error") or "")[:300], "finalized": bool(d.get("finalized"))},
               open(f"{LOG}/infra_error.json", "w"))

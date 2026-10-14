@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Use one arm to grasp the microphone on the table and handover it to the other arm.
 
-The scene objects are attributes of the task env (`env.grasp_arm_tag`, `env.handover_arm_tag`, `env.handover_middle_pose`, `env.microphone`, `env.microphone_id`; see `load_actors` in
+The scene objects are attributes of the task env (`env.grasp_arm_tag`, `env.handover_arm_tag`, `env.microphone`, `env.microphone_id`; see `load_actors` in
 `/opt/RoboTwin/envs/handover_mic.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

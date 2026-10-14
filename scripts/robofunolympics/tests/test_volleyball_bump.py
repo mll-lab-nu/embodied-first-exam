@@ -5,7 +5,8 @@ target (a real, passive forearm rebound among them), to a held ball, to a second
 the serve, to touching the net and to a foot beyond the centre line; yes to one forearm contact that rises above the
 net and comes down in the target.
 
-The positive is an INJECTION: no receiving controller exists for the H1-2. Real: the serve really flies 15 m in air
+The positive is an INJECTION (the reference controller, oracles/volleyball-bump, passes for real; this test does
+not depend on it). Real: the serve really flies 15 m in air
 over the net and comes down on the left forearm of the robot, which really holds its arms out as a platform (stand
 mode); the passed ball really rises above the net's height and lands in the target. Injected: where the robot stands
 (teleported at t = 0 to where the serve comes down) and the ball's velocity as it comes off the forearm (the direction

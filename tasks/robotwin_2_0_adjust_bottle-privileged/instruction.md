@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Pick up the bottle on the table headup with the correct arm.
 
-The scene objects are attributes of the task env (`env.bottle`, `env.left_target_pose`, `env.model_id`, `env.qpose_tag`, `env.right_target_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.bottle`, `env.model_id`, `env.qpose_tag`; see `load_actors` in
 `/opt/RoboTwin/envs/adjust_bottle.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

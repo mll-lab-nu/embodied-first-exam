@@ -22,6 +22,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_DTB_GOAL_TIMEOUT_S: "0"
       RCB_MAX_CONTROL_STEPS: "360000"
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-20}"   # DexToolBench standard: 20 resets (PROTOCOL §4.5); 0: one episode
       PYTHONPATH: /srv
       RCB_MJ_ROOT: /opt/rcb_mj
       RCB_WALL_CLOCK_S: "3600"

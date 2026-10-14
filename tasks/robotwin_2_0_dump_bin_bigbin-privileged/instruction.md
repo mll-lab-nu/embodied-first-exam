@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Grab the small bin and pour the balls into the big bin.
 
-The scene objects are attributes of the task env (`env.deskbin`, `env.deskbin_id`, `env.dustbin`, `env.garbage_num`, `env.middle_pose`, `env.pour_actions`, `env.sphere_lst`; see `load_actors` in
+The scene objects are attributes of the task env (`env.deskbin`, `env.deskbin_id`, `env.dustbin`, `env.garbage_num`, `env.sphere_lst`; see `load_actors` in
 `/opt/RoboTwin/envs/dump_bin_bigbin.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

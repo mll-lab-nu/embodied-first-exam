@@ -117,5 +117,13 @@ class Robot:
         meta = {"cameras": list(cameras), "seconds": float(seconds), "video_fps": int(video_fps), "include_depth": bool(include_depth), "video": video}
         return self._post("/observe", meta, [], timeout=600)
 
+    def reset(self, cameras=None, include_depth: bool = False, video_fps: int = 10, video: str = "frames") -> Result:
+        """POST /reset, only where spec()["budget"]["reset"] > 0 (otherwise the service answers 404): abandon the running
+        episode and start a new one from the same starting state; returns the start's frames (and meta: episode,
+        resets_left). EpisodeOver once the budget is spent, after a success, or when your time is up."""
+        meta = {"include_depth": bool(include_depth), "video_fps": int(video_fps), "video": video}
+        if cameras is not None: meta["cameras"] = [cameras] if isinstance(cameras, str) else list(cameras)
+        return self._post("/reset", meta, [], timeout=600)
+
     def status(self) -> dict:
         r = requests.get(self.base + "/status", timeout=(5, 60)); r.raise_for_status(); return r.json()
