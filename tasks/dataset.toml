@@ -7251,5 +7251,17 @@ digest = "sha256:71fcd2a9cec5e927de4bbd71116f3d366f256c45bd016462687c4c493e7a7c5
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
-digest = "sha256:2b4a1f23b409a8a84a0a19684412ac27f61ac7ee69d460842bb4bf8063261cac"
+digest = "sha256:046489434ab798b8d575e694cac1be9591c8c15ad7545f9fc70fc7f370d62573"
 
+
+[[tasks]]
+name = "robot-coding-bench/ambench-press-button-fahexa-i00-privileged"
+digest = "sha256:eb823ef1f9bf3893ff4f9dfc0a9128454b303f4da1f0b63708306ab772a98b2e"
+
+[[tasks]]
+name = "robot-coding-bench/ambench-push-slider-fahexa-i00-privileged"
+digest = "sha256:708eee37cbfdd3f0641e7c39db170849f7059edc81c5feea55f9b67dab39ccca"
+
+[[tasks]]
+name = "robot-coding-bench/ambench-rotate-valve-fahexa-i00-privileged"
+digest = "sha256:ec4b88f6b987d6b41e8907f1c597376083fe077929c25dbb40c3016bbbd389b1"

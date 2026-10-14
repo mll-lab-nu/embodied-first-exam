@@ -17,10 +17,10 @@
 set -uo pipefail
 umask 022   # the renders these checks compare with: never the caller's umask (a checkout is made with umask 022)
 root="$(cd "$(dirname "$0")/.." && pwd)"
-if [ "${1:-}" = "--one" ]; then   # --one <script under scripts/> <mode>: one generator's check
-  script="$2" mode="$3"
-  if out=$(python3 "$root/scripts/$script" "$mode" 2>&1); then echo "ok scripts/$script: ${out##*$'\n'}"; exit 0
-  else echo "FAIL scripts/$script $mode:"; echo "$out" | tail -n 40; exit 1; fi
+if [ "${1:-}" = "--one" ]; then   # --one <script under scripts/> <check arguments>...: one generator's check
+  script="$2"; shift 2
+  if out=$(python3 "$root/scripts/$script" "$@" 2>&1); then echo "ok scripts/$script: ${out##*$'\n'}"; exit 0
+  else echo "FAIL scripts/$script $*:"; echo "$out" | tail -n 40; exit 1; fi
 fi
 only=(); if [ "${1:-}" = "--only" ]; then shift; only=("$@"); fi
 want() {   # want <script under scripts/>: in the --only scope (or no --only)
@@ -33,10 +33,13 @@ gens=("kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behavior/m
       "maniguard/mk_tasks.py --check" "robopaint_strict/mk_tasks.py --check"
       "mujoco-playground/generate.py --check" "libero-max/generate.py --check"
       "myosuite/generate.py --check" "dexjoco/generate.py --check")
-# generators that their tasks pull request adds: run when present
+# generators that their tasks pull request adds: run when present (DexHand: the release families of
+# scripts/dexhand/release.json)
 for g in "roboolympics/gen_tasks.py check" "roboarc/mk_tasks.py --check" "yamlab/mk_tasks.py --check" \
          "pandadyn/mk_tasks.py --check" "ambench/mk_tasks.py --check" "robodojo/mk_tasks.py --check" \
-         "bigym2/gen_tasks.py check" "robofunolympics/gen_tasks.py check" "labutopia/generate.py --check" \
+         "bigym2/gen_tasks.py check" "robofunolympics/gen_tasks.py check" \
+         "dexhand/generate.py --check --release" \
+         "labutopia/generate.py --check" \
          "molmospaces/mk_tasks.py --check" "autobio/generate.py --check" \
          "robotwin_sync_shared.py --check"; do   # RoboTwin 2.0: every task's shared files are the template tasks' (no simulator needed)
   [ -f "$root/scripts/${g%% *}" ] && gens+=("$g")

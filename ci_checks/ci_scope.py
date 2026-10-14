@@ -57,6 +57,7 @@ UNITS: dict[str, list[str]] = {
     "MolmoSpaces": _own("molmospaces"),
     "MyoSuite": _own("myosuite"),
     "DexJoCo": _own("dexjoco"),
+    "DexHand": _own("dexhand"),
     "LabUtopia": _own("labutopia"),
     "AutoBio": _own("autobio"),
     "VLABench": _own("vlabench"),

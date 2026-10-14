@@ -19,6 +19,7 @@
 # no number.
 
 [cutoff_sec]
+"AM-Bench"          = { privileged =  3600 }
 "AutoBio"           = { privileged =  3600, standard =  3600 }
 "BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
 "BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
@@ -267,3 +268,12 @@ from_sec = 0
 to_sec = 3600
 decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
 note = "the first standard-realtime task (table_tennis): the standard twin's number"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "AM-Bench"
+modes = ["privileged"]
+from_sec = 0
+to_sec = 3600
+decided_by = "proposal (D8 default)"
+note = "the benchmark's first tasks (privileged only): the protocol's default; every Python process pays a few minutes of Isaac Sim start, which the hour includes"
