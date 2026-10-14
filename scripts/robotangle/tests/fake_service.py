@@ -28,6 +28,7 @@ class Fake:
         s.runtime_binding = {"binding_id": "x"}; s.spec = {"text": "do it"}; s.max_steps = 100000; s.eval_index = 0
         s.instance_exact = True; s.instance_sha = "s0"
         s.robot = types.SimpleNamespace(arms=["arm"], arm_slice={"arm": slice(0, 7)}, grip_index={"arm": 7},
+                                        entity=types.SimpleNamespace(links=[types.SimpleNamespace(name="base")]),   # the root link (the service's frame origin)
                                         limits=[(-2.9, 2.9)] * 7 + [(0.0, 0.8) if NATIVE else (0.0, WIDTH_OPEN)])
         s.action_layout = LAY; s.env = types.SimpleNamespace(sensor_frame=lambda depth=False: Frame(depth))
         s.monitor = types.SimpleNamespace(review=lambda: None, forcing=lambda: None)
