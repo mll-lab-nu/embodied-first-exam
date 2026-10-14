@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_bump` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_volleyball_bump.py: positive by injection (the real 14 m/s float serve onto a real forearm platform, the ball's velocity set as it comes off); negatives: the passive rebound (lands 2.6 m off the target), below net height, the body, a second touch, held, under the net, a net touch, over the centre line. A still forearm returns the serve to the right height and distance; the direction changes by 3 m/s for 4 cm of standing place; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Receive the serve: pass the volleyball that is served over the net to you with your forearms, in one contact, above net height and into the setter's target at the net. (RoboFunOlympics `volleyball-bump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

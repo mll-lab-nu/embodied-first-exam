@@ -9,7 +9,7 @@
 | Family / instance | `steeplechase` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_steeplechase.py: positive by injection (a flight over the 0.914 m hurdle and the pit; a landing in the pit with a second hop out; from standing on the bar); negatives: under, round, a trailing foot, to the side of the water jump. The H1-2's open-loop squat jump raises its centre of mass 0.16 m; the walking policy does not climb the pit's slope; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out beyond the pit's far edge and stand on your feet. (RoboFunOlympics `steeplechase`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
@@ -44,7 +44,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Category | parkour-apparatus-balance |
 | Rule book | World Athletics Competition and Technical Rules 2024, Technical Rule 23 (steeplechase races): the men's hurdle 0.914 m high with a top bar 0.127 m square; the hurdle at the water jump 3.66 m wide and fixed; the water jump 3.66 m long including the hurdle, the pit 3.66 m wide, 0.50 m deep at the hurdle for about 1.20 m, then a uniform slope up to the level of the track at the far end; each athlete shall go over each hurdle (in any manner) and over or through the water, and is disqualified for stepping to one side of the water jump or trailing a foot or leg below the horizontal plane of the top of the hurdle at the instant of clearance; deviations: TR 23 (the race): one water jump from a 10.0 m approach instead of a 3000 m race with 28 hurdle and 7 water jumps (a single action; the family is the water jump) · TR 23 (the water jump): the water itself is not simulated; the pit is dry and its floor is the hard, sloping bottom (the simulator has no free-surface water; what remains is the pit's real geometry) · TR 23 (clearance): "foot or leg below the top of the hurdle" is judged on the centres of the two feet and the pelvis where each crosses the vertical plane through the middle of the hurdle's top bar (three points a referee can measure on a robot) · the finish: with no race to run on to, the attempt ends when the whole body is beyond the pit's far edge and the robot has stood on its feet for 1.0 s |
 | Stages | hurdle → out of the water jump → stand |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `3347f4835c2e91644f1fbeb5f854200f228f9482f34b7b55a633f47c01add698` |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `c8ea61116d7aa693fc094b0ab2821b1d89dcbe4ba3d7b1ff69258c275fa22452` |
 | Episode | 6000 control steps (60 s at 100 Hz) |
 | Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
 | Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |
