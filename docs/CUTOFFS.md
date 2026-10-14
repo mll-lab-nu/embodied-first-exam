@@ -25,6 +25,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | MuJoCo Playground | 1800 s (30 min) | 1800 s (30 min) | — | 13 / 13 / — |
 | MyoSuite | 3600 s (60 min) | 3600 s (60 min) | — | 22 / 22 / — |
 | Panda Dynamic Scenes | 3600 s (60 min) | 3600 s (60 min) | — | 25 / 25 / — |
+| RoboARC | 10800 s (180 min) | 10800 s (180 min) | — | 94 / 94 / — |
 | RoboCasa | 3600 s (60 min) | 3600 s (60 min) | — | 29 / 29 / — |
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
@@ -33,24 +34,23 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
-| RoboTangle | 7200 s (120 min) | 7200 s (120 min) | — | 52 / 52 / — |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
 | RoboWits | 3600 s (60 min) | 3600 s (60 min) | — | 15 / 15 / — |
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1726 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1810 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
 A benchmark's row is the default of all its tasks in a mode. The table may give one family, or one task, another number; the most specific entry wins: **task > family > benchmark and mode**. A family is `[metadata] family` in `task.toml` (`python3 scripts/task_cutoffs.py families "<benchmark>"` lists a benchmark's). Like every cutoff, an exception is an owner decision with a `[[history]]` entry, and results are compared only under the same cutoff (PROTOCOL D8).
 
 ```toml
-[family_cutoff_sec."RoboTangle"]              # benchmark; then one line per family, a number per mode
+[family_cutoff_sec."RoboARC"]              # benchmark; then one line per family, a number per mode
 "cast_coil" = { privileged = 14400, standard = 14400 }
 
 [task_cutoff_sec]                              # one line per task directory
-"robotangle-cast-coil-hard-i00-standard" = 10800
+"roboarc-cast-coil-05-i01-standard" = 10800
 ```
 
 No exception is in use: every task takes its benchmark's number.
@@ -68,7 +68,7 @@ In the standard and standard-realtime modes the second paragraph is:
 
 > This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
 
-(RoboTangle, whose service counts on a clock of its own, keeps the earlier sentence there: "The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left.")
+(No benchmark keeps the earlier, weaker sentence today: every service counts from the agent's first request.)
 
 What a benchmark adds about its own time (a simulator's start-up, what its service counts) stands in its own text and names no number: it says "the time limit (`## Time limit`)".
 
@@ -85,7 +85,7 @@ A change of a cutoff changes the task in place: the scene, the frozen instance, 
 ## What follows the number, and what does not
 
 - **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which reads `task.toml`.
-- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).
+- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
 - **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).
 - **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.
@@ -114,3 +114,5 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-12 | MuJoCo Playground, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |
 | 2026-10-13 | Panda Dynamic Scenes, privileged, standard | (none) -> 3600 s | proposal #177 (D8 default) | the benchmark's first tasks: the protocol's default; a scene builds in seconds and simulates at 60-150 control steps per second, so the hour is the agent's own work |
+| 2026-10-13 | RoboTangle, privileged, standard | 7200 s -> (removed) | owner | removed: the benchmark is renamed RoboARC (next entry) and its Genesis tasks are deleted; RoboARC's MuJoCo release replaces them, and results recorded under this row are not carried over |
+| 2026-10-13 | RoboARC, privileged, standard | (none) -> 10800 s | owner | new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap |
