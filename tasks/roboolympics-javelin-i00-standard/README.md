@@ -9,7 +9,7 @@
 | Family / instance | `javelin` / seed 0 |
 | Oracle | `full` — Reference: a standing throw by the trunk's turn, the hand above the shoulder, from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 15.0 m/s at 37 degrees, head first at 21.58 m (the line is 20 m), then back 4 m behind the arc and standing. Open loop on the frozen start, not robust. Referee test negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front The privileged twin's reference rows (1533 control steps, success after 15.33 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Throw the javelin in your right hand over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand. (RoboOlympics `javelin`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

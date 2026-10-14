@@ -9,7 +9,7 @@
 | Family / instance | `pole_vault` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_pole_vault.py: positive by injection (the run-up, the plant and the swing-up are injected: the robot is put on the planted pole 20 degrees short of vertical; from there it really hangs, passes 4 cm over the 2.00 m bar, lets go and lands on the mat); negatives: the bar off its pegs, the ground beyond the zero line before the clearance, a hand moved up the pole, a clearance without the planted pole, round or under the bar, a hand steadying the bar; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Vault over the bar with the pole you carry: plant its tip in the box, leave the ground hanging on it, go over the bar between the uprights and come down on the mat, with the bar still on its pegs. (RoboOlympics `pole-vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

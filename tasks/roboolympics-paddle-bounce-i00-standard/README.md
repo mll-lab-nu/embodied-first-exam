@@ -9,7 +9,7 @@
 | Family / instance | `paddle_bounce` / seed 0 |
 | Oracle | `full` — Reference: the paddle kept level under the ball and tapped up at each bounce, closed loop on the ball's state: 20 bounces, each back to the drop height; 11 of 11 perturbations when it was written. A still blade gets 6 to 13 bounces of the 0.15 m rise alone, which is why each bounce must also reach the drop height. The privileged twin's reference rows (1453 control steps, success after 14.53 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Keep the table tennis ball that is dropped in front of you bouncing on the paddle in your right hand: 20 bounces in a row, each back up to the height the ball was dropped from. (RoboOlympics `paddle-bounce`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

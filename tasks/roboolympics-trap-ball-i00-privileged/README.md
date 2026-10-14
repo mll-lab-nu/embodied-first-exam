@@ -9,7 +9,7 @@
 | Family / instance | `trap_ball` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_trap_ball.py: positive by injection (the real 8 m/s pass onto the foot of the standing robot, the ball's speed set to 0.3 m/s as it comes off); negatives: a planted foot (the ball is 7 m away after 3 s), rolling away, first touch a shin, a handball, too close before the pass. The pass arrives at 6 m/s; a still foot sends it off at 5 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Trap the pass: take the football that is passed along the ground past you with a foot, and bring it to rest within a metre of you inside three seconds. (RoboOlympics `trap-ball`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

@@ -9,7 +9,7 @@
 | Family / instance | `wall_ball` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_wall_ball.py: positive by injection (a real release, the ball's velocity set to 20 m/s: the target hit, the rebound's last 0.8 m replaced as in `catch`); negatives: over the line, outside the target, a bounce before the wall, the rebound onto the body or the floor, taken back before the wall, dropped. An arm swing gives 6.9 m/s; the throw needs 16 to 20 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Throw the tennis ball in your right hand at the target circle on the wall and catch the rebound with a hand before it touches the ground, and keep hold of it. (RoboOlympics `wall-ball`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
