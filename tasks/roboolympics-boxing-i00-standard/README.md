@@ -9,7 +9,7 @@
 | Family / instance | `boxing` / seed 0 |
 | Oracle | `full` — Reference: a straight right from the guard behind a trunk turn, then the walking policy to stay up: 15.7 N s on the 30 kg bag (the line is 12), a 0.07 s touch; 12 of 12 variations when it was written. The meter reads a known injected impulse 1.5 % low. The privileged twin's reference rows (404 control steps, success after 4.04 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Punch the heavy bag once with the knuckles of your right fist, on the marked band, hard enough to give it 12.0 N s, then bring the fist back to your guard and stand. (RoboOlympics `boxing`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

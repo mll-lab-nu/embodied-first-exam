@@ -31,7 +31,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 50 / 50 / 1 |
 | RoboDojo | 3600 s (60 min) | 3600 s (60 min) | — | 48 / 54 / — |
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
-| RoboOlympics | 7200 s (120 min) | 7200 s (120 min) | 7200 s (120 min) | 50 / 52 / 6 |
+| RoboOlympics | 7200 s (120 min) | 7200 s (120 min) | 7200 s (120 min) | 50 / 52 / 19 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
 | RoboSafeBench | — | 3600 s (60 min) | 3600 s (60 min) | — / 294 / 15 |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
@@ -39,7 +39,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-2133 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
+2146 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
 
 ## Exceptions (per family, per task)
 
