@@ -2,7 +2,7 @@
  "task": "place_object_scale",
  "seed": 60417,
  "embodiment": "aloha-agilex",
- "state_sha": "f1442d98b394",
+ "state_sha": "e21634a59bcf",
  "text": "Use one arm to grab the object and put it on the scale.",
  "n_active_joints": 16
 }

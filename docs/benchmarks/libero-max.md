@@ -84,6 +84,19 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   finger positions, joint positions and velocities, last command. The agent is told that the scene may change once
   (what kinds of change), not which change or when. No object poses, no goal, no success signal.
 
+### Notes on single cases (2026-10-14, board 0113)
+- A move event (`target_relocation`, `receptacle_relocation`) sets one entity's position (`libero_backend._move_object`):
+  what rests in or on a moved receptacle stays behind, and an entity that lands on another is pushed apart by the
+  physics. Both instructions say so.
+- Four cases of `LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate...`: LIBERO's left plate (`plate_1`, in
+  `plate_left_region`) is on the robot's right; the instructions say that left and right are as seen facing the robot.
+- `STUDY_SCENE1_..._back_compartment_of_the_caddy` with the mug (LIBERO-PRO's task variant replaces the book): the back
+  compartment is the narrow back cell, about 5.5 cm across, narrower than the mug; LIBERO's `In` (origin in the region's
+  box, contact with the caddy) holds for a mug resting on its opening. The instructions say so; the check is unchanged.
+- The `initial_pose_position_angle` cases of `pick_up_the_black_bowl_{on,next_to}_the_cookie_box...` shift the target bowl
+  0.17 m in x and -0.06 m in y and turn it 45 degrees, so the sentence's spatial relation no longer holds; the
+  instructions say which bowl is meant.
+
 ## Collect budget (standard mode)
 When the agent's container is gone, the collect hook (`environment/sim/finalize.sh`) signals the service, which ends the
 episode and replays it in a fresh process (`lmx_tool.py --replay`, one simulator per process). That replay is the

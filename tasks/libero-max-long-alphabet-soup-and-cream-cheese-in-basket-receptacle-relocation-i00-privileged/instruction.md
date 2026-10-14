@@ -3,7 +3,7 @@
 A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Put both the alphabet soup and the cream cheese box in the basket.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_10 task (camera_view_angle), with one online
 event: the first time the gripper comes within 0.18 m of `alphabet_soup_1`, LIBERO-MAX changes the scene
-once (the receptacle `basket_1` is moved 0.06 m, direction (0, -1)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).
+once (the receptacle `basket_1` is moved 0.06 m, direction (0, -1); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).
 
 ## What you hand in
 `/app/output/trajectory.npz` with key `actions`: LIBERO's native control steps, shape `(T, 7)`, 1 ≤ T ≤ 520

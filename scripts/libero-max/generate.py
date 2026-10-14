@@ -138,6 +138,48 @@ def nums(v, fmt="{:g}") -> str:
     return "(" + ", ".join(fmt.format(round(float(x), 3)) for x in v) + ")"
 
 
+# A LIBERO-MAX move is a jump of one entity (libero_backend._move_object sets that object's position, nothing else).
+TELEPORT = ("it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object "
+            "the physics pushes the two apart")
+# Where a case's sentence and its scene need a word more (board 0086 / 0113): the note follows the task sentence in both
+# instructions, and its Change Log entry ends both READMEs. LIBERO-PRO's own files (bddl, the caddy's asset) are the source.
+_PLATES = ("Left and right are LIBERO's, as seen from the front of the table, facing the robot: the left plate (`plate_1`, "
+           "the goal's) is the one on the robot's right, the right plate (`plate_2`) the one on the robot's left "
+           "(LIBERO-PRO's scene file puts them in `plate_left_region` / `plate_right_region`, 0.3 m to either side).")
+_CADDY = ("The caddy has a large cell at each end and, between them, two narrow cells: the front one and the back one, which "
+          "runs along the caddy's tall wall. The back compartment is that narrow back cell (`desk_caddy_1_back_contain_region`, "
+          "about 5.5 cm across): the mug (about 9 cm wide) does not fit down into it. LIBERO's In tests only the mug's origin "
+          "against the region's box (its top is about 15 cm above the table) and its contact with the caddy, so a mug resting "
+          "on top of the back cell's opening, its origin just inside the top of that box, counts; a mug in any other cell "
+          "does not.")
+_BOWL_MOVED = ("LIBERO-PRO's initial-pose variant moved the target bowl (`akita_black_bowl_1`, the goal's) 0.17 m away from the "
+               "robot and 0.06 m to the robot's right of where the sentence puts it, and turned it 45 degrees")
+CASE_NOTES = {
+    "pro-camera-view-angle-10-t04-i08-camera_shift-d1-p195": _PLATES,
+    "pro-camera-view-angle-10-t04-i09-illumination_switch-d0-p195": _PLATES,
+    "pro-position-10-t04-i00-visual_theme_switch-d1-p195": _PLATES,
+    "pro-semantic-10-t04-i09-visual_theme_switch-d1-p195": _PLATES,
+    "pro-task-10-t05-i00-illumination_switch-d1-p195": _CADDY,
+    "pro-task-10-t05-i04-camera_shift-d1-p195": _CADDY,
+    "pro-initial-pose-position-angle-spatial-t03-i00-sensor_noise_onset-d1-p195": (
+        _BOWL_MOVED + ": it starts on the table, not on the cookies box (no bowl is on the box). The bowl to move is still that "
+        "one; the other black bowl stands on top of the wooden cabinet."),
+    "pro-initial-pose-position-angle-spatial-t06-i01-target_relocation-d0-p195": (
+        _BOWL_MOVED + ": it no longer stands right next to the cookies box. The bowl to move is still that one; the other "
+        "black bowl stands on the stove."),
+}
+CHANGE_NOTE = ("- 2026-10-14 (board 0113, from board 0086): the instruction adds a note after the task sentence, where the "
+               "sentence alone misleads in this LIBERO-PRO variant: {what}. Text only: the instance, the event, the reference "
+               "solution, LIBERO's success check and the verifier are unchanged, so the task keeps its name.\n")
+CHANGE_WHAT = {_PLATES: "which plate is the left one (LIBERO's left is as seen facing the robot, the robot's right)",
+               _CADDY: "which cell is the caddy's back compartment, that the mug does not fit into it, and what LIBERO's In accepts",
+               }
+CHANGE_TELEPORT = ("- 2026-10-14 (board 0113, from board 0086): the instruction says that a moved {what} jumps alone: what "
+                   "rests in or on it stays where it was (LIBERO-MAX moves one entity; board 0086 saw a basket jump through "
+                   "a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check "
+                   "and the verifier are unchanged, so the task keeps its name.\n")
+
+
 def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     """(short words, what happens) for a LIBERO-MAX change."""
     obj = f"`{ch.get('object')}`"
@@ -149,7 +191,7 @@ def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     if change_type == "receptacle_relocation":
         return (
             "receptacle relocation",
-            f"the receptacle {obj} is moved {ch['distance_m']:g} m, direction {nums(ch['direction_xy'])}",
+            f"the receptacle {obj} is moved {ch['distance_m']:g} m, direction {nums(ch['direction_xy'])}; {TELEPORT}",
         )
     if change_type == "obstacle_insertion":
         return (
@@ -334,13 +376,21 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         "n_actions": rep["live"]["control_steps"],
         "event_step": rep["live"]["event_step"],
         "live_sha": rep["live"]["state_sha"][:12],
+        "case_note": (" " + CASE_NOTES[case["case_id"]]) if case["case_id"] in CASE_NOTES else "",
     }
+    note = CASE_NOTES.get(case["case_id"])
+    what = CHANGE_WHAT.get(note, "the target bowl is not where the sentence puts it, and which bowl is meant") if note else None
+    priv_log = CHANGE_NOTE.format(what=what) if note else ""
+    std_log = priv_log
+    if case["scenario"]["change_type"] == "receptacle_relocation":
+        priv_log += CHANGE_TELEPORT.format(what="receptacle")
+    std_log += CHANGE_TELEPORT.format(what="object or receptacle")   # the standard text is the same for every case
 
     p = out / f"{name}-privileged"
     reset_dir(p)
     put(p / "task.toml", render("task.toml", values))
     put(p / "instruction.md", render("instruction.md", values))
-    put(p / "README.md", render("README.md", values))
+    put(p / "README.md", render("README.md", {**values, "change_log_extra": priv_log}))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/lmx_tool.py", src=SHARED / "lmx_tool.py")
     put(p / "environment/instance.json", src=fz / "instance.json")
@@ -357,7 +407,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     reset_dir(s)
     put(s / "task.toml", render("standard/task.toml", values))
     put(s / "instruction.md", render("standard/instruction.md", values))
-    put(s / "README.md", render("standard/README.md", values))
+    put(s / "README.md", render("standard/README.md", {**values, "change_log_extra": std_log}))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)
     put(s / "environment/docker-compose.yaml", compose(instruction, episode))
     put(s / "environment/rcb_client.py", src=SHARED / "standard/rcb_client.py")

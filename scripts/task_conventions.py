@@ -86,7 +86,7 @@ NO_TWIN = {"robodojo-fold-clothes-i00-standard": "— (none: standard only, grad
            "robodojo-pour-liquid-into-cup-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
-               "Base image"}
+               "Real time", "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
@@ -95,6 +95,11 @@ RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
 # PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` in task.toml (same list: ci_checks/check-dynamics.py)
 DYNAMICS_FILE = Path(__file__).resolve().parent / "task_dynamics.toml"
 DYNAMICS = ("static", "dynamic")
+# PROTOCOL §4b: a standard-realtime task states its slowdown S, `[metadata] slowdown` in task.toml, written from its sim
+# service's `RCB_SLOWDOWN` default (environment/docker-compose.yaml); its reset budget is the `RCB_RESET_BUDGET` default
+# there (same rules: ci_checks/check-realtime.py)
+SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
+RESET_RE = re.compile(r'RCB_RESET_BUDGET:\s*"?\$\{RCB_RESET_BUDGET:-([0-9]+)\}"?')
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
     "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
@@ -852,8 +857,14 @@ def render_readme(task: Path) -> str:
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")
               + (f" (allowed seeds: {seeds_text(sd['allowed'])}; §2.13)" if sd["allowed"] != [sd["default"]] else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
-             ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (PROTOCOL §5)"),
-             ("Base image", f"`{image_of(task)}`")]
+             ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (PROTOCOL §5)")]
+    rt = realtime_of(task)
+    if rt is not None:
+        head.append(("Real time", f"slowdown S = {slowdown_text(rt[0])} (the world runs at 1/S of real speed: one control "
+                                  f"step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default)"
+                                  + (f"; reset budget {rt[1]} (`RCB_RESET_BUDGET`'s default)" if rt[1] is not None else "")
+                                  + " (PROTOCOL §4b)"))
+    head.append(("Base image", f"`{image_of(task)}`"))
     used = set()
     task_text = intro or meta.get("task", {}).get("description", "")
     difficulty = secd.get("Difficulty") or default_difficulty(task, rowd)
@@ -997,6 +1008,41 @@ def normalize_dynamics(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def realtime_of(task: Path) -> tuple[float, int | None] | None:
+    """A standard-realtime task's (slowdown S, reset budget) as its sim service starts by default: the `RCB_SLOWDOWN`
+    and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (PROTOCOL §4b). None: not a standard-realtime task,
+    or a service without `RCB_SLOWDOWN` (ci_checks/check-realtime.py fails a 2.3 one)."""
+    if mode_of(task) != "standard-realtime":
+        return None
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    m, r = SLOWDOWN_RE.search(c), RESET_RE.search(c)
+    if not m:
+        return None
+    return float(m.group(1)), (int(r.group(1)) if r else None)
+
+
+def slowdown_text(S: float) -> str:
+    return f"{S:g}"
+
+
+def normalize_slowdown(task: Path) -> None:
+    """Writes `slowdown = S` (PROTOCOL §4b) right after `dynamics` (else `mode`) in `[metadata]` of a standard-realtime
+    task, from its sim service's `RCB_SLOWDOWN` default, replacing an earlier line."""
+    rt = realtime_of(task)
+    p = task / "task.toml"
+    s = re.sub(r'(?m)^slowdown = .*\n', "", p.read_text())
+    if rt is not None:
+        line = f"slowdown = {slowdown_text(rt[0])}"
+        line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md "
+                                                 "§4b); RCB_SLOWDOWN's default\n")
+        s, n = re.subn(r'(?m)^(dynamics = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+        if n != 1:
+            s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+        if n != 1:
+            raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
+    write_if_changed(p, s)
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
@@ -1004,6 +1050,7 @@ def normalize(task: Path) -> None:
         shutil.rmtree(task / "results")
     normalize_toml(task)
     normalize_dynamics(task)
+    normalize_slowdown(task)
     normalize_cutoff(task)
     normalize_resources(task)
     normalize_seeds(task)
