@@ -113,6 +113,26 @@ BASE_ARGS: dict[str, Any] = {
 }
 
 
+class _SortedGlob:
+    """While a scene is built, glob.glob / glob.iglob return their matches sorted. Four RoboTwin tasks (place_a2b_left,
+    place_a2b_right, place_object_scale, place_object_stand: envs/<task>.py load_actors) list an object's model files
+    with glob.glob and then draw one with the seeded np.random.choice; glob returns the file system's directory order,
+    which differs between hosts (and image layers), so one seed built a different object on another host and the frozen
+    instance's hash check failed there (board 0086 claim 5; never rebuilt off the reference workstation). Sorted, the
+    draw depends on the seed alone. No other task of ours lists files while it builds its scene."""
+
+    def __enter__(self):
+        import glob
+        self._glob, self._orig = glob, (glob.glob, glob.iglob)
+        glob.glob = lambda *a, **k: sorted(self._orig[0](*a, **k))
+        glob.iglob = lambda *a, **k: iter(sorted(self._orig[1](*a, **k)))
+        return self
+
+    def __exit__(self, *exc):
+        self._glob.glob, self._glob.iglob = self._orig
+        return False
+
+
 def _chdir_root() -> None:
     # RoboTwin resolves assets/config paths relative to the repo root and via ROOT_PATH
     if os.getcwd() != ROBOTWIN_ROOT and os.path.isdir(ROBOTWIN_ROOT):
@@ -218,7 +238,8 @@ class Session:
         if self.enable_render:
             sapien.render.set_camera_shader_dir(self.render_shader)
         args = _build_args(self.task, self.embodiment, self.seed)
-        self.env.setup_demo(**args)
+        with _SortedGlob():                          # the object draw depends on the seed alone, not the host's directory order
+            self.env.setup_demo(**args)
         if self.enable_render:  # setup_scene() switches the shader to ray tracing; put it back for cheap frames
             sapien.render.set_camera_shader_dir(self.render_shader)
         self._raw_scene = self.env.scene

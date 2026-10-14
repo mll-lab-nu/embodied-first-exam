@@ -9,6 +9,9 @@ Every family here has tasks. Eleven further families without a valid positive ar
 `criterion` (`mk_tasks.py --instance <its instance.json> <family>`).
 DROPPED lists the families that are not coming back, with the reason.
 
+change_log (optional): {"priv": [...], "std": [...]}, README Change Log entries of this family alone, after those of every
+family (mk_tasks.CHANGE_LOG).
+
 host_cpu_vendor (optional): the family's frozen instance is rebuilt within tolerance only on CPUs of this vendor (the
 `vendor_id` of /proc/cpuinfo; docs/benchmarks/robowits.md, Hosts). mk_tasks.py writes it to `[metadata].host_cpu_vendor`
 of both tasks and to their READMEs, for a scheduler to read; on another vendor's host the trial ends as infra_error = 1.
@@ -62,6 +65,9 @@ FAMILIES = {
                  "Neither the ball nor the bottle has fallen more than 5 cm below the table top."],
             unchecked="how the ball got there (the blue container and the funnel are not referenced), whether a gripper holds anything, and any speed",
             text_vs_code="\"Into the red bottle\" means deep inside it: seen from above inside the bottle's outline, with the ball's top more than 11 cm below the bottle's top and the ball off the bottle's base. \"From the blue container\" is not checked."),
+        priv_note="The red bottle's base is thin in the simulator (its collision shape is about 3.5 mm thick, and the bottle is fixed to the table): a ball that falls fast down the bottle can pass through the base onto the table, which fails the task. In one measured case about half of the pours did (16 replays of one pouring trajectory with tiny noise, 9 balls through the base): let the ball in slowly.",
+        std_note="The red bottle's base is thin in the simulator (its collision shape is about 3.5 mm thick, and the bottle is fixed to the table): a ball that falls fast down the bottle can pass through the base onto the table, which fails the task. In one measured case about half of the pours did (16 replays of one pouring trajectory with tiny noise, 9 balls through the base): let the ball in slowly.",
+        change_log={"priv": ["2026-10-14 (board 0113, from board 0086): the instruction says that the bottle's base is thin in the simulator and a fast-falling ball can pass through it (board 0086: a privileged trial measured 9 of 16 slightly perturbed replays of one pour losing the ball through the base; every standard run failed). Text only: the scene, the frozen instance, the tooling, the predicate and the verifier are unchanged, so the task keeps its name. A thicker base would change the frozen scene (not done)."], "std": ["2026-10-14 (board 0113, from board 0086): the instruction says that the bottle's base is thin in the simulator and a fast-falling ball can pass through it (board 0086: a privileged trial measured 9 of 16 slightly perturbed replays of one pour losing the ball through the base; every standard run failed). Text only: the scene, the frozen instance, the tooling, the predicate and the verifier are unchanged, so the task keeps its name. A thicker base would change the frozen scene (not done)."]},
     ),
     "ball_onto_tower": dict(
         status="pr", rid="17-ball-onto-tower", eval_index=0, blenderkit=True, backend="cpu", oracle="none",

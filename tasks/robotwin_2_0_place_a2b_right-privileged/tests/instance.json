@@ -2,7 +2,7 @@
  "task": "place_a2b_right",
  "seed": 28831,
  "embodiment": "aloha-agilex",
- "state_sha": "90b641f66006",
+ "state_sha": "1ed025a10f0d",
  "text": "Use appropriate arm to place object A on the right of object B.",
  "n_active_joints": 16
 }

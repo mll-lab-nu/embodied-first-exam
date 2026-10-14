@@ -31,6 +31,7 @@ simulator = "maniskill"
 robot = "franka-panda"
 family = "robopaint_acrylic_redfuji"
 mode = "standard"                  # camera RGB + proprioception only; no sheet readout, no score, no reset, no brush model
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
 oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 17225 of the 51700 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation)."

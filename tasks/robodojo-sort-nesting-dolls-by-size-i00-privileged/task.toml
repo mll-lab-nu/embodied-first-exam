@@ -4,7 +4,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/robodojo-sort-nesting-dolls-by-size-i00-privileged"
-description = "RoboDojo sort_nesting_dolls_by_size (Generalization; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Arrange the five nesting dolls upright in a straight row, ordered by size, from smallest to largest (left to right as the instruction says), and return the arms to their start pose. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/sort_nesting_dolls_by_size_0.json; graded by RoboDojo's own reward check."
+description = "RoboDojo sort_nesting_dolls_by_size (Generalization; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/sort_nesting_dolls_by_size_0.json; graded by RoboDojo's own reward check."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]
 
@@ -16,6 +16,7 @@ simulator = "robodojo"            # RoboDojo @ cb2a37d on its Isaac Lab 2.3 fork
 robot = "arx-x5-bimanual"
 family = "sort_nesting_dolls_by_size"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142"
 expert_time_estimate_hours = 2.0

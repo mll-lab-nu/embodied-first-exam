@@ -51,6 +51,13 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   channel is an absolute target, so the grip sites stay within about a millimetre, but the IK's posture term can still
   move the waist and elbows by a few hundredths of a radian while you watch.
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
+- The hands: each hand command is the position target, in radians, of that finger's joints (`thumb_flexion` drives
+  two thumb joints, `thumb_rotation` one): 0 is the straight, open finger, larger values bend it toward the palm
+  (the hand closes), and every finger joint stops at the end of its range (1.22 to 1.74 rad), so values below 0 or
+  above about 1.7 change nothing more. The grip site that the pose targets place is the origin of the hand's mounting
+  frame (`gripper0_right_grip_site`, `gripper0_left_grip_site`), at the wrist end of the hand, not a point between
+  the fingertips. The four small pink spheres beside each hand are part of the robot model (visual markers
+  `robot0_<side>_pinch_spheres_0..3`, about 13.5 cm from its grip site, with no collision): they are not objects.
 - World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
   frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame.
   The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.66859, -2.14823, 0.90329) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].

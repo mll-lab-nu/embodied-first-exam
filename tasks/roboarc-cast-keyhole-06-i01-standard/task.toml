@@ -32,6 +32,7 @@ robot = "aloha-2"
 family = "cast_keyhole"
 difficulty = "hard"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.4"
 oracle = "full"
 grasp = "assisted (the contact_weld_v1 pre-weld: the grippers start closed on keyhole_gold, keyhole_silver)"
