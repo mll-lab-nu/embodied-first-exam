@@ -623,7 +623,7 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(agent_time(), 1)}   # from the agent's first request, as time_s (/spec.budget.clock)
 
 
 def agent_time() -> float:
