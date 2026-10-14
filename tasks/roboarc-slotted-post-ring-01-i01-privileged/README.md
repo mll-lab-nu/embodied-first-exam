@@ -18,7 +18,7 @@ RoboARC slotted_post_ring (ALOHA 2, MuJoCo): produce one replayable trajectory. 
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (contact_weld_v1).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `bd9a249080b6d1a9…`) to `/app/output/`: the MuJoCo reference (this design's oracle, recorded on MuJoCo), which the verifier scored 1 in two fresh-process replays on a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance (2026-10-13; simulator source 7d0e5039, tooling 646f914f).
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `bd9a249080b6d1a9…`) to `/app/output/`: the MuJoCo reference (this design's oracle, recorded on MuJoCo), which the verifier scored 1 in two fresh-process replays on the release image eai-roboarc 0.1.0 (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in a fresh process, twice; pass iff the
@@ -33,7 +33,7 @@ trajectory's rows is reported (`strict_goal_reached`), not required.
 A trajectory may have at most 192000 rows (`RCB_MAX_STEPS`: two replays must fit the verifier's timeout; a longer one is
 `bad_trajectory`).
 
-`nop` scored 0 on this base in both modes (a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py); 2026-10-13).
+`nop` scored 0 on this base in both modes (the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py); 2026-10-14).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -82,4 +82,4 @@ Separate and place the entire removable metal ring inside the green dashed goal 
 - Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
 
 ### Change Log
-- 2026-10-13: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of slotted_post_ring: a ring on a slotted post (below easy). Its task files start from the Genesis 1.2.1 task `horseshoe-ring-very-easy-i00` (privileged mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.
+- 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of slotted_post_ring: a ring on a slotted post (below easy). Its task files start from the Genesis 1.2.1 task `horseshoe-ring-very-easy-i00` (privileged mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.

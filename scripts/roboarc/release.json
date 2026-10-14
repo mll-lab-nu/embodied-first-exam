@@ -51,20 +51,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "71572ecef0ce2db6ed039eca0136ed9c60da743493d4cbb33e2faa8b4a6736a4"
     },
     "standard": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "71572ecef0ce2db6ed039eca0136ed9c60da743493d4cbb33e2faa8b4a6736a4"
     }
    },
@@ -75,8 +75,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "blanket-flatten-very-easy-i00",
    "grasp_rules": "assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets",
@@ -119,8 +119,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
    "variation": "very_easy",
@@ -165,8 +165,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
    "variation": "easier",
@@ -199,8 +199,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
    "variation": "easy",
@@ -233,8 +233,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
    "variation": "medium",
@@ -257,6 +257,7 @@
     },
     "standard": {
      "status": "not_run",
+     "rows_over": 3,
      "trajectory_sha256": "4f9e875f4d998c10faa0b9c5279282d472a650fcfafb6a349348be86cb0e92b5"
     }
    },
@@ -266,7 +267,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
@@ -288,20 +290,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "3aa46e4621290e2810a7d8814d039c77b24a9e8bcd231c4347822dc55cba90a9"
     },
     "standard": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "3aa46e4621290e2810a7d8814d039c77b24a9e8bcd231c4347822dc55cba90a9"
     }
    },
@@ -312,8 +314,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
    "variation": "blanket_fold_very_easy",
@@ -352,8 +354,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
    "variation": "blanket_fold_easier",
@@ -371,11 +373,23 @@
    "creation_source": "de81088e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "6d53dfccc78c3c756031c34fee7521c48da81949410fa1915b189790e024431b"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "6d53dfccc78c3c756031c34fee7521c48da81949410fa1915b189790e024431b"
     }
    },
@@ -385,7 +399,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
@@ -404,11 +419,23 @@
    "creation_source": "de81088e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "aac99e2d67573b467d9fe75d7c8f2a4260e18117149fa3950d65b906f1ec36c8"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "aac99e2d67573b467d9fe75d7c8f2a4260e18117149fa3950d65b906f1ec36c8"
     }
    },
@@ -418,7 +445,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
@@ -437,11 +465,18 @@
    "creation_source": "de81088e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "9c23b599ab51f44ebc097bed86cd4293f9bc7c10d1bf2f31cf38a0c1235f0ca8"
     },
     "standard": {
-     "status": "not_run",
+     "status": "failed",
+     "rows_over": 1,
      "trajectory_sha256": "9c23b599ab51f44ebc097bed86cd4293f9bc7c10d1bf2f31cf38a0c1235f0ca8"
     }
    },
@@ -451,7 +486,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "blanket-flatten-very-easy-i00",
@@ -497,8 +533,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "buzz-wire-3d-very-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -513,11 +549,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "909bf1b888634757c708ee3196379a57fcba4f41d7c3b4a77aaa4ae4309e8e6d"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "909bf1b888634757c708ee3196379a57fcba4f41d7c3b4a77aaa4ae4309e8e6d"
     }
    },
@@ -527,7 +575,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "buzz-wire-3d-easier-i00",
@@ -550,8 +599,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "buzz-wire-3d-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -573,8 +622,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "buzz-wire-3d-medium-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -596,8 +645,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "buzz-wire-3d-hard-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -612,11 +661,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "96e66587740299d8916f0c0482ffbb6996c7237b2c4e23fe3b1e1c30a4513723"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "96e66587740299d8916f0c0482ffbb6996c7237b2c4e23fe3b1e1c30a4513723"
     }
    },
@@ -626,7 +687,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "buzz-wire-3d-very-easy-i00",
@@ -644,11 +706,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ba31bfcecae418c6b3c5897fb6f8b04a79050c40fe880ea6d2162f99e5aebffb"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ba31bfcecae418c6b3c5897fb6f8b04a79050c40fe880ea6d2162f99e5aebffb"
     }
    },
@@ -658,7 +732,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "buzz-wire-3d-easier-i00",
@@ -676,11 +751,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "3a2e970b5b775f6b7488a7353cd6c0151aa4315491567ac6b4381ffa0dd0e49b"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "3a2e970b5b775f6b7488a7353cd6c0151aa4315491567ac6b4381ffa0dd0e49b"
     }
    },
@@ -690,7 +777,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "buzz-wire-3d-easier-i00",
@@ -708,11 +796,18 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "da193646f23eafa6e412f488ffd471974f152326e4c7009f9f3cbed3917be48b"
     },
     "standard": {
      "status": "speed_rule",
+     "rows_over": 51,
      "trajectory_sha256": "da193646f23eafa6e412f488ffd471974f152326e4c7009f9f3cbed3917be48b"
     }
    },
@@ -722,7 +817,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "buzz-wire-3d-easier-i00",
@@ -740,11 +836,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "5c22278855762df455562c72690af1df8fd3a6d4925ed7fb755936c60c2e7957"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "5c22278855762df455562c72690af1df8fd3a6d4925ed7fb755936c60c2e7957"
     }
    },
@@ -754,7 +862,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "buzz-wire-3d-easier-i00",
@@ -772,11 +881,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "0dddbaa3a7641a5981f4deb477e99dd7d9c77da57132a6723a4c5aadb8354ecd"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "0dddbaa3a7641a5981f4deb477e99dd7d9c77da57132a6723a4c5aadb8354ecd"
     }
    },
@@ -786,7 +907,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-coil-very-easy-i00",
@@ -802,11 +924,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "c534f263e46a6e6fa0aa1d0ddb4e22361d88e3ea9ae64047bad47a4dfd226989"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "c534f263e46a6e6fa0aa1d0ddb4e22361d88e3ea9ae64047bad47a4dfd226989"
     }
    },
@@ -816,7 +950,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-coil-easier-i00",
@@ -832,11 +967,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "041d5a8c9f3504b2cf15edd6462944eb2c0d1cbd7954907357cddf22d6ebea23"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "041d5a8c9f3504b2cf15edd6462944eb2c0d1cbd7954907357cddf22d6ebea23"
     }
    },
@@ -846,7 +993,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-coil-easy-i00",
@@ -862,11 +1010,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "224d801831a54dc6963e41d2a01dd88c9be905fd69ef836e14ef22ca5920359c"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "224d801831a54dc6963e41d2a01dd88c9be905fd69ef836e14ef22ca5920359c"
     }
    },
@@ -876,7 +1036,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-coil-medium-i00",
@@ -892,11 +1053,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "fcd916a5a083fd3818f6b759421a3dcb2487f0be5e6611fc6047ffcea598b909"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "fcd916a5a083fd3818f6b759421a3dcb2487f0be5e6611fc6047ffcea598b909"
     }
    },
@@ -906,7 +1079,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-coil-hard-i00",
@@ -922,11 +1096,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "124f8aa7612977210298d20fc5a2aa017acca0650a38f454eadbc9e030587105"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "124f8aa7612977210298d20fc5a2aa017acca0650a38f454eadbc9e030587105"
     }
    },
@@ -936,7 +1122,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "cast-coil-very-easy-i00",
@@ -954,11 +1141,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "05d4c6e04540850c7b3207cba9eddf1b5154f686b65d8b792f91fa188578329b"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "05d4c6e04540850c7b3207cba9eddf1b5154f686b65d8b792f91fa188578329b"
     }
    },
@@ -968,7 +1167,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "cast-coil-easier-i00",
@@ -986,11 +1186,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "4b9e93412511cdfcf9c0f5cd03dc935b70419e3268ec44221864602b2d6a51c9"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "4b9e93412511cdfcf9c0f5cd03dc935b70419e3268ec44221864602b2d6a51c9"
     }
    },
@@ -1000,7 +1212,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "cast-coil-easy-i00",
@@ -1018,11 +1231,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8c51b94726651dbf8da93c2168260800a874c156e3cea1efaf9d6102061ae4c6"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8c51b94726651dbf8da93c2168260800a874c156e3cea1efaf9d6102061ae4c6"
     }
    },
@@ -1032,7 +1257,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-keyhole-very-easy-i00",
@@ -1048,11 +1274,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d10bf9156d5448aa95617ec1736dd886d401b808050fdcbc84575071448e7e70"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d10bf9156d5448aa95617ec1736dd886d401b808050fdcbc84575071448e7e70"
     }
    },
@@ -1062,7 +1300,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-keyhole-easier-i00",
@@ -1078,11 +1317,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d60c06e8a6956e07995285dba3196a315d99f95bc8960bbed3d6138372b627cc"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d60c06e8a6956e07995285dba3196a315d99f95bc8960bbed3d6138372b627cc"
     }
    },
@@ -1092,7 +1343,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-keyhole-easy-i00",
@@ -1108,11 +1360,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "75339998fcc59f596d629e22bb869e2510943541511e871547c53694ed4cb920"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "75339998fcc59f596d629e22bb869e2510943541511e871547c53694ed4cb920"
     }
    },
@@ -1122,7 +1386,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-keyhole-medium-i00",
@@ -1138,11 +1403,23 @@
    "creation_source": "aae08c2e",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "b704b570625ef6a7eeff0dc8669a2b752031c0887b013e71f0633b368279e69b"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "b704b570625ef6a7eeff0dc8669a2b752031c0887b013e71f0633b368279e69b"
     }
    },
@@ -1152,7 +1429,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "cast-keyhole-hard-i00",
@@ -1168,11 +1446,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ecc97db82dd4714dd1ef7888dd544132c7e7b1e9522aac3811f52780920a2ba6"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ecc97db82dd4714dd1ef7888dd544132c7e7b1e9522aac3811f52780920a2ba6"
     }
    },
@@ -1182,7 +1472,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "cast-keyhole-easy-i00",
@@ -1200,11 +1491,23 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f5d42fae2632b0a0458c869771b0baa430a1b6ca8b7183b3feaf86baa51dbcaf"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f5d42fae2632b0a0458c869771b0baa430a1b6ca8b7183b3feaf86baa51dbcaf"
     }
    },
@@ -1214,7 +1517,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "fiber-bundling-very-easy-i00",
@@ -1230,11 +1534,23 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "b9ec2647ea46b47049bea4c4e2703609a239a8c7c7b37b13b8aea21b31946cc1"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "b9ec2647ea46b47049bea4c4e2703609a239a8c7c7b37b13b8aea21b31946cc1"
     }
    },
@@ -1244,7 +1560,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "fiber-bundling-easier-i00",
@@ -1260,11 +1577,23 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f47644b719ab563e89df9f150a5796c3011110d69176df878b1c8321008406af"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f47644b719ab563e89df9f150a5796c3011110d69176df878b1c8321008406af"
     }
    },
@@ -1274,7 +1603,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "fiber-bundling-easy-i00",
@@ -1290,11 +1620,23 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ed272ef816d529c886a57c76f8f71a58a0a3e5ee721585178bf554dcd4e570eb"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ed272ef816d529c886a57c76f8f71a58a0a3e5ee721585178bf554dcd4e570eb"
     }
    },
@@ -1304,7 +1646,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "fiber-bundling-medium-i00",
@@ -1326,7 +1669,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "fiber-bundling-hard-i00",
@@ -1342,11 +1686,23 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "311fccc9319058e8c94ee951e4ff7a00941caa6bd04c5589b9891110ab4597c5"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "311fccc9319058e8c94ee951e4ff7a00941caa6bd04c5589b9891110ab4597c5"
     }
    },
@@ -1356,7 +1712,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "fiber-bundling-very-easy-i00",
@@ -1374,7 +1731,13 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "dcef00e78a89db269bc9aad70375b40c7b028a5268a0f09e0245cc8b90ec22ae"
     },
     "standard": {
@@ -1388,7 +1751,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "fiber-bundling-easier-i00",
@@ -1406,7 +1770,13 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "913222f403125c837f0717ecdd34c828fcc83c802081df5a26831fc046260423"
     },
     "standard": {
@@ -1420,7 +1790,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "fiber-bundling-easy-i00",
@@ -1438,7 +1809,13 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "1cb13efa19711a18beb589fab6fb8f9008110bf76a20ea0eb7ed6a9def0cb75a"
     },
     "standard": {
@@ -1452,7 +1829,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "fiber-bundling-medium-i00",
@@ -1470,7 +1848,13 @@
    "creation_source": "f24ccdce",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "450ae3be2a20107b9c7ce529070f07f35044cc8cb64164e5bd7401383dbe8f44"
     },
     "standard": {
@@ -1484,7 +1868,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "fiber-bundling-hard-i00",
@@ -1529,8 +1914,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "hedgehog-in-cage-very-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -1548,20 +1933,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "fa0fa4c45427439a75ba06bb13dd3892d1c426bae7f45db0dcedc11da90fbfe3"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "fa0fa4c45427439a75ba06bb13dd3892d1c426bae7f45db0dcedc11da90fbfe3"
     }
    },
@@ -1572,8 +1957,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "hedgehog-in-cage-easier-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -1615,8 +2000,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "hedgehog-in-cage-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -1658,8 +2043,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "hedgehog-in-cage-medium-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
@@ -1674,11 +2059,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d1d662ee9af0298b68780670637785ae0364a23cf243c18956c13f622873257c"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d1d662ee9af0298b68780670637785ae0364a23cf243c18956c13f622873257c"
     }
    },
@@ -1688,7 +2085,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "hedgehog-in-cage-hard-i00",
@@ -1731,8 +2129,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "hedgehog-in-cage-very-easy-i00",
    "variation": "hedgehog_in_cage_window_change",
@@ -1749,11 +2147,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "523c1406649f6d0fd4e49ee84e9fc26f311ac8cd1b0602f8e934a1ea97627362"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "523c1406649f6d0fd4e49ee84e9fc26f311ac8cd1b0602f8e934a1ea97627362"
     }
    },
@@ -1763,7 +2173,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "hedgehog-in-cage-hard-i00",
@@ -1781,11 +2192,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "23c2871db1b55c6b140e64d5d5bcbd4a8fb3509c9799474dcbda19d63e00ec2e"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "23c2871db1b55c6b140e64d5d5bcbd4a8fb3509c9799474dcbda19d63e00ec2e"
     }
    },
@@ -1795,7 +2218,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "template": "hedgehog-in-cage-very-easy-i00",
@@ -1813,11 +2237,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "665961f263543849411a17a144dedc86c57c6c118c32779558454fa6559f52df"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "665961f263543849411a17a144dedc86c57c6c118c32779558454fa6559f52df"
     }
    },
@@ -1827,7 +2263,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "horseshoe-ring-very-easy-i00",
@@ -1843,11 +2280,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "e48a3428c02b275c43b80282968ad0f0033faf463c0900fbecb6b1db5eaf7c28"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "e48a3428c02b275c43b80282968ad0f0033faf463c0900fbecb6b1db5eaf7c28"
     }
    },
@@ -1857,7 +2306,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "horseshoe-ring-easier-i00",
@@ -1873,11 +2323,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "cf3311b6d63b6e8f8dba3c0d0377d2b58bc19482c45a1636627a3dde999c3fa4"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "cf3311b6d63b6e8f8dba3c0d0377d2b58bc19482c45a1636627a3dde999c3fa4"
     }
    },
@@ -1887,7 +2349,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "horseshoe-ring-easy-i00",
@@ -1903,11 +2366,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "85e7befadb5aa27ec66a03a18aa36c1274c8fa9be689cd76ebe5259ee1de3730"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "85e7befadb5aa27ec66a03a18aa36c1274c8fa9be689cd76ebe5259ee1de3730"
     }
    },
@@ -1917,7 +2392,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "horseshoe-ring-medium-i00",
@@ -1933,11 +2409,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8d07c42d3f58aba19bcf77e197645650b004950110dd307bee99220f107a61f0"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8d07c42d3f58aba19bcf77e197645650b004950110dd307bee99220f107a61f0"
     }
    },
@@ -1947,7 +2435,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "horseshoe-ring-hard-i00",
@@ -1964,22 +2453,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8a52c984f247de9a4dd3deede596d403d6fe775b0a07f763a8d2bae44e10b962"
     },
     "standard": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8a52c984f247de9a4dd3deede596d403d6fe775b0a07f763a8d2bae44e10b962"
     }
    },
@@ -1990,8 +2479,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "interlocked-claws-very-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
@@ -2007,22 +2496,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "cc36baffc5e72ee71990e0f57a787f87fa4b394593f38722f2a2d057e3c71884"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "cc36baffc5e72ee71990e0f57a787f87fa4b394593f38722f2a2d057e3c71884"
     }
    },
@@ -2033,8 +2522,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "interlocked-claws-easier-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
@@ -2052,20 +2541,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "9b0b72ab379d7de5968dc4c11a040ac8f7de78472b21371e57bb631da36c555b"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "9b0b72ab379d7de5968dc4c11a040ac8f7de78472b21371e57bb631da36c555b"
     }
    },
@@ -2076,8 +2565,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "interlocked-claws-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
@@ -2093,22 +2582,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d9ccaa4056d5ffa20d588d29efd502385f350a7f15ec231ed09d775b32880db1"
     },
     "standard": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d9ccaa4056d5ffa20d588d29efd502385f350a7f15ec231ed09d775b32880db1"
     }
    },
@@ -2119,8 +2608,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "interlocked-claws-medium-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
@@ -2136,22 +2625,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "32c9c70f239325e21ce2118a4b223f76e1f7fed0852f0e4e017d0c2bd351e240"
     },
     "standard": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "32c9c70f239325e21ce2118a4b223f76e1f7fed0852f0e4e017d0c2bd351e240"
     }
    },
@@ -2162,8 +2651,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "interlocked-claws-hard-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (claw_0, claw_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
@@ -2179,22 +2668,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8543c7ac173cd883378fa204d80b8921f042eb28d5c580b8dc02311775cdc822"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8543c7ac173cd883378fa204d80b8921f042eb28d5c580b8dc02311775cdc822"
     }
    },
@@ -2205,8 +2694,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-very-easy-i00",
    "variation": "interlocked_claws_rd_very_easy",
@@ -2224,22 +2713,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "c7ac0b63b4481c0f93df44d2f85dc29ebdadf0d8d0cc3d3ac814a25d816e4899"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "c7ac0b63b4481c0f93df44d2f85dc29ebdadf0d8d0cc3d3ac814a25d816e4899"
     }
    },
@@ -2250,8 +2739,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-easier-i00",
    "variation": "interlocked_claws_rd_easier",
@@ -2269,22 +2758,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "44b93540c6469b833485bcb8e00bd3b2bfce35690c7a2709fce0151a8899e0a2"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "44b93540c6469b833485bcb8e00bd3b2bfce35690c7a2709fce0151a8899e0a2"
     }
    },
@@ -2295,8 +2784,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-easy-i00",
    "variation": "interlocked_claws_rd_easy",
@@ -2314,22 +2803,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f9759055927fccc6843c99c76a095d741ed760f47e187692d6ddd7d0b1dbe625"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f9759055927fccc6843c99c76a095d741ed760f47e187692d6ddd7d0b1dbe625"
     }
    },
@@ -2340,8 +2829,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-medium-i00",
    "variation": "interlocked_claws_rd_medium",
@@ -2359,22 +2848,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ca93a3425e3db2460c9c4122ee6e9b3e395ff1a24545c027591f317ca63b9f02"
     },
     "standard": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "ca93a3425e3db2460c9c4122ee6e9b3e395ff1a24545c027591f317ca63b9f02"
     }
    },
@@ -2385,8 +2874,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-hard-i00",
    "variation": "interlocked_claws_rd_hard",
@@ -2404,22 +2893,22 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "554b7eb29d0087e7d3ca3ce68eee3a72970cc47468c6acb45bf45d06d177f1ac"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "554b7eb29d0087e7d3ca3ce68eee3a72970cc47468c6acb45bf45d06d177f1ac"
     }
    },
@@ -2430,8 +2919,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-easy-i00",
    "variation": "interlocked_claws_cast_abc",
@@ -2449,12 +2938,12 @@
    "evidence": {
     "privileged": {
      "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
      "success": 1,
      "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "f040127465646290a920e959be941f44fb860727d2b6d630a10cce42e3324371"
     },
     "standard": {
@@ -2469,8 +2958,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "interlocked-claws-easy-i00",
    "variation": "interlocked_claws_rotor",
@@ -2514,8 +3003,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "knot-untying-very-easy-i00",
    "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
@@ -2574,8 +3063,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "knot-untying-easier-i00",
    "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
@@ -2610,20 +3099,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "366acc4f8e8a794cf3bed11d3aacb4927a16f287c65e47680ad691d2fc4ca42a"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "366acc4f8e8a794cf3bed11d3aacb4927a16f287c65e47680ad691d2fc4ca42a"
     }
    },
@@ -2634,8 +3123,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "knot-untying-easy-i00",
    "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
@@ -2694,8 +3183,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "knot-untying-medium-i00",
    "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
@@ -2754,8 +3243,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "ported_from": "knot-untying-hard-i00",
    "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
@@ -2787,11 +3276,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d469d3a64e1ff0a28b94e69f4beae65fdd880052c2f7860aaddfffba221e4867"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "d469d3a64e1ff0a28b94e69f4beae65fdd880052c2f7860aaddfffba221e4867"
     }
    },
@@ -2801,7 +3302,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "lock-picking-very-easy-i00",
@@ -2817,11 +3319,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "829b93d19689af4454b0d0fabdca9ca8c1b82ac3ac8836ed94a03e55b68ec6b0"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "829b93d19689af4454b0d0fabdca9ca8c1b82ac3ac8836ed94a03e55b68ec6b0"
     }
    },
@@ -2831,7 +3345,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "lock-picking-easier-i00",
@@ -2847,11 +3362,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "27131b5cc719f7dcfc4d45083b5efd207947b00a6bc97eca15a8437b1ab85693"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "27131b5cc719f7dcfc4d45083b5efd207947b00a6bc97eca15a8437b1ab85693"
     }
    },
@@ -2861,7 +3388,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "lock-picking-easy-i00",
@@ -2877,11 +3405,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "1a123aabc69151d4a87f2a1e99a027f8c13ac477c9ddca9e9360a153c191aba3"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "1a123aabc69151d4a87f2a1e99a027f8c13ac477c9ddca9e9360a153c191aba3"
     }
    },
@@ -2891,7 +3431,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "lock-picking-medium-i00",
@@ -2907,11 +3448,23 @@
    "creation_source": "d1eb6f13",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8bf6a0e983a3d152a6509fbfb7b38525716a3bf6cc62ec1eec06cee0329a0021"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "8bf6a0e983a3d152a6509fbfb7b38525716a3bf6cc62ec1eec06cee0329a0021"
     }
    },
@@ -2921,7 +3474,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "lock-picking-hard-i00",
@@ -2940,20 +3494,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "6465b8c802d197a9052515380dc1a91a21eaac0e9dab5da7db6ac80f6f697663"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "6465b8c802d197a9052515380dc1a91a21eaac0e9dab5da7db6ac80f6f697663"
     }
    },
@@ -2964,8 +3518,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "horseshoe-ring-very-easy-i00",
    "variation": "orbits_very_easy",
@@ -3000,11 +3554,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "c589ff0a979785c84ac6ee146b452df5a1232122da3b59868d4e426154064953"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "c589ff0a979785c84ac6ee146b452df5a1232122da3b59868d4e426154064953"
     }
    },
@@ -3014,7 +3580,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "rope-threading-easy-i00",
@@ -3051,11 +3618,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "7a736bb517f4c9bad73b28878e1b48890f3ab513f3c624d53a57988668d2ffe8"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "7a736bb517f4c9bad73b28878e1b48890f3ab513f3c624d53a57988668d2ffe8"
     }
    },
@@ -3065,7 +3644,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "rope-threading-medium-i00",
@@ -3102,11 +3682,23 @@
    "creation_source": "6fb23e0d",
    "evidence": {
     "privileged": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "6c429cfd38608b6357a9e53d1321330c2f300a540410e2ba60918fb22c02260a"
     },
     "standard": {
-     "status": "not_run",
+     "status": "passed",
+     "success": 1,
+     "deterministic": 1,
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "6c429cfd38608b6357a9e53d1321330c2f300a540410e2ba60918fb22c02260a"
     }
    },
@@ -3116,7 +3708,8 @@
    "physics_engine": "mujoco",
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
-    "status": "not_run",
+    "status": "passed",
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
     "date": "2026-10-14"
    },
    "ported_from": "rope-threading-hard-i00",
@@ -3164,6 +3757,7 @@
     },
     "standard": {
      "status": "speed_rule",
+     "rows_over": 897,
      "trajectory_sha256": "e9c88445e6511b01724ca2d95fe63dd613f4b7c3a7ad2e46ea640f013f4ce110"
     }
    },
@@ -3174,8 +3768,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "rope-threading-easy-i00",
    "variation": "rope_threading_rd_very_easy",
@@ -3224,6 +3818,7 @@
     },
     "standard": {
      "status": "speed_rule",
+     "rows_over": 888,
      "trajectory_sha256": "225ca75416db82eadc4af1ced7e2e0ec07148281f8f448155b0d75e7ef65372f"
     }
    },
@@ -3234,8 +3829,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "rope-threading-easy-i00",
    "variation": "rope_threading_rd_easier",
@@ -3284,6 +3879,7 @@
     },
     "standard": {
      "status": "speed_rule",
+     "rows_over": 1077,
      "trajectory_sha256": "217896a927affcf743e0bfc52fc21809c5c2229b313c50abaccd905b6d8cc3c6"
     }
    },
@@ -3294,8 +3890,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "rope-threading-easy-i00",
    "variation": "rope_threading_rd_easy",
@@ -3344,6 +3940,7 @@
     },
     "standard": {
      "status": "speed_rule",
+     "rows_over": 944,
      "trajectory_sha256": "c739135bdaf1020e601919c40fabb5e931273f4be3e6ecbd543e94b969c68786"
     }
    },
@@ -3354,8 +3951,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "rope-threading-medium-i00",
    "variation": "rope_threading_rd_medium",
@@ -3404,6 +4001,7 @@
     },
     "standard": {
      "status": "speed_rule",
+     "rows_over": 1174,
      "trajectory_sha256": "07e0a507163ffd4f66ce5adb6e89539a8b2272837899b461094c7438c96162cb"
     }
    },
@@ -3414,8 +4012,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "rope-threading-hard-i00",
    "variation": "rope_threading_rd_hard",
@@ -3456,20 +4054,20 @@
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "bd9a249080b6d1a9347876031a64b39ba29ca6c6b9ab9f8f7b18e0fb8d0518d4"
     },
     "standard": {
      "status": "passed",
      "success": 1,
      "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
+     "image": "the release image eai-roboarc 0.1.0",
+     "source": "37aa7ac0",
+     "tooling": "d8692e15",
+     "date": "2026-10-14",
      "trajectory_sha256": "bd9a249080b6d1a9347876031a64b39ba29ca6c6b9ab9f8f7b18e0fb8d0518d4"
     }
    },
@@ -3480,8 +4078,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "horseshoe-ring-very-easy-i00",
    "variation": "slotted_post_ring_very_easy",
@@ -3543,8 +4141,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "horseshoe-ring-easier-i00",
    "variation": "slotted_post_ring_easier",
@@ -3600,8 +4198,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "horseshoe-ring-easy-i00",
    "variation": "slotted_post_ring_easy_chain",
@@ -3657,8 +4255,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "horseshoe-ring-medium-i00",
    "variation": "slotted_post_ring_medium_chain",
@@ -3708,8 +4306,8 @@
    "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
    "nop": {
     "status": "passed",
-    "run": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-13"
+    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
+    "date": "2026-10-14"
    },
    "template": "horseshoe-ring-hard-i00",
    "variation": "slotted_post_ring_hard_chain",
