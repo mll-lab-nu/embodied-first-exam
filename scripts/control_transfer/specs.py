@@ -15,6 +15,7 @@ FAMILIES = [
     "neural-fly-vector-wind-v1",
     "g1",
     "anycar",
+    "anycar-drift",
     "anycar-circuit-lap-v2-silverstone-8",
     "anycar-circuit-lap-v2-monaco-6",
     "anycar-circuit-compact-v3-silverstone-8",
@@ -47,7 +48,12 @@ def spec(name, index):
         value = make_spec(index, name)
         value["family"] = "go2"
         return value
-    if name in ("neural-fly", "neural-fly-general-v1", "neural-fly-general-skydio-v1", "neural-fly-vector-wind-v1"):
+    if name in (
+        "neural-fly",
+        "neural-fly-general-v1",
+        "neural-fly-general-skydio-v1",
+        "neural-fly-vector-wind-v1",
+    ):
         from .neuralfly_spec import make_spec
 
         revision = (
@@ -83,6 +89,22 @@ def spec(name, index):
         from .anycar_spec import make_spec
 
         return make_spec(index)
+    if name == "anycar-drift":
+        from .anycar_drift_spec import make_spec
+
+        value = make_spec(index)
+        value["name"] = name
+        value["public"].update(
+            task_variant=value["task_variant"],
+            feedback="Public course command, 14 noisy sensor/own-action values and 161 images at 10 Hz. No hidden state, plant parameters, seeds, contacts or scores.",
+            command_fields=["radius", "park_x", "park_y", "slot_length", "slot_width"],
+            command_units=["m"] * 5,
+            video_resolution=[1920, 540],
+            video_fps=10,
+            image_sampling="All 161 frames at fixed 0.1-second times from 0 through 16 s, with all 161 noisy telemetry rows.",
+            score="Complete the ordered U-route, then slide near the bay with body lateral speed >0.2 m/s, planar speed >0.6 m/s and sideslip >10 degrees continuously for at least 0.15 s, accumulating at least 0.06 m of lateral slide. Park the entire car envelope inside the bay with x error <0.18 m, y error <0.12 m, yaw error <0.14 rad, speed <0.08 m/s and yaw rate <0.1 rad/s for the final 0.5 s. Collision, rollover, chassis-ground contact or route departure fails. A successful case scores 100*exp(-final_position_error_m/0.25-final_yaw_error_rad/0.3); otherwise zero.",
+        )
+        return value
     family = "linearbot" if name.startswith("linearbot") else name
     base = 10000 + index * 1000
     count = {"neural-fly": 5, "linearbot": 3, "spacecraft": 3, "yam": 9, "g1": 4}[family]
@@ -220,8 +242,15 @@ def spec(name, index):
 
         terrain_spec = make_spec(index)
         bank = {part: terrain_spec[part] for part in ("adaptation", "held_out")}
-        public.update(adaptation_cases=len(bank["adaptation"]), held_out_cases=len(bank["held_out"]))
-        public["command_channels"] = ["forward_velocity", "lateral_velocity", "yaw_rate"]
+        public.update(
+            adaptation_cases=len(bank["adaptation"]),
+            held_out_cases=len(bank["held_out"]),
+        )
+        public["command_channels"] = [
+            "forward_velocity",
+            "lateral_velocity",
+            "yaw_rate",
+        ]
         public["command_units"] = ["m/s", "m/s", "rad/s"]
         public["limitations"] = (
             "Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on both development plants."

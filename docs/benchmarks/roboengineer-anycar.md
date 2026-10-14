@@ -410,3 +410,17 @@ Never install the spec, trusted monitor/evaluator or banks in the agent containe
 The renderer is family-local; the operator image also needs the existing trusted
 AnyCar parameter sampler. Shared registry,
 Harbor packaging, budgets and site publication remain integration work owned by root.
+
+The integrated task IDs are `control-transfer-anycar-drift-i{00,01}-standard`.
+The shared adapter preserves the public course command and all 161 images at 10 Hz,
+including the subsecond drift and final stop. A strict course-field allowlist rejects
+hidden fields and non-finite values. Only the nominal controller/model modules are
+agent-visible. Both public import paths run without the trusted package.
+
+The frozen nominal controller passes the nominal example but **0/26 randomized
+cases** (6 adaptation and 20 held-out across two fixed plants). All 26 complete the
+route, 22 satisfy the drift requirement, 12 collide and none hold a valid park.
+No tuning used the held-out results. Three family replays and both generated private
+package replays match exactly. A 500-step driven comparison also confirms the added
+optional scene/substep hooks preserve the original AnyCar state trajectory. The task
+remains `oracle=none`; these checks do not establish robust transfer or an LLM score.

@@ -15,15 +15,31 @@ from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0"
 SKYDIO_IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:0.1.1"
-EMBODIMENTS = {"neural-fly": "drone", "g1": "humanoid", "anycar": "racing-car", "go2": "quadruped"}
-ROBOTS = {"neural-fly": "neural-fly-partial", "g1": "unitree-g1", "anycar": "anycar", "go2": "unitree-go2"}
+EMBODIMENTS = {
+    "neural-fly": "drone",
+    "g1": "humanoid",
+    "anycar": "racing-car",
+    "go2": "quadruped",
+}
+ROBOTS = {
+    "neural-fly": "neural-fly-partial",
+    "g1": "unitree-g1",
+    "anycar": "anycar",
+    "go2": "unitree-go2",
+}
+EMBODIMENTS["anycar-drift"] = "racing-car"
+ROBOTS["anycar-drift"] = "anycar"
 
 
 def copy_legacy_package(task, where, private, family):
     for p in ["scripts/__init__.py", "scripts/control_transfer/__init__.py"]:
         put(task, where + "/" + p, "")
     for p in sorted((SRC / "control_public").glob("*.py")):
-        put(task, where + "/scripts/control_transfer/control_public/" + p.name, p.read_text())
+        put(
+            task,
+            where + "/scripts/control_transfer/control_public/" + p.name,
+            p.read_text(),
+        )
     # A top-level alias avoids a namespace collision with the upstream G1 training scripts package.
     for p in sorted((SRC / "control_public").glob("*.py")):
         put(task, where + "/control_public/" + p.name, p.read_text())
@@ -67,10 +83,18 @@ def copy_legacy_package(task, where, private, family):
                     text = text.replace("nominal=False", "nominal=True")
             put(task, where + "/" + str(p.relative_to(SRC / "components")), text)
     if packages:
-        put(task, where + "/control_assets.py", (SRC / "components/control_assets.py").read_text())
+        put(
+            task,
+            where + "/control_assets.py",
+            (SRC / "components/control_assets.py").read_text(),
+        )
     if private:
         for p in sorted((SRC / "trusted").glob("*.py")):
-            put(task, where + "/scripts/control_transfer/trusted/" + p.name, p.read_text())
+            put(
+                task,
+                where + "/scripts/control_transfer/trusted/" + p.name,
+                p.read_text(),
+            )
 
 
 # Explicit agent-visible files: new evaluator helpers must never become public
@@ -79,6 +103,7 @@ PUBLIC_MODULES = {
     "neural-fly": ("fly.py",),
     "g1": ("g1.py", "g1_training.py"),
     "anycar": ("anycar.py", "anycar_nominal.py"),
+    "anycar-drift": ("anycar_drift.py", "anycar_drift_nominal.py"),
     "go2": ("go2.py", "go2_data.py", "go2_nominal.py", "go2_train.py"),
 }
 G1_PUBLIC = set()
@@ -94,11 +119,19 @@ def copy_package(task, where, private, family, visual_profile=None):
     ):
         put(task, where + "/" + path, "")
     names = ("__init__.py", "client.py", "weights.py", *PUBLIC_MODULES[family])
+    if private and family == "anycar-drift":
+        names += ("anycar.py",)  # Private shared plant/noise sampler imports this ABI.
     for name in names:
         source = SRC / "control_public" / name
         for prefix in ("control_public/", "scripts/control_transfer/control_public/"):
             put(task, where + "/" + prefix + name, source.read_text())
-    packages = {"neural-fly": [], "g1": ["sim2realbench"], "anycar": ["anycarbench"], "go2": ["quadrupedbench"]}[family]
+    packages = {
+        "neural-fly": [],
+        "g1": ["sim2realbench"],
+        "anycar": ["anycarbench"],
+        "anycar-drift": ["anycarbench"],
+        "go2": ["quadrupedbench"],
+    }[family]
     for package in packages:
         for source in sorted((SRC / "components" / package).rglob("*")):
             if not source.is_file() or source.is_symlink():
@@ -117,6 +150,13 @@ def copy_package(task, where, private, family, visual_profile=None):
             ):
                 continue
             if not private:
+                if family == "anycar-drift" and relative not in (
+                    "__init__.py",
+                    "model.py",
+                    "drift.py",
+                    "LICENSE.anycar",
+                ):
+                    continue
                 if family == "g1" and relative not in G1_PUBLIC:
                     continue
                 if family == "anycar" and relative not in (
@@ -152,7 +192,11 @@ def copy_package(task, where, private, family, visual_profile=None):
             for prefix in ("", "scripts/control_transfer/components/"):
                 put(task, where + "/" + prefix + package + "/" + relative, content)
     if packages:
-        put(task, where + "/control_assets.py", (SRC / "components/control_assets.py").read_text())
+        put(
+            task,
+            where + "/control_assets.py",
+            (SRC / "components/control_assets.py").read_text(),
+        )
     if private:
         names = (
             "__init__.py",
@@ -168,13 +212,22 @@ def copy_package(task, where, private, family, visual_profile=None):
             "neural-fly": ("fly.py",),
             "g1": (),
             "anycar": ("anycar.py", "anycar_spec.py"),
+            "anycar-drift": ("anycar_drift.py", "anycar.py", "anycar_spec.py"),
             "go2": ("go2.py", "go2_spec.py"),
         }
         for name in (*names, *family_files[family]):
-            put(task, where + "/scripts/control_transfer/trusted/" + name, (SRC / "trusted" / name).read_text())
-        for name in ("anycar_spec.py",):
-            if family == "anycar" and (SRC / name).exists():
-                put(task, where + "/scripts/control_transfer/" + name, (SRC / name).read_text())
+            put(
+                task,
+                where + "/scripts/control_transfer/trusted/" + name,
+                (SRC / "trusted" / name).read_text(),
+            )
+        for name in ("anycar_spec.py", "anycar_drift_spec.py"):
+            if (family == "anycar-drift" or family == "anycar" and name == "anycar_spec.py") and (SRC / name).exists():
+                put(
+                    task,
+                    where + "/scripts/control_transfer/" + name,
+                    (SRC / name).read_text(),
+                )
     if family == "neural-fly" and (SRC / "neuralfly_nominal.py").exists():
         names = ("neuralfly_nominal.py", "neuralfly_video.py", "neuralfly_constants.py")
         if visual_profile == "skydio-x2/1":
@@ -196,7 +249,11 @@ def copy_package(task, where, private, family, visual_profile=None):
             put(task, where + "/scripts/control_transfer/" + name, content)
             put(task, where + "/" + name, content)
         if not private:
-            put(task, where + "/nominal_fly.py", (SRC / "neuralfly_nominal.py").read_text())
+            put(
+                task,
+                where + "/nominal_fly.py",
+                (SRC / "neuralfly_nominal.py").read_text(),
+            )
 
 
 def render(task, name, index):
@@ -215,7 +272,9 @@ def render(task, name, index):
     if family == "anycar":
         instance["observation_revision"] = "anycar-dashed-cones/1"
         instance["public"]["observation_revision"] = "anycar-dashed-cones/1"
-        instance["public"]["visual_feedback"] = "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay."
+        instance["public"]["visual_feedback"] = (
+            "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay."
+        )
     lap = instance.get("task_variant") == "circuit-lap/2"
     compact = instance.get("task_variant") == "circuit-compact-lap/3"
     bounded_lap = lap or compact
@@ -236,6 +295,8 @@ def render(task, name, index):
     oracle = "full" if native_full else "none"
     if native_full:
         reference_note = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores."
+    elif family == "anycar-drift":
+        reference_note = "Development-only drift-park/1. A scripted nominal example succeeds, but the frozen controller passes 0/26 randomized cases across two plants (6 adaptation and 20 held-out). Three exact fresh-process and rendered replays pass. Transfer solvability and LLM evaluation remain unverified. Native infrastructure validation is reported separately from control success. No full oracle; human review required."
     elif lap:
         reference_note = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
     elif compact:
@@ -264,10 +325,18 @@ def render(task, name, index):
             private_asset_sha256="551eeb0d8e2c75e157c087f1ab2f5e40e68400a84fdf0882ed719ddfcfd8108a",
         )
     for folder in ("environment/sim", "tests"):
-        put(task, folder + "/instance.json", json.dumps(instance, sort_keys=True, indent=2) + "\n")
+        put(
+            task,
+            folder + "/instance.json",
+            json.dumps(instance, sort_keys=True, indent=2) + "\n",
+        )
     copy_package(task, "environment/public", False, family, instance.get("visual_profile"))
     copy_package(task, "environment/sim", True, family, instance.get("visual_profile"))
-    put(task, "environment/public/task-spec.json", json.dumps(instance["public"], indent=2) + "\n")
+    put(
+        task,
+        "environment/public/task-spec.json",
+        json.dumps(instance["public"], indent=2) + "\n",
+    )
     put(
         task,
         "environment/Dockerfile",
@@ -378,6 +447,8 @@ build_timeout_sec = 600.0
         training += f" Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task {name[4:]} --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`."
     if family == "anycar":
         training += " Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`."
+    if family == "anycar-drift":
+        training += " Run `python -m control_public.anycar_drift_nominal --out /app/output/nominal` for local nominal rollouts. The public numeric ABI is in `control_public.anycar_drift`. Each response preserves the public course in `feedback.command`, all 161 noisy telemetry rows and all 161 video frames at 10 Hz through 16 seconds. Use the course to distinguish changes in the parking target from changes in vehicle response."
     if instance.get("task_variant") == "circuit-sector/1":
         training += f" Use `--track {public['track_id']}` to train on this task's public route, and `--full-lap` for nominal full-lap practice. Deployment evaluates 24-second sectors; full-lap practice does not change that horizon."
     if lap:
@@ -431,7 +502,12 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
 """,
     )
     put(task, "tests/grade.py", (SRC / "trusted/verify.py").read_text())
-    put(task, "tests/test.sh", "#!/bin/bash\nmkdir -p /logs/verifier\npython /tests/grade.py\n", True)
+    put(
+        task,
+        "tests/test.sh",
+        "#!/bin/bash\nmkdir -p /logs/verifier\npython /tests/grade.py\n",
+        True,
+    )
     # Bind Docker's layer cache to the exact frozen instance as well as the
     # build context. Equal-size files staged with equal mtimes otherwise reused
     # a stale COPY layer in the native validation host's BuildKit file sync.
@@ -451,7 +527,11 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
         True,
     )
     if family == "neural-fly":
-        put(task, "solution/neuralfly_reference.py", (SRC / "neuralfly_reference.py").read_text())
+        put(
+            task,
+            "solution/neuralfly_reference.py",
+            (SRC / "neuralfly_reference.py").read_text(),
+        )
         put(
             task,
             "solution/solve.sh",
@@ -473,7 +553,31 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
             "    iterate(client, DEFAULT, '/app/output/reference')\n"
         )
         put(task, "solution/reference.py", reference)
-        put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
+        put(
+            task,
+            "solution/solve.sh",
+            "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n",
+            True,
+        )
+    if family == "anycar-drift":
+        put(
+            task,
+            "solution/reference.py",
+            (
+                "from control_public.client import Client\n"
+                "from control_public.anycar_drift import DEFAULT\n"
+                "c = Client()\nc.describe()\n"
+                "for i in range(3):\n"
+                "    r = c.deploy(DEFAULT, 'Frozen nominal controller; repeated for lifecycle validation only, transfer success is not established.')\n"
+                "c.seal(r['round_id'], 'Unadapted nominal baseline; randomized reference is unsuccessful.')\n"
+            ),
+        )
+        put(
+            task,
+            "solution/solve.sh",
+            "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n",
+            True,
+        )
     if family == "go2":
         from scripts.control_transfer.components.quadrupedbench.reference import policy
 
@@ -485,7 +589,12 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
             + "c.seal(r['round_id'], 'Reference candidate; full success is not assumed.')\n"
         )
         put(task, "solution/reference.py", solve)
-        put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
+        put(
+            task,
+            "solution/solve.sh",
+            "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n",
+            True,
+        )
     if family == "spacecraft":
         from nonlinearbench.contract import REFERENCE
 
@@ -495,13 +604,24 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
             + "\nfor i in range(3):\n r=c.deploy(policy, 'Reference nonlinear controller; fixed repeated policy for integration validation.')\nc.seal(r['round_id'],'Reference integration run.')\n"
         )
         put(task, "solution/reference.py", solve)
-        put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
+        put(
+            task,
+            "solution/solve.sh",
+            "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n",
+            True,
+        )
     normalize(task)
     # normalize adds the resource-limit grader and rewrites test.sh. Bind every
     # copied input after that step, before Docker evaluates either COPY layer.
     inputs = {
         name: hashlib.sha256((task / "tests" / name).read_bytes()).hexdigest()
-        for name in ("grade.py", "test.sh", "instance.json", "rcb_limits.py", "rcb_limits.json")
+        for name in (
+            "grade.py",
+            "test.sh",
+            "instance.json",
+            "rcb_limits.py",
+            "rcb_limits.json",
+        )
     }
     payload_sha = hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest()
     dockerfile = task / "tests/Dockerfile"
@@ -517,7 +637,10 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
         )
         for line in lines
     ]
-    lines.insert(next(i for i, line in enumerate(lines) if line.startswith("# resource limits:")), "RUN " + checks)
+    lines.insert(
+        next(i for i, line in enumerate(lines) if line.startswith("# resource limits:")),
+        "RUN " + checks,
+    )
     dockerfile.write_text("\n".join(lines) + "\n")
 
 
@@ -528,7 +651,9 @@ def main():
     p.add_argument("action", choices=["render", "check", "list-circuits"])
     selection = p.add_mutually_exclusive_group()
     selection.add_argument(
-        "--circuit", action="append", help="Opt-in circuit layout or venue alias; repeat to select several"
+        "--circuit",
+        action="append",
+        help="Opt-in circuit layout or venue alias; repeat to select several",
     )
     selection.add_argument(
         "--all-circuits",
@@ -536,19 +661,30 @@ def main():
         help="Opt-in all 159 runnable historical layouts plus zigzag (320 self-contained tasks)",
     )
     selection.add_argument(
-        "--lap-circuit", action="append", help="Opt-in full-lap layout or venue alias; repeat to select several"
+        "--lap-circuit",
+        action="append",
+        help="Opt-in full-lap layout or venue alias; repeat to select several",
     )
     selection.add_argument(
-        "--all-lap-circuits", action="store_true", help="Generate all 160 runnable full-lap routes, two plants each"
+        "--all-lap-circuits",
+        action="store_true",
+        help="Generate all 160 runnable full-lap routes, two plants each",
     )
     selection.add_argument(
-        "--compact-circuit", action="append", help="30-second compact F1-inspired layout or venue alias; repeat to select several"
+        "--compact-circuit",
+        action="append",
+        help="30-second compact F1-inspired layout or venue alias; repeat to select several",
     )
     selection.add_argument(
-        "--all-compact-circuits", action="store_true", help="Generate all 160 compact 30-second routes, two plants each"
+        "--all-compact-circuits",
+        action="store_true",
+        help="Generate all 160 compact 30-second routes, two plants each",
     )
     p.add_argument(
-        "--output-root", type=Path, default=ROOT / "tasks", help="Task directory parent; defaults to repository tasks/"
+        "--output-root",
+        type=Path,
+        default=ROOT / "tasks",
+        help="Task directory parent; defaults to repository tasks/",
     )
     a = p.parse_args()
     if a.action == "list-circuits":
@@ -556,8 +692,18 @@ def main():
 
         print(json.dumps(track_ids(), indent=2))
         return
-    if a.circuit or a.all_circuits or a.lap_circuit or a.all_lap_circuits or a.compact_circuit or a.all_compact_circuits:
-        from scripts.control_transfer.components.anycarbench.tracks import resolve_track, track_ids
+    if (
+        a.circuit
+        or a.all_circuits
+        or a.lap_circuit
+        or a.all_lap_circuits
+        or a.compact_circuit
+        or a.all_compact_circuits
+    ):
+        from scripts.control_transfer.components.anycarbench.tracks import (
+            resolve_track,
+            track_ids,
+        )
 
         try:
             circuits = (
@@ -568,8 +714,10 @@ def main():
         except ValueError as error:
             p.error(str(error))
         prefix = (
-            "anycar-circuit-compact-v3-" if (a.compact_circuit or a.all_compact_circuits)
-            else "anycar-circuit-lap-v2-" if (a.lap_circuit or a.all_lap_circuits)
+            "anycar-circuit-compact-v3-"
+            if (a.compact_circuit or a.all_compact_circuits)
+            else "anycar-circuit-lap-v2-"
+            if (a.lap_circuit or a.all_lap_circuits)
             else "anycar-circuit-v1-"
         )
         names = [prefix + name for name in circuits]

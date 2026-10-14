@@ -8,10 +8,11 @@ The shared `eai-policy/1.1` service supports repeated nominal-training → deplo
 |---|---|---|---|
 | [Neural Fly — fixed and general figure eights](roboengineer-neuralfly.md) | Editable nominal CPU MuJoCo and numeric-controller fitting | Noisy pose/velocity/rate measurements, public timed trajectory, images | 5 / 10 |
 | [AnyCar](roboengineer-anycar.md) | Editable nominal contact-wheel MuJoCo model and numeric-controller fitting | 18 noisy sensor/public-command channels and images | 3 / 10 |
+| [AnyCar Drift to Park](roboengineer-anycar.md#drift-to-park-drift-park1) | Editable nominal RC model; numeric approach, drift and brake tuning | Public course, 14 noisy/own-action channels and all 161 video frames at 10 Hz | 3 / 10 |
 | [Unitree G1 terrain](roboengineer-g1.md) | Blind-terrain PPO in mjlab/MuJoCo Warp; fixed numeric MLP export | 29 noisy joint angles, three public velocity commands and images | 4 / 12 |
 | [Unitree Go2](roboengineer-go2.md) | Nominal MuJoCo tuning; bounded numeric controller | 37 noisy proprioceptive/public-command channels and images | 3 / 10 per objective |
 
-The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 28 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, the explicit Skydio appearance revision of general-eight Neural Fly, and the separate experimental vector-wind revision. Neural Landing has its own generator and validated service; this service does not replace it.
+The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 30 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, the explicit Skydio appearance revision of general-eight Neural Fly, the separate experimental vector-wind revision, and two Drift to Park plants. Neural Landing has its own generator and validated service; this service does not replace it.
 
 Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. They are not generated members of the original eight-objective collection. Their old twelve-instance release must not be confused with the current task bank.
 
@@ -73,3 +74,5 @@ F1-inspired approximations with recorded smoothing and aspect widening; sharp tu
 crossovers may be removed. The car physics and controller ABI are unchanged. Compact tasks
 use the ordinary 14400-second agent cutoff, with all 301 noisy samples and 31 images spanning
 0–30 s per deployment. Existing sector and long-lap variants retain their geometry and budgets.
+
+Drift to Park is a ninth core objective, registered as `control-transfer-anycar-drift-i{00,01}-standard`. It has a 16 s horizon, three adaptation rounds, public course commands and a bounded three-action controller with a physical rear-wheel handbrake. The nominal example succeeds, but the frozen controller fails all 26 randomized development/held-out cases; it stays `oracle=none`. This control gap is distinct from package, replay and isolation validation.

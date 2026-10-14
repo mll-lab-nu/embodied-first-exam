@@ -217,11 +217,13 @@ def xml_model(plant, surfaces, command):
 
 
 class Vehicle:
-    def __init__(self, plant=None, surfaces=None, command=None):
+    def __init__(self, plant=None, surfaces=None, command=None, *, model_xml=None):
         self.plant = dict(NOMINAL if plant is None else plant)
         self.command = command or dict(a=4.5, b=3.5, phase=0.0, direction=1)
         self.surfaces = surfaces or [(-12, 12, 0.8)]
-        self.model = mujoco.MjModel.from_xml_string(xml_model(self.plant, self.surfaces, self.command))
+        self.model = mujoco.MjModel.from_xml_string(
+            model_xml if model_xml is not None else xml_model(self.plant, self.surfaces, self.command)
+        )
         self.data = mujoco.MjData(self.model)
         p = self.plant
         self.model.body_mass[1:] *= p["mass_scale"]
@@ -250,7 +252,7 @@ class Vehicle:
         self.collision = self.body_contact = False
         self.contacts_seen = set()
 
-    def advance(self, action):
+    def advance(self, action, substep_callback=None):
         self.buffer.append(np.asarray(action, dtype=float).copy())
         command = self.buffer.popleft()
         p = self.plant
@@ -272,6 +274,9 @@ class Vehicle:
                     self.collision = True
                 if pair & self.body_ids and pair & self.surface_ids:
                     self.body_contact = True
+
+            if substep_callback is not None:
+                substep_callback(self)
 
     def state(self):
         d = self.data

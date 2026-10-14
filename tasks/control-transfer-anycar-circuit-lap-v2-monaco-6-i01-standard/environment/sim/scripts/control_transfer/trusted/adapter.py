@@ -25,6 +25,10 @@ def validate(family, policy):
         from ..control_public.anycar import validate as check
 
         return check(policy)
+    if family == "anycar-drift":
+        from ..control_public.anycar_drift import validate as check
+
+        return check(policy)
     if family == "go2":
         from ..control_public.go2 import validate as check
 
@@ -46,9 +50,11 @@ def run(family, policy, case, out, render, asset=None):
         from .fly import rollout
 
         return rollout(json.loads(Path(policy).read_text()), case, out, asset, render)
-    if family in ("anycar", "go2"):
+    if family in ("anycar", "anycar-drift", "go2"):
         if family == "anycar":
             from .anycar import rollout
+        elif family == "anycar-drift":
+            from .anycar_drift import rollout
         else:
             from .go2 import rollout
         return rollout(policy, case, out, render)
@@ -82,7 +88,12 @@ def run(family, policy, case, out, render, asset=None):
     elif family == "spacecraft":
         from nonlinearbench.simulation import run_episode
 
-        result = run_episode(json.loads(Path(policy).read_text()), case["plant_seed"], case["episode_seed"], render)
+        result = run_episode(
+            json.loads(Path(policy).read_text()),
+            case["plant_seed"],
+            case["episode_seed"],
+            render,
+        )
         out.mkdir(parents=True, exist_ok=False)
         if render:
             (out / "video.mp4").write_bytes(result.video)
@@ -105,6 +116,8 @@ def feedback(family, record, folder, sampling=None):
         if family == "linearbot"
         else {"telemetry", "commands"}
         if family == "g1"
+        else {"telemetry", "command"}
+        if family == "anycar-drift"
         else {"telemetry"}
     )
     if set(value) != allowed:
@@ -132,12 +145,27 @@ def feedback(family, record, folder, sampling=None):
         else:
             if set(row) != {"t", "values"}:
                 raise ValueError("Observation fields")
-            dimensions = {"g1": 29, "linearbot": 16, "spacecraft": 13, "yam": 11, "anycar": 18, "go2": 37}
+            dimensions = {
+                "g1": 29,
+                "linearbot": 16,
+                "spacecraft": 13,
+                "yam": 11,
+                "anycar": 18,
+                "anycar-drift": 14,
+                "go2": 37,
+            }
             if len(row["values"]) != dimensions[family]:
                 raise ValueError("Observation dimension")
             vals = [row["t"]] + row["values"]
         if not all(type(x) in (int, float) and math.isfinite(x) for x in vals):
             raise ValueError("Observation values")
+    if family == "anycar-drift":
+        command = value["command"]
+        fields = {"radius", "park_x", "park_y", "slot_length", "slot_width"}
+        if not isinstance(command, dict) or set(command) != fields:
+            raise ValueError("Course command fields")
+        if not all(type(v) in (int, float) and math.isfinite(v) for v in command.values()):
+            raise ValueError("Course command values")
     if family == "g1":
         commands = value["commands"]
         if not isinstance(commands, list) or len(commands) != len(value["telemetry"]):
@@ -157,7 +185,7 @@ def feedback(family, record, folder, sampling=None):
     frames = []
     if (folder / "video.mp4").exists():
         # A fixed schedule, independent of launch state, contacts, reward or failure labels.
-        fps = 5 if family == "yam" else 0.1 if family == "spacecraft" else 1
+        fps = 10 if family == "anycar-drift" else 5 if family == "yam" else 0.1 if family == "spacecraft" else 1
         subprocess.run(
             [
                 "ffmpeg",
@@ -170,7 +198,7 @@ def feedback(family, record, folder, sampling=None):
                 "-vsync",
                 "vfr",
                 "-frames:v",
-                "48",
+                "161" if family == "anycar-drift" else "48",
                 "-threads",
                 "1",
                 "-q:v",
