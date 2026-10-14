@@ -1,0 +1,383 @@
+{
+ "joints": {
+  "high": [
+   1.55,
+   -0.45,
+   2.8973,
+   1.7628,
+   2.8973,
+   -0.0698,
+   2.8973,
+   3.7525,
+   2.8973
+  ],
+  "low": [
+   -1.55,
+   -3.58,
+   -2.8973,
+   -1.7628,
+   -2.8973,
+   -3.0718,
+   -2.8973,
+   -0.0175,
+   -2.8973
+  ],
+  "max_step": [
+   0.02,
+   0.02,
+   0.02175,
+   0.02175,
+   0.02175,
+   0.02175,
+   0.026099999999999998,
+   0.026099999999999998,
+   0.026099999999999998
+  ],
+  "names": [
+   "base_x",
+   "base_y",
+   "joint1",
+   "joint2",
+   "joint3",
+   "joint4",
+   "joint5",
+   "joint6",
+   "joint7"
+  ],
+  "ready_pose_arm": [
+   1.5444,
+   1.3195,
+   -1.3693,
+   -1.7296,
+   -0.0274,
+   1.8111,
+   0.438
+  ],
+  "rule": "each target within [low, high] and within max_step of the previous target (the first one: of q_target in the state); the base's targets within its speed and acceleration (from the second differences, the first rows joining q_target and qd_target)"
+ },
+ "limits": {
+  "arm": {
+   "acceleration_rad_s2": [
+    15.0,
+    7.5,
+    10.0,
+    12.5,
+    15.0,
+    20.0,
+    20.0
+   ],
+   "body": "franka_panda",
+   "jerk_rad_s3": [
+    7500.0,
+    3750.0,
+    5000.0,
+    6250.0,
+    7500.0,
+    10000.0,
+    10000.0
+   ],
+   "model": "Franka Emika Panda (FER)",
+   "range_rad": [
+    [
+     -2.8973,
+     -1.7628,
+     -2.8973,
+     -3.0718,
+     -2.8973,
+     -0.0175,
+     -2.8973
+    ],
+    [
+     2.8973,
+     1.7628,
+     2.8973,
+     -0.0698,
+     2.8973,
+     3.7525,
+     2.8973
+    ]
+   ],
+   "torque_nm": [
+    87.0,
+    87.0,
+    87.0,
+    87.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "torque_rate_nm_s": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "velocity_rad_s": [
+    2.175,
+    2.175,
+    2.175,
+    2.175,
+    2.61,
+    2.61,
+    2.61
+   ]
+  },
+  "base": {
+   "max_accel_mps2": 15.0,
+   "max_accel_per_axis_mps2": [
+    15.0,
+    15.0
+   ],
+   "max_force_n": 3000.0,
+   "max_jerk_mps3": 375.0,
+   "max_speed_mps": 2.0,
+   "range": {
+    "x": [
+     -1.5,
+     1.5
+    ],
+    "y": [
+     -3.5300000000000002,
+     -0.5
+    ]
+   }
+  },
+  "controller": "the robot's 1 kHz servo (the toolkit's servo model, lib/bm_servo.py, is this law as code): the 10 ms targets are interpolated linearly over the 10 physics steps, with (target - previous target) / 10 ms as the reference velocity; the arm: a jerk-limited setpoint generator within 0.9 of the Panda's velocity limits (velocity_rule) and its acceleration and jerk limits (the jerk also capped at 0.7 x the torque-rate limit over the row sums of the arm's inertia), torque = M_arm qdd_sp + kp e + kd de + gravity/Coriolis + the base's commanded acceleration fed forward through the arm-base inertia, limited to 87 / 12 N m and 1000 N m/s; a joint more than 0.02 rad from its setpoint pulls the setpoint along; the base: PD to its interpolated target + bias compensation within its drive force. The velocity reflex: a physical arm joint faster than 1.05 x its velocity limit stops the robot for 1 s (the targets are ignored; the arm's setpoints brake to rest at the pose of the trigger; from then on, until the robot is next put at its spot, the gantry's targets pass through a setpoint generator at its limits (speed, per-axis acceleration, jerk 25 x the acceleration; started from the targets' state; its reference is its stop point during the stop) whose acceleration is the one fed forward); then the robot follows its targets again from rest. The observed state's servo.reflex, servo.base_sp and servo.n_reflex report it",
+  "gains": {
+   "jerk_share_of_torque_rate": 0.7,
+   "kd": [
+    3000.0,
+    3000.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    30.0,
+    20.0,
+    6.0
+   ],
+   "kp": [
+    40000.0,
+    40000.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    2400.0,
+    1000.0,
+    600.0,
+    200.0
+   ],
+   "resync_rad": 0.02
+  },
+  "velocity_rule": {
+   "reflex_at_share": 1.05,
+   "reflex_stop_s": 1.0,
+   "setpoint_share_of_velocity_limits": 0.9,
+   "text": "the servo runs the arm's setpoints at 0.9 of the joint velocity limits; a physical arm joint faster than 1.05 x its limit triggers the robot's velocity reflex: the targets are ignored, the arm brakes to rest at the pose of the trigger and the gantry to rest within its limits, for 1 s; then the robot resumes from rest and catches up with its targets within the limits (the stroke under way is lost; final fields velocity_reflexes)"
+  }
+ },
+ "skill_contract": {
+  "act": {
+   "call": "act(t, pos, normal, vel)",
+   "deliverable": {
+    "allowed": "numpy, scipy, mujoco, the toolkit under /opt/robot (robot_only.xml, assets, lib/bm_kinematics.py, lib/bm_servo.py) and files inside /app/output/skill; module-level memory between calls of one run; state = the low level's observe state (no images, no shuttle coordinates) with step, spec = game spec's joints, limits, toolkit, skill_contract; no network, no other files, no other processes",
+    "memory": "per_case",
+    "optional": [
+     "step(*, state, spec) -> a command or None (called every 20 ms between acts)"
+    ],
+    "path": "/app/output/skill/act.py",
+    "signature": "act(t, pos, normal, vel, base=None, *, state, spec) -> one low-level command ({'type': 'traj', 'q': rows of 9 targets [base_x, base_y, q1..q7], row i for control step state['step'] + i} | {'type': 'none'}) or None",
+    "time_limits_s": {
+     "act": 5,
+     "load": 30,
+     "step": 1
+    }
+   },
+   "feasible": "the platform delivers a request within the tolerances when the contact is at least about 0.9 s ahead from the ready pose, 0.65-1.75 m high, within the base's reach in time and the head speed within about 2.2 t - 0.2 m/s along a forward face; otherwise it does its best and says so (FAILURES). Every API-test request comes from our reference player's own matches (L1-L3) on this revision and is feasible under the real limits: from the case's start state the platform's implementation, without its execution scatter, plans it and its own rehearsal (the robot alone) delivers it within 15 mm, 2.5 degrees and 0.10 m/s + 8 % (IK residual < 2 mm, the base at its stance in time, no self-collision); a request that asked for more head speed than the limits allow carries the velocity scaled the way the platform scales it",
+   "measured": "the racket head centre (site racket_center), its string-face normal (either face: the contact law reads the face the head moves towards) and its linear velocity in the match simulator's state at the contact step k_c = k_eff + round(t / 0.01) (as the high level's act: its reply's k_hit); the API-test case starts from the exact state of one of our reference player's matches (the robot as the match left it, the shuttle in flight) and runs to the leg's verdict, step() called every 2 control steps; time_err_s (reported, not a tolerance) = the step of the head's closest pass to pos within +-0.1 s, minus k_c. The high level's reply reports the same quantities from its rehearsal (blade_error_m, normal_error_deg, racket_vel_delivered); in play the platform's delivered state scatters by about 6 mm, 0.8 deg and 3 % (seeded, one stream per robot)",
+   "notes": {
+    "contact_law": "the shuttle leaves along the face normal at 4 max(0, v_head.n)(1 - 0.3 (r/0.14)^2) + 0.15 max(0, -v_in.n) (spec racket_contact): the player turns the shot it wants into (normal, vel)",
+    "control_authority": "the controller reads the robot only (joints, base, its own targets), never the shuttle, the opponent or the score; it chooses the base's forehand stance for pos, an IK solution clear of the robot's own stand and links, a joint-space swing within the Panda's limits and the follow-through, corrects its own tracking lag by robot-only rehearsals and slows the head when time is short; after the follow-through the arm returns to the ready pose and the base stays where it struck (no automatic return: where to wait is the player's, `move`); contact time, point, face, head velocity and, optionally, where the base stands (`base`) are the player's",
+    "failures": {
+     "every candidate swing touches the robot's own stand or links": "the swing with the fewest contact steps; notes 'self-collision: ...'; the contact is physical (the arm is stopped) and recorded (final fields self_collision)",
+     "out of range, non-finite, malformed": "refused (HTTP 400); nothing changes (E1)",
+     "sent before the previous act took effect": "refused (HTTP 409) (E3)",
+     "the base cannot reach the stance in time": "the base goes as far as it gets; notes 'could not reach the stance in time: X m short'",
+     "the contact time has passed when the act takes effect": "not executed; the stroke under way continues; the reply's stroke notes say 'too late'",
+     "the head speed is beyond the joints in the time left": "the swing is slowed; notes 'head speed limited by the joint speed limits (xF)'; state.command.vel_rehearsed gives the rehearsed head velocity",
+     "the point ends before the act takes effect": "dropped (notes 'dropped: ...')",
+     "the pose is out of reach or not delivered in time": "the nearest IK solution / the rehearsed pose; notes 'pose not delivered: the rehearsed racket head is X cm off'; state.command.pos_error_rehearsed_m"
+    },
+    "feedback": "the reply: effect_step and the stroke notes (stroke, base, speed_scale, blade_error_m, normal_error_deg, racket_vel_delivered); state.command: contact_in_s, vel_rehearsed, pos_error_rehearsed_m; last_shots",
+    "stance": "the base's goal for a contact at pos = (x, y, z) is (x, y) - 0.62 r (1, 1) with r = max(0.30, 0.95 - 0.35 |z - 1.333|) m (a forehand: right of and in front of the base), clipped to the gantry's range; the reply's stroke.base_goal gives it. So a serve whose contact is at that offset from the base's spot keeps the base still (it must stay within 5 cm until the serve is hit)",
+    "timing": "an act takes effect act.lead_steps control steps after the step at which it arrives (2 at x20); the plan is made meanwhile from the exact state at that step"
+   },
+   "replaces": "a new act (or none) replaces the stroke under way from its effect step; the swing restarts from the moving arm",
+   "request": {
+    "base": {
+     "doc": "optional: where the base stands at contact (your frame; within the base's range); default the forehand stance for pos (the stance formula); the base stays there after the stroke",
+     "len": 2,
+     "optional": true,
+     "type": "vector",
+     "unit": "m"
+    },
+    "normal": {
+     "doc": "string-face normal at contact (non-zero)",
+     "len": 3,
+     "nonzero": true,
+     "type": "vector"
+    },
+    "pos": {
+     "box": [
+      [
+       -2.136,
+       2.136
+      ],
+      [
+       -3.68,
+       -0.3
+      ],
+      [
+       0.2,
+       3.0
+      ]
+     ],
+     "doc": "racket-head centre at contact: |x| <= 2.136, -3.68 <= y <= -0.3, 0.2 <= z <= 3.0",
+     "len": 3,
+     "type": "vector",
+     "unit": "m"
+    },
+    "t": {
+     "doc": "contact T s after the act takes effect (0 < T <= 5)",
+     "max": 5.0,
+     "min": 0.0,
+     "type": "number",
+     "unit": "s"
+    },
+    "vel": {
+     "doc": "racket-head velocity at contact, |vel| <= 8",
+     "len": 3,
+     "max_norm": 8.0,
+     "type": "vector",
+     "unit": "m/s"
+    }
+   },
+   "returns": "one low-level command of this level, taking effect at control step state['step'] (that is k_eff): {'type': 'traj', 'q': rows of 9 joint targets [base_x, base_y, q1..q7]} (row i = the target of control step k_eff + i; after the last row the arm returns by itself to its ready pose and the base stays where it is) | {'type': 'none'} | None (no command); the high level's implementation lowers the act to the same traj, planned by the stroke controller on an exact copy of the robot advanced to the effect step",
+   "skill": "act",
+   "success": "every tolerance met and no refused",
+   "tolerances": [
+    {
+     "limit": 0.02,
+     "metric": "pos_err_m",
+     "text": "the head centre within 2 cm of pos at the contact step"
+    },
+    {
+     "limit": 3.0,
+     "metric": "normal_err_deg",
+     "text": "the face normal within 3 degrees of normal"
+    },
+    {
+     "limit": 0.15,
+     "metric": "vel_err_mps",
+     "rel": 0.1,
+     "rel_to": "vel_norm",
+     "text": "the head velocity within 0.15 m/s + 10 %"
+    }
+   ]
+  },
+  "toss": {
+   "call": "toss(pos, height)",
+   "feasible": "every toss within the ranges and the serve's window is executed exactly",
+   "measured": "the shuttle appears at pos at the effect step, at rest or rising height (exact; no scatter)",
+   "notes": {
+    "failures": {
+     "not the server, out of the window, a second toss, out of range": "refused (400 / 409); a serve not tossed within 3 s of the receiver being ready is a service fault (undue delay)"
+    }
+   },
+   "replaces": "once per serve",
+   "request": {
+    "height": {
+     "doc": "how far it rises straight up from pos (0 <= height <= 0.5; default 0: released from rest)",
+     "max": 0.5,
+     "min": 0.0,
+     "optional": true,
+     "type": "number",
+     "unit": "m"
+    },
+    "pos": {
+     "doc": "your serve's toss (docs/conventions/racket_serve_zh.md): the shuttle appears at this point (your frame) when the command takes effect; 0.5 <= z <= 1.8, within 1.0 m (horizontally) of your base, y <= -0.5; only the server, once per serve, from the step the receiver is ready (state.serve)",
+     "len": 3,
+     "type": "vector",
+     "unit": "m"
+    }
+   },
+   "returns": "the low-level toss at the effect step (the same command at both levels)",
+   "skill": "toss",
+   "success": "every tolerance met and no refused",
+   "tolerances": []
+  }
+ },
+ "toolkit": {
+  "id": "badminton-franka-base-low",
+  "ik_library": {
+   "algorithm": "damped least squares on MuJoCo's own Jacobians (mj_jacSite) of the robot-only model: head centre position + string-face normal (roll free), full rotation, or position only, the base held at a given position; joint ranges by clipping; solve_near: q_ref and 12 fixed starts, the accurate solution with the least speed-weighted travel. clearance: MuJoCo's collision detection on the model's self-collision pairs. The base: the documented go-to law of its return to the spot, with the limits of game spec base",
+   "api": [
+    "fk(q9) -> (pos, R)",
+    "jacobian(q9) -> (6, 9)",
+    "racket_velocity(q9, qd9) -> (v, w)",
+    "within_limits(q9)",
+    "solve(pos, normal=None, R=None, q0=None, base=(bx, by), ...) -> (q_arm7, err)",
+    "solve_near(pos, normal=None, R=None, q_ref=None, base=(bx, by), vel_limit=None, ...) -> (q_arm7, err)",
+    "pair_distances(q9) -> {self-collision pair: metres}",
+    "clearance(q9, exclude=()) -> least of them",
+    "close_pairs(q9, below=0.04) -> names (structurally close at a pose, e.g. the wrist at the ready pose)",
+    "base_goto(b, v, goal, a_prev) -> (b, v)",
+    "base_plan(b, v, goal, n, a) -> (rows, arrived)",
+    "base_rows_problem(rows, b0, v0) -> None | why"
+   ],
+   "class": "RacketKinematics",
+   "file": "/opt/robot/lib/bm_kinematics.py",
+   "module": "bm_kinematics",
+   "sha256": "4aeddd3a6308efd537aa00b01aa4675df852550ed354562bc241135173a34a8e",
+   "use": "import sys; sys.path.insert(0, '/opt/robot/lib'); from bm_kinematics import RacketKinematics",
+   "version": "1.0.0"
+  },
+  "manifest": "/opt/robot/toolkit.toml",
+  "meshes": "/opt/robot/assets",
+  "not_provided": [
+   "act: our implementation, the high level's act {t, pos, normal, vel} (the racket's state at contact) - the player implements act itself",
+   "the stroke controller: bm.Match.plan_racket, _swing, _swing_targets, _stroke_for, _rollout_contact, ik_multi's clearance-ranked multi-start and swing_score (the base's stance, the limits-aware swing, timing, rehearsals, speed scaling, self-collision avoidance), the plan worker (plugin.plan_job, sim/wc.py)"
+  ],
+  "optional": true,
+  "robot_model": "/opt/robot/robot_only.xml",
+  "servo_model": {
+   "algorithm": "the robot's own servo law exactly as game spec limits.controller documents it (the simulator's bm.Phys.servo: the Panda's jerk-limited setpoint generator at 0.9 of the velocity limits + torque-rate limiter, the base's PD within its force, the base's acceleration fed forward, the joint-velocity reflex with the gantry's braking; 1.2.0 since sport revision wallclock-12 / duel-14), at 1 kHz on the robot-only model: the same motion as the robot in the match (no world contact exists in badminton: the shuttle is not a body; tests: test_exploit_toolkit_is_the_manifest rolls rows out against the simulator: bit for bit from rest, < 0.2 mm of the racket head from a moving start, where the match reads the previous 1 ms step's inertia, also through a reflex in progress at the observation or fired within the rollout)",
+   "api": [
+    "RobotSim(xml, gains=, base_force=, base_limits=spec limits.base).reset(q9, qd9, q_target9, servo)",
+    "RobotSim.step(q_target9): one 10 ms control step",
+    "RobotSim.rollout(rows) -> per row (head pos, normal, vel, q, qd)",
+    "RobotSim.racket() -> (pos, normal, vel)",
+    "RobotSim.contact_steps: 1 ms steps with a self-collision contact",
+    "RobotSim.reflexes: joint-velocity reflexes in the rollout"
+   ],
+   "class": "RobotSim",
+   "file": "/opt/robot/lib/bm_servo.py",
+   "module": "bm_servo",
+   "sha256": "9c9bb0ee771e356d3366aed9edc2c894ce1eefd94d6d5a053af144b4779882ce",
+   "use": "import sys; sys.path.insert(0, '/opt/robot/lib'); from bm_servo import RobotSim",
+   "version": "1.2.0"
+  },
+  "tools": [
+   "joint_interface",
+   "robot_model",
+   "robot_meshes",
+   "ik_library",
+   "servo_model"
+  ],
+  "version": "1.2.0",
+  "yours_to_develop": "act(t, pos, normal, vel): where the base stands at contact, the swing trajectory (joint targets over time within the real limits) that delivers the requested racket state at the requested time, head speed and face control at contact, compensating the servo's lag, keeping clear of the robot's own pedestal, the follow-through, re-planning when a new act replaces the stroke under way"
+ }
+}

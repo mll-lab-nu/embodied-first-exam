@@ -7,6 +7,8 @@ task whose directory ends in `-standard-realtime`:
     allows resets, 10 by default), unless its benchmark is in RESET_EXCEPTIONS (PROTOCOL §4b, per-benchmark exceptions);
   - its instruction states S, as `S = <S>` (the generator's text; the README's "Real time" row and task.toml say it too),
     unless its benchmark is in TEXT_GRANDFATHERED (the twins that existed before the rule; their S is in /spec.timing).
+  A task a benchmark exports with its own service (PROTOCOL §4c: `protocol` is not eai-standard/2.3) states S its own way
+  (RoboOlympics: `RO_SLOWDOWN`) and has no reset (a match is one episode); S is still checked against task.toml and the text.
 
     python3 ci_checks/check-realtime.py [task dirs]      # default: every task
 Standard library only.
@@ -30,26 +32,27 @@ RESET_EXCEPTIONS = {
                       "either (board 0114, 2026-10-14; pending the owner's confirmation)"),
 }
 # Realtime twins made before 2026-10-14 (owner D2: kept as they are): their instructions need not quote S
-TEXT_GRANDFATHERED = {"HumanoidBench", "BiGym 2.0", "RoboOlympics"}
+TEXT_GRANDFATHERED = {"HumanoidBench", "BiGym 2.0"}   # (RoboOlympics' three 2.3 matches were removed on 2026-10-14)
 
 
 def check(task: Path) -> list[str]:
     errs = []
     compose = tc.read_text(task / "environment/docker-compose.yaml") or ""
-    m = tc.SLOWDOWN_RE.search(compose)
+    md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
+    own = md.get("protocol") != "eai-standard/2.3"     # PROTOCOL §4c: a benchmark's own service and protocol
+    m = tc.SLOWDOWN_RE.search(compose) or (tc.OWN_SLOWDOWN_RE.search(compose) if own else None)
     if not m:
         return [f'{task.name}: its sim service needs `RCB_SLOWDOWN: "${{RCB_SLOWDOWN:-S}}"` in environment/docker-compose.yaml']
     S = float(m.group(1))
     if not S > 0:
         errs.append(f"{task.name}: RCB_SLOWDOWN's default must be > 0 (got {m.group(1)})")
-    md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     if "slowdown" not in md:
         errs.append(f"{task.name}: [metadata] slowdown is missing (run scripts/task_conventions.py on the task)")
     elif float(md["slowdown"]) != S:
         errs.append(f"{task.name}: [metadata] slowdown = {md['slowdown']}, but its service's RCB_SLOWDOWN default is {S:g}")
     bench = tc.bench_of(task)
     r = tc.RESET_RE.search(compose)
-    if bench not in RESET_EXCEPTIONS and (r is None or int(r.group(1)) < 1):
+    if bench not in RESET_EXCEPTIONS and not own and (r is None or int(r.group(1)) < 1):
         errs.append(f"{task.name}: a standard-realtime task allows resets (RCB_RESET_BUDGET default >= 1; 10 by default, "
                     f"owner 2026-10-14), got {'none' if r is None else r.group(1)}")
     if bench not in TEXT_GRANDFATHERED:

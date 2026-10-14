@@ -40,9 +40,8 @@
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
 "RoboCasa365"       = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
-"RoboFunOlympics"   = { privileged =  7200, standard =  7200 }
 "RoboLab"           = { privileged =  3600, standard =  3600 }
-"RoboOlympics"      = { standard-realtime = 7200 }
+"RoboOlympics"      = { privileged =  7200, standard =  7200, standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
 "RoboSafeBench"     = { standard =  3600, standard-realtime = 3600 }
 "RoboARC"           = { privileged = 10800, standard = 10800 }
@@ -51,7 +50,7 @@
 "VLABench"          = { privileged =  1800, standard =  1800 }
 "YAMLab"            = { privileged =  3600, standard =  3600 }
 
-# Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
+# Exceptions (optional). The most specific entry wins: task > family > the benchmark's row above.
 # - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboARC"` lists a
 #   benchmark's). A family's entry gives a number per mode; a mode it leaves out keeps the benchmark's number.
 # - A task is its directory name under tasks/ (the mode is in the name).
@@ -62,6 +61,11 @@
 #
 # [task_cutoff_sec]
 # "roboarc-cast-coil-05-i01-standard" = 10800             # this one task directory
+
+[task_cutoff_sec]
+"roboolympics-soccerssl-match-i00-standard-realtime" = 14400   # a whole 5 v 5 match is 2.9 h of wall time at S = 10
+"roboolympics-badminton-match-i01-standard-realtime" = 14400   # a game to 11 at S = 20: over an hour for the reference alone
+"roboolympics-badminton-match-i02-standard-realtime" = 14400
 
 # History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
 # shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
@@ -279,6 +283,66 @@ from_sec = 0
 to_sec = 3600
 decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
 note = "the benchmark's first standard-realtime tasks: the standard tasks' number (D8 default); the episode's robot-time budget under the realtime clock (1800 s for the realtime set, RoboSafeBench 0.5.1) runs in real time from the first submit, so 3600 s leaves 1800 s for looking and planning before the clock starts (the harness's set-up and the service's start are outside or before it); the collect hook's finalize is outside the agent's time"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboOlympics"
+modes = ["standard-realtime"]
+from_sec = 7200
+to_sec = 0
+decided_by = "owner (board 0107, E7)"
+note = "removed: the three standard-realtime tasks on this repository's eai-standard/2.3 adapter (table tennis, badminton, air hockey) are deleted; their results are moved out of the pool (jobs-backup), not carried over"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboFunOlympics"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 0
+decided_by = "owner (board 0107, E7)"
+note = "removed: the benchmark is renamed RoboOlympics (next entry); the same 100 tasks, renamed robofunolympics-* -> roboolympics-*"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboOlympics"
+modes = ["privileged", "standard"]
+from_sec = 0
+to_sec = 7200
+decided_by = "owner (board 0107, E7)"
+note = "RoboFunOlympics' row under its new name (its entry of 2026-10-12, 0 -> 7200, owner): the same tasks and the same number; no result was recorded under the old name"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboOlympics"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 7200
+decided_by = "owner (board 0107, E7; proposed in #180)"
+note = "the matches RoboOlympics exports with its own service (PROTOCOL §4c; table tennis, humanoid soccer): a match at its slowdown plus the frozen reviews between points fits in 7200 s; RoboOlympics' skill-engineering tasks (standard, policy) take the benchmark's standard number, 7200 s"
+
+[[history]]
+date = "2026-10-14"
+task = "roboolympics-soccerssl-match-i00-standard-realtime"
+from_sec = 0
+to_sec = 14400
+decided_by = "owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-13)"
+note = "wheeled soccer 5 v 5 exported by RoboOlympics: two halves and a shoot-out are about 1035 s of game time, 2.9 h of wall time at its slowdown S = 10, plus the frozen reviews; at S = 5 its four overhead cameras cannot be rendered in time (51 % busy at S = 10); the D8 cap"
+
+[[history]]
+date = "2026-10-14"
+task = "roboolympics-badminton-match-i01-standard-realtime"
+from_sec = 0
+to_sec = 14400
+decided_by = "owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14)"
+note = "badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 to 93 min, so a model with its reviews needs more than 7200 s; the D8 cap"
+
+[[history]]
+date = "2026-10-14"
+task = "roboolympics-badminton-match-i02-standard-realtime"
+from_sec = 0
+to_sec = 14400
+decided_by = "owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14)"
+note = "as roboolympics-badminton-match-i01-standard-realtime (the same match at opponent level 2)"
 
 [[history]]
 date = "2026-10-14"

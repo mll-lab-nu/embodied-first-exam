@@ -14,7 +14,7 @@
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
 #    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC) is held to the same rules, with rcb_limited.py and
 #    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE.md) and 2.2's rcb1.py and run.sh.
-# 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, RoboOlympics, BiGym 2.0
+# 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/STANDARD_MODE.md,
 #    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/.
@@ -41,7 +41,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventio
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "dexhand": "rcb_dexhand.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
-          "labutopia": "rcb_labutopia.py", "autobio": "rcb_autobio.py", "robofunolympics": "rcb_rfo.py",
+          "labutopia": "rcb_labutopia.py", "autobio": "rcb_autobio.py", "roboolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py",
           "cell": "rcb_rsb.py"}   # cell-: RoboSafeBench
