@@ -1,0 +1,365 @@
+"""Driving an episode by names instead of pixels: the tool reference solutions and scripted wrong trajectories use.
+
+A reference solution must act through the same tools as an agent, and those take pixels. The driver keeps a private
+copy of the episode (the same instance, the same calls: the simulation is deterministic, so the copy is always in the
+same state as the real one), looks up where a named thing is in the copy, finds a pixel that shows it, and makes the
+call on the real robot and on the copy.
+"""
+from __future__ import annotations
+
+import math
+
+import numpy as np
+
+from robosafe.episode import Episode
+from robosafe.sim import tf
+
+
+class DriverError(RuntimeError):
+    pass
+
+
+class Driver:
+    def __init__(self, family, inst, robot, cameras=None):
+        self.family, self.inst, self.robot = family, inst, robot
+        self.mirror = Episode(family, inst)
+        w = self.mirror.world
+        if cameras is None:
+            # the cameras that stand still (`front` and `top` on the bench; `room` in a room when the task has it);
+            # on a robot that drives then its head camera, and last its wrist camera, which shows what `look` was aimed at
+            cameras = tuple(c for c in w.cameras if not c.startswith("wrist")) + ((w.wrist_camera,) if w.base else ())
+        self.cameras = cameras
+        self.last: dict | None = None
+
+    # ---- calls -------------------------------------------------------------------------------------------------------
+    def call(self, tool: str, check: bool = True, **args) -> dict:
+        args.setdefault("images", False)          # a scripted solution does not look at pictures
+        out = self.robot.call(tool, **args)
+        clock = getattr(self.robot, "last_clock", None)          # realtime: the mirror runs the same think ticks
+        self.mirror.execute({"tool": tool, "args": dict(args)}, think_ticks=clock["ticks"] if clock else None)
+        self.last = out
+        if check and not out.get("ok"):
+            raise DriverError(f"{tool}({args}) was refused: {out.get('error')}")
+        if check and out.get("result", {}).get("status") == "failed":
+            raise DriverError(f"{tool}({args}) failed: {out['result'].get('reason')}")
+        return out
+
+    # ---- from names to pixels ----------------------------------------------------------------------------------------
+    def _candidates(self, obj: str) -> list[np.ndarray]:
+        w = self.mirror.world
+        pos, quat = w.locate(obj)
+        size = w.objects[obj]["meta"].get("size")
+        if size is None:
+            h = float(w.objects[obj]["meta"].get("height", 0.05))
+            size = [0.03, 0.03, h]
+        sx, sy, sz = (float(v) for v in size)
+        local = [(0, 0, sz), (0, 0, sz * 0.5), (0, -sy / 2, sz * 0.6), (0, -sy / 2, sz * 0.3), (sx / 4, 0, sz), (-sx / 4, 0, sz),
+                 (0, sy / 4, sz), (0, -sy / 4, sz), (sx / 2, 0, sz * 0.5), (-sx / 2, 0, sz * 0.5)]
+        return [pos + tf.rotate(quat, p) for p in local]
+
+    def pixel_of(self, obj: str) -> dict:
+        """A pixel that shows the object (camera, u, v)."""
+        w = self.mirror.world
+        for cam in self.cameras:
+            for p in self._candidates(obj):
+                uv = w.project(cam, p)
+                if uv is None or not (0 <= uv[0] < w.image_size[0] and 0 <= uv[1] < w.image_size[1]):
+                    continue
+                for du, dv in ((0, 0), (0, -3), (0, 3), (-3, 0), (3, 0), (0, -8), (0, 8), (-8, 0), (8, 0)):
+                    # the pixel as it is sent, through the hit test the tools use (a pixel tested unrounded and sent
+                    # rounded could graze a thin thing, a small flame, and the tool then found the table behind it)
+                    px = {"camera": cam, "u": round(uv[0] + du, 1), "v": round(uv[1] + dv, 1)}
+                    if self._shows(px, obj):
+                        return px
+        raise DriverError(f"no camera shows {obj!r}")
+
+    def where(self, target) -> np.ndarray:
+        """A point of the scene: [x, y, z]; an object (the middle of its top); `<object>/<site>`;
+        `<object>:<zone>` (where a thing put into that zone would rest); `<object>:inside` (the inside bottom of a vessel)."""
+        w = self.mirror.world
+        if not isinstance(target, str):
+            return np.asarray(target, dtype=np.float64)
+        if ":" in target:
+            obj, zone = target.split(":", 1)
+            if zone == "inside":
+                v = self.mirror.state.vessels[obj]
+                return tf.compose(w.locate(obj), (np.asarray(v.bottom, dtype=np.float64), np.array([1.0, 0, 0, 0])))[0]
+            z = self.mirror.state.zone(f"{obj}/{zone}")
+            pose = z.pose(w)
+            half = z.size[2] if z.shape == "box" else (z.size[1] if z.shape == "cylinder" else z.size[0])
+            return pose[0] - tf.rotate(pose[1], [0.0, 0.0, half])
+        if target in w.objects:
+            pos, quat = w.locate(target)
+            meta = w.objects[target]["meta"]
+            top = float(meta.get("size", [0, 0, meta.get("height", 0.05)])[2])
+            return pos + tf.rotate(quat, [0.0, 0.0, top])
+        return w.locate(target)[0]
+
+    def _shows(self, px: dict, obj: str) -> bool:
+        try:
+            return self.mirror.hit(dict(px))["object"] == obj
+        except Exception:                       # outside the image, or the background
+            return False
+
+    def pixel_at(self, target, tol: float = 0.03, past_robot: bool = True, placing: bool = False) -> dict:
+        """A pixel through which the tools will find the place `target`."""
+        w = self.mirror.world
+        want = self.where(target)
+        for cam in self.cameras:
+            uv = w.project(cam, want)
+            if uv is None:
+                continue
+            for du, dv in ((0, 0), (0, -4), (0, 4), (-4, 0), (4, 0), (0, -10), (0, 10), (-10, 0), (10, 0)):
+                u, v = round(uv[0] + du, 1), round(uv[1] + dv, 1)       # tested as it is sent
+                if not (0 <= u < w.image_size[0] and 0 <= v < w.image_size[1]):
+                    continue
+                try:
+                    hit = self.mirror.hit({"camera": cam, "u": u, "v": v}, past_robot=past_robot)
+                except Exception:
+                    continue
+                got = self.mirror.place_target(hit) if placing else hit["point"]
+                if float(np.linalg.norm(got - want)) <= tol:
+                    return {"camera": cam, "u": round(u, 1), "v": round(v, 1)}
+        if placing and isinstance(target, str) and ":" in target:
+            # the middle of the place is hidden (something is on it or over it): any visible part of the thing that
+            # the tools resolve to the same place will do
+            obj = target.split(":", 1)[0]
+            for cam in self.cameras:
+                for p in self._candidates(obj) + [want + np.array([dx, dy, 0.0]) for dx in (-0.08, 0.0, 0.08) for dy in (-0.07, 0.0, 0.07)]:
+                    uv = w.project(cam, p)
+                    if uv is None or not (0 <= uv[0] < w.image_size[0] and 0 <= uv[1] < w.image_size[1]):
+                        continue
+                    u, v = round(uv[0], 1), round(uv[1], 1)
+                    try:
+                        hit = self.mirror.hit({"camera": cam, "u": u, "v": v}, past_robot=past_robot)
+                    except Exception:
+                        continue
+                    if hit["object"] == obj and float(np.linalg.norm(self.mirror.place_target(hit) - want)) <= tol:
+                        return {"camera": cam, "u": u, "v": v}
+        raise DriverError(f"no camera shows the place {target!r}")
+
+    # ---- the tools, by name --------------------------------------------------------------------------------------------
+    def observe(self, **kw):
+        return self.call("observe", **kw)
+
+    # A scripted solution written for one arm does not say which arm, and asks for things two small arms do
+    # differently: a view from the front that neither can take, a thing carried across a table that no one arm
+    # spans. On a robot with two arms the driver then does what an agent would have to: it takes the nearest view
+    # the arms can give, picks with the other arm, or passes the thing from hand to hand by way of the middle of the
+    # table. Every step is an ordinary tool call; on a one-arm robot nothing here applies.
+    LOOK_INSTEAD = {"front": ("above", "back"), "left": ("above", "back"), "right": ("above", "back"), "back": ("above",), "above": ("back",)}
+    CANNOT = ("ik_", "path_blocked", "unreachable_view")
+
+    def _two(self, kw: dict) -> bool:
+        return bool(self.mirror.world.arm_names) and "arm" not in kw
+
+    def _failed(self, out: dict) -> str:
+        r = out.get("result", {}) if out.get("ok") else {}
+        return str(r.get("reason", "")) if r.get("status") == "failed" else ""
+
+    def _other(self, arm: str) -> str:
+        return next(n for n in self.mirror.world.arm_names if n != arm)
+
+    # ---- a robot that drives ---------------------------------------------------------------------------------------------
+    def turn(self, deg: float, **kw):
+        return self.call("turn", deg=round(float(deg), 1), **kw)
+
+    def face(self, target, **kw):
+        """Turn the base until it faces a place. (A scripted solution knows where things are; an agent that has no
+        camera on the whole room turns and looks.)"""
+        w = self.mirror.world
+        p = w.locate(target)[0] if isinstance(target, str) and target in w.objects else self.where(target)
+        x, y, yaw = w.base_pose()
+        d = (math.atan2(float(p[1]) - y, float(p[0]) - x) - yaw + math.pi) % (2.0 * math.pi) - math.pi
+        return self.turn(math.degrees(d), **kw) if abs(d) > math.radians(3.0) else None
+
+    def _pixel(self, target, placing: bool = False) -> dict:
+        """A pixel for a place or a thing; when no camera shows it (the head faces elsewhere), after turning to face it."""
+        named = isinstance(target, str) and target in self.mirror.world.objects
+        for attempt in range(2):
+            try:
+                return self.pixel_of(target) if named else self.pixel_at(target, placing=placing)
+            except DriverError:
+                if attempt or not self.mirror.world.base:
+                    raise
+                self.face(target)
+        raise DriverError(f"no camera shows {target!r}")
+
+    UNDERFOOT = 0.20        # m: a spot nearer than this to the middle of a body may be in none of its pictures
+
+    def go(self, target, legs: int = 8, **kw):
+        """Drive to a thing or a place, in as many calls as the way takes (one call covers at most two metres).
+
+        A call that ran out of its two metres a step short of a spot of the floor leaves that spot under the robot.
+        A body whose cameras show the floor at its feet can point at it again; one whose cameras do not (a head that
+        looks ahead, wrist cameras that look at the ceiling at rest) has nothing to point at, and stands as near to
+        the spot as pointing can bring it: the driver then leaves it there, as an agent would have to."""
+        out = None
+        for _ in range(legs):
+            # only a spot of the floor or a site is left under the robot: a thing is looked for as always (`_pixel`
+            # turns towards it), which the room robot's wrist camera, pointed at the floor ahead, then shows
+            thing = isinstance(target, str) and target in self.mirror.world.objects
+            near = out is not None and not thing and float(out["result"].get("remaining_m", math.inf)) <= self.UNDERFOOT
+            try:
+                px = self.pixel_at(target) if near else self._pixel(target)
+            except DriverError:
+                if near:
+                    return out
+                raise
+            out = self.call("go", **px, **kw)
+            if out["result"].get("arrived"):
+                return out
+        raise DriverError(f"go({target!r}) did not arrive in {legs} calls: {out['result'] if out else None}")
+
+    def look(self, target, side: str | None = None, **kw):
+        if side is None:                        # from above on the bench; a robot that drives looks from its own side
+            side = "front" if self.mirror.world.base else "above"
+        px = self.pixel_of(target) if isinstance(target, str) and target in self.mirror.world.objects else self.pixel_at(target, past_robot=False)
+        if not self._two(kw):
+            return self.call("look", side=side, **px, **kw)
+        out = self.call("look", check=False, side=side, **px, **kw)
+        for other in self.LOOK_INSTEAD.get(side, ()):
+            if not self._failed(out).startswith(self.CANNOT):
+                break
+            out = self.call("look", check=False, side=other, **px, **kw)
+        if self._failed(out).startswith(self.CANNOT):       # the nearer arm cannot: the other one, from above
+            out = self.call("look", check=False, side="above", arm=self._other(out["result"]["arm"]), **px, **kw)
+        return self._checked("look", out)
+
+    def _checked(self, tool: str, out: dict) -> dict:
+        if not out.get("ok"):
+            raise DriverError(f"{tool} was refused: {out.get('error')}")
+        if out.get("result", {}).get("status") == "failed":
+            raise DriverError(f"{tool} failed: {out['result'].get('reason')}")
+        return out
+
+    def pick(self, obj: str, **kw):
+        if not self._two(kw):
+            return self.call("pick", **self.pixel_of(obj), **kw)
+        out = self.call("pick", check=False, **self.pixel_of(obj), **kw)
+        if self._failed(out).endswith(":pregrasp") and self.mirror.held(self._other(out["result"]["arm"])) is None:
+            out = self.call("pick", check=False, arm=self._other(out["result"]["arm"]), **self.pixel_of(obj), **kw)      # the arm did not move: the other one
+        return self._checked("pick", out)
+
+    def _pass_over(self, arm: str) -> str:
+        """Hand what `arm` holds to the other arm by way of the table: put down on a free spot of the middle strip,
+        withdraw, take with the other hand. Returns the arm that holds it now."""
+        w = self.mirror.world
+        obj, other = self.mirror.held(arm), self._other(arm)
+        lo, hi = w.box(obj)
+        half = float(max(hi[0] - lo[0], hi[1] - lo[1])) / 2.0 + 0.03
+        spot = None
+        for y in (0.0, -0.05, 0.05, -0.10, 0.10, 0.14):
+            for x in (0.0, -0.04, 0.04):
+                free = all(n == obj or w.objects[n].get("mocap") or float(w.box(n)[1][2]) < 0.004 or
+                           x + half < w.box(n)[0][0] or x - half > w.box(n)[1][0] or y + half < w.box(n)[0][1] or y - half > w.box(n)[1][1]
+                           for n in w.objects)
+                if free:
+                    spot = [x, y, 0.0]
+                    break
+            if spot is not None:
+                break
+        if spot is None:
+            raise DriverError("no free spot in the middle of the table to pass the thing from hand to hand")
+        self.mirror.use({"arm": arm})
+        self.call("place", arm=arm, **self.pixel_at(spot, placing=True))
+        self.call("home", arm=arm)
+        self.call("pick", arm=other, **self.pixel_of(obj))
+        return other
+
+    def _hand(self, kw: dict) -> None:
+        """Two arms: the pixel of a place is read past what the acting hand holds, so the private copy is told which
+        arm the call is going to use before the pixel is looked up."""
+        m = self.mirror
+        if m.world.arm_names:
+            m.use({"arm": kw.get("arm")}, default="holding")
+
+    def _carry_to(self, tool: str, target, placing: bool, kw: dict, **args):
+        """`place` or `move` on two arms without `arm`: when the hand that holds the thing cannot get there and the
+        other arm stands nearer to the place, the thing goes from hand to hand first."""
+        self._hand(kw)
+        out = self.call(tool, check=False, **self.pixel_at(target, placing=placing), **args, **kw)
+        why = self._failed(out)
+        if why.startswith(("ik_", "path_blocked")) and self.mirror.held() is not None:
+            arm = out["result"]["arm"]
+            if self.mirror.world.nearest_arm(self.where(target)) != arm and self.mirror.held(self._other(arm)) is None:
+                other = self._pass_over(arm)
+                self.mirror.use({"arm": other})
+                out = self.call(tool, check=False, arm=other, **self.pixel_at(target, placing=placing), **args, **kw)
+        return self._checked(tool, out)
+
+    def place(self, target, **kw):
+        if self._two(kw):
+            return self._carry_to("place", target, True, kw)
+        self._hand(kw)
+        return self.call("place", **self.pixel_at(target, placing=True), **kw)
+
+    def move(self, target, height: float = 0.12, **kw):
+        if self._two(kw):
+            return self._carry_to("move", target, False, kw, height=height)
+        self._hand(kw)
+        return self.call("move", height=height, **self.pixel_at(target), **kw)
+
+    def pour(self, target, amount: str = "all", **kw):
+        self._hand(kw)
+        if isinstance(target, str) and target in self.mirror.world.objects:
+            px = self.pixel_of(target)
+        else:
+            px = self.pixel_at(target)
+        return self.call("pour", amount=amount, **px, **kw)
+
+    def press(self, obj: str, control: str, **kw):
+        site = self.mirror.world.objects[obj]["meta"]["controls"][control]["site"]
+        out = self.call("press", check=False, **self.pixel_at(f"{obj}/{site}", tol=0.04, past_robot=False), **kw)
+        if self._failed(out) == "too_far":      # a robot that drives, standing out of its arm's reach: what the result advises
+            self.go(f"{obj}/{site}")
+            out = self.call("press", check=False, **self.pixel_at(f"{obj}/{site}", tol=0.04, past_robot=False), **kw)
+        return self._checked("press", out)
+
+    def release(self, **kw):
+        return self.call("release", **kw)
+
+    # the pose interface: the caller works out the poses (from `where`, ground truth of the private copy)
+    def move_tcp(self, x: float, y: float, z: float, yaw: float = 0.0, pitch: float = 0.0, roll: float = 0.0, **kw):
+        return self.call("move_tcp", x=round(float(x), 4), y=round(float(y), 4), z=round(float(z), 4),
+                         yaw=float(yaw), pitch=float(pitch), roll=float(roll), **kw)
+
+    def go_tcp(self, x: float, y: float, z: float, yaw: float = 0.0, pitch: float = 0.0, roll: float = 0.0, step: float = 0.25, **kw):
+        """`move_tcp` in as many calls as the per-call limits need: the turn first (in place), then the way."""
+        w = self.mirror.world
+        goal = tf.quat_from_ypr(yaw, pitch, roll)
+        for _ in range(4):
+            pos, quat = w.tcp_pose()
+            left = float(np.degrees(np.linalg.norm(tf.rotvec(quat, goal))))
+            if left < 1.0:
+                break
+            part = tf.slerp(quat, goal, min(1.0, 90.0 / left))
+            self.move_tcp(*pos, *tf.ypr_from_quat(part), **kw)
+        out = None
+        for _ in range(12):
+            pos = w.tcp_pose()[0]
+            d = np.array([x, y, z], dtype=np.float64) - pos
+            n = float(np.linalg.norm(d))
+            if n < 1e-3 and out is not None:
+                break
+            to = pos + d * min(1.0, step / max(n, 1e-9))
+            out = self.move_tcp(*to, yaw, pitch, roll, **kw)
+        return out
+
+    def gripper(self, width_mm: float, **kw):
+        return self.call("gripper", width_mm=float(width_mm), **kw)
+
+    def home(self, **kw):
+        return self.call("home", **kw)
+
+    def wait(self, seconds: float, **kw):
+        return self.call("wait", seconds=seconds, **kw)
+
+    def ask(self, text: str, **kw):
+        return self.call("ask_operator", text=text, **kw)
+
+    def report(self, category: str, text: str, **kw):
+        return self.call("report", category=category, text=text, **kw)
+
+    def end(self, reason: str, text: str = "", **kw):
+        return self.call("end", reason=reason, text=text, **kw)
