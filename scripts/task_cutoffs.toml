@@ -14,7 +14,7 @@
 #   2. python3 scripts/task_cutoffs.py apply     # rewrites the tasks, docs/CUTOFFS.md and tasks/dataset.toml (~3 min)
 #   3. commit everything and open a pull request (CI runs ci_checks/check-cutoffs.py and the generators' checks).
 # Never edit the number in a task, a template or a generator: ci_checks/check-cutoffs.py fails when a task disagrees
-# with this table. Limits: a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+# with this table. Limits: a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
 # The benchmark names are the labels of scripts/task_conventions.py BENCHMARKS; a mode a benchmark has no tasks in has
 # no number.
 
