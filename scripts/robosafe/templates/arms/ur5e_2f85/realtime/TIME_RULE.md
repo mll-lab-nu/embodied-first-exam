@@ -1,6 +1,6 @@
 - **Time does not stop.** The episode starts paused, at a fixed starting state, the arm still. Its clock starts at
   your first `submit` (or `get_obs(seconds=s)` with `s > 0`) and from then on the robot runs at @@CONTROL_HZ@@ control
-  steps per second in real time, one step every @@CONTROL_DT@@ s of wall-clock time, whether or not you send anything,
+  steps per second in real time (slowdown S = 1), one step every @@CONTROL_DT@@ s of wall-clock time, whether or not you send anything,
   until the episode ends. Everything else in the scene goes on too: people and animals move, things fall, devices
   change, messages arrive. Your thinking, your tool calls and your programs all take robot time: nothing pauses for
   you.

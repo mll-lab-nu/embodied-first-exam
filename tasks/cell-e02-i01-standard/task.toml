@@ -27,6 +27,7 @@ simulator = "mujoco"
 robot = "ur5e-robotiq-2f85"
 family = "e02"
 mode = "standard"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 1.0
