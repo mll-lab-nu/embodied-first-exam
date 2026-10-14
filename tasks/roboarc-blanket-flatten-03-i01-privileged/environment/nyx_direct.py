@@ -615,6 +615,7 @@ class Slot:
     static_pos: np.ndarray | None = None
     static_quat: np.ndarray | None = None
     shape: tuple = ()               # geometry for the raster depth: ("plane", size) | ("box", size) | ("mesh", v, f)
+    carrier: str | None = None      # a fixed entity's link: its MuJoCo body, drawn there when not welded to the world
 
 
 @dataclass
@@ -803,7 +804,10 @@ class NyxScene:
                     np.asarray(origin_quat)
                 if carried:
                     body, pos, quat = self._carried(spec.name, e, pos, quat)
-                e.slots.append(Slot(spec.name, link, body, pos, quat, shape=shape))
+                # a fixed entity is fixed at its base only: a link behind a joint (lock_picking's rotor discs on their
+                # hinges) moves in the MuJoCo model, and _bind draws it at its body when that body is not welded
+                e.slots.append(Slot(spec.name, link, body, pos, quat, shape=shape,
+                                    carrier=self._body(spec.name, link) if e.fixed else None))
             if e.fixed:
                 self._static_slots(e)
         elif kind == "mesh":
@@ -1680,6 +1684,14 @@ class NyxDirect:
         for name, rope in (getattr(world, "_ropes", None) or {}).items():
             birth = mujoco.MjData(world.model)
             mujoco.mj_kinematics(world.model, birth)
+            # A rope born from a MuJoCo birth archive (no IPC settled state, so no frozen FEM birth here) has its chain
+            # built at that birth (qpos0) while its volume spawns straight: the skin binds the chain's own birth
+            # vertices (RopeChain.birth, which belong to qpos0), not the spawn (2026-10-14: the redesigned knot tiers
+            # rendered their ropes straight, the skin bound to the spawn at the knotted qpos0)
+            d = next((x for x in nyx.deformables if x["entity"].name == name), None)
+            if d is not None and name not in scene.fem_birth and np.shape(rope.birth) == d["entity"].birth_vertices.shape:
+                d["entity"].birth_vertices = np.asarray(rope.birth, dtype=np.float64)
+                nyx.deform_pos[d["v_start"]:d["v_start"] + d["n_vertices"]] = d["entity"].birth_vertices.astype(np.float32)
             nyx.bind_chain(name, world.model, birth, bodies=[int(b) for b in rope.bodies], link_s=rope.s_nodes)
         for name, cloth in (getattr(world, "_cloths", None) or {}).items():
             nyx.bind_cloth(name, cloth)
@@ -1690,7 +1702,10 @@ class NyxDirect:
         ids = []
         for s in self.slots:
             if s.body is None:
-                ids.append(-1)
+                # a fixed entity's link whose MuJoCo body moves (not welded to the world: behind a joint) is drawn at
+                # that body, as a free entity's link; every other fixed slot keeps its static pose
+                b = -1 if s.carrier is None else mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_BODY, s.carrier)
+                ids.append(b if b >= 0 and int(mj_model.body_weldid[b]) != 0 else -1)
                 continue
             b = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_BODY, s.body)
             if b < 0:
