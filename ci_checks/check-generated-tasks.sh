@@ -39,6 +39,10 @@ if [ -f "$root/scripts/yamlab/mk_tasks.py" ]; then   # YAMLab (its tasks pull re
   if out=$(python3 "$root/scripts/yamlab/mk_tasks.py" --check 2>&1); then echo "ok scripts/yamlab/mk_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/yamlab/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/pandadyn/mk_tasks.py" ]; then   # Panda Dynamic Scenes (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/pandadyn/mk_tasks.py" --check 2>&1); then echo "ok scripts/pandadyn/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/pandadyn/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 if [ -f "$root/scripts/robodojo/mk_tasks.py" ]; then   # RoboDojo (its tasks pull request adds the generator)
   if out=$(python3 "$root/scripts/robodojo/mk_tasks.py" --check 2>&1); then echo "ok scripts/robodojo/mk_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robodojo/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
