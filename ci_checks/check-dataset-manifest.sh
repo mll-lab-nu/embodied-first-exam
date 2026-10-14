@@ -1,22 +1,27 @@
 #!/usr/bin/env bash
-# tasks/dataset.toml (PROTOCOL §2.8): every task dir under tasks/ is listed and vice versa, and every listed digest is the
-# digest of the task's files as they are now. A digest left over from before a change makes the published dataset and
-# the repository disagree, so it fails here: refresh with `cd tasks && harbor add --scan .` (umask 022).
+# Task digests (PROTOCOL §2.8): every task carries the digest of its current files in `tasks/<task>/DIGEST` (one line
+# `sha256:<hex>`, written last by scripts/task_conventions.py `normalize`, so every generator and
+# `scripts/task_cutoffs.py apply` refresh it). A digest left over from before a change makes the published dataset and
+# the repository disagree, so it fails here: refresh with `python3 scripts/task_conventions.py tasks/<task>` (umask 022).
+# The release manifest tasks/dataset.toml is generated from the DIGEST files (scripts/dataset_manifest.py) and is not
+# committed: pull requests that change different tasks share no file. This check fails when it is tracked again.
 # The digest is recomputed the way Harbor does it (harbor.publisher.packager.Packager.compute_content_hash, Harbor
-# 0.23.0), without needing Harbor: sha256 over "<relative path>\0<sha256 of the file>\n" of task.toml, instruction.md,
-# README.md, trajectory.json and every file under environment/, tests/, solution/ and steps/, sorted by path, with
-# Harbor's default ignores (__pycache__/, *.pyc, .DS_Store, *.swp, *.swo, *~).
-# Usage: check-dataset-manifest.sh            (repo-level; run_all.sh calls it once)
-root="$(cd "$(dirname "$0")/.." && pwd)"; python3 - "$root" <<'PY'
-import fnmatch, hashlib, pathlib, sys, tomllib
-root = pathlib.Path(sys.argv[1]); d = tomllib.load(open(root / "tasks" / "dataset.toml", "rb"))
-name_of = lambda t: t["name"].split("/")[-1] if "/" in t.get("name", "") else pathlib.Path(t.get("path", t.get("name"))).name  # noqa: E731
-listed = {name_of(t): t.get("digest") for t in d.get("tasks", [])}
-present = {p.name for p in (root / "tasks").iterdir() if p.is_dir() and (p / "task.toml").exists()}
+# 0.23.0), independently of scripts/task_conventions.py and without needing Harbor: sha256 over
+# "<relative path>\0<sha256 of the file>\n" of task.toml, instruction.md, README.md, trajectory.json and every file
+# under environment/, tests/, solution/ and steps/, sorted by path, with Harbor's default ignores (__pycache__/, *.pyc,
+# .DS_Store, *.swp, *.swo, *~). DIGEST is not one of those files.
+# Usage: check-dataset-manifest.sh [task dirs]   (default: every task; run_all.sh passes a pull request's scope)
+root="$(cd "$(dirname "$0")/.." && pwd)"
+if git -C "$root" ls-files --error-unmatch tasks/dataset.toml >/dev/null 2>&1; then
+  echo "FAIL tasks/dataset.toml is tracked: it is generated for a release (scripts/dataset_manifest.py write), not committed (git rm --cached tasks/dataset.toml)"; exit 1
+fi
+python3 - "$root" "$@" <<'PY'
+import fnmatch, hashlib, pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+given = [pathlib.Path(a) for a in sys.argv[2:]]
+tasks = sorted({(p if p.is_absolute() else pathlib.Path.cwd() / p).resolve() for p in given if (p / "task.toml").is_file()}) \
+    if given else sorted(p for p in (root / "tasks").iterdir() if p.is_dir() and (p / "task.toml").exists())
 rc = 0
-for x in sorted(present - set(listed)): print(f"FAIL tasks/{x}: not in tasks/dataset.toml"); rc = 1
-for x in sorted(set(listed) - present): print(f"FAIL dataset.toml lists missing task {x}"); rc = 1
-if len(d.get("tasks", [])) != len(listed): print("FAIL dataset.toml lists a task more than once"); rc = 1
 
 IGNORE_NAMES = ("*.pyc", ".DS_Store", "*.swp", "*.swo", "*~")
 
@@ -45,19 +50,26 @@ def digest(task: pathlib.Path) -> str:
     return "sha256:" + outer.hexdigest()
 
 
-stale = []
-for x in sorted(present & set(listed)):
-    task = root / "tasks" / x
+stale, missing = [], []
+for task in tasks:
+    x = task.name
     if (task / ".gitignore").exists():
         print(f"FAIL tasks/{x}: a task-level .gitignore changes what Harbor packages; this check does not read it"); rc = 1
         continue
-    if digest(task) != listed[x]:
+    f = task / "DIGEST"
+    have = f.read_text() if f.is_file() else None
+    if have is None or not re.fullmatch(r"sha256:[0-9a-f]{64}\n", have):
+        missing.append(x)
+    elif have.strip() != digest(task):
         stale.append(x)
-if stale:
-    rc = 1
-    print(f"FAIL tasks/dataset.toml: {len(stale)} digest(s) are not the digest of the task's current files "
-          "(refresh: cd tasks && harbor add --scan .):")
-    for x in stale[:20]: print(f"  - {x}")
-    if len(stale) > 20: print(f"  ... {len(stale) - 20} more")
+for what, xs in (("no DIGEST file (or not one line `sha256:<hex>`)", missing),
+                 ("a DIGEST that is not the digest of the task's current files", stale)):
+    if xs:
+        rc = 1
+        print(f"FAIL {len(xs)} task(s) with {what} (refresh: python3 scripts/task_conventions.py tasks/<task>, umask 022):")
+        for x in xs[:20]: print(f"  - {x}")
+        if len(xs) > 20: print(f"  ... {len(xs) - 20} more")
+if rc == 0:
+    print(f"ok task digests: {len(tasks)} task(s), each DIGEST is the digest of its current files")
 sys.exit(rc)
 PY

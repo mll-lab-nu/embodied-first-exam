@@ -52,7 +52,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   rendered `## Time limit` section and state the limit nowhere else? Does the benchmark's own text say what the cutoff costs
   here (simulator start-up, what the service's `time_left_s` counts from, a service that ends the episode itself)? A
   pull request that changes a cutoff: an owner decision, a `[[history]]` entry, `scripts/task_cutoffs.py apply` run
-  (the task directories, `docs/CUTOFFS.md` and `tasks/dataset.toml` changed with the table), nothing else changed.
+  (the task directories, their `DIGEST` files and `docs/CUTOFFS.md` changed with the table), nothing else changed.
 - Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
   `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
   machine with exactly these values?

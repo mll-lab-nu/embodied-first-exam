@@ -11,7 +11,7 @@
 # To change a time:
 #   1. edit the number in this file, and add a `[[history]]` entry at the bottom (date, who decided, old -> new):
 #      CI and `apply` refuse a changed number without one;
-#   2. python3 scripts/task_cutoffs.py apply     # rewrites the tasks, docs/CUTOFFS.md and tasks/dataset.toml (~3 min)
+#   2. python3 scripts/task_cutoffs.py apply     # rewrites the tasks (and their DIGEST) and docs/CUTOFFS.md (~3 min)
 #   3. commit everything and open a pull request (CI runs ci_checks/check-cutoffs.py and the generators' checks).
 # Never edit the number in a task, a template or a generator: ci_checks/check-cutoffs.py fails when a task disagrees
 # with this table. Limits: a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
@@ -19,6 +19,7 @@
 # no number.
 
 [cutoff_sec]
+"AM-Bench"          = { privileged =  3600 }
 "AutoBio"           = { privileged =  3600, standard =  3600 }
 "BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
 "BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
@@ -293,3 +294,12 @@ from_sec = 0
 to_sec = 3600
 decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
 note = "the first standard-realtime task (table_tennis): the standard twin's number"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "AM-Bench"
+modes = ["privileged"]
+from_sec = 0
+to_sec = 3600
+decided_by = "proposal (D8 default)"
+note = "the benchmark's first tasks (privileged only): the protocol's default; every Python process pays a few minutes of Isaac Sim start, which the hour includes"

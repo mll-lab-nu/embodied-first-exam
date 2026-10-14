@@ -72,7 +72,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
 5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
 6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
-7. Listed in `tasks/dataset.toml`. [CI]
+7. Carries its content digest in `DIGEST` (§2.8). [CI]
 8. The verifier writes `reward.txt` (1/0) and a numeric-only `reward.json` with at least `success` (and `deterministic` for trajectory tasks). [current]
 9. Same verdict in a fresh process; the verifier does not need the network (standard-mode verifiers run with `no-network`). [current]
 10. Reference solutions only under `solution/`; nothing the agent can reach contains or points to one. [current]
@@ -245,7 +245,7 @@ example → nop result → predicate summary*. The reviewer checks:
 ### 2.8 Identity and immutability
 | Item | Level | Basis |
 |---|---|---|
-| Listed in `tasks/dataset.toml` with the digest of its current files (re-run `cd tasks && harbor add --scan .` after any change; `ci_checks/check-dataset-manifest.sh` recomputes every digest) | MUST | [CI] |
+| Carries the digest of its current files in `tasks/<task>/DIGEST` (one line `sha256:<hex>`, the digest Harbor publishes it under; written last by `scripts/task_conventions.py` `normalize`, so every generator and `scripts/task_cutoffs.py apply` refresh it; after a hand edit run `python3 scripts/task_conventions.py tasks/<task>`; `ci_checks/check-dataset-manifest.sh` recomputes it). The release manifest `tasks/dataset.toml` is generated from the DIGEST files (`scripts/dataset_manifest.py write`) and not committed, so pull requests that change different tasks share no file (2026-10-14, board 0117) | MUST | [CI] |
 | A published task's `environment/` and `tests/` inputs are immutable; a change is a new task. One line is not such an input: `RCB_WALL_CLOCK_S` of the `sim` service in `environment/docker-compose.yaml`, which mirrors the cutoff table (§2.12) and is rewritten with it by `scripts/task_cutoffs.py apply`, like `[agent] timeout_sec`; it changes what the service reports, not the scene, the instance or the success rule. Nothing else under `environment/` or `tests/` follows the table | MUST | [current]; the one line: [CI] (`ci_checks/check-cutoffs.py`) |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
 | A change of a task's cutoff, or of the text `scripts/task_conventions.py` owns in every instruction (`## External material`, `## Resource limits`, `## Time limit`), changes the task in place: same name and instance, new digest. A cutoff change is recorded in the cutoff table's `[[history]]` (§2.12; required: CI refuses a number that differs from its last recorded value), which stands for the per-task Change Log entry; a change of the shared text in §7. Results under another cutoff are reported separately (D8) | MUST (the record) | [new] (2026-10-11; precedents: #155 RoboDojo 5400 → 3600 s, #150 / #151) |
