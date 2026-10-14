@@ -1,50 +1,112 @@
 name: validate-task
-# Manual runtime validation on a self-hosted GPU runner: oracle scores 1 on every task whose task.toml says
-# oracle = "full", and the nop agent scores 0 on every task. Tasks with a partial or no oracle are human-reviewed
-# (docs/PROTOCOL.md §1.6) and only get the nop check.
+# Runtime validation on a self-hosted GPU runner: oracle scores 1 on every task whose task.toml says oracle = "full",
+# and the nop agent scores 0 on every task. Tasks with a partial or no oracle are human-reviewed (docs/PROTOCOL.md §1.6)
+# and only get the nop check.
+# Triggers (board 0120; as Terminal-Bench's validate-task.yml): a maintainer's comment `/validate` on a pull request
+# (author association OWNER / MEMBER / COLLABORATOR) runs it on the tasks the pull request adds or changes, at its head
+# commit, and answers with a comment of the results; a manual run (workflow_dispatch) takes task dirs (default: all) and
+# optionally a pull request number. Never on every push: a trial builds images and takes a GPU.
 on:
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       tasks:
-        description: "space-separated task dirs, e.g. tasks/foo-privileged (default: all)"
+        description: "space-separated task dirs, e.g. tasks/foo-privileged (default: all, or a pull request's changed tasks)"
+        required: false
+        default: ""
+      pr:
+        description: "a pull request number: validate its changed tasks at its head commit"
         required: false
         default: ""
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
+concurrency:
+  group: validate-task
+  cancel-in-progress: false   # one at a time on the GPU runner; later requests wait
 jobs:
   validate:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request && startsWith(github.event.comment.body, '/validate') &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: [self-hosted, docker]
     env:
       TASKS: ${{ inputs.tasks }}
+      PR: ${{ github.event.issue.number || inputs.pr }}
       HARBOR_VERSION: "0.23.0"
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: The pull request's head and changed tasks
+        if: env.PR != ''
+        run: |
+          set -eu
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
+          sha=$(curl -fsS "${auth[@]}" "$api/pulls/$PR" | python3 -c 'import json,sys; print(json.load(sys.stdin)["head"]["sha"])')
+          files=""
+          for page in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+            got=$(curl -fsS "${auth[@]}" "$api/pulls/$PR/files?per_page=100&page=$page" | python3 -c 'import json,sys; print("\n".join(f["filename"] for f in json.load(sys.stdin)))')
+            [ -n "$got" ] || break
+            files+="$got"$'\n'
+          done
+          dirs=$(printf '%s' "$files" | sed -n 's#^\(tasks/[^/]*\)/.*#\1#p' | sort -u | tr '\n' ' ')
+          echo "HEAD_SHA=$sha" >> "$GITHUB_ENV"
+          [ -n "$TASKS" ] || echo "TASKS=$dirs" >> "$GITHUB_ENV"
+          echo "pull request #$PR at $sha; changed task dirs: ${dirs:-none}"
       - uses: actions/checkout@v4
+        with: { ref: "${{ env.HEAD_SHA || github.sha }}" }
       - uses: astral-sh/setup-uv@v5
       - run: uv tool install "harbor==$HARBOR_VERSION"
       - name: Resolve task list
         run: |
           set -eu
-          list=${TASKS:-$(ls -d tasks/*/)}
+          if [ -n "$PR" ] && [ -z "$TASKS" ]; then list=""; else list=${TASKS:-$(ls -d tasks/*/)}; fi
+          real=""
           for t in $list; do
             [[ "$t" =~ ^tasks/[A-Za-z0-9_.-]+/?$ ]] || { echo "bad task dir: $t"; exit 1; }
-            [ -f "${t%/}/task.toml" ] || { echo "not a task: $t"; exit 1; }
+            if [ -f "${t%/}/task.toml" ]; then real+=" ${t%/}"; else echo "skip $t (no task.toml: removed)"; fi
           done
-          echo "TASK_LIST=$(echo $list)" >> "$GITHUB_ENV"
+          echo "TASK_LIST=$(echo $real)" >> "$GITHUB_ENV"
           echo "JOBS=jobs/validate-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
-      - name: oracle == 1 (tasks with oracle = "full")
+          echo "tasks: ${real:- none}"
+      - name: oracle == 1 (tasks with oracle = "full"), nop == 0
         run: |
-          set -eu
+          set -u
+          rc=0; : > "$RUNNER_TEMP/results.md"
           for t in $TASK_LIST; do
             n=$(basename "$t")
-            grep -Eq '^oracle *= *"full"' "${t%/}/task.toml" || { echo "skip $n (oracle is not full)"; continue; }
-            harbor run -p "$t" -a oracle -o "$JOBS" --job-name "oracle-$n"
-            grep -qx 1 "$JOBS/oracle-$n"/*/verifier/reward.txt || { echo "oracle failed on $t"; exit 1; }
+            if grep -Eq '^oracle *= *"full"' "$t/task.toml"; then
+              harbor run -p "$t" -a oracle -o "$JOBS" --job-name "oracle-$n" || true
+              r=$(cat "$JOBS/oracle-$n"/*/verifier/reward.txt 2>/dev/null | head -1)
+              [ "$r" = 1 ] && o="1 (ok)" || { o="${r:-no reward} (FAIL)"; rc=1; }
+            else
+              o="— (oracle is not full)"
+            fi
+            harbor run -p "$t" -a nop -o "$JOBS" --job-name "nop-$n" || true
+            r=$(cat "$JOBS/nop-$n"/*/verifier/reward.txt 2>/dev/null | head -1)
+            [ "$r" = 0 ] && z="0 (ok)" || { z="${r:-no reward} (FAIL)"; rc=1; }
+            echo "| \`$n\` | $o | $z |" >> "$RUNNER_TEMP/results.md"
           done
-      - name: nop == 0
+          echo "RC=$rc" >> "$GITHUB_ENV"
+          { echo "| Task | oracle | nop |"; echo "|---|---|---|"; cat "$RUNNER_TEMP/results.md"; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Answer on the pull request
+        if: always() && env.PR != ''
+        continue-on-error: true
         run: |
           set -eu
-          for t in $TASK_LIST; do
-            n=$(basename "$t")
-            harbor run -p "$t" -a nop -o "$JOBS" --job-name "nop-$n"
-            grep -qx 0 "$JOBS/nop-$n"/*/verifier/reward.txt || { echo "nop passed on $t"; exit 1; }
-          done
+          {
+            echo "### /validate: oracle and nop at \`${HEAD_SHA:-$GITHUB_SHA}\`"
+            echo
+            if [ -s "$RUNNER_TEMP/results.md" ]; then echo "| Task | oracle | nop |"; echo "|---|---|---|"; cat "$RUNNER_TEMP/results.md"
+            else echo "No task directory added or changed (or the run stopped before the trials)."; fi
+            echo
+            echo "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > "$RUNNER_TEMP/comment.md"
+          body=$(python3 -c 'import json,sys; print(json.dumps({"body": open(sys.argv[1]).read()}))' "$RUNNER_TEMP/comment.md")
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+               "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/$PR/comments" -d "$body" > /dev/null
+      - name: Result
+        run: '[ "${RC:-1}" = 0 ] || { echo "oracle or nop failed (table above)"; exit 1; }'
