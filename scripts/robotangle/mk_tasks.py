@@ -46,7 +46,7 @@ Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py 
 Nothing at run time imports repository code: the tooling and the sim layer are copies (PROTOCOL D9).
 """
 from __future__ import annotations
-import argparse, filecmp, hashlib, json, math, os, pathlib, re, shutil, sys, tempfile, zipfile
+import argparse, filecmp, hashlib, json, math, os, pathlib, re, shutil, sys, tempfile, tomllib, zipfile
 
 BENCH = "robotangle"   # the benchmark's name: task prefix, image eai-<BENCH>, scripts/<BENCH>/, docs/benchmarks/<BENCH>.md
 HERE = pathlib.Path(__file__).resolve().parent
@@ -1118,7 +1118,24 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
                 put(t / "solution/solve.sh", (SHARED / "standard/solution/solve.sh").read_bytes(), exe=True)
     for t in dirs:
         TC.normalize(t)          # leaves the layer alone: scripts/eai_standard/ is a shared source (task_conventions)
+        if main_cpus(t):
+            TC.normalize(t)      # the texts rendered from [environment] (the resource paragraph) follow the applied cap
     return dirs
+
+
+def main_cpus(task: pathlib.Path) -> bool:
+    """`[environment].cpus` = `[metadata.resources.caps].main.cpus` (scripts/task_resources.toml: the task classes' own
+    values, rigid / rope-chain / cloth). normalize sets `memory_mb` from the same cap; Harbor applies both to the agent's
+    container, and check-resources wants the declared cap to be the applied one."""
+    p = task / "task.toml"; s = p.read_text()
+    main = ((tomllib.loads(s).get("metadata", {}).get("resources") or {}).get("caps") or {}).get("main") or {}
+    if not main.get("cpus"):
+        return False
+    want = f"{float(main['cpus']):g}"
+    new = re.sub(r"(?ms)(^\[environment\]\n.*?^cpus\s*=\s*)[0-9.]+", lambda m: m.group(1) + want, s, count=1)
+    if new != s:
+        p.write_text(new)
+    return new != s
 
 
 def snapshot(d: pathlib.Path) -> dict:
