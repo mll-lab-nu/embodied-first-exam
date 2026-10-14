@@ -4,38 +4,36 @@
 # privileged task's tests/instance.{json,npz}, and the copy the task runs from (privileged: environment/; standard and
 # standard-realtime: the sim sidecar's environment/sim/) are byte-identical, and neither exists without the other.
 # RoboPaint's privileged environment/ copy is reduced by design (check-robopaint-leak.sh), so its scorer sidecar's
-# environment/scorer/ copy is compared instead. A standard or standard-realtime task's twin <base>-privileged must
-# exist, except for the benchmarks PROTOCOL §4b exempts by owner decision (NO_TWIN below; the same list:
-# scripts/task_conventions.py NO_TWIN): they have no privileged mode and nothing to compare. STANDARD_ONLY: standard tasks
-# without a twin that carry their own frozen instance (PROTOCOL §4.8, physics that does not replay bit for bit: graded by
-# the live episode); their generator checks that copy against the benchmark's frozen instance (mk_tasks.py --check).
+# environment/scorer/ copy is compared instead.
+# A benchmark ships any subset of the three modes (PROTOCOL §2.15, owner 2026-10-14). A standard or standard-realtime
+# task without its twin <base>-privileged is accepted when scripts/task_conventions.py no_twin_reason() gives a reason:
+# its benchmark has no privileged mode (no privileged number in scripts/task_cutoffs.toml), or the task is listed in
+# NO_TWIN (e.g. RoboDojo's six standard-only tasks, PROTOCOL §4.8). Such a task carries its own frozen instance, if it
+# has one: its sim sidecar's copy and its verifier's tests/ copy, where both exist, are byte-identical (a generator's
+# --check compares them with the benchmark's frozen instance). Any other missing twin fails.
 # Usage: check-instance-copies.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
-NO_TWIN=(roboolympics-)   # PROTOCOL §4b: RoboOlympics (owner, 2026-10-08), standard-realtime only
-STANDARD_ONLY=(robodojo-fold-clothes-i00-standard robodojo-fold-clothes-random-i00-standard robodojo-make-toast-random-i00-standard robodojo-pour-by-language-i00-standard robodojo-pour-liquid-into-cup-i00-standard robodojo-pour-liquid-into-cup-random-i00-standard)   # PROTOCOL §4.8 exception (owner, 2026-10-11)
-case "$n" in
-  *-standard-realtime) base="${n%-standard-realtime}"; ref="$base-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too
-  *-standard) base="${n%-standard}"; ref="$base-privileged/tests"; copy="environment/sim" ;;
-  robopaint-*) base=""; ref="$n/tests"; copy="environment/scorer" ;;
-  *) base=""; ref="$n/tests"; copy="environment" ;;
-esac
-if [ -n "$base" ]; then
-  for s in "${STANDARD_ONLY[@]}"; do   # while its twin still exists (until the tasks change lands) the pair rules below apply
-    if [ "$n" = "$s" ] && [ ! -e "$(dirname "$t")/$base-privileged" ]; then
-      [ -f "$t/$copy/instance.json" ] || { echo "FAIL $t: a standard-only task carries its frozen instance ($copy/instance.json)"; exit 1; }
-      exit 0
-    fi
+root="$(cd "$(dirname "$0")/.." && pwd)"
+# the mode registry (PROTOCOL §2.16; run_all.sh reads it once): "<mode> <sidecar 0|1> <twin mode or ->", longest first
+modes="${RCB_MODES_TABLE:-$(python3 "$root/scripts/task_conventions.py" modes)}"
+base=""; ref="$n/tests"; copy="environment"; twin=""
+case "$n" in robopaint-*) copy="environment/scorer" ;; esac
+while read -r m sidecar tw; do
+  [ -n "$m" ] && [[ "$n" == *"-$m" ]] || continue
+  if [ "$tw" != "-" ]; then base="${n%-$m}"; twin="$tw"; ref="$base-$tw/tests"; fi
+  [ "$sidecar" = 1 ] && copy="environment/sim"
+  break
+done <<< "$modes"
+if [ -n "$base" ] && [ ! -d "$(dirname "$t")/$base-$twin" ]; then
+  why="$(python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, sys.argv[1]); import task_conventions as tc; print(tc.no_twin_reason(Path(sys.argv[2])) or "")' "$root/scripts" "$t")" \
+    || { echo "FAIL $t: scripts/task_conventions.py no_twin_reason() failed"; exit 1; }
+  [ -n "$why" ] || { echo "FAIL $t: its twin $base-$twin is missing; its benchmark has a $twin mode, so a task without a twin is listed in scripts/task_conventions.py NO_TWIN with the reason (PROTOCOL §2.15)"; exit 1; }
+  for f in instance.json instance.npz; do   # no twin: its own two copies, where both exist, agree
+    a="$t/tests/$f"; b="$t/$copy/$f"
+    [ -f "$a" ] && [ -f "$b" ] && ! cmp -s "$a" "$b" && { echo "FAIL $t: $copy/$f and tests/$f differ"; rc=1; }
   done
-  for p in "${NO_TWIN[@]}"; do
-    if [[ "$n" == "$p"* ]]; then
-      for f in instance.json instance.npz; do   # no twin, so no instance copy to keep in step with one
-        [ -f "$t/$copy/$f" ] && { echo "FAIL $t: $copy/$f without a privileged twin (PROTOCOL §4b NO_TWIN)"; rc=1; }
-      done
-      exit $rc
-    fi
-  done
-  [ -d "$(dirname "$t")/$base-privileged" ] || { echo "FAIL $t: its privileged twin $base-privileged is missing (PROTOCOL §2.2)"; exit 1; }
+  exit $rc
 fi
 for f in instance.json instance.npz; do
   a="$(dirname "$t")/$ref/$f"; b="$t/$copy/$f"
