@@ -237,5 +237,5 @@ benchmark = "RoboTangle"
 modes = ["privileged", "standard"]
 from_sec = 7200
 to_sec = 10800
-decided_by = "user (2026-10-13)"
+decided_by = "owner"
 note = "RoboTangle is now its MuJoCo release (it replaces the Genesis tasks, which are deleted; until today the release was prepared as RoboTangle-New, whose row and two entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap"
