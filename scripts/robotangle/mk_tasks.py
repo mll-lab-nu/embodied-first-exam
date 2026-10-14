@@ -720,7 +720,8 @@ def since_evidence(rec: dict) -> str:
     return f"This family's task, geometry and asset files are unchanged from that build to this release; {shared}." + end
 
 
-NOT_CONFIRMED = {"not_run": "No Harbor oracle trial of it has been run yet",
+NOT_CONFIRMED = {"failed": "Its Harbor oracle trial did not score 1, and the cause is not established",
+                 "not_run": "No Harbor oracle trial of it has been run yet",
                  "running": "Its Harbor oracle trial was still running when this release was rendered and is not confirmed"}
 
 
