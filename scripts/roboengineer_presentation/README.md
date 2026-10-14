@@ -47,6 +47,10 @@ python -m scripts.roboengineer_presentation.render_all \
 
 The default selection is instance 0, held-out case 0. Capture requires exact state, policy, dynamics, metrics and feedback agreement with the archived record before exporting 200 poses. The complete eight-second clip plays at real time; the camera shows the launch, physical gap, descending landing ramp and stop. The studio foundation stays below the source pit at z=-1.2 m. This scripted reference replay is additional to the original eight-objective collection and does not establish native Harbor or coding-agent acceptance. Its separate provenance JSON and download preserve the original montage and ZIP.
 
+For an explicitly modified demonstration, add `--showcase-config <operator-json>` and `--reference-dir <saved-run-directory>` to `capture_jump`. The config contains `revision`, `course`, `policy`, `plant_seed`, `friction`, `initial_y`, `initial_yaw` and `noise_seed`; these are inputs to the frozen evaluator's `run` function. Run and save that configuration first, then capture verifies exact agreement in a fresh process. The published clip is marked a custom showcase, with `benchmark_case=false`; it is not a held-out benchmark result. Keep the config, private record and pose export outside the public video package.
+
+The user-requested `wide-gap-showcase/2` changes the gap from 0.5620 m to 1.40 m and the controller's approach/braking settings. Car physics, ramp slopes and success predicates are unchanged. The launch-speed coefficient is 5.0 m/s, but the measured takeoff speed is 3.8605 m/s (3.7303 m/s horizontally), compared with 2.8481 m/s previously. The successful custom episode takes off at 1.314 s and lands at 1.630 s; it is shown at real-time speed. This local demonstration search provides no new benchmark or agent score.
+
 ## Scope and interpretation
 
 - These clips show scripted or trained reference policies, not Astra/Luna/Sol or other coding-agent scores.

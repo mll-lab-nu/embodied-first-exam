@@ -220,6 +220,12 @@ def encode(root, name):
         render=receipt,
         rotor_animation=spec.get("rotor_animation"),
     )
+    if spec.get("showcase_revision"):
+        result.update(
+            showcase_revision=spec["showcase_revision"],
+            benchmark_case=spec["benchmark_case"],
+            gap_m=spec["course"]["gap"],
+        )
     (out / (name + ".json")).write_text(json.dumps(result, indent=2) + "\n")
     print("ENCODED", name, checked, flush=True)
 
