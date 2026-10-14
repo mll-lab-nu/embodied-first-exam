@@ -7253,3 +7253,7 @@ digest = "sha256:71fcd2a9cec5e927de4bbd71116f3d366f256c45bd016462687c4c493e7a7c5
 name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
 digest = "sha256:2b4a1f23b409a8a84a0a19684412ac27f61ac7ee69d460842bb4bf8063261cac"
 
+[[tasks]]
+name = "robot-coding-bench/mujoco_playground_barkour_joystick-standard-realtime"
+digest = "sha256:7406babaffc78c275f950c6abbf0aa8c1bd93b7c8521b1dcab66a98407a7c897"
+
