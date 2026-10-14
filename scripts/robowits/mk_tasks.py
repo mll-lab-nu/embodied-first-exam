@@ -450,12 +450,13 @@ def reference_text(fam: str, f: dict, mode: str) -> str:
                 "published on the results site).")
 
 
-def readme(title: str, rows: list[tuple[str, str]], task: str, difficulty: str, reference: str, verification: str, mode: str) -> str:
+def readme(title: str, rows: list[tuple[str, str]], task: str, difficulty: str, reference: str, verification: str, mode: str,
+           extra: tuple = ()) -> str:
     """README content in the standard layout (PROTOCOL §2.1). normalize() (scripts/task_conventions.py) then writes the key
     table (benchmark, mode, twin, simulator / robot, family / instance, oracle, budget, base image) from task.toml and the
     Dockerfiles, and moves these extra rows and the Change Log (PROTOCOL §2.8) into ## Details."""
     table = "\n".join(["| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows])
-    log = "\n".join(f"- {e}" for e in CHANGE_LOG[mode])
+    log = "\n".join(f"- {e}" for e in [*CHANGE_LOG[mode], *extra])   # extra: the family's own entries (families.py change_log)
     return (f"# {title}\n\n{table}\n\n## Task\n{task}\n\n## Difficulty\n{difficulty}\n\n## Reference solution\n{reference}\n\n"
             f"## Verification\n{verification}\n\n## Change Log\n{log}\n")
 
@@ -508,7 +509,8 @@ def priv_readme(fam: str, f: dict) -> str:
     task = wrap(f"{f_text(fam)} One replayable trajectory from the frozen instance (evaluation scene {f['eval_index']} of RoboWits task "
                 f"{int(num(f))}), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay); the "
                 "success criterion as graded is in `instruction.md`.")
-    return readme(priv_dir(fam), rows, task, wrap(f["difficulty"]), reference_text(fam, f, "priv"), ver, "priv")
+    return readme(priv_dir(fam), rows, task, wrap(f["difficulty"]), reference_text(fam, f, "priv"), ver, "priv",
+                  f.get("change_log", {}).get("priv", ()))
 
 
 def std_readme(fam: str, f: dict) -> str:
@@ -536,7 +538,8 @@ def std_readme(fam: str, f: dict) -> str:
     diff = wrap(f"That of `{priv_dir(fam)}` (its Difficulty), without resets, privileged state or the tooling's primitives: the agent "
                 "perceives the scene through calibrated RGB-D cameras and its own proprioception, and every action it sends is part of "
                 "the one graded episode.")
-    return readme(std_dir(fam), rows, task, diff, reference_text(fam, f, "std"), ver, "std")
+    return readme(std_dir(fam), rows, task, diff, reference_text(fam, f, "std"), ver, "std",
+                  f.get("change_log", {}).get("std", ()))
 
 
 def toml_str(s: str) -> str:

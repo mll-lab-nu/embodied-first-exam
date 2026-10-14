@@ -1,8 +1,16 @@
 name: static-checks
+# Scope (ci_checks/ci_scope.py, docs: CONTRIBUTING.md "Review and merge"): a pull request runs the checks on what it
+# can affect -- one benchmark's own paths changed: that benchmark's tasks, generator check and unit tests (plus the cheap
+# repo-level checks on everything); anything shared (ci_checks/, .github/, shared scripts/ modules and tables, shared
+# images, the protocol documents, an unknown path): the full suite. Pushes to main, the nightly run and a manual run
+# always run the full suite, so nothing a scoped run leaves out stays unchecked past the merge.
 on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: "40 9 * * *"     # nightly full suite (UTC)
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -16,25 +24,46 @@ concurrency:
 jobs:
   checks:
     runs-on: [self-hosted, rcb-ci]
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }   # a pull request's checkout is GitHub's merge commit: HEAD^1 = main, HEAD^2 = the branch
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Static checks on all tasks
-        run: bash ci_checks/run_all.sh
-      - name: Task conventions (README, task.toml, test.sh are what scripts/task_conventions.py writes)
-        run: python3 scripts/task_conventions.py --check tasks/*/
+      # every per-task check (incl. scripts/task_conventions.py --check: README, task.toml, test.sh are what normalize
+      # writes) and the repo-level checks, concurrently on the runner's CPUs; the unit tests run in the job below
+      - name: Static checks (pull request - what it can affect; main - all tasks)
+        env: { RCB_SKIP_UNIT_TESTS: "1" }
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && git rev-parse -q --verify HEAD^2 >/dev/null; then
+            bash ci_checks/run_all.sh --changed HEAD^1
+          else
+            bash ci_checks/run_all.sh
+          fi
   # The shared service layers and the benchmarks' service / grader tests on stub simulators (numpy + requests; no
-  # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, second tier. A job of its own, so that the static
-  # checks above do not wait for it.
+  # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, both tiers. A job of its own, so that the static
+  # checks above do not wait for it. On a pull request: the tests of the benchmarks in scope (all of them when the scope
+  # is full).
   unit-tests:
     runs-on: [self-hosted, rcb-ci]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: numpy and requests
         run: python3 -m pip install --quiet numpy requests
       - name: Unit tests (both tiers)
-        run: bash ci_checks/check-unit-tests.sh --all
+        run: |
+          scope=full
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && git rev-parse -q --verify HEAD^2 >/dev/null; then
+            eval "$(python3 ci_checks/ci_scope.py --diff-from HEAD^1)"; scope="$RCB_SCOPE"
+            echo "scope: $RCB_SCOPE ($RCB_SCOPE_REASON)${RCB_SCOPE_BENCHES:+ -- benchmarks: $RCB_SCOPE_BENCHES}"
+          fi
+          case "$scope" in
+            full) bash ci_checks/check-unit-tests.sh --all ;;
+            benchmarks) read -ra only <<<"$RCB_SCOPE_PATHS"; bash ci_checks/check-unit-tests.sh --all --only "${only[@]}" ;;
+            none) echo "no benchmark or shared code changed: no unit test in scope" ;;
+            *) echo "FAIL unknown scope $scope"; exit 1 ;;
+          esac

@@ -104,7 +104,7 @@ or robot base position either.
 
 `BENCH` in `scripts/roboarc/mk_tasks.py` and `--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
 `git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
-(`BENCHMARKS`, `CUTOFF_CAP_EXCEPTIONS`), `scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml`
+(`BENCHMARKS`), `scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml`
 (the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
 (`ci_checks/check-tooling-identity.sh` `MODULE`, `check-standard-texts.sh`, `check-generated-tasks.sh`,
 `check-unit-tests.sh`), and the `docs/CUTOFFS.md` render (`python3 scripts/task_cutoffs.py apply "<label>"`).

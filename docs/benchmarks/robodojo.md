@@ -201,6 +201,19 @@ each, and one call captures at most 3000 images (cameras × frames, per-frame de
 `max_frames_per_call`): a `joint_position` chunk or an `/observe` that would exceed it is a 400; an `ee_pose` call, whose
 length is only known once its IK is solved, keeps executing and stops filming (`meta["frames_capped"]`).
 
+## Known issues (board 0086, 2026-10-14)
+- **Joint limits in `/spec` and `robot_spec()`** are the articulation's soft limits as Isaac Lab reports them (about
+  +-10 rad for several joints). Two trials found the arm's joint4 stopping at about +-1.78 rad. Not verified in the
+  simulator here, so neither the instructions nor the limits have been changed.
+- **Privileged `s.reset()`** in a long-lived process is not always reliable after an articulated object moved ("articulation
+  not found", or "All scene Unstable Error"); a fresh process (as the verifier uses) always builds the frozen start.
+- **`pack_objects_into_box(_random)`**: "front sides facing left" is the assets' own axis convention (the checkpoint
+  point's -x, the shoe's root +x), which images do not show; every standard run failed it.
+- Fixed in the instructions on 2026-10-14 (text only, RoboDojo's checks unchanged): `sort_nesting_dolls_by_size(_random)`
+  had the size order reversed (the config's comments call index mod 5 = 4 the largest doll; the dolls' measured sizes say
+  it is the smallest); `swap_blocks`' button rests at about 0.79 of its travel, below the 0.9 / 0.95 its stages and press
+  counter need; `hang_mugs(_random)`' orientation conditions use the first functional point of each tag.
+
 ## Declarations
 - **Tooling: thin wrappers only.** Joint moves, gripper commands, hold, RoboDojo's IK, plus the frozen instance, state,
   recording, replay and rendering. Task-level skills are never added.

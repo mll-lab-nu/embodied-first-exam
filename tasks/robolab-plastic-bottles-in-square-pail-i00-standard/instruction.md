@@ -1,7 +1,7 @@
 # RoboLab · plastic_bottles_in_square_pail — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put all the small plastic bottles in the square pail. Success: The three small white plastic bottles must end inside the square pail and the gripper must touch none of them. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put all the small plastic bottles in the square pail. Success: The three small white plastic bottles must end inside the square pail and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
