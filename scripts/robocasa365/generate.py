@@ -622,7 +622,7 @@ REALTIME = {
 }
 RT_RESET_BUDGET = 10   # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
 RT_MAX_STEPS = MAX_STEPS   # an episode's control steps: the privileged deliverable's cap (150 s of robot time)
-RT_REVIEW_PR = "0"     # the pull request that adds the realtime twins (human review, PROTOCOL §2.7); set when opened
+RT_REVIEW_PR = "205"   # the pull request that adds the realtime twins (human review, PROTOCOL §2.7)
 RT = SHARED / "realtime"
 
 

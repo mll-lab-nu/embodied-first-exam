@@ -31,7 +31,7 @@ dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): sc
 slowdown = 2                      # standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md §4b); RCB_SLOWDOWN's default
 protocol = "eai-standard/2.3"
 oracle = "none"
-oracle_evidence = "the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #0"
+oracle_evidence = "the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #205"
 expert_time_estimate_hours = 6.0
 
 [metadata.resources]

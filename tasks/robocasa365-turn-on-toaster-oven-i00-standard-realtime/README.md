@@ -7,7 +7,7 @@
 | Twin | `robocasa365-turn-on-toaster-oven-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |
 | Family / instance | `robocasa365/TurnOnToasterOven` |
-| Oracle | `none` — the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #0 |
+| Oracle | `none` — the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #205 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` |
