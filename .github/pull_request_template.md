@@ -29,7 +29,7 @@
 - [ ] `[metadata.resources]` from measured peaks; README `## Compute resources` rendered (`scripts/task_conventions.py`)
 - [ ] The agent's egress is the allowlist (model APIs + package registries) and the oracle passes under it (the task itself downloads nothing at run time); no file the agent reads, in the task or its image, names or locates a solution, a demonstration or its dataset (PROTOCOL §2.7, §2.11)
 - [ ] `[metadata.resources.limits]` and `.caps` set from measured peaks; the oracle stays inside them; `instruction.md` has the rendered `## Resource limits` just before the closing `## Time limit` (PROTOCOL §2.10)
-- [ ] No credentials, personal paths or files > 2 MB; `tasks/dataset.toml` refreshed
+- [ ] No credentials, personal paths or files > 2 MB; each changed task's `DIGEST` current (`normalize` writes it; `tasks/dataset.toml` is no longer committed)
 
 ## Evidence
 <!-- Oracle / nop table; optionally one strong-model run and why it failed. -->

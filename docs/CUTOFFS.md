@@ -79,7 +79,7 @@ What a benchmark adds about its own time (a simulator's start-up, what its servi
 2. `python3 scripts/task_cutoffs.py apply` (about three minutes; `apply "<benchmark>"` for one benchmark).
 3. Commit everything it changed and open a pull request. CI (`ci_checks/check-cutoffs.py`) fails when a task's `task.toml`, its instruction or its sim service disagrees with the table.
 
-Never edit the number in a task, a template or a generator. `apply` writes, in every task concerned: `[agent] timeout_sec`, the number in the closing section of `instruction.md`, the README's `Agent time budget` row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's digest in `tasks/dataset.toml`, and this page.
+Never edit the number in a task, a template or a generator. `apply` writes, in every task concerned: `[agent] timeout_sec`, the number in the closing section of `instruction.md`, the README's `Agent time budget` row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's `DIGEST`, and this page.
 
 A change of a cutoff changes the task in place: the scene, the frozen instance, the success rule and the verifier are the same, so the task keeps its name (PROTOCOL §2.8, §2.12). The record of the change is its `[[history]]` entry (below), not a Change Log entry in each task's README. A number's last recorded value is its newest entry's, or, if it never changed, the table of 2026-10-11 ([`scripts/task_cutoffs.baseline.toml`](../scripts/task_cutoffs.baseline.toml), never edited). Results recorded under another cutoff are reported separately (PROTOCOL D8), and trials already running keep the cutoff they started with.
 
