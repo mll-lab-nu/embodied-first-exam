@@ -1,0 +1,159 @@
+{
+  "id": "essential_cube_layer",
+  "title": "Free-held cube layer reversal",
+  "category": "essential_articulated",
+  "description": "Keep a free cube body steady while independently turning its top layer through an ordered quarter-turn reversal.",
+  "instruction": "With the wrist locked, turn only the top layer +90 degrees, return it to zero, and turn it +90 degrees again. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.",
+  "scene": "essential_cube_layer",
+  "mechanism": "free_cube_passive_top",
+  "parameters": {
+    "side_m": 0.05,
+    "object_position": [
+      0.015,
+      0,
+      0.328
+    ],
+    "initial_hand_joints": {
+      "right_middle_MCP_FE": 0.08583164096829088,
+      "right_middle_MCP_AA": 4.794315652986548e-05,
+      "right_middle_PIP": 1.58870256463235,
+      "right_middle_DIP": 1.2653374304989293,
+      "right_ring_MCP_FE": 0.0023155167656717123,
+      "right_ring_MCP_AA": 0.07451707562605477,
+      "right_ring_PIP": 1.5106936507207367,
+      "right_ring_DIP": 1.250674563526424,
+      "right_pinky_CMC": 1.5636105339208912e-18,
+      "right_pinky_MCP_FE": 0.5097937072352401,
+      "right_pinky_MCP_AA": 0.23868748368906786,
+      "right_pinky_PIP": 1.7452999999999999,
+      "right_pinky_DIP": 1.3962999999999999,
+      "right_thumb_CMC_FE": 1.2502777084039263,
+      "right_thumb_CMC_AA": -0.34909999999999997,
+      "right_thumb_MCP_FE": 1.3962999999999999,
+      "right_thumb_MCP_AA": 0.3490999999999998,
+      "right_thumb_IP": 1.7452999999999999,
+      "right_index_MCP_FE": 0,
+      "right_index_MCP_AA": 0,
+      "right_index_PIP": 0,
+      "right_index_DIP": 0
+    },
+    "settle_steps": 2000,
+    "finger_velocity_gain": -0.1,
+    "object_quaternion": [
+      0.9238795637760319,
+      0,
+      0,
+      0.3826833568853094
+    ],
+    "top_contact_point": [
+      -0.018,
+      0,
+      0.02475
+    ],
+    "locked_wrist": true
+  },
+  "stages": [
+    {
+      "name": "quarter_turn",
+      "bounds": {
+        "top_turn": [
+          1.4507963267948965,
+          1.6907963267948967
+        ],
+        "base_contacts": [
+          1,
+          5
+        ],
+        "mechanism_contacts": [
+          1,
+          5
+        ]
+      },
+      "hold_steps": 5
+    },
+    {
+      "name": "return_zero",
+      "bounds": {
+        "top_turn": [
+          -0.12,
+          0.12
+        ],
+        "base_contacts": [
+          1,
+          5
+        ],
+        "mechanism_contacts": [
+          1,
+          5
+        ]
+      },
+      "hold_steps": 5
+    },
+    {
+      "name": "repeat_quarter_turn",
+      "bounds": {
+        "top_turn": [
+          1.4507963267948965,
+          1.6907963267948967
+        ],
+        "base_contacts": [
+          1,
+          5
+        ],
+        "mechanism_contacts": [
+          1,
+          5
+        ]
+      },
+      "hold_steps": 5
+    }
+  ],
+  "invariants": {
+    "force": [
+      0,
+      80
+    ],
+    "speed": [
+      0,
+      20
+    ],
+    "palm_drift": [
+      0,
+      0.006
+    ],
+    "wrist_rotation": [
+      0,
+      0.035
+    ],
+    "support": [
+      0,
+      0
+    ],
+    "body_drift": [
+      0,
+      0.02
+    ],
+    "body_rotation": [
+      0,
+      0.35
+    ]
+  },
+  "terminal": {
+    "bounds": {
+      "top_turn": [
+        1.4507963267948965,
+        1.6907963267948967
+      ],
+      "base_contacts": [
+        1,
+        5
+      ],
+      "speed": [
+        0,
+        0.12
+      ]
+    },
+    "hold_steps": 15
+  },
+  "difficulty": "hard"
+}

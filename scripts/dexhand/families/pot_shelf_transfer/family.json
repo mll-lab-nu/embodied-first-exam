@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "pot_shelf_transfer",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": []
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
+  "max_rows": 30000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/trajectory.npz: the 8,850 authoring rows of the accepted episode (bit-for-bit replay of the recorded states, tools/verify_oracle.py). Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (two fresh-process replays with identical state hashes; standard: live = replay).",
+    "expert_time_estimate_hours": 4.0,
+    "keywords": [
+      "bimanual",
+      "dual-arm",
+      "transport",
+      "wuji-hand-2.2"
+    ]
+  },
+  "timeouts": {
+    "verifier_privileged_sec": 3600,
+    "verifier_standard_sec": 600,
+    "collect_sec": 3600,
+    "replay_sec": 1400,
+    "video_sec": 900
+  },
+  "notes": {
+    "layout": "Each row starts with the 14 arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); one row is one 2 ms physics step."
+  }
+}
