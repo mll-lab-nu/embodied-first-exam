@@ -11,7 +11,7 @@ says it first. Checks:
 
     python3 ci_checks/check-dynamics.py [task dirs]      # default: every task
 Fix: edit scripts/task_dynamics.toml, then `python3 scripts/task_conventions.py tasks/<task> ...` (or
-`python3 scripts/task_cutoffs.py apply`, which normalizes every task and refreshes tasks/dataset.toml). Never edit the
+`python3 scripts/task_cutoffs.py apply`, which normalizes every task and refreshes each DIGEST). Never edit the
 value in a task.toml. Standard library only.
 """
 from __future__ import annotations

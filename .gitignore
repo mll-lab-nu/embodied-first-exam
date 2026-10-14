@@ -9,3 +9,4 @@ __pycache__/
 .env.*
 !.env.example
 images/mujoco/rcb_mj/
+/tasks/dataset.toml
