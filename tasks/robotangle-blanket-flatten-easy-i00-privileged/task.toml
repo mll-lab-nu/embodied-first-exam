@@ -15,6 +15,7 @@ simulator = "robotangle"             # RoboTangle on Genesis 1.2.1 (CUDA physics
 robot = "aloha-2"
 family = "blanket_flatten"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "easy"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (the pbd_local_patch_v1 grasp regions on blanket)"

@@ -15,6 +15,7 @@ simulator = "robosuite"
 robot = "fourier-gr1"
 family = "robocasa-gr1/PosttrainPnPNovelFromTrayToTieredbasketSplitA"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 expert_time_estimate_hours = 2.0
 

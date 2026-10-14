@@ -26,6 +26,7 @@ POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
 SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
+DYNAMICS = [sys.executable, str(ROOT / "ci_checks/check-dynamics.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -274,6 +275,11 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r"^allowed = \[(.*)\]$", r"allowed = [\1, 12345]"), SEEDS, "has no frozen instance"),
     ("another seed's instance in the agent's build context",
      TWIN_P, "+environment/seeds/7/instance.json", append("{}"), SEEDS, "a `seeds` directory where the agent's image"),
+    # PROTOCOL §2.14: scene dynamics, from the one table
+    ("a task.toml that contradicts the dynamics table",
+     TWIN_P, TOML, sub(r'^dynamics = "static"', 'dynamics = "dynamic"'), DYNAMICS, "the table says"),
+    ("a task.toml without dynamics",
+     TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), DYNAMICS, "[metadata] dynamics is missing"),
 ]
 
 
@@ -385,7 +391,7 @@ def main() -> int:
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS):
+            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS, DYNAMICS):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
