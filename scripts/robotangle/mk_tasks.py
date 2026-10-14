@@ -444,6 +444,11 @@ def audit_words(s: str, rec: dict, mode: str, readme: bool) -> str:
     if rec.get("chain"):
         s = VOLUME_RULES.sub("", s)
         s = s.replace('as "rope_volume_invalid: <what>" or "forced_breakdown: <what>"', 'as "forced_breakdown: <what>"')
+    # a dated decision note inside a quoted source excerpt (blanket_flatten rd's predicate): not for the agent (2026-10-13)
+    s = s.replace("        # (user 2026-10-12: that read-out-only union, ~150-190 ms per control step, is dropped; until then the last tick\n"
+                  "        # always computed it, complete_metrics). The birth (physics step 0) still reports it: the frozen instances'\n",
+                  "        # The birth (physics step 0) still reports it: the frozen instances'\n")
+    assert "(user 20" not in s, "a dated user decision note in an agent-facing text"
     if mode == "standard":
         s = re.sub(r"(?m)^- Grading: the verifier replays your trajectory twice[^\n]*\n", "", s)
         for rx in STIFFNESS:
@@ -676,17 +681,13 @@ def toml_str(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-OLD_NAME = "robotangle-new"     # the release's working name until 2026-10-13: its first Harbor trials ran under it
-
-
 def run_words(e: dict) -> str:
-    """Where the evidence episode ran. A record made under the working name keeps its own names (the image tag and the
-    Harbor job) and says so: that image holds the same frozen instance, byte for byte, as this task's image (the delivery
-    notes have the per-base hashes)."""
+    """Where the evidence episode ran: the image build and the date, never a host or a job name (2026-10-13). A record of
+    an earlier build of this release says so; that build holds the same frozen instance (the release notes have the hashes)."""
+    if "attempt" not in e:
+        return f"{e['image']} ({e['date']}; simulator source {e['source']}, tooling {e['tooling']})"
     run = pathlib.Path(e["attempt"]).name.removeprefix("attempt-")
-    old = (f", made under the release's working name `{OLD_NAME}` on image `eai-{OLD_NAME}:{e['release'].split()[0]}`, which holds the same frozen instance as this task's image"
-           if run.startswith(OLD_NAME + "-") else "")
-    return f"{e['release']} (source {e['source']}, tooling {e['tooling']}; lab run {run}{old})"
+    return f"{e['release']} (source {e['source']}, tooling {e['tooling']}; lab run {run})"
 
 
 NO_REFERENCE = ("No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing "
@@ -777,7 +778,7 @@ def nop_words(base: str, mode: str, rec: dict) -> str:
     if n and n.get("status", "passed") != "passed":
         return f"`nop`: no record yet on this base (`harbor run -p tasks/{BENCH}-{base}-{mode} -a nop`)."
     if n:
-        return f"`nop` scored 0 on this base in both modes ({n['run']}; {n['date']}, {n['host']})."
+        return f"`nop` scored 0 on this base in both modes ({n['run']}; {n['date']})."
     return f"`nop`: pending (`harbor run -p tasks/{BENCH}-{base}-{mode} -a nop`, docs/benchmarks/{BENCH}.md)."
 
 
