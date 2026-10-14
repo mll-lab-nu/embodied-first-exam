@@ -737,13 +737,15 @@ def ref_solution(mode: str, rec: dict) -> str:
         if ev["status"] == "speed_rule":       # 2026-10-13: the rope_threading rd references (888 to 1174 rows above the rule)
             return ("`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`) through the "
                     "client, but **this is not a working oracle in standard mode**: the reference was recorded faster than the "
-                    "standard service's joint-speed rule (0.04 rad per control step, 1.6 rad/s); replayed through the service "
+                    "standard service's joint-speed rule (0.04 rad per control step); replayed through the service "
                     "its rows are stretched over more control steps and the episode does not solve the task (the Harbor oracle "
                     "trial of rope-threading-rd-very-easy scored 0 for this reason). A re-timed reference follows. The "
                     "privileged twin's reference is the same rows and is graded without the speed rule.")
+        over = (f" Standard oracle not finished; the reference has {ev['rows_over']} rows above the service's joint-speed rule (0.04 rad per "
+                "control step) and may be stretched by the service." if ev.get("rows_over") else "")
         return ("`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`, one "
-                "`joint_position` row per 25 ms control step, `hold`; the same rows as the privileged reference) through the "
-                f"client (`solution/oracle_replay.py`). {why} on this standard service, so no score is claimed here.")
+                "`joint_position` row per control step, `hold`; the same rows as the privileged reference) through the "
+                f"client (`solution/oracle_replay.py`). {why} on this standard service, so no score is claimed here.{over}")
     if is_mujoco(rec) and ev:
         if mode == "privileged":
             route = ("this design's oracle, recorded on MuJoCo" if rec.get("template") or rec.get("design") else
