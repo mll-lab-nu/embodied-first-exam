@@ -35,7 +35,9 @@ set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root/scripts/eai_standard" <<'PY'
 import collections, hashlib, os, re, sys, tomllib
+from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
+sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.16)
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
@@ -130,8 +132,7 @@ for t in sorted(os.listdir(tasks)):
             bad.append(f"{t}: the sim service needs `restart: on-failure:N` with N >= 3 (crash recovery)")
         if not re.search(r"^\s*command:\s*[\"']?sh /srv/run\.sh[\"']?\s*$", blk, re.M):
             bad.append(f"{t}: the sim service must run `sh /srv/run.sh` (it exits non-zero when the service crashes)")
-    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith("-standard")
-            else "privileged")
+    mode = tc.mode_of(Path(t))
     own_fam, module = next((v for k, v in FAMILY.items() if t.startswith(k)), (None, None))
     fam = "dextoolbench" if os.path.isfile(os.path.join(tasks, t, "environment/sim/server_mj.py")) else own_fam
     if fam:
