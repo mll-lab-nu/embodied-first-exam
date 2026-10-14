@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); DexHand standard to N = 20 (owner, 2026-10-14); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -72,7 +72,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
 5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
 6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
-7. Listed in `tasks/dataset.toml`. [CI]
+7. Carries its content digest in `DIGEST` (§2.8). [CI]
 8. The verifier writes `reward.txt` (1/0) and a numeric-only `reward.json` with at least `success` (and `deterministic` for trajectory tasks). [current]
 9. Same verdict in a fresh process; the verifier does not need the network (standard-mode verifiers run with `no-network`). [current]
 10. Reference solutions only under `solution/`; nothing the agent can reach contains or points to one. [current]
@@ -245,7 +245,7 @@ example → nop result → predicate summary*. The reviewer checks:
 ### 2.8 Identity and immutability
 | Item | Level | Basis |
 |---|---|---|
-| Listed in `tasks/dataset.toml` with the digest of its current files (re-run `cd tasks && harbor add --scan .` after any change; `ci_checks/check-dataset-manifest.sh` recomputes every digest) | MUST | [CI] |
+| Carries the digest of its current files in `tasks/<task>/DIGEST` (one line `sha256:<hex>`, the digest Harbor publishes it under; written last by `scripts/task_conventions.py` `normalize`, so every generator and `scripts/task_cutoffs.py apply` refresh it; after a hand edit run `python3 scripts/task_conventions.py tasks/<task>`; `ci_checks/check-dataset-manifest.sh` recomputes it). The release manifest `tasks/dataset.toml` is generated from the DIGEST files (`scripts/dataset_manifest.py write`) and not committed, so pull requests that change different tasks share no file (2026-10-14, board 0117) | MUST | [CI] |
 | A published task's `environment/` and `tests/` inputs are immutable; a change is a new task. One line is not such an input: `RCB_WALL_CLOCK_S` of the `sim` service in `environment/docker-compose.yaml`, which mirrors the cutoff table (§2.12) and is rewritten with it by `scripts/task_cutoffs.py apply`, like `[agent] timeout_sec`; it changes what the service reports, not the scene, the instance or the success rule. Nothing else under `environment/` or `tests/` follows the table | MUST | [current]; the one line: [CI] (`ci_checks/check-cutoffs.py`) |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
 | A change of a task's cutoff, or of the text `scripts/task_conventions.py` owns in every instruction (`## External material`, `## Resource limits`, `## Time limit`), changes the task in place: same name and instance, new digest. A cutoff change is recorded in the cutoff table's `[[history]]` (§2.12; required: CI refuses a number that differs from its last recorded value), which stands for the per-task Change Log entry; a change of the shared text in §7. Results under another cutoff are reported separately (D8) | MUST (the record) | [new] (2026-10-11; precedents: #155 RoboDojo 5400 → 3600 s, #150 / #151) |
@@ -491,7 +491,8 @@ under an unrelated name would be missed.
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
 ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
-(not published at all: its environment package is this repository's `images/pandadyn/`), AM-Bench; Isaac Sim does not install from pypi.org.
+(not published at all: its environment package is this repository's `images/pandadyn/`), DexHand (not published at all: its scenes and tooling are this repository's
+`scripts/dexhand/` and `images/dexhand/`), AM-Bench; Isaac Sim does not install from pypi.org.
 
 **Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
 decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists that implement it (the same directory
@@ -730,7 +731,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | Version | Date | Content |
 |---|---|---|
 | eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
-| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes and MuJoCo Playground's quadruped tasks |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes, DexHand and MuJoCo Playground's quadruped tasks |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0, MyoSuite, RoboCasa365); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboARC; first RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
@@ -856,6 +857,13 @@ results must state the reset budget and are compared only with results under the
   does (its instruction calls `POST /reset` through `Robot._post`). The ALOHA and Panda standard tasks keep 0.
   `RCB_RESET_BUDGET=0` still runs one episode; quadruped standard results recorded before this change ran with 0 and
   are reported separately ([`benchmarks/mujoco-playground.md`](benchmarks/mujoco-playground.md)).
+- **DexHand** (owner, 2026-10-14, board 0109; standard tasks, from their first release): `budget.reset = 20`,
+  DexToolBench's value. Every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound
+  exceeded), the essential families start with the object already in the hand, and the agent has no simulator to
+  practise in, so with one episode the first slip decided the trial. A reset calls the family's `Session.reset()` (the
+  same state hash as a fresh process). The DexHand 2.2 adapter (`scripts/dexhand/shared/standard/server.py`) implements
+  the capability as MyoSuite's does. `RCB_RESET_BUDGET=0` still runs one episode
+  ([`benchmarks/dexhand.md`](benchmarks/dexhand.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
