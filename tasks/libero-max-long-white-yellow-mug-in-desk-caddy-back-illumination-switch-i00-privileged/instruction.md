@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_10 · illumination switch — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the cup and place it in the back compartment of the caddy.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick up the cup and place it in the back compartment of the caddy.** The caddy has a large cell at each end and, between them, two narrow cells: the front one and the back one, which runs along the caddy's tall wall. The back compartment is that narrow back cell (`desk_caddy_1_back_contain_region`, about 5.5 cm across): the mug (about 9 cm wide) does not fit down into it. LIBERO's In tests only the mug's origin against the region's box (its top is about 15 cm above the table) and its contact with the caddy, so a mug resting on top of the back cell's opening, its origin just inside the top of that box, counts; a mug in any other cell does not.
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_10 task (task), with one online
 event: the first time the gripper comes within 0.18 m of `white_yellow_mug_1`, LIBERO-MAX changes the scene
 once (the lighting is scaled by 1.8). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

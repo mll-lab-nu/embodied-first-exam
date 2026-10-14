@@ -2,7 +2,7 @@
 
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, in AutoBio's simulated biology laboratory (MuJoCo 3.3.0), via Python, through joint
 position targets.
-**Task:** Load a second 1.5 mL tube into the centrifuge's rotor, into the slot diametrically opposite the tube that is already in it (slot 8 of 30, `s.task.slot_id`; the tube in the rotor is in slot 23). The tube to load stands in the plate on the bench. Success at the first control step where the tube's body is within 5 mm of its seated position in that slot (`s.task.final_tar_tubepose`) and its height is between 0.955 and 0.961 m.
+**Task:** Load a second 1.5 mL tube into the centrifuge's rotor, into the slot diametrically opposite the tube that is already in it (slot 8 of 30, `s.task.slot_id`; the tube in the rotor is in slot 23). The tube to load stands in the plate on the bench. Success at the first control step where the tube's body is within 5 mm of its seated position in that slot (`s.task.final_tar_tubepose`) and its height is between 0.955 and 0.961 m. That reference position is computed when the episode starts: turning the rotor moves the slot away from it. In this instance a tube that has been let go comes to rest 5.0 to 5.1 mm from it, just outside the 5 mm (AutoBio's own expert's tube included), so the check holds while the tube is still being lowered into the slot; the episode ends at that moment.
 
 On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it.
 

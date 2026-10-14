@@ -54,7 +54,7 @@ BODY = {
                  "a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb)"),
     "legs": ("MyoLegs", "myolegs", "a free-standing musculoskeletal model of a human torso and both legs"),
     "osl": ("MyoLeg + OSL", "myoleg-osl",
-            "a free-standing musculoskeletal model of a human whose left leg is an Open-Source Leg knee-ankle prosthesis"),
+            "a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis"),
 }
 DEFAULT_CAMERA = {"table_tennis": "default", "bimanual": "front_view", "soccer": "agent_view", "chase_tag": "topview",
                   "osl_run": "side_view", **{f"dex_{k}": "center_cam" for k in ("apple_lift", "cylinder_pass", "bunny_inspect",
@@ -559,6 +559,21 @@ R3_PRIV = """\
 """
 
 
+OSL_SIDE_TEXT = (
+    "- 2026-10-14 (board 0113, from board 0086): the texts said that the prosthesis is the left leg; MyoSuite's model\n"
+    "  puts the Open-Source Leg on the right (its joints are `osl_knee_angle_r` and `osl_ankle_angle_r`, under `femur_r`),\n"
+    "  and the texts now say so. Text only: the instance, the tooling and the pass rule are the same.\n"
+)
+BAODING_END_TEXT = (
+    "- 2026-10-14 (board 0113, from board 0086): an episode that has not succeeded after 1000 control steps (25 s) ends\n"
+    "  there as a failure, and the task text says so. MyoSuite's baoding targets are a precomputed trajectory of 1000\n"
+    "  points; with MyoSuite's step budget lifted, the step after it raised an IndexError (the service answered 500 and\n"
+    "  the episode ended as a simulator error; a privileged replay that long stopped with an error). Nothing before that\n"
+    "  step changes: the instance, the tooling's physics and the pass rule are the same, and every verdict reached before\n"
+    "  is the same now.\n"
+)
+
+
 def change_log(fam: str, f: dict, std: bool) -> str:
     """The README's Change Log: the standard service's history, plus what changed for this family alone."""
     out = CHANGE_LOG if std else ""
@@ -582,6 +597,7 @@ def change_log(fam: str, f: dict, std: bool) -> str:
     if fam == "chase_tag":
         out += CHASE_TAG_TEXT
     out += R3_STD if std else R3_PRIV
+    out += {"osl_run": OSL_SIDE_TEXT, "baoding": BAODING_END_TEXT}.get(fam, "")
     if out and not std:
         out = CHANGE_LOG_HEAD + out
     return out

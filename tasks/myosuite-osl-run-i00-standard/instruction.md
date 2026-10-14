@@ -1,10 +1,10 @@
 # MyoSuite · osl_run — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You control the **MyoLeg + OSL**, a free-standing musculoskeletal model of a human whose left leg is an Open-Source Leg knee-ankle prosthesis, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
+You control the **MyoLeg + OSL**, a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (54 muscles and 2 other actuators).
-**Task:** Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the left leg is the prosthesis, driven by its own controller, so you command only the 54 muscles. Failure (the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.
+**Task:** Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. Failure (the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.
 
-A musculoskeletal body whose left leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track.
+A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track.
 
 ## Rules
 - **Episodes and resets.** The episode starts when the service comes up and ends on success (the challenge's own success event), on its failure conditions or its own time limit, when your time is up, or on

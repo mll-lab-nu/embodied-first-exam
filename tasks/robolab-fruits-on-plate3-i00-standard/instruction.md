@@ -1,7 +1,7 @@
 # RoboLab · fruits_on_plate3 — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put three (3) fruits on the plate. Success: Exactly 3 of the seven fruits (both lemons, both limes, both oranges, the pomegranate) (no more, no fewer) must end on the flat beige plate, and the gripper must touch none of them. "On" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put three (3) fruits on the plate. Success: Exactly 3 of the seven fruits (both lemons, both limes, both oranges, the pomegranate) (no more, no fewer) must end on the flat beige plate, and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). "On" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the

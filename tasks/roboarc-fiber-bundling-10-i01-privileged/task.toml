@@ -15,6 +15,7 @@ simulator = "roboarc"             # RoboARC on MuJoCo 3.14.0 (CPU float64 physic
 robot = "franka-robotiq-2f85"
 family = "fiber_bundling"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "hard"               # the variation's tier (docs/rcb/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 grasp regions on fiber_bundle)"

@@ -16,6 +16,7 @@ robot = "franka-robotiq-2f85"
 family = "hedgehog_in_cage"
 difficulty = "easier"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 grasp = "assisted (the contact_weld_v1 grasp regions on hedgehog_ball)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision hedgehog_placement_v4_grasp_contact_2mm)"

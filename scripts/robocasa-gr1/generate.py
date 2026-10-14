@@ -135,6 +135,12 @@ CHANGES_STANDARD = [
     "mode results from before this date used the offset calibration**: a point located from the images and the "
     "reported calibration came out about 3.4 cm to the side (agents missed a microwave button by 3.5 cm), so they are "
     "not strictly comparable with later ones.",
+    "2026-10-14 (board 0113, from board 0086): the instruction describes the hands: each hand command is the "
+    "position target (rad) of its finger's joints, 0 open and larger closing, within each joint's range; the grip site "
+    "is the origin of the hand's mounting frame at the wrist end of the hand; the pink spheres beside each hand are "
+    "visual markers of the robot model, not objects (board 0086: most standard runs took them for objects). Text only: "
+    "the scene, the frozen instance, the reference solution, the success check and the verifier are unchanged, so the "
+    "task keeps its name.",
 ]
 
 # Upstream success checks (robocasa-gr1-tabletop-tasks @ 4840e67, robocasa/environments/tabletop/): the
@@ -263,6 +269,22 @@ def action_text(dim: int) -> str:
     )
 
 
+# The GR1's hands as the model defines them (board 0086: standard runs spent their first minutes, and objects, finding
+# this out, and took the pink marker spheres for objects): each hand command is the position target of its finger's
+# joints (robosuite's Fourier hand copies command k to the finger's actuators, position servos, ctrl = target in rad;
+# finger joints range from 0 to 1.22-1.74 rad); the grip site is the origin of `gripper0_<side>_eef`, at the wrist end
+# of the hand; `robot0_<side>_pinch_spheres_0..3` are visible sites without collision, 13.5-13.8 cm from it.
+HANDS = (
+    "- The hands: each hand command is the position target, in radians, of that finger's joints (`thumb_flexion` drives\n"
+    "  two thumb joints, `thumb_rotation` one): 0 is the straight, open finger, larger values bend it toward the palm\n"
+    "  (the hand closes), and every finger joint stops at the end of its range (1.22 to 1.74 rad), so values below 0 or\n"
+    "  above about 1.7 change nothing more. The grip site that the pose targets place is the origin of the hand's mounting\n"
+    "  frame (`gripper0_right_grip_site`, `gripper0_left_grip_site`), at the wrist end of the hand, not a point between\n"
+    "  the fingertips. The four small pink spheres beside each hand are part of the robot model (visual markers\n"
+    "  `robot0_<side>_pinch_spheres_0..3`, about 13.5 cm from its grip site, with no collision): they are not objects.\n"
+)
+
+
 def hold_note(rec: dict) -> str:
     if rec["success_after_hold"]:
         return ""
@@ -374,7 +396,7 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   channel is an absolute target, so the grip sites stay within about a millimetre, but the IK's posture term can still
   move the waist and elbows by a few hundredths of a radian while you watch.
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
-- World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
+{HANDS if dim == 24 else ""}- World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
   frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame.
   {frame_text(rec)}
 """

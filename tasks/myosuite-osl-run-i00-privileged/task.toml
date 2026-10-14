@@ -4,7 +4,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/myosuite-osl-run-i00-privileged"
-description = "MyoSuite osl_run (MyoLeg + OSL, 54 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the left leg is the prosthesis, driven by its own controller, so you command only the 54 muscles. Frozen scene instance (myoChallengeOslRunFixed-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite osl_run (MyoLeg + OSL, 54 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. Frozen scene instance (myoChallengeOslRunFixed-v0, reset seed 0); graded by two fresh-process replays."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoleg-osl", "code-as-policy", "trajectory", "osl_run", "privileged"]
 
@@ -15,6 +15,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myoleg-osl"
 family = "osl_run"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv` (6714 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65"
 instance_seed = 0                 # myoChallengeOslRunFixed-v0: seed(0), then reset(seed=0)
