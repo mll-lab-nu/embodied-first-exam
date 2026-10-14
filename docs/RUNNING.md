@@ -87,7 +87,9 @@ harbor run -p /tmp/run1/<task> -a <agent> ...
 
 The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`,
 and the copy carries only the drawn one. As of 2026-10-13 every task allows its default seed only, so
-`scripts/run_agent_batch.sh` runs the task directories as they are; it materializes a seed per trial once a
+`scripts/run_agent_batch.sh` runs the task directories as they are (or a copy: with the gateway, the copy whose
+egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy with that cap clamped, PROTOCOL
+§2.10); it materializes a seed per trial once a
 benchmark allows more than one.
 
 ## The agent's time (the cutoff)
