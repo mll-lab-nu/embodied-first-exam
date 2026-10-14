@@ -2,7 +2,7 @@
  "repo": "eai-v2-internal/robotangle-assets",
  "repo_type": "dataset",
  "private": true,
- "revision": "8ad7ffd309c92bfe1fa1669e03887fd67b235c0a",
+ "revision": "88e0136e1b97d0acc877190016570d2b57d170d8",
  "files": {
   "instances/blanket-flatten-01-i01/instance.json": "71debdd2bfead3df950615c2fd266f1d7ace9478976d81c006acedd60502df83",
   "instances/blanket-flatten-01-i01/instance_assets/initial_state/arrays.npz": "2b3ae142101f33adeaf5268fae5741c11348f2182ec522f83cfd278dba443621",

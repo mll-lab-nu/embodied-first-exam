@@ -6299,753 +6299,753 @@ digest = "sha256:41c0af94ea445f2741cff4a052affe59ba18f19c89d61f035cc7eee90e06023
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-01-i01-privileged"
-digest = "sha256:445063225e8b4b95184233a412d444860ac70a11d14623374ca39ab7942313c5"
+digest = "sha256:5c09504e37941344e4d95110c2e181494290f1078923f238c10432ccc4d5cfb8"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-01-i01-standard"
-digest = "sha256:c645f245b7b44a0878d909458c85030063fb96e61a084ff09509ca88d6f0e003"
+digest = "sha256:b30d69d1a2265124241a468fd245dfdde58e8ed257df324c409739f8694d201d"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-02-i01-privileged"
-digest = "sha256:847d64e577906dac31b1204ec240852d1b10ee68bcd1d1c2c11a1b059125b706"
+digest = "sha256:41a80c3ee1bccd42669ecc5140db2873d5f07aa1018645369387b2323d804964"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-02-i01-standard"
-digest = "sha256:85393aaa48ab04e1b1212746fab0783758c2e7a4c866b47abe46d6ef62e12d18"
+digest = "sha256:4e2591929e8420d90cc049a552a84de9cd13391291fde88ab10079dd489a192a"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-03-i01-privileged"
-digest = "sha256:0c1b302f0ae385ad5fc233de8dcf8d2ae91d718d859593085cbd89a819347ef8"
+digest = "sha256:6298d931df4b77aa6ee345868f7f23d52fbcee943f17c7d70910f3cc8f4062b9"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-03-i01-standard"
-digest = "sha256:c8e059b0f7dae10a4d5dbf1038f05c0f79f98998c0473b4247b7777abedac221"
+digest = "sha256:777a9c3fa94d457c1e5963564ec302e848da471397c6cc6855034456f8ffbc4a"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-04-i01-privileged"
-digest = "sha256:e42a340ef846b3c6bff6fa65e7f30a786d574cebf4f954079dfc030d3a293701"
+digest = "sha256:04af31f86b435cf99d9129e2eef8219afba5b6c7712779e9b18aead71f96016c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-04-i01-standard"
-digest = "sha256:44165badb429d4659a14387887da8dcf7b603543e92c097b2ad15a768d6660fb"
+digest = "sha256:2a48034cefc510346e0e49384bb1aa0729b95bd34dc3f2bf0c31668e3c90df19"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-05-i01-privileged"
-digest = "sha256:03fe97fdeefbf6f8210d6afcf4a60794acc64a6a07195700b9bfc91614270863"
+digest = "sha256:efd44df1c46c9aae7ca3ba310085ee2c0f89e656a734a0eb3351bffbd942e85c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-05-i01-standard"
-digest = "sha256:fefc7fd07c78eb92befd0cd0c3ce581d1dbadaacbf1264855a49f22e7e4758c3"
+digest = "sha256:fb1c72070d9d39e34b27dc484686a56c2097f0ab0f272f5204c7b627d60ae91a"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-06-i01-privileged"
-digest = "sha256:277b7fef57133b00d48e5e8ca1af7ddb0d6bf91a758a4dc252cdf2d80fd70eea"
+digest = "sha256:96ab2405b06a882f8d4008dbad5b8629b46ff7aed9b2e10a8db5c9e7dc3af1da"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-flatten-06-i01-standard"
-digest = "sha256:e55bba9be56942fe89e5ddbca7c6cc2093155ea70c44a5a0251af1a46c47948d"
+digest = "sha256:e13f7768e1e705e212bde179dba157964ce6d957f0c274e87d9573f79c2404fb"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-01-i01-privileged"
-digest = "sha256:9cd76e27ed98ce150907602b81bff3f3484c1c2832d6c5498af52b4ce078df12"
+digest = "sha256:f3b2c2b2526458c3ebccbecc3e0814122bfac1434472dd822c0e6d5aa9ed6888"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-01-i01-standard"
-digest = "sha256:52246d35b2c802ea28dab7cbc6824403564a66b27ea646019932199a2437f656"
+digest = "sha256:3d87d6ad674933e22a821f5033250d2aa453aa4e3469b9d227c924b651c5ead2"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-02-i01-privileged"
-digest = "sha256:2300dba8fc47097105b4ff2870ed8f363908ee4acd18448db43bd64d87899980"
+digest = "sha256:19b12939ed70f99b7e053a8da3b23e036e0272384daa15bf87b64288f1a78459"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-02-i01-standard"
-digest = "sha256:4aa7cb5ee7e422e1f2425de64d0b363aa441cd4d50e89d3c8a08016fb44d6465"
+digest = "sha256:6d48cbc5650e66f7baa016b2837e00ec28bbf489e08722fc5d387979b1669213"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-03-i01-privileged"
-digest = "sha256:7c8319d00ba5951a13352e4304c0f25ec620e180319cd2b11f28ec04ea0fac41"
+digest = "sha256:7ddefcd9c0d83db0c61fd7449ac86281c2ab4551667c06083fa1f2b33612eedf"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-03-i01-standard"
-digest = "sha256:05e5b41b348c35a88946b985e7082b3f6ba2d82642ef20cea7bf35e6cd81daf6"
+digest = "sha256:5a1e2994e3493726f5739581c14da35fe33b6e416005ff973705d36354d38185"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-04-i01-privileged"
-digest = "sha256:5223d3f94ffb80ff84478b3c0c7346fb4fff6132f0c34ea78155776905b1214b"
+digest = "sha256:0cb3e9d97bc29f4b2262230da001ddb4b5e70b809f278ee12b6eac4b463534af"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-04-i01-standard"
-digest = "sha256:b9add0a6cd22f117c65b92b6838c280ee67dbb1adc752259117af66b64986c08"
+digest = "sha256:232ecff1f88db6f683e8b4daa4dbd8ce9f53651385c02555de2527bb97500a25"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-05-i01-privileged"
-digest = "sha256:cd3dbedaa44815538dbb66ba467e2753e39905cd40a087b1717fab9d5239dea4"
+digest = "sha256:f7f24bc512f54a94683e4d87a77032763a97548fa87b6276022c96a4e7f2f88e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-blanket-fold-05-i01-standard"
-digest = "sha256:279e6bf12c6793273a8f1c869ee2c222af00828c8e2a7d8b6f2505c48927d4e5"
+digest = "sha256:c683f22fad6a313f088aa1217a9d535f1fde5b191fbf2bfda0aa117d604d9609"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-01-i01-privileged"
-digest = "sha256:c283dee4851e228c7e287b313997251a6bc0531f801cec67d3cfefa94a299bdc"
+digest = "sha256:6737e1a30101a7a0580b285dfba2c057ecc00bb179135bb4e88ff30ef6fbfc90"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-01-i01-standard"
-digest = "sha256:005f051e99aac6469b294a1365a3e318b767705cea4caa90b8f7c4e26ceb3355"
+digest = "sha256:a42f4b208e97a72b2b597aab5e6becf3c12c5bc31a6f6bc062345cd6587bbc55"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-02-i01-privileged"
-digest = "sha256:bf1fd1158cbf95cfea1bca9960604dd2d778a258de18b37a5c2171c1c2c58f04"
+digest = "sha256:84ae74e502d71dd0296a9f966b1e843820479fb4b2b02ca79fd1b983350dce19"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-02-i01-standard"
-digest = "sha256:e4f0c803279dd2716a625b1f32f91bf5548f0990472d4379e676667bafb68652"
+digest = "sha256:6e81ac16e57d171dbae900b3a56a9e583e6328db2be2ec087a40de06ff1146d8"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-03-i01-privileged"
-digest = "sha256:ffaa8364437e2024056135679677cd7102eed3281a5573030aff73ce660d4d49"
+digest = "sha256:ff8f0b92ef0561b0981a1c9fc0420572ad43fba9a537b9675fb0cf7a54e93a67"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-03-i01-standard"
-digest = "sha256:8497eb786538576fe606033c914bb29a6002ac0fd4f2159acb13aaddcacf4a0f"
+digest = "sha256:cbc28787762a544ae49105a6e6d933130e543c3bf0dbe69f12fa09528ba48535"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-04-i01-privileged"
-digest = "sha256:7e93d7dd656f922dd6190afdd163bfcc6043e3b22ae288b3f3c4f051938d6dcf"
+digest = "sha256:1c60cf0d757050cfc0dbf46880e117455358cd1dfa770cdefd4ba15ddf79e7e4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-04-i01-standard"
-digest = "sha256:bc94db5724f8dd4baa97892432e42eea0f6e5c78dc35d19146835ff9d70e136e"
+digest = "sha256:a852d3f7981ad833c7980c1b08730c5418e17d41ded290c289643e0c71413bdf"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-05-i01-privileged"
-digest = "sha256:b13d6a384ec14fb75294d3ad63c2e3ee42ff68939a2a33f8364d757391bc7ed1"
+digest = "sha256:4125a2d67ede3b527bd9b530b589cc33e9f3cfdbb5af84142aeb3c03ad31d240"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-05-i01-standard"
-digest = "sha256:011b018712585ee88da975788831a1351394134530eddeb1ea6224b16f4772db"
+digest = "sha256:973e73adfb120c2c1263a7a47f886e9b4e6fb85f34d7a0d1d6b36ace2e14ce25"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-06-i01-privileged"
-digest = "sha256:ff86f58307e0d1b457450c99681d67384bac6501b44e65cdf0552de65bb2b872"
+digest = "sha256:798abb87952a099502cd4b0df6b879f2ce8ac07b3aa7a313125c42144014266d"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-06-i01-standard"
-digest = "sha256:72b14a939c8b183abbc17859d5474de34daf1936ed108dd00b0c3ba50866b4f8"
+digest = "sha256:2019b9eb4428f582b01c3eeb43be070ed51fc4c2f7cbfc72c1bf60e47d7a6bac"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-07-i01-privileged"
-digest = "sha256:3b34382df1f8fcc9c8c8c02bd0eda43fb8e48810ba116c4044291956d9c5de87"
+digest = "sha256:960fb7f1d58c7d77e09e8654bfcf929349e3628cd6fde92120641bb356665535"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-07-i01-standard"
-digest = "sha256:12c748f651d15d3731f0cd5ae7a791dd9cea10393d0c0abc50f52c519b1ce277"
+digest = "sha256:33ad49313427f9b84596c660b19cf780dfd9c4e16cff091cd241bbc0d3e45ef4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-08-i01-privileged"
-digest = "sha256:018942c904ac0dfb51356f768c802b73efaa95c9601e2e0766b8427c4c580d04"
+digest = "sha256:d0c2f074377679d3ca1031719c2eb85c46a30c6fd8e7b2c6c4eb4a7ea6da3d5e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-08-i01-standard"
-digest = "sha256:b00e76543ca0e15c23afacf12727b63fa169b160ad1eb462775edf99126e3773"
+digest = "sha256:ce651903dfb7879fffb2f0b20bd91db5577cf44bc65c6bdfacf7156342b5ef6c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-09-i01-privileged"
-digest = "sha256:47a057a7460ecb8c2b397ea7e4f8ecbbf3d03805a8f952b48093ea1f1f16e7a8"
+digest = "sha256:87d8a9168f574ea820243908fd72b475c9e79f89afab7a8234afc1ff86d62107"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-09-i01-standard"
-digest = "sha256:0c6f1f05e57b63e3bec7c50e5fa4ae3cb45fcaf32eb47a52985278412ba7e75e"
+digest = "sha256:f9cb204adb20f7acf9a65289b0d12b943923f074c00b6cd964ce6d715bf76e0b"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-10-i01-privileged"
-digest = "sha256:677d5cb92be4cac12b94af485fe9b80f53512a8f9ab87a69bee79571598e3045"
+digest = "sha256:2b6f409c5dd76d6a910da02d0c4b3793662183cdbf471da00f5c144e70d2e18b"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-buzz-wire-3d-10-i01-standard"
-digest = "sha256:1c7e98e17fb3040c6d558a88949210dc1f53032e70008f680ba1c06705f39560"
+digest = "sha256:054dd1d7772b336cbc231d6716048f6410153e4e6a0390d71cab082ebb8090f9"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-01-i01-privileged"
-digest = "sha256:0456f005ee2c1067664424f627f44ce07fce6512727729a7bb1f1852a55d7526"
+digest = "sha256:bdb420ed0675d509e1acbe735df98226ce3c8969a9e9a196eb3eb7d6ce903912"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-01-i01-standard"
-digest = "sha256:d6df01a520a8f73be2cf91386c9cc7d43c1e481fd716e4299ceebb796aeb8066"
+digest = "sha256:a04fbadfa1243953ea6c7b17a00b35a6e749c0a83b4308a7890b9130e1527773"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-02-i01-privileged"
-digest = "sha256:516fc8ccd8e59cae10e5ee0c1665955b8721437b054692cb879a95c9a2c1a26b"
+digest = "sha256:252faac582838c1893533ed6e4dc12e7260e47fb265ecd0406010eb5e9454249"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-02-i01-standard"
-digest = "sha256:a22dfdfc83c295602851f50be71c083f02816d5ef1e7c1bcebec042c9b842f86"
+digest = "sha256:c361fd097681bbdf109ddc8addecb3239d5a0f361f1c0d3681c7b37a268690ac"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-03-i01-privileged"
-digest = "sha256:51996a237f3ab320fd39221aed434bdbe49fb2ccbf2dd3b9e9dc35239a1dd914"
+digest = "sha256:379cae5aeba23fd40264e00739fbacbf13bdddb8c12fd62b3723a0161c1a4cca"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-03-i01-standard"
-digest = "sha256:11576ac48970b7e30286df8c3d38847aa7d84fc70d71d7ceab63c0888ddb8d36"
+digest = "sha256:d3e8eb64d531396856c83ce0b5246cbfbb60797250b853324f2f40c501356391"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-04-i01-privileged"
-digest = "sha256:95f17a4d93ffbaf098c6457fe55ced111d3a2e3fc389ab51aff1cabc879ebec4"
+digest = "sha256:4c38936b6fa048c25588c674d2e2717448311107a9897198e1dc1c2514b2715c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-04-i01-standard"
-digest = "sha256:7cdd39c8fd64eb2d08f13690eae3fbcab50f45ab99cfdb4f2215cd2bbc6750b3"
+digest = "sha256:79d53040a9cc5b6000ecb3aa06ee56d68747cadf923c4678dff474aaa94835d3"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-05-i01-privileged"
-digest = "sha256:9ebcd8fa464afb326fc55f00f58b4bf2331afaa3279b739aafddbd01900bfb5e"
+digest = "sha256:5d2f456c2864cab4fc6a2b2f3d4ea13851e5e5d209774d719750f01cccf08d95"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-05-i01-standard"
-digest = "sha256:225643a4589a427fe01be30c942386ba90c3c201fe273abbdd5abc6356b0982e"
+digest = "sha256:f20e41acf0675288b4418d3d6396100acee18cf64b0a16dcf865fb363a4d27c4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-06-i01-privileged"
-digest = "sha256:9b4530172f383e267a9253b8c6744848a5c401a522368ad2d88df9e0bc880475"
+digest = "sha256:f4fe80baca819c761b5b9fbb8a93577e5995e0b314ef30410a700568d04ce73d"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-06-i01-standard"
-digest = "sha256:24134acb3c6510a11cd3c83c5fcd90f66284716e74755ebf2e0cc701ecb1ae1e"
+digest = "sha256:d42ceee226f260c51e50bdf4bcae3bb7d58a7c16a47cc5b6bc24ea9e65930761"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-07-i01-privileged"
-digest = "sha256:51ee37cbf61faadb233f1449a6f68ec3ddf181a2930d43d2b75920f91c9ed76d"
+digest = "sha256:3c64aa454db69d24587c8871cad0573fe1f59cfc9b1bf04c406d8e316077c94a"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-07-i01-standard"
-digest = "sha256:5984fac1bbd31bc3bc810313ca7b60fb1d1161d56bd7bd05e1181b98e562a6f4"
+digest = "sha256:7a46f673d3e488f51589d0ec96da3db723574af8841c1f5a06edec215ac0ffe0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-08-i01-privileged"
-digest = "sha256:0a82f180e5d9df172e8e4459cdb7a573112e91277678572c1a32d501049567b2"
+digest = "sha256:7509d508b9a143bf1f35b1ffdd58c0e17038781e1347b75a9b2a5994b65755b2"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-08-i01-standard"
-digest = "sha256:90ab703a57854d2066cdc8b744967b2eac8d4d8325dcbb1b56d11102b6fc3260"
+digest = "sha256:0f653c0b364ffff2f4c0d28e721df06e705039e470ef02df27c8ad1601d07505"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-01-i01-privileged"
-digest = "sha256:5e0a71f95590b581c7424d363c769e81fc867ff0b428976e676907b45040ebf9"
+digest = "sha256:2da84469d94015b06c2a2aeccce764967a5cbb53dea4010da687d88f2b1e2a78"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-01-i01-standard"
-digest = "sha256:95ae05307054082d688240da280e24ffc28104536127ae6069d69c8fe7c5ddec"
+digest = "sha256:1ef7adeaf59fa4cc0348310476b4dce7f445ff61949d44e635cf2e035c326815"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-02-i01-privileged"
-digest = "sha256:5298e17d15e6c55974a61eee6b6d52c1b290f5f0bad801d3c76f1fc68849f47a"
+digest = "sha256:a55ed386a635eba283365f098bddb590f7ae30dc6bcf963879d957c25ebe0348"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-02-i01-standard"
-digest = "sha256:7bbe1afb7fd418b53fb4ebf2e33761970224b51135696a71deacd20854f287bb"
+digest = "sha256:854103a908a5fbf2e1f4d0e7c5f6da84d5641bdbebf3e4e60ea7c0b89edcd8b1"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-03-i01-privileged"
-digest = "sha256:5d106e73f482be13bb5229c94a1872769fa2a35bdbc1139639171a418cb613ad"
+digest = "sha256:7c28e5a03890ed474b2b1700b70ed7a2f46574b01600709a5a8a9fd699a95183"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-03-i01-standard"
-digest = "sha256:cb5acb14d3576a37b2df2f8bd1f2db9ed016fffc216e53daf5af305e47df0e09"
+digest = "sha256:1a94094e10ca2b04ba6b4ac4494e683766e446778a590d160a514bfcb28dd4b5"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-04-i01-privileged"
-digest = "sha256:57b56c3e068a7a4f2b239d0f08d1f538cbf2283de7e7c4feea2bc54d8c2490a8"
+digest = "sha256:20290e8907a55c70cc6fc1fa66d5df1a35115453c55f9d59f64c591bfa1a41fb"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-04-i01-standard"
-digest = "sha256:d48493239c45ea7815932051e0c887902f3b2133ca25eefdf7a25ee06768ddfd"
+digest = "sha256:667c6993c34428ed5e09b6b300a17e354d16751e640d9b17a61e1b5f48e764a0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-05-i01-privileged"
-digest = "sha256:c8361a23ce489c62324b9f7efa15cfb6879a7674a6fc449ed619ef2009da64ca"
+digest = "sha256:78ca02a04882c59debabb2f55cf675bb4adba3dac751f423efce716178f1bb69"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-05-i01-standard"
-digest = "sha256:5276bd9fbae04cd893a5bf3b40f1bc5d7fa433f0a1d9c5a88a138b7f77b30fc0"
+digest = "sha256:6f2f074b0e39c1e0b757b3084c9636aa7ccd2747215fcd3018e98e95787ea8ed"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-06-i01-privileged"
-digest = "sha256:ca98b21b8a70e689214da4a460d42ff31e38287d605ad0ef13ee523511dece0f"
+digest = "sha256:6d012a1ba95a8ea68c4ba3748a0c53e2c75e53b6b98397cf6e8e4c97ab9da902"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-06-i01-standard"
-digest = "sha256:dd7e1326f3d714ddc7d3751329e7fe6360a521354b2fcf0e7f38e29c6b7a8df0"
+digest = "sha256:6264c6a8c20dad30b1280990d71b6530d92eaf929d2adc1690bac4cc9d7f5498"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-01-i01-privileged"
-digest = "sha256:472ed3b71a8bf9a91f70efc8dc2d717702d5952b1f2b701b009793305b4bf6fb"
+digest = "sha256:e7e214059f22504478e41e75639e3f5d7fa25171b2128cfe93fde9135248ff5d"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-01-i01-standard"
-digest = "sha256:f428eb70ef745c9fce4069873d20ac2a8263953d126102815440d3dead13b0f8"
+digest = "sha256:00e14351f4d5230e79f6fb6622bce42658350a87b5c38627463912c39b696859"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-02-i01-privileged"
-digest = "sha256:6b914500a4346ef110f8dd9b82e73f103849b5b31d70c4b9e4b3b4df922683e3"
+digest = "sha256:f592adcd86daab1a1df2f75d6fe6357adccf2f559c28e08ebfd96c58873c0746"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-02-i01-standard"
-digest = "sha256:b48916cf62754a0917bddeeb84a7ced7bf2e82de6e431746808a650433f60138"
+digest = "sha256:92e3c75991be0f746d45da21edfbb4484b8d44d3d7e27a9d9d445bfb3a1613f1"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-03-i01-privileged"
-digest = "sha256:e693185541287f0c95180a1bf1f5228bb55c075c97ea51c043e1d09cc966dba3"
+digest = "sha256:529867d84d0546a01cc8721afc5f0b7b86fe0addef637128a7191e2657a4ec4c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-03-i01-standard"
-digest = "sha256:a3ca5f44feeb0d35776bc750fa46bce67ef1e9be2511c3e1aafbb9376fed16bd"
+digest = "sha256:b346ed2845abd704c8edf015dbe08e0429a4daac8444d52fb03d2cc00e99fee5"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-04-i01-privileged"
-digest = "sha256:26d61b1d85229bd60ac665e94b4ab46d8a6ce569066349af23a407e45555617a"
+digest = "sha256:669d8611a1c12facc59196b9b38907f1ba667a80081f0f7066257d2d18f9c2ee"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-04-i01-standard"
-digest = "sha256:ca3516446654fe2bf2e3088c16acbf612b2412a3c3d3ae79cbab77ac40a77552"
+digest = "sha256:cdc41908c42325fbe21c2d0b39a5e3b4ae74132f3e46d78036a36693c7113e59"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-05-i01-privileged"
-digest = "sha256:2c40c076a06e34a88e8eeb3c42fa0a57b80f97518b653052f3577684d2c7cd90"
+digest = "sha256:0c887dcfdbb5c1ab8f5657ea92ebb84ead4fa9756e7f683b828c81b4e2c53dd0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-05-i01-standard"
-digest = "sha256:ee17ac1f72104a4bd4114d81b4658b024d3b0c498956ca2d38ec5a1ded4d6120"
+digest = "sha256:c1a5879b05b2dae5a28e8539456c551be5d1f42d7684dcd9df3c19e0e1ee40b4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-06-i01-privileged"
-digest = "sha256:673ede4fec889462369b2999021f3957cefe92863b5a7f9b24a888234f4f8530"
+digest = "sha256:33b6eb13322fcf1e3909e03ff844181a7574249d22db0b4c72ceca2f1df04813"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-06-i01-standard"
-digest = "sha256:a11e6c5936225b1cbb14a354f187997512bc37647da90a96121b69b6e14d7c29"
+digest = "sha256:dba4eeb1821f31f55e15fb4965920a3628d716871478ac64355679a2b09ed83f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-07-i01-privileged"
-digest = "sha256:5741e412444fd9eda6e5e7a13ca8338265bed7c159c90680c49b1495ad3c0743"
+digest = "sha256:a96284270492c466ef91dabfbe5fe628f3923f15b6c7102ead28caf9356c5328"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-07-i01-standard"
-digest = "sha256:c0d4bdc4f25c22654434ae7babe7796753db9cc1855912072b2c9785b0d62427"
+digest = "sha256:62c7de7f836457a7a0c2c6f35d8742874992ad11088a48f61b40f48df6654194"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-08-i01-privileged"
-digest = "sha256:aa1bce1eb8b2ab3041d513478ab785d142125cd563686f9e433e97309b339e9f"
+digest = "sha256:5c13a2a3215f617aae565862aa0da13a4f4fce6fcdf88df6c17043b20c082a82"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-08-i01-standard"
-digest = "sha256:e72e7c40643496fa122dfa68e9416b8e2b0faf5ed135ddf968db46f6a3973926"
+digest = "sha256:f4361ea7c5462c5c61436f9b642527cdd5fdfd16be88774741e3c5ad9229db78"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-09-i01-privileged"
-digest = "sha256:022a926f4b7d4acd9d87619893d6217f70cac72e24ba11025fab0b06d99f2024"
+digest = "sha256:1764acd28aace4fdbeacc22a990646062f0e6b5b22a750e6150a77750275cdfb"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-09-i01-standard"
-digest = "sha256:e2257c0d09e674950ebe9a4115a5848c06ef7eb0b171aed7d7890d15f0888968"
+digest = "sha256:6aff73fd21798b881eecb64b49a5b58d7b9f43218421b4a569c0e45ae44cebef"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-10-i01-privileged"
-digest = "sha256:df3142c400815d4f7b7ac9e035b8e824ebed7cb1a2a10219bc7428eb05ff8654"
+digest = "sha256:729002a312d700bf7e09744bc846a322fccd5693028c40eeaeeea16d1cd1d4b7"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-10-i01-standard"
-digest = "sha256:27a0ae37b435acb32cf78b335f2739a098130eb852995cd87a5b7dce58c39954"
+digest = "sha256:0a3e95419fd2a36de6e6364f6da720fd139548a190b0200d3e1785a3ccd755e7"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-01-i01-privileged"
-digest = "sha256:b288966fcca602d11f8148a3daeb2cb3e6a6be397949f5bf693843bc98315c9f"
+digest = "sha256:3decefc1e4a11b66d6f406f23ca64c5925d239ac269d17542ff63e45c506ec1c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-01-i01-standard"
-digest = "sha256:ebe6e59191320cd71806546ac691b87cc4e677727b6961525d12e9894a44c7b1"
+digest = "sha256:fc074a250ba21cd628a700e5fc65c74dcc98aebb0b55513e5f24f8a2fffa92f8"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-02-i01-privileged"
-digest = "sha256:690becda861eaa424510aed4a34191f926972386d0e56d6717f161826c6a0ccd"
+digest = "sha256:47361dfde5f6863976b7d2a4e3a971ce0cc81a993e82a14e4606570b604950fc"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-02-i01-standard"
-digest = "sha256:3b682a74b64720be36b69eb3b4f76dfe230febf67723ae45f1e6db54e200e17b"
+digest = "sha256:0ae495172045fe4c4b9397762d525b5aca75d9e6db89f439611ff843c1a99f29"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-03-i01-privileged"
-digest = "sha256:b0d55c27242fdacbafdedc584ec85ac4b58ca855c6c7af91df14d7180924be29"
+digest = "sha256:b2dbba662bb96fa783e195a3ac70ee3b55aa2b0e8508c66925d596368eb53eed"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-03-i01-standard"
-digest = "sha256:4f45e8c93f6e17773a6e7f5ac93af774e7f86add79aa17b2aef7df2a73a155d5"
+digest = "sha256:2f728d7aaa1dde01202d27bb249d718de71beba36ba2e3b21d990344856cb6ca"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-04-i01-privileged"
-digest = "sha256:a29020ad39641ca6f06c8fa6c76b9bdedf03b6655ad44d42b101346e05ceb7e9"
+digest = "sha256:413025b787a0b9c2e47c6cc61a5d78b2d8bbdedbc999732702db0bcb8e4939e6"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-04-i01-standard"
-digest = "sha256:56620d2f37791f384703436f7d10c2968ce0da5020570c1886fe9e17076de3e5"
+digest = "sha256:5dd06fa0c3a460d1dc4785e76fd142072a286201e707014c58701605db3ae76d"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-05-i01-privileged"
-digest = "sha256:3228ea05bf4fc446f97c716eedc8821b3a0925add80cf628430e6883afb3dd5a"
+digest = "sha256:d8272d2bc812267e2195cad2a47fa34b9621cfa2d0f4b2a785ed98a4c2d47db6"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-05-i01-standard"
-digest = "sha256:5fedc89c963704eb0a781d7beee2b08960e78acb0740d6bfd22b6328390f980b"
+digest = "sha256:e9e571e6f96cbc4f8c34158c9e615cfbd4a977b0c007b38f762fdb978f5b6ba0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-06-i01-privileged"
-digest = "sha256:f3c0e67ae144877b7a11771af029be6f664c8d3e8839b7ba5815f5ba29e64d27"
+digest = "sha256:cd6fb34e0b17baaa38a3e34aacfa9128b0aa85b4519c977f63de485d62575d5f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-06-i01-standard"
-digest = "sha256:4868ca249e76db79c6db3164b71ec9bbdc710f49ee7476892501211666ce19d9"
+digest = "sha256:4bfa045e940fff7b3fa0fe0b25129bf9217dcbc47203eae93810c16b8026d854"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-07-i01-privileged"
-digest = "sha256:f87fecdcd03d36949fa63c420513367114950637b59c14692d9ee8c0425b57fd"
+digest = "sha256:4ee2c6ccd8fe79b31af2006844f08e27be212fc09925a89c889aa4c89f4745e8"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-07-i01-standard"
-digest = "sha256:f22d09b3be92a6a57e97d0ceb987e7d0212ffbdf0a4d09ce4dbc994747bd48ef"
+digest = "sha256:fb2e246f2c754d2a8276a9788aa330de6ec914d4ca0844f749742f47106956fd"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-08-i01-privileged"
-digest = "sha256:43a8aff875ab394d962631d98d48432698609c6b5c8f2f37d597c0d352e35960"
+digest = "sha256:b26ac2c77aa9106623f848ee26b375cea05073a91ae7f98543d46bad5525ed07"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-hedgehog-in-cage-08-i01-standard"
-digest = "sha256:b4702ff7fd82733f0634936329bd3d7ac9c3d80bc577ea1ef15d3834d53b5c3d"
+digest = "sha256:06b4e834d26ced11bf890c6cec4372384a4d4a96c365231869167d54d7359096"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-01-i01-privileged"
-digest = "sha256:4ef89ebb28e34073a3bd1a7f50727e00191c03b626006edf5b081e14c1c66c2a"
+digest = "sha256:181e120144a9b1aba2580e5341a78500ac841c54ac7dfb8142e35f36fc9cc468"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-01-i01-standard"
-digest = "sha256:5a58a3142bb7680040f362dec30252c8dec9bdde8aa544b74efa6a79e8795c37"
+digest = "sha256:b6958cdafc28649a2136cb37b69b983eed6efab6aa63ce366681eb45a8d78ef3"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-02-i01-privileged"
-digest = "sha256:4a0e9201fe39995024c5d160d36eaf5165076bf85088359184359f9bee47e53b"
+digest = "sha256:2fe80611729379f7776fd6b0363799e2092bca899d9884b13577dd99600b26ca"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-02-i01-standard"
-digest = "sha256:b5d2808e8aed6c95a1be82b775070ee43dce8c9d20c10940c54e848d2efaf372"
+digest = "sha256:55e7e3c0110cc3be91d65ec03f61446528cf17374a2a11bf8bcf349cdb9a8dfa"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-03-i01-privileged"
-digest = "sha256:6f24b756128c11a940d74a89fdabb2413686ce950040f7a095bfa2b206bbb8ab"
+digest = "sha256:e906d84ddf960aa63a3364eca372cbd28e7451d90ef65ca6e58e8c605f89fa32"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-03-i01-standard"
-digest = "sha256:7dd556f94eb5f7f6ea9459865d0b4980d9298723449630a9eff92fe993119dd7"
+digest = "sha256:b74f88693f4f9c29ee03a52d03a68bfce8f122b8b6a7c04619509b08a61fa1fe"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-04-i01-privileged"
-digest = "sha256:4729336bf618fe62355ef2df8d3ca8e3c398ac6487c2e84aff01fde5f2032e62"
+digest = "sha256:42c17d0a667974d5cb326bd8b5f63b8f95193408ce68a61346a1368d5b9fe243"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-04-i01-standard"
-digest = "sha256:6d7cb10fb8a263492b7135c2f642b37771725de754b257410ac20664f4bc80aa"
+digest = "sha256:bffb103e22221d5d15dd4102135b27cec57317976a316b53b65b65f98bc3e861"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-05-i01-privileged"
-digest = "sha256:1a8ffe0f89963e72abcc33820582b21ca11c567871a057d7eb50fcdf8df98afe"
+digest = "sha256:784d2082f56ccbf9112a390b0a09348ff73fbdf077568a768057b28db3802bc4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-horseshoe-ring-05-i01-standard"
-digest = "sha256:405fb27a3edb88ed63dd6bfaf5d161d11944e948dff3179e56d9d9f8066075d8"
+digest = "sha256:48abc6394adb46b04f959e9ea2cdfe5773094578bbc593c6ad5a97aba7aafc4b"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-01-i01-privileged"
-digest = "sha256:584bd2d84836ba996446ff356f5a04333f5de48c588c28f04b6241fdd2f7e195"
+digest = "sha256:e3e71cb532ff97b9a468dbd24946a94eb8171109e65da25fdf1678afcab1b825"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-01-i01-standard"
-digest = "sha256:df5a1897af9135d16ef4350b83723b10a4c08a4def4f2b0c141450ad921c29c9"
+digest = "sha256:e1a9d480a4161b93c3da1ddd1f189d2f532fb078ff96d978e1513f4fa01dcf10"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-02-i01-privileged"
-digest = "sha256:6154b41cd6f86e3b732aed8d59f60445d410ac4aff93dc5dfdb9eb3cb252d2de"
+digest = "sha256:cb5ae621ca4812b3112db2b139f37252215020ab8dee801c3ca629fba1dda077"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-02-i01-standard"
-digest = "sha256:52db67cb068a097c89dd9ad07470d188d43e6a5880ad055a5588287e1ec90f6c"
+digest = "sha256:b13f28663f5a636155c0431ee6cfa61d1210a6e70f6227393c69c47715cc1c4e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-03-i01-privileged"
-digest = "sha256:3f778bbdbcf6bb3c0698878f3b0934db5e60861b0d5a4468790c2958873fbef7"
+digest = "sha256:dd11a0ca688ba3cef47820d8dcf2e890dc7465d5e49597a42227bdb73b20d75e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-03-i01-standard"
-digest = "sha256:c79df4df88c901471eb637add4ee75d4be765658c76ad0645ecc508b3dee3a9a"
+digest = "sha256:5a2c278344a1a94787005b42be547d4d03c9a4136c9aa00d98bf5c48f8de6e94"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-04-i01-privileged"
-digest = "sha256:a6449bc8b87573a19801b4d6d42be01de4b25d215b80db81db1e5c7aeb8e532b"
+digest = "sha256:478e9278e568c2d48067c441bfa821f0dba67c868fd8efd94da22494f54fd329"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-04-i01-standard"
-digest = "sha256:a4bb9d5c3cdc1d9c8f03fed7505e04eb1cb11f9e4b6a53ad056926a67da6761c"
+digest = "sha256:45a31596956f9e1324edda0cbf99ed9ff2d2092afa72236d9ec42af1a09f56b9"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-05-i01-privileged"
-digest = "sha256:0c6ff66c14ef0bc9aee069ff90b130b522d9de1e076ed345aca1a73855b3e75c"
+digest = "sha256:eb7fce1577a5373176870beb398590bb40e72086752330554d4961743c831d30"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-05-i01-standard"
-digest = "sha256:6845b287ed0a3288ab1ccc4d445a8c7c37be829623abd6fbc1e8dbe5a2cd4739"
+digest = "sha256:1f0a2e07726f19f7f4f60846596bc0e7be5d2017a6dbf79653670281199221c0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-06-i01-privileged"
-digest = "sha256:a1884caa08611d018d9953cc8256271afdf79ddcf3fa5bc44975a2a0189989ae"
+digest = "sha256:721c3d4347b7f6086860d47d0df7202ba9d55135cc05b6a1ed3d3f603b86ab77"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-06-i01-standard"
-digest = "sha256:173eba7e2f11077c27a4a0fab7db998823aef6786c063652b7ec4bd6a9acfff7"
+digest = "sha256:567af773153e22a45ec72041473ec2b63f5601f11c2b6e2a9ba312fca21abb54"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-07-i01-privileged"
-digest = "sha256:9f2c5880ba7e027d0932e24ffed7a63aed0581860f263cfe04e8ddb4833b5eb1"
+digest = "sha256:0d1101390c323b80e5ddbc527dbf245ff64493d54c23f9df34f44d769eca20f7"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-07-i01-standard"
-digest = "sha256:2c25cc0b38a153caa145f8b4044815f6a36fa99840f641d483981c31270de025"
+digest = "sha256:cd45cf937d35c741e2af7a4e4e00ef351089479feff674f6e7ce0c1013f5568b"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-08-i01-privileged"
-digest = "sha256:15e1437882755ab2c169bc9a368065ff46ee06bd3d88fb2fe6c9e6f9aba25fa8"
+digest = "sha256:ee72f81e840b469edee8254c53122e5c18fa126a72dcbdea5af06bb6729b8243"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-08-i01-standard"
-digest = "sha256:1cd20eb194eaf539317d67403a2bc345de35f7967954d928aa7b10643e62ec08"
+digest = "sha256:3f07e3794ca3ca6c8a41963d84e4d0bddc5bde7754391e6bfc917be04e7f04de"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-09-i01-privileged"
-digest = "sha256:dfbca0341308eb163bca55d86414cbb2658aab013f1fe53154e3afe1d626da8f"
+digest = "sha256:48725a04416911c10b8e671698cfe2ef9932b5278c5f5a22633a4ab55088c4c5"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-09-i01-standard"
-digest = "sha256:ca66267b08f2aaf02b00f756d9f48d8cd10a66da27491cbc376cc174cf7dd686"
+digest = "sha256:3e528cea28e7c7f42f0a3db4ef9972d5f823c1a4565a6a9f9d9314b5d8c52aef"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-10-i01-privileged"
-digest = "sha256:a6c1cec08a5135387a6a3890ffe75b99f40a2413841ddb0ae5f15b3c032d3af4"
+digest = "sha256:415396867561330f9dd0f73eca08b30745739a9563e8066623eb1540608eee60"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-10-i01-standard"
-digest = "sha256:c946a58bb8165703a602c8a7bd2558ccdc4dc912ce73e5fbecc6c11e401389a5"
+digest = "sha256:7fd2093c734ef506875dfcdc701c7ddfc97d9980f19768117c3ff63327ac7f6c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-11-i01-privileged"
-digest = "sha256:43f5fe9c476926ca3eaa69e1d65d50c82e8ef7189e89ce4df58356fbb8fd566d"
+digest = "sha256:5e085d11c6c69a834a04fbe2b2fe734181b7fd7a829f666abfae624423313d4f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-11-i01-standard"
-digest = "sha256:0abad9a3436889124037a5554652cee5958b7519ca6c984c7fb3a08b8a107e7b"
+digest = "sha256:7813fb0955c68b9f178ade71b2d5f50f340ce5679b3e37f3c11f2dd3e9f6a7c4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-12-i01-privileged"
-digest = "sha256:5c1feab1897e010cd6368652f2ab0dac0dbc63104697b468ded806b16783efe4"
+digest = "sha256:1dee7b0d39acc3e4470eb2604bf6ec0bbecb0d5c55e82e3de5630efd5c9556cf"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-interlocked-claws-12-i01-standard"
-digest = "sha256:a7f540f56f40a9630e1e34343bd5121997efdf957f6a5115a69c8a118fa86a4b"
+digest = "sha256:efbdc3b1d91f7ddfd7358a73df42fe97b247e1343d72d18e7c482decef39e28f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-01-i01-privileged"
-digest = "sha256:6c75f06aa71adf7b17cc11ef1e34ba250690862e4dbf419559e73228456d3e4d"
+digest = "sha256:2b530e7520919c97750e5d93803d1a31da951776aeb8cc69fdb76b3826994539"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-01-i01-standard"
-digest = "sha256:921978890e005faa737dcf5ae417e58535444d0c2968e8d905f8a3db9c4c9bd3"
+digest = "sha256:9bed2e61d171d48caf736ef4ce83aac84c95ea37feeee7f002e03c801b095417"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-02-i01-privileged"
-digest = "sha256:b2d7d1a23bdc8c379b46883db2d9168bcf46106cf25b29064b43a34d291cca77"
+digest = "sha256:85bd39d483b097091a3cc8d9ebdcfb525b755a2c5afb4b9955791721e143b555"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-02-i01-standard"
-digest = "sha256:a5a5f6db0ae783494777ebc1350ffaead4476e574b19d299f8923b4d7644b1b1"
+digest = "sha256:886a32dc9ce773f3dccbca169ce790f0ca9c5a51b18e08f1c4120f3a2f72471c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-03-i01-privileged"
-digest = "sha256:40fa4423bcac10441ac01f2b49509ed66133cb896351df7be3bf3b3106d5102f"
+digest = "sha256:9db2d7ffcc923101cf0350d2a4aef8f954bef7d214eafd9ec9332147d5ed4203"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-03-i01-standard"
-digest = "sha256:8a31cef3f22b34712c4dfdf0293c29c6b969b108660db1de57a51c5a463aedf1"
+digest = "sha256:2bb87e0d5a2133f7a3e990a71923a5911080e7525fd763dc22b74564b91fd088"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-04-i01-privileged"
-digest = "sha256:f8427c20e7adccaaea7496f9a2013303a9c25ad9df0d7eb5b45dee7c66c4f418"
+digest = "sha256:2e80c5953c9999034ca5789666ebb4f268d3000ca242891bd1c92759fad0a4f6"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-04-i01-standard"
-digest = "sha256:1f9a2ffca27d1fe765cbae3664ce442da1708f134a36e3d8bdf32430151d4d2b"
+digest = "sha256:ec25e4f53119dd0ee8149335da8b3a44b7193ccc69fdff1f41f1a42128f5ad7b"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-05-i01-privileged"
-digest = "sha256:27c138b1d1598d255f7afe9fbb2959d9f25a9c30c0292f8dd0356b1a5fab1140"
+digest = "sha256:34f27d03a8364cae5176afee791884721351458f8f73191087ae21b4662b7f11"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-knot-untying-05-i01-standard"
-digest = "sha256:d57a73d02bfd1fba5dc21076b4165889d55379287da021eca9491aae4429860c"
+digest = "sha256:92701abc32dff3181f8ef18b2adf763baa7478aa8ff3d3b8f51b6b39cfccf735"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-01-i01-privileged"
-digest = "sha256:3ffcc142ac31db93e7a9a56d03c509d2bce77f55ffc8ff321d5aa2c6daa1a51b"
+digest = "sha256:13cf26b3c32f74a074fef005e451996e8179483fa15b1ae4402bd192ff1dff0f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-01-i01-standard"
-digest = "sha256:0005c6b3f70c14ac8d99f8d26a6dd9d9909211f8c13ce7a650d54ab625023e2f"
+digest = "sha256:353d9a678b31fc1c4fff18bb42a5001c612f11754bd451588cf66cb9028a7e7e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-02-i01-privileged"
-digest = "sha256:d1039623ecdb3862dc986d309697d7f8dc0826148204bebbaeb9f0c93790ab8a"
+digest = "sha256:f525618b1343ff54f59fa789ee082ea5e16fdee5fdff1e4325fd8c3ea8531748"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-02-i01-standard"
-digest = "sha256:f19fcc325dfc25c0a1a1a71a7ccedfe24716107408cd5cbafddc9d3cdcd548b8"
+digest = "sha256:8b4880727ecd628e543caa3f89b39dbada3c777a9699354060c46900c7c002d6"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-03-i01-privileged"
-digest = "sha256:412e1054761ec726513a7886a0b93a6d4ac73e8523787c7fcedb358e6d3a6e79"
+digest = "sha256:d3a92eb53ccb64e75aa3dd13bb4607588a86d915202dceec322f10a5eed086b1"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-03-i01-standard"
-digest = "sha256:2ee1613f543f398d7fd8a01f2a8bc59c31df38875fd396a2cc3aed5854b3ddde"
+digest = "sha256:1f6b2aa757b9de5a701921ae3cce02db171467758fdf8d934be9af407266bfc1"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-04-i01-privileged"
-digest = "sha256:6eb836d2969f8c44901cbad2ea522024cdaab3514b77462d67ece0d76a67b572"
+digest = "sha256:46e439c6d1a095795164e22b5563963c6ea5cfe01c1bf56991471107f60a99cc"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-04-i01-standard"
-digest = "sha256:5b3d122ac42fe121989c9caeeade948b1d4189c288a9f51069bb5ec2d31203cc"
+digest = "sha256:bd5b3affdb7cdf3f6dcbaf1e15d2a86e4940357512f5c21ab9ba115b05eba480"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-05-i01-privileged"
-digest = "sha256:61876f3622606b1a6644a58c445585b0b16b1e6d6dcfc01c35ae7e4bf610e2f8"
+digest = "sha256:c7a4e0bb8296f6f283850d8bb2e5f4fe098b96cb6247487f2c96d77758cecb60"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-lock-picking-05-i01-standard"
-digest = "sha256:6fc65cbbae70bfc8c4aff9b70ebc73a4391036a238336c894284d7229ac422e7"
+digest = "sha256:12bbffdffc25bc16c3993f81e1836947401b9509911d30cb2a72922b76a0a1c9"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-orbits-01-i01-privileged"
-digest = "sha256:be1f4d63d36e4250cd35693601527642db784493597e8aa92e764cc97e82ca7e"
+digest = "sha256:ebbefc098a0ad9a7d01bf3eb1a0924fedd3153c7597005bba0e3ef155dff4b8e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-orbits-01-i01-standard"
-digest = "sha256:37f1ddd4f92c1bdcd8d74ffd53143c36acaabee6d1e7c900d5423f808aec02eb"
+digest = "sha256:a4c63a27dac99391823710fb73823468151a16d29629534357aa8c60d3dd535b"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-01-i01-privileged"
-digest = "sha256:9338e5ed8c035f97bd0e6ff3aaf28a7101066357034347fc7915f5fe24d369ff"
+digest = "sha256:755325714a966878422b2c4f0df26105645c4f9e88420981189d660ec1bb4bcc"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-01-i01-standard"
-digest = "sha256:46ef391438c79636ab82f94a1d99ad3b48c0c306c3a324c9f2e4a3fa608f9439"
+digest = "sha256:0879d4bba4cd610cd08cab398a4e8b8186700f1ba6d6f1ad7a7ae0c7a7f53c79"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-02-i01-privileged"
-digest = "sha256:168c090f308f5a74d182c3f6e785af7dc85852a58bfab21c776e76c49ac46e31"
+digest = "sha256:a98439d864a140dcbfdcfa46fd30f903cf5a4a09ffecdd5db22d813dab279881"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-02-i01-standard"
-digest = "sha256:e8bd7b9619ecabb7e9ec7c3e91736fe6a2d1a1000d3c7eda85a9514835d6ab86"
+digest = "sha256:b98516d4a1b6690b2db69326c8add09207b51b6afb36866e63c9a32d4d9b0d1e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-03-i01-privileged"
-digest = "sha256:44d94db051958d5cd38fcfb921bff2f6a7f8628f920122d0e47bf8732c2f9639"
+digest = "sha256:b77f1bca5e661bef0c85fa87e35fe3124632311f729afc7d9096e314cf5eb6e0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-03-i01-standard"
-digest = "sha256:ad3394181090b0c67b8459230fba8e8429c1bdab31a703fa66f8df02abf002e6"
+digest = "sha256:98889c6c3bbc7ab4baba895b8d8e05e34761f39eebdbea505d2ebab681f06a28"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-04-i01-privileged"
-digest = "sha256:ef127536422e365b33e903dcedd55576decf605ea1fa9c1526b3d6cc23810aeb"
+digest = "sha256:2d4057ea0a68cb2083ba5c2827c63b83b34b16b96c002d8978dcc82f9b7bd914"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-04-i01-standard"
-digest = "sha256:4fe3f9b9cff82e209d7313ee2a4006e38359898b3e8da442705fbbd8f0691925"
+digest = "sha256:4b1f167356da92c101f46466faed6f0db0d2aaaf0818063cb02b01f0bab3c52f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-05-i01-privileged"
-digest = "sha256:94cd7e50f4567b3bf2386d13c86ff2c3c80d04735fc8244f2bedce1a0cfeaff7"
+digest = "sha256:0d3b1449dc490724e961ac98767c8321327e34bd6716188d72d2e970241a53e7"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-05-i01-standard"
-digest = "sha256:92f667a42f08bd352589dbd5538e5fd3ecebb2a6c2deddd62b84365ab039a8f1"
+digest = "sha256:8431a56db79aca2f39956150997c2cff0f945b4f5475f9e9c7d90705a61a2293"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-06-i01-privileged"
-digest = "sha256:aa6d2f13d3e12e63067062187d9b0a2f5fc68c3ef0df68e592603df35adfe5a0"
+digest = "sha256:b37f775fe9f2cfc2fda0f5cc105d1157502cceb14c833c5d172c55b89245bbf6"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-06-i01-standard"
-digest = "sha256:7a345c8e9f98f2df6eb9d6154f476edbf1ebedf9a1a19ffa9b751e8ab8b21547"
+digest = "sha256:299b439f3f582c8688fb909fd10b2c49484afe57ff95e9722127a2424ace98ab"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-07-i01-privileged"
-digest = "sha256:b16f2a3ca8461b178989d0b68113cb5d7e768678c9121ae8a9e0c3ddb0d395a1"
+digest = "sha256:bada0a8464e8bf3f12b0693357e740ec6516f8f004c9a68a5b96931fde4f4376"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-07-i01-standard"
-digest = "sha256:05be1dd692cde5b87aad67c0424b435efa142f600117a8bacbc41c70ba2c512d"
+digest = "sha256:e973d08119183af9207bcb53bc10a649cf63fadf8d6578938ba1c2681ea9f087"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-08-i01-privileged"
-digest = "sha256:4a0cd4f3d9b5aef7471d284194a3e308f974edb7d31346f2b0eb9cd56c73da0a"
+digest = "sha256:7f889e0fd7d2f9af27b9569eb8f6919ed0c731d8e1e8e9a5565afa66830a1229"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-rope-threading-08-i01-standard"
-digest = "sha256:89d5f2741c1ec7f2684a5341f3238d6a39357b897b42f9dd9baba266d181e2b2"
+digest = "sha256:56ef34ededa48a691c949a42770954550801ed40309e59df091c903ac672cbd4"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-01-i01-privileged"
-digest = "sha256:8b8f4c3451facaad4bd1af2731b13205b5b58f9665ce184eadb07730366eaf73"
+digest = "sha256:8d439091753600580e7d99dba3c471c209395515bda98ca2dddd079fc7f388f1"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-01-i01-standard"
-digest = "sha256:89d0c8f1bd2eb019201d6034e92f935220f697802c80ad7a53f0022bbbf04a7a"
+digest = "sha256:8d749bbcd720861dd2acb840114adf592f8787215e88b418b232671aa3eea12c"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-02-i01-privileged"
-digest = "sha256:7c4c5024d31d31cddebabcf6043797dc9ae964f1e80b26e1802a48a402e789f1"
+digest = "sha256:93e60f3dae0eaff1d7d54bbe8ffc1722a90da4d50a8d470533b0c68cd868efa3"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-02-i01-standard"
-digest = "sha256:a57c566e85ef54ffa05c228e0b7bbae7e03f21881d006b2b17c56fc343f91003"
+digest = "sha256:16085d995caad94f8cbb7ff973e7a80ed20d81e9a0d69bd2c5186a550d5a60b0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-03-i01-privileged"
-digest = "sha256:235680140b09378288546e23b57700fa5de8148bc283135aa99435b19012d91c"
+digest = "sha256:002e676baf2fc6ae86f3cb25fc481080e1aa993c7018b627ea9690bf1de39151"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-03-i01-standard"
-digest = "sha256:7d28b0e2ac24f85e36049ef16b569d0d31a2e9e98a255e5d8aefc55b2378684e"
+digest = "sha256:2d3c17d02c4ffcd15729ae90fc72b271c73bfa1d1dd5b6994af0c909f9440308"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-04-i01-privileged"
-digest = "sha256:1921a8200fa12847f38f42da90d1f1b651c74a13540431e737ac562f2ef98164"
+digest = "sha256:6c40a743b6eafb7d3200dda1c6e469cc8ff5edba17276e06f279ae066e1e91d1"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-04-i01-standard"
-digest = "sha256:7031c2b1163cc426ea3bbb966f26f1b570f87c8744ad7cb25b75596c904264ea"
+digest = "sha256:88876bdc8050f3840f420d615bee6e85a4b7a82297f03f2845b40d5f42c20ab2"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-05-i01-privileged"
-digest = "sha256:f930673c1f85aa44f3170f83b6d20cc1401342a6cc4c242f04cf0d049e58e378"
+digest = "sha256:8ff317165c8a1a652eb2b98e5b0f14e8318ff794bcf8173fc6a9ad3a1ff418e7"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-slotted-post-ring-05-i01-standard"
-digest = "sha256:b53d3607a42ad4fa2849d67299a454da20573c08c3bba498deeebdc4750a8497"
+digest = "sha256:53692bf06a933137098673795297142b2365422e8074ad249ce5209c20e91617"
 
