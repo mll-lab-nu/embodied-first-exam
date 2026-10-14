@@ -24,7 +24,7 @@ in the live episode and in the replay. A success reached earlier and then lost d
 want graded and stop submitting.
 
 What `TurnOffSinkFaucet`'s check requires (RoboCasa @ 756598a), all on that final state:
-- The water is off: the faucet handle's angle (mod 360°) is outside 0.40 rad (about 23°) to π from its off position, i.e. lowered back to below 0.40 rad.
+- The water is off: the faucet handle's angle on its on / off hinge (mod 360°) is outside 0.40 rad (about 23°) to π from its off position, i.e. turned back toward 0 to below 0.40 rad (it starts at about 0.47 rad; the handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.52 rad (so 0.40 rad is near the end of its travel), and a temperature hinge (about ±0.79 rad) that moves the handle in another direction and never turns the water on or off; which way each hinge turns depends on the sink model; what counts is that hinge's angle, not how high the handle is).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python

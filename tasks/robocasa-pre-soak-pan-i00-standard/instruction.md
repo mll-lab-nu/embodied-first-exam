@@ -25,7 +25,7 @@ want graded and stop submitting.
 
 What `PreSoakPan`'s check requires (RoboCasa @ 756598a), all on that final state:
 - The pan and the sponge are each entirely inside the sink basin (all eight corners of its bounding box within the interior, with a 5 cm tolerance).
-- The water is on: the faucet handle's angle (mod 360°) is between 0.40 rad (about 23°) and π from its off position.
+- The water is on: the faucet handle's angle on its on / off hinge (mod 360°) is between 0.40 rad (about 23°) and π from its off position (the handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.52 rad (so 0.40 rad is near the end of its travel), and a temperature hinge (about ±0.79 rad) that moves the handle in another direction and never turns the water on or off; which way each hinge turns depends on the sink model).
 - The gripper's grip site (between the fingertips) is more than 25 cm from the pan's centre: let go and move the hand away.
 A "centre" is a body's origin; "touches" means a MuJoCo contact.
 
