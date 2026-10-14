@@ -1,0 +1,86 @@
+# roboolympics @@FAMILY@@ — instance i00 — STANDARD MODE (robot as a service)
+
+You control a simulated @@ROBOT_LINE@@
+**as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
+client. **Task:** @@SENTENCE@@
+
+## The venue
+@@VENUE@@
+
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+@@START_NOTE@@
+
+## The rules
+@@RULEBOOK@@@@RULES@@
+
+A referee in the service decides this from the simulator's state. The events that must happen, in order, are
+**@@STAGES@@**. An attempt (an episode) ends at the success, at the first rule violation, or after @@HORIZON_S@@ s
+(@@HORIZON_STEPS@@ control steps) of robot time.
+
+## Real-robot rules
+- **Attempts.** The first episode starts when the service comes up. `r.reset()` abandons the running attempt (or
+  follows one that has ended) and starts a new one from the same start; `spec()["budget"]["reset"]` says how many
+  resets you have (@@RESET_BUDGET@@ here). **Only your last attempt is graded**, and a success ends the trial at once.
+- **Time moves only inside calls.** `submit` runs your rows and `get_obs(seconds=s)` holds the command in force for
+  s seconds; both use up the attempt's time. Between calls the robot waits, frozen, while you think; `get_obs()` with
+  no seconds is free.
+- **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
+  `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
+  motor torques and two IMUs (below), and the venue's fixed cameras (@@VENUE_CAMERAS@@; `spec()["cameras"]` says
+  where each is mounted). Not where you or any object is, not the
+  referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
+  (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
+- There is nothing to hand in: the service records your last attempt, replays it in a fresh simulator and grades the
+  replay. Keep the script that drives the robot at `/app/output/gen.py` and a `NOTES.md` of at most 20 lines (your
+  approach, what failed, what you downloaded or installed) for the record: save them early and keep them current.
+- Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same
+  way, so do not stop early: while you have attempts left, the run can still pass.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
+help(rcb_client)"`; it explains the protocol with another benchmark's example names: for this task `spec()` is
+authoritative).
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the service is ready |
+| `r.spec()` | `GET /spec` | the facts: `action_types` (each type's layout, lower, upper, meaning), `control_dt` (0.01 s), `max_control_steps` (@@HORIZON_STEPS@@), `cameras` (field of view, pose at the start), `proprio_layout`, `robot_facts` (joints, limits, default gains, the stance), `rules`, `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `resets_left` |
+| `r.get_obs(cameras=None, seconds=0, video="frames", include_depth=False)` | `POST /observe` | the current frames (free), or hold the command in force and watch for `seconds` (at most 30) |
+| `r.submit(type, A, dt=0.01, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s); stops early when the attempt ends |
+| `r.reset()` | `POST /reset` | a new attempt from the same start (see above) |
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
+`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
+`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Rendering is most of a
+call's cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
+`res.proprio`. With `interpolate="linear"` (the default) each control step's command is a straight line from the
+command in force to the row; `"hold"` applies the row as it is.
+```python
+from rcb_client import Robot
+r = Robot()
+res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, @@WALK_DIM@@) rows of the `walk` type
+```
+
+## Actions
+One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` spreads it. Every row ends with `grip_left`,
+`grip_right`.
+
+@@ACTION_TABLE@@
+
+Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains
+(also in `spec()["robot_facts"]`):
+
+@@JOINT_TABLE@@
+
+@@CONTROL_NOTES@@
+
+## Proprioception
+Each row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: the @@NJ@@ joint positions
+(`*_pos`, rad), their velocities (`*_vel`, rad/s), the motor torques applied (`*_torque`, N m), the joint targets in
+force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation quaternion `qw, qx, qy, qz`, world from
+sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
+`holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
+4 joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
+real @@ROBOT_SHORT@@ has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
