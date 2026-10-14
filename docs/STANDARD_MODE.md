@@ -619,7 +619,7 @@ agent latency counts, the agent's own program may act) and uses its `slowdown` n
 
 ## Part 4 — `eai-standard/2.4`: the operations capability
 
-Status: accepted 2026-10-08 (owner), protocol-change issue #89. It was first served by RoboARC's standard tasks; the
+Status: accepted 2026-10-08 (owner), protocol-change issue #89. It was first served by RoboTangle's standard tasks; the
 benchmark's own release called it "2.3", but that number had already gone to the realtime capability (#86). Reference
 implementation: [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/), with `rcb_limited.py` and
 `rcb_client.py`. `rcb1.py`, `run.sh`, the client image and the client pins are the 2.2 ones in `scripts/eai_standard/`.

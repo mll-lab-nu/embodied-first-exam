@@ -58,7 +58,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboARC 21600 s (owner, 2026-10-08). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
+| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. The usage gateway (`scripts/usage_gateway/`) is allowed: it forwards model-API requests unchanged, records token usage, and refuses what a trial may not have: a request past the token budget (§5) and, since 2026-10-10, every request that is not a model-API call (§2.11). No tool that runs outside the trial's container is offered to the model (§2.11): official runs turn the harness's web search off (Codex `web_search = "disabled"`, Claude Code `WebSearch` and `WebFetch` disallowed; `scripts/run_agent_batch.sh` `WEB_SEARCH=disabled`, the default) and start the harness without account connectors, apps, plugins, image generation and cloud agents (Codex: with the same switch the runner sets those features to false in the run's `config.toml`, `scripts/codex_tools_off.py`). These run at the model provider, so no egress allowlist stops them (2026-10-02: Codex with a ChatGPT login searched GitHub by default; 2026-10-10: the same login handed the model 238 account connector tools, and 21 trials called them) |
@@ -147,10 +147,10 @@ decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in
 number within the cap, §2.12). A standard sidecar's wall
 clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it, in every benchmark (§2.12) [CI]. That benchmark's results state the budget and are
 compared only with results under the same budget (D8). The token budget (D10) is unchanged.
-- **RoboARC** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task of its Genesis release. Its MuJoCo release (2026-10-13, which replaces the Genesis tasks) uses 10800 s, within the default cap, so the exception is not in use today. The topological puzzles are much
+- **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task. The topological puzzles are much
   harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
   owner sets the budget to probe the capability ceiling. Simulator speed-ups add interaction within it; they never
-  shorten it (`docs/benchmarks/roboarc.md`, added with the tasks in #81).
+  shorten it (`docs/benchmarks/robotangle.md`, added with the tasks in #81).
 
 ### 2.4 Images, registry, GPU
 
@@ -224,9 +224,9 @@ Harbor builds the task images locally from the task directory on every run; only
 | Item | Level | Basis |
 |---|---|---|
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
-| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container). A pointer is anything that locates the solution of this task: a URL, a dataset or file name, a demonstration or episode id, the name of the upstream expert that produced the reference. Provenance is kept in `scripts/<bench>/` and the README, never in a file under `environment/` the agent reads | MUST NOT | [CI] for the task's own files (`ci_checks/check-agent-pointers.py`: hosts of code, data and video, `*_url` keys, dataset and demonstration file names); [current] for images, reviewed when they are built. Upstream documentation inside a simulator image that names the benchmark's public datasets or checkpoints is not removed file by file: the allowlist of §2.11 makes them unreachable. Open (2026-10-10): RoboARC's image (docs/benchmarks/roboarc.md) |
+| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container). A pointer is anything that locates the solution of this task: a URL, a dataset or file name, a demonstration or episode id, the name of the upstream expert that produced the reference. Provenance is kept in `scripts/<bench>/` and the README, never in a file under `environment/` the agent reads | MUST NOT | [CI] for the task's own files (`ci_checks/check-agent-pointers.py`: hosts of code, data and video, `*_url` keys, dataset and demonstration file names); [current] for images, reviewed when they are built. Upstream documentation inside a simulator image that names the benchmark's public datasets or checkpoints is not removed file by file: the allowlist of §2.11 makes them unreachable. Open (2026-10-10): RoboTangle's image (docs/benchmarks/robotangle.md) |
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` (the model APIs and, since 2026-10-11, the package registries), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboARC were open) |
+| Agent egress allowlisted in `task.toml` (the model APIs and, since 2026-10-11, the package registries), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were open) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 (on each seed in `seeds.oracle`, §2.13) | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
@@ -458,7 +458,7 @@ that too strict: installing a package or trying a tool is part of what a model c
 | A trial that fetched a solution is flagged and the owner decides, case by case; there is no automatic rule that voids it. Installing a general-purpose package is never a violation, and neither is a tool call or request that was refused (an attempt: flagged for a look, nothing more) | MUST (how results are judged) | [new] |
 | `[agent] network_mode = "allowlist"` in every task, `allowed_hosts` = `scripts/set_agent_egress.py` `HOSTS`, the same list in every task: the model APIs' hosts and the package registries (`PACKAGE_HOSTS`: PyPI and the Debian / Ubuntu apt archives the images' distributions use). GitHub, Hugging Face and the general web are not on it | MUST | [CI] |
 | The list is the one switch: what agents reach changes by editing it there (and a run without any restriction is `set_agent_egress.py public` on a copy of the tasks, docs/RUNNING.md) | MUST | [new] |
-| What the task itself needs at run time (assets, robot models, the tooling's packages, caches) is in its image or the task directory; a task that needs a download during the agent phase does not conform | MUST | [current] (of the six benchmarks switched on 2026-10-10, RoboTwin, the Playground pairs, RoboWits, BEHAVIOR-1K and RoboLab were run with the oracle under the allowlist, both modes, with the rewards and state hashes of their open-egress runs; RoboLab needed its image to hold the materials it used to fetch, `eai-robolab:0.1.2`; RoboARC, whose image documents that it needs no network, was not run again before its next release) |
+| What the task itself needs at run time (assets, robot models, the tooling's packages, caches) is in its image or the task directory; a task that needs a download during the agent phase does not conform | MUST | [current] (of the six benchmarks switched on 2026-10-10, RoboTwin, the Playground pairs, RoboWits, BEHAVIOR-1K and RoboLab were run with the oracle under the allowlist, both modes, with the rewards and state hashes of their open-egress runs; RoboLab needed its image to hold the materials it used to fetch, `eai-robolab:0.1.2`; RoboTangle, whose image documents that it needs no network, was not run again before its next release) |
 | Every `instruction.md` states the rule in the same words under `## External material`, just before `## Resource limits`; `scripts/task_conventions.py` (`EXTERNAL_TEXT`) writes it and it is never edited in a task | MUST | [CI] |
 | The harness offers the model no tool that runs outside the container (web search and fetch, account connectors and apps, remote MCP servers, plugins, image generation, cloud agents): the runner's business, not a rule for the agent (D11). Web search is the direct way to ask for an answer, and connectors are the account owner's private data | MUST for official runs | [new] |
 | A run through the usage gateway narrows the agent's egress to the gateway's address and the package registries, and the gateway forwards model-API calls only (§5) | MUST for official runs | [new] (`scripts/run_agent_batch.sh` `GATEWAY=1`) |
@@ -589,11 +589,11 @@ is graded then.
 **The table's exceptions.**
 
 ```toml
-[family_cutoff_sec."RoboARC"]              # benchmark; then one line per family, a number per mode
+[family_cutoff_sec."RoboTangle"]              # benchmark; then one line per family, a number per mode
 "cast_coil" = { privileged = 14400, standard = 14400 }
 
 [task_cutoff_sec]                              # one line per task directory
-"roboarc-cast-coil-05-i01-standard" = 10800
+"robotangle-cast-coil-hard-i00-standard" = 10800
 ```
 
 A mode a family's entry leaves out keeps the benchmark's number. A generator reads the benchmark's number
@@ -659,7 +659,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard and MuJoCo Playground's quadruped tasks |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
-| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboARC); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
+| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
 Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
 accept every 2.x version and the former `rcb-limited/2.x` spelling as well. No task declares a version before 2.1
@@ -838,7 +838,7 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 
 **Per-benchmark exceptions.** A benchmark's standard-realtime tasks may differ from a default or a MUST of this section
 only by owner decision, recorded here and in `docs/benchmarks/<bench>.md` (and, where CI checks the rule, in its
-exception list), in the same way as HumanoidBench's reset budget (§4.5) and RoboARC's agent budget (§2.3). The
+exception list), in the same way as HumanoidBench's reset budget (§4.5) and RoboTangle's agent budget (§2.3). The
 interface, the encoding, crash recovery and the evidence are never excepted: every standard-realtime task serves
 `eai-standard/2.3`. That benchmark's results state what differs and are compared only with results under the same
 settings.
@@ -902,7 +902,7 @@ error, a physics-tick ledger that resumes replay with the ticks each row took, a
 (2.2's, and 2.3's realtime capability) stays a MAY, so a 2.2 service with the operations capability is a 2.4 service;
 standard tasks may declare it, standard-realtime tasks stay on 2.3. The reference implementation is `scripts/eai_standard/v2_4/`
 (`rcb_limited.py`, `rcb_client.py`; `rcb1.py` and `run.sh` are 2.2's), copied unchanged into every 2.4 task. First
-served by RoboARC, whose release named it "2.3" before that number went to the realtime capability.
+served by RoboTangle, whose release named it "2.3" before that number went to the realtime capability.
 
 **Not accepted:** step caps; single-control `step()` calls.
 
@@ -925,18 +925,18 @@ Open:
    positive example. Until they get one, results report them separately from the tasks with a verified solution.
 5. ~~Agent egress~~ decided 2026-10-10 (owner, board 0072; it replaces "kept as it is" of 2026-10-02): every task is
    on the allowlist and every instruction states the external-material rule (§2.11). RoboTwin had been set back to open
-   on 2026-09-24 and MuJoCo Playground's manipulation pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboARC were added
+   on 2026-09-24 and MuJoCo Playground's manipulation pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were added
    open, none for a stated technical reason. One had a dependency nobody had recorded: RoboLab's asset library fetched
    MDL materials and textures from NVIDIA's Omniverse content bucket at every scene build (without them its tables
    render red); image 0.1.2 holds them, and RoboLab's tasks moved to it with this change (rendering equal to the
    open-egress one within render noise, physics unchanged). An in-place change of every task's
    `instruction.md` and of 542 `task.toml` (scenes, instances, tooling and pass rules unchanged). Results obtained with
    open egress stand; the trials found to have fetched a solution or task sources were withdrawn and run again by the
-   owner's decision of that day (RoboARC as a whole). 2026-10-11 (owner): the rule becomes an honour rule and the package registries (PyPI, the Debian /
+   owner's decision of that day (RoboTangle as a whole). 2026-10-11 (owner): the rule becomes an honour rule and the package registries (PyPI, the Debian /
    Ubuntu apt archives) are reachable from every task, so that an agent can `pip install` and `apt-get install` as it
    could on the open tasks before (§2.11; an in-place change of every `task.toml` and `instruction.md` again; trials
-   run between the two changes, under the model-APIs-only list, could install nothing). Open: RoboARC's image still names upstream demonstrations and solution sheets in files a
-   privileged agent can read (unreachable under the allowlist; docs/benchmarks/roboarc.md, Network policy: a
+   run between the two changes, under the model-APIs-only list, could install nothing). Open: RoboTangle's image still names upstream demonstrations and solution sheets in files a
+   privileged agent can read (unreachable under the allowlist; docs/benchmarks/robotangle.md, Network policy: a
    requirement for its next release).
 6. Resource limits (§2.10, v1.1.5): every task declares limits and caps and its `instruction.md` states the limits (an
    in-place change of every task's `task.toml`, `instruction.md` and README, 2026-10-10); BEHAVIOR-1K's compose files
@@ -965,9 +965,9 @@ Open:
    table. No cutoff changed; scenes, instances, tooling, services and success rules are unchanged, earlier results
    stand, and trials started before the change read the earlier wording. The generators' own copies of the number
    are gone. Stricter values are set in the table afterwards, by owner decision, each with its `[[history]]` entry.
-   Open: RoboARC's standard service ends the episode on its own wall clock (since its MuJoCo release, 2026-10-13,
-   started at the agent's first request, so never before the harness's cutoff); it becomes report-only, like every
-   other service's, at RoboARC's next task update (docs/benchmarks/roboarc.md, "Time budget").
+   Open: RoboTangle's standard service ends the episode on its own wall clock, started with the service, a little before
+   the agent's session; it becomes report-only, like every other service's, at RoboTangle's next task update
+   (docs/benchmarks/robotangle.md, "To do").
 8. The agent's clock in the standard modes (§2.12; owner, 2026-10-12, boards 0085 and 0087; landed 2026-10-13): every
    service's `meta.time_s` / `meta.time_left_s` count from the agent's first request to the service, and a resumed
    service keeps that moment (STANDARD_MODE.md, "The agent's clock"). The services that counted from their own start
@@ -980,7 +980,7 @@ Open:
    Every standard instruction's closing `## Time limit` paragraph changed in place (what `time_left_s` counts from, and
    that the agent can plan by it), and the sentence "approximate: the harness's own deadline is authoritative" is gone
    from the instructions and `/spec` texts that had it (RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground). No
-   service ended an episode on this clock (RoboARC's apart, still open as in 7), so no verdict
+   service ended an episode on this clock (RoboTangle's apart, unchanged and still open as in 7), so no verdict
    depended on it: scenes, instances, success rules and graders are unchanged and earlier results stand. What
    changes for an agent is that `time_left_s` no longer reaches 0 while it still has the harness's set-up time left (the
    service was up a median of 79 s before the agent's phase over 2,322 recorded standard trials, board 0085).
