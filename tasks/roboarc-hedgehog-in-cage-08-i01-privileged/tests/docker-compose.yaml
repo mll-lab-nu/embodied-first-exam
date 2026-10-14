@@ -1,0 +1,17 @@
+# The verifier replays in the simulator: MuJoCo physics on the CPU; the GPU renders the Nyx camera images of the replay video.
+# Nyx renders through Vulkan: the device reservation below passes exactly one GPU (Nyx needs exactly one), and
+# NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the driver's graphics libraries, which the image's
+# Vulkan ICD and EGL vendor files name (images/roboarc/Dockerfile). No `runtime: nvidia`: with the image's
+# NVIDIA_VISIBLE_DEVICES=all it can expose every GPU of the host.
+services:
+  main:
+    shm_size: "2gb"
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

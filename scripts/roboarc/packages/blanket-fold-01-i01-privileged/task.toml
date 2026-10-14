@@ -1,0 +1,41 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/topogym-blanket-fold-01-i01-privileged"
+description = "TopoGym blanket_fold (aloha, Genesis): produce one replayable trajectory. Fold the blanket into the target shape on the table, then release it and withdraw. The blanket (600 mm x 480 mm) starts lying flat on the table. Fold it in half: turn the far half (the 240 mm of material along the far long edge) over onto the near half about the middle line parallel to the long edges, so that the far edge lies on the near edge and the far corners on the near corners. The folded stack is 600 mm x 240 mm, two layers, the far half upside down on top. The target images show the required final state: this is how the folded cloth must look and where it must lie; fold it like this. Near, far, left and right are as seen in the overhead camera cam_high (near = the lower side of its image). Frozen scene instance (variation blanket_fold_very_easy, seed 0)."
+authors = [{ name = "jianwen" }]
+keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "blanket_fold"]
+
+[metadata]
+author_name = "jianwen"
+tooling_version = "19"
+task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
+robot = "aloha"
+family = "blanket_fold"
+mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+oracle = "none"
+oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
+difficulty = "very_easy"               # the variation's tier (docs/rcb/TAXONOMY.md)
+grasp = "assisted (his pbd_local_patch_v1 grasp regions on blanket)"
+success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v1)"
+instance_seed = 0                 # scene = environment/instance.json (variation blanket_fold_very_easy, eval index None); identity = dataset.toml digest
+expert_time_estimate_hours = 2.0
+
+[verifier]
+timeout_sec = 45000.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"
+
+[agent]
+timeout_sec = 21600.0             # Agent wall-clock budget; verifier has its own budget
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

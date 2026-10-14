@@ -42,31 +42,31 @@
 "RoboLab"           = { privileged =  3600, standard =  3600 }
 "RoboOlympics"      = { standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
-"RoboTangle"        = { privileged =  7200, standard =  7200 }
+"RoboARC"           = { privileged = 10800, standard = 10800 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
 "RoboWits"          = { privileged =  3600, standard =  3600 }
 "VLABench"          = { privileged =  1800, standard =  1800 }
 "YAMLab"            = { privileged =  3600, standard =  3600 }
 
 # Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
-# - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboTangle"` lists a
+# - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboARC"` lists a
 #   benchmark's). A family's entry gives a number per mode; a mode it leaves out keeps the benchmark's number.
 # - A task is its directory name under tasks/ (the mode is in the name).
 # An entry that matches no task fails CI. An exception is an owner decision like any cutoff: add its `[[history]]` entry.
 #
-# [family_cutoff_sec."RoboTangle"]
+# [family_cutoff_sec."RoboARC"]
 # "cast_coil" = { privileged = 14400, standard = 14400 }      # every cast_coil task, whatever its tier
 #
 # [task_cutoff_sec]
-# "robotangle-cast-coil-hard-i00-standard" = 10800             # this one task directory
+# "roboarc-cast-coil-05-i01-standard" = 10800             # this one task directory
 
 # History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
 # shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
 # is the `to_sec` of its newest entry here or, for a number that never changed, scripts/task_cutoffs.baseline.toml (the
 # table on 2026-10-11, never edited). A number that differs from its last recorded value fails until its entry is added.
 #   benchmark   + modes          a benchmark's row              e.g. benchmark = "RoboLab", modes = ["privileged", "standard"]
-#   benchmark   + family + modes a family's exception           e.g. benchmark = "RoboTangle", family = "cast_coil", modes = ["standard"]
-#   task                         a task's exception             e.g. task = "robotangle-cast-coil-hard-i00-standard"
+#   benchmark   + family + modes a family's exception           e.g. benchmark = "RoboARC", family = "cast_coil", modes = ["standard"]
+#   task                         a task's exception             e.g. task = "roboarc-cast-coil-05-i01-standard"
 #   from_sec / to_sec            the number before and after; 0 = no entry (a new row or exception: from_sec = 0; an
 #                                exception removed: to_sec = 0)
 #   date, decided_by, note       "YYYY-MM-DD"; who decided; why, and what happens to results under the old number
@@ -240,3 +240,21 @@ from_sec = 0
 to_sec = 3600
 decided_by = "proposal #177 (D8 default)"
 note = "the benchmark's first tasks: the protocol's default; a scene builds in seconds and simulates at 60-150 control steps per second, so the hour is the agent's own work"
+
+[[history]]
+date = "2026-10-13"
+benchmark = "RoboTangle"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 0
+decided_by = "owner"
+note = "removed: the benchmark is renamed RoboARC (next entry) and its Genesis tasks are deleted; RoboARC's MuJoCo release replaces them, and results recorded under this row are not carried over"
+
+[[history]]
+date = "2026-10-13"
+benchmark = "RoboARC"
+modes = ["privileged", "standard"]
+from_sec = 0
+to_sec = 10800
+decided_by = "owner"
+note = "new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap"
