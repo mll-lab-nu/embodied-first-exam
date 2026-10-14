@@ -22,7 +22,7 @@ if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must 
 if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
 else:
     # PROTOCOL §2.3: 14400 s cap; per-benchmark exceptions by owner decision, recorded in PROTOCOL §2.3 (task-directory prefix -> cap)
-    BUDGET_EXCEPTIONS = {"robotangle-": 21600, "control-transfer-anycar-circuit-lap-v2-": 129600}   # scoped exceptions in PROTOCOL §2.3
+    BUDGET_EXCEPTIONS = {"robotangle-": 21600}   # RoboTangle, owner 2026-10-08 (issue #87)
     cap = next((c for p, c in BUDGET_EXCEPTIONS.items() if t.name.startswith(p)), 14400)
     if d["agent"]["timeout_sec"] > cap:
         fail(f"[agent].timeout_sec > {cap} s cap" + (" (4h, PROTOCOL §2.3)" if cap == 14400 else " (documented exception, PROTOCOL §2.3)"))

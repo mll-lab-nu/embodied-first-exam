@@ -60,10 +60,7 @@ def check_task(task: Path) -> None:
     if name.endswith("-realtime") and not name.endswith("-standard-realtime") or mode == "realtime":
         warn("mode name `realtime` / `-realtime` (the third mode is `standard-realtime`, PROTOCOL D12)", name)
     proto = meta.get("protocol")
-    if standard and meta.get("task_type") == "policy":
-        if proto not in ("eai-policy/1.0", "eai-policy/1.1"):
-            warn("standard policy requires eai-policy/1.0 or 1.1", name)
-    elif standard and proto not in PROTOCOLS:
+    if standard and proto not in PROTOCOLS:
         warn(f"standard-mode `protocol` not in {sorted(PROTOCOLS)}", f"{name} ({proto})")
     if realtime and proto not in REALTIME_PROTOCOLS:
         warn(f"standard-realtime `protocol` not in {sorted(REALTIME_PROTOCOLS)}", f"{name} ({proto})")

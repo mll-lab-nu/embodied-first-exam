@@ -12,7 +12,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 SRC = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize, cutoff_sec
+sys.path.insert(0, str(ROOT))
+from scripts.control_transfer.proposal import TASK_ROOT, normalize, cutoff_sec, require_experimental_destination
 
 PUBLIC = ("model.py", "policy.py", "nominal.py", "client.py")
 BASE = next(
@@ -50,6 +51,7 @@ def package(task, where, private=False):
 
 
 def render(task, index):
+    require_experimental_destination(task)
     instance = {
         "schema": "landing-instance/1",
         "task_version": "random-pad-landing/4",
@@ -247,7 +249,7 @@ def main():
     bad = False
     for index in range(2):
         name = f"quadrotor-landing-random-pad-i{index:02d}-standard"
-        target = ROOT / "tasks" / name
+        target = TASK_ROOT / name
         with tempfile.TemporaryDirectory() as temporary:
             task = Path(temporary) / name
             render(task, index)

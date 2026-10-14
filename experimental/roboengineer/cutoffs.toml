@@ -1,0 +1,35 @@
+# Experimental budgets only. Main has NOT accepted the 129600-second cap.
+[cutoff_sec]
+"Control Transfer" = { standard = 14400 }
+"Neural Lander" = { standard = 3600 }
+
+[family_cutoff_sec."Control Transfer"]
+"control-transfer/anycar-circuit-lap-v2" = { standard = 129600 }
+
+[[history]]
+date = "2026-10-13"
+benchmark = "Neural Lander"
+modes = ["standard"]
+from_sec = 0
+to_sec = 3600
+decided_by = "benchmark author, native integration requested by owner"
+note = "First policy-adaptation task: bounded deployments and private held-out evaluation."
+
+[[history]]
+date = "2026-10-13"
+benchmark = "Control Transfer"
+modes = ["standard"]
+from_sec = 0
+to_sec = 14400
+decided_by = "benchmark author, task expansion requested by owner"
+note = "Owner requested multi-round GPU training and CPU deployment; provisional four-hour budget, convergence calibration pending."
+
+[[history]]
+date = "2026-10-13"
+benchmark = "Control Transfer"
+family = "control-transfer/anycar-circuit-lap-v2"
+modes = ["standard"]
+from_sec = 0
+to_sec = 129600
+decided_by = "owner request for full historical F1 laps; orchestrator implementation"
+note = "Full-lap-only budget: frozen catalog reaches 3878.76 simulation seconds; three rounds of three CPU-rendered laps need a separate long-budget track. Original sector/ellipse and other Control Transfer cutoffs stay unchanged; no cloud run implied."

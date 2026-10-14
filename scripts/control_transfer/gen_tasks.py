@@ -9,7 +9,13 @@ SRC = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.control_transfer.specs import FAMILIES, spec
-from task_conventions import normalize, cutoff_sec, cutoff_overrides
+from scripts.control_transfer.proposal import (
+    TASK_ROOT,
+    normalize,
+    cutoff_sec,
+    cutoff_overrides,
+    require_experimental_destination,
+)
 from scripts.control_transfer.trusted.runtime_limits import runtime_limits, LAP_FAMILY
 from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
@@ -271,6 +277,7 @@ def copy_package(task, where, private, family, visual_profile=None):
 
 
 def render(task, name, index):
+    require_experimental_destination(task)
     instance = spec(name, index)
     family = instance["family"]
     skydio = instance.get("visual_profile") == "skydio-x2/1"
@@ -708,10 +715,14 @@ def main():
     p.add_argument(
         "--output-root",
         type=Path,
-        default=ROOT / "tasks",
-        help="Task directory parent; defaults to repository tasks/",
+        default=TASK_ROOT,
+        help="Experimental package directory; defaults to experimental/roboengineer/tasks/",
     )
     a = p.parse_args()
+    try:
+        require_experimental_destination(a.output_root)
+    except ValueError as error:
+        p.error(str(error))
     if a.action == "list-circuits":
         from scripts.control_transfer.components.anycarbench.tracks import track_ids
 

@@ -13,7 +13,6 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | AutoBio | 3600 s (60 min) | 3600 s (60 min) | — | 9 / 9 / — |
 | BEHAVIOR-1K | 7200 s (120 min) | 7200 s (120 min) | — | 100 / 100 / — |
 | BiGym 2.0 | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 13 / 13 / 13 |
-| Control Transfer | — | 14400 s (240 min) | — | — / 26 / — |
 | DexJoCo | 3600 s (60 min) | 3600 s (60 min) | — | 11 / 11 / — |
 | DexToolBench | 3600 s (60 min) | 3600 s (60 min) | — | 21 / 21 / — |
 | HumanoidBench | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 10 / 10 / 10 |
@@ -25,7 +24,6 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | MolmoSpaces | 3600 s (60 min) | 3600 s (60 min) | — | 8 / 8 / — |
 | MuJoCo Playground | 1800 s (30 min) | 1800 s (30 min) | — | 13 / 13 / — |
 | MyoSuite | 3600 s (60 min) | 3600 s (60 min) | — | 22 / 22 / — |
-| Neural Lander | — | 3600 s (60 min) | — | — / 2 / — |
 | RoboCasa | 3600 s (60 min) | 3600 s (60 min) | — | 29 / 29 / — |
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
@@ -40,7 +38,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1704 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; Control Transfer's exception: 129600; RoboTangle's exception: 21600).
+1676 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -54,9 +52,7 @@ A benchmark's row is the default of all its tasks in a mode. The table may give 
 "robotangle-cast-coil-hard-i00-standard" = 10800
 ```
 
-| Kind | Applies to | Mode | Cutoff | Tasks that take it |
-|---|---|---|---|---|
-| family | Control Transfer: `control-transfer/anycar-circuit-lap-v2` | standard | 129600 s (2160 min) | 4 of 4 |
+No exception is in use: every task takes its benchmark's number.
 
 ## What the agent is told
 
@@ -116,6 +112,3 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-12 | LIBERO-MAX, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | MuJoCo Playground, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |
-| 2026-10-13 | Neural Lander, standard | (none) -> 3600 s | benchmark author, native integration requested by owner | First policy-adaptation task: bounded deployments and private held-out evaluation. |
-| 2026-10-13 | Control Transfer, standard | (none) -> 14400 s | benchmark author, task expansion requested by owner | Owner requested multi-round GPU training and CPU deployment; provisional four-hour budget, convergence calibration pending. |
-| 2026-10-13 | Control Transfer: family `control-transfer/anycar-circuit-lap-v2`, standard | (none) -> 129600 s | owner request for full historical F1 laps; orchestrator implementation | Full-lap-only budget: frozen catalog reaches 3878.76 simulation seconds; three rounds of three CPU-rendered laps need a separate long-budget track. Original sector/ellipse and other Control Transfer cutoffs stay unchanged; no cloud run implied. |

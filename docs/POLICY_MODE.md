@@ -1,6 +1,8 @@
-# Policy adaptation protocol: eai-policy/1.0
+# Experimental proposal: multi-round policy adaptation
 
-Status: implemented for Neural Lander; native Harbor 0.23.0 Docker oracle/nop validation passed on both instances with resource enforcement.
+Status: experimental development interface, not an accepted Robot Coding Bench protocol. The authoritative [Task Protocol](PROTOCOL.md), synchronized from `main`, accepts only `eai-standard/2.x` for standard-mode tasks. This document describes the existing implementation; it does not create an exception. See [the compatibility assessment](benchmarks/roboengineer-main-compatibility.md) before using these packages as benchmark tasks.
+
+Neural Lander's native Harbor 0.23.0 Docker oracle/nop validation passed on both instances with resource enforcement. Those runs establish the recorded runtime behavior, not acceptance of this interface under main's protocol.
 
 ## Lifecycle and transport
 

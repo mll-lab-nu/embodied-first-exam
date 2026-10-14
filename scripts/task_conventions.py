@@ -55,8 +55,6 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
     ("unlimited oracle", "privileged-mode oracle"), ("unlimited expert", "privileged-mode expert"),
 ]
 BENCHMARKS = [  # (directory prefix, label)
-    ("quadrotor-landing-", "Neural Lander"),
-    ("control-transfer-", "Control Transfer"),
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
     ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
     ("metaworldplus-", "MetaWorld+"),
@@ -79,9 +77,7 @@ BENCHMARKS = [  # (directory prefix, label)
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
 # STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
 # does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard only, graded by the live episode.
-NO_TWIN = {"control-transfer-": "— (policy adaptation is standard only, PROTOCOL §4p)",
-           "quadrotor-landing-": "— (policy adaptation is standard only, PROTOCOL §4p)",
-           "roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
+NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
            "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
@@ -176,7 +172,7 @@ CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3; the same exceptions: ci_checks/check-task-fields.sh
-CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600, "Control Transfer": 129600}    # PROTOCOL §2.3; Control Transfer extension is full-lap-only
+CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600}    # owner, 2026-10-08 (issue #87)
 
 
 # ---------------------------------------------------------------------------------------------------------------------

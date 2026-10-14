@@ -127,7 +127,7 @@ On a host with Docker, Compose and Buildx installed, and NumPy and PyTorch avail
 bash images/quadrotor-landing/prepare_assets.sh
 docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/eai-quadrotor-landing:0.1.0 .
 python3 scripts/quadrotor_landing/gen_tasks.py check
-bash ci_checks/run_all.sh tasks/quadrotor-landing-*-standard
+python3 experimental/roboengineer/check.py
 # Use the native Harbor runner described in docs/RUNNING.md for oracle and nop on both instances.
 # Keep run artifacts outside tasks/ and outside a repository-level results/ directory.
 ```

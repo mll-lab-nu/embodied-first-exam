@@ -1,0 +1,211 @@
+{
+  "schema": "roboengineer-experimental-migration/1",
+  "source_commit": "ccec272dbb51a929eb7b5206bf5411593d8d2e2f",
+  "authoritative_main": "418a4542f452d4ac5b3272c5698e299055951131",
+  "tasks": [
+    {
+      "id": "control-transfer-anycar-circuit-compact-v3-monaco-6-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-compact-v3-monaco-6-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-compact-v3-monaco-6-i00-standard",
+      "instance_sha256": "9c4f580cb17732ddb0dd6c3303dd16d869eb30086044b5b9eb2bce9465a8559f"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-compact-v3-monaco-6-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-compact-v3-monaco-6-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-compact-v3-monaco-6-i01-standard",
+      "instance_sha256": "9c9016e233254c07d5cade6231fe39dcb850f0c189e2124120a38fb352172b20"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-compact-v3-silverstone-8-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-compact-v3-silverstone-8-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-compact-v3-silverstone-8-i00-standard",
+      "instance_sha256": "17ee262e37f9ee9454f7dd2c09d2669b5ef5fcf3193908800733209484b745f1"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-compact-v3-silverstone-8-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-compact-v3-silverstone-8-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-compact-v3-silverstone-8-i01-standard",
+      "instance_sha256": "51b13c6bb68ab923834be9c7359e1ef660a392edc8c8edaacc89e22bf35d6685"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-lap-v2-monaco-6-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-lap-v2-monaco-6-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-lap-v2-monaco-6-i00-standard",
+      "instance_sha256": "d1ec95f609664cf610d673b4c8af929533f87d15f92ca224c19ab4178d698f27"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-lap-v2-monaco-6-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-lap-v2-monaco-6-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-lap-v2-monaco-6-i01-standard",
+      "instance_sha256": "080df66698a54267ff0ae1e909c5963dc9df5fea775782bc5e822720eb586544"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-lap-v2-silverstone-8-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-lap-v2-silverstone-8-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-lap-v2-silverstone-8-i00-standard",
+      "instance_sha256": "62eedabead42ae874100251832c77923d98dd0b6125ec64555df171709cd9d63"
+    },
+    {
+      "id": "control-transfer-anycar-circuit-lap-v2-silverstone-8-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-circuit-lap-v2-silverstone-8-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-circuit-lap-v2-silverstone-8-i01-standard",
+      "instance_sha256": "2a80e9357ea5cbb9b6fe69423e03593efffb7d3bcc8ca7c778dcc901134beec6"
+    },
+    {
+      "id": "control-transfer-anycar-drift-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-drift-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-drift-i00-standard",
+      "instance_sha256": "e7032816b31bc45e519af1a93a64c51926eb14711e5e932329d1f806fdfe7fea"
+    },
+    {
+      "id": "control-transfer-anycar-drift-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-drift-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-drift-i01-standard",
+      "instance_sha256": "05040d3473e89d78933f2ef1cf98934bc39409afa5436038c6ad7c61983a8be0"
+    },
+    {
+      "id": "control-transfer-anycar-drift-v3-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-drift-v3-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-drift-v3-i00-standard",
+      "instance_sha256": "2de6fb2ea39d0293b13d58b5ed8ef416c1bce367907b3e28049759a2f0f9e772"
+    },
+    {
+      "id": "control-transfer-anycar-drift-v3-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-drift-v3-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-drift-v3-i01-standard",
+      "instance_sha256": "a7f19a1f0d06f302cef44b6705347faf41298505bc2a19c26731c21b8648e130"
+    },
+    {
+      "id": "control-transfer-anycar-i00-standard",
+      "old_path": "tasks/control-transfer-anycar-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-i00-standard",
+      "instance_sha256": "6b6a2f26816e6f11bf586036ef9d429a5f1d8d59b997a589abd8576a34726325"
+    },
+    {
+      "id": "control-transfer-anycar-i01-standard",
+      "old_path": "tasks/control-transfer-anycar-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-anycar-i01-standard",
+      "instance_sha256": "a624eb859de9e7b51dcb1527fcc4e40292ef4cd2dd1df78c26773834fc966857"
+    },
+    {
+      "id": "control-transfer-g1-i00-standard",
+      "old_path": "tasks/control-transfer-g1-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-g1-i00-standard",
+      "instance_sha256": "52cea26e0134eb1189aaec95379fd7fca91094619e6c212e3f03912b9defd041"
+    },
+    {
+      "id": "control-transfer-g1-i01-standard",
+      "old_path": "tasks/control-transfer-g1-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-g1-i01-standard",
+      "instance_sha256": "102fbe6e6675e48edcf2d5176f1708d9d13a183d6270a7a5beeb898664b8e791"
+    },
+    {
+      "id": "control-transfer-go2-attitude-i00-standard",
+      "old_path": "tasks/control-transfer-go2-attitude-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-attitude-i00-standard",
+      "instance_sha256": "5d5b14230447b301ea94e2b8309a7c8249df8f8cb5730e71869a9d520162fbce"
+    },
+    {
+      "id": "control-transfer-go2-attitude-i01-standard",
+      "old_path": "tasks/control-transfer-go2-attitude-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-attitude-i01-standard",
+      "instance_sha256": "866c961f574758f7bf6cf3b64e9d0c595a1fba052777ac0be2893e3b1a56c76f"
+    },
+    {
+      "id": "control-transfer-go2-forward-jump-i00-standard",
+      "old_path": "tasks/control-transfer-go2-forward-jump-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-forward-jump-i00-standard",
+      "instance_sha256": "7378e849108a925c248393e73d1515f689cbb8953156f18bc332d26011a98de8"
+    },
+    {
+      "id": "control-transfer-go2-forward-jump-i01-standard",
+      "old_path": "tasks/control-transfer-go2-forward-jump-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-forward-jump-i01-standard",
+      "instance_sha256": "95085e812ca4f37c9cc9e05005fe83a47cc72a72f59b35c66f48d5dd8ab022cb"
+    },
+    {
+      "id": "control-transfer-go2-weave-i00-standard",
+      "old_path": "tasks/control-transfer-go2-weave-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-weave-i00-standard",
+      "instance_sha256": "fe9c4090785a13e72a420d8382e7e488f48c9b496ad9b885a1dc93ef27185f4f"
+    },
+    {
+      "id": "control-transfer-go2-weave-i01-standard",
+      "old_path": "tasks/control-transfer-go2-weave-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-weave-i01-standard",
+      "instance_sha256": "4813dd409ccb75eb82d35bf26a620fd9d300ed8ba89a9896de9195477c292f23"
+    },
+    {
+      "id": "control-transfer-go2-yaw-jump-i00-standard",
+      "old_path": "tasks/control-transfer-go2-yaw-jump-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-yaw-jump-i00-standard",
+      "instance_sha256": "a3eeac70b3cd0b330a4995e810ed1c8ab36597814c88abcbd9ef9852a00e7397"
+    },
+    {
+      "id": "control-transfer-go2-yaw-jump-i01-standard",
+      "old_path": "tasks/control-transfer-go2-yaw-jump-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-go2-yaw-jump-i01-standard",
+      "instance_sha256": "e9299425526778f9921c5557746c3edbb74c2245ab76df8c6836c8c94fcff081"
+    },
+    {
+      "id": "control-transfer-neural-fly-general-skydio-v1-i00-standard",
+      "old_path": "tasks/control-transfer-neural-fly-general-skydio-v1-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-general-skydio-v1-i00-standard",
+      "instance_sha256": "a478623aea19f5ec780167206f307b6eb05a29d8fe97962bea00ff985bfe1ae8"
+    },
+    {
+      "id": "control-transfer-neural-fly-general-skydio-v1-i01-standard",
+      "old_path": "tasks/control-transfer-neural-fly-general-skydio-v1-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-general-skydio-v1-i01-standard",
+      "instance_sha256": "cca60b2ae312e060d8c5c95e181f70db674a2ca02a13e37b9714959bc46e9135"
+    },
+    {
+      "id": "control-transfer-neural-fly-general-v1-i00-standard",
+      "old_path": "tasks/control-transfer-neural-fly-general-v1-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-general-v1-i00-standard",
+      "instance_sha256": "1298af441952d93158751444af26045896ced504d865818f298adcd80235dc5e"
+    },
+    {
+      "id": "control-transfer-neural-fly-general-v1-i01-standard",
+      "old_path": "tasks/control-transfer-neural-fly-general-v1-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-general-v1-i01-standard",
+      "instance_sha256": "50b7c8455b4c60d5282299c72a4469db550fada0b4a749869e81a0a75d2b3b84"
+    },
+    {
+      "id": "control-transfer-neural-fly-i00-standard",
+      "old_path": "tasks/control-transfer-neural-fly-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-i00-standard",
+      "instance_sha256": "f87e623e5379e42742a35527a5b3ded902da84fa8990507500888fac6b5b3dc3"
+    },
+    {
+      "id": "control-transfer-neural-fly-i01-standard",
+      "old_path": "tasks/control-transfer-neural-fly-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-i01-standard",
+      "instance_sha256": "0ca3b164fcad8801dda9677c35dcbe7d3e5a51086f3976d8b23c28b8d8e24498"
+    },
+    {
+      "id": "control-transfer-neural-fly-vector-wind-v1-i00-standard",
+      "old_path": "tasks/control-transfer-neural-fly-vector-wind-v1-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-vector-wind-v1-i00-standard",
+      "instance_sha256": "6221a23c14d990da90f9a55462bda232703be0ef2eb9d651e96e6d71958cc712"
+    },
+    {
+      "id": "control-transfer-neural-fly-vector-wind-v1-i01-standard",
+      "old_path": "tasks/control-transfer-neural-fly-vector-wind-v1-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/control-transfer-neural-fly-vector-wind-v1-i01-standard",
+      "instance_sha256": "470689a1804fd87ccf7863fec3e2b4f3ede8cd4d42b2a1d71f390b9304454451"
+    },
+    {
+      "id": "quadrotor-landing-random-pad-i00-standard",
+      "old_path": "tasks/quadrotor-landing-random-pad-i00-standard",
+      "new_path": "experimental/roboengineer/tasks/quadrotor-landing-random-pad-i00-standard",
+      "instance_sha256": "df83aea05abfea7138baf33a2f58be27f20d04ccaa86b75140d26a32ddfca5a1"
+    },
+    {
+      "id": "quadrotor-landing-random-pad-i01-standard",
+      "old_path": "tasks/quadrotor-landing-random-pad-i01-standard",
+      "new_path": "experimental/roboengineer/tasks/quadrotor-landing-random-pad-i01-standard",
+      "instance_sha256": "bf2c31ed5b86c178cc1a8cc4cef0ca09541e4ef15e79cc9abfa01c0b42767fa4"
+    }
+  ]
+}

@@ -34,10 +34,6 @@ KEYS = re.compile(r"""["']?\b((?:source|demo|demonstration|dataset|video|viewer|
 FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrecord)\b|datasets/[\w.-]+/[\w.-]+)""", re.I)
 # (task-name regex, path regex, matched-text regex, reason)
 ALLOW = [
-    (r"^control-transfer-anycar(?:-|$)",
-     r"^environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)$",
-     r"^https://github\.com/f1db/f1db$",
-     "CC BY 4.0 attribution for public circuit-outline geometry; contains no controller, policy or task solution"),
     (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
 ]

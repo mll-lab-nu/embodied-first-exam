@@ -1,0 +1,44 @@
+# control-transfer-go2-yaw-jump-i00-standard
+
+> Experimental multi-round policy proposal. This package is not admitted by main's `eai-standard/2.x` protocol or listed in the accepted dataset. Its historical ID is retained for traceability; successful package checks are not protocol approval.
+
+| | |
+|---|---|
+| Benchmark | Control Transfer |
+| Mode | standard (`eai-policy/1.1`) |
+| Twin | — (experimental multi-round policy proposal; not an accepted standard-mode task) |
+| Simulator / robot | `mujoco` / `unitree-go2` |
+| Family / instance | `control-transfer/go2-yaw-jump` / seed 0 |
+| Oracle | `none` — Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required. |
+| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
+
+## Task
+Jump through a commanded 110–150 degree heading change with verified airborne rotation and stable touchdown; ground spinning is rejected.
+
+## Difficulty
+Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
+
+## Reference solution
+Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required.
+
+## Verification
+Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.
+
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 6 | 4 |
+| Memory | 12 GB | 6 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: provisional caps; CPU adapter smoke runs only, native container peak measurements pending
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: provisional generous caps; native validation pending.
+
+## Details
+
+### Notes
+SPI-Active-inspired task port, not a hardware calibration or reproduction of its trained policies; MuJoCo contacts differ from Isaac Gym.

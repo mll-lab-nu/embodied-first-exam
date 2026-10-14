@@ -14,7 +14,7 @@ See [the benchmark design and run instructions](../../docs/benchmarks/quadrotor-
 - `native/`, `gen_tasks.py`: self-contained Harbor policy tasks, trusted collect lifecycle and numeric verifier; `eai-policy/1.0`.
 - Top-level Dockerfiles / `compose.yaml`: standalone development transport; native tasks use `images/quadrotor-landing/` and their generated compose files.
 
-Native container validation is pending. Use the build/run steps in the benchmark document before an official evaluation.
+Earlier native Harbor oracle/nop validation is recorded in the benchmark document. The interface remains an experimental proposal outside main's accepted protocol; those runs are not protocol approval. Current packages and explicit check commands are under `experimental/roboengineer/`.
 
 No LLM evaluation or hardware validation is claimed. This initial task uses CPU physics and supervised residual fitting; GPU RL training is not required or implemented here.
 

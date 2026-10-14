@@ -11,7 +11,7 @@ The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (the version is s
 
 ## Evaluation modes
 
-Trajectory tasks generally offer two modes sharing the same frozen scene (benchmark-specific exceptions are documented in the protocol). Neural Lander adds standard-only [policy adaptation](docs/POLICY_MODE.md): nominal training, three deployment-feedback rounds and private held-out replay. The table below describes trajectory tasks.
+Every task instance is offered in two modes that share the same frozen scene.
 
 | | **Privileged mode** | **Standard mode** ("robot as a service") |
 |---|---|---|
@@ -37,7 +37,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 
 ## roboEngineer
 
-[roboEngineer](docs/benchmarks/roboengineer.md) groups control-engineering tasks by embodiment: **drone**, **racing car**, **humanoid**, and **quadruped**. The agent trains or tunes a controller in a nominal simulator, improves it over bounded deployment-feedback rounds, and submits it for private held-out evaluation. **Neural Landing, Neural Fly, AnyCar Multi-surface Tracking and Go2 Attitude Tracking** have passing native Harbor scripted-reference and no-submission checks. G1 Walking over Terrain and the other three Go2 tasks remain development-only with documented control or validation gaps; see the [integration evidence](docs/benchmarks/roboengineer-validation.md). See the collection roadmap for task scope and implementation status.
+[roboEngineer](experimental/roboengineer/README.md) is an experimental control-engineering proposal organized by **drone**, **racing car**, **humanoid**, and **quadruped**, with 34 development packages outside the accepted task registry. Its multi-round `eai-policy/1.x` interface is not accepted by main's [Task Protocol](docs/PROTOCOL.md); see the [compatibility assessment](docs/benchmarks/roboengineer-main-compatibility.md). Recorded native Harbor and controller validation remains useful development evidence, but does not establish protocol compliance or admission to the benchmark suite.
 
 ## Benchmarks
 
@@ -48,7 +48,6 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda; quadrupeds: Unitree Go1, Boston Dynamics Spot, Google Barkour vB | 4 manipulation + 9 quadruped | full (manipulation: scripted IK; quadrupeds: Playground's Go1 policy or policies trained on its rewards) |
 | KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 5 | full on 1, none on 4 (human review) |
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 10 (+ 10 standard-realtime, `-standard-realtime`: time does not stop) | full on 1, none on 9 (human review), in each mode |
-| [roboEngineer](docs/benchmarks/roboengineer.md) | MuJoCo CPU deployment · drones, AnyCar, Unitree G1 and Go2; G1 uses GPU training | 34 standard policy task instances; three adaptation rounds each | full on 8; none on 26 (development-only / human review) |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |

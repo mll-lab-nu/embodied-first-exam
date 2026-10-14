@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
     args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=False)
-    task = ROOT / f"tasks/quadrotor-landing-random-pad-i{args.instance:02d}-standard"
+    task = ROOT / f"experimental/roboengineer/tasks/quadrotor-landing-random-pad-i{args.instance:02d}-standard"
     data = args.out / "data"
     data.mkdir()
     if args.oracle_cache:

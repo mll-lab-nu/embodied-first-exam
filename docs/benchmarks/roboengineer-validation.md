@@ -1,5 +1,7 @@
 # roboEngineer integration validation
 
+> Historical development evidence. Paths under `tasks/control-transfer-*` and `tasks/quadrotor-landing-*` below refer to the pre-migration checkout. Current packages live under `experimental/roboengineer/tasks/`; use its explicit checks. Earlier branch-local CI success does not establish compliance with main. See [the compatibility assessment](roboengineer-main-compatibility.md).
+
 This record covers the October 13, 2026 development integration of the eight-objective collection. The runs use scripted engineering references and Harbor's `nop` agent. They are **not LLM model scores**. Raw trial outputs, video, feedback, policies and operator diagnostics are retained outside Git; task directories contain only reproducible inputs.
 
 ## Validation layers
