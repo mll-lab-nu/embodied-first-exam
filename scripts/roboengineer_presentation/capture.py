@@ -228,6 +228,8 @@ def main():
         (folder / "scene.json").write_text(json.dumps(visual, indent=2) + "\n")
     if selected("neural-landing"):
         from scripts.quadrotor_landing.trusted.rendering import scene_xml
+        from scripts.quadrotor_landing.public.model import CT
+        from scripts.roboengineer_presentation.rotors import landing_rotors
 
         root = a.landing_runs / "aws-harbor-20261013"
         item = json.loads((root / "final-evaluation-10/manifest.json").read_text())[
@@ -254,7 +256,19 @@ def main():
                 status="Native Harbor reference: success",
                 note="Partial Intel Aero calibration; learned residual dynamics",
                 pad=record["pad_position"],
+                rotor_animation={
+                    "revision": "force-driven-rotors/1",
+                    "source": "Archived per-motor forces; RPM = sqrt(force / nominal CT)",
+                    "thrust_coefficient_N_per_RPM2": CT,
+                    "phase": "Integrated at 100 Hz; initial blade phase is cosmetic",
+                    "blur": "Cosmetic high-speed disk; 48-sample low-speed blur, 1/50 s exposure",
+                    "measured_RPM": False,
+                },
             ),
+        )
+        np.savez_compressed(
+            a.out / "neural-landing" / "rotors.npz",
+            **landing_rotors(record["trajectory"], [t for t, _ in frames], CT),
         )
     if selected("anycar"):
         from scripts.control_transfer.trusted import anycar

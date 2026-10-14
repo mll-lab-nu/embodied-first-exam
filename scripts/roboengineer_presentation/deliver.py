@@ -217,6 +217,7 @@ def encode(root, name):
         poster=poster.name,
         **checked,
         render=receipt,
+        rotor_animation=spec.get("rotor_animation"),
     )
     (out / (name + ".json")).write_text(json.dumps(result, indent=2) + "\n")
     print("ENCODED", name, checked, flush=True)

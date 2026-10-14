@@ -12,7 +12,7 @@ import sys
 import time
 
 import bpy
-from mathutils import Vector
+from mathutils import Quaternion, Vector
 import numpy as np
 
 p = argparse.ArgumentParser()
@@ -351,6 +351,46 @@ for g in spec["geoms"]:
         print("Skydio translucent rotor faces", count, flush=True)
     objects[g["id"]] = ob
 
+# MuJoCo's saved free-body pose does not include the presentation blade angle.
+# Animate only the four named propeller geometries; airframe transforms stay exact.
+rotors = None
+rotor_objects = []
+if name == "neural-landing" and "rotor_animation" in spec:
+    rotors = np.load(a.capture / "rotors.npz", allow_pickle=False)
+    assert np.array_equal(rotors["time"], motion["time"])
+    assert rotors["rpm"].shape == rotors["phase"].shape == (len(motion["time"]), 4)
+    blur_material = material(
+        "Propeller shutter samples", (0.01, 0.013, 0.016), 0.03, 0.62
+    )
+    blur_material.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = (
+        1 / 48
+    )
+    scene.cycles.transparent_max_bounces = 64
+    disk_material = material("Fast rotor blur envelope", (0.04, 0.05, 0.055), 0.05, 0.5)
+    disk_material.node_tree.nodes["Principled BSDF"].inputs[
+        "Alpha"
+    ].default_value = 0.12
+    for rotor_index in range(4):
+        blade = next(
+            objects[g["id"]]
+            for g in spec["geoms"]
+            if g["name"] == f"visual_blade_{rotor_index}"
+        )
+        ghosts = []
+        for sample in range(48):
+            ghost = blade.copy()
+            ghost.name = f"Rotor {rotor_index} shutter sample {sample}"
+            scene.collection.objects.link(ghost)
+            ghost.material_slots[0].link = "OBJECT"
+            ghost.material_slots[0].material = blur_material
+            ghosts.append(ghost)
+        bpy.ops.mesh.primitive_circle_add(vertices=96, radius=0.115, fill_type="NGON")
+        disk = bpy.context.object
+        disk.name = f"Rotor {rotor_index} high-speed blur envelope"
+        disk.rotation_mode = "QUATERNION"
+        disk.data.materials.append(disk_material)
+        rotor_objects.append((blade, ghosts, disk))
+
 qpos = motion["qpos"]
 base_min = qpos[:, :3].min(axis=0)
 base_max = qpos[:, :3].max(axis=0)
@@ -558,6 +598,27 @@ def set_frame(index):
         ob = objects[int(g)]
         ob.location = value[:3]
         ob.rotation_quaternion = value[3:]
+    if rotors is not None:
+        for rotor_index, (blade, ghosts, disk) in enumerate(rotor_objects):
+            body_rotation = blade.rotation_quaternion.copy()
+            phase = float(rotors["phase"][index, rotor_index])
+            omega = float(rotors["rpm"][index, rotor_index]) * 2 * math.pi / 60
+            direction = 1 if rotor_index % 2 == 0 else -1
+            # A two-blade propeller repeats every pi radians. Once a shutter
+            # exposure spans a whole turn, sample that period without temporal
+            # aliasing; at shutdown the original opaque blade returns.
+            sweep = min(omega / 50, math.pi)
+            blurred = sweep > 0.15
+            blade.hide_render = blurred
+            blade.rotation_quaternion = body_rotation @ Quaternion((0, 0, 1), phase)
+            disk.hide_render = sweep < math.pi
+            disk.location = blade.location
+            disk.rotation_quaternion = body_rotation
+            for sample, ghost in enumerate(ghosts):
+                ghost.hide_render = not blurred or sweep >= math.pi
+                ghost.location = blade.location
+                angle = phase + direction * sweep * ((sample + 0.5) / len(ghosts) - 0.5)
+                ghost.rotation_quaternion = body_rotation @ Quaternion((0, 0, 1), angle)
     pos = Vector(qpos[index, :3])
     if name == "anycar":
         # World-oriented chase camera avoids unnatural snap rotations through corners.
@@ -637,6 +698,7 @@ receipt = dict(
     renderer_sha256=render_config["renderer_sha256"],
     total_expected_frames=len(qpos),
     frame_time_range_s=[float(motion["time"][0]), float(motion["time"][-1])],
+    rotor_animation=spec.get("rotor_animation"),
 )
 (
     a.output

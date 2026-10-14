@@ -12,6 +12,8 @@ The eight objectives are Neural Fly, Neural Landing, AnyCar multi-surface tracki
 
 The renderer refuses to resume into a directory produced by a different renderer source, capture or quality setting. Source-record and renderer hashes accompany each output. A changed visual configuration needs a new output directory.
 
+Neural Landing's `force-driven-rotors/1` presentation revision exports all four motor histories separately. RPM is reconstructed from archived motor force using the existing nominal thrust coefficient, and blade phase is integrated at the original 100 Hz before video sampling. Opposite pairs counter-rotate; the recorded motor decay brings them to rest after landing. RPM is model-derived, not a new physical measurement, and initial blade phases and 48-sample shutter blur are cosmetic. The renderer alters only the named visual blades; archived body states, scores and canonical feedback are unchanged. The older capture format remains available for exact historical reproduction.
+
 ## Reproduce
 
 Supply local operator evidence and prepared assets explicitly. These commands intentionally contain placeholders, not developer-specific paths:
