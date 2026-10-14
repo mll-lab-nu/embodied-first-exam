@@ -101,9 +101,7 @@ for t in sorted(os.listdir(tasks)):
     tt = os.path.join(tasks, t, "task.toml")
     if not os.path.isfile(tt):
         continue
-    # the benchmark: the directory's first word, or a registered name of several words whose prefix the directory has
-    # (none today; robotangle-new-* was one until RoboTangle's MuJoCo release took the name, 2026-10-13)
-    bench = next((k for k in MODULE if "-" in k and t.startswith(k + "-")), t.split("-")[0])
+    bench = t.split("-")[0]
     proto = str(tomllib.load(open(tt, "rb")).get("metadata", {}).get("protocol", ""))
     v24 = proto == "eai-standard/2.4"
     if proto == "eai-standard/2.3":
