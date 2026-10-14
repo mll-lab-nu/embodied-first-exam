@@ -1,0 +1,82 @@
+{
+  "family": "essential_two_object",
+  "initial_fingers": {
+    "r_wuji_r_thumb_cmc_flex": -0.06840088722971072,
+    "r_wuji_r_thumb_cmc_abd": 0.49757199864414337,
+    "r_wuji_r_thumb_mcp": 0.43846881155833034,
+    "r_wuji_r_thumb_ip": 0.6706691697057221,
+    "r_wuji_r_index_finger_mcp_flex": 0.6660556778476883,
+    "r_wuji_r_index_finger_mcp_abd": 0.018142437638039077,
+    "r_wuji_r_index_finger_pip": 0.5513373407423872,
+    "r_wuji_r_index_finger_dip": 0.5947820120148234,
+    "r_wuji_r_middle_finger_mcp_flex": 0.8336709161800222,
+    "r_wuji_r_middle_finger_mcp_abd": 0.12449914647839821,
+    "r_wuji_r_middle_finger_pip": 1.1919127438367576,
+    "r_wuji_r_middle_finger_dip": 1.0821204788894518,
+    "r_wuji_r_ring_finger_mcp_flex": 0.3627082057926537,
+    "r_wuji_r_ring_finger_mcp_abd": 0.1245424694149615,
+    "r_wuji_r_ring_finger_pip": 1.696265122818114,
+    "r_wuji_r_ring_finger_dip": 0.7617499755648222,
+    "r_wuji_r_pinky_mcp_flex": 0.48276122007716843,
+    "r_wuji_r_pinky_mcp_abd": -0.24179033280235496,
+    "r_wuji_r_pinky_pip": 1.4022462939942018,
+    "r_wuji_r_pinky_dip": 1.0158710443181447
+  },
+  "initial_objects": {
+    "initial_position_a": [
+      0.020514643166011284,
+      -0.013334154377179929,
+      0.30773513508862027
+    ],
+    "initial_quaternion_a": [
+      -0.4899628846599734,
+      -0.18991919976889135,
+      -0.850692048491949,
+      -0.013787960233243827
+    ],
+    "initial_position_b": [
+      0.017942027013778884,
+      0.01308619048288397,
+      0.3057688389246667
+    ],
+    "initial_quaternion_b": [
+      0.4934483964472322,
+      0.6677368292804422,
+      -0.4189624466947082,
+      -0.3675685992107313
+    ]
+  },
+  "provenance": "Authoring grasp formation (w-wuji, 2026-10-14): Wuji Hand 2.2 finger targets and the walnut start poses they hold. The walnuts were released just above the open hand while the fingers closed to these targets under their own servos, then rested; no weld, scripted motion or applied force. Walnut B's reference pose is its pose after the 300-step reset settle (as for Sharpa). Not a task policy.",
+  "formation": {
+    "drop_position_a": [
+      0.054241286711999986,
+      -0.02493200341548831,
+      0.3317554243286666
+    ],
+    "drop_quaternion_a": [
+      0.5757303403688847,
+      -0.17747460996910053,
+      -0.7920277583971022,
+      -0.09863755838171023
+    ],
+    "drop_position_b": [
+      -0.003283572295898901,
+      0.01675609951017641,
+      0.33081200239436737
+    ],
+    "drop_quaternion_b": [
+      0.23836299131535665,
+      0.504475661694699,
+      -0.5158706182847713,
+      0.6500499183288762
+    ],
+    "ramp_s": 0.6,
+    "rest_s": 0.8,
+    "search": {
+      "tool": "artifacts/ready-10-2026-10-14/wuji/two_object/tools/search1.py (workspace authoring tool; rebuild with build_wuji_reset.py in the same folder)",
+      "mode": 1,
+      "seed": 1015,
+      "index": 22
+    }
+  }
+}

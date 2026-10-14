@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "release": "ready-10-2026-10-14",
+  "note": "The DexHand families in the ready-10 pull request; generate.py --release / --check --release render or check only these.",
+  "families": [
+    "essential_cube_layer",
+    "essential_held_joystick",
+    "essential_pen_regrasp",
+    "essential_two_object",
+    "essential_rotary_gait",
+    "essential_cube_reorient",
+    "assemble_hamburger",
+    "paper_half_fold",
+    "sweep_dustpan",
+    "pot_shelf_transfer"
+  ]
+}

@@ -1,0 +1,490 @@
+{
+  "parts": [
+    {
+      "name": "Joystick_top_Grey_Sections1_0",
+      "file": "joycon_Joystick_top_Grey_Sections1_0.obj",
+      "moving": true,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0061725624000000005,
+          -0.006172561600000001,
+          0.003752190552000002
+        ],
+        [
+          0.0061725624000000005,
+          0.006172561600000001,
+          0.006488832952000001
+        ]
+      ],
+      "triangles": 4304
+    },
+    {
+      "name": "Joystick_Body_Grey_Sections1_0",
+      "file": "joycon_Joystick_Body_Grey_Sections1_0.obj",
+      "moving": true,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0031461904000000002,
+          -0.0031461896000000017,
+          9.519999996654427e-10
+        ],
+        [
+          0.0031461904000000002,
+          0.0031461896000000017,
+          0.003925438551999999
+        ]
+      ],
+      "triangles": 1576
+    },
+    {
+      "name": "Button_R_Grey_Sections1_0",
+      "file": "joycon_Button_R_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0103480728,
+          0.0018270816000000023,
+          0.0062214688
+        ],
+        [
+          0.013348617600000001,
+          0.018856644000000006,
+          0.0102844304
+        ]
+      ],
+      "triangles": 784
+    },
+    {
+      "name": "Button_Rmiddle_Red_Sections_0",
+      "file": "joycon_Button_Rmiddle_Red_Sections_0.obj",
+      "moving": false,
+      "material": "Red_Sections",
+      "bounds_m": [
+        [
+          -0.0103277208,
+          0.002263764800000005,
+          0.0042290792
+        ],
+        [
+          0.0128975192,
+          0.018446072,
+          0.0070227808000000004
+        ]
+      ],
+      "triangles": 2048
+    },
+    {
+      "name": "Button_ZR_Grey_Sections1_0",
+      "file": "joycon_Button_ZR_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0098471752,
+          0.0017930864000000046,
+          -0.007086952
+        ],
+        [
+          0.012631269600000002,
+          0.018334713600000004,
+          0.0046998888
+        ]
+      ],
+      "triangles": 732
+    },
+    {
+      "name": "Button_Plus_Grey_Sections1_0",
+      "file": "joycon_Button_Plus_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.011672888000000001,
+          0.009229864800000005,
+          0.012000904
+        ],
+        [
+          -0.007688632,
+          0.013214123200000004,
+          0.0124559112
+        ]
+      ],
+      "triangles": 396
+    },
+    {
+      "name": "Button_Y_Grey_Sections1_0",
+      "file": "joycon_Button_Y_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0037821592000000003,
+          0.0012602280000000021,
+          0.0116775312
+        ],
+        [
+          0.0021219392,
+          0.007164324800000007,
+          0.0131370616
+        ]
+      ],
+      "triangles": 480
+    },
+    {
+      "name": "Button_B_Grey_Sections1_0",
+      "file": "joycon_Button_B_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0037821592000000003,
+          -0.010774200799999998,
+          0.0116775312
+        ],
+        [
+          0.0021219392,
+          -0.004870101599999999,
+          0.0131370616
+        ]
+      ],
+      "triangles": 480
+    },
+    {
+      "name": "Button_A_Grey_Sections1_0",
+      "file": "joycon_Button_A_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          0.0022557608,
+          -0.0047013303999999985,
+          0.0116775312
+        ],
+        [
+          0.008159860000000001,
+          0.0012027680000000034,
+          0.0131370616
+        ]
+      ],
+      "triangles": 480
+    },
+    {
+      "name": "Button_X_Grey_Sections1_0",
+      "file": "joycon_Button_X_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0097785392,
+          -0.0047013303999999985,
+          0.0116775312
+        ],
+        [
+          -0.0038744400000000003,
+          0.0012027680000000034,
+          0.0131370616
+        ]
+      ],
+      "triangles": 480
+    },
+    {
+      "name": "Home_Button_Grey_Sections1_0",
+      "file": "joycon_Home_Button_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.008461084,
+          -0.0401926544,
+          0.0118425232
+        ],
+        [
+          -0.0035989072,
+          -0.0353304792,
+          0.0123476512
+        ]
+      ],
+      "triangles": 480
+    },
+    {
+      "name": "Release_button_Grey_Sections1_0",
+      "file": "joycon_Release_button_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0128630968,
+          0.0037906704000000013,
+          -0.0004572479999999995
+        ],
+        [
+          -0.0104518496,
+          0.006201916800000002,
+          0.0020909959999999995
+        ]
+      ],
+      "triangles": 112
+    },
+    {
+      "name": "Button_SR_Red_Sections_0",
+      "file": "joycon_Button_SR_Red_Sections_0.obj",
+      "moving": false,
+      "material": "Red_Sections",
+      "bounds_m": [
+        [
+          -0.015165732000000001,
+          -0.005929342399999996,
+          0.005
+        ],
+        [
+          -0.0146720584,
+          7.066080000000044e-05,
+          0.0078000000000000005
+        ]
+      ],
+      "triangles": 142
+    },
+    {
+      "name": "Button_SL_Red_Sections_0",
+      "file": "joycon_Button_SL_Red_Sections_0.obj",
+      "moving": false,
+      "material": "Red_Sections",
+      "bounds_m": [
+        [
+          -0.015165732000000001,
+          -0.038585586399999997,
+          0.005
+        ],
+        [
+          -0.0146720584,
+          -0.032585584,
+          0.0078000000000000005
+        ]
+      ],
+      "triangles": 142
+    },
+    {
+      "name": "Button_Grey_Sections1_0",
+      "file": "joycon_Button_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0152592144,
+          -0.026379023199999997,
+          0.0057806808
+        ],
+        [
+          -0.014269233600000002,
+          -0.024833051199999998,
+          0.007326652800000001
+        ]
+      ],
+      "triangles": 112
+    },
+    {
+      "name": "Light4_Lights_0",
+      "file": "joycon_Light4_Lights_0.obj",
+      "moving": false,
+      "material": "Lights",
+      "bounds_m": [
+        [
+          -0.015234365600000003,
+          -0.0207951768,
+          0.006131927200000001
+        ],
+        [
+          -0.015066904,
+          -0.019926880799999998,
+          0.006975616800000001
+        ]
+      ],
+      "triangles": 34
+    },
+    {
+      "name": "Light3_Lights_0",
+      "file": "joycon_Light3_Lights_0.obj",
+      "moving": false,
+      "material": "Lights",
+      "bounds_m": [
+        [
+          -0.015235744,
+          -0.01798356,
+          0.0061219552
+        ],
+        [
+          -0.015065524,
+          -0.017139016,
+          0.0069825968
+        ]
+      ],
+      "triangles": 34
+    },
+    {
+      "name": "Light2_Lights_0",
+      "file": "joycon_Light2_Lights_0.obj",
+      "moving": false,
+      "material": "Lights",
+      "bounds_m": [
+        [
+          -0.0152343992,
+          -0.012381665599999998,
+          0.0061315296
+        ],
+        [
+          -0.015066860800000002,
+          -0.011533280799999998,
+          0.006975807200000001
+        ]
+      ],
+      "triangles": 34
+    },
+    {
+      "name": "Light1_Lights_0",
+      "file": "joycon_Light1_Lights_0.obj",
+      "moving": false,
+      "material": "Lights",
+      "bounds_m": [
+        [
+          -0.015234188800000001,
+          -0.015185349599999998,
+          0.0061245216
+        ],
+        [
+          -0.0150670776,
+          -0.014323661599999999,
+          0.006982815200000001
+        ]
+      ],
+      "triangles": 34
+    },
+    {
+      "name": "Side_Part_Main_Grey_Sections1_0",
+      "file": "joycon_Side_Part_Main_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.015264699999999999,
+          -0.0538320072,
+          0.0027999992
+        ],
+        [
+          -0.013412982400000002,
+          0.014129110400000006,
+          0.0100000008
+        ]
+      ],
+      "triangles": 1120
+    },
+    {
+      "name": "Base_Combined_Red_Sections_0",
+      "file": "joycon_Base_Combined_Red_Sections_0.obj",
+      "moving": false,
+      "material": "Red_Sections",
+      "bounds_m": [
+        [
+          -0.0136000032,
+          -0.062,
+          -0.0077204512
+        ],
+        [
+          0.0134750552,
+          0.017999152000000004,
+          0.012000024000000001
+        ]
+      ],
+      "triangles": 7654
+    },
+    {
+      "name": "Screw3_Grey_Sections1_0",
+      "file": "joycon_Screw3_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.012331208,
+          -0.058874216,
+          0.0012811424
+        ],
+        [
+          -0.0111104128,
+          -0.0576534208,
+          0.0014702247999999994
+        ]
+      ],
+      "triangles": 80
+    },
+    {
+      "name": "Screw2_Grey_Sections1_0",
+      "file": "joycon_Screw2_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          0.0044330336000000005,
+          -0.053837136800000004,
+          0.0011863159999999998
+        ],
+        [
+          0.005653828800000001,
+          -0.0526163424,
+          0.0013753984
+        ]
+      ],
+      "triangles": 80
+    },
+    {
+      "name": "Screw1_Grey_Sections1_0",
+      "file": "joycon_Screw1_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          0.009488965600000001,
+          -0.0008617583999999956,
+          0.0015189143999999998
+        ],
+        [
+          0.01070976,
+          0.00035903600000000355,
+          0.0017079968
+        ]
+      ],
+      "triangles": 80
+    },
+    {
+      "name": "Screw_Grey_Sections1_0",
+      "file": "joycon_Screw_Grey_Sections1_0.obj",
+      "moving": false,
+      "material": "Grey_Sections1",
+      "bounds_m": [
+        [
+          -0.0122987416,
+          0.014101891999999998,
+          0.0009767112
+        ],
+        [
+          -0.0110927816,
+          0.015307852000000004,
+          0.0011634951999999997
+        ]
+      ],
+      "triangles": 80
+    }
+  ],
+  "collision_shell": [
+    "joycon_shell_collision_00.obj",
+    "joycon_shell_collision_01.obj",
+    "joycon_shell_collision_02.obj"
+  ],
+  "pivot_m": [
+    0.0,
+    -0.022,
+    0.010632109448
+  ],
+  "scale": 0.0008
+}

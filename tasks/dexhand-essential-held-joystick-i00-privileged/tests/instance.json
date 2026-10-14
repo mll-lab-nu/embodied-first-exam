@@ -1,0 +1,205 @@
+{
+  "category": "essential_articulated",
+  "description": "Stabilize a real Joy-Con mesh while independently steering and releasing its passive spring-centered two-axis thumbstick.",
+  "difficulty": "hard",
+  "id": "essential_held_joystick",
+  "instruction": "With the wrist locked, keep the controller steady and move the joystick through left, front, right, back, then center, holding each checkpoint. Checkpoints are joint angles relative to the shell, not world tilt.",
+  "invariants": {
+    "body_drift": [
+      0,
+      0.02
+    ],
+    "body_rotation": [
+      0,
+      0.35
+    ],
+    "force": [
+      0,
+      80
+    ],
+    "palm_drift": [
+      0,
+      0.006
+    ],
+    "speed": [
+      0,
+      20
+    ],
+    "support": [
+      0,
+      0
+    ],
+    "wrist_rotation": [
+      0,
+      0.035
+    ]
+  },
+  "mechanism": "free_controller_passive_gimbal",
+  "parameters": {
+    "asset_variant": "right_joycon_uniform_scale_80_percent",
+    "finger_velocity_gain": -0.1,
+    "flat_cap": true,
+    "initial_hand_joints": {
+      "right_index_DIP": 0,
+      "right_index_MCP_AA": 0,
+      "right_index_MCP_FE": 0,
+      "right_index_PIP": 0,
+      "right_middle_DIP": 1.3876512259865401,
+      "right_middle_MCP_AA": -0.13502760136282624,
+      "right_middle_MCP_FE": 0.1707434146927149,
+      "right_middle_PIP": 1.7452999900000001,
+      "right_pinky_CMC": 0.06258307196914947,
+      "right_pinky_DIP": 1.3962999900000002,
+      "right_pinky_MCP_AA": 0.05007721190922223,
+      "right_pinky_MCP_FE": 0.1751310641909313,
+      "right_pinky_PIP": 1.7452999900000001,
+      "right_ring_DIP": 1.3546537925660762,
+      "right_ring_MCP_AA": 0.11994812404296695,
+      "right_ring_MCP_FE": 0.04390396614481175,
+      "right_ring_PIP": 1.7370740433539096,
+      "right_thumb_CMC_AA": -0.055987567425446354,
+      "right_thumb_CMC_FE": 1.2243043971890966,
+      "right_thumb_IP": 1.7452999900000001,
+      "right_thumb_MCP_AA": 0.34909999,
+      "right_thumb_MCP_FE": 1.3962999900000002
+    },
+    "initial_wrist": [
+      -0.08,
+      0,
+      0.29,
+      0,
+      0,
+      0
+    ],
+    "joycon_uniform_scale": 0.8,
+    "joystick_damping": 0.001,
+    "joystick_pivot": [
+      0,
+      -0.022,
+      0.010632109448
+    ],
+    "locked_wrist": true,
+    "object_position": [
+      0.015,
+      0.005,
+      0.319
+    ],
+    "settle_steps": 500,
+    "stick_length": 0.00512
+  },
+  "scene": "essential_held_joystick",
+  "stages": [
+    {
+      "bounds": {
+        "base_contacts": [
+          1,
+          5
+        ],
+        "joystick_x": [
+          -0.4,
+          -0.19999999999999998
+        ],
+        "joystick_y": [
+          -0.1,
+          0.1
+        ]
+      },
+      "hold_steps": 5,
+      "name": "left"
+    },
+    {
+      "bounds": {
+        "base_contacts": [
+          1,
+          5
+        ],
+        "joystick_x": [
+          -0.1,
+          0.1
+        ],
+        "joystick_y": [
+          0.19999999999999998,
+          0.4
+        ]
+      },
+      "hold_steps": 5,
+      "name": "front"
+    },
+    {
+      "bounds": {
+        "base_contacts": [
+          1,
+          5
+        ],
+        "joystick_x": [
+          0.19999999999999998,
+          0.4
+        ],
+        "joystick_y": [
+          -0.1,
+          0.1
+        ]
+      },
+      "hold_steps": 5,
+      "name": "right"
+    },
+    {
+      "bounds": {
+        "base_contacts": [
+          1,
+          5
+        ],
+        "joystick_x": [
+          -0.1,
+          0.1
+        ],
+        "joystick_y": [
+          -0.4,
+          -0.19999999999999998
+        ]
+      },
+      "hold_steps": 5,
+      "name": "back"
+    },
+    {
+      "bounds": {
+        "base_contacts": [
+          1,
+          5
+        ],
+        "joystick_x": [
+          -0.1,
+          0.1
+        ],
+        "joystick_y": [
+          -0.1,
+          0.1
+        ]
+      },
+      "hold_steps": 5,
+      "name": "center"
+    }
+  ],
+  "terminal": {
+    "bounds": {
+      "base_contacts": [
+        1,
+        5
+      ],
+      "joystick_x": [
+        -0.08,
+        0.08
+      ],
+      "joystick_y": [
+        -0.08,
+        0.08
+      ],
+      "speed": [
+        0,
+        0.12
+      ]
+    },
+    "hold_steps": 15
+  },
+  "title": "Held Joy-Con thumbstick sequence"
+}

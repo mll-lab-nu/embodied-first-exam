@@ -22,6 +22,7 @@
 "AutoBio" = { dynamics = "static", why = "Fixed-base arms on a laboratory bench; devices (centrifuge, thermal cycler, mixer, pipette) move only when the robot moves them." }
 "BEHAVIOR-1K" = { dynamics = "static", why = "R1Pro (wheeled base) in household scenes; objects move only by the robot or gravity; cooking / freezing / toggled states change no motion." }
 "BiGym 2.0" = { dynamics = "static", why = "G1 (legs held by the GR00T-WBC policy) at kitchen fixtures; objects and fixtures move only by the robot or gravity." }
+"DexHand" = { dynamics = "static", why = "One dexterous hand on a wrist stage (locked in the six essential families) or two fixed Tianji Marvin arms with a hand each; the held objects, the passive spring-centred thumbstick, the knob, the elastic paper, the broom, the debris and the pot move only by the robot or gravity." }
 "DexJoCo" = { dynamics = "static", why = "Franka + Allegro hand(s) at a table; objects and devices move only by the robot or gravity." }
 "DexToolBench" = { dynamics = "static", why = "Arm + hand using a tool on objects at rest; nothing moves except by the robot or gravity." }
 "HumanoidBench" = { dynamics = "static", why = "H1 humanoid (floating base, must balance) in scenes whose objects move only by the robot or gravity; balancing is not scene dynamics (owner 2026-10-14)." }
