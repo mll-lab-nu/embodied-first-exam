@@ -33,7 +33,7 @@ trajectory's rows is reported (`strict_goal_reached`), not required.
 A trajectory may have at most 37000 rows (`RCB_MAX_STEPS`: two replays must fit the verifier's timeout; a longer one is
 `bad_trajectory`).
 
-`nop`: no record yet on this base (`harbor run -p tasks/roboarc-blanket-flatten-06-i01-privileged -a nop`).
+`nop` scored 0 on this base in both modes (the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py); 2026-10-14).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.

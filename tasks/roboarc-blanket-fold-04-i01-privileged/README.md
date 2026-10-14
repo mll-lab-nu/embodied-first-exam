@@ -19,7 +19,7 @@ The target images: `/app/goal/target_cam_high.png` (seen from the overhead camer
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: assisted grasping (pbd_local_patch_v1).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `aac99e2d67573b46…`) to `/app/output/`: the MuJoCo reference, which its author replayed to success with a reproducible end state outside Harbor. No Harbor oracle trial of it has been run yet, so no score is claimed here.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `aac99e2d67573b46…`) to `/app/output/`: the MuJoCo reference (this design's oracle, recorded on MuJoCo), which the verifier scored 1 in two fresh-process replays on the release image eai-roboarc 0.1.0 (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in a fresh process, twice; pass iff the
@@ -30,7 +30,7 @@ final-state hashes (`deterministic`) are still diagnostic; the rebuilt frozen sc
 A trajectory may have at most 37000 rows (`RCB_MAX_STEPS`: two replays must fit the verifier's timeout; a longer one is
 `bad_trajectory`).
 
-`nop`: no record yet on this base (`harbor run -p tasks/roboarc-blanket-fold-04-i01-privileged -a nop`).
+`nop` scored 0 on this base in both modes (the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py); 2026-10-14).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
