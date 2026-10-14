@@ -16,6 +16,7 @@ robot = "aloha-2"
 family = "cast_coil"
 difficulty = "easier"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 grasp = "assisted (the contact_weld_v1 grasp regions on coil_gold, coil_silver)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v2_grasp_contact_2mm)"

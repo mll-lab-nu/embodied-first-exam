@@ -16,6 +16,7 @@ simulator = "maniskill"           # Panda Dynamic Scenes on ManiSkill 3.0.1 / SA
 robot = "franka-panda"
 family = "s10_swinging_load_transit_dock"
 mode = "privileged"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
