@@ -77,6 +77,9 @@ write(
         "sim_error": int(d.get("reason") == "error"),
         "sim_startups": int(d.get("sim_startups") or 0),
         "resumes": int(d.get("resumes") or 0),
+        "resets": int(d.get("resets") or 0),                # PROTOCOL §4.5: resets the agent used; only the last episode is graded
+        "reset_budget": int(d.get("reset_budget") or 0),
+        "episodes": int(d.get("episodes") or 1),
         "resume_state_mismatch": int(d.get("resume_state_mismatch") or 0),
         "resume_max_joint_dev": num("resume_max_joint_dev"),
     },
