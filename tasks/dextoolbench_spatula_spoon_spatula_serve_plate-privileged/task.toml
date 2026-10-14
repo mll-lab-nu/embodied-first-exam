@@ -14,6 +14,7 @@ simulator = "mujoco"
 robot = "kuka-iiwa14-sharpa-ha4"
 family = "dextoolbench/spatula/spoon_spatula/serve_plate"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "partial"
 oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 13/48 goals (solution/; README of dextoolbench_spatula_spoon_spatula_serve_plate-privileged)"
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization

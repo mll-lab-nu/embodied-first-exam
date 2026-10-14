@@ -1,0 +1,87 @@
+# Scene dynamics per task: THE table (docs/PROTOCOL.md §2.14; owner 2026-10-14, board 0106). One row per benchmark, and
+# per family an exception where the family differs from its benchmark's row; every entry gives its reason (`why`).
+#
+#   dynamic   something in the scene other than the robot can do work by a force other than the robot's own and gravity:
+#             a body with a velocity at the start (thrown, served, rolling, sliding, swinging), an actuated or scripted
+#             body (conveyor, motor-driven rail, scripted push, a timer that moves a part), an opponent or another agent.
+#   static    everything else: objects move only because the robot moves them or gravity pulls them (settling after
+#             reset, cloth / liquid / granular material the robot moves, passive springs that only give back the
+#             robot's energy, visual-only or state-only changes, episode horizons). A robot that must balance actively
+#             (humanoid, legged, drone) does not make a task dynamic by itself.
+#
+# scripts/task_conventions.py (`normalize`) writes `[metadata] dynamics` into every task.toml from this file; never edit
+# it in a task, a template or a generator: ci_checks/check-dynamics.py fails a task that disagrees with this table, a
+# benchmark without a row, and an exception that matches no family. To change a value: edit it here (with its `why`),
+# then `python3 scripts/task_cutoffs.py apply` (normalizes every task and refreshes tasks/dataset.toml, ~3 min).
+# The benchmark names are the labels of scripts/task_conventions.py BENCHMARKS; a family is `[metadata] family`.
+# A dynamic task may get a `-standard-realtime` twin (PROTOCOL §4b); static tasks need none. Per-family evidence
+# (file:line): agentboard task 0106, dynamic_tasks.csv.
+
+[benchmark]
+"AutoBio" = { dynamics = "static", why = "Fixed-base arms on a laboratory bench; devices (centrifuge, thermal cycler, mixer, pipette) move only when the robot moves them." }
+"BEHAVIOR-1K" = { dynamics = "static", why = "R1Pro (wheeled base) in household scenes; objects move only by the robot or gravity; cooking / freezing / toggled states change no motion." }
+"BiGym 2.0" = { dynamics = "static", why = "G1 (legs held by the GR00T-WBC policy) at kitchen fixtures; objects and fixtures move only by the robot or gravity." }
+"DexJoCo" = { dynamics = "static", why = "Franka + Allegro hand(s) at a table; objects and devices move only by the robot or gravity." }
+"DexToolBench" = { dynamics = "static", why = "Arm + hand using a tool on objects at rest; nothing moves except by the robot or gravity." }
+"HumanoidBench" = { dynamics = "static", why = "H1 humanoid (floating base, must balance) in scenes whose objects move only by the robot or gravity; balancing is not scene dynamics (owner 2026-10-14)." }
+"KinDER" = { dynamics = "static", why = "TidyBot++ (wheeled base + arm) in KinDER Dynamic3D; objects move only when the robot pushes or carries them." }
+"LIBERO-MAX" = { dynamics = "static", why = "Fixed Franka (LIBERO); the mid-episode perturbation is triggered by the robot's proximity and applied once, nothing moves by itself afterwards." }
+"LabUtopia" = { dynamics = "static", why = "Fixed Franka on a lab bench; apparatus moves only when the robot moves it." }
+"ManiGuard" = { dynamics = "static", why = "Fixed Franka in BEHAVIOR-1K scenes; safety constraints on objects the robot moves, no scripted hazards." }
+"MetaWorld+" = { dynamics = "static", why = "Fixed Sawyer at a table; objects, buttons and drawers move only by the robot or gravity." }
+"MolmoSpaces" = { dynamics = "static", why = "Franka or RB-Y1 (holonomic base) in house scenes; objects and doors move only by the robot or gravity." }
+"MuJoCo Playground" = { dynamics = "static", why = "Arms or legged robots on flat / rough terrain; joystick commands are targets, not bodies; nothing in the scene moves by itself." }
+"MyoSuite" = { dynamics = "static", why = "Musculoskeletal arm / hand / legs; objects move only by the model's muscles or gravity." }
+"Panda Dynamic Scenes" = { dynamics = "dynamic", why = "One or two Pandas in scenes whose balls, pucks, carts, conveyors, rails and pendulums move by themselves (initial velocities, driven rails / conveyors, scripted impulses); the six static families are listed below." }
+"RoboARC" = { dynamics = "static", why = "Fixed-base arm(s) on MuJoCo puzzles, ropes and cloth that move only when the robot moves them (rope / cloth elasticity only returns the robot's energy)." }
+"RoboCasa" = { dynamics = "static", why = "PandaOmron in robosuite kitchens; fixtures change only visual sites or on/off states, objects move only by the robot or gravity." }
+"RoboCasa-GR1" = { dynamics = "static", why = "Fixed-base GR1 at kitchen counters; objects move only by the robot or gravity." }
+"RoboCasa365" = { dynamics = "static", why = "PandaOmron in RoboCasa365 kitchens; fixtures change only visual sites or on/off states, objects move only by the robot or gravity." }
+"RoboDojo" = { dynamics = "static", why = "Two fixed ARX X5 arms at a table; objects move only by the robot or gravity (cloth and liquid moved by the robot)." }
+"RoboFunOlympics" = { dynamics = "static", why = "A humanoid (floating base) at a venue whose ball / implement is at rest until the robot touches it; only the robot and gravity do work." }
+"RoboLab" = { dynamics = "static", why = "Fixed Franka + Robotiq at a table; objects move only by the robot or gravity." }
+"RoboOlympics" = { dynamics = "dynamic", why = "Real-time sports against a scripted opponent: an incoming ball / shuttle / puck and an opponent that moves by itself." }
+"RoboPaint" = { dynamics = "static", why = "Fixed Franka painting or writing; paint deposits only where the robot's brush touches." }
+"RoboTwin 2.0" = { dynamics = "static", why = "Dual-arm aloha-agilex at a table; objects move only by the robot or gravity (RoboTwin's envs set no object velocities)." }
+"RoboWits" = { dynamics = "static", why = "Fixed bimanual Marvin at a table; objects move only by the robot or gravity (a domino chain falls under gravity after the robot's push)." }
+"VLABench" = { dynamics = "static", why = "Fixed Franka at a table; objects move only by the robot or gravity." }
+"YAMLab" = { dynamics = "static", why = "Two fixed YAM arms at a workstation table; objects move only by the robot or gravity." }
+
+[family."MuJoCo Playground"]
+"mujoco_playground/BarkourJoystick" = { dynamics = "dynamic", why = "Scripted random pushes (kicks) apply an external xfrc force to the floating-base Barkour torso at frozen times (12 kicks in the instance), work from neither the robot nor gravity." }
+
+[family."MyoSuite"]
+"table_tennis" = { dynamics = "dynamic", why = "The ping-pong ball is served toward the player with an initial velocity set at reset (5.6 m/s, measured in the frozen instance), kinetic energy not from the robot." }
+
+[family."Panda Dynamic Scenes"]
+"d05_moving_ramp_relay" = { dynamics = "static", why = "Nothing moves by itself; the ball only rolls under gravity once the robot puts it in the channel." }
+"d08_pendulum_energy_relay" = { dynamics = "static", why = "Passive pendulum at rest at t = 0; only the arms put energy into it." }
+"d11_moving_fixture_unlock" = { dynamics = "static", why = "Free fixture at rest; its latch spring only returns energy the robot put in (spring-return)." }
+"d12_reciprocal_sliding_transfer" = { dynamics = "static", why = "Cube at rest on a slippery scoop; nothing moves by itself." }
+"d13_supported_cube_flip_relay" = { dynamics = "static", why = "Cube at rest on the tray; nothing moves by itself." }
+"s06_cube_flip_route_recover" = { dynamics = "static", why = "Cube at rest; it slides down the chute only under gravity after the robot's push." }
+
+[family."RoboCasa365"]
+"robocasa365/TurnOnToasterOven" = { dynamics = "dynamic", why = "The toaster oven's timer dial, once set by the robot, turns back by itself over time (set_joint_state each step: val - elapsed/3000)." }
+
+[family."RoboDojo"]
+"imitate_sorting_sequence" = { dynamics = "dynamic", why = "A second, non-target arm replays a recorded trajectory that sorts the demonstrator objects." }
+"make_kong" = { dynamics = "dynamic", why = "The support arm replays a recorded opponent 'discard' motion." }
+"match_and_pick_from_conveyor" = { dynamics = "dynamic", why = "A powered conveyor belt carries the objects during the episode." }
+"pick_from_conveyor_by_image" = { dynamics = "dynamic", why = "A powered conveyor belt carries the four objects during the episode." }
+"play_tic_tac_toe" = { dynamics = "dynamic", why = "An opponent arm (support_arm0) places its pieces, running in parallel with the agent's actions." }
+
+[family."RoboFunOlympics"]
+"catch" = { dynamics = "dynamic", why = "A launcher 40 m away fires the baseball at t = 1 s (21 m/s)." }
+"catch_and_shoot" = { dynamics = "dynamic", why = "A machine throws the chest pass at a fixed time." }
+"header" = { dynamics = "dynamic", why = "The cross is launched toward the robot at launch_time_s." }
+"juggle_three" = { dynamics = "dynamic", why = "The venue throws the first ball at launch_time_s." }
+"paddle_bounce" = { dynamics = "dynamic", why = "The venue releases the ball at drop_time_s (a clock-timed release; gravity then does the work)." }
+"penalty_kick" = { dynamics = "dynamic", why = "A goalkeeper dummy on a slide is driven by the referee toward the ball after the kick." }
+"table_tennis_return" = { dynamics = "dynamic", why = "The ball is served toward the robot at serve_time_s with spin." }
+"tennis_return" = { dynamics = "dynamic", why = "The ball is served toward the robot at serve_time_s with spin." }
+"trap_ball" = { dynamics = "dynamic", why = "The ball is launched toward the robot at launch_time_s." }
+"volley_shot" = { dynamics = "dynamic", why = "The cross is launched toward the robot at launch_time_s." }
+"volleyball_bump" = { dynamics = "dynamic", why = "The ball is launched toward the robot at launch_time_s." }
+"volleyball_set" = { dynamics = "dynamic", why = "The ball is launched toward the robot at launch_time_s." }
+"volleyball_spike" = { dynamics = "dynamic", why = "The set ball is launched at launch_time_s." }

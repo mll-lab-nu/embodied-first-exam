@@ -27,6 +27,7 @@ simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "general_pickup"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "positive example: a model trial solved this task (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10; 1131 actions, graded by this verifier); no reference solution (RoboDojo releases no expert); human review in PR #142"

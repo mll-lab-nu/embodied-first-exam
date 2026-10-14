@@ -15,6 +15,7 @@ simulator = "roboarc"             # RoboARC on MuJoCo 3.14.0 (CPU float64 physic
 robot = "aloha-2"
 family = "interlocked_claws"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "hard"               # the variation's tier (docs/rcb/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)"

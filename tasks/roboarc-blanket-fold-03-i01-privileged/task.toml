@@ -15,6 +15,7 @@ simulator = "roboarc"             # RoboARC on MuJoCo 3.14.0 (CPU physics, CUDA 
 robot = "aloha-2"
 family = "blanket_fold"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "easy"               # the variation's tier (docs/rcb/TAXONOMY.md)
 grasp = "assisted (the pbd_local_patch_v1 grasp regions on blanket)"
