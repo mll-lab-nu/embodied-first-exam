@@ -1,0 +1,734 @@
+{
+ "snapshot": "easier_v8_untied",
+ "instance": "easier_v8_r2",
+ "rope": "rope",
+ "region": "easier_v8_r2: x -0.42..0.30, y 0.155..0.31 (task frame); fixtures as easier_v8",
+ "frame": "task frame (knot_placement/README.md): metres, z above the table; move targets are the pads' contact point; grasp s = arc length from the clamped end; jaw yaw = the rope's current tangent at s; hands only translate",
+ "route": "user method (10-13, coordinator-approved): leg 1 pulled straight along the strip's north side to the east end B1 (left hand flat pull to the middle, handed to the right hand at s1 = |clamp-B1| + 1.5 cm); right holds B1 while the left pulls leg 2 west to B2 (s2 = s1 + |B1-B2| + 3 cm), lifted 8 cm over the curb; right lets go of B1; the left lets go of B2 and takes the B2 bend itself (s1.33) while the right takes the free end, both lift 11 cm over the curb and lay the tail as leg 3 south of leg 2; two finishing pushes of the B2 bend",
+ "ops": [
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "rope",
+   "s": 0.8
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     0.065,
+     0.225,
+     0.005
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "grasp",
+   "hand": "right",
+   "rope": "rope",
+   "s": 0.67
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ]
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.04
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.285,
+     0.272,
+     0.005
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "rope",
+   "s": 1.3
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.08
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.3,
+     0.17,
+     0.084
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.3,
+     0.17,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "right"
+   ]
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "right"
+   ],
+   "dz": 0.04
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ]
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.04
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "rope",
+   "s": 1.33
+  },
+  {
+   "op": "grasp",
+   "hand": "right",
+   "rope": "rope",
+   "s": 1.77
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "dz": 0.11
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.31,
+     0.195,
+     0.114
+    ],
+    "right": [
+     0.11,
+     0.188,
+     0.114
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.31,
+     0.195,
+     0.005
+    ],
+    "right": [
+     0.11,
+     0.188,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "dz": 0.05
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "rope",
+   "s": 1.36
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.01
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.31,
+     0.17,
+     0.014
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.31,
+     0.17,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.05
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "rope",
+   "s": 1.4
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.01
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.25,
+     0.175,
+     0.014
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.25,
+     0.175,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.05
+  }
+ ],
+ "reasons": [
+  "左手竖直捏 s=0.80（夹子西侧外圈与 curb 南侧段的交界，离夹子沿绳 0.8 m，指位 ≥ 15 mm），jaw 按此处当前切向，握住时不转腕。",
+  "3 cm/s 贴桌往东平拉到中间 (0.065, 0.225)，即左手在这条线上能到的最东处：夹子侧的卷环被拉开（s0–0.7 弧/弦 4.2 → 2.0），尾巴跟着进区域；终点选在这里，是为了让 s1 落进右手可达范围（x ≥ -0.07）。",
+  "右手竖直捏 s1=0.67：夹子到 B1 的直线距离 0.655 m，加 1.5 cm 余量；离左手沿绳 13 cm（≥ 12 cm 两爪不碰），离旁边的尾巴 ≥ 10 mm 有指位。先捏后松。",
+  "左手松开 s0.80，交给右手。",
+  "左手抬 4 cm 让开。",
+  "3 cm/s 沿 strip 北侧东西向拉直第一段，到东端按住 B1 (0.285, 0.272)。只留 1.5 cm 余量不绷紧：余量 0.5 cm 时 2.7 N 脱手，这里峰值约 0.2 N；余量 3 cm 时中段会留下约 3 cm 的波浪。B1 放在 y 0.272：松手后发夹会向北弹开约 2 cm，圈顶约 y 0.29，离北边仍 ≥ 1 cm，±1 cm 落点误差也不出 8 mm 边距。",
+  "左手捏 s2=1.30：s1 加上 B1→B2 直线 0.60 m 再加 3 cm 余量。此处在 curb 西端南侧，指位 18 mm。",
+  "左手抬 8 cm，越过 curb 西端（curb 高 3 cm）。",
+  "3 cm/s 往西拉到 B2 (-0.30, 0.17)：B1→B2 这段刚好拉直，成为第二段，在第一段南侧 2–5 cm；尾巴 s1.30–1.79 被拖到 curb 南面。",
+  "放下，左手按住 B2。",
+  "右手松开 B1。紧贴的发夹弹开成直径约 7 cm 的圈，最北 y≈0.29，仍在区域内。",
+  "右手抬 4 cm 让开。",
+  "左手松开 B2，空出来去抬尾巴。",
+  "左手抬 4 cm 让开。",
+  "左手捏 B2 弯本身 s1.33（第二段末端的拐弯处）：搬运时弯一直在手里，不会被拧成圈。",
+  "右手捏自由端 s1.77（离末端 2 cm、可竖直捏取的最末一点，在 curb 东端外侧）。",
+  "双手同时抬 11 cm：两手间绳长比弦长多约 3 cm，会下垂约 7 cm，抬 11 cm 最低点才高过 curb（3 cm）。",
+  "两手同时 3 cm/s 往北移：左 (-0.31, 0.195)、右 (0.11, 0.188)，整段从 curb 上方越过，第三段铺在第二段南侧。",
+  "放下。",
+  "双手松开（16 mm）。",
+  "双手抬 5 cm 让开。",
+  "左手捏 B2 弯的最低点 s1.36：松手后 B2 弯也会弹开，往南垂到 y≈0.152，出了 8 mm 边距。",
+  "抬 1 cm。",
+  "2 cm/s 往西北推到 (-0.31, 0.17)，把弯底西半边推回 y ≥ 0.163（离南边 ≥ 8 mm）；往西有空间，不会压到第一段。",
+  "放下。",
+  "左手松开（16 mm）。",
+  "左手抬 5 cm 让开。",
+  "左手捏 s1.40：弯底东半边，也是第三段的起点。",
+  "抬 1 cm。",
+  "2 cm/s 往东北推到 (-0.25, 0.175)：把弯底东半边也抬起来，弯整体变小、往北收。只推一次的话，松手后弯底会回弹到 y≈0.163；推两次后离南边约 1 cm。",
+  "放下。",
+  "左手松开（16 mm）。",
+  "左手抬 5 cm 离开，双手与绳都不接触。"
+ ],
+ "self_check": {
+  "lab": "topogym/planning/knot_untying/redesign/place_obj.py run_ops (object-level MuJoCo, virtual hands, HOLD_N 2.7 N), judged on the easier_v8_r2 region, one continuous run from /data/pingyue/knot_place/K/easier_v8/K0.npz, every grasp and every 2 cm of every held move checked with robot_ik.pinch_feasible for its hand with the held jaw yaw",
+  "nominal_machine": "orbits3 (bit-identical to the local box)",
+  "goal": true,
+  "outside_fraction": 0.0,
+  "crossings": 0,
+  "first_crossing_op": null,
+  "min_nonlocal_gap_m": 0.0084,
+  "region_margin_min_m": 0.0108,
+  "grips_lost": 0,
+  "refused": 0,
+  "ops_run": 33,
+  "on_curb": false,
+  "z_max_m": 0.0042,
+  "ik_failures": 0,
+  "max_speed_m_s": 1.6e-05,
+  "released": true,
+  "sim_time_s": 118.2,
+  "max_grip_force_n": 0.75,
+  "region_margin_note": "smallest distance of the rope centre line to the r2 region's edges after the final settle",
+  "perturbation": {
+   "method": "every move target's xy shifted by an independent uniform [-1, 1] cm per axis (a move that only changes z at the same xy keeps that hand's previous shift), seeds 0-7 (and 8-15 for the extended count); pass = goal and centre line >= 8 mm from the region edges, 0 grips lost, IK all solvable; runs on vast1 unless noted (vast1 replays judge the same as the local box but end shapes differ by up to ~0.5 mm)",
+   "passed": 4,
+   "passed_goal_only": 8,
+   "n": 8,
+   "extended": {
+    "n": 16,
+    "passed": 6,
+    "passed_goal_only": 14
+   },
+   "runs": [
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0101,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P0",
+     "machine": "vast1",
+     "fail_reason": null
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0062,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P1",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 6.2 mm（s1.38 处，(-0.270, 0.161)）"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0042,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P2",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 4.2 mm（s1.40 处，(-0.261, 0.159)）"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0127,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P3",
+     "machine": "vast1",
+     "fail_reason": null
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0091,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P4",
+     "machine": "vast1",
+     "fail_reason": null
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0085,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P5",
+     "machine": "vast1",
+     "fail_reason": null
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0038,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P6",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 3.8 mm（s1.35 处，(-0.296, 0.159)）"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0018,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P7",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 1.8 mm（s1.39 处，(-0.274, 0.157)）"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0068,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P8",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 6.8 mm（s1.40 处，(-0.264, 0.162)）"
+    },
+    {
+     "goal": false,
+     "outside_fraction": 0.0376,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": -0.0039,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P9",
+     "machine": "vast1",
+     "fail_reason": "在外 3.8%"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0033,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P10",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 3.3 mm（s1.39 处，(-0.258, 0.158)）"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0089,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P11",
+     "machine": "vast1",
+     "fail_reason": null
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0086,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P12",
+     "machine": "vast1",
+     "fail_reason": null
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.0001,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P13",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 0.1 mm（s0.60 处，(0.202, 0.310)）"
+    },
+    {
+     "goal": true,
+     "outside_fraction": 0.0,
+     "crossings": 0,
+     "first_crossing_op": null,
+     "min_nonlocal_gap_m": 0.0084,
+     "region_margin_min_m": 0.002,
+     "grips_lost": 0,
+     "refused": 0,
+     "ops_run": 33,
+     "on_curb": false,
+     "z_max_m": 0.0042,
+     "ik_failures": 0,
+     "variant": "P14",
+     "machine": "vast1",
+     "fail_reason": "goal 通过但离边只有 2.0 mm（s0.60 处，(0.208, 0.308)）"
+    },
+    {
+     "goal": false,
+     "outside_fraction": 0.3183,
+     "crossings": 1,
+     "first_crossing_op": 8,
+     "min_nonlocal_gap_m": 0.0,
+     "region_margin_min_m": -0.0474,
+     "grips_lost": 0,
+     "refused": 4,
+     "ops_run": 33,
+     "on_curb": true,
+     "z_max_m": 0.0361,
+     "ik_failures": 1,
+     "variant": "P15",
+     "machine": "vast1",
+     "fail_reason": "1 个交叉（第 8 步起）；不贴桌（z max 36.1 mm）；在外 31.8%；1 处 IK 不可解"
+    }
+   ]
+  },
+  "region_rejudge": {
+   "note": "the same 8 perturbed end states (seeds 0-7) judged against wider regions, no new simulation: goal = planar clear, on table, quiet, released and every centre-line point inside; margin = signed distance of the centre line to the polygon edges",
+   "results": {
+    "base (_r2)": {
+     "polygon": [
+      [
+       -0.42,
+       0.155
+      ],
+      [
+       0.3,
+       0.155
+      ],
+      [
+       0.3,
+       0.31
+      ],
+      [
+       -0.42,
+       0.31
+      ]
+     ],
+     "passed_goal_only": 8,
+     "passed": 4,
+     "margins_mm": [
+      10.1,
+      6.2,
+      4.2,
+      12.7,
+      9.1,
+      8.5,
+      3.8,
+      1.8
+     ]
+    },
+    "S+1cm, N+2mm": {
+     "polygon": [
+      [
+       -0.42,
+       0.145
+      ],
+      [
+       0.3,
+       0.145
+      ],
+      [
+       0.3,
+       0.312
+      ],
+      [
+       -0.42,
+       0.312
+      ]
+     ],
+     "passed_goal_only": 8,
+     "passed": 8,
+     "margins_mm": [
+      20.1,
+      16.2,
+      14.2,
+      21.2,
+      19.1,
+      12.5,
+      13.8,
+      11.8
+     ]
+    },
+    "x<-0.15 S+1cm, N+2mm": {
+     "polygon": [
+      [
+       -0.42,
+       0.145
+      ],
+      [
+       -0.15,
+       0.145
+      ],
+      [
+       -0.15,
+       0.155
+      ],
+      [
+       0.3,
+       0.155
+      ],
+      [
+       0.3,
+       0.312
+      ],
+      [
+       -0.42,
+       0.312
+      ]
+     ],
+     "passed_goal_only": 8,
+     "passed": 8,
+     "margins_mm": [
+      20.1,
+      9.2,
+      14.2,
+      20.1,
+      18.5,
+      12.5,
+      13.8,
+      11.8
+     ]
+    }
+   }
+  }
+ }
+}

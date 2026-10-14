@@ -1,0 +1,623 @@
+{
+ "snapshot": "hard_nostop_untied",
+ "instance": "hard_nostop_r2",
+ "ropes": [
+  "b",
+  "a"
+ ],
+ "role": "hard 的备选路线（螺旋，路线 B）；用户选定的方法（搬进 + easier 第 1、2、4 步）见 hard_nostop_untied_user.json",
+ "frame": "任务坐标系（knot_placement/README.md）：米，+x 右臂，-y 前侧，z 为桌面以上；move 目标是夹爪接触点（落在绳中心线上：0.005 = 放到桌面，0.034 / 0.074 = 抬 3 / 7 cm）；grasp 的 s 为离夹住端的弧长；jaw yaw 取捏取处绳子当前切向，握住期间只平移不转腕",
+ "order": "先 b（17 步：短、离 a 远，重铺成一个 U），再 a（30 步）",
+ "route_b": "夹子 -> 北腿（原上卷 + 下垂 lobe 拉直，y 约 0.25-0.30）-> 西端 U（s 约 0.66，x 约 -0.20）-> 南腿（尾巴，y 约 0.205）。原状的上卷 + 下垂 lobe 竖着叠了约 16 cm，只推不铺做不到四边 >= 1 cm，所以 s 0.66 之后重铺",
+ "route_a": "顺时针内旋螺旋：近腿（y 约 -0.2，arch s 0.11-0.6）-> 东 U -> 远腿（y 约 -0.30，内圈）-> 西 U（s 约 1.34）-> 中腿（y 约 -0.253，自由端一段）。它保持未解开时那团绳自身的平面次序：arch 把后面的材料包在里面，plan.json 的先铺远侧（从夹子起）要把 arch 拖过这些材料，仿真里第一步就出 2-3 个交叉",
+ "rules": "只竖直捏取，握住时不转腕；搬运 <= 3 cm/s，抬放 2 cm/s；过 curb 抬 7 cm；离夹子 24 cm 以内只拖不抬；两手同时握住时沿绳间距 >= 0.20 m；每个阶段有一只手（或夹子）按住已铺部分的末端；所有捏取点和 move 目标（含每段 1/4 处中间点）用 place_plan.pinch / robot_ik.pinch_feasible 按握持 yaw 检查可解，握持期间不换腕翻转",
+ "ops": [
+  {
+   "op": "grasp",
+   "hand": "right",
+   "rope": "b",
+   "s": 0.66
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "right"
+   ],
+   "dz": 0.0298,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.05,
+     0.205,
+     0.034
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     -0.04,
+     0.215,
+     0.034
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     -0.04,
+     0.215,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "right"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "b",
+   "s": 0.66
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.0298,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.05,
+     0.25,
+     0.034
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.2,
+     0.25,
+     0.034
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.2,
+     0.25,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "grasp",
+   "hand": "right",
+   "rope": "b",
+   "s": 0.89
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "right"
+   ],
+   "dz": 0.0298,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.0,
+     0.205,
+     0.034
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.0,
+     0.205,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "dz": 0.05,
+   "speed": 0.03
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "a",
+   "s": 1.34
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.0698,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.359,
+     -0.285,
+     0.074
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.359,
+     -0.285,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "grasp",
+   "hand": "right",
+   "rope": "a",
+   "s": 0.9
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "right"
+   ],
+   "dz": 0.0698,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.045,
+     -0.31,
+     0.074
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.045,
+     -0.31,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "a",
+   "s": 1.507
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.0698,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.212,
+     -0.253,
+     0.074
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.212,
+     -0.253,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "a",
+   "s": 0.42
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.0698,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.02,
+     -0.205,
+     0.074
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.02,
+     -0.205,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "right"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "grasp",
+   "hand": "right",
+   "rope": "a",
+   "s": 0.68
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "right"
+   ],
+   "dz": 0.0698,
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.205,
+     -0.262,
+     0.074
+    ]
+   },
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "right": [
+     0.205,
+     -0.262,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "grasp",
+   "hand": "left",
+   "rope": "a",
+   "s": 0.24
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left"
+   ],
+   "dz": 0.002,
+   "speed": 0.03
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.17,
+     -0.225,
+     0.0062
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "move",
+   "to": {
+    "left": [
+     -0.17,
+     -0.225,
+     0.005
+    ]
+   },
+   "speed": 0.02
+  },
+  {
+   "op": "release",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "width": 0.016
+  },
+  {
+   "op": "lift",
+   "hands": [
+    "left",
+    "right"
+   ],
+   "dz": 0.05,
+   "speed": 0.03
+  }
+ ],
+ "reasons": [
+  "b：右手竖直捏 s=0.66（发夹弯顶，离 b 的夹子 66 cm，可抬），jaw 按此处当前切向。",
+  "抬 3 cm（后侧 strip 没有 curb）。",
+  "先往西南到 (0.05, 0.205)，路径留在区域内，被拖的绳不会沿区域外的路径落下。",
+  "再往西到 (-0.04, 0.215)：右臂在这一带能到的最西处（s 0.66 的原位在左臂够不到的地方，所以右手先拉一段再交给左手）。",
+  "放下。",
+  "右手松开（本阶段的固定端是 b 的夹子）。",
+  "左手在同一点 s=0.66 接手，jaw 按当前切向。",
+  "抬 3 cm。",
+  "先往北到 (-0.05, 0.25)：左臂沿 y 0.215-0.235 向西走时夹爪座会碰到 post_left（IK 碰撞），y >= 0.25 这一路无碰撞。",
+  "拉到 (-0.20, 0.25)：上卷和下垂 lobe 被拉直成北腿（y 约 0.25-0.30），s 0.66 成为西端 U 弯，尾巴拖在后面。",
+  "放下；左手继续按住西端 U 弯。",
+  "右手捏 s=0.89（尾巴近自由端，离左手 23 cm）。",
+  "抬 3 cm。",
+  "把尾巴摆到 (0, 0.205)，成为南腿（y 约 0.205），离北腿约 4 cm；离拉直还留约 3 cm（更紧的目标在仿真里会脱手）。",
+  "放下。",
+  "双手松开；b 全在区域内，四边边距 >= 18 mm。",
+  "双手抬 5 cm 离开 b，再去做 a。",
+  "a 阶段 1：左手捏 a 西南 lobe 的底 s=1.34；这团绳的 arch（s 0.36-0.8）把后面的材料包在里面，唯一出口是 a 西侧那段与 curb 西端之间的空当，这个 lobe 就在出口上。",
+  "抬 7 cm。",
+  "从那个空当（离 curb 西端约 1 cm）把 lobe 拉出来，放到目标螺旋的西 U 弯处；lobe 两臂跟着走，不扫过别的绳段。",
+  "放下；左手继续按住，作为远腿的西端锚点（本阶段的固定端是夹子）。",
+  "阶段 2（左手按住西 U）：右手捏内圈 s=0.90。",
+  "抬 7 cm 过 3 cm 的 curb。",
+  "翻过 curb 到远腿东段 (0.045, -0.31)：两手之间的内圈（0.44 m，两点相距 0.405 m，留约 3.5 cm 松量，±1 cm 放置误差下不会拉紧脱手）被拉过 curb 铺成远腿（y 约 -0.30）。",
+  "放下；右手继续按住远腿东端。",
+  "左手松开西 U（已由远腿定住）。",
+  "阶段 3（右手按住 s 0.90）：左手捏自由端一段 s=1.507。",
+  "抬 7 cm。",
+  "把自由端一段顺时针转到中腿（y -0.253），位于远腿和将来的近腿之间。",
+  "放下。",
+  "左手松开；右手仍按住 s 0.90。",
+  "阶段 4（右手按住 s 0.90）：左手捏 arch 的 s=0.42；此时 arch 只是 curb 北边的一个空圈，里面没有别的绳。",
+  "抬 7 cm。",
+  "翻过 curb 放到近腿 (-0.02, -0.205)（离区域北沿 3 cm，±1 cm 放置误差下仍不碰 curb），夹子到手之间留约 3 cm 松量（恰好拉直的目标在仿真里 2.7 N 脱手）。",
+  "放下；左手按住近腿东端。",
+  "右手松开 s 0.90，远腿已铺好。",
+  "阶段 5（左手按住 s 0.42）：右手捏 arch 东侧 s=0.68（s 0.70-0.72 躺在 curb 顶上，夹爪没有位置）。",
+  "抬 7 cm。",
+  "翻过 curb 放到东 U 弯顶 (0.205, -0.262)；arch 剩下的部分从 curb 上滑下来成为近腿东段和东 U 弯。",
+  "放下；右手按住。",
+  "左手松开近腿东端。",
+  "阶段 6（右手按住东 U）：左手捏 s=0.24，近腿在这里爬上 curb 西端（s 0.26-0.36 搭在 curb 顶上）。",
+  "只抬 2 mm：离夹子 24 cm，只拖不抬。",
+  "沿桌面往西南拖到 (-0.17, -0.225)：搭在 curb 上的一段滑回桌面，近腿离区域北沿 >= 1 cm。",
+  "放下。",
+  "双手松开。",
+  "双手抬 5 cm，离两根绳都远。"
+ ],
+ "self_check": {
+  "lab": "topogym/planning/knot_untying/redesign/place_obj.py run_ops（物体级 MuJoCo，虚拟手，握力 20 ms 均值 > 2.7 N 即脱手），build_lab('hard_nostop_r2', 'hard_nostop_untied')，整份列表从快照一次跑完",
+  "goal": true,
+  "released": true,
+  "settled": true,
+  "quiet": true,
+  "ropes_apart_mm": 389.7,
+  "crossings": 0,
+  "ropes": {
+   "a": {
+    "outside_pct": 0.0,
+    "planar_clear": true,
+    "min_nonlocal_gap_mm": 11.3,
+    "crossings": 0,
+    "z_max_mm": 4.2,
+    "on_curb": false,
+    "max_speed_mm_s": 0.022
+   },
+   "b": {
+    "outside_pct": 0.0,
+    "planar_clear": true,
+    "min_nonlocal_gap_mm": 17.7,
+    "crossings": 0,
+    "z_max_mm": 4.2,
+    "on_curb": false,
+    "max_speed_mm_s": 0.01
+   }
+  },
+  "edge_margin_mm": {
+   "a": {
+    "W": 40.4,
+    "E": 77.7,
+    "S": 35.7,
+    "N": 17.9
+   },
+   "b": {
+    "W": 102.6,
+    "E": 49.5,
+    "S": 26.7,
+    "N": 18.2
+   }
+  },
+  "grips_dropped_or_refused_at_ops": [],
+  "sim_time_s": 190.1,
+  "ik": "141 个检查点（每个捏取点 + 每段 move 的 1/4、1/2、3/4、终点，按握持 yaw，place_plan.pinch，含 hard_nostop 全部固定物）全部可解，握持期间不换腕翻转",
+  "perturbation": {
+   "rule": "每个 move 目标点 xy 加 [-1, +1] cm 均匀随机偏移（同一手的同一个目标点，抬起 / 放下共用一个偏移），8 个变体（orbits3 6 个 + 本机 2 个），种子 3000-3007",
+   "passed": 4,
+   "total": 8,
+   "runs": [
+    {
+     "name": "F7_p0",
+     "goal": false,
+     "dropped": [
+      36
+     ],
+     "a_out_pct": 30.7,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 9.1,
+     "min_edge_mm": -101.9
+    },
+    {
+     "name": "F7_p1",
+     "goal": true,
+     "dropped": [],
+     "a_out_pct": 0.0,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 8.4,
+     "min_edge_mm": 6.1
+    },
+    {
+     "name": "F7_p2",
+     "goal": true,
+     "dropped": [],
+     "a_out_pct": 0.0,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 8.4,
+     "min_edge_mm": 14.0
+    },
+    {
+     "name": "F7_p3",
+     "goal": false,
+     "dropped": [],
+     "a_out_pct": 5.3,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 16.5,
+     "min_edge_mm": -5.8
+    },
+    {
+     "name": "F7_p4",
+     "goal": true,
+     "dropped": [],
+     "a_out_pct": 0.0,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 8.4,
+     "min_edge_mm": 11.1
+    },
+    {
+     "name": "F7_p5",
+     "goal": false,
+     "dropped": [],
+     "a_out_pct": 3.8,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 17.7,
+     "min_edge_mm": -3.9
+    },
+    {
+     "name": "F7_p6",
+     "goal": true,
+     "dropped": [],
+     "a_out_pct": 0.0,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 12.0,
+     "min_edge_mm": 13.8
+    },
+    {
+     "name": "F7_p7",
+     "goal": false,
+     "dropped": [],
+     "a_out_pct": 2.6,
+     "b_out_pct": 0.0,
+     "crossings": 0,
+     "min_gap_mm": 10.0,
+     "min_edge_mm": -3.8
+    }
+   ],
+   "failure_modes": [
+    "p0：第 36 步右手捏 s=0.68 被拒（阶段 4 的近腿目标偏西 0.9 cm 后，s 0.68-0.72 正好搭在 curb 顶上，夹爪没位置）；s 0.66 / 0.74 代替在同一状态下也不行（拉紧脱手或近腿留在 curb 上）",
+    "p3 / p5 / p7：a 的近腿中段 s 0.33-0.39 贴在 curb 南面上，越出区域北沿 4-6 mm（阶段 4 / 6 的目标被偏到北侧时，最后的拖动不足以把它拉离 curb）",
+    "b 在 8 个变体里都通过（离边 >= 15.9 mm）"
+   ],
+   "runs_note": "运行目录 /data/pingyue/knot_place/runs/hard_nostop/F7_p*（p0-p5 在 orbits3，p6-p7 在本机）"
+  },
+  "end_top_png": "/data/pingyue/knot_place/runs/hard_nostop/F7_end_top.png（orbits3 运行目录 /data/pingyue/knot_place/runs/hard_nostop/F7）"
+ },
+ "route_a_tried": "plan.json 的先铺远侧（B0 s0.198 -> B1 s0.689 -> B2 s1.226 -> B3 s1.507，左右手交替按住）在同一 lab 里试过：B0 离夹子 < 24 cm 只能拖，拖到位时整团绳被拉向西南压紧（间距 7.5 mm），B1 原定点 s0.689 只剩 4 mm 指位；改捏 s0.74 翻 curb 放到 B1（左手按 B0）后，B1 回到绳团的那段压在第一条腿上，出现 1 个交叉，铺完三条腿 0% 在外但 4 个交叉（run A3）；B1 按建议绕 curb 东端 3 cm 走，右手在绕行中脱手，此前已有 3 个交叉（run A4）。原因：未解开的那团绳里 arch（s0.36-0.8，即第一条腿的材料）把后面的材料包在里面，第一条腿要放到远侧就得扫过它们。松手后的回拉量在 A3 里很小（B0 4 mm、B1 9.5 mm、B2 13 mm、B3 2 mm），失败不是回拉。"
+}
