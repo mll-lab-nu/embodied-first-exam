@@ -192,7 +192,8 @@ frame). `time_s` / `time_left_s` are the agent's clock (above; `spec.budget.cloc
 as soon as the replay's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the
 collect hook waits for, so the video never decides or delays a verdict (the MetaWorld+ service,
 `images/metaworld/standard/server_mw.py`, follows the same rules; docs/benchmarks/metaworldplus.md). DexToolBench's own eval gives each goal 10 s; here the
-standard twins have **no per-goal limit** (one episode, no reset) and an episode cap of 360,000 control steps (100 min of
+standard twins have **no per-goal limit** and **20 resets** (owner, 2026-10-13: the optional reset capability below;
+until then one episode, no reset) and an episode cap of 360,000 control steps (100 min of
 robot time, `spec.max_control_steps`; the 60 min agent budget ends first), while the privileged tasks give each goal 30 s
 (replayed offline, free resets). DexToolBench episodes end when all goals are reached, at the cap, or when the agent's
 time is up; Playground episodes run to the end of the agent phase and the final state is graded. The MuJoCo service
@@ -211,8 +212,8 @@ tables. A request body over 64 MB gets 413 before it is decoded.
 Off by default (`budget.reset = 0`): one trial is one episode, in standard and standard-realtime mode alike. Exception, by
 owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
 to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`; BiGym2's and KinDER's standard
-tasks (2026-10-11) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
-on the service (implemented by the KinDER, HumanoidBench, BiGym2 and MyoSuite services; MyoSuite's 2.2 client has no `reset()`,
+tasks (2026-10-11) to `budget.reset = 10`; DexToolBench's standard tasks (2026-10-13) to `budget.reset = 20`. A run may set `RCB_RESET_BUDGET=N`
+on the service (implemented by the KinDER, HumanoidBench, BiGym2, MyoSuite and MuJoCo (`server_mj.py`: DexToolBench, Playground ALOHA / Panda) services; MyoSuite's 2.2 client has no `reset()`,
 so its instruction calls `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
 same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a
