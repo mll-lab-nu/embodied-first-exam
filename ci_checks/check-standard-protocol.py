@@ -46,7 +46,7 @@ GROUPS_REQ = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_ef
 META_KEYS_OK = {"stopped", "step", "calls", "control_steps", "physics_steps", "sim_time_s", "time_s", "time_left_s", "proprio", "cameras",
                 "done", "reason", "degraded", "chunk_id", "type", "executed_rows", "control_steps_chunk", "physics_steps_chunk",
                 "clipped", "n_clipped", "plan", "rejected", "ok", "obs_id", "seconds", "control_steps_watch", "physics_steps_watch",
-                "frames_skipped"}   # frames_skipped: frames a call left out at max_frames_per_call (RoboWits, RoboTangle)
+                "frames_skipped"}   # frames_skipped: frames a call left out at max_frames_per_call (RoboWits, RoboARC)
 META_CAM_KEYS_OK = {"intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size"}
 PART_RE = re.compile(r"^(video|frames|last|last_depth|depth_frames|depth|extrinsic_cv)/[^/]+$|^(proprio|frame_step|frame_time_s)$")
 FORBIDDEN = re.compile(r"mask|segment|semantic(?!s$)|instance_?id|bbox|bounding|categor|object|\bobj_|label|mass|friction|restitution|"
