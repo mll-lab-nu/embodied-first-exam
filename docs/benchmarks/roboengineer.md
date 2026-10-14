@@ -2,6 +2,8 @@
 
 roboEngineer evaluates a coding agent's ability to engineer controllers across robot embodiments: train or tune in a nominal simulator, diagnose deployment failures from permitted observations, update the training or control pipeline, and generalize to held-out conditions. It is a collection within Robot Coding Bench, using native Harbor tasks and the repository's isolation and resource rules.
 
+The collection currently contains **34 standard policy task instances**: two [Neural Landing](quadrotor-landing.md) instances under `quadrotor-landing-*` and 32 instances under `control-transfer-*`. [Control Transfer](control-transfer.md) is the shared implementation used by the later tasks; Neural Landing retains its original generator and service. Both belong to roboEngineer and are organized by embodiment and objective. These counts include task variants and randomized instances, not 34 distinct control objectives. Eight instances have full scripted references; the remaining 26 are development-only with no full oracle.
+
 ## Embodiments and tasks
 
 | Embodiment | Task | Intended objective | Status in this collection |
