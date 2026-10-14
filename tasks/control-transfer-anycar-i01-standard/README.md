@@ -7,7 +7,7 @@
 | Twin | — (policy adaptation is standard only, PROTOCOL §4p) |
 | Simulator / robot | `mujoco` / `anycar` |
 | Family / instance | `control-transfer/anycar` / seed 1 |
-| Oracle | `full` — Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending. |
+| Oracle | `full` — Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. Reference metrics predate the dashed-line and traffic-cone appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
 
@@ -18,7 +18,7 @@ Track one prescribed-time lap of a randomized ellipse across rigid traction patc
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending.
+Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. Reference metrics predate the dashed-line and traffic-cone appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending.
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.

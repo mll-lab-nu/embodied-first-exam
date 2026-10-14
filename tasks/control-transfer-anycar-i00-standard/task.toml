@@ -17,7 +17,7 @@ family = "control-transfer/anycar"
 mode = "standard"
 protocol = "eai-policy/1.1"
 oracle = "full"
-oracle_evidence = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending."
+oracle_evidence = "Scripted reference and native Harbor no-submission checks pass on both development instances with resource enforcement and exact CPU replay. These are integration references, not LLM scores. Reference metrics predate the dashed-line and traffic-cone appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 

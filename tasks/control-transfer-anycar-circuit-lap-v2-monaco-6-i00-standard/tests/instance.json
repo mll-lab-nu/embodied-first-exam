@@ -94,7 +94,7 @@
   "family": "anycar",
   "index": 0,
   "name": "anycar-circuit-lap-v2-monaco-6",
-  "observation_revision": "anycar-reference-line/1",
+  "observation_revision": "anycar-dashed-cones/1",
   "public": {
     "adaptation_cases": 3,
     "bounds": {
@@ -173,7 +173,7 @@
     "limitations": "Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No AnyCar learned transformer is evaluated. Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
     "max_rounds": 3,
     "name": "anycar-circuit-lap-v2-monaco-6",
-    "observation_revision": "anycar-reference-line/1",
+    "observation_revision": "anycar-dashed-cones/1",
     "policy_abi": "anycar-controller/1 bounded numeric JSON",
     "protocol": "eai-policy/1.1",
     "request_timeout_s": 6681,
@@ -214,7 +214,7 @@
       "m/s",
       "rad"
     ],
-    "visual_feedback": "Continuous public commanded centerline in both video panels; no moving target dot or privileged overlay."
+    "visual_feedback": "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay."
   },
   "schema": "control-transfer-instance/2",
   "task_variant": "circuit-lap/2",

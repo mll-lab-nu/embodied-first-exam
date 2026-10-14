@@ -302,9 +302,39 @@ checks and 26 task contracts. System Python skips the optional NumPy/requests gl
 the affected numerical/runtime checks run separately in the pinned environment. Operator
 evidence is `anycar/integration-reference-line-v1`. The benchmark site adds the exact MP4,
 feedback JSON/JPEGs, public task specification and nominal policy. Browser playback uses
-a separately identified VP9 WebM copy at full resolution/frame rate because the installed
+a separately identified 960×360, 10 fps VP9 WebM preview because the installed
 Chromium lacks H.264 support; original artifact bytes remain unchanged. Private case banks,
 dynamics and true-state records are excluded from the website export.
 
 Earlier native reference evidence predates this image revision. Native/model acceptance
 of `anycar-reference-line/1` remains pending; no new isolation or coding-agent score is claimed.
+
+## Dashed centerline and traffic-cone observation revision
+
+Worker commit `04ed39a5df64acacb67f8a03db1e6c6373c384f3` changes only the public
+route overlay and cosmetic scenery. Both views show fixed spatial dashes and
+tapered orange-and-white traffic cones with black bases. The visible cone geoms
+have zero mass and disabled collision masks; the original collision cylinders
+remain unchanged and invisible. No hidden state is used to draw the route.
+Generated AnyCar packages explicitly declare `anycar-dashed-cones/1`.
+
+The generated compact Silverstone i00 first held-out spot-check produces a
+byte-identical physical record and noisy trajectory relative to the preceding
+continuous-line run. A fresh process exactly reproduces physical state, metrics
+and feedback. The 30-second CPU OSMesa/llvmpipe video decodes all 301 frames; all
+31 delivered JPEGs and 301 noisy rows are retained. Finish time remains 28.0483 s
+and the scripted-controller score remains 60.0126. All 133 previous local AnyCar
+MP4 hashes are preserved. The largest legacy route, Valencia-1, renders 20807
+scene geoms within its 25204-geom capacity, including 2700 dash segments.
+
+Operator evidence is `anycar/integration-dashed-cones-v1`. Website exports include
+the exact MP4, exact image payloads, noisy measurements, public specification and
+nominal controller; private case banks and true-state records are excluded. This
+is a local visual integration check, not an LLM evaluation, a full held-out bank
+or new native Harbor acceptance. Earlier native scores predate this image revision.
+
+Thirty-two focused physics, controller, circuit, packaging and runtime-budget
+tests pass. Repository CI passes all 26 Control Transfer task contracts and 117
+mutation checks. All 26 generated instance banks and nonvisual specifications
+match the preceding revision. The optional global NumPy/requests tier remains
+unavailable in system Python; affected numerical tests ran in pinned MuJoCo 3.5.

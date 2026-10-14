@@ -213,9 +213,9 @@ def render(task, name, index):
         "device_isolation_verified": True,
     }
     if family == "anycar":
-        instance["observation_revision"] = "anycar-reference-line/1"
-        instance["public"]["observation_revision"] = "anycar-reference-line/1"
-        instance["public"]["visual_feedback"] = "Continuous public commanded centerline in both video panels; no moving target dot or privileged overlay."
+        instance["observation_revision"] = "anycar-dashed-cones/1"
+        instance["public"]["observation_revision"] = "anycar-dashed-cones/1"
+        instance["public"]["visual_feedback"] = "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay."
     lap = instance.get("task_variant") == "circuit-lap/2"
     compact = instance.get("task_variant") == "circuit-compact-lap/3"
     bounded_lap = lap or compact
@@ -249,7 +249,7 @@ def render(task, name, index):
     else:
         reference_note = "Development-only: the fixed numeric reference candidate does not solve the held-out bank. Native replay and no-submission checks validate infrastructure, not solvability. Human review required."
     if family == "anycar":
-        reference_note += " Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending."
+        reference_note += " Reference metrics predate the dashed-line and traffic-cone appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending."
     if skydio:
         reference_note += " The cited reference result predates this appearance revision; Skydio-profile native/model acceptance is pending."
     gpu = family in ("linearbot", "g1")

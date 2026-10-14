@@ -345,3 +345,10 @@ have zero mass and disabled collisions. The original fixed barrier collision
 cylinders remain at their original positions, invisible, preserving contact
 dynamics. Dash spacing depends only on public route arc length. Earlier video
 artifacts are retained under their original observation revision.
+
+Generated packages now explicitly declare `anycar-dashed-cones/1`. The preceding
+`anycar-reference-line/1` denotes the continuous-line recordings. Both are image
+revisions: numeric feedback, case banks, vehicle physics and scoring are unchanged.
+The renderer reserves room for the complete model plus the public dash overlay,
+including the largest legacy route. Native/model acceptance of this appearance
+revision is still pending.

@@ -86,6 +86,37 @@ def visual_bodywork():
     return assets, "".join(geoms)
 
 
+def traffic_cone_assets():
+    """Shared tapered, striped cone meshes; render-only, no contact or mass."""
+    assets = []
+    levels = (.016, .09, .135, .18, .22, .26)
+    for band, (low, high) in enumerate(zip(levels[:-1], levels[1:])):
+        vertices = []
+        for z in (low, high):
+            radius = .063 - (z - .016) / .244 * .054
+            vertices.extend((radius * np.cos(t), radius * np.sin(t), z)
+                            for t in np.linspace(0, 2*np.pi, 16, endpoint=False))
+        faces = []
+        for j in range(16):
+            k = (j+1) % 16
+            faces.extend([(j,k,j+16),(k,k+16,j+16)])
+        for j in range(1,15):
+            faces.extend([(0,j+1,j),(16,16+j,17+j)])
+        v = " ".join(str(float(x)) for row in vertices for x in row)
+        f = " ".join(str(x) for row in faces for x in row)
+        assets.append(f'<mesh name="traffic_cone_{band}" vertex="{v}" face="{f}"/>')
+    return assets
+
+
+def traffic_cone(x, y):
+    visual = 'mass="0" contype="0" conaffinity="0"'
+    result = [f'<geom type="box" pos="{x} {y} .008" size=".078 .078 .008" rgba=".035 .035 .035 1" {visual}/>']
+    for band in range(5):
+        color = '.96 .96 .92 1' if band % 2 else '1 .23 .025 1'
+        result.append(f'<geom type="mesh" mesh="traffic_cone_{band}" pos="{x} {y} 0" rgba="{color}" {visual}/>')
+    return "".join(result)
+
+
 def xml_model(plant, surfaces, command):
     """Procedural chassis; wheel/joint/tendon mechanism retains source numeric settings."""
     circuit = "track_id" in command
@@ -99,6 +130,7 @@ def xml_model(plant, surfaces, command):
         extent = 12
     road = []
     assets, bodywork = visual_bodywork()
+    assets.extend(traffic_cone_assets())
     for i, surface in enumerate(surfaces):
         left, right, mu = surface
         road.append(
@@ -137,9 +169,8 @@ def xml_model(plant, surfaces, command):
                 # Avoid placing barriers inside another route branch at crossovers.
                 if route.distance([[bx, by]])[0] < 0.82:
                     continue
-                color = ".90 .90 .88 1" if i % 2 else ".80 .16 .12 1"
                 road.append(
-                    f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{bx} {by} .13" mass="0" rgba="{color}"/>'
+                    f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{bx} {by} .13" mass="0" rgba="0 0 0 0"/>{traffic_cone(bx, by)}'
                 )
     else:
         # Solid outer/inner track barriers; contacts are actual physics, not rendered decorations.
@@ -147,7 +178,7 @@ def xml_model(plant, surfaces, command):
             for side in (-1, 1):
                 x, y = (a + side * 0.9) * np.cos(angle), (b + side * 0.9) * np.sin(angle)
                 road.append(
-                    f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{x} {y} .13" mass="0" rgba=".85 .42 .12 1"/>'
+                    f'<geom name="barrier_{i}_{side}" type="cylinder" size=".035 .13" pos="{x} {y} .13" mass="0" rgba="0 0 0 0"/>{traffic_cone(x, y)}'
                 )
     wheels = []
     for name, x, y in (("fl", 0.1385, 0.115), ("fr", 0.1385, -0.115), ("bl", -0.158, 0.115), ("br", -0.158, -0.115)):

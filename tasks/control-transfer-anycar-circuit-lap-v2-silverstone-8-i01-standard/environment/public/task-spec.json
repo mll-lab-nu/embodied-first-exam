@@ -114,8 +114,8 @@
   },
   "horizon_rule": "ceil_50Hz(scaled_length_m / 0.85 + 2.5)",
   "completion": "All ordered gates, spaced at most 0.5 m, including the finish line",
-  "observation_revision": "anycar-reference-line/1",
-  "visual_feedback": "Continuous public commanded centerline in both video panels; no moving target dot or privileged overlay.",
+  "observation_revision": "anycar-dashed-cones/1",
+  "visual_feedback": "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay.",
   "image_sampling": "Up to 128 equally spread video frame indices, including first and last; full 10 Hz telemetry.",
   "request_timeout_s": 4719
 }

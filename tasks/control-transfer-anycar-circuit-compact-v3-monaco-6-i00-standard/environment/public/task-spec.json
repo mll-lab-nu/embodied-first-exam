@@ -122,8 +122,8 @@
     "source_samples": 1024,
     "minor_axis_widening": 5.178203757016185
   },
-  "observation_revision": "anycar-reference-line/1",
-  "visual_feedback": "Continuous public commanded centerline in both video panels; no moving target dot or privileged overlay.",
+  "observation_revision": "anycar-dashed-cones/1",
+  "visual_feedback": "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay.",
   "image_sampling": "31 images at fixed one-second times from 0 through 30 s; all 301 noisy 10 Hz rows.",
   "request_timeout_s": 1200
 }
