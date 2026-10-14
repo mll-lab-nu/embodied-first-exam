@@ -6,15 +6,20 @@ of the **49 goal poses in order** (the green ghost tool shows the current goal).
 draw_smile` of DexToolBench (SimToolReal), run here in plain MuJoCo.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode.
+client and **20 resets**: at most 21 episodes, of which the last is graded.
 
 ## Rules (real-robot rules)
-- **No reset.** Knocked-over objects stay knocked over.
+- **Episodes and resets.** You have **20 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0,
+  there is no reset and the one episode is the run). `r.reset()` puts the robot, the tool and the goals back to the same
+  starting state and starts a new episode, either abandoning the running one or after one has ended. Within an episode
+  nothing is undone: a tool knocked off the table stays there until you reset. **Only the last episode is graded**: a
+  success (every goal reached) ends the run at once, and when your time is up the episode then running is the one
+  graded, so do not reset away a good episode late. Resetting does not stop or restore the clock.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
 - Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
   request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
-  service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
+  service records every episode, and grades the last one as the trajectory. Leave your script at `/app/output/gen.py` for the
   record.
 - Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
@@ -22,7 +27,7 @@ client and one episode.
 ## Scoring
 The current goal counts as reached when all 8 corners of the tool's grasp box (0.141 × 0.030 × 0.027 m, scaled by
 1.5, in the tool's frame) are within **1.5 cm** of the same corners at the goal pose; then the next goal becomes
-current. In this mode goals have **no time limit** (the benchmark gives each goal 10 s; here you get one episode and no reset). The episode ends when every goal is reached, when your time is up, or after **360,000 control steps (100 min of robot time)**.
+current. In this mode goals have **no time limit** (the benchmark gives each goal 10 s). An episode ends when every goal is reached, when your time is up, or after **360,000 control steps (100 min of robot time)**. **Only the last episode is scored.**
 **Score: 1 if all 49 goals are reached (and the replay is deterministic), else 0.** Goals reached / 49 is reported as `progress`; there is no partial credit.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
@@ -39,14 +44,17 @@ obs = r.get_obs(cameras=cams[:1], seconds=2.0, video="mp4")    # hold the target
 res = r.submit("joint_position", A, dt=spec["control_dt"], cameras=cams[:1], video="mp4")   # A: (T, 29) rows dt apart
 res.meta["done"], res.meta["reason"], res.meta["task"], res.meta["control_steps"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
+obs = r.reset(cameras=cams)                   # a new episode from the starting state; obs.meta["resets_left"]
 ```
 - Actions `joint_position` (29: `joint1..joint7` (iiwa), then the 22 Sharpa hand joints (names in `spec["action_types"]["joint_position"]["layout"]`)); rows are `dt` apart (a multiple of `control_dt`), each held
   (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default) over its control steps; clipped to the
   limits in the spec. A chunk covers at most 10 s.
 - `meta["task"]` = the current goal (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`, `steps_left_on_goal`
 (the benchmark shows the controller the current goal, as SimToolReal's deployment does). The episode **ends** when every
-goal is reached or at the step limit (`spec["max_control_steps"]`); after that the service answers 409.
+goal is reached or at the step limit (`spec["max_control_steps"]`); after that `submit` raises `EpisodeOver` (409) until you reset.
 `steps_left_on_goal` is null: no goal has a time limit here.
+- `r.reset(cameras=None, include_depth=False)` (`POST /reset`): a new episode from the same starting state (at most 20 in all);
+  it returns the start's frames, and `meta` (also `r.status()`) carries `episode`, `resets_left` and `control_steps_total`.
 - Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
   OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the
   **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
