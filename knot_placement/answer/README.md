@@ -2,6 +2,12 @@
 
 给 Qineng。对应交接包 `knot_placement/README.md` 第 5 节的问题 (a)(b)。
 
+> **范围（维护者注，2026-10-14，board 0114）**：本目录是交接分支 `dev/pingyue_handover` 上的设计材料，针对
+> `dev/robotangle_softbody_redesign` 的 knot_untying 重设计（带目标区域和 curb 的 tier：`easier_v8_r2`、`hard_nostop_r2`）。
+> main 上 RoboTangle 已改名为 RoboARC（#186 / #187），main 的 `roboarc-knot-untying-*` 任务没有目标区域和 curb，
+> 这里的路点不是它们的答案，也不用于它们的 oracle。这些文件不得拷进 `tasks/`、任务镜像或任何 agent 可见的文件；
+> 若重设计的 tier 将来进入 RoboARC，参考路点只能放在 `scripts/roboarc/oracles/`（只在 solution / 验证侧）。
+
 - 快照：`easier_v8_untied`、`hard_nostop_untied`（`data/snapshots.json`）。
 - 目标区域：按 10-12 定下的 `_r2`，即 `easier_v8_r2`、`hard_nostop_r2`。
 
