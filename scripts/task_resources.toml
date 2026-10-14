@@ -914,6 +914,20 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, the collect hook replays in fresh processes one after the other; CPU: one core per scene + one for the agent"
 
+# ambench, privileged
+[[rule]]
+match = "^ambench-.*-privileged$"
+min_cpus = 8.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "freezing the instances and three oracle trials (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 10 s, rcb_monitor): a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.9 GiB of memory and 3.2 GiB of GPU memory (oracle trials: 2.8 / 3.1); with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) 13.2 GiB and 6.4 GiB; 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on process"
+
 [[limit]]
 match = "^robofunolympics-.*-privileged$"
 scope = "trial"
@@ -1933,6 +1947,21 @@ trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 14.0
 measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the replays' scenes); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
+[[limit]]
+match = "^ambench-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 28.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 28.0
+measured = "a camera-on Isaac process peaks at 13.2 GiB of memory and 6.4 GiB of GPU memory, a camera-free one at 2.9 / 3.2 (the rule's measurement); the agent may run two processes at once (a Session and the replay CLI): at most 26.4 GiB, 12.8 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
 [[cap]]
 match = "^autobio-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
@@ -2249,3 +2278,7 @@ main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
 match = "^pandadyn-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^ambench-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 34.0, pids = 16384 }

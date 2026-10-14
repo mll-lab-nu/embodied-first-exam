@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared-source rules (PROTOCOL §2.1, D9: copies of shared sources are byte-identical). Two parts:
-# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, RoboARC, BiGym 2.0, YAMLab, RoboDojo, LabUtopia, AutoBio and Panda Dynamic Scenes: within one benchmark, every mode, every copy of a shared file is byte-identical
+# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, RoboARC, BiGym 2.0, YAMLab, RoboDojo, LabUtopia, AutoBio, Panda Dynamic Scenes and AM-Bench: within one benchmark, every mode, every copy of a shared file is byte-identical
 #    (the generators copy them from the benchmark's template task unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
@@ -42,7 +42,8 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
           "labutopia": "rcb_labutopia.py", "autobio": "rcb_autobio.py", "robofunolympics": "rcb_rfo.py",
-          "pandadyn": "rcb_pandadyn.py"}
+          "pandadyn": "rcb_pandadyn.py",
+          "ambench": "rcb_ambench.py"}
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",

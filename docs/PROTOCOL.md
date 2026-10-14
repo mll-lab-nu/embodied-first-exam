@@ -495,7 +495,7 @@ under an unrelated name would be missed.
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
 ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
-(not published at all: its environment package is this repository's `images/pandadyn/`); Isaac Sim does not install from pypi.org.
+(not published at all: its environment package is this repository's `images/pandadyn/`), AM-Bench; Isaac Sim does not install from pypi.org.
 
 **Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
 decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists that implement it (the same directory
