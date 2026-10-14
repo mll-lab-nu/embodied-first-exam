@@ -492,7 +492,7 @@ under an unrelated name would be missed.
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
 ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, BiGym, YAMLab, Panda Dynamic Scenes
 (not published at all: its environment package is this repository's `images/pandadyn/`); Isaac Sim does not install from pypi.org.
-ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
+ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
 (not published at all: its environment package is this repository's `images/pandadyn/`), DexHand (not published at all: its scenes and tooling are this repository's
 `scripts/dexhand/` and `images/dexhand/`), AM-Bench; Isaac Sim does not install from pypi.org.
 
@@ -736,7 +736,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | Version | Date | Content |
 |---|---|---|
 | eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0, RoboOlympics, RoboFunOlympics, RoboSafeBench |
-| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes, DexHand and MuJoCo Playground's quadruped tasks |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, ManiGuard, Panda Dynamic Scenes, DexHand and MuJoCo Playground's quadruped tasks (LabUtopia and AutoBio until their removal on 2026-10-14) |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, BiGym 2.0, MyoSuite, RoboOlympics, RoboSafeBench, Panda Dynamic Scenes, RoboCasa365, MuJoCo Playground); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (Robo, RoboARC; first RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 

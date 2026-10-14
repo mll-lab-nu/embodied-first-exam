@@ -1,8 +1,0 @@
-#!/bin/sh
-# fake `python` for finalize.sh: the shared layer's `end`, the tooling's `replay`, and the hook's own heredoc scripts
-case "$1" in
-  /srv/rcb_limited.py) exit "${FAKE_END_RC:-0}";;
-  -) exec python3 - ;;
-  "$RCB_TOOL") exec python3 "$FAKE_TOOL" "$@";;
-esac
-echo "shim: unexpected python call: $*" >&2; exit 99

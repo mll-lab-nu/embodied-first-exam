@@ -138,10 +138,10 @@ unchanged), resume class `exact`:
   ended (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/2.2` has no
   rule that makes it an infrastructure failure (that rule is standard-realtime's, PROTOCOL §4b).
 - **malformed requests:** a request is checked in full before anything is executed (`parse_submit` / `parse_observe`
-  under `checked`, as AutoBio's adapter): a field of the wrong JSON type (a number or an object as `note`, a string or
+  under `checked`): a field of the wrong JSON type (a number or an object as `note`, a string or
   a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`
   is a 400, no physics, the episode goes on; `null` for `dt`, `seconds`, `video_fps`, `cameras` or `note` is the
-  default (what the 2.2 client sends for an argument left out). `scripts/labutopia/tests/test_server_validation.py`
+  default (what the 2.2 client sends for an argument left out). `scripts/dexjoco/tests/test_server_validation.py`
   fuzzes these functions (13,068 requests, numpy only, no simulator).
 - `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
