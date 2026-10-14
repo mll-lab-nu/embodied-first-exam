@@ -1,0 +1,104 @@
+{
+  "task": "D12-ReciprocalSlidingTransfer",
+  "common": {
+    "horizon": 25.0,
+    "object_mass": 0.035,
+    "tool_mass": 0.2,
+    "tool_half": 0.08,
+    "radius": 0.018,
+    "preview": 0.65,
+    "incoming_speed": 0.35,
+    "fixture_speed": 0.04,
+    "restitution": 0.1,
+    "table_friction": 0.08,
+    "tool_friction": 0.05,
+    "friction": 0.05,
+    "target_offset": 0.035,
+    "target_tolerance": 0.014
+  },
+  "difficulty": {
+    "debug": {
+      "friction": 0.045,
+      "tool_friction": 0.045
+    },
+    "nominal": {},
+    "hard": {
+      "friction": 0.06,
+      "tool_friction": 0.06
+    }
+  },
+  "ranges": {
+    "horizon": [
+      1,
+      45
+    ],
+    "object_mass": [
+      0.01,
+      0.15
+    ],
+    "tool_mass": [
+      0.1,
+      0.4
+    ],
+    "tool_half": [
+      0.001,
+      1.0
+    ],
+    "radius": [
+      0.001,
+      2
+    ],
+    "preview": [
+      0.001,
+      2
+    ],
+    "incoming_speed": [
+      0.001,
+      2
+    ],
+    "fixture_speed": [
+      0.001,
+      2
+    ],
+    "restitution": [
+      0,
+      1
+    ],
+    "table_friction": [
+      0,
+      1
+    ],
+    "tool_friction": [
+      0.045,
+      0.1
+    ],
+    "friction": [
+      0.045,
+      0.1
+    ],
+    "target_offset": [
+      0.001,
+      2
+    ],
+    "target_tolerance": [
+      0.001,
+      2
+    ]
+  },
+  "units": {
+    "horizon": "s",
+    "object_mass": "kg",
+    "tool_mass": "kg",
+    "tool_half": "m",
+    "radius": "m",
+    "preview": "s",
+    "incoming_speed": "m/s",
+    "fixture_speed": "m/s",
+    "restitution": "dimensionless",
+    "table_friction": "dimensionless",
+    "tool_friction": "dimensionless",
+    "friction": "dimensionless",
+    "target_offset": "m",
+    "target_tolerance": "m"
+  }
+}

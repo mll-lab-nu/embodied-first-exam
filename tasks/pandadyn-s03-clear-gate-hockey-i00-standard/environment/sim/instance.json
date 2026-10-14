@@ -1,0 +1,35 @@
+{
+ "task": "S03-ClearGateHockey",
+ "env_id": "PandaMultiStage/S03-ClearGateHockey-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.05,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.35,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.004,
+  "tool_friction": 0.3,
+  "blocker_friction": 0.003
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "single"
+ },
+ "action_dim": 8,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "first_strike",
+  "clear_blocker",
+  "recover_deflection",
+  "second_strike",
+  "bank_and_goal"
+ ],
+ "initial_sha": "449f78c9e83666979aecde084931c8cfc76c99035e3e1cb01338cfa3e6ee9ed5"
+}
