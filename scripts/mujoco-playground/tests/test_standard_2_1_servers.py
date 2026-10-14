@@ -9,7 +9,10 @@ read without a bound); a camera named many times is rendered once, before the fr
 another process at start is waited for, not a crash; the agent's clock (meta time_s / time_left_s) is not started by
 the service's start or by a probe that only connects to the port, starts at the first request, and is not set back by
 a resume (RoboTwin's service has these tests in scripts/robotwin/tests/test_standard_service.py); a camera's reported
-pose is the viewpoint its image is rendered from, not MuJoCo's left-eye camera.
+pose is the viewpoint its image is rendered from, not MuJoCo's left-eye camera. server_mj.py's optional reset capability
+(PROTOCOL §4.5; DexToolBench standard grants 20): no /reset without a budget; with one, a reset restores the start state,
+the budget is enforced (409 after it, after the agent's time), a crash resumes the current episode, and only the last
+episode is graded.
 """
 from __future__ import annotations
 
@@ -17,6 +20,7 @@ import json
 import math
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -77,6 +81,11 @@ class Session:
     def state(self): return {"q": self.q, "qd": np.zeros(len(self.q)), "targets": self.targets}
     def state_sha(self): return hashlib.sha1(np.concatenate([self.q, self.targets]).tobytes()).hexdigest()[:16]
     def check(self): return {"success": False}
+    def reset(self): n = len(self.q); self.q = np.zeros(n); self.targets = np.zeros(n); self.n = 0
+    def replay(self, A):
+        self.reset()
+        for row in A: self.step(row)
+        return {"state_sha": self.state_sha(), "success": False, "steps": self.n}
 '''
 
 
@@ -268,6 +277,87 @@ class ServerCase:
         self.assertLessEqual(m1["time_left_s"], m0["time_left_s"] - 1.5)
         self.assertEqual(len(self.first_requests()), 1, "a resume logged a second first_request")
         self.assertEqual(self.wait_up()["calls"], 2)                 # the same episode: both observes are counted
+
+
+    # ---- server_mj.py's reset capability
+    def post(self, path: str, meta: dict):
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", data=json.dumps(meta).encode())
+        try:
+            m, parts = rcb1.decode(urllib.request.urlopen(req, timeout=60).read())
+            return 200, m
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+
+    def events(self) -> list:
+        return [json.loads(x) for x in (self.data / "episode.jsonl").read_text().splitlines() if x.strip()]
+
+    def submit(self, rows: list):
+        return self.post("/submit", {"type": "joint_position", "dt": 0.02, "actions": rows, "video": "none"})
+
+    def reset_case(self, budget: str | None) -> None:
+        if self.SERVER.name != "server_mj.py":
+            self.skipTest("the reset capability of the MuJoCo service (DexToolBench)")
+        if budget is not None:
+            self.ENV = {**self.ENV, "RCB_RESET_BUDGET": budget}
+        self.start(); self.wait_up()
+
+    def test_no_reset_without_a_budget(self):
+        self.reset_case(None)
+        spec = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/spec", timeout=5).read())
+        self.assertEqual(spec["budget"]["reset"], 0); self.assertNotIn("reset", spec)
+        self.assertEqual(self.post("/reset", {})[0], 404)
+        code, m = self.submit([[0.5, 0.5]] * 3)
+        self.assertEqual(code, 200); self.assertNotIn("episode", m); self.assertNotIn("resets_left", m)
+        self.assertEqual(self.wait_up()["control_steps"], 3)
+
+    def test_resets_restore_the_start_and_the_budget_is_enforced(self):
+        self.reset_case("2")
+        spec = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/spec", timeout=5).read())
+        self.assertEqual(spec["budget"]["reset"], 2); self.assertIn("only the last episode", spec["reset"])
+        start_sha = self.events()[0]["state_sha"]
+        code, m = self.submit([[0.5, -0.5]] * 4)
+        self.assertEqual((code, m["episode"], m["resets_left"], m["control_steps"]), (200, 1, 2, 4))
+        self.assertEqual(self.post("/reset", {"cameras": ["cam"], "video": "frames", "include_depth": "x" == "y"})[0], 200)
+        st = self.wait_up()
+        self.assertEqual((st["episode"], st["resets_left"], st["control_steps"], st["control_steps_total"]), (2, 1, 0, 4))
+        resets = [e for e in self.events() if e["ev"] == "reset"]
+        self.assertEqual(len(resets), 1); self.assertEqual(resets[0]["state_sha"], start_sha)   # the start state again
+        self.assertEqual([e["reason"] for e in self.events() if e["ev"] == "end"], ["reset"])  # the abandoned episode
+        self.assertEqual(self.post("/reset", {"video": "gif"})[0], 400)          # a bad request changes nothing
+        self.assertEqual(self.wait_up()["resets_left"], 1)
+        self.assertEqual(self.submit([[0.2, 0.2]] * 3)[0], 200)
+        code, m = self.post("/reset", {})
+        self.assertEqual((code, m["episode"], m["resets_left"], m["control_steps_total"]), (200, 3, 0, 7))
+        code, m = self.post("/reset", {})
+        self.assertEqual(code, 409); self.assertEqual(m["error"], "reset budget exhausted")
+        self.assertEqual(self.submit([[0.1, -0.1]] * 2)[0], 200)
+        # a crash: compose restarts the container, the same (third) episode resumes from the journal
+        self.proc.kill(); self.proc.wait(); self.log.close()
+        self.start(); st = self.wait_up()
+        self.assertEqual((st["episode"], st["resets_left"], st["control_steps"], st["control_steps_total"], st["done"]), (3, 0, 2, 9, False))
+        self.assertEqual([e["ev"] for e in self.events()].count("resumed"), 1)
+        self.assertEqual(self.submit([[0.1, -0.1]] * 1)[0], 200)
+        # the agent's time is up: the collect hook's SIGUSR1 ends the episode; only the last one is graded
+        os.kill(self.proc.pid, signal.SIGUSR1)
+        t0 = time.time()
+        while time.time() - t0 < 30 and not json.loads((self.data / "final.json").read_text()).get("video_done"):
+            time.sleep(0.1)
+        fin = json.loads((self.data / "final.json").read_text())
+        self.assertEqual((fin["reset_budget"], fin["resets"], fin["episodes"], fin["control_steps"], fin["control_steps_total"]), (2, 2, 3, 3, 10))
+        self.assertTrue(fin["deterministic"], fin)                   # the last episode's rows, replayed from the start
+        import numpy as np
+        self.assertEqual(np.load(self.data / "trajectory.npz")["actions"].shape, (3, 2))
+
+    def test_no_reset_once_the_time_is_up(self):
+        self.reset_case("5")
+        self.assertEqual(self.submit([[0.5, 0.5]] * 2)[0], 200)
+        os.kill(self.proc.pid, signal.SIGUSR1)
+        t0 = time.time()
+        while time.time() - t0 < 30 and not (self.data / "final.json").exists() or not json.loads((self.data / "final.json").read_text()).get("finalized"):
+            time.sleep(0.1)
+        code, m = self.post("/reset", {})
+        self.assertEqual(code, 409); self.assertIn("time is up", m["error"])
+        self.assertEqual(json.loads((self.data / "final.json").read_text())["resets"], 0)
 
 
 class TestServerMj(ServerCase, unittest.TestCase):
