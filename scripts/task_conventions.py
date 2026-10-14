@@ -220,8 +220,7 @@ CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then Ro
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
-CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3; the same exceptions: ci_checks/check-task-fields.sh
-CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600}    # owner, 2026-10-08 (issue #87)
+CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -544,22 +543,21 @@ def render_external(task_name: str = "") -> str:
 _CUTOFFS: tuple[dict, dict, dict] | None = None
 
 
-def _cutoff_value(where: str, bench: str, sec) -> int:
-    cap = CUTOFF_CAP_EXCEPTIONS.get(bench, CUTOFF_CAP)
+def _cutoff_value(where: str, sec) -> int:
     if isinstance(sec, bool) or not isinstance(sec, int) or sec <= 0:
         raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec!r} is not a whole positive number of seconds")
-    if sec > cap:
-        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec} s is above the {cap} s cap (PROTOCOL D8, §2.3)")
+    if sec > CUTOFF_CAP:
+        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec} s is above the {CUTOFF_CAP} s cap (PROTOCOL D8, §2.3)")
     return sec
 
 
-def _cutoff_row(where: str, bench: str, row) -> dict[str, int]:
+def _cutoff_row(where: str, row) -> dict[str, int]:
     if not isinstance(row, dict) or not row:
         raise ValueError(f"{CUTOFFS_FILE.name}: {where}: expected {{ <mode> = <seconds>, ... }}")
     for mode, sec in row.items():
         if mode not in MODES:
             raise ValueError(f"{CUTOFFS_FILE.name}: {where}: unknown mode {mode!r} (one of {', '.join(MODES)})")
-        _cutoff_value(f"{where} {mode}", bench, sec)
+        _cutoff_value(f"{where} {mode}", sec)
     return row
 
 
@@ -583,20 +581,20 @@ def _cutoffs() -> tuple[dict, dict, dict]:
         table = raw.get("cutoff_sec", {})
         for bench, row in table.items():
             known(bench, "[cutoff_sec]")
-            _cutoff_row(bench, bench, row)
+            _cutoff_row(bench, row)
         families = raw.get("family_cutoff_sec", {})
         for bench, rows in families.items():
             known(bench, "[family_cutoff_sec]")
             if not isinstance(rows, dict):
                 raise ValueError(f"{CUTOFFS_FILE.name}: [family_cutoff_sec.\"{bench}\"]: expected \"<family>\" = {{ <mode> = <seconds> }}")
             for family, row in rows.items():
-                _cutoff_row(f"{bench}, family {family!r}", bench, row)
+                _cutoff_row(f"{bench}, family {family!r}", row)
         tasks = raw.get("task_cutoff_sec", {})
         for name, sec in tasks.items():
             bench = next((label for prefix, label in BENCHMARKS if name.startswith(prefix)), "")
             if not bench or not name.endswith(tuple("-" + m for m in MODES)):
                 raise ValueError(f"{CUTOFFS_FILE.name}: [task_cutoff_sec]: {name!r} is not a task directory name")
-            _cutoff_value(f"task {name}", bench, sec)
+            _cutoff_value(f"task {name}", sec)
         _CUTOFFS = (table, families, tasks)
     return _CUTOFFS
 
