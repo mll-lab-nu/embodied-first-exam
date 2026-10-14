@@ -720,7 +720,8 @@ def since_evidence(rec: dict) -> str:
     return f"This family's task, geometry and asset files are unchanged from that build to this release; {shared}." + end
 
 
-NOT_CONFIRMED = {"failed": "Its Harbor oracle trial did not score 1, and the cause is not established",
+NOT_CONFIRMED = {"speed_rule": "It is faster than the standard service's joint-speed rule",
+                 "failed": "Its Harbor oracle trial did not score 1, and the cause is not established",
                  "not_run": "No Harbor oracle trial of it has been run yet",
                  "running": "Its Harbor oracle trial was still running when this release was rendered and is not confirmed"}
 
@@ -733,6 +734,13 @@ def ref_solution(mode: str, rec: dict) -> str:
             return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
                     f"`/app/output/`: the MuJoCo reference, which its author replayed to success with a reproducible end "
                     f"state outside Harbor. {why}, so no score is claimed here.")
+        if ev["status"] == "speed_rule":       # 2026-10-13: the rope_threading rd references (888 to 1174 rows above the rule)
+            return ("`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`) through the "
+                    "client, but **this is not a working oracle in standard mode**: the reference was recorded faster than the "
+                    "standard service's joint-speed rule (0.04 rad per control step, 1.6 rad/s); replayed through the service "
+                    "its rows are stretched over more control steps and the episode does not solve the task (the Harbor oracle "
+                    "trial of rope-threading-rd-very-easy scored 0 for this reason). A re-timed reference follows. The "
+                    "privileged twin's reference is the same rows and is graded without the speed rule.")
         return ("`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`, one "
                 "`joint_position` row per 25 ms control step, `hold`; the same rows as the privileged reference) through the "
                 f"client (`solution/oracle_replay.py`). {why} on this standard service, so no score is claimed here.")
