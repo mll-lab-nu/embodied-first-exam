@@ -1,0 +1,41 @@
+{
+ "code": "S03",
+ "task": "S03-ClearGateHockey",
+ "title": "Clear the blocker, recover and bank into the goal",
+ "arms": 1,
+ "summary": "A square puck slides toward the robot over an almost frictionless table at the start. Strike it with the paddle so that it hits a sliding blocker bar that obstructs the way to the goal and pushes it aside along its rail; let the puck come back toward the robot, strike it a second time, and make it bank off the long side rail and then cross the goal line while the blocker is still pushed aside.",
+ "robot_setup": "One Panda, base at (-0.55, 0, 0), yaw 0 (facing +x). Its hand carries a blue upright paddle: a box 12 mm thick (tool x) x 0.10 m wide (tool y, 2 x `tool_half`, `tool_half` = 0.05 m) x 50 mm tall (tool z), centred at the tool frame origin; its striking faces are normal to the tool x axis. A rigid dark-grey adapter behind the paddle (on its -x side) joins it to the hand: a horizontal bar 0.035 m above the tool origin (tool-frame x from -0.132 to -0.038) and a short vertical post at x = -0.05 reaching down to z = -0.005; both are part of the tool, and the adapter does not touch the paddle plate itself. The Panda TCP is at (-0.12, 0, 0.04) in the tool frame, so with the paddle upright the gripper points straight down. At the start the paddle is upright with tool axes aligned with the world axes (faces normal to world x), its centre at (0.03, -0.20, 0.045), so its lower edge is 0.02 m above the table.",
+ "scene": "An orange square puck (44 mm x 44 mm, 24 mm tall) slides over the table toward the robot (-x) at t = 0. The table surface and the puck are nearly frictionless and the puck is bouncy, so it keeps sliding and rebounds off walls. A blue blocker bar (140 mm long, 30 mm thick, 64 mm tall), set at an angle to the axes, stands on the table on a passive, unpowered sliding joint along the world y axis; it starts at one end of its travel, so it can only be pushed toward +y, and it obstructs the route to the goal. Three fixed orange walls, 70 mm tall, stand on the table: a long bank rail (0.34 m) running along x on one side of the play area, a return rail (0.20 m) running along y on the robot's side, and a backstop (0.20 m) running along y behind the goal line. The goal itself is not a physical object but a line segment on the table (see world goals). Nothing else moves by itself. The table top is the world's z = 0 plane.",
+ "scene_privileged": "Puck: box half-extents (0.022, 0.022, 0.012) m, mass `object_mass` = 0.035 kg, friction `table_friction` = 0.004 (the table also uses `table_friction`), restitution 0.65. At t = 0 it is at (0.23, y0, 0.0125) with velocity (-`incoming_speed`, 0, 0) = (-0.35, 0, 0) m/s; y0 ~ U(-0.14, -0.10) m drawn at reset (the only random draw). Blocker: articulation rooted at (0.29, 0.06, 0.032); prismatic joint along world +y, limits [0, 0.17] m, starts at q = 0 at rest, no drive, joint friction `blocker_friction` = 0.003, damping 0; the moving link is a box of half-extents (0.015, 0.07, 0.032) m yawed -0.6 rad about z (long axis along (0.565, 0.825)), bottom at z = 0, friction 0.05, restitution 0.65, density 250 kg/m^3 (about 0.067 kg); at q = 0 it spans about x 0.24 to 0.34 m and y -0.01 to 0.13 m. Return rail: static box 0.016 x 0.20 x 0.07 m centred at (-0.14, 0.035, 0.035), restitution 0.65. Bank rail: static box 0.34 x 0.016 x 0.07 m centred at (0.30, -0.23, 0.035), restitution 0.7. Backstop: static box 0.02 x 0.20 x 0.07 m centred at (0.52, 0.06, 0.035), restitution 0.05. Rails' friction 0.3. Paddle: `tool_mass` = 0.2 kg, `tool_friction` = 0.3, restitution 0.05.",
+ "phases": [
+  {
+   "name": "first_strike",
+   "text": "the puck touches the paddle."
+  },
+  {
+   "name": "clear_blocker",
+   "text": "during this phase the puck hits the blocker (puck-blocker contact), and the blocker is displaced more than 0.065 m along its rail from its start (joint position q > 0.065 m); the phase completes at the first step at which the hit has happened and the displacement exceeds 0.065 m."
+  },
+  {
+   "name": "recover_deflection",
+   "text": "the puck's centre is at world x < 0.16 m (back on the robot's side) while the puck is not touching the paddle."
+  },
+  {
+   "name": "second_strike",
+   "text": "the puck touches the paddle again."
+  },
+  {
+   "name": "bank_and_goal",
+   "text": "after the second strike the puck touches the bank rail at least once, and afterwards its centre crosses the goal line, world x = 0.46 m, moving in +x (x <= 0.46 on one physics step and > 0.46 on the next) with |y - 0.06| < 0.055 m (y between 0.005 and 0.115 m), while it is not touching the paddle and the blocker is still displaced more than 0.065 m. This completes the task. A crossing of that segment in this phase without a bank-rail contact since the second strike, or while touching the paddle, or with the blocker at q <= 0.065 m fails the task (skipped_route)."
+  }
+ ],
+ "task_failures": [
+  "direct_blocker_shortcut: at any time, the paddle touches the blocker.",
+  "skipped_route: during bank_and_goal, the puck crosses the goal segment (x = 0.46 m in +x, |y - 0.06| < 0.055 m) without having touched the bank rail in this phase, or while touching the paddle, or while the blocker's displacement is at most 0.065 m."
+ ],
+ "contact_rules": "Only the paddle (including its adapter) may touch anything, and it may touch only the puck: touching the blocker (which also fails the task as direct_blocker_shortcut), the return rail, the bank rail, the backstop or the table is forbidden. No other part of the robot, the fingers included, may touch anything, the puck included.",
+ "world_goals_fixed": "Goal line: world x = 0.46 m for 0.005 m < y < 0.115 m (centre (0.46, 0.06), half-width 0.055 m), to be crossed in +x. Recover line: puck centre at world x < 0.16 m (recover_deflection).",
+ "world_goals_seeded": "`goal_zone` = (0.08, -0.08, 0.012) is also announced at reset but no predicate uses it.",
+ "difficulty_note": "The puck slides almost without friction and rebounds off everything, so each strike sets its direction and speed in a single contact; the blocker can only be cleared by the puck, and the final shot must bank off the side rail into a narrow goal while the blocker stays out of the way.",
+ "standard_notes": "The puck is already sliding toward the robot at t = 0 and reaches the paddle's area within the first second. It does not stop by itself: after each contact it keeps sliding and bouncing between the walls."
+}
