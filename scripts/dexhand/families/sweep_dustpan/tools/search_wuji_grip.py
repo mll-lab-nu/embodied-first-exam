@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Authoring tool: search Wuji Hand 2.2 holding targets for the pre-held tools (evidence for the Sharpa-only decision).
+"""Authoring tool (historical): Wuji Hand 2.2 closing targets from the neutral-finger reset; all fail (see README Hands).
+
+The declared Wuji start (assets/reset_wuji.npz, tools/build_wuji_reset.py) replaced this approach.
 
 The Wuji reset keeps the arm/tool/debris state of the frozen scene and starts the Wuji fingers at their neutral
 (zero) joint positions. Only the initial motor targets of the 40 Wuji finger actuators are chosen here: the fingers

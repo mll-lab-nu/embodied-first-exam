@@ -149,31 +149,44 @@ def test_checker_fixture_contained_pieces_are_recognized(sharpa):
     assert sharpa.status()["success"] is False and not features["terminal_valid"]
 
 
-def test_task_is_sharpa_only(tmp_path, monkeypatch):
-    """Wuji Hand 2.2 cannot hold the pre-placed tools at these flanges: the task refuses it everywhere."""
-    with pytest.raises(ValueError, match="supports only"):
-        Session(hand="wuji")
-    monkeypatch.setenv("DEXHAND_HAND", "wuji")
-    with pytest.raises(ValueError, match="supports only"):
-        Session()
-    monkeypatch.delenv("DEXHAND_HAND")
-    path = tmp_path / "wuji.npz"
-    np.savez(path, actions=np.zeros((10, 54)), hand=np.array("wuji"))
-    result = replay_cli(tmp_path, path)
-    assert result["success"] is False and result["bad_trajectory"] == 1
-
-
-def test_wuji_composition_for_authoring_is_deterministic():
-    """The authoring-only composition (evidence for the Sharpa-only decision) still builds and replays deterministically."""
-    first = Session(hand="wuji", allow_unsupported_hand=True)
+def test_wuji_start_keeps_the_frozen_scene_and_holds_the_tools(tmp_path):
+    """Wuji Hand 2.2: declared pre-grasp (fingers only), both tools held past the 1.2 s grip check, deterministic."""
+    first = Session(hand="wuji")
+    sharpa_reset = np.load(FAMILY / "assets/reset.npz")
+    m = first.model
+    wuji_joints = {m.joint(i).name: i for i in range(m.njnt)}
+    for name, adr, dim in zip(sharpa_reset["joint_names"], sharpa_reset["joint_qposadr"], sharpa_reset["joint_qposdim"]):
+        if str(name) in wuji_joints:  # every arm, tool, debris and bristle coordinate of the Sharpa start
+            j = wuji_joints[str(name)]
+            ours = first.data.qpos[m.jnt_qposadr[j]:m.jnt_qposadr[j] + int(dim)]
+            assert np.array_equal(ours, sharpa_reset["initial_qpos"][int(adr):int(adr) + int(dim)]), name
     assert first.action_dim == 54 and first.actuator_names[14] == "l_wuji_l_THJ0"
-    rows = np.repeat(first.hold_action()[None], 3000, axis=0)
+    rows = np.repeat(first.hold_action()[None], 4000, axis=0)  # 2 s: past the 1.2 s settling period
     status = first.replay(rows)
-    second = Session(hand="wuji", allow_unsupported_hand=True)
+    assert not status["failed"] and min(first.checker.state["min_contacts"].values()) >= 2
+    second = Session(hand="wuji")
     second.replay(rows)
-    assert status["failed"] and first.state_sha() == second.state_sha()
+    assert first.state_sha() == second.state_sha()
+    path = tmp_path / "wuji.npz"
+    first.save_trajectory(rows[:200], path)
+    result = replay_cli(tmp_path, path)
+    assert result["success"] is False and result["bad_trajectory"] == 0 and result["hand"] == "wuji"
     first.close()
     second.close()
+
+
+def test_wuji_start_file_must_not_move_the_frozen_scene(tmp_path, monkeypatch):
+    """A reset_wuji.npz that changes a frozen non-finger coordinate is refused."""
+    import runtime
+    saved = dict(np.load(FAMILY / runtime.WUJI_RESET))
+    saved["initial_qpos"] = saved["initial_qpos"].copy()
+    m = Session(hand="wuji", allow_unsupported_hand=True).model
+    saved["initial_qpos"][m.jnt_qposadr[m.joint("broom_free").id]] += 0.01  # move the broom by 1 cm
+    fake = tmp_path / "reset_wuji.npz"
+    np.savez(fake, **saved)
+    monkeypatch.setattr(runtime, "WUJI_RESET", str(fake))
+    with pytest.raises(ValueError, match="frozen coordinate"):
+        Session(hand="wuji")
 
 
 @pytest.mark.parametrize(
@@ -181,7 +194,8 @@ def test_wuji_composition_for_authoring_is_deterministic():
     [
         ("bad_width", lambda r: dict(actions=r[:, :57])),
         ("sharpa_rows_wuji_label", lambda r: dict(actions=r, hand=np.array("wuji"))),
-        ("wuji_width_wuji_label", lambda r: dict(actions=r[:, :54], hand=np.array("wuji"))),
+        ("wuji_width_sharpa_label", lambda r: dict(actions=r[:, :54], hand=np.array("sharpa"))),
+        ("wuji_width_no_label", lambda r: dict(actions=r[:, :54])),
         ("unknown_hand", lambda r: dict(actions=r, hand=np.array("allegro"))),
         ("other_task", lambda r: dict(actions=r, task=np.array("essential_cube_layer"))),
         ("names_reversed", lambda r: dict(actions=r, actuator_names=np.array(["x"] * 58))),

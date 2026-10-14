@@ -179,21 +179,59 @@ def test_forged_success_members_are_ignored(tmp_path):
     assert all(isinstance(value, (int, float)) for value in reward.values())
 
 
-WUJI_FAMILIES = [f for f in FAMILIES if f != "essential_two_object"]   # two_object offers only the Sharpa Wave
+WUJI_FAMILIES = list(FAMILIES)
 
 
-def test_two_object_offers_only_the_sharpa_wave(tmp_path, monkeypatch):
-    with pytest.raises(hands.HandError, match="not offered"):
-        Session("essential_two_object", hand="wuji")
-    monkeypatch.setenv("DEXHAND_HAND", "wuji")
-    with pytest.raises(hands.HandError, match="not offered"):
-        Session("essential_two_object")
-    monkeypatch.delenv("DEXHAND_HAND")
-    rows = Session("essential_cube_layer", hand="wuji").hold_action()
-    path = tmp_path / "wuji.npz"
-    hands.write_trajectory(path, [rows] * 10, hand="wuji", task="essential_two_object")
-    result = replay_cli("essential_two_object", path, tmp_path)
-    assert result["success"] is False and result["bad_trajectory"] == 1 and "not offered" in result["error"]
+def test_two_object_wuji_start_holds_both_walnuts():
+    """The declared Wuji start (wuji_reset.json: finger targets + walnut start poses) holds both walnuts for 10 s."""
+    import essential
+    session = Session("essential_two_object", hand="wuji")
+    declared = essential.wuji_initial_objects(session.frozen_spec)
+    assert set(declared) == {"initial_position_a", "initial_quaternion_a", "initial_position_b", "initial_quaternion_b"}
+    assert session.spec["parameters"]["initial_position_b"] == declared["initial_position_b"]
+    assert session.frozen_spec["parameters"]["initial_position_b"] != declared["initial_position_b"]  # Sharpa unchanged
+    features = session.features()
+    assert features["b_finger_contacts"] >= 1 and features["a_hand_contacts"] >= 1 and features["b_support"] == 0
+    status = run(session, [session.hold_action()] * 500)
+    assert not status["failed"] and not status["success"] and status["steps"] == 500
+
+
+def test_two_object_counts_wuji_fingers_by_link():
+    import essential
+    scene = essential.module(Session("essential_two_object").spec)
+    assert scene._wuji_finger("r_wuji_r_ring_finger_middle") == "ring"
+    assert scene._wuji_finger("r_wuji_r_pinky_middle") == "pinky"
+    assert scene._wuji_finger("r_wuji_r_thumb_tip_sensor_frame") == "thumb"
+    assert scene._wuji_finger("r_wuji_r_wrist") is None and scene._wuji_finger("right_index_DP") is None
+
+
+def test_finger_of_takes_the_finger_named_first():
+    """A later word names the phalanx: Wuji `r_ring_finger_middle` is the ring finger, `r_pinky_middle` the pinky."""
+    assert hands.finger_of("r_ring_finger_middle") == "ring" and hands.finger_of("r_pinky_middle") == "pinky"
+    assert hands.finger_of("r_middle_finger_middle") == "middle" and hands.finger_of("r_index_finger_middle") == "index"
+    assert hands.finger_of("r_thumb_tip_sensor_frame") == "thumb" and hands.finger_of("right_pinky_DP") == "pinky"
+    assert hands.finger_of("r_wrist") is None and hands.finger_of("") is None
+
+
+def test_wuji_middle_phalanx_geoms_carry_their_own_finger():
+    """The essential predicates count per-finger contacts by geom name; the Wuji ring and pinky middle phalanges must
+    count for the ring and pinky (not the middle finger)."""
+    model = Session("essential_cube_layer", hand="wuji").model
+    names = {model.geom(g).name for g in range(model.ngeom)}
+    assert "right_ring_wuji_r_ring_finger_middle_collision1" in names
+    assert "right_pinky_wuji_r_pinky_middle_collision1" in names
+    assert not any(name.startswith("right_middle_") and ("ring" in name or "pinky" in name) for name in names)
+
+
+def test_wuji_reset_may_only_place_held_objects(tmp_path, monkeypatch):
+    import essential
+    spec = Session("essential_two_object").spec
+    fake = tmp_path / "wuji_reset.json"
+    fake.write_text(json.dumps({"family": "essential_two_object", "initial_fingers": {},
+                                "initial_objects": {"deposit_position": [0, 0, 0]}}))
+    monkeypatch.setattr(essential, "_HERE", tmp_path)
+    with pytest.raises(ValueError, match="may not declare"):
+        essential.wuji_initial_objects(spec)
 
 
 @pytest.mark.parametrize("family", WUJI_FAMILIES)

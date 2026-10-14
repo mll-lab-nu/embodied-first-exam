@@ -10,10 +10,16 @@ integrates at 0.5 ms and every action row is one physics step, so rows are a 200
 slower than real time (several seconds of CPU per simulated second).
 
 {{HANDS}}
-Row layout
+Sharpa rows
 (58 targets): the 7 left-arm joints `SHOULDER_PITCH_L_J1_target ... WRIST_ROLL_L_J7_target`, the 7 right-arm joints
 `SHOULDER_PITCH_R_J1_target ... WRIST_ROLL_R_J7_target` (radians), then the 22 left-hand and the 22 right-hand
 Sharpa Wave finger targets (radians).
+Wuji rows (54 targets): the same 14 arm targets, then the 20 left-hand and the 20 right-hand Wuji Hand 2.2
+finger targets (`l_wuji_l_THJ0 ... l_wuji_l_LFJ3`, `r_wuji_r_THJ0 ... r_wuji_r_LFJ3`: thumb CMC flexion, CMC
+abduction, MCP, IP, then index/middle/ring/pinky MCP flexion, MCP abduction, PIP, DIP; radians). With Wuji the start
+differs only in the finger joints and their targets: both Wuji hands start closed on the same broom and dustpan
+(the arm, tool, debris and bristle coordinates and the arm targets are those of the Sharpa start), and
+the targets at the start keep them. The task, predicate and fail-fast rules are the same for both hands.
 
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint

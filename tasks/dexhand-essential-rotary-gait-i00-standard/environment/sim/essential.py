@@ -72,3 +72,28 @@ def wuji_reset(spec):
             if value.get("family") == spec["id"]:
                 return dict(value["initial_fingers"])
     return {}
+
+
+# Instance parameters a family may re-declare for Wuji in wuji_reset.json: only where the held objects start.
+WUJI_OBJECT_KEYS = ("initial_position", "initial_quaternion")
+
+
+def wuji_initial_objects(spec):
+    """The family's declared Wuji Hand 2.2 start placement of the held objects (parameter name -> value), or {}.
+
+    ``initial_objects`` in wuji_reset.json: only ``initial_position*`` / ``initial_quaternion*`` keys are accepted (a
+    small re-placement of held objects into the Wuji grasp, found by settling in physics). Stages, invariants, guards,
+    fixtures and every other parameter are the same for both hands; reset-relative quantities (e.g. walnut B's pose)
+    are measured from the post-reset pose of the selected hand, as for Sharpa.
+    """
+    for path in (_HERE / "wuji_reset.json", _HERE.parent / "task_library" / spec["id"] / "wuji_reset.json"):
+        if path.is_file():
+            value = json.loads(path.read_text())
+            if value.get("family") == spec["id"]:
+                objects = dict(value.get("initial_objects", {}))
+                for key in objects:
+                    prefix = next((p for p in WUJI_OBJECT_KEYS if key.startswith(p)), None)
+                    if prefix is None or "initial_position" + key[len(prefix):] not in spec.get("parameters", {}):
+                        raise ValueError(f"wuji_reset.json may not declare {key!r}")
+                return objects
+    return {}

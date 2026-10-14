@@ -10,12 +10,20 @@ integrates at 0.5 ms and every action row is one physics step, so rows are a 200
 slower than real time (several seconds of CPU per simulated second).
 
 ## Hands
-This task uses the Sharpa Wave (22 finger actuators per hand). The Wuji Hand 2.2 is not offered for this task: at the arm flanges set for the Sharpa Wave, the Wuji Hand 2.2 cannot keep the pre-placed broom and dustpan. Selecting Wuji is refused.
+Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
+This task uses two hands of one model on the two arms of a fixed robot: Sharpa Wave (default) or Wuji Hand 2.2. Every row holds both arms' joint targets and both hands' finger targets (layout below). With Wuji, both hands start closed on the same broom and dustpan (assets/reset_wuji.npz: the frozen arm, tool, debris and bristle coordinates with Wuji finger joints).
+The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`58` for `sharpa`, `54` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
 
-Row layout
+Sharpa rows
 (58 targets): the 7 left-arm joints `SHOULDER_PITCH_L_J1_target ... WRIST_ROLL_L_J7_target`, the 7 right-arm joints
 `SHOULDER_PITCH_R_J1_target ... WRIST_ROLL_R_J7_target` (radians), then the 22 left-hand and the 22 right-hand
 Sharpa Wave finger targets (radians).
+Wuji rows (54 targets): the same 14 arm targets, then the 20 left-hand and the 20 right-hand Wuji Hand 2.2
+finger targets (`l_wuji_l_THJ0 ... l_wuji_l_LFJ3`, `r_wuji_r_THJ0 ... r_wuji_r_LFJ3`: thumb CMC flexion, CMC
+abduction, MCP, IP, then index/middle/ring/pinky MCP flexion, MCP abduction, PIP, DIP; radians). With Wuji the start
+differs only in the finger joints and their targets: both Wuji hands start closed on the same broom and dustpan
+(the arm, tool, debris and bristle coordinates and the arm targets are those of the Sharpa start), and
+the targets at the start keep them. The task, predicate and fail-fast rules are the same for both hands.
 
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint

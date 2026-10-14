@@ -3,7 +3,7 @@
 Keep the wrist fixed. Turn walnut A +90 degrees around palm-local Y, return A to its initial orientation, then release only A into the catch tray. Maintain walnut B at its initial position and orientation throughout. The walnuts, standardized to the same maximum dimension, must never contact one another. Before selective release, keep both objects unsupported by the environment and in load-bearing hand contact. Finally let A settle in the tray while continuing to hold B. If walnut A drops toward the table (center below 0.135 m) or leaves the tray footprint (more than 0.10 m horizontally from the tray center), or walnut B slips, the episode fails immediately.
 
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
-actuated finger joints (see Hands).
+actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).
 The wrist stage is position actuated in the physics engine; grasping and manipulating require physical contact.
 The five fingers are thumb, index, middle, ring and pinky. The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
@@ -14,11 +14,9 @@ Use the declared target values rather than copying measured wrist joint position
 change. Objects have no actuators, scripted motion or grasp attachments; they move through contact and normal gravity.
 
 ## Hands
-This task uses the Sharpa Wave (22 finger actuators per hand). The Wuji Hand 2.2 is not offered for this task: no Wuji Hand 2.2 finger pose holds walnut B at the start, so a Wuji episode could only fail. Selecting Wuji is refused.
-
-## Action rows
-Rows are 28 wide: the six wrist targets, then `right_thumb_CMC_FE, right_thumb_CMC_AA, right_thumb_MCP_FE, right_thumb_MCP_AA, right_thumb_IP`, `right_<index|middle|ring>_MCP_FE, _MCP_AA, _PIP, _DIP` and `right_pinky_CMC, _MCP_FE, _MCP_AA, _PIP, _DIP`. The fingers use the dissipative velocity coefficient declared in the frozen instance and start from its declared finger pose.
-`spec()["hand"]` names the hand, and `spec()["action_types"]["joint_position"]` gives the row width (`28`) and the exact order.
+Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
+Sharpa rows: the six wrist targets, then `right_thumb_CMC_FE, right_thumb_CMC_AA, right_thumb_MCP_FE, right_thumb_MCP_AA, right_thumb_IP`, `right_<index|middle|ring>_MCP_FE, _MCP_AA, _PIP, _DIP` and `right_pinky_CMC, _MCP_FE, _MCP_AA, _PIP, _DIP`. Wuji rows: the same six wrist targets, then `r_wuji_r_THJ0..3` (thumb CMC flexion, CMC abduction, MCP, IP) and `r_wuji_r_FFJ0..3`, `MFJ0..3`, `RFJ0..3`, `LFJ0..3` (index, middle, ring, pinky: MCP flexion, MCP abduction, PIP, DIP). Both hands are mounted in the same wrist frame; Sharpa fingers use the dissipative velocity coefficient declared in the frozen instance, Wuji fingers the manufacturer's position servos. Sharpa starts from the instance's declared finger pose; Wuji starts from the pose in `wuji_reset.json` (neutral fingers when the file is absent), an authoring choice that keeps the object held at reset, not a policy. The wrist, fixtures and predicate are identical for both hands; where a Wuji grasp cannot hold an object at the Sharpa start pose, `wuji_reset.json` also declares the held objects' start poses in the Wuji grasp, and every reset-relative quantity is measured from the post-reset pose.
+The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
 
 ## Success predicate
 The verifier evaluates these conditions on features it computes from simulator state (values rounded to six significant digits here; the exact numbers are in `catalog.json`). A stage or the terminal condition counts a control sample only if its bounds held at every 2 ms physics substep of that control interval; stages are completed in order and each starts after the previous one.
@@ -78,8 +76,8 @@ r.fk(q)                       # robot-link forward kinematics; no physics is ste
 r.status()
 res.save("/app/runs/001")
 ```
-`rows` is `(T, 28)` in `spec["action_types"]["joint_position"]["layout"]` order: wrist XYZ translations (metres),
-three serial XYZ rotational joints (radians), then 22 finger joints (radians). Actuator targets are clipped to the
+`rows` is `(T, 28)` (Sharpa) or `(T, 26)` (Wuji) in `spec["action_types"]["joint_position"]["layout"]` order: wrist XYZ translations (metres),
+three serial XYZ rotational joints (radians), then the 22 or 20 finger joints (radians). Actuator targets are clipped to the
 published joint limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk
 covers at most 10 s. Hold interpolation holds each row for `dt`; linear interpolation starts from the previous target.
 The robot has no scalar gripper opening. Quaternions in measured poses use WXYZ; world z is up. Cameras are overview,

@@ -15,9 +15,10 @@ with the debris, no dropped or slipping tool and no debris outside the work area
 adds margin). The oracle hands these rows in unchanged; the standard oracle submits them as float64 (rows rounded to
 float32 already break the grip-rotation bound, so they do not succeed). Replayed in this task's frozen scene
 they reproduce the accepted run bit for bit and succeed after 132,392 steps (66.2 s): all six pieces in the lifted pan
-(81.8 mm), maximum grip drift 5.7 mm and rotation 0.229 rad, a 1.0 s terminal hold. The task is Sharpa only: Wuji Hand 2.2 composes at
-the same flanges, but no Wuji finger closure holds both pre-placed tools (the broom tips against another robot link or
-keeps at most one force-bearing contact by 1.2 s), so a Wuji variant is pending a Wuji-specific pre-grasp.
+(81.8 mm), maximum grip drift 5.7 mm and rotation 0.229 rad, a 1.0 s terminal hold. Both hands are offered.
+With Wuji Hand 2.2 the start differs only in the finger joints (`assets/reset_wuji.npz`, formed by closing the Wuji
+fingers onto the frozen shafts); holding its targets keeps both tools for the whole 80 s horizon (at least 5
+force-bearing contacts per handle, grip drift <= 4.4 mm, rotation <= 0.022 rad). No Wuji success is claimed.
 
 ## Verification
 The isolated verifier reads only the numeric `actions` rows and the `hand` label of `/app/output/trajectory.npz`

@@ -9,17 +9,17 @@ task families, each with one frozen scene, in privileged and standard mode (20 t
 | `essential_cube_layer` | hand on a locked six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 450 rows |
 | `essential_held_joystick` | hand on a locked six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 415 rows |
 | `essential_pen_regrasp` | hand on a locked six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 385 rows |
-| `essential_two_object` | hand on a locked six-DoF wrist stage | 28 / - (Sharpa only) | 50 Hz, 10 x 2 ms | 408 rows |
+| `essential_two_object` | hand on a locked six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 408 rows |
 | `essential_rotary_gait` | hand on a locked six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 15,620 rows |
 | `essential_cube_reorient` | hand on a locked six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 153 rows |
 | `assemble_hamburger` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 6,090 rows (standard: 5,793) |
 | `paper_half_fold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 40 x 0.5 ms | 1,108 rows (+ 250 hold rows) |
-| `sweep_dustpan` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / - (Sharpa only) | 2000 Hz, one 0.5 ms step | 132,521 rows (+ 16,000 hold rows) |
+| `sweep_dustpan` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 2000 Hz, one 0.5 ms step | 132,521 rows (+ 16,000 hold rows) |
 | `pot_shelf_transfer` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 500 Hz, one 2 ms step | 8,850 rows |
 
-The default hand is a right (on the arms: a left and a right) **Sharpa Wave** with 22 actuated finger joints; eight of
-the ten families also run with the genuine **Wuji Hand 2.2** (20 finger joints) mounted in its place, selected per
-episode (`essential_two_object` and `sweep_dustpan` offer only the Sharpa Wave, see Hands). There
+The default hand is a right (on the arms: a left and a right) **Sharpa Wave** with 22 actuated finger joints; all ten
+families also run with the genuine **Wuji Hand 2.2** (20 finger joints) mounted in its place, selected per
+episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`).
 No Wuji success is claimed (see Hands).
@@ -61,7 +61,10 @@ rotation that aligns fingers, palm normal and thumb side with the Wave's. Wave a
 equalities of the removed hand are dropped, Wuji names get the prefix `<side>_wuji_`, and Wuji actuators follow the
 remaining (wrist or arm) actuators. Everything above the mount (wrist stage, arm joints, objects, task geometry,
 physics options) is unchanged. Every Wuji file is checked against `images/dexhand/wuji-asset-manifest.json` (sha256 and
-size) before composing.
+size) before composing. In the essential families the Wuji collision geoms are renamed to the predicate's roles
+(`right_<finger>_...`, fingertip pads, `palm...`; meshes and contact parameters unchanged) so per-finger contact counts
+mean the same for both hands; `hands.finger_of` takes the finger named first in a link name (`r_ring_finger_middle` is
+the ring finger's middle phalanx, not the middle finger).
 
 **Row layouts.** Wrist-stage families: Sharpa 28 = `wrist_x, wrist_y, wrist_z` (m), `wrist_rx, wrist_ry, wrist_rz`
 (rad, serial XYZ joints) + 22 finger targets in native order (`right_thumb_CMC_FE ... right_pinky_DIP`); Wuji 26 = the
@@ -84,20 +87,23 @@ locked wrist targets beyond float32 rounding) give reward 0 with `bad_trajectory
 rows are never padded, truncated or converted between hands. A missing file is reward 0 with
 `missing_trajectory = 1`.
 
-**Wuji acceptance.** In the eight families that offer it, the Wuji scene composes from the image's assets in both
+**Wuji acceptance.** In all ten families, the Wuji scene composes from the image's assets in both
 modes, a no-op scores 0, and short hold or seeded replays are deterministic in fresh processes. Wuji trajectories are
 graded exactly like Sharpa ones; no family packages a Wuji solution.
 
-**A family may offer fewer hands.** Two families offer only `sharpa` (`task.toml` `hands = ["sharpa"]`); Wuji support
-is pending for both, because with the Wuji geometry the scene's initial hold cannot be kept, so a Wuji episode could
-only fail:
-- `essential_two_object` (`task_library/essential_two_object/offered_hands.json`): no Wuji Hand 2.2 reset pose holds
-  walnut B (about 5,000 evaluated finger poses lose it before the first control).
-- `sweep_dustpan` (`family.json` `hands`, reason in `notes.hands`): at the Sharpa-calibrated arm flanges the Wuji hands
-  cannot keep the pre-placed broom and dustpan (36 of 48 grip candidates lose a tool before 1.2 s, the other 12 at
-  1.2 s).
+**Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
+start cannot be held by the Wuji geometry; only hand joints (and, where physically necessary, the held objects' start
+poses) differ, found by closing the Wuji fingers in physics; the task, predicate and fail-fast rules are unchanged:
+- `essential_two_object`: `task_library/essential_two_object/wuji_reset.json` declares the Wuji finger targets and
+  both walnuts' start poses in the Wuji grasp (`initial_objects`; formed by releasing the walnuts above the open hand
+  while the fingers close). Walnut B's (and A's) reference pose is its pose after the reset settle, as for Sharpa. The
+  start holds both walnuts for 60 s of hold actions; a searched open-loop finger controller completes stage 1.
+- `sweep_dustpan`: `assets/reset_wuji.npz` keeps every arm, tool, debris and bristle coordinate and every arm target of
+  the frozen start and declares only the 40 Wuji finger joints and targets (closed onto the frozen shafts); holding
+  them keeps both tools for the full 80 s horizon.
 
-The generator writes the offered hands into the task's runtime (`offered_hands.json` beside `hands.py`). Such a task's
+A family may still offer fewer hands (`task.toml` `hands`, `offered_hands.json` written by the generator); none of the
+ten release families does. The generator writes the offered hands into the task's runtime (`offered_hands.json` beside `hands.py`). Such a task's
 instruction and README offer no other hand; `Session(..., hand="wuji")` (or `DEXHAND_HAND=wuji`) raises `HandError`;
 a standard service started with `DEXHAND_HAND=wuji` starts no episode (`final.json` reason `hand_not_offered`,
 `infra_error = 1`: the runner's misconfiguration, not the agent's failure); a privileged archive labelled `wuji` is a
@@ -194,7 +200,7 @@ Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <=
 ### `essential_two_object` (independent walnut rotation and selective release)
 Two scanned walnuts (28 mm maximum extent, convex collision hulls of at most 64 vertices): turn walnut A +90° about
 palm-local Y, return it, then release only A into the catch tray, while B stays in place and held and the walnuts never
-touch. Sharpa Wave only (Wuji support pending: no stable initial hold of walnut B with the Wuji geometry).
+touch. Both hands; the Wuji start (`wuji_reset.json`) holds both walnuts in the Wuji grasp.
 
 1. `rotate_a_keep_b`: `0 <= a_quarter_turn_error <= 0.16`, `1 <= a_finger_contacts <= 5`, `0 <= speed <= 0.25`; 5 consecutive controls. While active (fail-fast): `a_hand_contacts >= 1`, `a_support == 0`, `0 <= a_position_error <= 0.035`, `0 <= speed <= 12`.
 2. `return_a_keep_b`: `0 <= a_orientation_error <= 0.16`, `1 <= a_finger_contacts <= 5`, `0 <= speed <= 0.25`; 5 consecutive controls. While active (fail-fast): `a_hand_contacts >= 1`, `a_support == 0`, `0 <= a_position_error <= 0.035`, `0 <= speed <= 12`.
@@ -232,8 +238,9 @@ concatenated and sha256-checked) is the validated Sharpa actuator trajectory of 
 replays ending in the validated final state hash, and success of the float32-rounded rows).
 `scripts/dexhand/tests/test_essential_strict.py` covers the oracle, the no-op, a truncated oracle, a dropped object
 (fail-fast and permanent), forged archive members, wrong widths and hand labels, task and actuator-name mismatches
-and NaN, empty and object arrays, for both hands (two_object: the refusal of Wuji). The Wuji resets are declared in
-`wuji_reset.json` (pen, knob) or neutral (cube, Joy-Con, sphere rest on the neutral Wuji hand).
+and NaN, empty and object arrays, for both hands. The Wuji resets are declared in
+`wuji_reset.json` (pen, knob, walnuts: finger targets, for the walnuts also their start poses) or neutral (cube,
+Joy-Con, sphere rest on the neutral Wuji hand).
 
 ## Hamburger assembly (`assemble_hamburger`)
 
@@ -297,8 +304,9 @@ shorter than 1 s is not a success.
 The oracle is the accepted 132,521-row Sharpa trajectory plus 16,000 copies of its last row (an 8 s hold that only
 adds margin; stored as five sha256-checked parts under 2 MB); it reproduces the accepted run bit for bit and succeeds
 after 132,392 steps. Its float32-rounded rows fail (the tool grip slips), so the standard oracle submits float64 rows;
-an agent's controls must not depend on the last bits either. Sharpa Wave only: Wuji support is pending (at the
-Sharpa-calibrated flanges the Wuji hands cannot keep the pre-placed tools; see Hands). Simulating one second costs a few seconds of CPU; the standard
+an agent's controls must not depend on the last bits either. Wuji Hand 2.2: the start keeps the frozen
+arm/tool/debris state and closes the Wuji fingers on the same shafts (`assets/reset_wuji.npz`; see Hands); no Wuji
+solution is claimed. Simulating one second costs a few seconds of CPU; the standard
 service renders frames with OSMesa, so agents should keep `video_fps` low.
 
 ## Pot-to-shelf transfer (`pot_shelf_transfer`)
@@ -371,17 +379,17 @@ a service restart. Rows above the repository's 2 MB file limit are stored as `tr
 | Family | privileged oracle / nop | standard oracle / nop | standard oracle wall | peak GiB: privileged verifier / standard sim | Wuji |
 |---|---|---|---|---|---|
 | `essential_cube_layer` | 1 / 0 | 1 / 0 | 4 min | 0.39 / 0.61 | privileged nop 0; standard nop 0 |
-| `essential_held_joystick` | 1 / 0 | 1 / 0 | 4 min | 0.51 / 0.70 | - |
-| `essential_pen_regrasp` | 1 / 0 | 1 / 0 | 4 min | 0.41 / 0.63 | - |
-| `essential_two_object` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.67 | standard: refused (`hand_not_offered`, infra_error 1) |
-| `essential_rotary_gait` | 1 / 0 | 1 / 0 | 17 min | 0.49 / 0.70 | - |
-| `essential_cube_reorient` | 1 / 0 | 1 / 0 | 2 min | 0.39 / 0.61 | - |
-| `assemble_hamburger` | 1 / 0 | 1 / 0 | 9 min | 0.41 / 0.63 | - |
+| `essential_held_joystick` | 1 / 0 | 1 / 0 | 4 min | 0.51 / 0.70 | standard nop 0 |
+| `essential_pen_regrasp` | 1 / 0 | 1 / 0 | 4 min | 0.41 / 0.63 | standard nop 0 |
+| `essential_two_object` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.67 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
+| `essential_rotary_gait` | 1 / 0 | 1 / 0 | 17 min | 0.49 / 0.70 | standard nop 0 |
+| `essential_cube_reorient` | 1 / 0 | 1 / 0 | 2 min | 0.39 / 0.61 | standard nop 0 |
+| `assemble_hamburger` | 1 / 0 | 1 / 0 | 9 min | 0.41 / 0.63 | standard nop 0 |
 | `paper_half_fold` | 1 / 0 | 1 / 0 | 5 min | 0.50 / 0.64 | privileged nop 0; standard nop 0 |
-| `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | standard: refused (`hand_not_offered`, infra_error 1) |
+| `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
 | `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | privileged nop 0; standard nop 0 |
 
-The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB.
+The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`).
 
 ## Generator
 

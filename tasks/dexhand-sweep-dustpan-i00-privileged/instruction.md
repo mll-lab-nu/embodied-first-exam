@@ -12,15 +12,25 @@ of CPU: plan with `snapshot()`/`restore()` instead of replaying from the start. 
 deliverable early and improve it.
 
 ## Hands
-This task uses the Sharpa Wave (22 finger actuators per hand). The Wuji Hand 2.2 is not offered for this task: at the arm flanges set for the Sharpa Wave, the Wuji Hand 2.2 cannot keep the pre-placed broom and dustpan. Selecting Wuji is refused.
+Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
+This task uses two hands of one model on the two arms of a fixed robot: Sharpa Wave (default) or Wuji Hand 2.2. Every row holds both arms' joint targets and both hands' finger targets (layout below). With Wuji, both hands start closed on the same broom and dustpan (assets/reset_wuji.npz: the frozen arm, tool, debris and bristle coordinates with Wuji finger joints).
+Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
 
-The verifier rejects any trajectory whose `hand` is not `sharpa`. Row layout (58 targets): the 7 left-arm joints
+Sharpa rows (58 targets): the 7 left-arm joints
 `SHOULDER_PITCH_L_J1_target ... WRIST_ROLL_L_J7_target`, the 7 right-arm joints `SHOULDER_PITCH_R_J1_target ...
 WRIST_ROLL_R_J7_target` (radians), then the 22 left-hand and the 22 right-hand Sharpa Wave finger targets
 (`l_hand_thumb_CMC_FE ... l_hand_pinky_DIP`, `r_hand_thumb_CMC_FE ... r_hand_pinky_DIP`, radians).
+Wuji rows (54 targets): the same 14 arm targets, then the 20 left-hand and the 20 right-hand Wuji Hand 2.2
+finger targets (`l_wuji_l_THJ0 ... l_wuji_l_LFJ3`, `r_wuji_r_THJ0 ... r_wuji_r_LFJ3`: thumb CMC flexion, CMC
+abduction, MCP, IP, then index/middle/ring/pinky MCP flexion, MCP abduction, PIP, DIP; radians). With Wuji the start
+differs only in the finger joints and their targets: both Wuji hands start closed on the same broom and dustpan
+(the arm, tool, debris and bristle coordinates and the arm targets are those of the Sharpa start), and
+`s.hold_action()` keeps them. The task, predicate and fail-fast rules are the same for both hands.
+The verifier rebuilds the scene with the archive's `hand` and rejects rows whose width does not match it.
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)`, 1 <= T <= 160000,
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` (Sharpa) or `(T, 54)`
+(Wuji), 1 <= T <= 160000,
 as a compressed archive of at most 64 MB, and `/app/output/gen.py`, the script that produced it. Use `s.save_trajectory(actions, "/app/output/trajectory.npz")`, which compresses and records the hand. Row `i` holds the motor
 targets for physics step `i` after the frozen reset, in `s.actuator_names` order, within `s.model.actuator_ctrlrange`.
 The separate verifier starts from its own frozen scene and replays only these rows in two fresh processes; both
@@ -31,7 +41,7 @@ Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does)
 ## Tooling
 ```python
 from rcb_dexhand import Session
-s = Session("sweep_dustpan")          # Sharpa Wave hands (the only hand of this task)
+s = Session("sweep_dustpan")          # Sharpa Wave hands (default); Session("sweep_dustpan", hand="wuji") for Wuji
 s.actuator_names, s.action_dim        # row order and width
 s.model.actuator_ctrlrange            # target limits (radians)
 s.hold_action()                       # current targets; at the reset they hold the tools
@@ -43,7 +53,7 @@ s.features()                          # predicate diagnostics: containment, pan 
 s.observe()                           # joints, targets, palm/tool/debris poses and the diagnostics
 snap = s.snapshot(); s.restore(snap)  # exact copies of simulator and predicate state
 s.render_frame("work")                # RGB uint8 (480, 640, 3); cameras: overview, work, pan, side
-s.reset()                             # exact frozen reset
+s.reset()                             # exact frozen reset (of the selected hand)
 s.replay(rows)                        # reset, then execute rows exactly like the verifier
 s.save_trajectory(rows, "/app/output/trajectory.npz")
 s.model, s.data                       # privileged MuJoCo model and state

@@ -2,8 +2,9 @@
 
 {{TASK_TEXT}}
 
-Save a valid trajectory early and keep
-improving it; do not stop early.
+One trial is one episode with no reset: the service executes and records every row you submit, and the first
+failure ends the episode for good, so check each chunk before you send it. Grading replays the recorded episode;
+there is no trajectory to hand in. Keep working until the episode has succeeded.
 
 ## Robot, scene and control
 The robot is a fixed Tianji Marvin stand with two 7-joint arms and a dexterous hand on each wrist. Every arm and finger

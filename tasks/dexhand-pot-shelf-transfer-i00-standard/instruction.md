@@ -2,8 +2,9 @@
 
 A fixed dual-arm robot (two 7-joint arms, a dexterous hand on each wrist) stands at a kitchen worktop. A freely moving 1 kg two-handle stockpot (286 mm vessel diameter, 438 mm across its two loop handles) rests on the worktop; an open kitchen shelf is to the robot's left. Grasp the pot by its two handles, lift it with both hands, carry it into the shelf compartment and set it down upright on the shelf board at the target, then open both hands and withdraw them. The pot must never be dropped, tipped over, knocked against the furniture, the floor or a non-hand robot link, or leave its support while no hand carries it. Only the robot's position-controlled joint targets act on the world: there are no attachments, object actuators, scripted object motion or applied forces.
 
-Save a valid trajectory early and keep
-improving it; do not stop early.
+One trial is one episode with no reset: the service executes and records every row you submit, and the first
+failure ends the episode for good, so check each chunk before you send it. Grading replays the recorded episode;
+there is no trajectory to hand in. Keep working until the episode has succeeded.
 
 ## Robot, scene and control
 The robot is a fixed Tianji Marvin stand with two 7-joint arms and a dexterous hand on each wrist. Every arm and finger

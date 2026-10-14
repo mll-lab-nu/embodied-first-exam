@@ -702,7 +702,9 @@ ESSENTIAL_LAYOUT = (
     "same wrist frame; Sharpa fingers use the dissipative velocity coefficient declared in the frozen instance, "
     "Wuji fingers the manufacturer's position servos. Sharpa starts from the instance's declared finger pose; Wuji "
     "starts from the pose in `wuji_reset.json` (neutral fingers when the file is absent), an authoring choice that "
-    "keeps the object held at reset, not a policy. Objects, wrist and predicate are identical for both hands."
+    "keeps the object held at reset, not a policy. The wrist, fixtures and predicate are identical for both hands; "
+    "where a Wuji grasp cannot hold an object at the Sharpa start pose, `wuji_reset.json` also declares the held "
+    "objects' start poses in the Wuji grasp, and every reset-relative quantity is measured from the post-reset pose."
 )
 
 

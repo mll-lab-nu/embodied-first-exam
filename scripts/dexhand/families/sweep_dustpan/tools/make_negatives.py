@@ -13,7 +13,7 @@ Physical cases (Sharpa, 2000 Hz rows; times are simulated seconds of the oracle)
                     oracle over 1 s: the piece the cleanup pass recovers stays outside, the pan is lifted with 5/6
   drop_dustpan      the left-hand fingers open at 61.0 s while the loaded pan is lifted
   drop_broom        the right-hand fingers open at 8.0 s during the first sweeping pass
-  wuji_hold         Wuji-labelled 54-wide rows: refused (the task is Sharpa only; see README.md)
+  wuji_hold         Wuji-labelled 54-wide rows (arm reset targets, zero fingers): valid width, reward 0
 Metadata cases: wrong width, Sharpa rows labelled wuji, Wuji rows labelled sharpa, unknown hand, other task,
 actuator-name mismatch, NaN, out-of-range target, too many rows, empty, an object array, forged success members.
 """
@@ -88,7 +88,7 @@ def main() -> int:
 
     wuji_hold = np.zeros((step(3.0), 54))
     wuji_hold[:, :14] = hold[:14]
-    save("wuji_hold", 0, "Wuji-labelled 54-wide rows (arm reset targets, zero fingers, 3 s): refused, the task is Sharpa only",
+    save("wuji_hold", 0, "Wuji-labelled 54-wide rows (arm reset targets, zero fingers, 3 s): the fingers open, the tools drop",
          actions=wuji_hold, hand=np.array("wuji"))
     short = oracle[:2000]
     save("bad_width", 0, "57 columns", actions=short[:, :57])

@@ -277,12 +277,15 @@ def _drop_unreferenced_meshes(root) -> None:
 
 
 def finger_of(name: str) -> str | None:
-    """Map a hand geom/body/joint name of either model to thumb/index/middle/ring/pinky."""
+    """Map a hand geom/body/joint name of either model to thumb/index/middle/ring/pinky.
+
+    The finger is the finger word that comes first in the name: link names put the finger before the link, and a
+    later word names the phalanx (Wuji ``r_ring_finger_middle`` is the ring finger's middle phalanx, not the middle
+    finger; ``r_pinky_middle`` belongs to the pinky).
+    """
     lowered = (name or "").lower()
-    for finger in FINGERS:
-        if finger in lowered:
-            return finger
-    return None
+    found = [(lowered.find(finger), finger) for finger in FINGERS if finger in lowered]
+    return min(found)[1] if found else None
 
 
 # --------------------------------------------------------------------------------------------- trajectories

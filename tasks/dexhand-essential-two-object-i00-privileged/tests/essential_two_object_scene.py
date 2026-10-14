@@ -111,6 +111,21 @@ def configure(source, spec):
                       contype="0", conaffinity="0", density="0")
 
 
+WUJI_LINK_PREFIX = "r_wuji_r_"
+
+
+def _wuji_finger(name):
+    """Finger of a Wuji Hand 2.2 link body (``r_wuji_r_<finger>[_finger]_<link>``, hands.merge_wuji), else None.
+
+    The finger is the token right after the vendor prefix, never a later link word (``r_wuji_r_ring_finger_middle``
+    is the ring finger's middle phalanx). Sharpa Wave bodies never carry this prefix, so Sharpa features are unchanged.
+    """
+    if not name.startswith(WUJI_LINK_PREFIX):
+        return None
+    token = name[len(WUJI_LINK_PREFIX):].split("_")[0]
+    return token if token in ("thumb", "index", "middle", "ring", "pinky") else None
+
+
 def features(session):
     """Identify real hand contacts by ancestry, including unnamed vendor meshes."""
     result = _shared_features(session)
@@ -139,7 +154,7 @@ def features(session):
             if force > 0.005:
                 counts[label] += 1
             for finger in ("thumb", "index", "middle", "ring", "pinky"):
-                if any(name.startswith("right_" + finger + "_") for name in chain):
+                if any(name.startswith("right_" + finger + "_") or _wuji_finger(name) == finger for name in chain):
                     # A mesh contact manifold can distribute a real finger's
                     # load over several points, each individually below 5 mN.
                     finger_force[label][finger] = finger_force[label].get(finger, 0.0) + force

@@ -20,7 +20,7 @@ The scene uses two_passive_scanned_walnuts and independently controlled fingers 
 a terminal hold must be reached through contact alone.
 
 ## Reference solution
-`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 408 finger-target rows at 50 Hz (8.2 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` submits the same rows as float64 through the agent's client request path (`hold`, dt 0.02 s), so the service executes the validated targets bit for bit; float32-rounded rows (the client's `submit`) also succeed. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence by `scripts/dexhand/verify_oracles.py` (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). The Wuji Hand 2.2 is not offered in this family (no Wuji Hand 2.2 finger pose holds walnut B at the start, so a Wuji episode could only fail).
+`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 408 finger-target rows at 50 Hz (8.2 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` submits the same rows as float64 through the agent's client request path (`hold`, dt 0.02 s), so the service executes the validated targets bit for bit; float32-rounded rows (the client's `submit`) also succeed. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence by `scripts/dexhand/verify_oracles.py` (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). No Wuji trajectory is packaged: Wuji is selectable and graded identically, but not demonstrated.
 
 ## Verification
 The trusted sidecar records its episode and hand; its collect hook replays the rows twice in fresh processes. The separate verifier grades only the sidecar artifacts.
@@ -29,7 +29,7 @@ state hashes equal to the live final hash. Invariants and guards are checked at 
 physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
 partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
 or out-of-range targets and wrist motion are rejected with reward 0. `scripts/dexhand/tests/test_essential_strict.py`
-covers the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases (and the refusal of any other hand).
+covers the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases for both hands.
 Release status is provisional until independent solvability review.
 
 ## Compute resources
@@ -50,5 +50,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ### Notes
 Source: `scripts/dexhand/` (task folder `task_library/essential_two_object/`); the image recipe is `images/dexhand/`. Both
 modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes are pinned to MuJoCo Menagerie commit
-`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). Wuji Hand 2.2 support is pending for this family (`offered_hands.json`). Object assets carry
+`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). Wuji Hand 2.2 is the manufacturer's `hand2/hand2_2` model
+from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in
+the same wrist frame; its collision geoms are renamed to the predicate's finger/palm roles only. Object assets carry
 their own licenses and checksums under `object_assets/`. Renderer output is evidence; it never determines the verdict.

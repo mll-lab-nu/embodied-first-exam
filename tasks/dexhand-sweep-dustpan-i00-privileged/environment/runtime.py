@@ -1,7 +1,8 @@
 """Privileged session of the DexHand `sweep_dustpan` task: fixed dual-arm robot, pre-held broom and dustpan.
 
 The scene is the frozen model `assets/sweep_sharpa.xml` (mesh paths tokenized, four fixed cameras) and its exact
-reset `assets/reset.npz`. One control row sets every motor target for one native 0.5 ms physics step (2000 Hz); nothing
+reset `assets/reset.npz` (Wuji Hand 2.2: `assets/reset_wuji.npz`, same arm/tool/debris state, Wuji fingers closed on
+the shafts). One control row sets every motor target for one native 0.5 ms physics step (2000 Hz); nothing
 else acts on the simulator. The predicate (`checker.py`) is evaluated after every physics step.
 """
 
@@ -24,11 +25,12 @@ from checker import SweepChecker
 HERE = Path(__file__).resolve().parent
 TASK_ID = "sweep_dustpan"
 CONFIG_PATH = HERE / "task.json"
-ACTION_DIM = {"sharpa": 58}  # the hands this task accepts and their row widths
-# Sharpa only. Wuji Hand 2.2 composes at the same flanges (54 actuators) but cannot keep the pre-placed broom and
-# dustpan: the tools stand where the Sharpa grip holds them and no Wuji finger closure holds both (README.md). The
-# composition stays available to authoring tools through allow_unsupported_hand=True; tasks never pass it.
-UNSUPPORTED_WIDTH = {"wuji": 54}
+ACTION_DIM = {"sharpa": 58, "wuji": 54}  # the hands this task accepts and their row widths
+# Wuji Hand 2.2 composes at the same flanges (54 actuators: 14 arm + 20 left + 20 right) and starts from its own
+# declared pre-grasp (assets/reset_wuji.npz): every arm, tool, debris and bristle coordinate of the frozen reset with the
+# Wuji finger joints closed on the same shafts (README.md "Hands").
+UNSUPPORTED_WIDTH = {}
+WUJI_RESET = "assets/reset_wuji.npz"
 RANGE_TOLERANCE = 1e-9
 UNSTABLE = (mujoco.mjtWarning.mjWARN_BADQPOS, mujoco.mjtWarning.mjWARN_BADQVEL, mujoco.mjtWarning.mjWARN_BADQACC)
 
@@ -122,6 +124,11 @@ class Session:
         self._structure_check()
         with np.load(HERE / self.config["reset"], allow_pickle=False) as saved:
             self._reset = {key: saved[key].copy() for key in saved.files}
+        self._reset_hand = None
+        if self.hand == "wuji" and not allow_unsupported_hand:  # authoring (build_wuji_reset.py): neutral fingers
+            with np.load(HERE / WUJI_RESET, allow_pickle=False) as saved:
+                self._reset_hand = {key: saved[key].copy() for key in saved.files}
+            self._check_hand_reset()
         self.scene_sha256 = _sha(json.dumps({"xml": xml, "hand": self.hand}, sort_keys=True).encode())
         self.renderer = None
         self.reset()
@@ -154,11 +161,34 @@ class Session:
         if problems:
             raise ValueError("scene structure check failed: " + "; ".join(problems))
 
+    def _check_hand_reset(self) -> None:
+        """The declared Wuji start must describe exactly this model (joint layout and actuator order) and keep every
+        non-finger coordinate of the frozen reset bit for bit."""
+        m, saved, frozen = self.model, self._reset_hand, self._reset
+        names = [m.joint(j).name for j in range(m.njnt)]
+        if list(saved["joint_names"]) != names or list(saved["actuator_names"]) != self.actuator_names:
+            raise ValueError("assets/reset_wuji.npz does not match the Wuji scene")
+        if saved["initial_qpos"].shape != (m.nq,) or saved["initial_ctrl"].shape != (m.nu,):
+            raise ValueError("assets/reset_wuji.npz has the wrong size")
+        for name, adr, dim in zip(frozen["joint_names"], frozen["joint_qposadr"], frozen["joint_qposdim"]):
+            name = str(name)
+            if name in names:
+                j = names.index(name)
+                ours = saved["initial_qpos"][int(m.jnt_qposadr[j]):int(m.jnt_qposadr[j]) + int(dim)]
+                if not np.array_equal(ours, frozen["initial_qpos"][int(adr):int(adr) + int(dim)]):
+                    raise ValueError(f"assets/reset_wuji.npz changes the frozen coordinate {name}")
+        known = {str(n): float(v) for n, v in zip(frozen["actuator_names"], frozen["initial_ctrl"])}
+        for i, name in enumerate(self.actuator_names):
+            if name in known and saved["initial_ctrl"][i] != known[name]:
+                raise ValueError(f"assets/reset_wuji.npz changes the frozen target {name}")
+
     def reset(self) -> dict:
         m, d, saved = self.model, self.data, self._reset
         mujoco.mj_resetData(m, d)
         if self.hand == "sharpa":
             d.qpos[:] = saved["initial_qpos"]
+        elif self._reset_hand is not None:
+            d.qpos[:] = self._reset_hand["initial_qpos"]
         else:
             by_name = {
                 str(name): saved["initial_qpos"][int(adr) : int(adr) + int(dim)]
@@ -183,6 +213,8 @@ class Session:
         saved = self._reset
         if self.hand == "sharpa":
             return saved["initial_ctrl"].copy()
+        if self._reset_hand is not None:
+            return self._reset_hand["initial_ctrl"].copy()
         known = {str(n): float(v) for n, v in zip(saved["actuator_names"], saved["initial_ctrl"])}
         ctrl = np.empty(self.model.nu)
         for i, name in enumerate(self.actuator_names):

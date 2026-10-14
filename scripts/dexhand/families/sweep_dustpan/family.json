@@ -14,10 +14,12 @@
     "shared": []
   },
   "hands": [
-    "sharpa"
+    "sharpa",
+    "wuji"
   ],
   "action_dim": {
-    "sharpa": 58
+    "sharpa": 58,
+    "wuji": 54
   },
   "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 160000,
@@ -53,7 +55,6 @@
     "video_sec": 2400
   },
   "notes": {
-    "layout": "This task uses the Sharpa Wave hand on both arms of a fixed two-arm robot (Sharpa only: Wuji Hand 2.2 cannot hold the pre-placed broom and dustpan at these mounts). Every row holds both arms' joint targets and both hands' finger targets (layout below).",
-    "hands": "at the arm flanges set for the Sharpa Wave, the Wuji Hand 2.2 cannot keep the pre-placed broom and dustpan"
+    "layout": "This task uses two hands of one model on the two arms of a fixed robot: Sharpa Wave (default) or Wuji Hand 2.2. Every row holds both arms' joint targets and both hands' finger targets (layout below). With Wuji, both hands start closed on the same broom and dustpan (assets/reset_wuji.npz: the frozen arm, tool, debris and bristle coordinates with Wuji finger joints)."
   }
 }

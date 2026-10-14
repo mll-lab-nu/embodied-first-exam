@@ -47,18 +47,21 @@ Float32 rounding of the controls already breaks success (rotation 0.2575 rad > 0
 `artifacts/ready-10-2026-10-14/sweep/analysis/float32-rounded-replay.json`), which is why the standard oracle
 submits float64 rows.
 
-## Hands: Sharpa only (Wuji Hand 2.2 pending)
+## Hands: Sharpa Wave (default) and Wuji Hand 2.2
 
-`family.json` declares `"hands": ["sharpa"]`; `runtime.Session` refuses any other hand (argument or `DEXHAND_HAND`)
-and the replay rejects archives labelled with another hand (manager decision 2026-10-14, as for
-`essential_two_object`). Why Wuji is pending: `hands.replace_wave_hands(root, "wuji")` composes the genuine
-left/right Wuji Hand 2.2 at the same flanges (54 actuators: 14 arm + 20 + 20), but the broom and dustpan are pre-placed
-where the Sharpa grip holds them. Of 48 Wuji closing-target candidates (`tools/search_wuji_grip.py`, 2.5 s each,
-`artifacts/ready-10-2026-10-14/sweep/wuji/grip-search-v2.json`), 36 fail before 1.2 s because the tipping broom
-touches another robot link and 12 fail at 1.2 s with at most one force-bearing right-hand contact on the broom (the
-left hand reaches 2-6 contacts on the dustpan handle). A Wuji variant needs its own pre-grasp (tool poses or arm
-targets for the Wuji hand), i.e. a new frozen instance. The composition stays available to authoring tools via
-`Session(hand="wuji", allow_unsupported_hand=True)`.
+`family.json` declares `"hands": ["sharpa", "wuji"]` (rows 58 and 54 wide). `hands.replace_wave_hands(root, "wuji")`
+composes the genuine left/right Wuji Hand 2.2 at the same flanges (54 actuators: 14 arm + 20 + 20). The Sharpa start
+cannot be reused as is: the tools stand where the Sharpa grip holds them and the neutral Wuji thumbs intersect both
+shafts (up to 76 N contact at t = 0), which kicks the tools; closing targets alone then fail within about 1 s
+(`tools/search_wuji_grip.py`, 48 candidates). The Wuji start (`assets/reset_wuji.npz`, written by
+`tools/build_wuji_reset.py`, deterministic bytes) keeps every arm, tool, debris and bristle coordinate and every arm
+target of the frozen start bit for bit and declares only the 40 Wuji finger joints and targets: the fingers were
+closed onto the frozen shafts in physics (authoring formation with the tools held at their frozen poses), and from
+the start nothing but the finger servos holds the tools. `runtime.Session` refuses a `reset_wuji.npz` that changes any
+frozen non-finger coordinate or target. Validation (w-wuji, `artifacts/ready-10-2026-10-14/wuji/`): holding the start
+targets keeps both tools for the full 160,000-row horizon (no failure before `episode_budget`; min 5 force-bearing
+contacts per handle, grip drift <= 4.4 mm, rotation <= 0.022 rad); 12 s and 80 s hold replays are identical in two
+fresh processes; a hold never succeeds. No Wuji success is claimed.
 
 ## Oracle robustness
 

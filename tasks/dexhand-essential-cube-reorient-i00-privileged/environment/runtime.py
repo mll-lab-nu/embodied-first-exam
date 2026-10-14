@@ -95,6 +95,7 @@ class Session:
             for key in WUJI_RESET_KEYS:
                 if key in parameters:
                     parameters[key] = essential.wuji_reset(self.spec)
+            parameters.update(essential.wuji_initial_objects(self.spec))  # held objects' Wuji start, if declared
             parameters["require_initial_palm_contact"] = False
             parameters["initial_horizontal_max_deg"] = 90
             self.spec = {**self.spec, "parameters": parameters}

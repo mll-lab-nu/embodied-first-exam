@@ -6,14 +6,14 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 name = "robot-coding-bench/dexhand-sweep-dustpan-i00-standard"
 description = "With a fixed dual-arm robot holding a broom in one hand and a dustpan in the other, sweep all six debris pieces off the floor into the pan with the bristles and lift the loaded pan."
 authors = [{ name = "Embodied Exam contributors" }]
-keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "tool_use", "bimanual", "sweeping", "marvin"]
+keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "bimanual", "sweeping", "marvin"]
 
 [metadata]
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
 robot = "marvin-bimanual-sharpa-wave"
-hands = ["sharpa"]
+hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "sweep_dustpan"
 mode = "standard"

@@ -6,14 +6,14 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 name = "robot-coding-bench/dexhand-essential-two-object-i00-standard"
 description = "Rotate and selectively release walnut A while independently retaining walnut B. Both walnuts use authentic closed-shell scan geometry with non-spherical convex-hull collision and the same material properties."
 authors = [{ name = "Embodied Exam contributors" }]
-keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "multi_object"]
+keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "multi_object"]
 
 [metadata]
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
 robot = "sharpa-wave-floating"
-hands = ["sharpa"]
+hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "essential_two_object"
 mode = "standard"
