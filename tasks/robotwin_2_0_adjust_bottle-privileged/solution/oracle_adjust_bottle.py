@@ -35,6 +35,43 @@ def play_once(self):
         }
         return self.info
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (left_target_pose, right_target_pose; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        self.qpose_tag = np.random.randint(0, 2)
+        qposes = [[0.707, 0.0, 0.0, -0.707], [0.707, 0.0, 0.0, 0.707]]
+        xlims = [[-0.12, -0.08], [0.08, 0.12]]
+
+        self.model_id = np.random.choice([13, 16])
+
+        self.bottle = rand_create_actor(
+            self,
+            xlim=xlims[self.qpose_tag],
+            ylim=[-0.13, -0.08],
+            zlim=[0.752],
+            rotate_rand=True,
+            qpos=qposes[self.qpose_tag],
+            modelname="001_bottle",
+            convex=True,
+            rotate_lim=(0, 0, 0.4),
+            model_id=self.model_id,
+        )
+        self.delay(4)
+        self.add_prohibit_area(self.bottle, padding=0.15)
+        self.left_target_pose = [-0.25, -0.12, 0.95, 0, 1, 0, 0]
+        self.right_target_pose = [0.25, -0.12, 0.95, 0, 1, 0, 0]
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (play_once,):
     setattr(env, _f.__name__, types.MethodType(_f, env))

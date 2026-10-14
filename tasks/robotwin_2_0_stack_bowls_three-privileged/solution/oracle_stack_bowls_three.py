@@ -59,6 +59,64 @@ def play_once(self):
         self.info["info"] = {"{A}": f"002_bowl/base3"}
         return self.info
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (bowl1_target_pose, quat_of_target_pose; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        bowl_pose_lst = []
+        for i in range(3):
+            bowl_pose = rand_pose(
+                xlim=[-0.3, 0.3],
+                ylim=[-0.15, 0.15],
+                qpos=[0.5, 0.5, 0.5, 0.5],
+                ylim_prop=True,
+                rotate_rand=False,
+            )
+
+            def check_bowl_pose(bowl_pose):
+                for j in range(len(bowl_pose_lst)):
+                    if (np.sum(pow(bowl_pose.p[:2] - bowl_pose_lst[j].p[:2], 2)) < 0.0169):
+                        return False
+                return True
+
+            while (abs(bowl_pose.p[0]) < 0.09 or np.sum(pow(bowl_pose.p[:2] - np.array([0, -0.1]), 2)) < 0.0169
+                   or not check_bowl_pose(bowl_pose)):
+                bowl_pose = rand_pose(
+                    xlim=[-0.3, 0.3],
+                    ylim=[-0.15, 0.15],
+                    qpos=[0.5, 0.5, 0.5, 0.5],
+                    ylim_prop=True,
+                    rotate_rand=False,
+                )
+            bowl_pose_lst.append(deepcopy(bowl_pose))
+
+        bowl_pose_lst = sorted(bowl_pose_lst, key=lambda x: x.p[1])
+
+        def create_bowl(bowl_pose):
+            return create_actor(self, pose=bowl_pose, modelname="002_bowl", model_id=3, convex=True)
+
+        self.bowl1 = create_bowl(bowl_pose_lst[0])
+        self.bowl2 = create_bowl(bowl_pose_lst[1])
+        self.bowl3 = create_bowl(bowl_pose_lst[2])
+
+        self.add_prohibit_area(self.bowl1, padding=0.07)
+        self.add_prohibit_area(self.bowl2, padding=0.07)
+        self.add_prohibit_area(self.bowl3, padding=0.07)
+        target_pose = [-0.1, -0.15, 0.1, -0.05]
+        self.prohibited_area.append(target_pose)
+        self.bowl1_target_pose = np.array([0, -0.1, 0.76])
+        self.quat_of_target_pose =  [0, 0.707, 0.707, 0]
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (move_bowl, play_once,):
     setattr(env, _f.__name__, types.MethodType(_f, env))
