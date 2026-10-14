@@ -301,9 +301,10 @@ def chain_text(s: str, rec: dict) -> str:
 
 
 def safety_text(s: str) -> str:
-    """The standard instruction's meta["safety"] paragraph: RoboTangle publishes only what the robot feels itself
-    (user decision 2026-10-12; the sim service's robot_felt, SAFETY_PUBLISHED)."""
-    return swap(s, SAFETY_OLD, SAFETY_NEW, "the meta safety paragraph")
+    """The standard instruction's meta["safety"] paragraph stays the released one (SAFETY_OLD): the service publishes
+    main's declared fields again, with part names (user decision 2026-10-13; the sim service's robot_felt,
+    SAFETY_PUBLISHED). A text still carrying the reduced paragraph of 2026-10-12 (SAFETY_NEW) gets the released one back."""
+    return s.replace(SAFETY_NEW, SAFETY_OLD)
 
 
 def is_mujoco(rec: dict) -> bool:

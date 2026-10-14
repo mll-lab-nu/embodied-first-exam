@@ -61,25 +61,30 @@ episode with reason `timeout` when that count reaches 0; counted from the first 
 
 ## Safety readings in standard mode (`meta["safety"]`)
 
-User decision 2026-10-12: a standard response publishes only what the robot can feel itself, the readings a real robot
-senses through its own drives and controller:
-- `forcing`: the largest force an arm, or a part it holds, pressed with (`max_press_force_n`), the arm drive's load
-  meanwhile (`max_drive_fraction_while_pressing`), the longest run of the forcing condition (`longest_forcing_s`), the
-  number of forcing events and the last ones (arm, joint, step, drive fraction, torque cap, force), with the thresholds
-  (`event_after_s`, `near_cap_fraction`, `contact_n`). In an event, what pressed is the robot's own link or "a held part",
-  and what it pressed on is "the environment": no task part is named.
-- `table_guard`: the control steps whose gripper target the table guard stopped (the robot's own targets).
-- `ik_jumps`: IK solutions far from the current joints.
-- `rules`, `scope`: the rules revision and what the reading covers.
+Owner decision, 2026-10-10: the standard service keeps publishing `meta["safety"]` in every response, and the protocol
+records it as a declared exception to "no object contact forces". Why: the benchmark's physical-validity policy judges
+the agent on these readings -- a success with a deep task contact is held for human review instead of credited, a
+soft body that stays collapsed ends the episode, a simulator breakdown shortly after forcing is the agent's failure --
+so an agent that could not see them would be judged on something it cannot measure. The fields are exactly what
+`rcb_topogym._SafetyMonitor.read` returns (maxima since the previous response, each next to its limit), and nothing
+else of the simulator's contact state is published:
 
-Not published (the grader's evidence, final.json and the review): task-contact depths (part to part), held-finger
-contact depths, review events, soft-body volume ratios, cord attachment stretch. Why: the agent may be judged on its own
-forcing (a breakdown it forced is its failure), so it sees that; the depth of a contact between two task parts, which
-part touched which, and the internal state of a deformable are not something the robot can sense.
-Implementation: the sim service's `robot_felt` (`scripts/robotangle/shared/standard/sim/server.py`,
-`SAFETY_PUBLISHED`), on the benchmark's own copy; RoboTangle's service is unchanged.
-`scripts/robotangle/tests/test_server_requests.py` checks that no dropped field and no task-part name reaches a
-response. Pending the owner: this listing under PROTOCOL §4.5's declared telemetry.
+| Field of `meta["safety"]` | What it is | Families |
+|---|---|---|
+| `rules`, `scope` | the policy's revision; "since the previous read" | all |
+| `forcing` | `max_press_force_n` (the largest total contact force an arm's gripper, or a part it holds, pressed on anything else with), `max_drive_fraction_while_pressing`, `longest_forcing_s`, `events`, the last three events (each: the arm and joint, the control step, the drive fraction and cap, the force, and in words what pressed on what, e.g. "a part it holds" on a named task part), and the thresholds (`contact_n`, `near_cap_fraction`, `event_after_s`) | all |
+| `task_contact_mm` | the deepest contact between task parts (`max`), the longest time above the sustained limit, and the review and breakdown limits | rigid |
+| `held_finger_contact_mm` | the deepest contact between a finger and the part it holds, with its review limits | rigid |
+| `review` | the count of review events and the last three (each: the kind, the control step, the names of the two task parts in contact, the depth in mm and the force in N); a success with one is held for review | rigid |
+| `soft_volume_ratio` | the lowest volume ratio of each soft body and the longest time at or below 0 | soft (rope, cord, cloth) |
+| `attachment_stretch_mm` | the worst cord attachment stretch and the longest time above its limit | soft |
+| `table_guard` | the control steps whose gripper target the table guard stopped, with the last events | where the guard applies |
+| `ik_jumps` | the last IK solutions that lay far from the current joints (`ee_pose` actions) | when one occurred |
+
+These are forces, depths, ratios and the names of the parts involved, never a pose: no field says where an object is.
+A change to this list is a change of the declaration and goes through the protocol-change process (PROTOCOL §6).
+
+User decision 2026-10-13: this release publishes main's declared fields again, with the names of the parts involved (names are allowed in standard mode; only positions / poses in the simulator's world frame, the table height and physics parameters are withheld). The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`); `scripts/robotangle/tests/test_server_requests.py` checks the list and the names.
 
 ## Standard mode, world frame, network
 
