@@ -80,6 +80,15 @@ ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 # (scripts/task_cutoffs.toml) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
 COLLECT_TIMEOUT_S = 3600
 COLLECT_WAIT_S = 3450
+# README Change Log entries of single tasks (by environment), after those of every task; both modes.
+_FAUCET_CHANGE = (
+    '2026-10-14 (board 0113, from board 0086): the success text now says that the faucet handle has two hinges at one'
+    ' pivot: the water on / off hinge (range 0 to 0.52 rad) and a temperature hinge (about ±0.79 rad) that never '
+    'turns the water on or off, and that "off" means turned back toward 0 on that hinge, not lowered (board 0086: '
+    'runs moved the temperature hinge or pressed the handle down). Text only: the scene, the frozen instance, the '
+    "reference solution, the environment's success check and the verifier are unchanged, so the task keeps its name."
+)
+CHANGES_TASK = {env: [_FAUCET_CHANGE] for env in ['TurnOnSinkFaucet', 'TurnOffSinkFaucet', 'PreSoakPan']}
 # README Change Log of the standard tasks (PROTOCOL §2.8: published tasks are fixed in place), oldest first.
 CHANGES_STANDARD = [
     "2026-10-10: the sim service writes its verdict together with `finalized` in one atomic step and renders the "
@@ -344,9 +353,11 @@ def privileged_readme(rec: dict) -> str:
         ("Deliverable", f"`(T, {rec['action_dim']})` native controller commands, 1 ≤ T ≤ {MAX_STEPS}, 20 Hz"),
         ("Success", "the environment's own check (`_check_success`) on the state after the last action"),
     ]
-    return readme(
+    text = readme(
         readme_head(rec, "privileged"), task, DIFFICULTY_PRIVILEGED.replace("\n", " "), reference, verification, details
     )
+    log = CHANGES_TASK.get(rec["env"], [])
+    return text + ("\n### Change Log\n" + "".join(f"- {c}\n" for c in log) if log else "")
 
 
 def standard_readme(rec: dict) -> str:
@@ -374,7 +385,7 @@ def standard_readme(rec: dict) -> str:
     text = readme(
         readme_head(rec, "standard"), task, DIFFICULTY_STANDARD.replace("\n", " "), reference, verification, details
     )
-    return text + "\n### Change Log\n" + "".join(f"- {c}\n" for c in CHANGES_STANDARD)
+    return text + "\n### Change Log\n" + "".join(f"- {c}\n" for c in CHANGES_STANDARD + CHANGES_TASK.get(rec["env"], []))
 
 
 def privileged_toml(rec: dict) -> str:

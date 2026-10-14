@@ -34,11 +34,8 @@ def seeds(task: Path) -> dict:
 
 
 def holder(task: Path) -> Path:
-    if tc.mode_of(task) in tc.SIDECAR_MODES:
-        twin = task.with_name(tc.base_of(task) + "-privileged")
-        if twin.is_dir():
-            return twin
-    return task
+    twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §2.16)
+    return twin if twin is not None and twin.is_dir() else task
 
 
 def places(task: Path) -> list[str]:

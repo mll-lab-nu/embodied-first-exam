@@ -219,6 +219,14 @@ sees it and still ends the episode with a 500.
   privileged trajectory may hold at most that many rows.
 - An `ee_pose` submit has no frame cap: a long one at a high `video_fps` keeps many frames in memory (the client's
   defaults, 5 fps and mp4, stay small).
+- RoboLab's success terms are upstream's and stay as they are (owner, 2026-10-14: "the original simulator decides"),
+  including two that are looser than their words (board 0086): `require_gripper_detached` can read an object that is
+  still pinched or wedged in the gripper as detached, and "inside" extends without limit along the container's up axis
+  (the instructions state the latter). `tools_picking_drill`'s term names the left bin while the drill starts in the
+  right bin; the instruction says so (2026-10-14).
+- Contact can make the physics diverge (joint readings of 1e6 and more, objects thrown off the table) after a grasp
+  that looks ordinary; in standard mode that episode is lost (board 0086 saw it once in about 350 trials). A
+  privileged `s.reset()` does not restore the start bit for bit; the verifier replays in a fresh process.
 
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA

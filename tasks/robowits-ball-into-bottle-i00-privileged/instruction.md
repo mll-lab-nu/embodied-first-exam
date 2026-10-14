@@ -3,6 +3,8 @@
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
 0.4.7 physics) via Python. **Task:** Transfer the ball from the blue container into the red bottle.
 
+The red bottle's base is thin in the simulator (its collision shape is about 3.5 mm thick, and the bottle is fixed to the table): a ball that falls fast down the bottle can pass through the base onto the table, which fails the task. In one measured case about half of the pours did (16 replays of one pouring trajectory with tiny noise, 9 balls through the base): let the ball in slowly.
+
 The scene objects are the env's entities (`s.objects()`: `red bottle`, `funnel`, `ball container`, `small ball`; see
 `/opt/robowits/gs_gym/envs/robowits/12_ball_into_bottle.py`). RoboWits' success predicate is `_check_success` in that file:
 ```python
