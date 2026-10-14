@@ -27,6 +27,7 @@ simulator = "autobio"             # AutoBio @ 0850421 on MuJoCo 3.3.0 (CPU)
 robot = "ur5e-dexhand-2f85-bimanual"
 family = "pipette"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 difficulty = "medium"              # AutoBio's own level for the task

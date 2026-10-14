@@ -26,6 +26,7 @@ simulator = "robolab"
 robot = "franka-robotiq-2f85"
 family = "rubiks_cube_in_front_of_bowl"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-rubiks-cube-in-front-of__9ygGYcP (robolab-rubiks-cube-in-front-of-bowl-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/rubiks_cube_in_front_of_bowl/unlimited/); robolab-rubiks-cube-in-front-of__7zQXMPY (robolab-rubiks-cube-in-front-of-bowl-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/rubiks_cube_in_front_of_bowl/limited/). Human review per family (PROTOCOL §2.7)."

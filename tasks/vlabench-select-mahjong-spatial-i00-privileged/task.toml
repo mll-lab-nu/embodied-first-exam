@@ -16,6 +16,7 @@ simulator = "vlabench"
 robot = "franka-panda"
 family = "vlabench/select_mahjong_spatial"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 0             # VLABench's episode configuration for this task, seeded build
 expert_time_estimate_hours = 1.0

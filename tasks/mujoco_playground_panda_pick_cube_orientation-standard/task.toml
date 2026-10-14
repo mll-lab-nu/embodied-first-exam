@@ -24,6 +24,7 @@ family = "mujoco_playground/PandaPickCubeOrientation"
 instance_seed = 60417             # Playground's reset randomization (box xy, target position and orientation) with this seed
 expert_time_estimate_hours = 1.0
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "full"
 
