@@ -9,7 +9,9 @@ one arm) or `"franka-panda-bimanual"` (D01-D13, two arms). Each arm has its stan
 tool on it (a plate, a cup, a paddle, a scoop, a fork, a receiver, a pusher).
 
 One frozen instance per task (i00), each a privileged task `pandadyn-<code>-<name>-i00-privileged` and its standard twin
-`pandadyn-<code>-<name>-i00-standard` (`eai-standard/2.2`): 50 task directories.
+`pandadyn-<code>-<name>-i00-standard` (`eai-standard/2.2`): 50 task directories; the 19 dynamic families (all but D05, D08,
+D11, D12, D13, S06) also have a standard-realtime twin `pandadyn-<code>-<name>-i00-standard-realtime` (`eai-standard/2.3`,
+since 2026-10-14): 69 task directories.
 
 | Code | Task | Arms | Phases | Seed (i00) | Oracle |
 |---|---|---|---|---|---|
@@ -161,10 +163,55 @@ multiple of 0.01 s, at most 0.5 s; `hold` or `linear`; executed as float64, whic
 proprioception per arm: joints and fingers, hand TCP pose, velocities, aperture, motor torques, tool pose, the targets in
 force (`spec["proprio_groups"]`). The simulated clock advances only with the agent's calls (submit rows, observe
 watches): between calls the world is frozen, so the agent can look between control steps at a cost in calls, as on a
-robot whose controller it pauses; standard-realtime mode (§4b) is not offered.
+robot whose controller it pauses. The dynamic families also have a standard-realtime twin (below).
 
 The episode's only step bound is the task's own horizon (`max_control_steps` = 2,500, 3,200 or 3,500: 25, 32 or 35 s of
 simulated time), a failure of the task, stated in `/spec` (`episode`), both instructions and the README.
+
+## Standard-realtime (eai-standard/2.3, since 2026-10-14)
+The owner, 2026-10-14 (board 0107 E3, board 0112): the dynamic families (PROTOCOL §2.14; `scripts/task_dynamics.toml`
+makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as static: nothing in them moves by itself) get a
+`-standard-realtime` twin. Defaults of the standard twins are unchanged (owner E3).
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged (`rcb_realtime.py`,
+  `rcb_service.py`, `rcb_client.py`, `grade.py`, copied by `mk_tasks.py` from `scripts/humanoidbench/shared/`), with
+  `template/realtime/environment/sim/server.py`, an `rcb_service.Sim` adapter on `rcb_pandadyn.Session`: the standard
+  twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras
+  (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
+  2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
+  scene rebuilt and reset with the instance's seed (exact, about 1 s); 10 by default (PROTOCOL §4b).
+- **Grading.** The live episode, and a replay of its rows in a **fresh process** (`rcb_pandadyn.py replay`, the standard
+  twin's collect-hook replay: a Session holds a SAPIEN scene, one per process), which must succeed and end in the live
+  run's state (CPU PhysX with enhanced determinism). The video is filmed afterwards by the live scene and never decides.
+- **Reference solution.** `solution/oracle_plan.py` plans the privileged oracle's rows (one per control step, `hold`)
+  into the episode from step 0, 10 s per chunk, each chunk at its own step (`at`), so every row runs at its recorded
+  control step whatever the wall clock does: `oracle = "full"`.
+- **Slowdown S per family.** CPU PhysX at 1000 Hz with two servos in Python runs slower than real time here, so no
+  family runs at S = 1. Measured on ws-1 (32 cores, the service capped at 4 CPUs, board 0112, 2026-10-14): the
+  realtime service with its clock flat out (`RCB_SLOWDOWN=0.01`, the oracle's first 10 s planned from step 0; host load
+  18-80) and the bare physics loop (`Session.step` over the oracle's first 8 s; load 39-47). S = ceil(1.5 / RTF) with
+  the lower of the two (PROTOCOL §4b; a busy pool host is slower still: the same service ran 1.4-1.9 x faster at load
+  20 than at load 45):
+
+| family | RTF (service, physics) | S | | family | RTF (service, physics) | S |
+|---|---|---:|---|---|---|---:|
+| D01 ReciprocalCupRelay | 1.00, 0.69 | 3 | | S03 ClearGateHockey | 1.21, 1.18 | 2 |
+| D02 StrikeCatchMerge | 0.83, 0.52 | 3 | | S04 ImpactReleaseRelay | 1.06, 1.02 | 2 |
+| D03 CooperativePuckCourse | 1.01, 0.71 | 3 | | S05 SlidingReceiveAlignDeliver | 1.21, 1.20 | 2 |
+| D04 SharedTrayTransportDischarge | 0.75, 0.42 | 4 | | S07 ConveyorLoadBrakeUnload | 0.46, 0.48 | 4 |
+| D06 MovingBankRelay | 0.94, 0.73 | 3 | | S08 LoadSwitchRecover | 0.29, 0.29 | 6 |
+| D07 SpringGateSwitchyard | 0.86, 0.51 | 3 | | S09 TossRecatchDelivery | 0.92, 1.14 | 2 |
+| D09 LeverLaunchCatchReload | 0.98, 0.61 | 3 | | S10 SwingingLoadTransitDock | 0.84, 0.84 | 2 |
+| D10 MovingGraspHandover | 0.55, 0.30 | 6 | | S11 CylinderRescueRouteDeliver | 0.69, 0.94 | 3 |
+| S01 CupRouteDelivery | 1.49, 1.22 | 2 | | S12 MovingBridgePuckRelay | 0.68, – | 3 |
+| S02 PlateCatchTransportRelease | 1.41, 1.24 | 2 | |  | |  |
+
+- **Checked at the task's S** (board 0112, one container at a time, 4 CPUs, GPU for SAPIEN): in every one of the 19 twins,
+  three aborted attempts (the oracle's first second planned from step 0, then `reset`) and then the oracle planned
+  from step 0 in the fourth episode: live success, fresh-process replay success, the same final state (deterministic),
+  `late_steps` 0; the clock kept time with no stall in 17 of them (largest lag 0.01-0.49 s) and stalled 3 times in D07
+  (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
+  success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
+  and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
 
 ## Declarations
 - **Tooling: thin wrappers only** (above). No task-level skill (catch, strike, carry) is in the agent's tooling.
