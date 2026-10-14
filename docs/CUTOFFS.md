@@ -23,7 +23,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | MetaWorld+ | 1800 s (30 min) | 1800 s (30 min) | — | 50 / 50 / — |
 | MolmoSpaces | 3600 s (60 min) | 3600 s (60 min) | — | 8 / 8 / — |
 | MuJoCo Playground | 1800 s (30 min) | 1800 s (30 min) | — | 13 / 13 / — |
-| MyoSuite | 3600 s (60 min) | 3600 s (60 min) | — | 22 / 22 / — |
+| MyoSuite | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 22 / 22 / 1 |
 | Panda Dynamic Scenes | 3600 s (60 min) | 3600 s (60 min) | — | 25 / 25 / — |
 | RoboARC | 10800 s (180 min) | 10800 s (180 min) | — | 94 / 94 / — |
 | RoboCasa | 3600 s (60 min) | 3600 s (60 min) | — | 29 / 29 / — |
@@ -39,7 +39,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1810 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1811 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -116,3 +116,4 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-13 | Panda Dynamic Scenes, privileged, standard | (none) -> 3600 s | proposal #177 (D8 default) | the benchmark's first tasks: the protocol's default; a scene builds in seconds and simulates at 60-150 control steps per second, so the hour is the agent's own work |
 | 2026-10-13 | RoboTangle, privileged, standard | 7200 s -> (removed) | owner | removed: the benchmark is renamed RoboARC (next entry) and its Genesis tasks are deleted; RoboARC's MuJoCo release replaces them, and results recorded under this row are not carried over |
 | 2026-10-13 | RoboARC, privileged, standard | (none) -> 10800 s | owner | new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap |
+| 2026-10-14 | MyoSuite, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the first standard-realtime task (table_tennis): the standard twin's number |
