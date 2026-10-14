@@ -20,9 +20,11 @@ comparable with this release's and are not carried over. The new image is built 
 - `<family>` with dashes (`interlocked-claws`); `[metadata].family` keeps the underscores.
 - `<tier>`: the variation id without the family prefix, with dashes. A ported tier keeps RoboTangle's tier
   (`very-easy`, `easier`, `easy`, `medium`, `hard`); a redesigned set has its own ids (`rd-very-easy` … `rd-hard`); a
-  new variation its own name (e.g. `v2-very-easy`).
+  new variation its own name (e.g. `double-maze`). No version in a task name: a redesign of a tier is another instance.
 - `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<tier>-i01/`); RoboTangle's Genesis instance of the
   same scene is its `i00`.
+- `i02`: the redesigned instance of the same tier: `cast-coil-{very-easy,easier,easy}-i02` (the redesigned Cast Coil,
+  internal variation ids `cast_coil_v2_*`), beside the ported `cast-coil-<tier>-i01`.
 
 Every task is RoboTangle's task contract (the same tooling `rcb_topogym.py`, graders, sim service and eai-standard/2.4
 layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "Standard mode") with these differences:
