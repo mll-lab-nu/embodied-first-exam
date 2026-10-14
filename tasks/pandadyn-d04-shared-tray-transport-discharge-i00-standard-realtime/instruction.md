@@ -1,0 +1,172 @@
+# Panda Dynamic Scenes · Shared tray transport and discharge (D04) — STANDARD-REALTIME MODE (robot as a service; time does not stop)
+
+You control two simulated **Franka Panda** arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
+1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
+for you: once an episode is running, the scene and the robot move while you think.
+**Task:** The two Pandas hold one tray between them. Each arm's small open fork cradles a tab on one end of the tray, and an orange ball lies loose in the tray. Working together, the arms must first hold the tray steadily. They then carry it through two waypoints that make a turn. When the environment pushes the ball, they must bring it back to rest near the tray centre. Next they bring the tray to an exit position beside a fixed basin, and finally they tip the ball out so that it settles in the basin. Both forks must support the tray during the transport phases, the ball must not leave the tray before the discharge, and the tray must never drop low.
+
+**Slowdown: S = 4.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
+S x 10 ms = 40 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is
+the task's, from its measured speed). `spec()["timing"]["slowdown"]` states it.
+
+## Scene
+panda-0 (left): base at (-0.55, -0.22, 0), yaw 0 (facing +x). panda-1 (right): base at (0.74, 0.22, 0), yaw pi (facing -x). Each carries a support fork: a small, shallow square cradle 0.07 m x 0.07 m inside (2 x `tool_half`, `tool_half` = 0.035 m). It has a 5 mm floor and 18 mm high walls on three sides, is open on the tool +x side, and is held by an adapter on its closed tool -x wall. The tool frame is the centre of the cradle floor's top surface, z up. The TCP sits 0.12 m along tool -x and 0.04 m above the tool frame. Left fork start: (-0.075, 0, 0.22), orientation identity (open side toward world +x). Right fork start: (0.215, 0, 0.22), quaternion (0, 0, 0, 1) (yawed 180 deg, open side toward world -x). The two open sides face each other. In this task both arms' servos plan their reference motion with lower acceleration and jerk fractions than usual (0.30 and 0.025, default 0.55 and 0.05). Role labels in every phase: panda-0 left_support, panda-1 right_support.
+
+A blue rigid tray, 0.20 m x 0.24 m inside, has a 9 mm rim and a 5 mm floor. A flat tab (48 mm x 60 mm, 8 mm thick) sticks out at floor level from the middle of each of its two longer sides. At the start each tab rests in one arm's fork, so the tray hangs between the two arms. An orange ball (radius 18 mm) lies loose near the middle of the tray. A fixed blue open-top basin, 0.21 m x 0.20 m inside and 0.08 m deep, stands on posts above the table. Nothing moves by itself, except that the environment gives the ball a brief push along world +x the moment the third phase begins. The table top is the world's z = 0 plane.
+
+**Goal geometry.** Tray waypoints A = (0.12, -0.04, 0.27) and B = (0.02, 0.08, 0.27) apply to the tray's frame origin. The exit point (0.12, 0.18) applies in the horizontal plane and is not announced. The tray's frame origin must always stay at or above z = 0.17 m.
+
+## Time in this scene
+The scene is dynamic: from the episode's first control step on, things move by themselves (as described above), and
+they do not wait for the robot. **Time does not stop**: an episode starts paused, on the frozen starting state, the arms
+holding their starting joints. Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the
+simulator runs one control step (10 ms of robot time) every 40 ms of wall-clock time, whether or not you send
+anything, until the episode ends. Between your commands each arm executes what you planned, then holds its last targets;
+nothing pauses for you, not your thinking, not your tool calls. The episode lasts at most **25 s of robot time**
+(the task's horizon, 2500 control steps, about 100 s of wall-clock time): when it is reached
+before the task is complete, the task has failed. Nothing moves at t = 0: the tray rests in both forks and the ball lies still in it. The only scripted motion is the push the ball receives the moment the third phase (disturbance_recovery) starts.
+
+## Success
+The task has 5 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
+(a phase is checked only once the previous one is complete, and a completed phase stays complete):
+1. **shared_support**: For 0.35 s without interruption, two things hold. The tray is supported by both forks: it has been in contact with the left fork within the last 0.04 s and with the right fork within the last 0.04 s. And the ball is inside the tray, as defined under ball_spill.
+2. **transport_turn**: With the tray supported by both forks (as above), the tray's frame origin (the centre of its floor's top surface) comes within 0.025 m of waypoint A = (0.12, -0.04, 0.27). Later, again with both forks supporting it, the origin comes within 0.025 m of waypoint B = (0.02, 0.08, 0.27). The waypoints must be reached in this order.
+3. **disturbance_recovery**: When this phase begins, the environment pushes the ball along world +x for 0.03 s with a fixed impulse. The phase completes when all of the following hold for 0.4 s without interruption. Both forks support the tray. The push has been fully applied (at least 95% of it). The ball's centre is within 0.045 m of the tray centre in the tray's x-y plane. The ball moves at less than 0.07 m/s relative to the tray, including the tray's rotation.
+4. **exit_alignment**: With both forks supporting the tray, the tray's frame origin is within 0.04 m of (0.12, 0.18), measured horizontally (x and y only).
+5. **natural_discharge**: The ball is contained in the basin and does not touch the tray, for 0.7 s without interruption. Contained in the basin means all of the following, in the basin's frame (origin at the centre of its floor's top surface, axes = world axes). |x| and |y| of the ball centre are below 0.0919 m (0.10 - 0.45 x radius; the same bound is used on both axes). Its height above the basin floor is between 0.014 m and 0.0778 m. It has been in contact with the basin within the last 25 ms. Its speed is below 0.09 m/s. Neither fork has to support the tray in this phase, but the tray must still stay above z = 0.17 m. This completes the task.
+
+The episode **ends by itself** at the first control step where the last phase is complete (success) or where the task has
+failed (`meta["done"]`, `meta["reason"]`: `success` or the failure's name).
+
+**The task fails** (the episode ends, reward 0) as soon as any of these happens:
+- before natural_discharge (in phases shared_support to exit_alignment), the ball leaves the tray region. In the tray's frame that is |x| >= 0.11 m, |y| >= 0.16 m, or a centre at or more than 0.01 m below the tray floor's top surface (`ball_spill`);
+- at any time, in every phase including the discharge, the tray's frame origin falls below z = 0.17 m (`shared_support_drop`);
+- the task's horizon is reached: 25 s of simulated time (`timeout`);
+- an object leaves the workspace: its centre falls more than 0.2 m below the table top or gets more than 1.8 m from the
+  world's z axis (`out_of_bounds`);
+- a forbidden contact or a deep interpenetration (below);
+- a safety limit is exceeded (`limit_violation`, below).
+
+**Contacts.** The forks may touch the tray and the ball, which are free objects, and nothing else: not the basin or its posts, not the table, not the robot pedestals. No other robot part, the fingers included, may touch anything. The two arms and their forks must never touch each other, and a fork must not touch its own arm. The tray and the ball may touch the basin. In every task: the two arms (and their tools) never touch each other
+(`arm_arm_or_tool_collision`), an arm never touches itself (`self_collision`), no robot part touches the table or the floor
+(`forbidden_collision`, `tool_table_collision`), a robot link other than an allowed one touches no object or fixture
+(`forbidden_arm_object_contact`, `forbidden_arm_scene_contact`, `forbidden_arm_fixture_contact`), a tool touches only the
+task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
+4 mm (`excessive_penetration`).
+
+**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `spec()["robot_spec"]["safety_limits"]`):
+measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
+2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
+2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
+and jerks at most 1.05 x (7500, 3750, 5000, 6250, 7500, 10000, 10000) rad/s³; the TCP's acceleration (20 ms windows) at
+most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 87, 12, 12, 12) N m, changing at most
+1000 N m/s. The servo's own reference motion is checked against the same speed, acceleration and jerk limits. A contact
+(a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
+
+## Rules (real-robot rules)
+- **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds of
+  wall-clock time, which is many control steps here. Drive the robot with a program: a controller of your own (Python in
+  your container, with numpy and the client) that plans or streams the targets, started in the background
+  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the episode. Use
+  your turns to start episodes, read what happened, and improve the program.
+- **Episodes and resets.** An episode ends on success, on a failure, when your time is up, or on a simulator error. You
+  have **10 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset and the one
+  episode is the run). `r.reset()` puts the robot and the scene back on the same frozen starting state (the scene is
+  rebuilt, about a second) and starts a new episode, paused until your next `submit`, either abandoning the running
+  episode or after one has ended. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives
+  `resets_left`) until you reset. **Only the last episode is graded**: an episode you reset away is never graded, a
+  success ends the run at once (no reset after it), and when your time is up the episode then running is the one graded.
+  The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes.
+- **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
+  (joints, fingers, hand TCP and tool poses, velocities, motor torques, the targets in force). No object poses, no success
+  signal before the end: the service tells you that an episode ended and why (`meta["done"]`, `meta["reason"]`:
+  `"success"`, `"error"` after a simulator error, else `"failed"`).
+- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
+  process and grades the replay. Keep the program that drives the robot at `/app/output/gen.py` for the record: save it
+  early and keep it current. Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode, paused
+  (never a reset). `r.status()` answers again once it is back; check `control_steps` before you continue.
+- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
+  what you look at and where you store it is your code's decision.
+
+## Time and streaming
+- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
+  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
+  keeping what is planned before it. When the plan runs out, the last targets are held. `res.meta["control_steps"]` is
+  the number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]` the
+  proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+- Open loop: plan a movement at once (rows `dt` apart, a multiple of 0.01 s; a chunk covers at most 10 s of robot time),
+  from step `at = 0` for the episode's start: `r.submit("joint_position", rows, dt=0.01, interpolate="hold", at=0,
+  cameras=[])` starts the clock and runs exactly those rows from the first step; plan the next chunk with its own `at`
+  (at most `spec()["timing"]["max_ahead_steps"]` steps ahead of the next one) before the plan runs out.
+- Closed loop: send one row per control step, `r.submit("joint_position", a[None], cameras=[])`, computed from the
+  proprioception the previous call returned. `cameras=[]` skips the images (the fastest call).
+- Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
+  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
+  them); the rest of its chunk applies from the next step.
+- `get_obs()` reads the robot and the cameras now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time
+  run and returns what the cameras saw meanwhile (the robot keeps executing its plan). Rendering a camera takes 10-150 ms
+  on the service's GPU, time the simulator is not stepping: ask only for the cameras you need. `spec()["timing"]` states
+  all this; `r.status()` shows `running` and `lag_s`.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
+Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
+help(rcb_client)"`); the calls and the endpoints they use:
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
+| `r.spec()` | `GET /spec` | the robot's facts: the action layout and limits, `control_dt` (0.01 s), `timing`, the cameras and their calibration, `proprio_layout` / `proprio_groups`, `robot_spec` (bases, servo and safety limits), `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
+| `r.submit("joint_position", A, dt=0.01, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 16 targets `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the episode's clock |
+| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state, paused (at most 10 in all); returns the start's frames |
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
+`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during a watch),
+`res.depth[camera]` (with `include_depth=True`, metres), `res.proprio` (proprioception rows). A malformed request raises
+`ValueError` and changes nothing.
+```python
+from rcb_client import Robot
+import numpy as np
+r = Robot()
+q0 = np.asarray(r.get_obs(cameras=[]).meta["proprio"]["now"])          # the robot at the frozen start (no time passes)
+rows = ...                                                             # (T, 16) targets, one per control step
+res = r.submit("joint_position", rows, dt=0.01, interpolate="hold", at=0, cameras=[])   # starts the clock
+while not r.status()["done"]:
+    ...                                                                # plan the next chunk (at=...) or stream rows
+```
+Cameras (640×480 RGB, static): `overview` (the whole workspace) and `closeup` (the task's working area), with their
+calibration in `spec()["cameras"]` (`intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`); z-depth on request.
+`cameras=None` means both: name the one you need, or `[]` for none.
+
+### Action type
+- `joint_position` (16 per row): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each arm's 8 values are its 7 absolute joint-position targets
+  (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at most
+  0.025 m/s). Rows are `dt` apart (a multiple of the 0.01 s control period); `interpolate="linear"` (default: a straight
+  line from the targets in force) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed
+  in `meta["clipped"]` (limits in `spec()["action_types"]["joint_position"]`). The realtime client sends the rows as
+  float64, and the service executes them as sent.
+- The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
+  trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 30 % (acceleration) and 2 % (jerk) of the Panda's joint
+  speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
+  Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
+  reached smoothly, not in one step. `spec()["robot_spec"]["servo"]` has the exact limits and gains.
+
+## Conventions
+- World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
+- `spec()["proprio_groups"]` names the proprio columns: `joint_pos` (per arm joint1..7, finger_left, finger_right), `tcp_pose`
+  (the hand TCP, between the fingertips), `joint_vel`, `gripper_opening`, `joint_effort` (motor torques), `tool_pose` (the
+  task tool's frame), `target` (the targets in force). The arms are listed panda-0 first.
+- Control runs at 100 Hz (10 ms per row), physics at 1000 Hz.
+
+## External material
+You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

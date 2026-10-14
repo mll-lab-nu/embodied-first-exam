@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "assemble_hamburger",
+  "task": "task.json",
+  "runtime": {
+    "files": ["runtime.py", "replay.py", "scene.py", "task.json"],
+    "dirs": [],
+    "shared": []
+  },
+  "hands": ["sharpa", "wuji"],
+  "action_dim": {"sharpa": 28, "wuji": 26},
+  "robot": "sharpa-wave-floating",
+  "max_rows": 7500,
+  "instruction": {"privileged": "instruction/privileged.md", "standard": "instruction/standard.md"},
+  "readme": "README.task.md",
+  "solution": {"privileged": "solution/privileged.npz", "standard": "solution/standard.npz"},
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes.",
+    "expert_time_estimate_hours": 3.0,
+    "keywords": ["food-assembly", "stacking", "thin-layers"]
+  },
+  "control_hz": 50,
+  "timeouts": {"verifier_privileged_sec": 3600, "verifier_standard_sec": 600, "collect_sec": 3600,
+               "replay_sec": 900, "video_sec": 900},
+  "notes": {
+    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets."
+  }
+}

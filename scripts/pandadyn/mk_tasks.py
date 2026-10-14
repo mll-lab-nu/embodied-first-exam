@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate the Panda Dynamic Scenes tasks: tasks/pandadyn-<code>-<name>-iNN-privileged and -standard (eai-standard/2.2) for
-every frozen instance in scripts/pandadyn/instances.json (docs/benchmarks/pandadyn.md).
+every frozen instance in scripts/pandadyn/instances.json, and -standard-realtime (eai-standard/2.3) for the dynamic families
+in REALTIME (docs/benchmarks/pandadyn.md).
 
     python3 scripts/pandadyn/mk_tasks.py              # (re)write every Panda Dynamic Scenes task dir; `git diff tasks/` stays empty
     python3 scripts/pandadyn/mk_tasks.py --check      # write nothing; exit 1 if a task dir differs from the generator's
@@ -16,6 +17,8 @@ Inputs, all in the repository:
   scripts/pandadyn/shared/rcb_pandadyn.py  the tooling (privileged environment/ + tests/, standard environment/sim/)
   scripts/pandadyn/template/<mode>/        every other task file; a *.tmpl file is filled with the instance's values (@@KEY@@)
   scripts/eai_standard/                    the eai-standard/2.2 layer, copied unchanged, and the standard client (client.env)
+  scripts/humanoidbench/shared/            the eai-standard/2.3 realtime layer (realtime/rcb_realtime.py, rcb_client.py;
+                                           standard/rcb_service.py, grade.py), copied unchanged into the standard-realtime twins
   images/pandadyn/                         VERSION (the base image tag) and the environment package (the servo fractions
                                            of each task are read from its source)
 Both twins of an instance are written to a scratch directory, passed through scripts/task_conventions.py's normalize() and
@@ -30,6 +33,20 @@ PKG = ROOT / "images/pandadyn/panda_dynamics"
 REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 MAX_ROWS = 4500
+RT_LAYER = ROOT / "scripts/humanoidbench/shared"     # the shared eai-standard/2.3 layer (one source; check-tooling-identity.sh)
+# The standard-realtime twins (owner, 2026-10-14, board 0107 E3 / board 0112): the dynamic families (scripts/task_dynamics.toml;
+# PROTOCOL §2.14), each with its slowdown S from the real-time factor RTF of its realtime service, measured on the reference
+# workstation (docs/benchmarks/pandadyn.md "Standard-realtime": the realtime service with its clock flat out, RCB_SLOWDOWN =
+# 0.01, and the bare physics loop, at host loads 18-80): S = 1 when RTF >= 3, else ceil(1.5 / RTF) with the lowest RTF
+# measured (PROTOCOL §4b). code -> (RTF range as measured, S)
+REALTIME = {
+    "D01": ("0.69-1.00", 3), "D02": ("0.52-0.83", 3), "D03": ("0.71-1.01", 3), "D04": ("0.42-0.75", 4),
+    "D06": ("0.73-0.94", 3), "D07": ("0.51-0.87", 3), "D09": ("0.61-0.98", 3), "D10": ("0.30-0.55", 6),
+    "S01": ("1.22-1.49", 2), "S02": ("1.24-1.41", 2), "S03": ("1.18-1.21", 2), "S04": ("1.02-1.06", 2),
+    "S05": ("1.20-1.21", 2), "S07": ("0.46-0.48", 4), "S08": ("0.29", 6), "S09": ("0.92-1.14", 2),
+    "S10": ("0.84", 2), "S11": ("0.69-0.94", 3), "S12": ("0.68", 3),
+}
+RT_RESETS = 10        # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
 POSITION_IN_TEXT = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)")
 
 
@@ -180,7 +197,7 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
     goals_std = ("\n**Goal geometry.** " + " ".join(x for x in (inst_goal, std_fixed) if x) + "\n") if (std_fixed or inst_goal) else ""
     servo = f"65 % (speed), {round(100 * acc):d} % (acceleration) and {round(100 * jerk):d} % (jerk)"
     common = {"CODE": code, "TITLE": D["title"], "TASK": task, "INST": f"i{i:02d}", "PRIV": f"{base(task, i)}-privileged",
-              "STD": f"{base(task, i)}-standard", "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
+              "STD": f"{base(task, i)}-standard", "RT": f"{base(task, i)}-standard-realtime", "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
               "ROBOT": "franka-panda" if arms == 1 else "franka-panda-bimanual", "FAMILY": f"{code.lower()}_{kebab(task.split('-', 1)[1]).replace('-', '_')}",
               "SEED": str(int(I["seed"])), "ARMS_SHORT": arms_short, "GOAL_TOML": toml_str("Task: " + D["summary"]),
               "KW_ARMS": '"single-arm"' if arms == 1 else '"bimanual"', "ROBOT_INTRO": intro, "N_PHASES": str(len(phases)), "HORIZON": num(horizon),
@@ -204,10 +221,16 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
                          f"horizon of {num(horizon)} s of simulated time, {int(round(horizon * 100))} control steps), when your time is up, or "
                          f"on a simulator error; the simulated clock advances only with the control steps you run")}
     out: dict[str, dict[str, tuple[bytes, int]]] = {}
-    for mode, extra in (("privileged", priv), ("standard", std)):
+    modes = [("privileged", priv), ("standard", std)]
+    if code in REALTIME:
+        rtf, S = REALTIME[code]
+        modes.append(("standard-realtime", {**std, "SLOWDOWN": str(S), "RTF": rtf, "WALL_MS": str(10 * S),
+                                            "HORIZON_WALL_S": num(round(horizon * S, 1)), "RT_RESETS": str(RT_RESETS),
+                                            "RT_RESETS_PLUS1": str(RT_RESETS + 1)}))
+    for mode, extra in modes:
         common["AGENT_TIMEOUT_S"] = str(agent_timeout(mode))
         files: dict[str, tuple[bytes, int]] = {}
-        tdir = HERE / "template" / mode
+        tdir = HERE / "template" / ("realtime" if mode == "standard-realtime" else mode)
         for p in sorted(tdir.rglob("*")):
             if not p.is_file() or "__pycache__" in p.parts:
                 continue
@@ -223,6 +246,18 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
             for rel in ("environment/instance.json", "tests/instance.json"):
                 files[rel] = (inst_b, 0o644)
             files["solution/oracle_actions.npy"] = (oracle_b, 0o644)
+        elif mode == "standard-realtime":
+            files["environment/sim/rcb_pandadyn.py"] = (tool, 0o644)
+            files["environment/sim/instance.json"] = (inst_b, 0o644)
+            files["environment/sim/texts.json"] = ((json.dumps(texts, indent=1, ensure_ascii=False) + "\n").encode(), 0o644)
+            for rel, src in (("environment/rcb_client.py", RT_LAYER / "realtime/rcb_client.py"), ("environment/rcb1.py", LAYER / "rcb1.py"),
+                             ("environment/sim/rcb_realtime.py", RT_LAYER / "realtime/rcb_realtime.py"),
+                             ("environment/sim/rcb_service.py", RT_LAYER / "standard/rcb_service.py"),
+                             ("environment/sim/rcb1.py", LAYER / "rcb1.py"), ("tests/grade.py", RT_LAYER / "standard/grade.py")):
+                files[rel] = (src.read_bytes(), 0o644)
+            req = CLIENT.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
+            files["environment/client-requirements.txt"] = ((LAYER / req).read_bytes(), 0o644)
+            files["solution/oracle_qpos.npy"] = (oracle_b, 0o644)          # one row per control step, planned with `hold`
         else:
             files["environment/sim/rcb_pandadyn.py"] = (tool, 0o644)
             files["environment/sim/instance.json"] = (inst_b, 0o644)

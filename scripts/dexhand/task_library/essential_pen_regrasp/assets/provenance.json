@@ -1,0 +1,186 @@
+{
+  "name": "Pen",
+  "author": "Chad",
+  "author_username": "cpenfold",
+  "source_url": "https://sketchfab.com/3d-models/76d3050b6c2646278feaa28007d180cb",
+  "source_uid": "76d3050b6c2646278feaa28007d180cb",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "license_evidence": {
+    "objaverse_metadata_license": "by",
+    "uploader_page_declares": "CC Attribution",
+    "source_metadata_file": "source-metadata.json"
+  },
+  "distribution_source": "Allen Institute for AI Objaverse, Hugging Face official mirror",
+  "distribution_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-035/76d3050b6c2646278feaa28007d180cb.glb",
+  "dataset_license": "ODC-By-1.0",
+  "dataset_license_url": "https://opendatacommons.org/licenses/by/1-0/",
+  "asset_sha256": "51caf43216f24bce982eb94e8598c84fc6ea857f2ced01af5bb02565f6733a98",
+  "asset_bytes": 1156848,
+  "mesh_inspection": {
+    "source": "workspace artifacts/dexhand-visual-upgrade/assets-research/pen/paper-mate-kilometrico.glb",
+    "objects": [
+      {
+        "name": "Pen_Pen_Blue_0",
+        "vertices": 687,
+        "triangles": 798,
+        "bounds_world": [
+          [
+            -0.057733744382858276,
+            -0.0038933544419705868,
+            -0.0038933465257287025
+          ],
+          [
+            0.09222017973661423,
+            0.00389333488419652,
+            0.00389334699138999
+          ]
+        ],
+        "matrix_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            -3.0294631869765e-07,
+            1.0000001192092896,
+            0.0
+          ],
+          [
+            0.0,
+            -1.0000001192092896,
+            -3.0294631869765e-07,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "materials": [
+          "Pen_Blue"
+        ]
+      }
+    ],
+    "textures": []
+  },
+  "modifications": [
+    "Source glTF imported with Blender 4.5.3 LTS",
+    "Object world transforms baked into exported OBJ",
+    "Original embedded PBR images extracted as PNG",
+    "Cap omitted from preview and OBJ export, leaving writing instrument body"
+  ],
+  "original_units": "meters (author confirms real-world scale)",
+  "original_body_dimensions_m": [
+    0.1499539241194725,
+    0.00778668932616711,
+    0.007786693517118693
+  ],
+  "original_long_axis": "+X",
+  "writing_tip_axis": "-X",
+  "recommendation": {
+    "bind_body": "object",
+    "remove_source_objects": [
+      "Cap_Pen_Blue_0"
+    ],
+    "body_local_axis": "+Z pointing toward writing tip",
+    "source_center_m": [
+      0.017243217676877975,
+      0,
+      0
+    ],
+    "source_to_body_rotation_rows": [
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        -1
+      ],
+      [
+        -1,
+        0,
+        0
+      ]
+    ],
+    "source_to_existing_task_scale_xyz": [
+      0.800245816,
+      1.02739434,
+      1.02739434
+    ],
+    "existing_collision_dimensions_m": {
+      "length": 0.12,
+      "diameter": 0.008
+    },
+    "note": "Use true 149.954 mm length for full real-world dimensions; 120 mm version is explicitly a size-adapted derivative. The cap is omitted to expose the writing tip."
+  },
+  "obj_export_coordinates": "Blender-imported Z-up world coordinates; glTF import applies the standard Y-up to Z-up conversion. OBJ export forward Y / up Z preserves this imported frame.",
+  "gltf_materials": [
+    {
+      "doubleSided": true,
+      "name": "Pen_Blue",
+      "normalTexture": {
+        "index": 2
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        }
+      }
+    }
+  ],
+  "gltf_textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    }
+  ],
+  "gltf_images": [
+    {
+      "name": null,
+      "mimeType": "image/png"
+    },
+    {
+      "name": null,
+      "mimeType": "image/png"
+    },
+    {
+      "name": null,
+      "mimeType": "image/png"
+    }
+  ],
+  "adapted_dimensions_m": [
+    0.15,
+    0.012,
+    0.012
+  ],
+  "adapted_source_scale_xyz": [
+    1.0003072669208095,
+    1.541091405775506,
+    1.5410905763298046
+  ],
+  "collision": "Fitted straight-shaft capsule plus convex hulls of the source writing tip and tail; all physical parts are measured",
+  "adapted_body_axis": "+Z toward writing tip",
+  "adapted_bind_body": "object",
+  "reset_frame_translation_m": 0.0028,
+  "grip_band_frame_translation_m": -0.0028
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "assemble_hamburger",
+  "title": "Assemble a neatly aligned hamburger",
+  "category": "food_assembly",
+  "description": "Pick up five freely moving ingredients with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) and assemble a centered, stable six-layer hamburger on a plate; a dropped or escaped ingredient fails the episode at once.",
+  "difficulty": "hard",
+  "mechanism": "free ingredients and passive articulated thin layers",
+  "instruction": "Assemble a neat hamburger on the serving plate. The bottom bun already rests on the plate; the beef patty, cheese slice, tomato slice, lettuce leaf and top bun start separately on preparation supports. Stack them from bottom to top in exactly this order: bottom bun, patty, cheese, tomato, lettuce, top bun. Success requires all six layers at the same time: every ingredient center within 12 mm horizontally of the plate center, every layer upright within 0.22 radians, heights strictly increasing in recipe order, all five consecutive pairs in physical contact and the bottom bun touching the plate. Then release the hamburger: with no hand contact on any ingredient, every ingredient linear speed at most 0.025 m/s and angular speed at most 0.25 rad/s, the complete condition must hold for 100 consecutive controls (2 s). The episode ends with success at that moment; a partial stack never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when any ingredient touches the table top or the floor (dropped, or knocked off its support, the plate or the stack), when any ingredient body falls below the table top (z < 0.30 m) or leaves the workspace box x in [-0.64, 0.64] m, y in [-0.52, 0.52] m, z in [0.30, 0.80] m, when a passive cheese or lettuce bending angle exceeds 0.65 radians, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct ingredient forces. Lettuce and cheese use three passive elastic strips; other ingredients are rigid contact proxies. This task evaluates assembly under that approximation, not continuum food deformation or ingredient damage. The episode allows at most 7500 controls at 50 Hz; reaching that limit without success is a failure.",
+  "robot": "sharpa-wave-floating",
+  "recipe": ["bottom_bun", "patty", "cheese", "tomato", "lettuce", "top_bun"],
+  "physics_dt": 0.002,
+  "control_dt": 0.02,
+  "max_steps": 7500,
+  "target_xy": [-0.16, 0.0],
+  "table_z": 0.3,
+  "plate_z": 0.312,
+  "source_x": 0.10,
+  "source_y": [-0.28, -0.14, 0.0, 0.14, 0.28],
+  "source_support_z": 0.345,
+  "initial_targets": {
+    "sharpa": [0.44, -0.28, 0.54, -1.5707963267948966, 0.0, 3.13, 1.0, 0.0, 0.7, 0.0, 0.8, 0.7, 0.0, 0.8, 0.4, 1.3, 0.0, 1.5, 0.9, 1.3, 0.0, 1.5, 0.9, 0.1, 1.3, 0.0, 1.5, 0.9],
+    "wuji": [0.44, -0.28, 0.54, -1.5707963267948966, 0.0, 3.13, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  },
+  "alignment_tolerance_m": 0.012,
+  "tilt_tolerance_rad": 0.22,
+  "linear_speed_tolerance_m_s": 0.025,
+  "angular_speed_tolerance_rad_s": 0.25,
+  "released_hold_steps": 100,
+  "max_bend_rad": 0.65,
+  "workspace": {"min": [-0.64, -0.52, 0.30], "max": [0.64, 0.52, 0.80]},
+  "modeling": "Free rigid bun halves, patty and tomato; lettuce and cheese use three passive articulated strips with elastic bending and frictional contact. This is an assembly feasibility prototype, not a continuum soft-food or damage model."
+}

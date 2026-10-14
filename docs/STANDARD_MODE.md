@@ -552,7 +552,7 @@ for `include_depth` and ignore the new parts and keys).
 
 Time does not stop. The wire protocol of the standard-realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
 standard-realtime tasks only (`<base>-standard-realtime`, `mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
-`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics', BiGym 2.0's and MyoSuite's tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics', BiGym 2.0's, MyoSuite's, Panda Dynamic Scenes', RoboCasa365, MuJoCo Playground's tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
 addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
 recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
 time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
