@@ -110,6 +110,20 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
 Synthetic tests of 6–8 (a stub in place of the simulator; no MuJoCo) were run for the change; they are not part of the
 repository's checks.
 
+10. **Camera calibration = the rendered viewpoint** (2026-10-13, board 0093; found in board 0086). `cam2world_gl` is
+   `data.cam_xpos` / `data.cam_xmat` of the camera, the pose the renderer draws the mono RGB and depth images from
+   (`cam2world()`, as `server_mj.py` since #135). Until 2026-10-13 it was MuJoCo's left-eye camera `scene.camera[0]`,
+   which sits half the camera's interpupillary distance (`cam_ipd` 0.068 m) to its left: 3.4 cm off, in all three
+   RoboCasa benchmarks. Checked with MuJoCo's own renders of 4 mm marker spheres at known world points (nothing else
+   drawn), every served camera, at the start and after the robot had moved: the marker's projection through the
+   reported calibration was 10.5–10.7 px median (up to 28 px for near points, always to the same side) from where it was
+   drawn, and is now 0.15 px median, at most 0.4 px. The intrinsics (`fx = fy = (H / 2) / tan(fovy / 2)`, principal
+   point at the image centre) were already right: every camera of these models is given by its `fovy` (no
+   `sensorsize`, checked on the RoboCasa, RoboCasa365 and RoboCasa-GR1 models), unlike ALOHA's (#164). **Standard-mode
+   results from before 2026-10-13 used the offset calibration** (a point located from the images came out about
+   3.4 cm to the side; agents missed a microwave button by 3.5 cm) and are not strictly comparable with later ones.
+   The service is copied into each task (`environment/sim/server_casa.py`, mounted into the sidecar): no image rebuild.
+
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries
 (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench and HumanoidBench do.

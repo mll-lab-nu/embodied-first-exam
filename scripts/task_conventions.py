@@ -143,16 +143,20 @@ CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by us
 CUTOFF_HEADING = "## Time limit"
 CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text names the limit: never a duration
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
+# owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
+# high and stopped early; every agent gets the same way to know it (a command, not a guess).
+_CUTOFF_CLOCK = (" Your session started when you received this task: run `date` now, and again before you decide that time "
+                 "is short; work out the time left from those readings, never from a guess.")
 CUTOFF_NOTE = {
     "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
                    "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
                    "graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better "
-                   "one." + _CUTOFF_CLOSE),
+                   "one." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
     "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
                  "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
                  "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
                  "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
-                 "spent before that request. Plan by it." + _CUTOFF_CLOSE),
+                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 # A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
@@ -162,7 +166,7 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service "
     "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOSE)
+    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {("RoboTangle", "standard"): _CUTOFF_NOTE_OWN_CLOCK}   # (benchmark label, mode) -> its note
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
@@ -830,6 +834,7 @@ def render_readme(task: Path) -> str:
     mode = md.get("mode", mode_of(task))
     twin = base_of(task) + ("-privileged" if mode in SIDECAR_MODES else "-standard")
     seed = md.get("instance_seed")
+    sd = seeds_of(md)
     oracle = md.get("oracle", "")
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
@@ -840,7 +845,8 @@ def render_readme(task: Path) -> str:
     head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
                                      else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
-             ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
+             ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")
+              + (f" (allowed seeds: {seeds_text(sd['allowed'])}; §2.13)" if sd["allowed"] != [sd["default"]] else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
              ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (PROTOCOL §5)"),
              ("Base image", f"`{image_of(task)}`")]
@@ -889,6 +895,69 @@ def assert_converted(task: Path) -> None:
             raise RuntimeError(f"{f}: client accepts only rcb-limited/2.x (update CLIENT_ASSERT_OLD)")
 
 
+def seeds_of(md: dict) -> dict:
+    """`[metadata.seeds]` (PROTOCOL §2.13) as the generator wrote it, completed: `default` = the generator's, else
+    `instance_seed`, else 0 (then 0 names the task's one frozen instance); `allowed` = [default] unless given (a list,
+    a range `{from, to}` with both ends included, or "any"); `oracle` = the seeds the reference solution is for: the
+    generator's (else [default]) for an `oracle` of "full" or "partial", [] for "none"; `build` = "frozen" (every
+    allowed seed a committed instance) unless the generator says "runtime" (the task builds a seed's instance itself)."""
+    given = md.get("seeds") if isinstance(md.get("seeds"), dict) else {}
+    default = int(given.get("default", md.get("instance_seed", 0)))
+    allowed = given.get("allowed", [default])
+    if isinstance(allowed, list):
+        allowed = [int(x) for x in allowed]
+    elif isinstance(allowed, dict):
+        allowed = {"from": int(allowed["from"]), "to": int(allowed["to"])}
+    if md.get("oracle") in ("full", "partial"):
+        oracle = [int(x) for x in given.get("oracle", [])] or [default]
+    else:                                  # (a task copied from a template with a reference solution keeps none of it)
+        oracle = []
+    return {"default": default, "allowed": allowed, "oracle": oracle, "build": given.get("build", "frozen")}
+
+
+def seed_allowed(sd: dict, seed: int) -> bool:
+    a = sd["allowed"]
+    if a == "any":
+        return True
+    if isinstance(a, dict):
+        return a["from"] <= seed <= a["to"]
+    return seed in a
+
+
+def seeds_text(allowed) -> str:
+    """`allowed` as task.toml writes it: a list, `{ from = A, to = B }` or "any"."""
+    if isinstance(allowed, dict):
+        return f"{{ from = {allowed['from']}, to = {allowed['to']} }}"
+    if isinstance(allowed, str):
+        return f'"{allowed}"'
+    return "[" + ", ".join(str(x) for x in allowed) + "]"
+
+
+def normalize_seeds(task: Path) -> None:
+    """Writes `[metadata.seeds]` (PROTOCOL §2.13) after the `[metadata]` keys and their `[metadata.resources*]` tables,
+    replacing an earlier block; the values a generator wrote are kept."""
+    p = task / "task.toml"
+    s = p.read_text()
+    sd = seeds_of(tomllib.loads(s).get("metadata", {}))
+    s = re.sub(r"(?ms)^\[metadata\.seeds\]\n.*?(?=^\[|\Z)", "", s)
+    m = re.search(r"(?m)^\[metadata\]\n", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [metadata] table")
+    at = len(s)
+    for h in re.finditer(r"(?m)^\[([^\]]+)\]", s[m.end():]):
+        if not h.group(1).startswith("metadata.resources"):
+            at = m.end() + h.start()
+            break
+    block = ("[metadata.seeds]\n# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a "
+             "runner may draw\n# from (a list, { from = A, to = B } or \"any\"), and the ones the reference solution under "
+             "solution/ is for\n"
+             f"default = {sd['default']}\nallowed = {seeds_text(sd['allowed'])}\noracle = {seeds_text(sd['oracle'])}\n"
+             + (f'build = "{sd["build"]}"\n' if sd["build"] != "frozen" else ""))
+    head = s[:at].rstrip("\n") + "\n\n"
+    s = head + block + ("\n" + s[at:] if at < len(s) else "")
+    write_if_changed(p, s)
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
@@ -897,6 +966,7 @@ def normalize(task: Path) -> None:
     normalize_toml(task)
     normalize_cutoff(task)
     normalize_resources(task)
+    normalize_seeds(task)
     normalize_main_cap(task)
     normalize_text_files(task)
     normalize_instruction(task)

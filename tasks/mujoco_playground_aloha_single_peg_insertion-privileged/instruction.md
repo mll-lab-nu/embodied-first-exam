@@ -13,8 +13,11 @@ start in a separate sandbox (MuJoCo on CPU is bit-exact). Leave the script that 
 
 ## Success
 At the **end of the trajectory** the peg's tip (site `peg_end2`) is within **5 mm** of the socket's axis (the line
-through sites `socket_rear` and `socket_entrance`) and at least **25 % of the socket's depth inside** it
-(axial parameter `t ≤ 0.75`, where t = 0 at the rear wall and 1 at the entrance). `s.check()` computes exactly this.
+through sites `socket_rear` and `socket_entrance`) and **inside the socket, at least 12 mm from its open end**: the
+axial parameter `t` is in `[-0.875, 0.75]`, where t = 0 at `socket_rear` (the middle of the tube), t = 1 at
+`socket_entrance` (the open end; 48 mm per unit of t) and t = -0.833 at the inner face of the red rear wall (the cavity
+is 88 mm deep; the lower bound leaves 2 mm for the contact's give). A peg pushed all the way in counts.
+`s.check()` computes exactly this.
 
 ## Tooling (`/opt/tools/rcb_aloha.py`, importable as `rcb_aloha`)
 ```python
@@ -48,4 +51,4 @@ Limits for the whole trial, all its processes together (every simulator you star
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

@@ -180,13 +180,34 @@ def cam2world(cam: str) -> np.ndarray:
     return np.vstack([np.column_stack([R, pos]), [0.0, 0.0, 0.0, 1.0]])
 
 
+def intrinsics(cam: str) -> tuple[float, float, float, float, float]:
+    """(fx, fy, cx, cy) in pixels of the W x H image MuJoCo renders for this camera, and its vertical field of view in
+    degrees. MuJoCo's rule (3.3.7, checked against CPU renders):
+    - a camera given by its vertical field of view (`fovy`; every free camera: the model's global fovy) has square
+      pixels whatever the image's aspect: fx = fy = (H / 2) / tan(fovy / 2), principal point at the image centre;
+    - a camera given by its sensor (`sensorsize`, with `focal` / `focalpixel` and optionally `principal` /
+      `principalpixel`: model.cam_sensorsize > 0, model.cam_intrinsic = focal x, focal y, principal x, principal y in
+      length units) is rendered with the sensor's own extent in each direction, squeezed or stretched into the W x H
+      image: fx = W * focal_x / sensor_x, fy = H * focal_y / sensor_y, cx = W / 2 - W * principal_x / sensor_x,
+      cy = H / 2 + H * principal_y / sensor_y. Its pixels are square only when W : H is the sensor's aspect.
+    Until 2026-10-13 every camera was reported by the first rule. ALOHA's overhead and wrist cameras are given by a
+    3.896 x 2.140 mm sensor with a 1.93 mm lens and rendered at 320 x 240: fx is 158.52 px, not the 216.45 reported."""
+    cid = CAMS[cam][0]; m = S.model
+    fovy = float(m.cam_fovy[cid]) if cid is not None else float(m.vis.global_.fovy)
+    sx, sy = (float(v) for v in m.cam_sensorsize[cid]) if cid is not None else (0.0, 0.0)
+    if sx > 0 and sy > 0:
+        fxl, fyl, pxl, pyl = (float(v) for v in m.cam_intrinsic[cid])
+        return W * fxl / sx, H * fyl / sy, W / 2 - W * pxl / sx, H / 2 + H * pyl / sy, fovy
+    f = 0.5 * H / np.tan(np.deg2rad(fovy) / 2)
+    return f, f, W / 2, H / 2, fovy
+
+
 def calib() -> dict:
-    """Per camera: pinhole intrinsics and the camera-to-world pose in the current state (see cam2world)."""
+    """Per camera: pinhole intrinsics (see intrinsics) and the camera-to-world pose in the current state (see cam2world)."""
     out = {}
     for c in CAMS:
-        fovy = float(S.model.cam_fovy[CAMS[c][0]]) if CAMS[c][0] is not None else float(S.model.vis.global_.fovy)
-        f = 0.5 * H / np.tan(np.deg2rad(fovy) / 2)
-        out[c] = {"intrinsic_cv": [[f, 0, W / 2], [0, f, H / 2], [0, 0, 1]], "cam2world_gl": cam2world(c).tolist(),
+        fx, fy, cx, cy, fovy = intrinsics(c)
+        out[c] = {"intrinsic_cv": [[fx, 0, cx], [0, fy, cy], [0, 0, 1]], "cam2world_gl": cam2world(c).tolist(),
                   "width": W, "height": H, "fovy_deg": fovy, "moving": MOVING[c]}
     return out
 
@@ -225,7 +246,8 @@ SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("te
                              "episode (never a reset): the state is the one after the last call that completed on the service, "
                              "which you may not have received; check GET /status (control_steps) before continuing"),
         "cameras": {c: {"rgb": True, "depth": True, "size": [W, H], "moving": MOVING[c]} for c in CAMS},
-        "camera_calibration": ('meta["cameras"][cam] of every response: intrinsic_cv (pinhole, pixels) and cam2world_gl (4x4, OpenGL axes: x right, '
+        "camera_calibration": ('meta["cameras"][cam] of every response: intrinsic_cv (pinhole, pixels of the returned image: [[fx, 0, cx], [0, fy, cy], '
+                               "[0, 0, 1]]; fx and fy differ for a camera whose sensor has another aspect than the image) and cam2world_gl (4x4, OpenGL axes: x right, "
                                "y up, the camera looks along -z; the viewpoint the image is rendered from), computed for the state at the END "
                                "of that call (the `last/<cam>` image and the last frame of every stack). A camera with moving = false never "
                                "moves. For a camera with moving = true (mounted on the robot) the response also carries the part "
