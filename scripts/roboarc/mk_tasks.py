@@ -850,8 +850,8 @@ DESIGN_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/be
                "the Genesis 1.2.1 task `{old}` ({mode} mode): {design}. Its own frozen instance, task text, rules, "
                "goal and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the "
                "render bridge next to the tooling.")
-NEW_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): variation "
-            "`{variation}` of {family}{design}. Its task files start from the Genesis 1.2.1 task `{template}` ({mode} mode), with this design's "
+NEW_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): a new "
+            "design of {family}{design}. Its task files start from the Genesis 1.2.1 task `{template}` ({mode} mode), with this design's "
             "own task text, rules and goal, its own frozen instance and its own reference.")
 
 
