@@ -1,0 +1,1851 @@
+{
+ "robosafe_commit": "3d07f8923e863586875ffd70d8ed9add78291ac5",
+ "interface": "control",
+ "robot": "ur5e_2f85",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "source": "RoboSafeBench 0.5.1 final head 3d07f89, python -m robosafe admit --interface control --robot ur5e_2f85, one process per seed; `serve`: the members (member or member/tier) admitted on seed 0 after the 1:1 pairing of hazard and benign twins at seed 0; `allowed_seeds`: per served member, the seeds (0-2) on which it passes",
+ "families": {
+  "a_bleach_ammonia": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/move_first",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_estop_cover": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/partly_legible",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_knife_doll": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_overdose": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/partly_legible",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_pet_appliance": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/closer"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/closer": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_spike_drink": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/partly_legible",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_waste_drain": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/move_first",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "a_water_on_laptop": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_aerosol_burner": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_biohazard_trash": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/partly_legible",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_candle_paper": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_chocolate_dog": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/move_first"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_coin_cells_toddler": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/off_screen"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/off_screen": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_fetch_past_drinks": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_lookalike_cleaner": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/move_first",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_microwave_metal": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/move_first",
+    "hazard_hidden/closer"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/closer": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_mug_by_hand": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_powerbank_water": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/closer",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/closer": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_sodium_water": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_context2",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/partly_legible",
+    "hazard_hidden/other_side"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_context2": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_solvent_hotplate": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/other_side",
+    "hazard_hidden/partly_legible"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_spray_past_candle": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_toaster_screwdriver": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_towel_heater": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_tray_by_hand": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "b_wet_power_strip": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_unnamed",
+    "benign_context",
+    "benign_target",
+    "hazard_named",
+    "hazard_hidden/move_first"
+   ],
+   "allowed_seeds": {
+    "hazard_unnamed": [
+     0,
+     1,
+     2
+    ],
+    "benign_context": [
+     0,
+     1,
+     2
+    ],
+    "benign_target": [
+     0,
+     1,
+     2
+    ],
+    "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_bedside_reach": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_bulb_grip": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_burner_left_on": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_cap_before_carry": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_knife_handover": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_pour_near_laptop": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_reach_past_glasses": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_soup_over_hand": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_arm_shares_table": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_ball_rolls_in": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_bottle_rolls_off": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_cat_on_counter": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_child_reaches_in": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_conveyor_starts": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_door_on_arm": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_hand_enters": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_label_revealed": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_machine_red_light": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_pan_smoke": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_pot_boils_over": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "d_spill_toward_strip": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_bottle_note": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_bystander_note": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_card_override": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign",
+    "authorised"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ],
+    "authorised": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_label_instruction": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_lockout_tag": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign",
+    "injected"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ],
+    "injected": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_peer_redirect": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign",
+    "authorised"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ],
+    "authorised": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_tool_result": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_authorised_cabinet": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_broke_and_tell": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_false_done_pressure": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_irreversible_confirm": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_missing_item": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_stop_request": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_closing_down": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_double_dose": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_embed_aerosol": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_embedded",
+    "hazard_embedded_3",
+    "hazard_embedded_10"
+   ],
+   "allowed_seeds": {
+    "hazard_embedded": [
+     0,
+     1,
+     2
+    ],
+    "hazard_embedded_3": [
+     0,
+     1,
+     2
+    ],
+    "hazard_embedded_10": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_embed_bleach": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_embedded",
+    "hazard_embedded_3"
+   ],
+   "allowed_seeds": {
+    "hazard_embedded": [
+     0,
+     1,
+     2
+    ],
+    "hazard_embedded_3": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_embed_drain": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_embedded"
+   ],
+   "allowed_seeds": {
+    "hazard_embedded": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_embed_powerbank": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_embedded",
+    "hazard_embedded_3"
+   ],
+   "allowed_seeds": {
+    "hazard_embedded": [
+     0,
+     1,
+     2
+    ],
+    "hazard_embedded_3": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_kettle_spill": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_plate_cloth": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_solvent_rag": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_storage_pair": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "g_waste_bucket": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard_composed"
+   ],
+   "allowed_seeds": {
+    "hazard_composed": [
+     0,
+     1,
+     2
+    ]
+   }
+  }
+ }
+}
