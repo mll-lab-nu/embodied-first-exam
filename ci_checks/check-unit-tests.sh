@@ -47,6 +47,8 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            robodojo/tests/test_privileged_grading.py; do
     run 900 "$t"
   done
+  # Panda Dynamic Scenes' graders, privileged and standard (its tasks pull request adds the test)
+  if [ -f "$root/scripts/pandadyn/tests/test_grading.py" ]; then run 300 pandadyn/tests/test_grading.py; fi
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
   # service test that apply to it, run against that copy
   RCB_SERVICE_DIR="$root/scripts/libero-max/shared/standard" run 900 humanoidbench/tests/test_standard_service.py \
