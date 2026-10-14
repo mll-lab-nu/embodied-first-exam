@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "5475df6dbe74e98ed78924d05c3c2ee14ffcd918703e5eb691d55b0c2234c126",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/wire_base_base_0_38acb7d381490f13.obj": "38acb7d381490f139479026ddb948cb94e0bf72c6d169bfd3d49d643049514f9",
+    "instance_assets/mujoco/meshes/wire_base_base_1_c87d69f4d9d65229.obj": "c87d69f4d9d65229ce1543705d353731d5480e72414eb6a2966ca2855ce59830",
+    "instance_assets/mujoco/meshes/wire_base_base_2_609d6ab8f21cf88a.obj": "609d6ab8f21cf88a9260ee80fd56caa428f877fe2e9a1a5be791aac293c25c66",
+    "instance_assets/mujoco/meshes/wire_base_base_3_d37cd7a134e84af9.obj": "d37cd7a134e84af9377d6d8cb039e5264686ef687852095ff2dbeecdc2bdd291",
+    "instance_assets/mujoco/meshes/wire_base_base_4_cb227b93d02863b0.obj": "cb227b93d02863b003b78dcadcb2aab1f667f2b4fd5f168985df9205b7411f60",
+    "instance_assets/mujoco/meshes/wire_base_base_5_ec3d4eabd3a2bf39.obj": "ec3d4eabd3a2bf39b41e4a78e6e5db28706d93ecd33b15f03c5d768d49dc787f",
+    "instance_assets/mujoco/scene.json": "19ccad40655d4d5591c55b2a57094d7a42edd0dcb30059da0bccc89fe5b47730",
+    "instance_assets/mujoco/scene.xml": "91811526321821915dab447cff312a71f96931187f3f95511760f89d42fc9787"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d601866b4c91c858aa4e249b5bf5145b8fe3263b2885048a86016e34c314c208",
+    "files": 444
+  },
+  "runtime": {
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "python": "3.11.15",
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
+  },
+  "render_bridge_sha256": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
+  "nyx_direct_sha256": "5d667130086c340c5e285b12e0d4596d71098f70f6194d198718bfa9b200d5c5"
+}
