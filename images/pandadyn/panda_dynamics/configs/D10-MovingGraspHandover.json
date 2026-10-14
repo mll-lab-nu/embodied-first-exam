@@ -1,0 +1,86 @@
+{
+  "task": "D10-MovingGraspHandover",
+  "common": {
+    "horizon": 25.0,
+    "object_mass": 0.035,
+    "tool_mass": 0.2,
+    "tool_half": 0.07,
+    "radius": 0.018,
+    "preview": 0.65,
+    "incoming_speed": 0.08,
+    "fixture_speed": 0.035,
+    "restitution": 0.1,
+    "table_friction": 0.08,
+    "tool_friction": 0.3
+  },
+  "difficulty": {
+    "debug": {
+      "preview": 0.9,
+      "incoming_speed": 0.064
+    },
+    "nominal": {},
+    "hard": {
+      "preview": 0.55,
+      "incoming_speed": 0.08800000000000001
+    }
+  },
+  "ranges": {
+    "horizon": [
+      1,
+      45
+    ],
+    "object_mass": [
+      0.01,
+      0.15
+    ],
+    "tool_mass": [
+      0.1,
+      0.4
+    ],
+    "tool_half": [
+      0.001,
+      2
+    ],
+    "radius": [
+      0.001,
+      2
+    ],
+    "preview": [
+      0.001,
+      2
+    ],
+    "incoming_speed": [
+      0.001,
+      2
+    ],
+    "fixture_speed": [
+      0.001,
+      2
+    ],
+    "restitution": [
+      0,
+      1
+    ],
+    "table_friction": [
+      0,
+      1
+    ],
+    "tool_friction": [
+      0,
+      1
+    ]
+  },
+  "units": {
+    "horizon": "s",
+    "object_mass": "kg",
+    "tool_mass": "kg",
+    "tool_half": "m",
+    "radius": "m",
+    "preview": "s",
+    "incoming_speed": "m/s",
+    "fixture_speed": "m/s",
+    "restitution": "dimensionless",
+    "table_friction": "dimensionless",
+    "tool_friction": "dimensionless"
+  }
+}
