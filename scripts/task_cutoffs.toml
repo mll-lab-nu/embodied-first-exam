@@ -44,6 +44,7 @@
 "RoboLab"           = { privileged =  3600, standard =  3600 }
 "RoboOlympics"      = { standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
+"RoboSafeBench"     = { standard =  3600, standard-realtime = 3600 }
 "RoboARC"           = { privileged = 10800, standard = 10800 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
 "RoboWits"          = { privileged =  3600, standard =  3600 }
@@ -260,6 +261,24 @@ from_sec = 0
 to_sec = 10800
 decided_by = "owner"
 note = "new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap"
+
+[[history]]
+date = "2026-10-13"
+benchmark = "RoboSafeBench"
+modes = ["standard"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner"
+note = "the benchmark's first tasks: the protocol's default (D8); RoboSafeBench's own trials gave agents 40 minutes"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboSafeBench"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the benchmark's first standard-realtime tasks: the standard tasks' number (D8 default); the episode's robot-time budget under the realtime clock (1800 s for the realtime set, RoboSafeBench 0.5.1) runs in real time from the first submit, so 3600 s leaves 1800 s for looking and planning before the clock starts (the harness's set-up and the service's start are outside or before it); the collect hook's finalize is outside the agent's time"
 
 [[history]]
 date = "2026-10-14"
