@@ -7,7 +7,7 @@ cap above the host's CPU count is clamped by the runner); enforcement is off by 
 the calibration batch has confirmed the limits. Also on 2026-10-10 and 2026-10-11 (owner decisions, board 0072): every task's
 agent egress is the model APIs and the package registries, every instruction states the same honour rule about looking
 solutions up (§2.11), and the usage gateway forwards model-API calls only (D11, §5). On 2026-10-11 (owner): §4.8's exception for
-physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Also on 2026-10-11 (owner, board 0080): the agent's time cutoffs live in one table, and every instruction ends with its cutoff and the request not to cheat in one format (§2.12; 2026-10-12: at the end of the instruction, and the table takes exceptions per family and per task). On 2026-10-12 (owner): §3's and §4.8's exception for grading by one replay instead of two (RoboDojo). On 2026-10-14 (owner, board 0107 E6): a benchmark ships any subset of the three modes, a general rule that replaces the per-benchmark exceptions for a missing twin (§2.14; where privileged and standard both exist, their cutoffs stay equal). Earlier versions, whose rules are all part of this text: v1.0
+physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Also on 2026-10-11 (owner, board 0080): the agent's time cutoffs live in one table, and every instruction ends with its cutoff and the request not to cheat in one format (§2.12; 2026-10-12: at the end of the instruction, and the table takes exceptions per family and per task). On 2026-10-12 (owner): §3's and §4.8's exception for grading by one replay instead of two (RoboDojo). On 2026-10-14 (owner, board 0107 E6): a benchmark ships any subset of the three modes, a general rule that replaces the per-benchmark exceptions for a missing twin (§2.14; where privileged and standard both exist, their cutoffs stay equal), and new modes may be added by pull request, through one registry of modes (§2.15). Earlier versions, whose rules are all part of this text: v1.0
 (2026-09-30: the two modes and their names), v1.1 (2026-10-08: the standard-realtime mode, §4b), v1.1.4 (compute
 resources, §2.9), v1.1.5 (resource limits, §2.10).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard and
@@ -62,7 +62,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. The usage gateway (`scripts/usage_gateway/`) is allowed: it forwards model-API requests unchanged, records token usage, and refuses what a trial may not have: a request past the token budget (§5) and, since 2026-10-10, every request that is not a model-API call (§2.11). No tool that runs outside the trial's container is offered to the model (§2.11): official runs turn the harness's web search off (Codex `web_search = "disabled"`, Claude Code `WebSearch` and `WebFetch` disallowed; `scripts/run_agent_batch.sh` `WEB_SEARCH=disabled`, the default) and start the harness without account connectors, apps, plugins, image generation and cloud agents (Codex: with the same switch the runner sets those features to false in the run's `config.toml`, `scripts/codex_tools_off.py`). These run at the model provider, so no egress allowlist stops them (2026-10-02: Codex with a ChatGPT login searched GitHub by default; 2026-10-10: the same login handed the model 238 account connector tools, and 21 trials called them) |
-| D12 | Mode naming | `mode ∈ {privileged, standard, standard-realtime}` (the third mode since v1.1, #86; named `standard-realtime` since v1.1.1, owner 2026-10-08, #97: it is standard mode's robot as a service on a clock that does not stop); the `tier` field is removed; every task directory ends in its mode: `-privileged`, `-standard` or `-standard-realtime`. |
+| D12 | Mode naming | `mode ∈ {privileged, standard, standard-realtime}` (the third mode since v1.1, #86; named `standard-realtime` since v1.1.1, owner 2026-10-08, #97: it is standard mode's robot as a service on a clock that does not stop); the `tier` field is removed; every task directory ends in its mode: `-privileged`, `-standard` or `-standard-realtime`. More modes may be added by pull request, through the registry of §2.15 (owner, 2026-10-14). |
 
 ## 1. Checklist (every task)
 
@@ -649,6 +649,33 @@ owner 2026-10-08; RoboDojo's six, §4.8, owner 2026-10-11); those benchmarks are
 | A standard or standard-realtime task without a privileged twin carries its own frozen instance, if it has one, in its sidecar, and its verifier's copy (where it keeps one) is byte-identical; its README's Twin row says why there is none. In a benchmark with no privileged mode that is automatic; in a benchmark that has one, the task is listed with its reason in `scripts/task_conventions.py` `NO_TWIN` (a missing twin that is neither fails CI, so a deleted or misnamed twin is caught) | MUST | [CI] (`ci_checks/check-instance-copies.sh`) |
 | A privileged task without a standard twin needs nothing more (its README's Twin row says "privileged only") | MAY | [current] |
 | Results are reported per mode (§5); a benchmark's results state which modes it ships, and a mode it does not ship is "not offered", not a failure | SHOULD | [new] |
+
+### 2.15 Adding a mode (owner, 2026-10-14)
+
+The three modes (privileged §3, standard §4, standard-realtime §4b) are not a closed list: anyone may propose a new mode
+by pull request. The modes live in one registry, `MODE_REGISTRY` in `scripts/task_conventions.py`; everything in the
+repository that parses or branches on a mode reads it (`mode_of`, `base_of`, `twin_of`, the limits' scope, the cutoff
+table's columns, `docs/CUTOFFS.md`, and the checks under `ci_checks/`, which get it once per run from
+`python3 scripts/task_conventions.py modes`). An entry gives the mode's name (= its directory suffix and `[metadata]
+mode`), its column label, its PROTOCOL section, whether the simulator runs in a trusted `sim` sidecar, whom the resource
+limits bind, the `protocol` values its tasks may declare, its twin mode (the task of the same base that holds the frozen
+instance and seeds) and the mode whose cutoff it must equal, if any.
+
+| A new-mode pull request contains | Level | Basis |
+|---|---|---|
+| A name, which is also the task-directory suffix (`<base>-<name>`) and the `[metadata] mode` value: lower case, words joined by `-`, not a suffix of another mode's name nor ending in one (`-standard-realtime` is recognised by its whole suffix, longest first), no version or duration (§2.2) | MUST | [CI] (`scripts/task_conventions.py` refuses a registry that breaks it; `ci_checks/check-task-fields.sh` checks every task's suffix and `mode`) |
+| A PROTOCOL section of its own, like §3 / §4 / §4b, defining: what the agent gets (its container, the interface, privileged information or not, the wire protocol and its version if any); what is graded (the deliverable or the service's record, the success rule, replays and determinism); the time rule (what the cutoff counts, how a service reports it, §2.12) and the reset rule (none by default, §4.5); and the failure semantics, which failures are infrastructure (`infra_error`, never the agent's 0) and which are the agent's | MUST | [new] |
+| Its `MODE_REGISTRY` entry, its `CUTOFF_NOTE` (the second paragraph of `## Time limit` for the mode; the module refuses a mode without one) and, where it has a protocol, its reference implementation (as §6 requires of a protocol change) | MUST | [CI] |
+| CI support: the existing checks pass for its tasks through the registry; a rule specific to the mode is a new check (or a branch keyed on a registry field, never on a hard-coded mode name list), with a `ci_checks/check-ci-selftest.py` case that breaks a real task of the mode and must fail | MUST | [CI] |
+| At least one benchmark using it: its tasks in the benchmark's own pull request (shared files first, as for a new benchmark), with the oracle and `nop` evidence of §2.7 in the new mode | MUST | [new] |
+| `docs/TAXONOMY.md` (`mode`, and `protocol` if any), `docs/REVIEWING.md` if reviewers check something new, and the results: the new mode is reported separately from the others (§5) | MUST | [new] |
+| The runner side (batch_eval_live and the results site) is told the new suffix in the same change; it reads the registry or follows it | SHOULD | [new] |
+
+**Cutoffs of a new mode.** A benchmark that ships the mode has a number for it in its row of the cutoff table (§2.12),
+like any mode, with its `[[history]]` entry; the column appears in `docs/CUTOFFS.md` from the registry. Whether it must
+equal another mode's number is the registry's `same_cutoff_as`, decided in the mode's pull request: standard has
+`same_cutoff_as = "privileged"` (owner, 2026-10-12, CI-enforced), standard-realtime has none (today its numbers equal the
+others everywhere). A new mode is free unless its pull request says otherwise.
 
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 

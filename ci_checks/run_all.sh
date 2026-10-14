@@ -6,6 +6,9 @@ set -uo pipefail
 # the umask the repository is written with; the checkout itself must be made with umask 022 too.
 umask 022
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
+# the mode registry (PROTOCOL §2.15, scripts/task_conventions.py MODE_REGISTRY), read once for the per-task shell checks
+RCB_MODES_TABLE="$(python3 "$root/scripts/task_conventions.py" modes)" || { echo "FAIL scripts/task_conventions.py modes"; exit 1; }
+export RCB_MODES_TABLE
 tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=("$root"/tasks/*/)
 for t in "${tasks[@]}"; do
   t="${t%/}"; [ -f "$t/task.toml" ] || continue

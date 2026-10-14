@@ -91,6 +91,36 @@ NO_TWIN = {"roboolympics-airhockey-match-i00-standard-realtime": _RO_NO_TWIN,
            "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-liquid-into-cup-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
+# PROTOCOL §2.15 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
+# (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
+# base_of, the cutoff table's columns, the limits' scope, the checks under ci_checks/, which get it once per run through
+# `python3 scripts/task_conventions.py modes`). A new mode is one entry here plus its protocol section, by a mode
+# pull request (PROTOCOL §2.15 lists what it must contain). Fields:
+#   short          the column label in docs/CUTOFFS.md
+#   section        the PROTOCOL section that defines the mode
+#   sidecar        the simulator runs in a trusted `sim` sidecar the agent's container talks to (robot as a service):
+#                  the instance copy is environment/sim/, the agent's image holds no simulator, the service is told the
+#                  cutoff (RCB_WALL_CLOCK_S), the verifier collects its evidence from the sidecar
+#   limit_scope    whom the resource limits bind (§2.10): "trial" (every container) or "agent" (the agent's container)
+#   protocols      the `[metadata] protocol` values a task of the mode may declare (empty: the field is not set)
+#   twin           the mode whose task of the same base holds the pair's frozen instance and seeds (None: itself)
+#   same_cutoff_as the mode whose cutoff this mode's must equal wherever a benchmark, family or task has both (None: free)
+MODE_REGISTRY = {
+    "privileged": {"short": "P", "section": "§3", "sidecar": False, "limit_scope": "trial", "protocols": (),
+                   "twin": None, "same_cutoff_as": None},
+    "standard": {"short": "S", "section": "§4", "sidecar": True, "limit_scope": "agent",
+                 "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
+                 "twin": "privileged", "same_cutoff_as": "privileged"},   # owner, 2026-10-12: one cutoff for both modes
+    "standard-realtime": {"short": "RT", "section": "§4b", "sidecar": True, "limit_scope": "agent",
+                          "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None},
+}
+MODES = tuple(MODE_REGISTRY)
+SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (§4, §4b)
+for _m, _d in MODE_REGISTRY.items():   # a registry that cannot parse names is refused at import (every check imports it)
+    assert re.fullmatch(r"[a-z]+(?:-[a-z]+)*", _m) and not any(_m.endswith("-" + o) for o in MODE_REGISTRY if o != _m), \
+        f"mode {_m!r}: lower-case words joined by '-', not ending in another mode's suffix (PROTOCOL §2.15)"
+    assert _d["limit_scope"] in ("trial", "agent") and _d["twin"] in (None, *MODE_REGISTRY) \
+        and _d["same_cutoff_as"] in (None, *MODE_REGISTRY), f"mode {_m!r}: a bad registry field (PROTOCOL §2.15)"
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
@@ -112,7 +142,7 @@ LIMIT_KEYS = {  # key -> type (sizes in GiB)
 CAP_KEYS = {"cpus": float, "memory_gb": float, "pids": int}   # [metadata.resources.caps] per compose service (§2.10)
 ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 0 = record only; 1 = a violation fails)
 EMERGENCY_GPU_FACTOR = 1.5           # §2.10: host protection in enforced runs (the same value: rcb_monitor/monitor.py)
-LIMIT_SCOPES = {"privileged": "trial", "standard": "agent", "standard-realtime": "agent"}   # §2.10: who the limits bind
+LIMIT_SCOPES = {m: d["limit_scope"] for m, d in MODE_REGISTRY.items()}   # §2.10: who the limits bind
 LIMITS_HEADING = "## Resource limits"
 # PROTOCOL §2.11 (owner, 2026-10-11, board 0072): an honour rule, the same words in every task's instruction.md, just
 # before `## Resource limits` (generator-owned: edit it here, never in a task; ci_checks/check-resources.py compares).
@@ -166,6 +196,7 @@ CUTOFF_NOTE = {
                  "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
+assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §2.12)"
 # A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
 # text says what its service counts (PROTOCOL §2.12). None today: RoboARC's service counts from the first request
 # since its MuJoCo release (2026-10-13).
@@ -190,23 +221,36 @@ def replace_words(s: str) -> str:
     return s
 
 
-# PROTOCOL D12: the three modes, each the whole suffix of its task directories. A mode is recognised by its complete
-# suffix only: `-standard-realtime` is never `-standard` (it does not end in it), and `-standard` is never standard-realtime.
-MODES = ("privileged", "standard", "standard-realtime")
-SIDECAR_MODES = ("standard", "standard-realtime")   # robot as a service: the simulator runs in the `sim` sidecar (§4, §4b)
-
-
+# PROTOCOL D12 / §2.15: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
+# its complete suffix only, longest first: `-standard-realtime` is never `-standard` (it does not end in it).
 def mode_of(task: Path) -> str:
     for mode in sorted(MODES, key=len, reverse=True):   # longest suffix first
         if task.name.endswith(f"-{mode}"):
             return mode
-    raise ValueError(f"{task.name}: task directories end in -privileged, -standard or -standard-realtime "
-                     "(docs/PROTOCOL.md §2.2)")
+    raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
+                     + " (docs/PROTOCOL.md §2.2, the modes of §2.15)")
 
 
 def base_of(task: Path) -> str:
-    """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`; PROTOCOL §2.2)."""
-    return re.sub(r"-(standard-realtime|privileged|standard)$", "", task.name)
+    """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`, ...; PROTOCOL §2.2)."""
+    for mode in sorted(MODES, key=len, reverse=True):
+        if task.name.endswith(f"-{mode}"):
+            return task.name[: -len(mode) - 1]
+    return task.name
+
+
+def twin_of(task: Path) -> Path | None:
+    """The task of the same base in the mode MODE_REGISTRY names as this mode's twin (the one that holds the pair's frozen
+    instance and seeds: `<base>-privileged` for the standard modes), whether it exists or not; None for a mode without one."""
+    twin = MODE_REGISTRY[mode_of(task)]["twin"]
+    return task.with_name(f"{base_of(task)}-{twin}") if twin else None
+
+
+def modes_table() -> str:
+    """One line per mode, longest name first, for the shell checks (`python3 scripts/task_conventions.py modes`):
+    `<mode> <sidecar 0|1> <twin mode or ->`."""
+    return "\n".join(f"{m} {int(MODE_REGISTRY[m]['sidecar'])} {MODE_REGISTRY[m]['twin'] or '-'}"
+                     for m in sorted(MODES, key=len, reverse=True))
 
 
 def bench_of(task: Path) -> str:
@@ -587,15 +631,16 @@ def no_twin_reason(task: Path) -> str | None:
     """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §2.14), as its
     README's Twin row says it; None for a privileged task and for one that must have its twin. Whether the twin exists
     is not looked at: the answer is the same before and after a generator has rendered it."""
-    if mode_of(task) not in SIDECAR_MODES:
+    twin = MODE_REGISTRY[mode_of(task)]["twin"]
+    if twin is None:
         return None
     for prefix, why in NO_TWIN.items():
         if task.name.startswith(prefix):
             return why
     bench = bench_of(task)
     row = cutoff_table().get(bench)
-    if row and "privileged" not in row:
-        return f"— (none: {bench} has no privileged mode, PROTOCOL §2.14)"
+    if row and twin not in row:
+        return f"— (none: {bench} has no {twin} mode, PROTOCOL §2.14)"
     return None
 
 
@@ -1004,6 +1049,9 @@ def snapshot(task: Path) -> dict[str, bytes]:
 
 
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.15)
+        print(modes_table())
+        return 0
     check = "--check" in argv
     dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]
     bad = 0

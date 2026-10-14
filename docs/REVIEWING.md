@@ -38,6 +38,13 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   and standard one number? A standard or standard-realtime task without a twin: does it carry its own frozen instance,
   and, in a benchmark that has a privileged mode, is it listed in `scripts/task_conventions.py` `NO_TWIN` with the
   reason (a deleted or misnamed twin must not pass silently)?
+- A new mode (PROTOCOL §2.15): does the pull request have everything §2.15 lists: the name / suffix and `mode` value,
+  its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are
+  infrastructure and which the agent's), the `MODE_REGISTRY` entry and `CUTOFF_NOTE`, CI support keyed on the registry
+  (no new hard-coded list of mode names anywhere) with a self-test case, at least one benchmark using it, the TAXONOMY
+  entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (batch_eval_live, the results
+  site) told the new suffix? A new mode is an owner-visible protocol change: one pull request of its own, shared files
+  only, merged before the benchmark that uses it.
 - Time cutoff (PROTOCOL §2.12): is the benchmark's number in `scripts/task_cutoffs.toml`, under the benchmark's label of
   `scripts/task_conventions.py` `BENCHMARKS` (a new benchmark: the label first, in its shared-files pull request; the
   row with its tasks) (3600 s unless the pull
