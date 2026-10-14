@@ -90,6 +90,15 @@ class Video:
             from ..components.anycarbench.tracks import get_route
 
             self.camera.distance = get_route(vehicle.command["track_id"], vehicle.command.get("route_revision", "circuit-sector/1")).half_extent * 3.1
+        # The line is derived only from the public command, never robot state.
+        if "track_id" in vehicle.command:
+            route = get_route(vehicle.command["track_id"], vehicle.command.get("route_revision", "circuit-sector/1"))
+            xy = route.at(np.linspace(0, route.length, 257))[:, :2]
+        else:
+            command = vehicle.command
+            phase = command["phase"] + command["direction"] * np.linspace(0, 2 * np.pi, 257)
+            xy = np.column_stack((command["a"] * np.cos(phase), command["b"] * np.sin(phase)))
+        self.reference_line = np.column_stack((xy, np.full(len(xy), .018)))
         self.camera.azimuth = 90
         self.camera.elevation = -70
         # Fixed orientation; center uses the already-delivered noisy position only.
@@ -134,17 +143,15 @@ class Video:
         # A single whole-circuit shadow map produces meter-sized artifacts in the
         # RC close-up; disable it for this public visual profile.
         scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = self.render_shadows
-        # Public commanded target marker, no privileged trajectory/score overlays.
-        geom = scene.geoms[scene.ngeom]
-        mujoco.mjv_initGeom(
-            geom,
-            mujoco.mjtGeom.mjGEOM_CYLINDER,
-            np.array([0.12, 0.006, 0.0]),
-            np.array([target[0], target[1], 0.012]),
-            np.eye(3).ravel(),
-            np.array([0.1, 0.85, 0.55, 0.85]),
-        )
-        scene.ngeom += 1
+        # Render the public commanded centerline in both views, without a target dot.
+        for start, end in zip(self.reference_line[:-1], self.reference_line[1:]):
+            geom = scene.geoms[scene.ngeom]
+            mujoco.mjv_initGeom(
+                geom, mujoco.mjtGeom.mjGEOM_LINE, np.zeros(3), np.zeros(3),
+                np.eye(3).ravel(), np.array([0.15, 0.95, 0.85, 1.0]),
+            )
+            mujoco.mjv_connector(geom, mujoco.mjtGeom.mjGEOM_LINE, 3.0, start, end)
+            scene.ngeom += 1
         return self.renderer.render().copy()
 
     def frame(self, v, target, observation):

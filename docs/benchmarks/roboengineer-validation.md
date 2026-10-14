@@ -279,3 +279,32 @@ Repository CI passes all 26 Control Transfer task contracts and all 117 delibera
 mutation checks, including compact revision/cutoff violations. The optional global
 NumPy/requests service-test tier is skipped by system Python; the affected numerical and
 runtime checks were run separately in the pinned MuJoCo 3.5 environment above.
+
+## Public reference-line observation revision
+
+Worker commit `be58433a0cec3af93c838952bd39425bdcbbbaeb` replaces the target dot with a
+continuous cyan commanded centerline in both AnyCar camera panels. All generated AnyCar
+packages explicitly declare `anycar-reference-line/1`. The overlay depends only on public
+route geometry, not robot state. Numeric feedback, physical trajectories, task geometry,
+policies and scoring are unchanged; image observations intentionally change.
+
+The generated compact Silverstone i00 first held-out spot-check retains byte-identical
+physical record and noisy-feedback files relative to the preceding target-dot run.
+A fresh-process non-rendered replay matches physical state, feedback and metrics. The full
+1280×480, 301-frame CPU OSMesa/llvmpipe clip decodes; all 31 delivered JPEGs span 0–30 s
+and all 301 noisy rows are retained. The actual finish is 28.0483 s, score 60.0126.
+This is one scripted-controller spot-check, not an LLM run or complete held-out bank.
+The largest legacy route, Valencia-1, renders with 3378 of 10000 scene geoms, including the
+257-point line. All 131 earlier AnyCar video hashes remain unchanged.
+
+Thirty-six focused tests and repository CI pass, including all 117 existing mutation
+checks and 26 task contracts. System Python skips the optional NumPy/requests global tier;
+the affected numerical/runtime checks run separately in the pinned environment. Operator
+evidence is `anycar/integration-reference-line-v1`. The benchmark site adds the exact MP4,
+feedback JSON/JPEGs, public task specification and nominal policy. Browser playback uses
+a separately identified VP9 WebM copy at full resolution/frame rate because the installed
+Chromium lacks H.264 support; original artifact bytes remain unchanged. Private case banks,
+dynamics and true-state records are excluded from the website export.
+
+Earlier native reference evidence predates this image revision. Native/model acceptance
+of `anycar-reference-line/1` remains pending; no new isolation or coding-agent score is claimed.

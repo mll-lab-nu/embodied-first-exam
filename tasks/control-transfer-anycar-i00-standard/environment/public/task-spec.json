@@ -96,5 +96,7 @@
     "rad"
   ],
   "image_interval_s": 1.0,
-  "limitations": "Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No AnyCar learned transformer is evaluated."
+  "limitations": "Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No AnyCar learned transformer is evaluated.",
+  "observation_revision": "anycar-reference-line/1",
+  "visual_feedback": "Continuous public commanded centerline in both video panels; no moving target dot or privileged overlay."
 }

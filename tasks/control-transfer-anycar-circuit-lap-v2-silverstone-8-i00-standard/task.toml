@@ -17,7 +17,7 @@ family = "control-transfer/anycar-circuit-lap-v2"
 mode = "standard"
 protocol = "eai-policy/1.1"
 oracle = "none"
-oracle_evidence = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
+oracle_evidence = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 

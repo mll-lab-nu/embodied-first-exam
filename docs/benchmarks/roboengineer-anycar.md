@@ -46,7 +46,7 @@ Episode commands, initial offsets, surface layouts and sensor noise vary; the ve
 
 The controller runs at 50 Hz using noisy estimated x/y, yaw, body-frame linear speed, yaw rate, four wheel encoders and steering encoder. Gaussian standard deviations are 0.008 m for x/y, 0.005 rad for yaw, 0.035/0.02 m/s for forward/lateral speed, 0.012 rad/s for yaw rate, 0.15 rad/s for wheel encoders and 0.002 rad for steering. These are synthetic independent estimator errors, not a full VIO/IMU estimator or calibrated sensor model.
 
-Feedback is sampled at 10 Hz (241 rows including t=0 and t=24), with 18 declared values per row: eleven noisy state estimates, five public target values and two controller-requested commands. Video is 1280×480 at 10 fps: a fixed 640×480 route overview on the left and a 640×480 close-up on the right. The close-up has fixed orientation/distance and centers on the already-delivered noisy x/y estimate, never a privileged tracking-camera pose. Both panels are part of the exact agent-visible stream, rendered using OSMesa/llvmpipe on the CPU. The public projection samples 25 JPEG frames at fixed times 0–24 s. Visible surfaces/obstacles and a green commanded-target marker are legitimate visual observations; there are no coefficient labels, scores, contacts, true-state overlays or diagnostic text. Hidden parameters, actual contacts, true trajectories, seeds and grades remain operator-only. Episodes retain a fixed duration, including after a scored failure.
+Feedback is sampled at 10 Hz (241 rows including t=0 and t=24), with 18 declared values per row: eleven noisy state estimates, five public target values and two controller-requested commands. Video is 1280×480 at 10 fps: a fixed 640×480 route overview on the left and a 640×480 close-up on the right. The close-up has fixed orientation/distance and centers on the already-delivered noisy x/y estimate, never a privileged tracking-camera pose. Both panels are part of the exact agent-visible stream, rendered using OSMesa/llvmpipe on the CPU. The public projection samples 25 JPEG frames at fixed times 0–24 s. Visible surfaces/obstacles and the public commanded reference centerline are legitimate visual observations (archived earlier videos retain their target dot); there are no coefficient labels, scores, contacts, true-state overlays or diagnostic text. Hidden parameters, actual contacts, true trajectories, seeds and grades remain operator-only. Episodes retain a fixed duration, including after a scored failure.
 
 The reference learner fits steering gain, bias and lag from noisy encoder/command pairs and drive scale from noisy wheel speeds. It receives only the delivered feedback. It records a short observable diagnosis and numerical policy revision for each of three deployment rounds; no claim of image understanding or LLM reasoning is made. The shared service owns sealing, deadlines and holding back final evaluation feedback.
 
@@ -329,3 +329,10 @@ public commanded route (or ellipse parameters), never from hidden robot state.
 The line is a rendering overlay and does not change physics or noisy telemetry.
 Previous video artifacts remain unchanged; this visual revision produces new
 video bytes. Time-indexed target values remain available in noisy-feedback rows.
+
+
+Generated AnyCar packages now declare `observation_revision=anycar-reference-line/1`.
+This changes image observations; physical trajectories, noisy numeric feedback, policies,
+scoring and task geometry are unchanged. The line is computed from the public commanded
+route, with 257 points covering the loop, and drawn in both panels. Historical native
+reference results predate this image revision; they are not new visual-agent evaluations.

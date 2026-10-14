@@ -7,7 +7,7 @@
 | Twin | — (policy adaptation is standard only, PROTOCOL §4p) |
 | Simulator / robot | `mujoco` / `anycar` |
 | Family / instance | `control-transfer/anycar-circuit-lap-v2` / seed 1 |
-| Oracle | `none` — Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required. |
+| Oracle | `none` — Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending. |
 | Agent time budget | 129600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
 
@@ -18,7 +18,7 @@ Track one complete lap of a scaled circuit at the prescribed speed; cross every 
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required.
+Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending.
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.

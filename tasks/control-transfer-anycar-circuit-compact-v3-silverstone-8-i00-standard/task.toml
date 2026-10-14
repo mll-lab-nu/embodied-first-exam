@@ -17,7 +17,7 @@ family = "control-transfer/anycar-circuit-compact-v3-silverstone-8"
 mode = "standard"
 protocol = "eai-policy/1.1"
 oracle = "none"
-oracle_evidence = "Development-only circuit-compact-lap/3. A fixed nominal controller completes one local adaptation-only case on each of 160 compact layouts. These are heavily smoothed F1-inspired approximations, not exact scaled outlines. Multi-round held-out native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
+oracle_evidence = "Development-only circuit-compact-lap/3. A fixed nominal controller completes one local adaptation-only case on each of 160 compact layouts. These are heavily smoothed F1-inspired approximations, not exact scaled outlines. Multi-round held-out native Harbor and LLM acceptance remain unperformed. No full oracle; human review required. Reference metrics predate the reference-line appearance revision; rendered physical replay is checked locally, while native/model validation of the new observation revision remains pending."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 
