@@ -17,7 +17,8 @@ scripts/task_cutoffs.toml gives the seconds per benchmark and mode, with optiona
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3).
 Repository level (no task given): the table itself is usable, has a number for exactly the benchmark-mode pairs that
-have tasks, every exception names a family or a task that exists, every number equals its last recorded value (its
+have tasks, privileged and standard (any mode with `same_cutoff_as` in the mode registry) have one number wherever
+both exist (a benchmark's row, a family's entry, a task and its counterpart), every exception names a family or a task that exists, every number equals its last recorded value (its
 newest `[[history]]` entry, else scripts/task_cutoffs.baseline.toml: a change without its entry fails), and
 docs/CUTOFFS.md is what `python3 scripts/task_cutoffs.py apply` renders from it.
 
@@ -160,6 +161,27 @@ def check_repo(tasks: list[Path]) -> list[str]:
     for name in sorted(by_task):
         if name not in names:
             errs.append(f"scripts/task_cutoffs.toml: [task_cutoff_sec] names {name!r}, which is not a task directory")
+    # a benchmark may ship any subset of the modes (PROTOCOL §2.15), but a mode whose registry entry names
+    # `same_cutoff_as` has that mode's number wherever both exist (§2.16; standard = privileged, owner 2026-10-12):
+    # in a benchmark's row, in a family's entry, and for a task and its counterpart of the same base
+    pairs = [(m, d["same_cutoff_as"]) for m, d in tc.MODE_REGISTRY.items() if d["same_cutoff_as"]]
+    for m, other in pairs:
+        for bench, row in sorted(table.items()):
+            if m in row and other in row and row[m] != row[other]:
+                errs.append(f"scripts/task_cutoffs.toml: {bench} gives {other} {row[other]} s and {m} {row[m]} s; the two "
+                            "modes have the same cutoff (PROTOCOL §2.12, §2.16)")
+        for bench, rows in sorted(families.items()):
+            for family, row in sorted(rows.items()):
+                if m in row and other in row and row[m] != row[other]:
+                    errs.append(f"scripts/task_cutoffs.toml: [family_cutoff_sec] {bench} {family!r} gives {other} "
+                                f"{row[other]} s and {m} {row[m]} s; the two modes have the same cutoff")
+        for t in tasks:
+            if tc.mode_of(t) != m:
+                continue
+            o = t.with_name(f"{tc.base_of(t)}-{other}")
+            if (o / "task.toml").is_file() and tc.cutoff_for(t) != tc.cutoff_for(o):
+                errs.append(f"{t.name} has a cutoff of {tc.cutoff_for(t)} s and {o.name} {tc.cutoff_for(o)} s; the two "
+                            "modes have the same cutoff (PROTOCOL §2.12, §2.16)")
     errs += task_cutoffs.history_errors()     # every number equals its last recorded value: a change has its [[history]] entry
     doc = ROOT / "docs/CUTOFFS.md"
     if not doc.is_file() or doc.read_text(encoding="utf-8") != task_cutoffs.render_doc(tasks):

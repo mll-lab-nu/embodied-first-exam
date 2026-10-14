@@ -34,12 +34,8 @@ def seeds_table(task: Path) -> tuple[dict, dict]:
 
 def holder(task: Path) -> Path:
     """The task whose tests/ holds the pair's instances: the privileged twin of a standard task, else the task."""
-    mode = tc.mode_of(task)
-    if mode in tc.SIDECAR_MODES:
-        twin = task.with_name(tc.base_of(task) + "-privileged")
-        if twin.is_dir():
-            return twin
-    return task
+    twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §2.16)
+    return twin if twin is not None and twin.is_dir() else task
 
 
 def instance_kinds(d: Path) -> set[str]:

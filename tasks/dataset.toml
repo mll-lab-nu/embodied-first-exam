@@ -6838,6 +6838,10 @@ name = "robot-coding-bench/pandadyn-s12-moving-bridge-puck-relay-i00-standard"
 digest = "sha256:71fcd2a9cec5e927de4bbd71116f3d366f256c45bd016462687c4c493e7a7c5f"
 
 [[tasks]]
+name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
+digest = "sha256:2b4a1f23b409a8a84a0a19684412ac27f61ac7ee69d460842bb4bf8063261cac"
+
+[[tasks]]
 name = "robot-coding-bench/roboolympics-backflip-i00-privileged"
 digest = "sha256:6c5f21cac893d59bfbe1063e055c769488e388fa9c46444e17ee6f7fc2cd25c7"
 

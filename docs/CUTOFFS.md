@@ -23,7 +23,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | MetaWorld+ | 1800 s (30 min) | 1800 s (30 min) | — | 50 / 50 / — |
 | MolmoSpaces | 3600 s (60 min) | 3600 s (60 min) | — | 8 / 8 / — |
 | MuJoCo Playground | 1800 s (30 min) | 1800 s (30 min) | — | 13 / 13 / — |
-| MyoSuite | 3600 s (60 min) | 3600 s (60 min) | — | 22 / 22 / — |
+| MyoSuite | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 22 / 22 / 1 |
 | Panda Dynamic Scenes | 3600 s (60 min) | 3600 s (60 min) | — | 25 / 25 / — |
 | RoboARC | 10800 s (180 min) | 10800 s (180 min) | — | 94 / 94 / — |
 | RoboCasa | 3600 s (60 min) | 3600 s (60 min) | — | 29 / 29 / — |
@@ -38,7 +38,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1815 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1816 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -126,3 +126,4 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-14 | `roboolympics-soccerssl-match-i00-standard-realtime` | (none) -> 14400 s | owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-13) | wheeled soccer 5 v 5 exported by RoboOlympics: two halves and a shoot-out are about 1035 s of game time, 2.9 h of wall time at its slowdown S = 10, plus the frozen reviews; at S = 5 its four overhead cameras cannot be rendered in time (51 % busy at S = 10); the D8 cap |
 | 2026-10-14 | `roboolympics-badminton-match-i01-standard-realtime` | (none) -> 14400 s | owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14) | badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 to 93 min, so a model with its reviews needs more than 7200 s; the D8 cap |
 | 2026-10-14 | `roboolympics-badminton-match-i02-standard-realtime` | (none) -> 14400 s | owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14) | as roboolympics-badminton-match-i01-standard-realtime (the same match at opponent level 2) |
+| 2026-10-14 | MyoSuite, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the first standard-realtime task (table_tennis): the standard twin's number |

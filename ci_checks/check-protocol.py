@@ -16,8 +16,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
-PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"}   # standard mode (2.4: the operations capability, issue #89)
-REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # standard-realtime mode (PROTOCOL §4b): 2.3 = the realtime capability
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.16)
+# the `protocol` values each mode may declare: standard 2.1 / 2.2 / 2.4 (2.4: the operations capability, issue #89),
+# standard-realtime 2.3 (the realtime capability, §4b), privileged none
+MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
 # Tasks a benchmark exports with its own service inside (PROTOCOL §4c; owner, 2026-10-14): the protocol it serves, per
 # mode; only for directories its manifest lists (scripts/roboolympics/exported.toml)
 OWN_PROTOCOLS = {"roboolympics-": {"standard-realtime": "eai-standard-realtime/1.0", "standard": "skilleval-api-test/1"}}
@@ -32,6 +35,8 @@ def own_protocol(name: str, mode: str | None) -> str | None:
                 name in {t["name"] for t in tomllib.loads(man.read_text()).get("tasks", [])}:
             return per_mode.get(mode or "")
     return None
+
+
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}
 
@@ -67,21 +72,24 @@ def check_task(task: Path) -> None:
     meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     mode = meta.get("mode")
     if mode is None:
-        warn("missing `mode` (privileged | standard | standard-realtime)", name)
-    # whole suffixes only: `-standard-realtime` does not end in `-standard`, and `mode` is compared exactly
-    realtime = mode == "standard-realtime" or name.endswith("-standard-realtime")
-    standard = not realtime and (mode == "standard" or name.endswith("-standard"))
+        warn("missing `mode` (" + " | ".join(tc.MODES) + ")", name)
+    # whole suffixes only (`-standard-realtime` does not end in `-standard`), and `mode` is compared exactly
+    try:
+        named = tc.mode_of(task)
+    except ValueError:
+        named = None
     if name.endswith("-realtime") and not name.endswith("-standard-realtime") or mode == "realtime":
         warn("mode name `realtime` / `-realtime` (the third mode is `standard-realtime`, PROTOCOL D12)", name)
     proto = meta.get("protocol")
     if proto is not None and proto == own_protocol(name, mode):
-        pass
-    elif standard and proto not in PROTOCOLS:
-        warn(f"standard-mode `protocol` not in {sorted(PROTOCOLS)}", f"{name} ({proto})")
-    elif realtime and proto not in REALTIME_PROTOCOLS:
-        warn(f"standard-realtime `protocol` not in {sorted(REALTIME_PROTOCOLS)}", f"{name} ({proto})")
-    if not standard and not realtime and proto is not None:
-        warn("`protocol` set on a privileged task", name)
+        pass                                   # PROTOCOL §4c: the benchmark's own protocol
+    else:
+        for m in {mode, named} & set(tc.MODES):
+            allowed = MODE_PROTOCOLS[m]
+            if allowed and proto not in allowed:
+                warn(f"{m}-mode `protocol` not in {sorted(allowed)}", f"{name} ({proto})")
+            if not allowed and proto is not None:
+                warn(f"`protocol` set on a {m} task", name)
 
     oracle = meta.get("oracle")
     if oracle is None:

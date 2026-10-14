@@ -33,7 +33,7 @@ import task_conventions as tc  # noqa: E402
 DOC = ROOT / "docs/CUTOFFS.md"
 BASELINE = ROOT / "scripts/task_cutoffs.baseline.toml"   # the table on the day it was created: never edited
 MANIFEST = ROOT / "tasks/dataset.toml"
-SHORT = {"privileged": "P", "standard": "S", "standard-realtime": "RT"}
+SHORT = {m: d["short"] for m, d in tc.MODE_REGISTRY.items()}   # the mode registry (PROTOCOL §2.16)
 
 
 def all_tasks() -> list[Path]:
@@ -46,11 +46,12 @@ def _dur(sec: int) -> str:
 
 def table_rows(tasks: list[Path]) -> list[str]:
     n = Counter((tc.bench_of(t), tc.mode_of(t)) for t in tasks)
-    rows = ["| Benchmark | privileged | standard | standard-realtime | Tasks (P / S / RT) |", "|---|---|---|---|---|"]
+    rows = ["| Benchmark | " + " | ".join(tc.MODES) + " | Tasks (" + " / ".join(SHORT[m] for m in tc.MODES) + ") |",
+            "|---|" + "---|" * (len(tc.MODES) + 1)]
     for bench, row in sorted(tc.cutoff_table().items(), key=lambda kv: kv[0].lower()):
         cells = [_dur(row[m]) if m in row else "—" for m in tc.MODES]
         counts = " / ".join(str(n[(bench, m)]) if n[(bench, m)] else "—" for m in tc.MODES)
-        rows.append(f"| {bench} | {cells[0]} | {cells[1]} | {cells[2]} | {counts} |")
+        rows.append(f"| {bench} | " + " | ".join(cells) + f" | {counts} |")
     return rows
 
 
@@ -203,7 +204,7 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         *table_rows(tasks),
         "",
-        f"{len(tasks)} task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number "
+        f"{len(tasks)} task directories. {' / '.join(SHORT[m] for m in tc.MODES)}: {', '.join(tc.MODES)}. A cutoff is a whole number "
         f"of seconds, at most {tc.CUTOFF_CAP} (PROTOCOL D8"
         + "".join(f"; {b}'s exception: {c}" for b, c in sorted(tc.CUTOFF_CAP_EXCEPTIONS.items())) + ").",
         "",

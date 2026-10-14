@@ -32,7 +32,7 @@
 "MetaWorld+"        = { privileged =  1800, standard =  1800 }
 "MolmoSpaces"       = { privileged =  3600, standard =  3600 }
 "MuJoCo Playground" = { privileged =  1800, standard =  1800 }
-"MyoSuite"          = { privileged =  3600, standard =  3600 }
+"MyoSuite"          = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "Panda Dynamic Scenes" = { privileged =  3600, standard =  3600 }
 "RoboCasa"          = { privileged =  3600, standard =  3600 }
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
@@ -322,3 +322,12 @@ from_sec = 0
 to_sec = 14400
 decided_by = "owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14)"
 note = "as roboolympics-badminton-match-i01-standard-realtime (the same match at opponent level 2)"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "MyoSuite"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the first standard-realtime task (table_tennis): the standard twin's number"
