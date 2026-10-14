@@ -69,6 +69,8 @@ def official(d, contract) -> bool:
     """An official configuration: the seed (a registered hidden seed once the sport has a hidden set, else one of the
     public [official] seeds), the slowdown, the first player and the level."""
     off = contract.get("official", {})
+    if ((contract.get("formats") or {}).get(d.get("format") or "") or {}).get("preview"):
+        return False                           # a preview format ([formats.<f>] preview = true; core 0.2.21) is never official
     ok = True
     if off.get("hidden_seeds"):
         ok &= hidden_index(d, contract) is not None

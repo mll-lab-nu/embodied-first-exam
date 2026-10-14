@@ -1,7 +1,9 @@
 """soccer's part of reward.json (the common part is core/grading.py): numbers only, from final.json and the declared
 artifacts episode.jsonl (team messages) and think_usage_<seat>.json (metering). The keys are the legacy tasks' keys
 (scripts/olympiad/soccer/*/tests/grade.py) where the v0.2 record holds the value; README "Reward keys" lists the
-differences."""
+differences. official_config replaces the core's value with the legacy per-format rule (match: the level's own seeds and
+the slowdowns; duel / team: seeds 1-3 at x10); with a hidden official seed (core 0.2.14, the sport's registered set) the
+core's value stands and only the slowdown rule can lower it (hidden_rule)."""
 import json
 import os
 from pathlib import Path
@@ -49,6 +51,24 @@ def official_config(d, f):
         return int(int(d.get("seed") or 0) in (1, 2, 3) and s in DUEL_SLOWDOWNS)
     except (KeyError, TypeError, ValueError):
         return 0
+
+
+def hidden_rule(d, out):
+    """A hidden official seed (core 0.2.14: final.json seed_proof; the seed itself is never written): the core's rule
+    decides (the seed must be in the format x level cell of the registered set, tests/grade.py hidden_index), so its
+    official_config stands; this sport only adds its per-format slowdown rule, which can only lower it."""
+    if not d.get("seed_proof"):
+        return out
+    try:
+        single = len(d["cfg"]["seats"]) == 1
+        ok = float(d.get("slowdown") or 0) in (OFFICIAL_SLOWDOWNS if single else DUEL_SLOWDOWNS)
+    except (KeyError, TypeError, ValueError):
+        ok = False
+    if ok:
+        out.pop("official_config", None)
+    else:
+        out["official_config"] = 0
+    return out
 
 
 def evaluate(d):
@@ -103,4 +123,4 @@ def evaluate(d):
             out[f"{rb}_{k}"] = int(st.get(k, 0))
         out[f"{rb}_distance_m"] = round(float(st.get("distance_m", 0.0)), 2)
         out[f"{rb}_messages"] = int(msgs.get(rb, 0)) if d.get("format") == "team" else 0
-    return out
+    return hidden_rule(d, out)

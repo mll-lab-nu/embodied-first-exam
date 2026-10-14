@@ -7,25 +7,25 @@
 name = "roboolympics-badminton-actskill-i00-standard"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["1f91cd36c666", "c48d6a28fbe9"]
+source_commits = ["3ace9b35c9c9"]
 
 [[tasks]]
 name = "roboolympics-badminton-match-i01-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["1f91cd36c666", "90d5beca0782"]
+source_commits = ["3ace9b35c9c9"]
 
 [[tasks]]
 name = "roboolympics-badminton-match-i02-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["1f91cd36c666", "90d5beca0782"]
+source_commits = ["3ace9b35c9c9"]
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
-revision = "soccer-2v2-9+core-0.2"
-source_commits = ["c3b0463fc95c"]
+revision = "soccer-2v2-10+core-0.2"
+source_commits = ["3ace9b35c9c9"]
 
 [[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
@@ -37,16 +37,16 @@ source_commits = ["c0b93f73cf04"]
 name = "roboolympics-tabletennis-hitskill-i00-standard"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["c3b0463fc95c"]
+source_commits = ["3ace9b35c9c9"]
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["c3b0463fc95c"]
+source_commits = ["3ace9b35c9c9"]
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i02-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["c3b0463fc95c"]
+source_commits = ["3ace9b35c9c9"]

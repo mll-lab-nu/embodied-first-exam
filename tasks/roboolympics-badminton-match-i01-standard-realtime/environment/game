@@ -10,6 +10,8 @@
                              in images, they are saved like observe's, as reply_*.png)
   game ready "WHY" "PLAN"    your review (after each of your actions, turn-based; at each review, real time)
   game say "TEXT"            team formats: a message to your teammates (never shown to the other side)
+  game team [SINCE]          team formats: your teammates' messages after seq SINCE (default 0); reading never
+                             consumes them (observe / status show the recent ones and team_seq, the newest seq)
 Sport shortcuts (generated from the sport's declaration):
   game none """
 import base64
@@ -99,6 +101,8 @@ def main(a):
         show(call("ready", {"why": a[1], "plan": a[2]}))
     elif a[:1] == ["say"] and len(a) == 2:
         show(call("say", {"text": a[1]}))
+    elif a[:1] == ["team"] and len(a) <= 2:
+        show(call("team", {"since": int(a[1]) if len(a) == 2 else 0}))
     elif a and a[0] in COMMANDS and len(a) == len(COMMANDS[a[0]]):
         kind, *names = COMMANDS[a[0]]
         show(call("act", {"type": kind, **{n: arg(n, x) for n, x in zip(names, a[1:])}}))

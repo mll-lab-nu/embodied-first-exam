@@ -5,6 +5,8 @@ A built-in player is an object made by factory(spec, seat, seed) with
     act(view) -> body | None     view = {"state": <the seat's state>, "observation": <the /observe observation>}
                                  (body = the /act request; None = nothing now, realtime only)
     review(reply) -> (why, plan) optional; called after each own action (turn) or at each review (realtime)
+    message(view) -> text | None optional (realtime, core 0.2.21): a team-channel message to the seat's teammates
+                                 (POST /say; refused messages, e.g. faster than the channel allows, are dropped)
 
     python3 -m core.client MODULE:FACTORY        (SIM_URL, SEAT; e.g. the task's solution/oracle_play.py)
 """
@@ -116,9 +118,14 @@ def play_realtime(c: Seat, player, every_s: float = 0.05) -> dict:
             c.call("ready", {"why": why, "plan": plan})
             continue
         if now.get("world") == "running":
-            body = player.act({"state": now, "observation": view.get("observation") or {}})
+            v = {"state": now, "observation": view.get("observation") or {}}
+            body = player.act(v)
             if body is not None:
                 c.call("act", body)
+            say = getattr(player, "message", None)
+            text = say(v) if say is not None else None
+            if text:
+                c.call("say", {"text": text})
         c.call("wait", {"dt": every_s})
 
 

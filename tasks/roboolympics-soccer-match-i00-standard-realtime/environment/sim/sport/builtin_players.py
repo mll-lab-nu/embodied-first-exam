@@ -10,8 +10,12 @@
                   team B) the same way on the plane of the trunk (z = 0.78 m);
                2. roles: the robot nearer the ball is the striker, the other guards the line between the ball and its
                   own goal (outside the own penalty area while the striker is in it: illegal defence); kick-off and
-                  shoot-out roles from the referee's information; in the team format (one robot per seat, no team
-                  channel for built-in players) every robot plays as the striker;
+                  shoot-out roles from the referee's information; in the team formats (one robot per seat: team,
+                  team_match) the seat talks with its teammate only through the team channel (core 0.2.21:
+                  message(view)): every 0.2 s its pose and its own latest ball sighting (team frame, with the game
+                  time it was seen); it plays with the fresher of its own and its teammate's ball sighting, takes the
+                  teammate's reported pose for the roles (the same rule: the robot nearer the ball strikes, the other
+                  guards) and falls back to playing as the striker while it has no recent message;
                3. striker: gets behind the ball on the line ball -> aim, lines up 0.3 m behind the spot that puts the
                   ball in the swing kick's strike zone and walks straight in slowly, turns to the aim and kicks (the
                   swing with the foot on its side of the ball; power 1 near the goal, 0.6 farther, 0 for the kick-off's
@@ -22,6 +26,9 @@
                4. returns ONE act per call (the core's client and in-process loop take one body per call): the robot
                   whose command changed, round robin between the two robots of a team seat.
   Chase      the simple baseline: the reference player with every robot a striker (no division of labour).
+  StepReference  the reference with the in-walk kick (style step) instead of the swing in every format (in team_match
+             the Reference itself plays the in-walk kick: the format's camera reference, user decision 2026-10-13).
+  StepChase  StepReference with every robot a striker (the truth reference's plan; screening variant).
   Stand      starts and stands still (a robot that never acts; check policy).
   Random     seeded random walk / stand / kick commands (check policy).
 No simulator import: this file runs in the player's container as the task's oracle (numpy + pillow only)."""
@@ -42,6 +49,10 @@ PUSH_AHEAD, PUSH_RIGHT, CONTEST_M = 0.975, 0.15, 1.5   # the push kick's spot; u
 BALL_MEMORY_S, BALL_MEMORY_NEAR_S = 2.0, 6.0  # how long a ball estimate is used; longer when the ball is too close
                                               # to the feet for the head camera (it sees the floor from ~0.55 m on)
 LV = dict(vmax=0.8, vlat=0.4, wmax=1.0, pos_tol=0.05, yaw_tol=0.08, shoot_m=7.0)
+# the in-walk kick (style step; StepReference), as the scripted levels and the truth reference use it (soccer.STEP):
+# line up on the kicking foot's line STEP_STAGE behind the ball (the ball still in the head camera's view, which
+# starts ~0.55 m ahead), then send the kick walking in; the kick waits for the step that reaches the ball
+STEP_LINE, STEP_STAGE, STEP_LAT_TOL, STEP_YAW_TOL, STEP_V = 0.16, 0.7, 0.06, 0.15, 0.5
 
 
 def in_own_area(p, margin=0.0):
@@ -242,6 +253,45 @@ def striker(me, ball, aim, power_far=0.6, first_touch=False, others=(), opps=(),
               opps=([o for o in opps if np.hypot(*(o - ball)) > 0.6] if np.hypot(*e) > 0.4 else []) + close)
 
 
+def step_striker(me, ball, aim, power_far=0.6, first_touch=False, others=(), opps=(), fixed=False):
+    """The striker with the in-walk kick: behind the ball on the kicking foot's line, then kick walking in."""
+    p, yaw = np.array([me["pose"]["x"], me["pose"]["y"]]), me["pose"]["yaw"]
+    if not fixed:
+        aim = choose_aim(ball, aim)
+        if aim is None:
+            c = -ball / max(np.hypot(*ball), 1e-6)
+            return go(me, ball + 0.5 * c, face=math.atan2(c[1], c[0]), others=others)
+    u = aim - ball
+    u /= max(np.hypot(*u), 1e-6)
+    left = np.array([-u[1], u[0]])
+    rel = p - ball
+    face = math.atan2(u[1], u[0])
+    behind, lat = float(np.dot(rel, u)), float(np.dot(rel, left))
+    foot, ry = ("right", STEP_LINE) if lat >= 0 else ("left", -STEP_LINE)
+    err = wrap(face - yaw)
+    if not fixed and not first_touch and behind < -0.2 and np.hypot(*rel) < 1.4 \
+            and any(np.hypot(*(o - ball)) < 0.7 for o in opps):
+        return go(me, ball - 0.2 * u, face=face, others=others)          # press an opponent at the ball
+    if -STEP_STAGE - 0.25 < behind < -0.35 and abs(lat - ry) < STEP_LAT_TOL and abs(err) < STEP_YAW_TOL:
+        power = 1.0 if float(np.hypot(*(np.array([HALF_L, 0.0]) - ball))) < LV["shoot_m"] else power_far
+        c, s_ = math.cos(yaw), math.sin(yaw)
+        vy = float(np.clip(1.5 * (ry - lat) * float(-s_ * left[0] + c * left[1]), -LV["vlat"], LV["vlat"]))
+        cmd = dict(type="kick", style="step", power=0.0 if first_touch else power,
+                   v=[STEP_V, round(vy, 3), round(float(np.clip(1.8 * err, -LV["wmax"], LV["wmax"])), 3)])
+        if foot != "right":
+            cmd["foot"] = foot
+        return cmd
+    if behind > -0.2:                                    # not behind the ball: go round it
+        side = 1.0 if lat >= 0 else -1.0
+        rr = 0.9 if ball[0] < -HALF_L + 3.0 else 0.75
+        tgt = ball - rr * u + side * rr * left
+        return go(me, tgt, face=face if np.hypot(*(p - tgt)) < 0.8 else None, others=others, opps=opps)
+    Ps = ball - STEP_STAGE * u + ry * left
+    close = [o for o in opps if np.hypot(*(o - p)) < 0.75]
+    return go(me, Ps, face=face, slow=np.hypot(*(Ps - p)) < 0.3, others=others,
+              opps=[o for o in opps if np.hypot(*(o - ball)) > 0.6] + close)
+
+
 def search(me):
     return dict(type="walk", v=[0.0, 0.0, 0.6])
 
@@ -258,9 +308,18 @@ class Reference:
         self.K = cam["intrinsics"]
         self.C = np.array(cam["cam_to_trunk"], float)
         self.robots = [str(r) for r in spec["your_robots"]]
-        self.team_fmt = len(self.robots) == 1           # one robot per seat: the team format
-        self.ball = None                                # (xy, t_sim)
-        self.mate = {}                                  # the teammate's last message (team channel: unused here)
+        self.team_fmt = len(self.robots) == 1           # one robot per seat: the team formats (team, team_match)
+        self.all_strike = False                         # Chase: every robot a striker
+        # the kick: the swing, except in team_match, where the reference plays the in-walk kick (user decision
+        # 2026-10-13; the match format keeps the swing until the next soccer revision); StepReference: always the step
+        self.kick = step_striker if spec.get("format") == "team_match" else striker
+        self.ball = None                                # (xy, t_sim): the ball estimate played with
+        self.own = None                                 # (xy, t_sim): this seat's own latest sighting (team formats)
+        self.mate = None                                # the teammate's latest message (team channel), with t_recv
+        self.heard = set()                              # (from, k) of the messages read: each used once
+        self.last_say = -9.0
+        self.i_strike = False                           # team formats: this seat's robot claims the striker role
+        self.unit_t = 0.0
         self.last_cmd = {}
         self.striker_robot = None
         self.opp_colour = "red" if spec["team"] == "A" else "blue"
@@ -291,6 +350,7 @@ class Reference:
                     est.append(b)
         if est:
             self.ball = (np.mean(est, axis=0), t_frame)
+            self.own = self.ball
         merged = []
         for o in opp:
             if all(np.hypot(*(o - q)) > 0.5 for q in merged):
@@ -299,16 +359,51 @@ class Reference:
                                                      all(np.hypot(*(o - q)) > 0.7 for q in merged)]
         for m in now.get("team_messages") or []:
             try:
-                self.mate = dict(json.loads(m["text"]), t_recv=m["k"] * 0.02)
+                key = (m["from"], int(m["k"]))
+                if key in self.heard:                   # a message delivered again is used once
+                    continue
+                self.heard.add(key)
+                j = json.loads(m["text"])
+                if isinstance(j, dict) and isinstance(j.get("p"), list) and (self.mate is None or
+                                                                            j.get("t", 0) >= self.mate.get("t", 0)):
+                    self.mate = dict(j, t_recv=t_frame)
             except (ValueError, TypeError, KeyError):
                 pass
+        mb = (self.mate or {}).get("b")
+        if mb is not None and self.mate.get("bt", -1) >= self.unit_t and \
+                (self.ball is None or self.mate["bt"] > self.ball[1] + 0.05):
+            self.ball = (np.array(mb[:2], float), float(self.mate["bt"]))   # the teammate saw it more recently
         return bool(est)
+
+    def mate_pos(self, now):
+        """{robot number: xy} of the teammate from its message of the last second (standing, on the pitch)."""
+        m = self.mate
+        if not self.team_fmt or m is None or now["t_sim"] - m.get("t", -9) > 1.0 or m.get("f"):
+            return {}
+        return {str(m.get("r")): np.array(m["p"][:2], float)}
+
+    def message(self, view):
+        """Team formats: every 0.2 game s the robot's pose and its own latest ball sighting (core 0.2.21)."""
+        now = view["state"]
+        t = float(now.get("t_sim", 0.0))
+        if not self.team_fmt or t - self.last_say < 0.2 - 1e-9 or now.get("world", "running") != "running":
+            return None
+        r = self.robots[0]
+        st = now["robots"][r]
+        self.last_say = t
+        own = self.own if self.own is not None and self.own[1] >= self.unit_t else None
+        return json.dumps({"r": r, "p": [round(st["pose"]["x"], 3), round(st["pose"]["y"], 3), round(st["pose"]["yaw"], 3)],
+                           "f": int(bool(st["fallen"] or st["penalized"])),
+                           "b": None if own is None else [round(float(own[0][0]), 3), round(float(own[0][1]), 3)],
+                           "bt": None if own is None else round(own[1], 2), "s": int(self.i_strike), "t": round(t, 2)},
+                          separators=(",", ":"))
 
     def decide(self, now):
         ref = now["referee"]
         rs = now["robots"]
         out = {}
         mine = {r: np.array([rs[r]["pose"]["x"], rs[r]["pose"]["y"]]) for r in self.robots}
+        team = {**self.mate_pos(now), **mine}           # + the teammate's reported pose (team formats)
         ball = None
         if self.ball is not None:
             age = now["t_sim"] - self.ball[1]
@@ -323,14 +418,14 @@ class Reference:
             st = rs[r]
             if st["fallen"] or st["penalized"] or st["command"]["type"] == "kick":
                 continue
-            oth = [o for rr, o in mine.items() if rr != r]
+            oth = [o for rr, o in team.items() if rr != r]
             if ref["state"] == "pso_kick" and cur:
                 if cur["we_shoot"] and cur["striker"] == "us" + r:
                     if ball is None:
                         out[r] = search(st)
                         continue
                     side = PSO_AIM_Y if (cur["n"] % 2) else -PSO_AIM_Y
-                    out[r] = striker(st, ball, np.array([HALF_L, side]), power_far=1.0, fixed=True)
+                    out[r] = self.kick(st, ball, np.array([HALF_L, side]), power_far=1.0, fixed=True)
                 elif not cur["we_shoot"] and cur["keeper"] == "us" + r:
                     y = 0.0 if ball is None else float(np.clip(ball[1], -GOAL_W / 2 + 0.3, GOAL_W / 2 - 0.3))
                     out[r] = go(st, np.array([-HALF_L + 0.25, y]), face=0.0)
@@ -340,19 +435,19 @@ class Reference:
             if ball is None:
                 # no ball estimate: the robot nearer the own goal guards it (outside the penalty area) and looks
                 # around from there; the other searches
-                deep = min(mine, key=lambda x: (float(np.hypot(*(mine[x] - np.array([-HALF_L, 0.0])))), x))
-                if r == deep and len(mine) > 1 and np.hypot(*(mine[r] - np.array([-(HALF_L - 2.6), 0.0]))) > 0.4:
+                deep = min(team, key=lambda x: (float(np.hypot(*(team[x] - np.array([-HALF_L, 0.0])))), x))
+                if r == deep and len(team) > 1 and np.hypot(*(mine[r] - np.array([-(HALF_L - 2.6), 0.0]))) > 0.4:
                     out[r] = go(st, np.array([-(HALF_L - 2.6), 0.0]), others=oth, opps=opps)
                 else:
                     out[r] = search(st)
                 continue
-            role = self.role(r, mine, ball, ko)
+            role = self.role(r, team, ball, ko)
             if role == "wait":
                 out[r] = dict(type="stand")
             elif role == "striker":
                 # the kick-off team scores only after a touch outside the centre circle: a soft first touch there
                 first = bool(ko and ko.get("ours") and np.hypot(*ball) < CENTER_R + 0.2)
-                out[r] = striker(st, ball, np.array([HALF_L, 0.0]), first_touch=first, others=oth, opps=opps)
+                out[r] = self.kick(st, ball, np.array([HALF_L, 0.0]), first_touch=first, others=oth, opps=opps)
             else:
                 own = np.array([-HALF_L, 0.0])
                 tgt = own + 0.42 * (ball - own)
@@ -364,12 +459,23 @@ class Reference:
 
     def role(self, r, mine, ball, ko):
         if ko and not ko.get("ball_in_play"):
-            if not ko.get("ours"):
-                return "wait"
-            return "striker" if r == "1" else "wait"
-        if self.team_fmt:
+            self.i_strike = bool(ko.get("ours")) and r == "1"
+            return "striker" if self.i_strike else "wait"
+        if self.all_strike or len(mine) < 2:            # Chase; a team-format seat without a recent message
+            self.i_strike = True
             return "striker"
         d_me = {rr: float(np.hypot(*(mine[rr] - ball))) for rr in mine}
+        if self.team_fmt:
+            # one robot per seat: the incumbent is whoever CLAIMS the striker role (its own last decision, the
+            # teammate's flag "s" in its latest message); both seats apply the same rule to the same shared data, so
+            # they agree (a per-seat memory alone could leave both robots supporting, each waiting for the other)
+            me = self.robots[0]
+            claims = [x for x, c in ((me, self.i_strike), (str((self.mate or {}).get("r")), (self.mate or {}).get("s")))
+                      if c and x in d_me]
+            best = min(d_me, key=lambda x: (d_me[x], x))
+            s = claims[0] if len(claims) == 1 and d_me[best] + 0.4 >= d_me[claims[0]] else best
+            self.i_strike = s == me
+            return "striker" if r == s else "support"
         s = self.striker_robot if self.striker_robot in d_me else None
         best = min(d_me, key=lambda x: (d_me[x], x))
         if s is None or d_me[best] + 0.4 < d_me[s]:
@@ -381,7 +487,8 @@ class Reference:
         now = view["state"]
         if now.get("stoppages") != self.unit:         # a new unit (after a stoppage): forget the old ball estimate
             self.unit = now.get("stoppages")
-            self.ball = None
+            self.ball = self.own = None
+            self.unit_t = float(now.get("t_sim", 0.0))
         self.perceive(view.get("observation") or {}, now)
         want = self.decide(now)
         todo = [r for r, cmd in want.items() if cmd["type"] == "kick" or cmd != self.last_cmd.get(r)
@@ -395,7 +502,7 @@ class Reference:
         return {**want[r], "entity": r}
 
     def review(self, reply):
-        self.ball = None
+        self.ball = self.own = None
         stop = (reply or {}).get("stoppage") or {}
         return f"stoppage: {stop.get('kind')}", "camera reference player: same plan"
 
@@ -406,7 +513,24 @@ class Chase(Reference):
 
     def __init__(self, spec, seat, seed=0):
         super().__init__(spec, seat, seed)
-        self.team_fmt = True
+        self.all_strike = True
+
+
+class StepReference(Reference):
+    """The camera reference with the in-walk kick (style step) instead of the swing: the kick the scripted levels and
+    the truth reference play since soccer-2v2-9 (screening variant; not the sport's [players] reference)."""
+
+    def __init__(self, spec, seat, seed=0):
+        super().__init__(spec, seat, seed)
+        self.kick = step_striker
+
+
+class StepChase(StepReference):
+    """StepReference with every robot a striker (the truth reference's plan: all go for the ball, in-walk kick)."""
+
+    def __init__(self, spec, seat, seed=0):
+        super().__init__(spec, seat, seed)
+        self.all_strike = True
 
 
 class Stand:

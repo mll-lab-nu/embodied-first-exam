@@ -8,6 +8,8 @@ penalty shoot-out when level. Three formats on one world (soccer.World):
   duel    format A: one seat per team (A, B), each commands its two robots
   team    format B: one seat per robot (A1, A2 against B1, B2; sides A and B); teammates talk only through the core's
           team channel (sport.toml [team_channel])
+  team_match  one seat per robot of team A (A1, A2; one side A) against the scripted team B inside the world, the
+          levels of `match`; the two seats talk only through the team channel
 
 The simulator: soccer.py (world, walking policy batch, kick skill, referee, the scripted coach; since soccer-2v2-4 the
 real T1's leg limits of bodies/booster_t1 and the swing kick of swing_kick.py), soccer_scene.py (the MuJoCo scene, the
@@ -123,7 +125,7 @@ def head_camera(m, d, robot: str) -> dict:
 class SoccerMatch(MatchBase):
     def __init__(self, cfg):
         self.cfg = cfg
-        self.single = len(cfg.seats) == 1
+        self.single = len(set(cfg.side_of(s) for s in cfg.seats)) == 1   # one side (match, team_match): vs Coach
         self.level = int(cfg.level or 2) if self.single else 0   # default: level 2, the lowest official level
         if self.single and self.level not in S.COACH_LEVELS:
             raise ValueError(f"opponent level must be one of {sorted(k for k in S.COACH_LEVELS if isinstance(k, int))}")
@@ -413,7 +415,13 @@ class Soccer:
                                                 "ankle_roll"],
                                      "velocity_rad_s": S.T1["limits"]["leg"]["speed_rad_s"],
                                      "torque_nm": S.T1["limits"]["leg"]["torque_nm"],
-                                     "torque_speed": "full torque up to 80 % of velocity_rad_s, then linearly to 0 "
+                                     "rated_torque_nm": [round(S.T1["motors"]["thermal"]["rated_frac"] * x, 2)
+                                                         for x in S.T1["limits"]["leg"]["torque_nm"]],
+                                     "thermal": "a motor's limit folds back from torque_nm to rated_torque_nm when it is "
+                                                "held near its peak (about %g s from cold at the peak; I^2 t, an estimate)"
+                                                % S.T1["motors"]["thermal"]["peak_s"],
+                                     "bus_power_w": S.T1["motors"]["bus"]["power_w"],
+                                     "torque_speed": "full torque up to 64 % of velocity_rad_s, then linearly to 0 "
                                                      "at it (braking keeps full torque; an estimate)"},
                       "strike_zone": {"swing": S.SWING_ZONE, "push": S.STRIKE_ZONE,
                                       "step": {"ahead_of_support_foot": [S.STK.PARAMS["reach_min"], S.STK.PARAMS["reach_max"]],
@@ -457,7 +465,8 @@ class Soccer:
 
     def players(self):
         import builtin_players as bp
-        return {"reference": bp.Reference, "chase": bp.Chase, "stand": bp.Stand, "random": bp.Random}
+        return {"reference": bp.Reference, "chase": bp.Chase, "stand": bp.Stand, "random": bp.Random,
+                "reference_step": bp.StepReference, "chase_step": bp.StepChase}
 
 
 SPORT = Soccer()

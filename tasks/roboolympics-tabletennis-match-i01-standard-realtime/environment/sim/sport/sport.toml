@@ -151,7 +151,7 @@ reference_class = "builtin_players:SkillReference"   # the in-loop oracle: the c
 raw_rule = "while a ball is in play (from a toss or a stroke until the point is decided: traj, slew and hold go through your hit); between points and before your toss you may send them"
 
 [timing]
-slowdown = 20                         # the legacy default (RCB_SLOWDOWN)
+slowdown = 10                         # the official slowdown (RCB_SLOWDOWN; was 20 until 2026-10-14; badminton stays x20 this round)
 start_timeout_s = 1800                # duel: up to 30 minutes to start after the first player
 ready_timeout_s = 300                 # each review (after every point), else the side loses
 

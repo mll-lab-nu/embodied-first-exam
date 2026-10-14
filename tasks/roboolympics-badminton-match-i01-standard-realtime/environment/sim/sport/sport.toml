@@ -95,9 +95,30 @@ b9_test = "test_b9_serves_returnable_by_an_informed_receiver"   # robot and mode
 skills = ["act", "toss", "move"]            # the racket's state at contact; the serve's toss
 contract = "skill_api.py"             # CONTRACTS: ranges, timing, feedback, control authority, failures (P6)
 implementation = "plugin.py:RacketLayer"   # the platform's stroke controller (sim/bm.py Match.plan_racket)
-# [modes.low] is not declared yet: the action level `low` (traj) exists, but the low level's toolkit manifest, the
-# deliverable, the hidden API-test requests, the reference and boundary implementations and skill-in-the-loop are not
-# built (docs/screening/badminton.md, step 3: it should be set, and what it needs)
+
+[modes.low]                           # Agent as Robotics Engineer: the player implements the same act skill (lowlevel/README.md)
+implements = ["act"]
+toolkit = "seat/toolkit.toml"         # the manifest (skilleval/toolkit.py: sha256-checked)
+toolkit_path = "/opt/robot/toolkit.toml"   # where the seat has it
+tools = ["joint_interface", "robot_model", "robot_meshes", "ik_library", "servo_model"]
+forbidden = ["act"]                   # the core skill: never given at the low level
+evaluator = "lowlevel/evaluator.py"   # hooks of skilleval/evaluate.py (API test, competition test)
+reference = "lowlevel/reference"      # our act from the toolkit only, with rehearsals on the servo model (rule 4)
+boundary = "lowlevel/boundary"        # the IK block: IK to the requested pose at a stance + the fastest move there, no swing (rule 5)
+reference_results = "lowlevel/reference_results.json"   # platform / reference / boundary rows (tools/skill_eval.py --record)
+thresholds = { reference_min = 0.8, boundary_max = 0.05 }   # API-test success rates (lowlevel/README.md; as table tennis)
+eval_pip = ["scipy==1.18.1"]          # the evaluation image = the sim image + the seat's scipy (the deliverable may use it)
+[modes.low.deliverable]               # robot and mode rule 10
+path = "/app/output/skill/act.py"
+signature = "act(t, pos, normal, vel, base=None, *, state, spec) -> one low-level command ({'type': 'traj', 'q': rows of 9 targets [base_x, base_y, q1..q7], row i for control step state['step'] + i} | {'type': 'none'}) or None"
+optional = ["step(*, state, spec) -> a command or None (called every 20 ms between acts)"]
+allowed = "numpy, scipy, mujoco, the toolkit under /opt/robot (robot_only.xml, assets, lib/bm_kinematics.py, lib/bm_servo.py) and files inside /app/output/skill; module-level memory between calls of one run; state = the low level's observe state (no images, no shuttle coordinates) with step, spec = game spec's joints, limits, toolkit, skill_contract; no network, no other files, no other processes"
+memory = "per_case"                   # API test: a fresh process per request; competition test: one process per match
+time_limits_s = { load = 30, act = 5, step = 1 }
+[modes.low.cases]                     # skilleval/cases.py; rebuilt by `python3 lowlevel/evaluator.py record DIR` + `make-cases DIR`
+hidden = "lowlevel/cases/hidden.jsonl.gz"   # simulator side only (the requests and their replay start states): never in the seat, not in generated tasks
+public = "lowlevel/cases/public.jsonl"      # the practice subset (request, the robot's state, our implementation's plan)
+practice_path = "/opt/robot/act_cases_public.jsonl"
 
 [timing]
 slowdown = 20                         # the legacy default (RCB_SLOWDOWN; official 1, 2, 5, 10, 20)
@@ -108,10 +129,18 @@ ready_timeout_s = 300                 # each review after a point (legacy READY_
 high = { none = [] }
 low = { none = [] }
 
+[seat.low]                            # the low action level's toolkit (seat/toolkit.toml 1.2.0): the robot's own model, MuJoCo, the kinematics library, the servo model
+files = { "/opt/robot/robot_only.xml" = "seat/robot_only.xml", "/opt/robot/assets" = "sim/scene/assets", "/opt/robot/lib/bm_kinematics.py" = "seat/lib/bm_kinematics.py", "/opt/robot/lib/bm_servo.py" = "seat/lib/bm_servo.py", "/opt/robot/toolkit.toml" = "seat/toolkit.toml", "/opt/robot/act_cases_public.jsonl" = "lowlevel/cases/public.jsonl" }
+pip = ["mujoco==3.3.7", "absl-py==2.5.0", "etils==1.14.0", "fsspec==2026.9.0", "glfw==2.10.2", "PyOpenGL==3.1.10",
+       "typing_extensions==4.16.0", "zipp==4.1.0"]   # = the sim image's MuJoCo and its closure (as table tennis)
+run = ["python -c \"import mujoco; m = mujoco.MjModel.from_xml_path('/opt/robot/robot_only.xml'); assert (m.njnt, m.nu) == (9, 9)\"",
+       "python -c \"import sys; sys.path.insert(0, '/opt/robot/lib'); import bm_kinematics as k, bm_servo; K = k.RacketKinematics(); q, e = K.solve([0.3, -1.0, 1.2], normal=[0, 1, 0], base=[0.0, -1.6]); assert e < 1e-3, e; bm_servo.RobotSim()\""]
+note = "Your robot's own model is /opt/robot/robot_only.xml (MJCF: the base, the pedestal, the arm and the racket only, nothing of the world; meshes in /opt/robot/assets), with MuJoCo at the simulator's version. Your toolkit (/opt/robot/toolkit.toml) also holds two optional libraries: /opt/robot/lib/bm_kinematics.py (RacketKinematics: forward kinematics and Jacobians of the 9 joints, damped least-squares IK of the racket head centre and string-face normal with the base at a given position, the self-collision clearance, the base's go-to law) and /opt/robot/lib/bm_servo.py (RobotSim: your robot's own servo law on the robot-only model, to roll your joint targets out before you send them, from the observed state q, qd, q_target, servo; it models the joint-velocity rule: the servo runs the arm at 0.9 of its velocity limits, and an arm joint faster than 1.05 x its limit stops the robot for 1 s - game spec limits.velocity_rule, the state's servo.reflex). There is no act skill or stroke controller at this level: implementing act(t, pos, normal, vel[, base]) is your engineering task (game spec skill_contract; the practice requests /opt/robot/act_cases_public.jsonl: each the request, the robot's state and our implementation's plan). The act contract: the racket head centre at pos, its string-face normal along normal (either face) and its velocity vel at the contact step (base, when the request gives it: where your base stands at contact; it is passed as a fifth positional argument only when given) k_c = k_eff + round(t / 0.01) (k_eff: the step your act's command takes effect); within 2 cm, 3 degrees and 0.15 m/s + 10 % of |vel|, with no refused command. The match itself is graded as before. Start the match (`game start`) within the start window (timing.start_timeout_s, 30 minutes) even if your skill is not finished: a seat that has not started by then loses by no-show; you can keep improving the skill during the reviews between points"
+
 [observation]
 fields = ["score", "point", "ball", "t_since_played", "heard", "robot_base_xy", "q_arm", "racket_pos", "racket_normal",
           "ball_in_play", "ball_state", "serve_in_s", "you_receive_serve", "serve", "command", "pending_commands",
-          "last_points", "last_shots", "opponent_level", "q_target", "you_serve"]
+          "last_points", "last_shots", "opponent_level", "q_target", "you_serve", "q", "qd", "qd_target", "servo"]
 renderer = "mujoco"                   # the sport draws its own views (the legacy 2 x 4 tiles, MuJoCo; plugin.Views)
 frame_budget_ms = 4000                # one observation, 8 tiles of 480 x 360 (CPU osmesa, a loaded host)
 columns = 4
@@ -197,6 +226,26 @@ test = "test_exploit_self_collision"
 id = "E14"
 text = "no serve is a sure point against the scripted opponent (revision wallclock-11): a fast flat short serve to the front corner of its service court (about 5-6 m/s; a model scored 10 points in a row with one on the old opponent) is returned or blocked at every level"
 test = "test_exploit_flat_short_serve"
+[[exploits]]
+id = "E15"
+text = "the low-level toolkit is what its manifest says (seat/toolkit.toml, skilleval/toolkit.py: the robot model, its meshes, the kinematics library and the servo model match their sha256 and versions; the seat ships exactly them); the libraries import nothing of the simulator; the kinematics library reproduces the simulator's racket kinematics and its IK is deterministic; the servo model moves the robot as the simulator does"
+test = "test_exploit_toolkit_is_the_manifest"
+[[exploits]]
+id = "E16"
+text = "the robot's own model given at the low level (seat/robot_only.xml, /spec robot_model) reproduces the simulator's robot (base, pedestal, arm, racket) and holds nothing of the world"
+test = "test_exploit_robot_model_is_the_simulator_robot"
+[[exploits]]
+id = "E17"
+text = "the low level's API test: the seat gets only the public practice act requests (the request, the robot's state and our plan; no world state, no seed); the hidden evaluation cases and their replay start states stay on the simulator side and are left out of the generated tasks (skilleval/cases.py, tools/sportlib.py); every request is feasible under the real limits"
+test = "test_exploit_act_cases_hidden_stay_in_the_simulator"
+[[exploits]]
+id = "E18"
+text = "the low level's deliverable (the final /app/output/skill/act.py) is evaluated after the match in an isolated container (tools/skill_eval.py: no network, read-only, the skill as nobody) and in its own process (skilleval/sandbox.py: python -I, a scrubbed environment): it sees only what each call passes (no simulator, no shuttle state); a call that raises or overruns its time limit gives no command and is counted"
+test = "test_exploit_act_skill_runs_isolated"
+[[exploits]]
+id = "E19"
+text = "skill in the loop (RCB_SKILL_INLOOP, skilleval/inloop.py): the core skill cannot be bypassed: while a shuttle the robot may meet is in play the low level refuses joint commands (409) and accepts only act (lowered by the player's own skill, run in its sandbox on a private copy of its files, each call logged with their sha256) and the skill's own step() every 20 ms; a failed call is a no-op; the episode holds the lowered commands only and replays without the skill"
+test = "test_exploit_skill_in_the_loop"
 
 [players]
 reference = "reference"               # camera-only (the legacy duel's cam_player.py) + a scripted serve: wins the default configuration
@@ -232,6 +281,10 @@ id = "badminton-match-wallclock-program-standard"   # the legacy task name
 format = "duel-wallclock"
 action_level = "high"
 id = "badminton-duel-wallclock-program-standard"    # the legacy task name
+[[tasks]]
+format = "match-wallclock"
+action_level = "low"
+id = "badminton-match-wallclock-program-lowlevel-standard"   # the low level (Agent as Robotics Engineer)
 
 [score]                               # the continuous score (core 0.2.14, core/score.py): larger is better
 name = "point_share"

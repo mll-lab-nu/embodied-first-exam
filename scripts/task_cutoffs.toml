@@ -61,6 +61,8 @@
 
 [task_cutoff_sec]
 "roboolympics-soccerssl-match-i00-standard-realtime" = 14400   # a whole 5 v 5 match is 2.9 h of wall time at S = 10
+"roboolympics-badminton-match-i01-standard-realtime" = 14400   # a game to 11 at S = 20: over an hour for the reference alone
+"roboolympics-badminton-match-i02-standard-realtime" = 14400
 
 # History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
 # shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
@@ -250,3 +252,19 @@ from_sec = 0
 to_sec = 14400
 decided_by = "pending (this pull request; RoboOlympics' owner, 2026-10-13)"
 note = "the wheeled soccer 5 v 5 match exported by RoboOlympics: two halves and a shoot-out are about 1035 s of game time, 2.9 h of wall time at its slowdown S = 10, plus the frozen reviews; at S = 5 its four overhead cameras cannot be rendered in time (51 % busy at S = 10), so the budget is RoboOlympics' own 4 h"
+
+[[history]]
+date = "2026-10-14"
+task = "roboolympics-badminton-match-i01-standard-realtime"
+from_sec = 0
+to_sec = 14400
+decided_by = "pending (this pull request; RoboOlympics' owner, 2026-10-14)"
+note = "badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 min (10:12), so a model with its reviews needs more than 7200 s"
+
+[[history]]
+date = "2026-10-14"
+task = "roboolympics-badminton-match-i02-standard-realtime"
+from_sec = 0
+to_sec = 14400
+decided_by = "pending (this pull request; RoboOlympics' owner, 2026-10-14)"
+note = "badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 min (10:12), so a model with its reviews needs more than 7200 s"

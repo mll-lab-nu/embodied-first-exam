@@ -89,20 +89,52 @@ class Actuators:
     along the motion is limited to Y1 below X1 rad/s, falling linearly to 0 at X2 (the motor cannot drive faster); a
     torque against the motion (braking) to Y2 at any speed, as the curve's drawing in unitree_actuators.py shows it
     (its code also fades the braking torque beyond X1, which lets a joint pushed past X2 run away unbraked).
+
+    thermal (optional; motor_model() builds it from body.toml [motors.thermal]): (rated, T, derate_from) per motor:
+    an I^2 t state h per motor, dh/dt = ((tau / rated)^2 - h) / T (h = 1: the winding at its limit after a long
+    time at the rated torque); the torque limit falls linearly from tau_max at h = derate_from to the rated torque at
+    h = 1 (a drive's I^2 t foldback). h starts at 0 (a cold motor) and is never reset by reset(): heat stays with the
+    motor (cool_down() for a new match).
+    power (optional; [motors.bus]): (groups, watts): per group of motors (one robot's), the summed positive
+    mechanical power tau * qd is capped at watts; above it the torques doing positive work are scaled down together
+    (the battery and the drives cannot deliver more).
     """
 
-    def __init__(self, model, aid, vadr, tau_max, dt, dtau=None, envelope=None):
+    def __init__(self, model, aid, vadr, tau_max, dt, dtau=None, envelope=None, thermal=None, power=None):
         self.aid, self.vadr = np.asarray(aid, int), np.asarray(vadr, int)
         n = len(self.aid)
+        self.dt = float(dt)
         self.tau_max = np.minimum(np.asarray(tau_max, float), model.actuator_ctrlrange[self.aid, 1])
         self.step_max = None if dtau is None else np.asarray(dtau, float) * float(dt)
         self.env = None if envelope is None else tuple(np.asarray(e, float) for e in envelope)
+        self.thermal = None
+        if thermal is not None:
+            rated, T, frm = (np.broadcast_to(np.asarray(x, float), (n,)).copy() for x in thermal)
+            self.thermal = (np.minimum(rated, self.tau_max), T, frm)
+        self.power = None
+        if power is not None:
+            groups, watts = power
+            self.power = ([np.asarray(g, int) for g in groups], float(watts))
+        self.h = np.zeros(n)
         self.tau = np.zeros(n)
-        self.stats = dict(steps=0, torque_clipped=0, rate_clipped=0, envelope_clipped=0)
+        self.stats = dict(steps=0, torque_clipped=0, rate_clipped=0, envelope_clipped=0, thermal_derated=0,
+                          power_capped=0)
 
     def reset(self, tau=None):
         self.tau = np.zeros(len(self.aid)) if tau is None else np.clip(np.asarray(tau, float), -self.tau_max,
                                                                         self.tau_max)
+
+    def cool_down(self):
+        """The thermal state of cold motors (a new match)."""
+        self.h = np.zeros(len(self.aid))
+
+    def thermal_limit(self):
+        """The torque limit per motor now (the I^2 t foldback; tau_max without a thermal model)."""
+        if self.thermal is None:
+            return self.tau_max
+        rated, _, frm = self.thermal
+        x = np.clip((self.h - frm) / np.maximum(1.0 - frm, 1e-9), 0.0, 1.0)
+        return self.tau_max - (self.tau_max - rated) * x
 
     def limit(self, qd):
         """The torque limit per motor at joint speeds qd for torques along (+) the motion: (along, against)."""
@@ -132,9 +164,30 @@ class Actuators:
             t = c
         c = np.clip(t, -self.tau_max, self.tau_max)
         st["torque_clipped"] += int(np.any(c != t))
-        self.tau = c
-        d.ctrl[self.aid] = c
-        return c
+        t = c
+        if self.thermal is not None:
+            th = self.thermal_limit()
+            c = np.clip(t, -th, th)
+            st["thermal_derated"] += int(np.any(c != t))
+            t = c
+        if self.power is not None:
+            qd = d.qvel[self.vadr]
+            groups, watts = self.power
+            p = np.maximum(t * qd, 0.0)
+            capped = False
+            for g in groups:
+                ps = float(p[g].sum())
+                if ps > watts:
+                    pos = g[p[g] > 0]
+                    t[pos] = t[pos] * (watts / ps)
+                    capped = True
+            st["power_capped"] += int(capped)
+        if self.thermal is not None:
+            rated, T, _ = self.thermal
+            self.h = self.h + self.dt * ((t / rated) ** 2 - self.h) / T
+        self.tau = t
+        d.ctrl[self.aid] = t
+        return t
 
 
 def unitree_envelope(decl: dict, joint_keys: list):
@@ -146,6 +199,32 @@ def unitree_envelope(decl: dict, joint_keys: list):
     inf = dict(X1=np.inf, X2=np.inf, Y1=np.inf, Y2=np.inf)
     curves = [inf if k is None else mot[mot["assign"][k]] for k in joint_keys]
     return tuple(np.array([c[x] for c in curves], float) for x in ("X1", "X2", "Y1", "Y2"))
+
+
+def motor_model(decl: dict, joint_keys: list, groups=None) -> dict:
+    """Actuators keyword arguments of a body's motor model from body.toml [motors]: the torque-speed envelope
+    (unitree_envelope), the thermal derating ([motors.thermal]: rated_frac of the torque limit is the continuous
+    torque, the peak torque from cold lasts peak_s before the foldback ends at the rated torque, the foldback starts
+    at derate_from) and the bus power cap per group of motors ([motors.bus] power_w; groups: index arrays into
+    joint_keys, one per robot; default all one group). Only the parts the body declares."""
+    mot = decl.get("motors") or {}
+    kw = dict(envelope=unitree_envelope(decl, joint_keys))
+    th = mot.get("thermal")
+    if th:
+        tau = np.array([np.nan if k is None else _leg_torque(decl, k) for k in joint_keys], float)
+        rf = float(th["rated_frac"])
+        T = float(th["peak_s"]) / -math.log(1.0 - rf ** 2)    # h(peak_s) = 1 at the peak torque from cold
+        kw["thermal"] = (rf * tau, T, float(th["derate_from"]))
+    bus = mot.get("bus")
+    if bus:
+        kw["power"] = ([np.arange(len(joint_keys))] if groups is None else groups, float(bus["power_w"]))
+    return kw
+
+
+def _leg_torque(decl: dict, key: str) -> float:
+    """The torque limit of a motor by its [motors.assign] key (the [motors] curve's Y1, the URDF torque)."""
+    mot = decl["motors"]
+    return float(mot[mot["assign"][key]]["Y1"])
 
 
 # ------------------------------------------------------------------------------------------------ setpoints

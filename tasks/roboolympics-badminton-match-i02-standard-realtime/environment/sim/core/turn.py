@@ -49,6 +49,7 @@ class TurnService(Service):
         out = {ep: self.guarded(ep, fn) for ep, fn in fns.items()}
         if post:
             out["say"] = self.say
+        out["team"] = self.team                    # read-only, never consumes (core 0.2.20)
         return out
 
     @property
@@ -163,7 +164,7 @@ class TurnService(Service):
         return False
 
     # ------------------------------------------------------------------ replies
-    def state(self, seat, query=None):
+    def state(self, seat, query=None, since=None):
         others = [s for s in self.cfg.seats if s != seat]
         if self.phase == "prepare":
             turn = "start" if not self.seats[seat].joined else "waiting for the opponent to start"
@@ -175,7 +176,7 @@ class TurnService(Service):
             turn = "opponent"
         out = {"seat": seat, "phase": self.phase, "turn": turn, "your_turn": turn in ("you", "review"),
                "awaiting_review": self.review_due == seat, "done": self.phase == "over",
-               **self.observation(seat, query), "clock_left_s": round(self.seats[seat].clock_left(), 1)}
+               **self.observation(seat, query, since), "clock_left_s": round(self.seats[seat].clock_left(), 1)}
         if self.retired:
             out["retired"] = list(self.retired)
         if len(others) == 1:
@@ -190,7 +191,7 @@ class TurnService(Service):
         return out
 
     def status(self, seat, body=None):
-        return 200, {"state": self.state(seat)}
+        return 200, {"state": self.state(seat, since=self.team_since(body))}
 
     def gate(self, seat):
         if self.phase == "over":
@@ -224,9 +225,10 @@ class TurnService(Service):
         if g:
             return g
         query = query_of(body)
+        since = self.team_since(body)
         self.seats[seat].count("n_observe")
         (job, meta), now = self.query_guard(seat, query, lambda: (self.camera_job(seat, query),
-                                                                   self.state(seat, query)))
+                                                                   self.state(seat, query, since)))
         return 200, {"state": now, "observation": dict(meta)}, job     # drawn off the lock
 
     def act(self, seat, body):
@@ -298,11 +300,12 @@ class TurnService(Service):
             timeout = min(WAIT_MAX_S, max(0.0, float(body.get("timeout_s", WAIT_MAX_S))))
         except (TypeError, ValueError, OverflowError):
             return 400, {"error": "timeout_s must be a number"}
+        since = self.team_since(body)
         self.seats[seat].count("n_wait")
         deadline = time.time() + timeout
         while self.phase != "over" and self.on_turn != seat and time.time() < deadline:
             self.cond.wait(min(1.0, max(0.01, deadline - time.time())))
-        return 200, {"state": self.state(seat)}
+        return 200, {"state": self.state(seat, since=since)}
 
     # ------------------------------------------------------------------ watchdog, collect
     def loop(self):

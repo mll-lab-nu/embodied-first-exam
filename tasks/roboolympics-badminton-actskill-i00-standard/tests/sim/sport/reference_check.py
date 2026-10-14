@@ -8,7 +8,7 @@ docs/benchmarks/badminton-minicourt-20261008/study.py), so that its results are 
   perception    "camera": the reference unchanged (the 8 tiles of the two cameras, its own detection); "truth": the
                 same player given the shuttle's true position at the tiles' times + 3 mm noise (no images drawn)
 
-Returns {"won", "scores": [ours, theirs], "perception", "report": {"legal_returns": [returned, rally shots], "velocity_reflexes"}}.
+Returns {"won", "scores": [ours, theirs], "perception", "report": {"legal_returns": [returned, rally shots], "velocity_reflexes": [reflexes, rally shots]}}.
 """
 from __future__ import annotations
 
@@ -101,4 +101,4 @@ def reference_match(format: str = "match-wallclock", level: int | None = 1, seed
     return {"won": g.winner == 0, "scores": [int(g.score[0]), int(g.score[1])],
             "perception": perception,      # a real truth variant (tools/check stage 5: not a camera stand-in)
             "report": {"legal_returns": [sum(bool(r.get("returned")) for r in rally), len(rally)],
-                       "velocity_reflexes": int(g.s.n_reflex)}}
+                       "velocity_reflexes": [int(g.s.n_reflex), len(rally)]}}   # {name: [count, of]}: reflexes per rally shot

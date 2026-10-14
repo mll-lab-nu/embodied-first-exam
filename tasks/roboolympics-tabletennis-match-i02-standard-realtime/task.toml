@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/roboolympics-tabletennis-match-i02-standard-realtime"
-description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): table tennis, one match against the scripted opponent at level 3, program play (eai-standard-realtime/1.0: the world runs at 1/20 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players. Exported from RoboOlympics task tabletennis-match-wallclock-program-standard by tools/export_fexam.py."
+description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): table tennis, one match against the scripted opponent at level 3, program play (eai-standard-realtime/1.0: the world runs at 1/10 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players. Exported from RoboOlympics task tabletennis-match-wallclock-program-standard by tools/export_fexam.py."
 authors = [{ name = "RoboOlympics (CHIGUI0)" }]
 keywords = ["robotics", "roboolympics", "sports", "tabletennis", "mujoco", "standard-realtime-mode", "vision", "real-time"]
 
@@ -26,18 +26,18 @@ mode = "standard-realtime"
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 12
 opponent_level = 3
-slowdown = 20
+slowdown = 10
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 play = "program"
 action_level = "high"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-source_commits = ["c3b0463fc95c"]
+source_commits = ["3ace9b35c9c9"]
 exporter = "roboolympics tools/export_fexam.py"
 player_mode = "unmetered"
 official = false
 expert_time_estimate_hours = 0.5
 oracle = "partial"
-oracle_evidence = "re-screen 2026-10-12 (revision 15, D = 5): our camera-only reference player beat level 3 in 7 of 40 seeds, this seed 5:1; live (vanilla Harbor, S = 20) see the oracle run in the export report"
+oracle_evidence = "re-screen 2026-10-12 (revision 15, D = 5, S = 20): our camera-only reference player beat level 3 in 7 of 40 seeds, this seed 5:1; S = 10 since 2026-10-14 (PR #138); the live oracle run is in the export report"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)

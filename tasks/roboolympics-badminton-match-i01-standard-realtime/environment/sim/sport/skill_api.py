@@ -3,8 +3,13 @@ high level's two skills, `act` (the racket's state at contact) and `toss` (the s
 
   high  Agent as Athlete: the act IS the skill; the platform implements it (plugin.RacketLayer: the stroke controller
         sim/bm.py Match.plan_racket, planned on an exact copy of the robot at the act's effect step and lowered to joint
-        targets). Only [modes.high] is declared: the low level (`traj`) exists as an action level, but its toolkit,
-        deliverable and post-match tests are not built yet (docs/screening/badminton.md, step 3).
+        targets).
+  low   Agent as Robotics Engineer: the player implements act(t, pos, normal, vel, *, state, spec) itself from the
+        toolkit (seat/toolkit.toml: the robot-only model, the joint-target interface with the real limits, the
+        kinematics library, the servo model), at /app/output/skill/act.py; evaluated after the match
+        (lowlevel/evaluator.py, tools/skill_eval.py: the API test on hidden requests, the competition test with our
+        fixed reference strategy) and, in the skill-in-the-loop mode, called by the platform during the match
+        (skilleval/inloop.py, plugin.inloop_layer). `toss` is the same command at both levels (nothing to implement).
 
 This file is the contract's single source: the request ranges (plugin.HIGH_SCHEMA is built from them; tests check them
 against the simulator's constants), what the controller reads and may correct, its timing, its feedback and its failure
@@ -63,11 +68,18 @@ ACT = SkillContract(
                  "doc": "optional: where the base stands at contact (your frame; within the base's range); default the "
                         "forehand stance for pos (the stance formula); the base stays there after the stroke"},
     },
-    returns="the low-level traj (joint targets [base_x, base_y, q1..q7] per 10 ms control step from the effect step, "
-    "then the ready pose; the base stays at its stance) that the stroke controller plans on an exact copy of the robot "
-    "advanced to the effect step",
-    measured="the racket's state at the planned contact step on the robot-only twin WITHOUT execution scatter (the "
-    "rehearsal the reply reports: blade_error_m, normal_error_deg, racket_vel_delivered); in play the delivered state "
+    returns="one low-level command of this level, taking effect at control step state['step'] (that is k_eff): "
+    "{'type': 'traj', 'q': rows of 9 joint targets [base_x, base_y, q1..q7]} (row i = the target of control step "
+    "k_eff + i; after the last row the arm returns by itself to its ready pose and the base stays where it is) | "
+    "{'type': 'none'} | None (no command); the high level's implementation lowers the act to the same traj, planned "
+    "by the stroke controller on an exact copy of the robot advanced to the effect step",
+    measured="the racket head centre (site racket_center), its string-face normal (either face: the contact law reads "
+    "the face the head moves towards) and its linear velocity in the match simulator's state at the contact step "
+    "k_c = k_eff + round(t / 0.01) (as the high level's act: its reply's k_hit); the API-test case starts from the "
+    "exact state of one of our reference player's matches (the robot as the match left it, the shuttle in flight) and "
+    "runs to the leg's verdict, step() called every 2 control steps; time_err_s (reported, not a tolerance) = the step "
+    "of the head's closest pass to pos within +-0.1 s, minus k_c. The high level's reply reports the same quantities "
+    "from its rehearsal (blade_error_m, normal_error_deg, racket_vel_delivered); in play the platform's delivered state "
     "scatters by about 6 mm, 0.8 deg and 3 % (seeded, one stream per robot)",
     tolerances=(
         Tolerance("pos_err_m", 0.02, text="the head centre within 2 cm of pos at the contact step"),
@@ -75,10 +87,15 @@ ACT = SkillContract(
         Tolerance("vel_err_mps", 0.15, rel=0.10, rel_to="vel_norm", text="the head velocity within 0.15 m/s + 10 %"),
     ),
     must_be_zero=("refused",),
-    metrics=("speed_scale", "self_collision_steps"),
+    metrics=("vel_err_rel", "time_err_s", "self_collision_steps", "shuttle_returned"),
     feasible="the platform delivers a request within the tolerances when the contact is at least about 0.9 s ahead "
     "from the ready pose, 0.65-1.75 m high, within the base's reach in time and the head speed within about "
-    "2.2 t - 0.2 m/s along a forward face; otherwise it does its best and says so (FAILURES)",
+    "2.2 t - 0.2 m/s along a forward face; otherwise it does its best and says so (FAILURES). Every API-test request "
+    "comes from our reference player's own matches (L1-L3) on this revision and is feasible under the real limits: from "
+    "the case's start state the platform's implementation, without its execution scatter, plans it and its own "
+    "rehearsal (the robot alone) delivers it within 15 mm, 2.5 degrees and 0.10 m/s + 8 % (IK residual < 2 mm, the "
+    "base at its stance in time, no self-collision); a request that asked for more head speed than the limits allow "
+    "carries the velocity scaled the way the platform scales it",
     replaces="a new act (or none) replaces the stroke under way from its effect step; the swing restarts from the "
     "moving arm",
     notes={"control_authority": "the controller reads the robot only (joints, base, its own targets), never the "

@@ -18,6 +18,7 @@ import threading
 import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qsl
 
 from .sport import Refused, check_body
 
@@ -58,7 +59,8 @@ def make_server(service, seats, hosts, port=8000):
                 pass
 
         def dispatch(self, post):
-            bits = self.path.strip("/").split("/")
+            path, _, self.qs = self.path.partition("?")          # a GET may carry ?team_since=N (core 0.2.20)
+            bits = path.strip("/").split("/")
             if len(bits) != 2 or bits[0] not in seats or not seat_allowed(bits[0], self.client_address[0], hosts):
                 return self.send(403, {"error": "seat not authorized"})
             seat, ep = bits
@@ -85,6 +87,12 @@ def make_server(service, seats, hosts, port=8000):
         def handle_seat(self, seat, ep, post):
             try:                                # the request itself: any problem is the caller's (400), never a failure
                 body = {}
+                if not post and self.qs:            # GET parameters: small integers only (team_since, since)
+                    for key, val in parse_qsl(self.qs[:256], keep_blank_values=False)[:4]:
+                        if key in ("team_since", "since"):
+                            if not val.isdigit() or len(val) > 12:
+                                raise Refused(f"{key} must be a non-negative integer (a seq)")
+                            body[key] = int(val)
                 if post:
                     n = int(self.headers.get("Content-Length", "0"))
                     if not 0 <= n <= 65536:

@@ -8,14 +8,14 @@
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_match` / seed 8 |
 | Oracle | `partial` — screening round 16 (2026-10-13, revision 12): the truth-state reference beat level 2 in 10 of 20 seeds, the camera-only version did not win level 2; a model did (Opus 11:8, 11:6); this development seed was not screened |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
 
 ## Task
 Robot badminton against the scripted opponent (level 2), program play: robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players.
 
 ## Difficulty
-Frozen development instance: seed 8, level 2, slowdown S = 10. Not one of
+Frozen development instance: seed 8, level 2, slowdown S = 20. Not one of
 the sport's official (hidden) seeds, so results here are previews, not official RoboOlympics results.
 
 ## Reference solution

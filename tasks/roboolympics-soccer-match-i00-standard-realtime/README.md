@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` |
 
 ## Task
-Robot soccer 2 v 2 against the scripted opponent (level 2), program play: robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies on the released walking policy, held to the real robot's joint limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level; each robot takes a walk velocity command, stand or a swing-leg kick, and you see the game only through your robots' head cameras; in the `match` format you command both robots of team A against a scripted team, in the `duel` format another player commands team B, in the `team` format each robot has its own player and teammates talk only through the team channel.
+Robot soccer 2 v 2 against the scripted opponent (level 2), program play: robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies on the released walking policy, held to the real robot's joint limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level; each robot takes a walk velocity command, stand or a swing-leg kick, and you see the game only through your robots' head cameras; in the `match` format you command both robots of team A against a scripted team, in the `duel` format another player commands team B, in the `team` format each robot has its own player and teammates talk only through the team channel, in the `team_match` format each robot of team A has its own player against the scripted team.
 
 ## Difficulty
 Frozen development instance: seed 7, level 2, slowdown S = 5. Not one of
@@ -44,6 +44,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 
 ### Notes
-Source: RoboOlympics task `soccer-match-wallclock-program-standard`, revision `soccer-2v2-9+core-0.2`. The rules, the referee, the scripted
+Source: RoboOlympics task `soccer-match-wallclock-program-standard`, revision `soccer-2v2-10+core-0.2`. The rules, the referee, the scripted
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.

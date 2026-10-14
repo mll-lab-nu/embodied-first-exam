@@ -6715,31 +6715,31 @@ digest = "sha256:b78369488c008ecc71ea40aba410e621e3f1c9dd140a576c5b2bcc1c7262bc2
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-tabletennis-hitskill-i00-standard"
-digest = "sha256:0d7a1d327da9172ece743b635575a557e3f08dd04bd8dd31d8c7fd3cfcb38096"
+digest = "sha256:36bc9589c4ecc480881ce93521edf937acb87039b154b92711c75d08cde1e598"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-tabletennis-match-i01-standard-realtime"
-digest = "sha256:facff1e2efca9a6a17ec9656e8abaa2441f85098a3616eb3d18eb174d32181a5"
+digest = "sha256:16e29862623d631c67adb60b5928ad516cff88c11c1bb48fcf20b3f1a8328301"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-tabletennis-match-i02-standard-realtime"
-digest = "sha256:39fe2efa8f8bc196382e7ad1dd4b31d2f993dabb7473f2a745a3b57320df292b"
+digest = "sha256:8fbd398c5a63b2d731be2854d047ca487351c55b0f32509ab3077a99b2b6c73b"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-soccer-match-i00-standard-realtime"
-digest = "sha256:efc138ded781d150f90d4ddfda1f5fabf1929b6ce351ae446b515505552eb9de"
+digest = "sha256:6c8ffaf0d54d22a8d8c49f76053e39ca7a8fbe6072222d686c5e3fe40033934d"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-badminton-actskill-i00-standard"
-digest = "sha256:75bffa6c9262c00d4b4f357fd6615a6cb860c44534f2c596bce6fb3205236d9c"
+digest = "sha256:a55f3043b3fa05460c532618031a476ab7711e6844c1777d98e819d3206a66ef"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-badminton-match-i01-standard-realtime"
-digest = "sha256:7d0a1b4369a9684f5f4c4f3e1386ffac17484db11fadde64dee4e7d2e3981dcd"
+digest = "sha256:b2ff84926bccdb3f1ab689d8776bf95e943a541b417fa9ed36174c8a5f1b10f9"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-badminton-match-i02-standard-realtime"
-digest = "sha256:62d528ab5fd293e19eed70241db0c6a3dd3716bb6e49b9044d1e8db790dba1e0"
+digest = "sha256:88dde5b1c171f5052ebe87433b7f79505b7f054a6bebc2aa4017bd99543d25d1"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-soccerssl-match-i00-standard-realtime"

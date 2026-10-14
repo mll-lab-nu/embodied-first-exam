@@ -54,6 +54,8 @@ A benchmark's row is the default of all its tasks in a mode. The table may give 
 
 | Kind | Applies to | Mode | Cutoff | Tasks that take it |
 |---|---|---|---|---|
+| task | `roboolympics-badminton-match-i01-standard-realtime` | standard-realtime | 14400 s (240 min) | 1 |
+| task | `roboolympics-badminton-match-i02-standard-realtime` | standard-realtime | 14400 s (240 min) | 1 |
 | task | `roboolympics-soccerssl-match-i00-standard-realtime` | standard-realtime | 14400 s (240 min) | 1 |
 
 ## What the agent is told
@@ -116,3 +118,5 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |
 | 2026-10-13 | RoboOlympics, standard | (none) -> 7200 s | pending (this pull request) | the benchmark's first standard-mode tasks, exported by RoboOlympics itself: the skill-engineering tasks (implement the robot's skill from its model and toolkit; graded offline by the sport's API test), the same budget as the real-time matches |
 | 2026-10-13 | `roboolympics-soccerssl-match-i00-standard-realtime` | (none) -> 14400 s | pending (this pull request; RoboOlympics' owner, 2026-10-13) | the wheeled soccer 5 v 5 match exported by RoboOlympics: two halves and a shoot-out are about 1035 s of game time, 2.9 h of wall time at its slowdown S = 10, plus the frozen reviews; at S = 5 its four overhead cameras cannot be rendered in time (51 % busy at S = 10), so the budget is RoboOlympics' own 4 h |
+| 2026-10-14 | `roboolympics-badminton-match-i01-standard-realtime` | (none) -> 14400 s | pending (this pull request; RoboOlympics' owner, 2026-10-14) | badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 min (10:12), so a model with its reviews needs more than 7200 s |
+| 2026-10-14 | `roboolympics-badminton-match-i02-standard-realtime` | (none) -> 14400 s | pending (this pull request; RoboOlympics' owner, 2026-10-14) | badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 min (10:12), so a model with its reviews needs more than 7200 s |

@@ -13,6 +13,9 @@ hidden_seeds: sha256, counts and commitments per cell = format x level), officia
 one of its cell: the commitment the sim recorded (final.json seed_proof; the replay must give the same one) must be in
 the registered cell (hidden_seed = 1, hidden_seed_index = its position; else 0 and -1). A hidden seed is never written:
 seed = -1 here and in every record. The public [official] seeds then no longer count as official.
+Core 0.2.19: this holds over the sport's own official_config too (tests/sport_grade.py may replace the core's value
+with a legacy per-format rule): with a registered set, official_config = 1 needs hidden_seed = 1 and the sport's
+value 1, so the sport's rule can only lower it and a public-seed match is never official.
 Continuous score (core 0.2.14, core/score.py): final.json continuous.by_side (the replay must agree) becomes
 <seat>_continuous_score per seat and, for a single-side format, continuous_score; larger is better.
 
@@ -66,6 +69,8 @@ def official(d, contract) -> bool:
     """An official configuration: the seed (a registered hidden seed once the sport has a hidden set, else one of the
     public [official] seeds), the slowdown, the first player and the level."""
     off = contract.get("official", {})
+    if ((contract.get("formats") or {}).get(d.get("format") or "") or {}).get("preview"):
+        return False                           # a preview format ([formats.<f>] preview = true; core 0.2.21) is never official
     ok = True
     if off.get("hidden_seeds"):
         ok &= hidden_index(d, contract) is not None
@@ -145,6 +150,11 @@ def grade(d, r, contract, evaluate, audits=None):
             out[s + "_nocode_violations"] = len(audits.get(s, (0, []))[1])
             out[s + "_nocode_forfeit"] = int(bad[s])
     out.update(evaluate(d))
+    if (contract.get("official") or {}).get("hidden_seeds"):
+        # core 0.2.19: once the sport registered a hidden seed set (frozen), only a match on a registered hidden seed of
+        # its cell is official, whatever the sport's own official_config says (its legacy public-seed rule); the
+        # sport's rule (e.g. its slowdowns) can only lower the value
+        out["official_config"] = int(out.get("official_config") == 1 and hidx is not None)
     return out
 
 

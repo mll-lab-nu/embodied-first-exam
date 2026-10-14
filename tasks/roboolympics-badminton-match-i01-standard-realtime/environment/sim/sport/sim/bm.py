@@ -61,6 +61,7 @@ In the duel (bduel.Side) each robot has its own stream: 1 for the first server, 
 """
 from __future__ import annotations
 
+import copy as _copy
 import hashlib
 import io
 import json
@@ -583,6 +584,87 @@ def hermite(q0, v0, q1, v1, T, n):
     return h00[:, None] * q0 + h10[:, None] * T * v0 + h01[:, None] * q1 + h11[:, None] * T * v1
 
 
+# ---------------------------------------------------------------------- the servo's arithmetic, without the overhead
+# Phys.servo runs 10 times per control step, for the match and for every rehearsal of the stroke planner (about 6 500
+# times per planned stroke): its Python overhead was most of the planner's wall time (2026-10-13: ~75 % of 0.5-2 s per
+# stroke). _jerk_caps and _jl_step do the SAME floating-point operations in the same order as limits.jerk_caps and
+# limits.JerkLimiter.step (and Phys.servo those of limits.TorqueRateLimiter), so the results are bit-identical
+# (tests/test_badminton.py test_planner_fast_paths_bit_identical); only the constants of the arm's limits are computed
+# once, the ufuncs are called directly (no wrappers) and common subexpressions are shared.
+_uclip = (np._core if hasattr(np, "_core") else np.core).umath.clip   # what np.clip calls with both bounds
+_umin, _umax, _uabs, _usign, _usqrt = np.minimum, np.maximum, np.abs, np.sign, np.sqrt
+_add_reduce, _max_reduce = np.add.reduce, np.maximum.reduce
+
+
+class _ArmConst:
+    """The constants of the arm's setpoint generator (limits.JerkLimiter), jerk caps (limits.jerk_caps, share 0.7) and
+    torque stage (limits.TorqueRateLimiter), computed as their code computes them."""
+
+    def __init__(self, jl, lim_caps, trl):
+        assert lim_caps.dtau is not None and lim_caps.jerk is not None and trl.step_max is not None
+        assert np.array_equal(lim_caps.jerk, jl.J)      # so min(J, jerk_caps(..)) is jerk_caps(..) itself
+        self.dt, self.V, self.A, self.Jh = jl.dt, jl.V, jl.A, jl.J
+        self.negV, self.negA = -jl.V, -jl.A
+        self.KP, self.KV, self.KV2 = jl.KP, jl.KV, jl.KV * jl.KV
+        Ab = jl.BRAKE * jl.A                            # brake_speed's A
+        self.Ab3, self.nAbAb, self.Ab4, self.Ab8 = Ab**3, -Ab * Ab, Ab**4, 8.0 * Ab
+        self.twoJh = 2.0 * jl.J
+        self.dt3 = jl.dt**3
+        self.cap_num, self.cap_jerk = 0.7 * lim_caps.dtau, lim_caps.jerk
+        self.tau_max, self.neg_tau_max, self.step_max = trl.tau_max, -trl.tau_max, trl.step_max
+
+
+def _jerk_caps(c: _ArmConst, M):
+    """limits.jerk_caps(M, lim) (share 0.7) for a lim with torque-rate and jerk limits."""
+    return _umin(c.cap_jerk, c.cap_num / _umax(_add_reduce(_uabs(M), axis=1), 1e-9))
+
+
+def _jl_step(c: _ArmConst, jl, r, rd, J):
+    """limits.JerkLimiter.step(r, rd, jerk_cap) with jerk_cap = J from _jerk_caps (<= the jerk limits): the same
+    operations in the same order. Updates jl.q, jl.qd, jl.qdd (new arrays) and returns them."""
+    q, qd, qdd, dt = jl.q, jl.qd, jl.qdd, c.dt
+    e = r - q
+    t = _uabs(qdd) / J
+    e = e - ((qd - rd) * t + 0.5 * qdd * t * t - _usign(qdd) * J * t**3 / 6.0)
+    ae = _uabs(e)
+    J2 = J**2                                       # brake_speed(|e|, BRAKE A, J) (its max(dist, 0) is |e| itself)
+    bs = np.where(ae <= c.Ab3 / J2, np.cbrt(ae * ae * J), 0.5 * (c.nAbAb / J + _usqrt(c.Ab4 / J2 + c.Ab8 * ae)))
+    v_cmd = _uclip(rd + _usign(e) * _umin(c.KP * ae, bs), c.negV, c.V)
+    err = v_cmd - qd                                # _sqrt_ctrl(v_cmd - qd, KV, J)
+    lin = J / c.KV2
+    a = _uabs(err)
+    twoJ = 2.0 * J
+    sc = np.where(a <= lin, c.KV * err, _usign(err) * _usqrt(_umax(0.0, twoJ * (a - 0.5 * lin))))
+    a_cmd = _uclip(sc, c.negA, c.A)
+    room_up, room_dn = _umax(0.0, c.V - qd), _umax(0.0, c.V + qd)
+    a_cmd = _uclip(a_cmd, -_usqrt(twoJ * room_dn), _usqrt(twoJ * room_up))
+    h_up, h_dn = _usqrt(c.twoJh * room_up), _usqrt(c.twoJh * room_dn)
+    hard = (qdd > h_up) | (qdd < -h_dn)
+    if hard.any():
+        a_cmd = np.where(hard, _uclip(a_cmd, -h_dn, h_up), a_cmd)
+        jlim = np.where(hard, c.Jh, J)
+    else:
+        jlim = J
+    j = _uclip((a_cmd - qdd) / dt, -jlim, jlim)
+    jl.q = q + qd * dt + 0.5 * qdd * dt * dt + j * c.dt3 / 6.0
+    jl.qd = qd + qdd * dt + 0.5 * j * dt * dt
+    jl.qdd = qdd + j * dt
+    return jl.q, jl.qd, jl.qdd
+
+
+_ARMC: list = []                                # [_ArmConst] of the arm (ARM_OP setpoints, ARM caps), built once
+
+
+def _arm_const() -> _ArmConst:
+    if not _ARMC:
+        _ARMC.append(_ArmConst(AL.JerkLimiter(ARM_OP, PHYS_DT), ARM, AL.TorqueRateLimiter(ARM, PHYS_DT)))
+    return _ARMC[0]
+
+
+_MON_STATE = ("t", "open", "events", "warnings", "steps_in_contact", "peak_force", "peak_force_10ms", "max_depth",
+              "impulse", "first_t", "by_pair")      # selfcollision.Monitor's running state (its reset())
+
+
 # ---------------------------------------------------------------------- robot + shuttle physics
 class Phys:
     """MuJoCo robot (mobile base + Franka + racket), the shuttle integrator and the racket-shuttle contact model."""
@@ -695,6 +777,31 @@ class Phys:
         self.n_steady = st[12]
         self._set_servo_extra(st[13])
 
+    def checkpoint(self):
+        """The robot's whole state, exactly (all of MjData, the servo, the reflex, the self-collision monitor), for
+        restore(): stepping on from a restored checkpoint is bit-identical to stepping on from where it was taken
+        (unlike save() / load(), which keep only what copy_from copies and recompute the rest with mj_forward). The
+        stroke planner's rehearsals share their common start this way (Match._simulate_arm)."""
+        mon = self.selfcol["A"]
+        return (_copy.copy(self.d), self.target.copy(), self.k, list(self._actions), self.jl.q.copy(),
+                self.jl.qd.copy(), self.jl.qdd.copy(), self.trl.tau.copy(), self.n_steady, self._servo_extra(),
+                self.sh_p, self.sh_v, self.sh_live, self.hit_enabled, list(self.events), self._prev, self.steps_total,
+                _copy.deepcopy({k: getattr(mon, k) for k in _MON_STATE}))
+
+    def restore(self, ck):
+        """Back to a checkpoint() of this robot (the checkpoint stays valid: it can be restored again)."""
+        self.d = _copy.copy(ck[0])
+        self.target = ck[1].copy(); self.k = ck[2]; self._actions = list(ck[3])
+        self.jl.reset(ck[4], ck[5], ck[6])
+        self.trl.tau = ck[7].copy()
+        self.n_steady = ck[8]
+        self._set_servo_extra(ck[9])
+        self.sh_p, self.sh_v, self.sh_live, self.hit_enabled = ck[10], ck[11], ck[12], ck[13]
+        self.events = list(ck[14]); self._prev = ck[15]; self.steps_total = ck[16]
+        mon = self.selfcol["A"]
+        for k, v in _copy.deepcopy(ck[17]).items():
+            setattr(mon, k, v)
+
     def check_target(self, q):
         if q.shape != (9,) or not np.all(np.isfinite(q)):
             raise ValueError(f"action must be 9 finite joint targets, got {q.shape}")
@@ -718,8 +825,8 @@ class Phys:
         m, d, qa, va = self.m, self.d, self.qa, self.va
         mj.mj_fullM(m, self._M, d.qM)
         M = self._M
-        lo, hi = m.actuator_ctrlrange[:, 0], m.actuator_ctrlrange[:, 1]
-        if self.reflex_at is None and np.any(np.abs(d.qvel[va[2:]]) > REFLEX * ARM_VEL):
+        ix = self._ix()
+        if self.reflex_at is None and (_uabs(d.qvel[ix["va_a"]]) > ix["reflex_vel"]).any():
             # the joint-velocity reflex: the gantry's setpoints from its targets' state, braking to rest where its
             # limits stop it (BASE_LIM), the arm's to rest at the pose of the trigger
             if self.bl is None:
@@ -740,43 +847,70 @@ class Phys:
             b_sp, bd_sp, base_acc = self.bl.step(q_des[:2], qd_des[:2])
         else:
             b_sp, bd_sp = q_des[:2], qd_des[:2]
-        tau_b = KP[:2] * (b_sp - d.qpos[qa[:2]]) + KD[:2] * (bd_sp - d.qvel[va[:2]]) + d.qfrc_bias[va[:2]]
-        d.ctrl[:2] = np.clip(tau_b, lo[:2], hi[:2])     # the gantry's feed force (BASE_FORCE, the scene's ctrlrange)
-        Ma = M[np.ix_(va[2:], va[2:])]
-        q_sp, qd_sp, qdd_sp = self.jl.step(q_des[2:], qd_des[2:], AL.jerk_caps(Ma, ARM))
-        e = q_sp - d.qpos[qa[2:]]
-        tau = Ma @ qdd_sp + KP[2:] * e + KD[2:] * (qd_sp - d.qvel[va[2:]]) + d.qfrc_bias[va[2:]]
+        tau_b = ix["kp_b"] * (b_sp - d.qpos[ix["qa_b"]]) + ix["kd_b"] * (bd_sp - d.qvel[ix["va_b"]]) \
+            + d.qfrc_bias[ix["va_b"]]
+        cr = m.actuator_ctrlrange
+        d.ctrl[:2] = _uclip(tau_b, cr[:2, 0], cr[:2, 1])   # the gantry's feed force (BASE_FORCE, the scene's ctrlrange)
+        Ma = M[ix["aa"]]
+        c = _arm_const()                           # the arm: setpoint generator, jerk caps (limits.py, bit-identical)
+        q_sp, qd_sp, qdd_sp = _jl_step(c, self.jl, q_des[2:], qd_des[2:], _jerk_caps(c, Ma))
+        qa_a, va_a = ix["qa_a"], ix["va_a"]
+        e = q_sp - d.qpos[qa_a]
+        tau = Ma @ qdd_sp + ix["kp_a"] * e + ix["kd_a"] * (qd_sp - d.qvel[va_a]) + d.qfrc_bias[va_a]
         if COUPLING_FF and base_acc is not None:   # the base's commanded acceleration fed forward into the arm
-            tau = tau + M[np.ix_(va[2:], va[:2])] @ base_acc      # (the coupling M_arm,base x a_base)
-        d.ctrl[2:] = self.trl(tau)
-        if np.max(np.abs(e)) > RESYNC:             # the setpoint does not run away from the arm (no wind-up)
+            tau = tau + M[ix["ab"]] @ base_acc      # (the coupling M_arm,base x a_base)
+        trl = self.trl                             # the torque stage (limits.TorqueRateLimiter)
+        trl.tau = _uclip(_uclip(tau, trl.tau - c.step_max, trl.tau + c.step_max), c.neg_tau_max, c.tau_max)
+        d.ctrl[2:] = trl.tau
+        if _max_reduce(_uabs(e)) > RESYNC:         # the setpoint does not run away from the arm (no wind-up)
             jl = self.jl
             big = np.abs(e) > RESYNC
             jl.q[big] = d.qpos[qa[2:]][big] + np.sign(e[big]) * RESYNC
             jl.qd[big] = np.clip(d.qvel[va[2:]], -jl.V, jl.V)[big]
             jl.qdd[big] = 0.0
 
+    def _ix(self) -> dict:
+        """The servo's index arrays and gains (fancy indices of qpos / qvel / qM, as servo used them), built once."""
+        ix = self.__dict__.get("_ixd")
+        if ix is None:
+            qa, va = self.qa, self.va
+            # the joints' qpos / qvel addresses as slices when contiguous (views: the same numbers, no copy); the
+            # inertia blocks stay fancy-indexed copies (the matrix products see the same contiguous arrays as before)
+            def sl(a, i, j):
+                run = np.array_equal(a[i:j], np.arange(a[i], a[i] + j - i))
+                return slice(int(a[i]), int(a[i]) + j - i) if run else a[i:j].copy()
+            ix = self._ixd = {"qa_b": sl(qa, 0, 2), "qa_a": sl(qa, 2, 9), "va_b": sl(va, 0, 2),
+                              "va_a": sl(va, 2, 9), "aa": np.ix_(va[2:], va[2:]), "ab": np.ix_(va[2:], va[:2]),
+                              "kp_b": KP[:2].copy(), "kd_b": KD[:2].copy(), "kp_a": KP[2:].copy(),
+                              "kd_a": KD[2:].copy(), "reflex_vel": REFLEX * ARM_VEL}
+        return ix
+
     def step(self, q):
         q = np.asarray(q, dtype=np.float64).reshape(-1)
         self.check_target(q)
-        m, d = self.m, self.d
+        m, d, site = self.m, self.d, self.site
         q_prev = self.target
-        qd_des = (q - q_prev) / CONTROL_DT
+        dq = q - q_prev
+        qd_des = dq / CONTROL_DT
         b_acc = self.base_acc(q)
+        mon = self.selfcol["A"]
+        pending = False                            # the racket's pose of the last substep still to be kept (_prev)
         for j in range(1, SUBSTEPS + 1):
-            q_des = q_prev + (q - q_prev) * (j / SUBSTEPS)
-            self.servo(q_des, qd_des, b_acc)
+            self.servo(q_prev + dq * (j / SUBSTEPS), qd_des, b_acc)
             mj.mj_step(m, d)
-            self.selfcol["A"].update(d)
+            mon.update(d)
             # site pose now = the pose at the start of this step (time t_n), the same time as self.sh_p
-            c = d.site_xpos[self.site].copy(); n = d.site_xmat[self.site].reshape(3, 3)[:, 0].copy()
             if self.sh_live:
+                c = d.site_xpos[site].copy(); n = d.site_xmat[site].reshape(3, 3)[:, 0].copy()
                 if self.hit_enabled and self._prev is not None and self.sh_p[1] < 0:   # only on our half (BWF 13.4.2)
                     self._check_hit(c, n)
                 self._prev = (c, n, self.sh_p)
                 self._advance_shuttle()
-            else:
-                self._prev = (c, n, self.sh_p)
+                pending = False
+            else:                                  # (only the last one is ever read: taken after the loop)
+                pending = True
+        if pending:
+            self._prev = (d.site_xpos[site].copy(), d.site_xmat[site].reshape(3, 3)[:, 0].copy(), self.sh_p)
         self.target = q.copy()
         self._actions.append(q.copy())
         self.k += 1
@@ -833,10 +967,15 @@ class Phys:
 
     # kinematics (scratch data; never stepped)
     def kin_set(self, q9):
-        self.kin.qpos[:] = self.d.qpos
-        self.kin.qpos[self.qa] = q9
+        qp = self.d.qpos.copy()
+        qp[self.qa] = q9
+        key = qp.tobytes()
+        if self.__dict__.get("_kin_key") == key:  # the scratch data already holds this exact pose (fk then jac: IK)
+            return
+        self.kin.qpos[:] = qp
         mj.mj_kinematics(self.m, self.kin)
         mj.mj_comPos(self.m, self.kin)
+        self._kin_key = key
 
     def fk(self, q9):
         self.kin_set(np.asarray(q9, float))
@@ -866,7 +1005,8 @@ class Phys:
 
     def __getstate__(self):
         st = self.__dict__.copy()
-        st.pop("_clr_d", None)                  # scratch data of the clearance model (rebuilt on use; not pickled)
+        for k in ("_clr_d", "_ixd", "_kin_key"):    # scratch (the clearance model's data, the servo's indices, the
+            st.pop(k, None)                         # pose in kin): rebuilt on use, not pickled
         return st
 
     def jac(self, q9):
@@ -920,6 +1060,16 @@ def _clear_model(m):
     return c
 
 
+_EYE6_1E3 = 1e-3 * np.eye(6)
+
+
+def _cross3(a, b) -> np.ndarray:
+    """np.cross of two 3-vectors (the same products and differences: a1 b2 - a2 b1, a2 b0 - a0 b2, a0 b1 - a1 b0)."""
+    a0, a1, a2 = a.tolist()
+    b0, b1, b2 = b.tolist()
+    return np.array([a1 * b2 - a2 * b1, a2 * b0 - a0 * b2, a0 * b1 - a1 * b0])
+
+
 def ik(ph: Phys, pos, normal, base_xy, q_init, iters=150, tol=1e-4):
     """Damped least squares over the 7 arm joints (base fixed at base_xy): racket centre at pos, face normal along
     `normal` (rotation about the normal free)."""
@@ -930,14 +1080,16 @@ def ik(ph: Phys, pos, normal, base_xy, q_init, iters=150, tol=1e-4):
     for _ in range(iters):
         p, R = ph.fk(q)
         n = R[:, 0]
-        e = np.r_[pos - p, np.cross(n, n_t)]
-        err = float(np.linalg.norm(e[:3]) + np.arcsin(min(1.0, np.linalg.norm(e[3:]))))
+        c = _cross3(n, n_t)
+        e = np.concatenate((pos - p, c))
+        e3, e6 = e[:3], e[3:]                   # np.linalg.norm(x) of a float vector is sqrt(x.dot(x))
+        err = float(_usqrt(e3.dot(e3)) + np.arcsin(min(1.0, _usqrt(e6.dot(e6)))))
         if n @ n_t < 0:
-            e[3:] = np.cross(n, n_t) + 0.5 * np.cross(n, R[:, 1]); err += np.pi / 2
+            e[3:] = c + 0.5 * _cross3(n, R[:, 1]); err += np.pi / 2
         if err < tol:
             break
         J = ph.jac(q)
-        dq = J.T @ np.linalg.solve(J @ J.T + 1e-3 * np.eye(6), e)
+        dq = J.T @ np.linalg.solve(J @ J.T + _EYE6_1E3, e)
         nd = float(np.max(np.abs(dq)))
         if nd > 0.25:
             dq *= 0.25 / nd
@@ -1759,6 +1911,14 @@ class Match:
     RACKET_SCATTER = dict(pos=0.006, ang_deg=0.8, speed=0.03)   # execution scatter of the racket state at contact
 
     def plan_racket(self, t_hit, p_c, nrm, v_p, base=None):
+        """_plan_racket, with the rehearsals' shared start kept for this plan only (_simulate_arm)."""
+        self._sim_ck = None
+        try:
+            return self._plan_racket(t_hit, p_c, nrm, v_p, base)
+        finally:
+            self.__dict__.pop("_sim_ck", None)
+
+    def _plan_racket(self, t_hit, p_c, nrm, v_p, base=None):
         """Racket-level decision: the player gives the racket state at contact (time t_hit s after the shuttle was
         played, head centre p_c, string-face normal nrm, head velocity v_p). The controller only makes the robot
         deliver it: the base to the forehand stance for p_c (or as far as it gets), IK, a speed-weighted Jacobian
@@ -1927,7 +2087,7 @@ class Match:
         best = None
         for it in range(5):
             tg = self._swing_targets(q_goal, qd_goal, n_avail, n_sw, base_tg)
-            p, n_act, v_act = self._simulate_arm(tg, n_avail)
+            p, n_act, v_act = self._simulate_arm(tg, n_avail, keep=n_avail - n_sw)
             sg = 1.0 if n_act @ c["nrm"] >= 0 else -1.0
             perr = float(np.linalg.norm(p - c["p_hit"]))
             nerr = float(np.degrees(np.arccos(np.clip(abs(float(n_act @ c["nrm"])), 0.0, 1.0))))
@@ -1966,22 +2126,35 @@ class Match:
         follow = hermite(q_h, qd_h, q_h + qd_h * 0.5 * n_f * CONTROL_DT, np.zeros(7), n_f * CONTROL_DT, n_f)
         out, prev = [], ph.target.copy()
         lim = np.r_[BASE_VMAX, BASE_VMAX, ARM_VEL_OP] * CONTROL_DT * 0.999   # the arm at VMARGIN
-        for i, q in enumerate(np.vstack([pre, swing, follow])):
-            q9 = np.r_[base_tg[min(i, len(base_tg) - 1)], q]
-            q9 = np.clip(q9, ph.lo + 1e-4, ph.hi - 1e-4)
-            q9 = prev + np.clip(q9 - prev, -lim, lim)
+        arm = np.vstack([pre, swing, follow])
+        rows = np.concatenate((np.asarray(base_tg)[np.minimum(np.arange(len(arm)), len(base_tg) - 1)], arm), axis=1)
+        rows = _uclip(rows, ph.lo + 1e-4, ph.hi - 1e-4)       # (row by row before 2026-10-13: the same numbers)
+        nlim = -lim
+        for q9 in rows:                                        # within the joint speed limits, step by step
+            q9 = prev + _uclip(q9 - prev, nlim, lim)
             out.append(q9); prev = q9
         return out
 
-    def _simulate_arm(self, targets, n):
-        """Robot-only twin rollout from the live robot state: racket (pos, normal, velocity) after n steps."""
+    def _simulate_arm(self, targets, n, keep=None):
+        """Robot-only twin rollout from the live robot state: racket (pos, normal, velocity) after n steps.
+        Within one plan_racket the rollouts start from the same state and the correction passes of a swing share their
+        first `keep` targets (the wait before the swing): the twin's exact state after them is kept (Phys.checkpoint)
+        and a later rollout whose targets start with the same rows (compared) continues from it, bit-identically."""
         tw = self._twin_phys()
-        tw.copy_from(self.s)
-        tw.sh_live = False; tw.hit_enabled = False
-        nrf0 = tw.n_reflex
         mon = tw.selfcol["A"]
-        mon.reset()
-        for j in range(n):
+        ck, start = self.__dict__.get("_sim_ck"), 0
+        if ck is not None and ck[0] is tw and ck[1] <= n and all(
+                a.tobytes() == np.asarray(b, np.float64).tobytes() for a, b in zip(ck[2], targets)):   # bit for bit
+            start, nrf0 = ck[1], ck[4]
+            tw.restore(ck[3])
+        else:
+            tw.copy_from(self.s)
+            tw.sh_live = False; tw.hit_enabled = False
+            nrf0 = tw.n_reflex
+            mon.reset()
+        for j in range(start, n):
+            if j == keep and j > start and "_sim_ck" in self.__dict__:
+                self._sim_ck = (tw, j, [np.array(x, dtype=np.float64) for x in targets[:j]], tw.checkpoint(), nrf0)
             tw.step(targets[j])
         self._sim_contact = int(mon.steps_in_contact)   # the rollout's self-collision contact steps (1 ms)
         self._sim_reflex = tw.n_reflex - nrf0           # joint-velocity reflexes in the rollout

@@ -116,10 +116,26 @@ def test_seats_sides_entities_and_team_channel():
     assert post["say"]("A1", {"text": "press high"})[0] == 200
     assert post["say"]("A1", {"text": "again"})[0] == 429          # min_interval_s in game time
     time.sleep(0.05)
-    a2 = svc.routes(False)["status"]("A2", {})[1]
-    b1 = svc.routes(False)["status"]("B1", {})[1]
+    get = svc.routes(False)
+    a2 = get["status"]("A2", {})[1]
+    b1 = get["status"]("B1", {})[1]
     assert [m["text"] for m in a2["team_messages"]] == ["press high"] and a2["team_messages"][0]["from"] == "A1"
-    assert b1["team_messages"] == []                               # never shown to the other side
+    assert a2["team_messages"][0]["seq"] == 1 and a2["team_seq"] == 1
+    assert b1["team_messages"] == [] and b1["team_seq"] == 0       # never shown to the other side
+    # core 0.2.20: reading never consumes: a second client of the same seat (the agent's own status, a monitor)
+    # sees the same message; a read mark gives only newer ones; the sender never gets its own message back
+    again = get["status"]("A2", {})[1]
+    assert [m["text"] for m in again["team_messages"]] == ["press high"]
+    assert get["status"]("A2", {"team_since": 1})[1]["team_messages"] == []
+    assert get["status"]("A1", {})[1]["team_messages"] == [] and get["status"]("A1", {})[1]["team_seq"] == 1
+    assert post["team"]("A2", {"since": 0})[1]["messages"][0]["text"] == "press high"
+    assert post["team"]("B1", {})[1]["messages"] == []
+    for bad in (-1, 1.5, "x", [1], True):
+        try:
+            get["status"]("A2", {"team_since": bad})
+            raise AssertionError(f"read mark {bad!r} accepted")
+        except Refused:
+            pass
     th = [threading.Thread(target=play, args=(svc, post, s), daemon=True) for s in sides]
     for t in th:
         t.start()
@@ -169,6 +185,9 @@ def test_delayed_effect_is_logged_at_its_step():
     cmd = next(r for r in rows if r["ev"] == "cmd" and r["seat"] == "A")
     assert cmd["k"] == eff["effect_step"]
     assert fin["valid_trial"] and fin["deterministic"], fin["errors"]
+    rc = fin["reaction"]                                  # core 0.2.23: the layer's delay is part of the report
+    assert rc["effect_delay_steps"] == 3 and rc["by_seat"]["A"]["acts"] == 1 and rc["replayed"] is True, rc
+    assert rc["by_seat"]["A"]["delay_steps"]["max"] == cmd["k"] - cmd["seen"] >= 3, (rc, cmd)
 
 
 def fixture_with_reaction_delay(D):
@@ -274,6 +293,149 @@ def test_reaction_delay_local_play_deterministic():
     assert out["D3"] == out["D3 again"]
     assert out["D3"][1] and all(k % 5 == 3 for k in out["D3"][1]), out["D3"][1][:10]
     assert out["none"][1] and all(k % 5 == 0 for k in out["none"][1]) and out["none"][0] != out["D3"][0]
+
+
+def reaction_match(plugin, slow_s=0.35, slowdown=5.0, n=8):
+    """A duel on the fixture at 50 ms per step: seat A is a fast player (acts right after each observation), seat B a
+    slow one (thinks slow_s wall seconds between its observation and its act). Returns final.json, replay_check.json,
+    the episode rows and what each act's reply said."""
+    for s in ("A", "B"):
+        os.environ[f"PLAYER_MODE_{s}"] = "oracle"
+    cfg = MatchConfig(sport="fixture", format="duel", seats=("A", "B"), seed=1, slowdown=slowdown)
+    svc = RealtimeService(load_plugin(plugin), plugin, cfg, Path(tempfile.mkdtemp(prefix="core-test-")))
+    threading.Thread(target=svc.loop, daemon=True).start()
+    post = svc.routes(True)
+    got = {"A": [], "B": []}
+
+    def player(think):
+        def act(seat, p):
+            if len(got[seat]) >= n or svc.phase != "running":
+                return
+            code, ob = p["observe"](seat, {})
+            if code != 200 or ob["now"]["phase"] != "running":
+                return
+            time.sleep(think)
+            code, out = p["act"](seat, {"type": "move", "v": 0.1, "entity": "e0"})
+            if code == 200:
+                got[seat].append((ob["now"]["step"], out["took_effect"]))
+        return act
+    os.environ["READY_TIMEOUT_S"] = "5"                  # a loaded host: the slow seat still reviews in time
+    try:
+        fin = run_all(svc, post, ["A", "B"], A={"act": player(0.0)}, B={"act": player(slow_s)})
+    finally:
+        os.environ["READY_TIMEOUT_S"] = "1.5"
+    assert fin["valid_trial"], {k: fin.get(k) for k in ("reason", "phase", "finalized", "deterministic", "errors")}
+    rows = [json.loads(x) for x in (svc.data / "episode.jsonl").read_text().splitlines()]
+    return fin, json.loads((svc.data / "replay_check.json").read_text()), rows, got
+
+
+def check_reaction_report(fin, rep, rows, D):
+    """final.json `reaction` = the rows' numbers = the replay's, and grading never sees it."""
+    from core.episode import reaction_report
+    assert fin["valid_trial"] and fin["deterministic"], fin["errors"]
+    r = fin["reaction"]
+    assert r["policy"] == "report_only" and r["reaction_delay_steps"] == D and r["replayed"] is True, r
+    assert rep["reaction"]["by_seat"] == r["by_seat"], (rep["reaction"], r)
+    head = next(x for x in rows if x["ev"] == "header")
+    assert head["timing"] == {"reaction_delay_steps": D, "effect_delay_steps": 0}, head
+    assert reaction_report(rows, ("A", "B"), D)["by_seat"] == r["by_seat"]
+    for seat in ("A", "B"):
+        lags = sorted(x["k"] - x["seen"] for x in rows if x["ev"] == "cmd" and x["seat"] == seat
+                      and x.get("seen") is not None)
+        b = r["by_seat"][seat]
+        assert b["acts"] == len(lags) > 0 and b["within_d"] == sum(d <= D for d in lags), (seat, b, lags)
+        assert b["share"] == round(b["within_d"] / b["acts"], 6) and b["delay_steps"]["max"] == lags[-1], b
+    out = grade({"cfg": fin["cfg"], **fin}, rep, {}, lambda d: {})
+    assert not any("reaction" in k or "within" in k for k in out), sorted(out)
+    return r["by_seat"]
+
+
+def test_reaction_report_declared_delay():
+    """core 0.2.23 (report only): with D declared, a fast player's acts all take effect within D (exactly D), a slow
+    player's (0.35 s of thinking = 7 steps at 50 ms) none; final.json gives the counts, the share and the delay's
+    median / p90 / max per seat, the fresh-process replay recomputes the same numbers, grading ignores them."""
+    D = 2
+    fin, rep, rows, got = reaction_match(fixture_with_reaction_delay(D))
+    by = check_reaction_report(fin, rep, rows, D)
+    a, b = by["A"], by["B"]
+    assert a["within_d"] >= a["acts"] - 1 and a["delay_steps"]["median"] == D, a       # D exactly when fast
+    assert b["within_d"] == 0 and b["share"] == 0 and b["delay_steps"]["median"] >= D + 3, b
+    for seen, eff in got["B"]:                                       # the replies agree with the report
+        assert eff["seen_step"] == seen and eff["step"] - seen > D, (seen, eff)
+
+
+def test_reaction_report_without_declared_delay():
+    """D = 0 (not declared): within D means the next control-step boundary after the seen state; the slow player is
+    never within it; the act replies are unchanged (no seen_step), the report is in final.json and the replay."""
+    fin, rep, rows, got = reaction_match(PLUGIN)
+    by = check_reaction_report(fin, rep, rows, 0)
+    assert by["B"]["within_d"] == 0 and by["B"]["delay_steps"]["median"] >= 4, by["B"]
+    assert by["A"]["delay_steps"]["median"] <= 1, by["A"]
+    assert all("seen_step" not in eff for _, eff in got["A"] + got["B"])
+
+
+def test_reaction_report_rule_and_old_episodes():
+    """reaction_report on rows: the layer's fixed effect delay counts as part of D; ticks (no `seen`) are not acts; an
+    act whose seat had been sent no world state is `unseen`; an episode before 0.2.23 gives empty seats."""
+    from core.episode import reaction_report
+    rows = [{"ev": "cmd", "k": 10, "seat": "A", "cmd": {}, "seen": 7}, {"ev": "cmd", "k": 11, "seat": "A", "cmd": {}},
+            {"ev": "cmd", "k": 20, "seat": "A", "cmd": {}, "seen": 14}, {"ev": "cmd", "k": 21, "seat": "B", "cmd": {},
+                                                                          "seen": None}]
+    r = reaction_report(rows, ("A", "B"), 2, 1)["by_seat"]
+    assert r["A"] == {"acts": 2, "within_d": 1, "share": 0.5, "delay_steps": {"median": 4.5, "p90": 6, "max": 6},
+                      "unseen": 0}, r
+    assert r["B"] == {"acts": 0, "within_d": 0, "share": None, "delay_steps": None, "unseen": 1}, r
+    old = reaction_report([{"ev": "cmd", "k": 3, "seat": "A", "cmd": {}}], ("A",), 0)["by_seat"]
+    assert old == {"A": {"acts": 0, "within_d": 0, "share": None, "delay_steps": None, "unseen": 0}}, old
+
+
+def test_local_play_team_channel_of_builtin_players():
+    """core 0.2.21: a built-in player's optional message(view) goes on the team channel in local play as POST /say
+    would (the channel's limits; a refused message is dropped), reaches its teammates' views (team_messages) and never
+    the other side, is a `team` row of the episode, and changes nothing the replay sees."""
+    from core import local
+    from core.episode import read_rows, replay
+
+    class Talker:
+        def __init__(self, seat):
+            self.seat, self.heard, self.n = seat, [], 0
+
+        def act(self, view):
+            self.heard += [(m["from"], m["text"]) for m in view["state"].get("team_messages") or []]
+            self.n += 1
+            return {"type": "move", "entity": "e0", "v": 0.1}
+
+        def message(self, view):
+            return f"{self.seat} {self.n}" if self.seat.endswith("1") else None
+
+    sides = {"A1": "home", "A2": "home", "B1": "away", "B2": "away"}
+    cfg = MatchConfig(sport="fixture", format="team", seats=tuple(sides), seed=1, slowdown=1.0, sides=sides)
+    d = Path(tempfile.mkdtemp(prefix="core-test-"))
+    players = {s: Talker(s) for s in sides}
+    r = local.play(SPORT, cfg, players, data=d, render=False, plugin=PLUGIN)
+    rows = read_rows(d / "episode.jsonl")
+    team = [x for x in rows if x["ev"] == "team"]
+    assert team and {x["seat"] for x in team} == {"A1", "B1"}, team[:3]
+    ks = [x["k"] for x in team if x["seat"] == "A1"]
+    assert all(b - a >= 0.2 / SPORT.build(cfg).dt - 1e-9 for a, b in zip(ks, ks[1:])), ks[:5]   # min_interval_s
+    assert players["A2"].heard and all(f == "A1" for f, _ in players["A2"].heard)
+    assert players["B2"].heard and all(f == "B1" for f, _ in players["B2"].heard)
+    assert not players["A1"].heard and not players["B1"].heard                    # never their own, never the others'
+    rep = replay(SPORT, rows)
+    assert rep["state_sha"] == r["digest"] and rep["scores"] == r["scores"]
+
+
+def test_preview_format_is_never_official():
+    """core 0.2.21: a format declared preview ([formats.<f>] preview = true, in the contract's formats) is never an
+    official configuration, whatever its seed, level and first player; the same match in a non-preview format is."""
+    from core.grading import official
+    d = {"format": "tm", "seed": 202, "first": "A", "slowdown": 10.0, "play": "program",
+         "cfg": {"seats": ["A1", "A2"], "level": 2}, "sides": {"A1": "A", "A2": "A"}}
+    contract = {"official": {"seeds": [202], "levels": [2, 3], "first_any": True},
+                "formats": {"tm": {"seats": ["A1", "A2"], "opponent": True, "preview": True}}}
+    assert not official(d, contract)
+    contract["formats"]["tm"].pop("preview")
+    assert official(d, contract)
 
 
 def test_observation_query_and_runtime_whitelist():
@@ -626,6 +788,26 @@ def test_launch_seat_env_second_account_and_route():
     assert a["THINK_OPENAI_ROUTE"] == "openrouter" and b["THINK_OPENAI_ROUTE"] == "azure"
     assert a["THINK_USAGE_FILE"].endswith("think_usage_A.json") and a["THINK_CLIENT_HOST"] == "seat_a"
     assert PROXY.parts[-2:] == ("metering", "think_proxy.py")     # where tools/sportlib.py puts the proxy
+
+
+def test_launch_seat_env_holds_no_other_seats_variables():
+    """After the mapping a proxy has no RO_SEAT_* and no other seat's per-seat variable; a seat on route chatgpt keeps
+    only the credentials given to it alone (no task-wide key)."""
+    from core.launch import seat_env
+    env = {"SUB_TOKEN": "", "TASK_KEY": "task-key", "THINK_OPENAI_ROUTE": "azure", "SUB_TOKEN_A": "raw-a",
+           "PLAYER_MODE_A": "model", "PLAYER_MODE_B": "model", "RO_SEAT_SELECT_A": "", "RO_SEAT_SELECT_B": ""}
+    for s, tok, route in (("A", "secret-a", "chatgpt"), ("B", "secret-b", "chatgpt"), ("C", "", "azure")):
+        env.update({f"RO_SEAT_ENV_SUB_TOKEN_{s}": tok, f"RO_SEAT_ENV_TASK_KEY_{s}": "",
+                    f"RO_SEAT_ENV_THINK_OPENAI_ROUTE_{s}": route, f"RO_SEAT_ENV_THINK_MODEL_{s}": f"model-{s}"})
+    a, b, c = (seat_env(s, env, ["A", "B", "C"]) for s in "ABC")
+    for e, own, others in ((a, "secret-a", ("secret-b",)), (b, "secret-b", ("secret-a", "raw-a")),
+                           (c, None, ("secret-a", "secret-b", "raw-a"))):
+        assert not [k for k in e if k.startswith(("RO_SEAT_ENV_", "RO_SEAT_SELECT_"))], sorted(e)
+        assert not [k for k, v in e.items() for x in others if x in v], sorted(e.items())
+        assert e.get("SUB_TOKEN") == (own if own else "")
+    assert "TASK_KEY" not in a and "TASK_KEY" not in b and c["TASK_KEY"] == "task-key"   # route chatgpt: no task key
+    assert (a["THINK_MODEL"], b["THINK_MODEL"], c["THINK_MODEL"]) == ("model-A", "model-B", "model-C")
+    assert "PLAYER_MODE_B" not in a and "PLAYER_MODE_A" not in b and "SUB_TOKEN_A" in a
 
 
 # ------------------------------------------------------------------ the spectator scene (core 0.2.4, renderer rule 6)
@@ -1366,7 +1548,7 @@ def test_check_body_and_check_action_limits():
             raise AssertionError(f"accepted {body}")
         except Refused:
             pass
-# ------------------------------------------------------------------ unmetered seats (core 0.2.21)
+# ------------------------------------------------------------------ unmetered seats (core 0.2.24)
 def test_unmetered_seat_needs_no_meter_and_no_proxy():
     from core.launch import seat_mode
     from core.seats import Seat, validity_fields
@@ -1659,6 +1841,82 @@ def test_testkit_replay_timeout_from_sport_toml():
     bad = {r["name"]: r for r in rows}["determinism:fresh_process_replay"]
     assert not bad["ok"] and "4321 s" in bad["detail"] and "replay_timeout_s" in bad["detail"], rows
 
+
+
+def test_team_channel_reads_after_a_seq_never_consume():
+    """core 0.2.20: every message has a per-side seq; reads with a read mark return each message after it once per
+    read mark, any number of clients; without a read mark the recent window (recent_s game seconds, at most recent_max);
+    POST /team pages through the log; the limits of say are unchanged."""
+    from core.channel import TeamChannel
+    cfg = MatchConfig(sport="fixture", format="team", seats=("A1", "A2", "B1", "B2"), seed=1,
+                      sides={"A1": "A", "A2": "A", "B1": "B", "B2": "B"})
+    ch = TeamChannel(cfg, {"max_bytes": 64, "min_interval_s": 0.2, "max_messages": 4, "recent_s": 1.0,
+                           "recent_max": 2})
+    dt = 0.02
+    assert ch.say("A1", "a", 0, dt)[1]["sent"]["seq"] == 1
+    assert ch.say("A1", "b", 5, dt)[0] == 429                       # 0.2 s between two messages of one seat
+    assert ch.say("A2", "c", 5, dt)[1]["sent"]["seq"] == 2          # one seq per side
+    assert ch.say("B1", "z", 5, dt)[1]["sent"]["seq"] == 1          # the other side counts its own
+    assert ch.say("A1", "d", 10, dt)[1]["sent"]["seq"] == 3
+    assert ch.say("A1", "e", 100, dt)[1]["sent"]["seq"] == 4
+    for _ in range(3):                                              # never consumed
+        msgs, top = ch.messages("A2", 100, dt, since=0)
+        assert [m["text"] for m in msgs] == ["a", "d", "e"] and top == 4, (msgs, top)
+    assert [m["seq"] for m in ch.messages("A2", 100, dt, since=3)[0]] == [4]
+    assert ch.messages("A2", 100, dt, since=4)[0] == []
+    assert [m["text"] for m in ch.messages("A2", 100, dt)[0]] == ["e"]         # recent: the last 1.0 s only
+    assert [m["text"] for m in ch.messages("A2", 10, dt)[0]] == ["a", "d"]     # at step 10: both within 1 s, max 2
+    assert [m["text"] for m in ch.messages("B2", 100, dt, since=0)[0]] == ["z"]
+    assert ch.messages("A1", 100, dt, since=0)[0][0]["text"] == "c"            # A1 sees A2's only
+    code, page = ch.page("A2", 100, 1)
+    assert code == 200 and [m["seq"] for m in page["messages"]] == [3, 4] and page["team_seq"] == 4
+    assert not page["more"]
+    ch.page_max = 1
+    assert ch.page("A2", 100, 0)[1]["more"] and len(ch.page("A2", 100, 0)[1]["messages"]) == 1
+    assert ch.say("A1", "f", 200, dt)[0] == 200                     # A1's 4th message
+    assert ch.say("A1", "g", 300, dt)[0] == 429                     # max_messages (4 per seat) unchanged
+    off = TeamChannel(cfg, None)
+    assert off.messages("A1", 0, dt) == ([], 0) and off.page("A1", 0, 0)[0] == 404
+
+
+def test_team_channel_turn_protocol_and_http_since():
+    """core 0.2.20: the turn protocol reads the channel the same way (status / wait / observe with team_since, POST
+    /team), and an HTTP GET carries the read mark as ?team_since=N (anything but a small integer is a 400)."""
+    from core.http import make_server
+    sides = {"A1": "A", "A2": "A", "B1": "B", "B2": "B"}
+    svc, post = turn_service(list(sides), sides, fmt="team")
+    if not svc.channel.enabled:                                     # the turn fixture declares no channel
+        svc.channel.declared = svc.channel.enabled = True
+    assert post["say"]("A1", {"text": "hi"})[0] == 200
+    get = svc.routes(False)
+    st = get["status"]("A2", {})[1]["state"]
+    assert [m["text"] for m in st["team_messages"]] == ["hi"] and st["team_seq"] == 1
+    assert get["status"]("A2", {"team_since": 1})[1]["state"]["team_messages"] == []
+    assert get["team"]("A2", {"since": 0})[1]["messages"][0]["from"] == "A1"
+    srv = make_server(svc, tuple(sides), {}, port=0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    port = srv.server_address[1]
+    import urllib.error
+    import urllib.request
+
+    def fetch(path):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
+                return r.status, json.load(r)
+        except urllib.error.HTTPError as e:
+            return e.code, json.load(e)
+    try:
+        code, out = fetch("/A2/status?team_since=0")
+        assert code == 200 and out["state"]["team_messages"][0]["text"] == "hi", out
+        code, out = fetch("/A2/status?team_since=1")
+        assert code == 200 and out["state"]["team_messages"] == [], out
+        assert fetch("/A2/status?team_since=-3")[0] == 400
+        assert fetch("/A2/status?team_since=abc")[0] == 400
+        code, out = fetch("/A2/team?since=0")
+        assert code == 200 and out["messages"][0]["text"] == "hi", out
+    finally:
+        srv.shutdown()
+        srv.server_close()
 
 if __name__ == "__main__":
     sys.exit(main())

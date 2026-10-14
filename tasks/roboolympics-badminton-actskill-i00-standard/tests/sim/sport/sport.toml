@@ -298,10 +298,17 @@ match = "reference_check:reference_match"   # the step-4 loop (x20, every 5 step
 seeds = [101, 111, 121, 131, 141, 151, 161, 171, 181, 191, 201, 211, 221, 231, 241, 251, 261, 271, 281, 291]   # the screening record (docs/screening/badminton.md section 6): truth 20/6/0 of 20
 camera_seeds = 5                      # the camera reference's playability report (the screening: camera 15/20 at L1)
 
-[[reference.camera_wins]]             # model matches won with cameras only (screening step 5, revision wallclock-11)
+[[reference.camera_wins]]             # model matches won with cameras only (screening step 5, revision wallclock-12)
 format = "match-wallclock"
 level = 1
 who = "Claude Opus 5.5 (Claude Code, program play)"
+score = "11:7"
+evidence = "docs/screening/badminton.md#7-step-5-model-trial-runs"
+
+[[reference.camera_wins]]             # (revision wallclock-11)
+format = "match-wallclock"
+level = 1
+who = "Claude Opus 5.5 (Claude Code, program play), revision wallclock-11"
 score = "11:8"
 evidence = "docs/screening/badminton.md#7-step-5-model-trial-runs"
 

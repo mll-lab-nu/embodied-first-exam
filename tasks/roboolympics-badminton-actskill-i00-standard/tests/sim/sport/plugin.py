@@ -624,7 +624,7 @@ class LowLayer:
         return info
 
 
-def plan_job(job, model) -> dict:
+def plan_job(job, model, twin=None) -> dict:
     """The legacy planner (wc._worker / the duel's workers.plan): restore the exact copy taken at the request step,
     advance it to the effect step k0 = request step + lead with the command in force, and plan the act there
     (wc.plan_on / bduel.plan_on: what Match.rt_act at k0 would do). Single: if the point ends on the way, the act
@@ -636,6 +636,7 @@ def plan_job(job, model) -> dict:
     t0 = time.monotonic()
     if job["single"]:
         m = WC.restore(job["snap"], model)
+        m._twin = twin                          # the worker's rehearsal robot (None: a new one, as before)
         while m.k < k0:
             n0 = len(m.points)
             m.rt_advance(1)
@@ -646,6 +647,7 @@ def plan_job(job, model) -> dict:
         res = WC.plan_on(m, job["dec"])
     else:
         side = BD.restore(job["snap"], model)
+        side._twin = twin
         while side.k < k0:
             side.solo_step()
         out["key"] = side.state_key()
@@ -657,13 +659,17 @@ def plan_job(job, model) -> dict:
 
 
 class PlanCtx:
-    """The seat's plan worker: the MjModel the snapshots are restored with."""
+    """The seat's plan worker: the MjModel the snapshots are restored with, and one robot-only twin for the stroke
+    planner's rehearsals, kept from plan to plan (every rehearsal starts with Phys.copy_from, which sets all of the
+    twin's state: the same plans as with a new twin per plan, 5 ms less each)."""
 
     def __init__(self):
         self.model = BM.Phys().m
+        self.twin = BM.Phys()
+        self.twin.reset(np.r_[BM.HOME, BM.Q0_ARM])
 
     def plan(self, job):
-        return plan_job(job, self.model)
+        return plan_job(job, self.model, self.twin)
 
 
 class RacketLayer(LowLayer):

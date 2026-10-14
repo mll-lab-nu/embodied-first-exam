@@ -2,15 +2,19 @@
 
 episode.jsonl is append-only, one JSON object per line. Rows the replay reads (everything else is information):
   {"ev": "header", "cfg": MatchConfig, "sport", "revision", "protocol", "source_sha", "versions"}
+                                                               (+ realtime, core 0.2.23: "timing": {reaction_delay_steps,
+                                                               effect_delay_steps})
   {"ev": "cmd", "k": K, "seat": S, "cmd": LOW_LEVEL_COMMAND}   applied before control step K (turn: as action K);
-                                                               a delayed command is logged at its effect step
+                                                               a delayed command is logged at its effect step; a
+                                                               realtime act's row also has "seen" (core 0.2.23)
   {"ev": "resume", "k": K}                                     a review ended before step K
   {"ev": "forfeit", "k": K, "seat": S, "why": W}               a core decision that ends the match
   {"ev": "retire", "k": K, "seat": S, "side": D, "why": W}     a side leaves, the match goes on (N sides)
   {"ev": "end", "k": K, "reason": R}
 Replay (python -m core.episode PLUGIN DIR) rebuilds the match from the header, re-applies the rows at their steps and
-writes DIR/replay_check.json: state_sha, scores, winner, ranking, k, commands_sha, source_sha, and the continuous
-score by side (sport.toml [score], core 0.2.14; null without one).
+writes DIR/replay_check.json: state_sha, scores, winner, ranking, k, commands_sha, source_sha, the continuous
+score by side (sport.toml [score], core 0.2.14; null without one) and the reaction report (core 0.2.23,
+reaction_report: the same numbers as final.json `reaction`).
 Reply images are a pure function of the replayed match (core 0.2.8): python -m core.episode PLUGIN DIR --reply N
 draws the reply image of the N-th command row (1-based) into DIR/reply_N.png (+ reply_N.json: the tiles).
 """
@@ -19,7 +23,9 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import math
 import os
+import statistics
 import sys
 import threading
 import time
@@ -73,6 +79,41 @@ class Episode:
     def commands_sha(self) -> str:
         with self.lock:
             return sha_json(self.commands)
+
+
+def reaction_report(rows, seats, react: int = 0, effect_delay: int = 0) -> dict:
+    """The reaction report (core 0.2.23; report only, no effect on validity or grading). A realtime act's command row
+    carries `seen` = s, the step of the latest world state the service had sent to the seat when the act arrived (any
+    reply's `now`), and is logged at its effect step k; its actual delay is k - s control steps. It took effect within
+    the declared reaction delay D (sport.toml [timing] reaction_delay_steps; core 0.2.18) when k - s <= D +
+    effect_delay (the action layer's fixed `delay_steps`, 0 in every sport today); with D = 0 that is the next
+    control-step boundary after s. Per seat: acts (rows with a known s), within_d, share = within_d / acts (None
+    without acts), delay_steps {median, p90 (nearest rank), max} (None without acts), unseen (act rows without s: the
+    seat had been sent no world state). Rows without `seen` (layer ticks, episodes before 0.2.23) are not acts here."""
+    lags: dict = {s: [] for s in seats}
+    unseen = {s: 0 for s in seats}
+    for r in rows:
+        if r.get("ev") != "cmd" or "seen" not in r:
+            continue
+        seat = r["seat"]
+        lags.setdefault(seat, [])
+        unseen.setdefault(seat, 0)
+        if r["seen"] is None:
+            unseen[seat] += 1
+        else:
+            lags[seat].append(int(r["k"]) - int(r["seen"]))
+    limit = int(react) + int(effect_delay)
+    by_seat = {}
+    for seat, v in lags.items():
+        x = sorted(v)
+        n, within = len(x), sum(1 for d in x if d <= limit)
+        by_seat[seat] = {"acts": n, "within_d": within, "share": round(within / n, 6) if n else None,
+                         "delay_steps": {"median": float(statistics.median(x)), "p90": x[math.ceil(0.9 * n) - 1],
+                                         "max": x[-1]} if n else None,
+                         "unseen": unseen[seat]}
+    return {"policy": "report_only", "reaction_delay_steps": int(react), "effect_delay_steps": int(effect_delay),
+            "rule": "within D: effect step - seen step <= reaction_delay_steps + effect_delay_steps (D = 0: the next "
+                    "control-step boundary)", "by_seat": by_seat}
 
 
 def _dispatch(match, row, forfeits, retired, on_cmd=None):
@@ -147,7 +188,10 @@ def replay(sport, rows: list[dict], observer=None, on_cmd=None, decl: dict | Non
             "finished": match.phase().state == FINISHED,
             "commands_sha": sha_json([{k: v for k, v in r.items() if k not in ("ts", "wall")} for r in rep]),
             "source_sha": head.get("source_sha"), "revision": head.get("revision"), "cfg": head["cfg"],
-            "continuous": _continuous(match, decl, cfg, fo, retired)}
+            "continuous": _continuous(match, decl, cfg, fo, retired),
+            "reaction": None if sport.protocol == "turn" else
+            reaction_report(rep, cfg.seats, *(int((head.get("timing") or {}).get(k) or 0)
+                                              for k in ("reaction_delay_steps", "effect_delay_steps")))}
 
 
 def _continuous(match, decl, cfg, fo, retired):

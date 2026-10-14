@@ -7,7 +7,7 @@
 | Twin | — (none: RoboOlympics is standard-realtime only, PROTOCOL §4b) |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_match` / seed 22 |
-| Oracle | `partial` — re-screen 2026-10-12 (revision 15, D = 5): our camera-only reference player beat level 2 in 16 of 40 seeds, this seed 5:1; live (vanilla Harbor, S = 20) see the oracle run in the export report |
+| Oracle | `partial` — re-screen 2026-10-12 (revision 15, D = 5, S = 20): our camera-only reference player beat level 2 in 16 of 40 seeds, this seed 5:1; S = 10 since 2026-10-14 (PR #138); the live oracle run is in the export report |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
 
@@ -15,11 +15,11 @@
 Table tennis against the scripted opponent (level 2), program play: robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.
 
 ## Difficulty
-Frozen development instance: seed 22, level 2, slowdown S = 20. Not one of
+Frozen development instance: seed 22, level 2, slowdown S = 10. Not one of
 the sport's official (hidden) seeds, so results here are previews, not official RoboOlympics results.
 
 ## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. re-screen 2026-10-12 (revision 15, D = 5): our camera-only reference player beat level 2 in 16 of 40 seeds, this seed 5:1; live (vanilla Harbor, S = 20) see the oracle run in the export report.
+`solution/`: our camera-only reference player through the same HTTP interface. re-screen 2026-10-12 (revision 15, D = 5, S = 20): our camera-only reference player beat level 2 in 16 of 40 seeds, this seed 5:1; S = 10 since 2026-10-14 (PR #138); the live oracle run is in the export report.
 
 ## Verification
 Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier

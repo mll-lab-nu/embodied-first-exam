@@ -14,6 +14,7 @@ from pathlib import Path
 from . import PROTOCOLS, VERSION
 from . import score as score_mod
 from . import spec as spec_mod
+from .channel import TeamChannel
 from .episode import Episode
 from .observe import CameraWorker, filter_fields, players_scene
 from .outcome import decide
@@ -28,8 +29,9 @@ DEFAULT_CLOCK_S = 3600.0
 class Views:
     """The view a player gets: {"state": core fields + the whitelisted observation, "observation": images}."""
 
-    def __init__(self, sport, cfg, m, decl, render: bool, plugin: str | None = None):
+    def __init__(self, sport, cfg, m, decl, render: bool, plugin: str | None = None, channel=None):
         self.sport, self.cfg, self.m, self.render, self.plugin = sport, cfg, m, render, plugin
+        self.channel = channel                  # the team channel (core/channel.py), as the live service runs it
         self.allowed = spec_mod.whitelist(decl)
         self.columns = int((decl.get("observation") or {}).get("columns", 2))
         self.cam = None
@@ -39,6 +41,9 @@ class Views:
     def view(self, seat, extra: dict, query=None) -> dict:
         obs, bad = filter_fields(self.m.observe(seat, query), self.allowed)
         self.leaks += bad
+        if self.channel is not None and self.channel.enabled:       # as Service.observation (core 0.2.21)
+            msgs, top = self.channel.messages(seat, self.m.k, self.m.dt or 1.0)   # the recent ones, never consumed
+            obs["team_messages"], obs["team_seq"] = msgs, top
         out = {"state": {"seat": seat, **extra, **obs}, "observation": {}}
         if not self.render:
             return out
@@ -96,7 +101,8 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
         (Path(data) / "episode.jsonl").unlink(missing_ok=True)
         ep = Episode(Path(data) / "episode.jsonl")
     _header(ep, sport, cfg)
-    views = Views(sport, cfg, m, decl, render, plugin)
+    channel = TeamChannel(cfg, decl.get("team_channel"))
+    views = Views(sport, cfg, m, decl, render, plugin, channel)
     clocks = {s: DEFAULT_CLOCK_S for s in cfg.seats}
     refused = {s: 0 for s in cfg.seats}
     log = (lambda ev, **row: ep.write(ev, **row)) if ep is not None else (lambda ev, **row: None)
@@ -139,6 +145,14 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
                 if "rejected" in (m.apply(seat, low) or {}):
                     refused[seat] = refused.get(seat, 0) + 1
 
+        def say(seat, v):
+            """a built-in player's team-channel message (optional message(view) -> text | None; core 0.2.21), sent
+            under the channel's limits as POST /<seat>/say would be (a refused message is dropped)"""
+            f = getattr(players[seat], "message", None)
+            text = f(v) if f is not None and channel.enabled else None
+            if text and channel.say(seat, text, m.k, m.dt or 1.0)[0] == 200:
+                log("team", seat=seat, k=m.k, text=text)
+
         while m.phase().state != FINISHED and m.k < max_steps:
             if m.phase().state == UNIT_OVER:
                 scheduled.clear()
@@ -166,6 +180,7 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
                     v = views.view(seat, {"phase": "running", "world": "running", "step": m.k,
                                           "t_sim": m.k * m.dt, "done": False})
                     body = players[seat].act(v)
+                    say(seat, v)
                     if body is None:
                         continue
                     try:

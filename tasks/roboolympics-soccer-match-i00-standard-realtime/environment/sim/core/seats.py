@@ -19,7 +19,7 @@ class Seat:
         self.mode = os.environ.get(f"PLAYER_MODE_{name}", os.environ.get("RCB_PLAYER_MODE", "model"))
         if self.mode not in UNMETERED_MODES + ("model",):
             raise ValueError(f"PLAYER_MODE_{name} must be model, oracle or unmetered")
-        # "unmetered" (core 0.2.21): the runner meters the seat's model itself (a single-seat task run by a plain
+        # "unmetered" (core 0.2.24): the runner meters the seat's model itself (a single-seat task run by a plain
         # Harbor with its native agents, e.g. the export to the upstream benchmark): no metering proxy, so the meter
         # takes the gate's exemption (ThinkClock's oracle rule; think_clock.py stays unchanged) and no meter is
         # required for validity (Service.need_meter); final.json records the mode as it is.

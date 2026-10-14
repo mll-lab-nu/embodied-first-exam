@@ -268,6 +268,8 @@ class Badminton(MatchBase):
         res = {"type": "act", "plan": [x.copy() for x in q], "info": copy.deepcopy(cmd.get("info") or {}),
                "q_hit": None if q_hit is None else np.asarray(q_hit, np.float64), "ik_seed": None,
                "swing_last": None}
+        if len(q):                              # (the low level) the base holds the traj's last base row afterwards (no
+            rob.home = q[-1][:2].copy()         # automatic return; a stroke's planned stance, home_after, still wins)
         if self.single:
             WC.install(self.g, res)
         else:
@@ -379,6 +381,7 @@ class Badminton(MatchBase):
                                       "takes_effect_at_step": int(it["k0"])}]
         if self.cfg.action_level == "low":
             o["q_target"] = [float(x) for x in rob.s.target]
+            o.update(low_state(rob))
         return o
 
     def _single_state(self):
@@ -504,6 +507,31 @@ class Badminton(MatchBase):
                 "seats": {s: {"rejected_acts": self.rejected[s]} for s in SEATS2}}
 
 
+def low_state(rob) -> dict:
+    """The low level's robot fields (what a real Franka and its base report; the toolkit's servo model continues a
+    rollout exactly from them, seat/lib/bm_servo.py RobotSim.reset): the joints q and their velocities qd (9 each,
+    base first, full precision), the velocity of the targets in force qd_target (what a new traj's first rows must
+    join: the base's acceleration is checked from it), and the servo's own state `servo` (the arm's setpoint generator
+    q, qd, qdd and its last torque tau, 7 each, like libfranka's q_d, dq_d, ddq_d, tau_J_d; the target before
+    q_target, q_target_prev; steady = control steps since the robot was last put at rest, capped at 2; the joint-velocity
+    reflex (bm.REFLEX, revision wallclock-12 / duel-14): reflex = None or {s_left: seconds of the stop left, q: the 9
+    joints at the trigger (the arm is held there), stop: the gantry's stop point}, base_sp = None or the gantry's setpoint
+    generator {q, qd, qdd} (engaged by a reflex until the robot is next put at its spot), n_reflex = the robot's
+    reflexes in the match so far)."""
+    ph = rob.s
+    a = ph._actions
+    prev = a[-2] if len(a) >= 2 else ph.target
+    r = lambda v: [float(x) for x in v]
+    rf, bl = ph.reflex_at, ph.bl
+    return {"q": r(ph.d.qpos[ph.qa]), "qd": r(ph.d.qvel[ph.va]), "qd_target": r(rob._target_vel()),
+            "servo": {"q": r(ph.jl.q), "qd": r(ph.jl.qd), "qdd": r(ph.jl.qdd), "tau": r(ph.trl.tau),
+                      "q_target_prev": r(prev), "steady": int(min(ph.n_steady, 2)),
+                      "reflex": None if rf is None else {"s_left": float(BM.REFLEX_RECOVER_S - (ph.d.time - rf[0])),
+                                                         "q": r(rf[1]), "stop": r(rf[2])},
+                      "base_sp": None if bl is None else {"q": r(bl.q), "qd": r(bl.qd), "qdd": r(bl.qdd)},
+                      "n_reflex": int(ph.n_reflex)}}
+
+
 # ---------------------------------------------------------------------------------------------- action layers
 NUM = {"type": "number"}
 VEC3 = {"type": "vector", "len": 3}
@@ -596,7 +624,7 @@ class LowLayer:
         return info
 
 
-def plan_job(job, model) -> dict:
+def plan_job(job, model, twin=None) -> dict:
     """The legacy planner (wc._worker / the duel's workers.plan): restore the exact copy taken at the request step,
     advance it to the effect step k0 = request step + lead with the command in force, and plan the act there
     (wc.plan_on / bduel.plan_on: what Match.rt_act at k0 would do). Single: if the point ends on the way, the act
@@ -608,6 +636,7 @@ def plan_job(job, model) -> dict:
     t0 = time.monotonic()
     if job["single"]:
         m = WC.restore(job["snap"], model)
+        m._twin = twin                          # the worker's rehearsal robot (None: a new one, as before)
         while m.k < k0:
             n0 = len(m.points)
             m.rt_advance(1)
@@ -618,6 +647,7 @@ def plan_job(job, model) -> dict:
         res = WC.plan_on(m, job["dec"])
     else:
         side = BD.restore(job["snap"], model)
+        side._twin = twin
         while side.k < k0:
             side.solo_step()
         out["key"] = side.state_key()
@@ -629,13 +659,17 @@ def plan_job(job, model) -> dict:
 
 
 class PlanCtx:
-    """The seat's plan worker: the MjModel the snapshots are restored with."""
+    """The seat's plan worker: the MjModel the snapshots are restored with, and one robot-only twin for the stroke
+    planner's rehearsals, kept from plan to plan (every rehearsal starts with Phys.copy_from, which sets all of the
+    twin's state: the same plans as with a new twin per plan, 5 ms less each)."""
 
     def __init__(self):
         self.model = BM.Phys().m
+        self.twin = BM.Phys()
+        self.twin.reset(np.r_[BM.HOME, BM.Q0_ARM])
 
     def plan(self, job):
-        return plan_job(job, self.model)
+        return plan_job(job, self.model, self.twin)
 
 
 class RacketLayer(LowLayer):
@@ -847,7 +881,11 @@ class BadmintonSport:
         return Badminton(cfg)
 
     def action_layer(self, level):
-        return RacketLayer(self._lead) if level == "high" else LowLayer()
+        if level == "high":
+            return RacketLayer(self._lead)
+        if any(os.environ.get(k) for k in ("RCB_SKILL_INLOOP", "RCB_SKILL_INLOOP_A", "RCB_SKILL_INLOOP_B")):
+            return inloop_layer()                         # the skill in the loop (low level; skilleval/inloop.py)
+        return LowLayer()
 
     def worker_init(self, kind, seat, cfg):
         if kind == "plan":
@@ -885,14 +923,7 @@ class BadmintonSport:
                        "law": "speed out = gain x max(0, v_head . n) x (1 - offcentre_loss (r / radius)^2) + "
                               "incoming_share x max(0, -v_in . n), along the face normal n"},
             "arm_limits": AL_TABLE,
-            "velocity_rule": {"setpoint_share_of_velocity_limits": BM.VMARGIN, "reflex_at_share": BM.REFLEX,
-                              "reflex_stop_s": BM.REFLEX_RECOVER_S,
-                              "text": ("the servo runs the arm's setpoints at 0.9 of the joint velocity limits; a physical "
-                                       "arm joint faster than 1.05 x its limit triggers the robot's velocity reflex: "
-                                       "the targets are ignored, the arm brakes to rest at the pose of the trigger and "
-                                       "the gantry to rest within its limits, for 1 s; then the robot resumes from rest "
-                                       "and catches up with its targets within the limits (the stroke under way is "
-                                       "lost; final fields velocity_reflexes)")},
+            "velocity_rule": velocity_rule(),
             "base": {"max_speed_mps": BM.BASE_VMAX, "max_accel_mps2": BM.BASE_AMAX, "max_jerk_mps3": BM.BASE_JMAX,
                      "max_force_n": BM.BASE_FORCE, "home_xy": [float(x) for x in BM.HOME],
                      "range": {"x": [float(BM.BASE_LO[0]), float(BM.BASE_HI[0])],
@@ -942,18 +973,202 @@ class BadmintonSport:
         if cfg.action_level != "low":           # the high level's skill API (skill_api.py; sport.toml [modes.high])
             out["skill_contract"] = {"act": ACT_CONTRACT.describe(), "toss": TOSS_CONTRACT.describe()}
         if cfg.action_level == "low":
-            rob = m.robot(seat)
-            out["joints"] = {"names": BM.JOINTS, "low": [float(x) for x in rob.s.lo],
-                             "high": [float(x) for x in rob.s.hi],
-                             "max_step": [float(x) for x in BM.VEL_LIMIT * DT],
-                             "ready_pose_arm": [float(x) for x in BM.Q0_ARM],
-                             "rule": "each target within [low, high] and within max_step of the previous target "
-                                     "(the first one: of q_target in the state)"}
+            out.update(low_spec(m.robot(seat).s))
+            out["robot_model"] = {"file": "/opt/robot/robot_only.xml", "robot_only_xml": robot_model_xml(),
+                                  "note": "the base, pedestal, arm and racket cut out of the simulator's scene (MJCF; "
+                                          "the mesh files are MuJoCo Menagerie panda_nohand's, /opt/robot/assets); "
+                                          "nothing of the world"}
+            out["action_interface"] = ("joint position targets at 100 Hz (traj); no stroke controller or act skill "
+                                       "(your toolkit has an optional kinematics library and the servo model, see "
+                                       "toolkit); the skill you implement: skill_contract")
+            out["skill_contract"]["practice_requests"] = _decl()["modes"]["low"]["cases"]["practice_path"]
         return out
 
     def players(self):
         import builtin_players as bp
         return {"reference": bp.Reference, "random": bp.Random}
+
+
+# ---------------------------------------------------------------------------------------------- the low level
+def _decl() -> dict:
+    import tomllib
+    with open(os.path.join(HERE, "sport.toml"), "rb") as f:
+        return tomllib.load(f)
+
+
+def robot_model_xml() -> str:
+    import robot_model
+    return robot_model.robot_only_xml()
+
+
+def toolkit_spec() -> dict:
+    """The low level's toolkit as /spec names it (seat/toolkit.toml, the seat's /opt/robot; skilleval/toolkit.py)."""
+    import tomllib
+    lo = _decl()["modes"]["low"]
+    with open(os.path.join(HERE, lo["toolkit"]), "rb") as f:
+        tk = tomllib.load(f)
+    tools = {t["name"]: t for t in tk["tools"]}
+    lib = {n: tools[n] for n in ("ik_library", "servo_model")}
+    return {"manifest": lo["toolkit_path"], "id": tk["toolkit"]["id"], "version": tk["toolkit"]["version"],
+            "robot_model": tools["robot_model"]["file"], "meshes": tools["robot_meshes"]["file"],
+            **{n: {"file": t["file"], "module": t["module"], "class": t["class"], "version": t["version"],
+                   "sha256": t["sha256"], "api": t["api"], "algorithm": t["algorithm"],
+                   "use": f"import sys; sys.path.insert(0, '/opt/robot/lib'); from {t['module']} import {t['class']}"}
+               for n, t in lib.items()},
+            "optional": True, "tools": lo["tools"],
+            "not_provided": tk["forbidden"]["skills"], "yours_to_develop": tk["forbidden"]["develop"]}
+
+
+CONTROLLER = ("the robot's 1 kHz servo (the toolkit's servo model, lib/bm_servo.py, is this law as code): the 10 ms "
+              "targets are interpolated linearly over the 10 physics steps, with (target - previous target) / 10 ms as "
+              "the reference velocity; the arm: a jerk-limited setpoint generator within 0.9 of the Panda's velocity "
+              "limits (velocity_rule) and its acceleration and jerk limits (the jerk also capped at 0.7 x the "
+              "torque-rate limit over the row sums of the arm's inertia), torque = M_arm qdd_sp + kp e + kd de + "
+              "gravity/Coriolis + the base's commanded acceleration fed forward through the arm-base inertia, limited to "
+              "87 / 12 N m and 1000 N m/s; a joint more than 0.02 rad from its setpoint pulls the setpoint along; the "
+              "base: PD to its interpolated target + bias compensation within its drive force. The velocity reflex: a "
+              "physical arm joint faster than 1.05 x its velocity limit stops the robot for 1 s (the targets are "
+              "ignored; the arm's setpoints brake to rest at the pose of the trigger; from then on, until the robot is "
+              "next put at its spot, the gantry's targets pass through a setpoint generator at its limits (speed, "
+              "per-axis acceleration, jerk 25 x the acceleration; started from the targets' state; its reference is its "
+              "stop point during the stop) whose acceleration is the one fed forward); then the robot follows its "
+              "targets again from rest. The observed state's servo.reflex, servo.base_sp and servo.n_reflex report it")
+
+
+def velocity_rule() -> dict:
+    """/spec velocity_rule (and limits.velocity_rule at the low level): the joint-velocity rule (revision wallclock-12 /
+    duel-14)."""
+    return {"setpoint_share_of_velocity_limits": BM.VMARGIN, "reflex_at_share": BM.REFLEX,
+            "reflex_stop_s": BM.REFLEX_RECOVER_S,
+            "text": ("the servo runs the arm's setpoints at 0.9 of the joint velocity limits; a physical "
+                     "arm joint faster than 1.05 x its limit triggers the robot's velocity reflex: "
+                     "the targets are ignored, the arm brakes to rest at the pose of the trigger and "
+                     "the gantry to rest within its limits, for 1 s; then the robot resumes from rest "
+                     "and catches up with its targets within the limits (the stroke under way is "
+                     "lost; final fields velocity_reflexes)")}
+
+
+def low_spec(ph) -> dict:
+    """The low level's robot interface in game spec (and the `spec` every call of a skill receives): joints, limits
+    (the arm's, the base's, the servo law and gains), the base, the toolkit, the skill contract."""
+    lo = _decl()["modes"]["low"]
+    return {
+        "joints": {"names": BM.JOINTS, "low": [float(x) for x in ph.lo], "high": [float(x) for x in ph.hi],
+                   "max_step": [float(x) for x in BM.VEL_LIMIT * DT],
+                   "ready_pose_arm": [float(x) for x in BM.Q0_ARM],
+                   "rule": "each target within [low, high] and within max_step of the previous target (the first one: "
+                           "of q_target in the state); the base's targets within its speed and acceleration (from "
+                           "the second differences, the first rows joining q_target and qd_target)"},
+        "limits": {"arm": AL_TABLE, "controller": CONTROLLER, "velocity_rule": velocity_rule(),
+                   "gains": {"kp": [float(x) for x in BM.KP], "kd": [float(x) for x in BM.KD],
+                             "jerk_share_of_torque_rate": 0.7, "resync_rad": BM.RESYNC},
+                   "base": {"max_speed_mps": BM.BASE_VMAX, "max_accel_mps2": BM.BASE_AMAX,
+                            "max_accel_per_axis_mps2": [float(x) for x in BM.BASE_AXIS_AMAX],
+                            "max_jerk_mps3": BM.BASE_JMAX, "max_force_n": BM.BASE_FORCE,
+                            "range": {"x": [float(BM.BASE_LO[0]), float(BM.BASE_HI[0])],
+                                      "y": [float(BM.BASE_LO[1]), float(BM.BASE_HI[1])]}}},
+        "toolkit": toolkit_spec(),
+        "skill_contract": {"act": ACT_CONTRACT.describe(lo["deliverable"]), "toss": TOSS_CONTRACT.describe()},
+    }
+
+
+# ---------------------------------------------------------------------------------------------- the skill in the loop
+_INLOOP: dict = {}
+
+
+def _ball_in_play(match, seat) -> bool:
+    """A shuttle the seat's robot may meet (coming to it, or its own toss in the air): then joint commands are
+    refused (skill in the loop: the strokes are played through the player's own act skill)."""
+    if match.single:
+        leg = match.g.leg
+        return bool(match.g.in_play() and leg.get("state") in ("incoming", "falling"))
+    rs = match.g.rs
+    return rs.get("state") in ("tossed", "live") and (rs.get("expect") == seat or rs.get("server") == seat)
+
+
+def inloop_skill_spec(ph=None) -> dict:
+    """What every in-loop call of the player's act receives as `spec` (= the post-match evaluator's skill_spec)."""
+    return low_spec(ph if ph is not None else BM.Phys())
+
+
+def _act_inloop_class(InLoopLayer):
+    """skilleval's InLoopLayer with the contract's optional request fields (act's `base`: where the base stands at
+    contact) left out of a request that does not give them, and passed to the skill only when given (positionally,
+    after the required ones: act(t, pos, normal, vel[, base], *, state, spec)). skilleval.contract.valid_request
+    treats every field as required (a shared-code limitation, reported in the screening)."""
+    from skilleval.contract import _field_problem
+
+    class ActInLoopLayer(InLoopLayer):
+        def parse(self, seat, body, match, ctx):
+            t = body.get("type") if isinstance(body, dict) else None
+            c = self.contracts.get(t)
+            if c is None and t in ("toss", "move"):   # not the core skill: the same command at both levels, any time
+                return self.low.parse(seat, body, match, ctx)
+            if c is None:
+                return super().parse(seat, body, match, ctx)
+            extra = sorted(set(body) - set(c.args) - {"type"})
+            if extra:
+                raise Refused(f"unknown field(s) {extra}")
+            req = {}
+            for k, f in c.args.items():
+                if body.get(k) is None:
+                    if f.get("optional"):
+                        continue
+                    raise Refused(f"{c.name} needs {k}")
+                why = _field_problem(k, f, body[k])
+                if why:
+                    raise Refused(why)
+                req[k] = body[k]
+            return {"type": c.name, **req}
+
+        @staticmethod
+        def _args(c, cmd):
+            return [cmd[k] for k in c.args if k in cmd]         # the optional fields only when given
+
+        def snapshot(self, seat, cmd, match, ordinal):
+            c = self.contracts.get(cmd.get("type"))
+            if c is None or seat not in self.loops:
+                return super().snapshot(seat, cmd, match, ordinal)
+            self._ensure_unit(seat, match)
+            if self.timing == "wall":
+                self._worker(seat, match).begin_call()
+            return {"seat": seat, "skill": c.name, "args": self._args(c, cmd), "state": self._state(seat, match, cmd),
+                    "k": int(match.k), "match": match}
+
+        def lower(self, seat, cmd, prepared, match):
+            c = self.contracts.get(cmd.get("type"))
+            if c is not None and prepared is None and seat in self.loops:   # no snapshot / prepare: call it now
+                self._ensure_unit(seat, match)
+                loop = self.loops[seat]
+                ret = loop.call(c.name, *self._args(c, cmd), state=self._state(seat, match, cmd), k=match.k)
+                prepared = {"ret": ret, "rec": loop.last}
+            return super().lower(seat, cmd, prepared, match)
+
+    return ActInLoopLayer
+
+
+def inloop_layer():
+    """The low level with `act` lowered by the player's own /app/output/skill/act.py (skilleval/inloop.py): enabled
+    by RCB_SKILL_INLOOP (seat A) / RCB_SKILL_INLOOP_<seat> = the directory the simulator reads the player's skill
+    from; RCB_SKILL_INLOOP_LOG = a directory for the per-call log (inloop_<seat>.jsonl). One layer per process."""
+    if "layer" not in _INLOOP:
+        from pathlib import Path
+        from skilleval.inloop import InLoop, InLoopLayer
+        lo = _decl()["modes"]["low"]
+        tl = {k: float(v) for k, v in (lo["deliverable"].get("time_limits_s") or {}).items()}
+        spec = inloop_skill_spec()
+        logd = os.environ.get("RCB_SKILL_INLOOP_LOG")
+        loops = {}
+        for seat in SEATS2:
+            src = os.environ.get(f"RCB_SKILL_INLOOP_{seat}") or (os.environ.get("RCB_SKILL_INLOOP") if seat == "A"
+                                                                 else None)
+            if src:
+                loops[seat] = InLoop(src, "act", spec, timeouts=tl, load_timeout_s=tl.get("load", 30.0),
+                                     log_path=(Path(logd) / f"inloop_{seat}.jsonl") if logd else None)
+        _INLOOP["layer"] = _act_inloop_class(InLoopLayer)(LowLayer(), {"act": ACT_CONTRACT}, loops, _decl(),
+                                       raw_allowed=lambda seat, m: not _ball_in_play(m, seat),
+                                       noop={"type": "traj", "k0": None, "q": []}, step_every=2)
+    return _INLOOP["layer"]
 
 
 SPORT = BadmintonSport()

@@ -10,7 +10,9 @@ subscription). The proxy
   * routes by request: Anthropic-style requests (an `anthropic-version` header, or a /v1/messages path)
     go to https://api.anthropic.com with the subscription token as Bearer; /backend-api/* (Codex logged in with a
     ChatGPT subscription, see harbor_agents/codex_chatgpt_think.py) goes to https://chatgpt.com with the sidecar's
-    CODEX_ACCESS_TOKEN / CODEX_ACCOUNT_ID; everything else goes to OpenRouter;
+    CODEX_ACCESS_TOKEN / CODEX_ACCOUNT_ID; everything else goes to OpenRouter (or Azure, THINK_OPENAI_ROUTE). A seat
+    on THINK_OPENAI_ROUTE=chatgpt gets the ChatGPT backend only: any other request is refused (403);
+  * follows no upstream redirect: a 30x goes back to the agent, never with the real credentials to another host;
   * forwards everything to OpenRouter unchanged, except the model-turn repair that Gemini needs
     (same rule as harbor_agents/or_proxy.py);
   * reads the `usage` of every completed response (streamed or not) and keeps cumulative counts:
@@ -49,6 +51,25 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 UPSTREAM = os.environ.get("THINK_UPSTREAM", "https://openrouter.ai/api")
 ANTHROPIC_UPSTREAM = os.environ.get("THINK_ANTHROPIC_UPSTREAM", "https://api.anthropic.com")
 CHATGPT_UPSTREAM = os.environ.get("THINK_CHATGPT_UPSTREAM", "https://chatgpt.com")   # Codex on a ChatGPT subscription
+# THINK_CHATGPT_MODEL (per seat: RO_SEAT_ENV_THINK_CHATGPT_MODEL_<seat>, from players.toml `deployment` of a ChatGPT
+# subscription player) pins the seat's ChatGPT-backend calls to that model: a request the model lock admitted is sent
+# with this model (rec["model_alias"] keeps the name the agent sent). The harness can then use its own slug for the
+# model family (Codex 0.158.0 has metadata for "gpt-6-sol", none for "gpt-6.1-sol") while the backend serves the pinned
+# model ("gpt-6.1-sol"). Empty: no pin.
+CHATGPT_MODEL = os.environ.get("THINK_CHATGPT_MODEL", "").strip()
+
+
+def chatgpt_pin(body: bytes, rec: dict) -> bytes:
+    """The ChatGPT backend's pinned model (THINK_CHATGPT_MODEL) in place of the model the agent named."""
+    try:
+        d = json.loads(body)
+    except ValueError:
+        return body
+    if not isinstance(d, dict) or not isinstance(d.get("model"), str) or d["model"] == CHATGPT_MODEL:
+        return body
+    rec["model_alias"] = d["model"]
+    d["model"] = CHATGPT_MODEL
+    return json.dumps(d).encode()
 # OpenAI-style requests (Codex) go to OpenRouter unless THINK_OPENAI_ROUTE=azure: then to an Azure AI Foundry resource
 # (AZURE_AI_ENDPOINT, e.g. https://<res>.services.ai.azure.com/models, key AZURE_AI_API_KEY), /v1/... -> /openai/v1/...,
 # the model's provider prefix dropped ("openai/gpt-6-astra" -> deployment "gpt-6-astra").
@@ -58,6 +79,10 @@ CHATGPT_UPSTREAM = os.environ.get("THINK_CHATGPT_UPSTREAM", "https://chatgpt.com
 # On azure_sol the deployments are pinned: a request for a model that is not one of AZURE_SOL_DEPLOYMENTS goes to them
 # anyway (rec["model_alias"] keeps the name the agent sent). The agent can then use its harness's own name for the
 # model family (Codex knows "gpt-6-sol" and has its metadata) while the resource serves its deployment ("gpt-6.1-sol").
+# THINK_OPENAI_ROUTE=chatgpt: the seat plays on a ChatGPT subscription only. Its proxy forwards the ChatGPT backend
+# (/backend-api/*) and refuses every other request (OpenRouter / Azure / Anthropic paths) before any credential is
+# touched, so a program in that seat cannot reach another provider with a task-wide key (core/launch.py also drops those
+# keys from the seat's proxy).
 AZURE_ROUTES = {"azure": ("AZURE_AI_ENDPOINT", "AZURE_AI_API_KEY", "AZURE_DEPLOYMENTS"),
                 "azure_sol": ("AZURE_SOL_ENDPOINT", "AZURE_SOL_API_KEY", "AZURE_SOL_DEPLOYMENTS")}
 ROUTE = os.environ.get("THINK_OPENAI_ROUTE", "openrouter").strip().lower()
@@ -65,6 +90,7 @@ AZURE = ROUTE in AZURE_ROUTES
 AZURE_ROUTE = ROUTE if AZURE else "azure"
 AZURE_ENDPOINT_VAR, AZURE_KEY_VAR, AZURE_POOL_VAR = AZURE_ROUTES[AZURE_ROUTE]
 AZURE_PINNED = AZURE_ROUTE == "azure_sol"
+CHATGPT_ONLY = ROUTE == "chatgpt"
 AZURE_BASE = os.environ.get(AZURE_ENDPOINT_VAR, "").strip().rstrip("/").removesuffix("/models")
 USAGE_FILE = os.environ.get("THINK_USAGE_FILE", "/data/think_usage.json")
 CALLS_FILE = os.environ.get("THINK_CALLS_FILE") or (USAGE_FILE.replace("think_usage", "think_calls").rsplit(".json", 1)[0] + ".jsonl"
@@ -86,6 +112,14 @@ HOP_BY_HOP = {"connection", "keep-alive", "transfer-encoding", "te", "trailer", 
 # USAGE["azure_failovers"]); they are not model failures and do not count as rate_limit_retries.
 AZURE_POOL = [d.strip() for d in os.environ.get(AZURE_POOL_VAR, "").split(",") if d.strip()]
 AZURE_CURRENT = [0]
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow no redirect: a 30x goes back to the client as it is, so the credentials this proxy adds (Authorization,
+    api-key, chatgpt-account-id) never travel to a host the redirect names."""
+    def redirect_request(self, *a, **kw):
+        return None
+
+
+OPENER = urllib.request.build_opener(_NoRedirect)            # replaces the default (following) redirect handler
 AZURE_RATE_WORDS = ("rate limit", "rate_limit", "too_many_requests", "server_is_overloaded", '"429"')
 
 
@@ -438,6 +472,8 @@ class Handler(BaseHTTPRequestHandler):
     def _forward(self, body: bytes | None) -> None:
         pre = {}
         code, why, body = screen(self.command, self.path, body, pre)
+        if not code and CHATGPT_ONLY and not self.path.startswith("/backend-api/"):
+            code, why = 403, "route chatgpt: only the ChatGPT backend (/backend-api/*) is forwarded for this seat"
         if code:                                               # refused before any credential is touched
             rec = {"t0": round(time.time(), 3), "client": self.client_address[0], "method": self.command,
                    "path": self.path.split("?")[0][:200], "user_agent": self.headers.get("User-Agent", ""),
@@ -456,6 +492,8 @@ class Handler(BaseHTTPRequestHandler):
         key = os.environ.get(name, "")
         if body and azure:
             body = azure_model(body)
+        elif body and chatgpt and CHATGPT_MODEL:               # after the model lock admitted the agent's name
+            body = chatgpt_pin(body, pre)
         elif body and not anthropic and not chatgpt:
             body = repair(body, self.path)
         model_call = is_model_call(self.command, self.path)
@@ -533,7 +571,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             for attempt in (range(len(RATE_LIMIT_WAITS_S) + 1) if resp is None else ()):
                 try:
-                    resp = urllib.request.urlopen(req, timeout=600); break
+                    resp = OPENER.open(req, timeout=600); break
                 except urllib.error.HTTPError as err:
                     resp = err
                     if err.code != 429 or attempt >= len(RATE_LIMIT_WAITS_S):
@@ -549,6 +587,13 @@ class Handler(BaseHTTPRequestHandler):
             rec["status"] = 502; rec["error"] = repr(exc)[:200]
             return self._json(502, {"error": {"message": f"think_proxy upstream failure: {exc!r}"}})
         rec["status"] = resp.status
+        if chatgpt:                                            # subscription usage (x-codex-primary-used-percent, ...)
+            limits = {k.lower(): v for k, v in resp.headers.items() if k.lower().startswith("x-codex-")}
+            if limits:
+                rec["codex_limits"] = limits
+                with LOCK:
+                    USAGE["codex_limits"] = limits
+                    publish()
         self.send_response(resp.status)
         ctype = resp.headers.get("Content-Type", "")
         for k, v in resp.headers.items():
@@ -621,7 +666,7 @@ class Handler(BaseHTTPRequestHandler):
             req = urllib.request.Request(url, data=payload, method="POST", headers=h)
             last = i == n - 1
             try:
-                resp = urllib.request.urlopen(req, timeout=600)
+                resp = OPENER.open(req, timeout=600)
             except urllib.error.HTTPError as err:
                 resp = err
                 if err.code in (429, 503) and not last:

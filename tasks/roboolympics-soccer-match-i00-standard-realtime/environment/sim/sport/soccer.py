@@ -17,8 +17,10 @@ PD torques at 500 Hz. The four robots' policies are evaluated together in one ba
 Real limits (soccer-2v2-4; bodies/booster_t1/body.toml through bodies/servo.py Actuators and WalkCommand, the robot
 library's one limit path; sport.toml [legs] body): the leg motors' torques are the
 Booster URDF's (45 / 30 / 30 / 60 / 24 / 15 N m; the sai-mujoco model's ctrlrange is higher and not used), a torque
-that drives a joint in its direction of motion is limited by a linear torque-speed envelope (full torque up to 80 % of
-the URDF joint speed, none at it; ESTIMATE), and the walking command a policy sees moves toward the requested one by at
+that drives a joint in its direction of motion is limited by a linear torque-speed envelope (full torque up to 64 % of
+the URDF joint speed, none at it), each motor's torque limit folds back to its rated (continuous) torque, 60 % of the
+URDF torque, when its I^2 t thermal state is used up (the peak from a cold motor lasts about 5 s), and a robot's 12 leg
+motors share a 1 kW bus (soccer-2v2-10; all ESTIMATES of bodies/booster_t1 [motors]), and the walking command a policy sees moves toward the requested one by at
 most 2 m/s^2, 2 m/s^2, 4 rad/s^2 (ESTIMATE, the G1 joystick's).
 
 Kick (style "swing", the default): the right leg's model-based swing kick (swing_kick.py): once the walking controller
@@ -64,7 +66,7 @@ TEAMS = ("A", "B")
 OTHER = {"A": "B", "B": "A"}
 TEAM_ROBOTS = {t: tuple(r for r in ROBOTS if r[0] == t) for t in "AB"}
 N = TEAM_SIZE
-REVISION = "soccer-2v2-9" if N == 2 else "soccer-5v5-3"   # 5 v 5 (not a task yet): the legacy soccer-4 rules on the real T1
+REVISION = "soccer-2v2-10" if N == 2 else "soccer-5v5-3"   # 5 v 5 (not a task yet): the legacy soccer-4 rules on the real T1
 GOALKEEPER = 1 if N >= 3 else None           # HSL Law 3: at most one designated goalkeeper (robot 1; 5 v 5)
 JOINT_NAMES = ["Left_Hip_Pitch", "Left_Hip_Roll", "Left_Hip_Yaw", "Left_Knee_Pitch", "Left_Ankle_Pitch",
                "Left_Ankle_Roll", "Right_Hip_Pitch", "Right_Hip_Roll", "Right_Hip_Yaw", "Right_Knee_Pitch",
@@ -353,7 +355,8 @@ class World:
         # [motors] and the torque limit; the only writer of the legs' actuators) and each robot's walking command
         self.motors = SV.Actuators(m, self._act.reshape(-1), self._jv.reshape(-1),
                                    np.concatenate([r.tau for r in rs]), PHYS_DT,
-                                   envelope=SV.unitree_envelope(T1, LEG_KEYS * len(rs)))
+                                   **SV.motor_model(T1, LEG_KEYS * len(rs),
+                                                    groups=[np.arange(12) + 12 * i for i in range(len(rs))]))
         self.cmd_lim = {r: SV.WalkCommand(T1["limits"]["walk"], CONTROL_DT) for r in ROBOTS}
         self._kin = mujoco.MjData(m)                       # the swing kick's kinematics (never the world's data)
         self.prog = {r: dict(type="stand") for r in ROBOTS}
@@ -473,6 +476,7 @@ class World:
         self.hist = deque(maxlen=40)
         self.review_hist = None
         mujoco.mj_resetData(self.m, self.d)
+        self.motors.cool_down()                          # a new match: cold motors (heat stays across placements)
         self.place_ball(0, 0)
         self._kickoff_positions()
         # the first kick-off has the same conditions as every other one (HSL Law 8.1)
