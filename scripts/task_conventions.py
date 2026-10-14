@@ -76,6 +76,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robodojo-", "RoboDojo"),
     ("robofunolympics-", "RoboFunOlympics"),
     ("pandadyn-", "Panda Dynamic Scenes"),
+    ("ambench-", "AM-Bench"),
 ]
 # Modes (PROTOCOL §2.15, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
 # standard-realtime task without a privileged twin is expected when its benchmark has no privileged mode (no privileged
