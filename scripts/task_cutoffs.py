@@ -204,8 +204,7 @@ def render_doc(tasks: list[Path]) -> str:
         *table_rows(tasks),
         "",
         f"{len(tasks)} task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number "
-        f"of seconds, at most {tc.CUTOFF_CAP} (PROTOCOL D8"
-        + "".join(f"; {b}'s exception: {c}" for b, c in sorted(tc.CUTOFF_CAP_EXCEPTIONS.items())) + ").",
+        f"of seconds, at most {tc.CUTOFF_CAP} (PROTOCOL D8; no benchmark is excepted).",
         "",
         "## Exceptions (per family, per task)",
         "",
