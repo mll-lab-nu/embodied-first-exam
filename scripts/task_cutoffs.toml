@@ -47,7 +47,7 @@
 "VLABench"          = { privileged =  1800, standard =  1800 }
 "YAMLab"            = { privileged =  3600, standard =  3600 }
 
-# Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
+# Exceptions (optional). The most specific entry wins: task > family > the benchmark's row above.
 # - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboTangle"` lists a
 #   benchmark's). A family's entry gives a number per mode; a mode it leaves out keeps the benchmark's number.
 # - A task is its directory name under tasks/ (the mode is in the name).
@@ -58,6 +58,9 @@
 #
 # [task_cutoff_sec]
 # "robotangle-cast-coil-hard-i00-standard" = 10800             # this one task directory
+
+[task_cutoff_sec]
+"roboolympics-soccerssl-match-i00-standard-realtime" = 14400   # a whole 5 v 5 match is 2.9 h of wall time at S = 10
 
 # History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
 # shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
@@ -239,3 +242,11 @@ from_sec = 0
 to_sec = 7200
 decided_by = "pending (this pull request)"
 note = "the benchmark's first standard-mode tasks, exported by RoboOlympics itself: the skill-engineering tasks (implement the robot's skill from its model and toolkit; graded offline by the sport's API test), the same budget as the real-time matches"
+
+[[history]]
+date = "2026-10-13"
+task = "roboolympics-soccerssl-match-i00-standard-realtime"
+from_sec = 0
+to_sec = 14400
+decided_by = "pending (this pull request; RoboOlympics' owner, 2026-10-13)"
+note = "the wheeled soccer 5 v 5 match exported by RoboOlympics: two halves and a shoot-out are about 1035 s of game time, 2.9 h of wall time at its slowdown S = 10, plus the frozen reviews; at S = 5 its four overhead cameras cannot be rendered in time (51 % busy at S = 10), so the budget is RoboOlympics' own 4 h"

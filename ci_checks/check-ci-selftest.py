@@ -291,7 +291,12 @@ def cutoff_exceptions(tmp: Path) -> int:
 
     def table(extra: str) -> Path:
         tables.append(tmp / f"cutoffs-{len(tables)}.toml")
-        tables[-1].write_text(head + extra)
+        h = head
+        m = re.match(r'(?s)(.*?)\[task_cutoff_sec\]\n((?:"[^\n]*\n)*)(.*)', extra)
+        if m and re.search(r"(?m)^\[task_cutoff_sec\]\n", h):    # the repository's table has task entries already:
+            h = re.sub(r"(?m)^\[task_cutoff_sec\]\n", lambda _: "[task_cutoff_sec]\n" + m.group(2), h, count=1)
+            extra = m.group(1) + m.group(3)                    # the test's entries join that table (TOML: one table)
+        tables[-1].write_text(h + extra)
         return tables[-1]
 
     def run_py(args: list[str], cutoffs: Path | None) -> tuple[int, str]:

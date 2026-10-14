@@ -6741,3 +6741,7 @@ digest = "sha256:7d0a1b4369a9684f5f4c4f3e1386ffac17484db11fadde64dee4e7d2e3981dc
 name = "robot-coding-bench/roboolympics-badminton-match-i02-standard-realtime"
 digest = "sha256:62d528ab5fd293e19eed70241db0c6a3dd3716bb6e49b9044d1e8db790dba1e0"
 
+[[tasks]]
+name = "robot-coding-bench/roboolympics-soccerssl-match-i00-standard-realtime"
+digest = "sha256:aea1ceac59ca5521738e10e86c27da8be75096df10d68cce0a738aa4e1d2d342"
+

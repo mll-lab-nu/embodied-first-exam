@@ -28,6 +28,12 @@ revision = "soccer-2v2-9+core-0.2"
 source_commits = ["c3b0463fc95c"]
 
 [[tasks]]
+name = "roboolympics-soccerssl-match-i00-standard-realtime"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+revision = "soccer_ssl-1"
+source_commits = ["c0b93f73cf04"]
+
+[[tasks]]
 name = "roboolympics-tabletennis-hitskill-i00-standard"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
