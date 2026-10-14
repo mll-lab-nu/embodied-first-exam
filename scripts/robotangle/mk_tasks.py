@@ -452,6 +452,40 @@ def audit_words(s: str, rec: dict, mode: str, readme: bool) -> str:
     return s
 
 
+# interlocked_claws, the whole-piece separation goal (easy / medium / hard, Cast ABC, Rotor; user 2026-10-13). Its predicate
+# (topogym/tasks/interlocked_claws/terminal.py separation_candidate) checks a gap between the two complete pieces and that
+# BOTH are still, for the confirmation time; it checks no goal square and no separator. The texts ported from the Genesis
+# release kept the placement families' two grader-details lines ("Goal square in this instance ...", "The separator is
+# ... free to move (its speed is not checked) ..."), which contradict the requirement above them. They go; in their place
+# stands the separation line of dev's scripts/topogym_rules.py claws_separation_words() (word for word), unless the
+# package's text already carries it. A placement text (very_easy / easier, the rd tiers) has no SEPARATION_MARK: no-op.
+SEPARATION_MARK = "release and transport into the green region are not required."
+SEPARATION_GAP = re.compile(r"Leave at least (\S+ mm) between the complete pieces")
+SEPARATION_FALSE = re.compile(r"(?m)^- (?:Goal square in this instance: |The separator is an invisible, fixed vertical plane )[^\n]*\n")
+SEPARATION_LINE = ("- Separation as the grader measures it: every vertex of both pieces' visual and collision meshes counts, and "
+                   "the gap is measured along ten directions only: the three world axes, each piece's own three body axes, and "
+                   "the line between the two pieces' centres (the mean of each piece's vertices). Along at least one of them the "
+                   "two pieces must be at least {gap} apart; a separating plane in any other direction "
+                   "does not count. The green dashed square on the table is not part of this goal: neither containment in it nor "
+                   "a separator plane is checked.\n")
+
+
+def separation_words(s: str, where: str) -> str:
+    """The grader details of a claws separation text say what its predicate checks (instruction.md and README.md)."""
+    if SEPARATION_MARK not in s:
+        return s
+    line = SEPARATION_LINE.format(gap=SEPARATION_GAP.search(s).group(1))
+    false = SEPARATION_FALSE.findall(s)
+    if line in s:
+        assert not false, f"{where}: the separation line next to a goal-square / separator line"
+    else:
+        assert len(false) == 2, f"{where}: expected the goal-square and the separator line, found {len(false)}"
+        s = SEPARATION_FALSE.sub("", s.replace(false[0], line, 1))
+    left = [w for w in ("free to move", "speed is not checked", "Goal square", "The separator is") if w in s]
+    assert not left and s.count(line) == 1, f"{where}: a separation text still says {left}"
+    return s
+
+
 def family_words(name: str, s: str, rec: dict) -> str:
     """A new base templated on another family's package (slotted / orbits on horseshoe_ring, blanket_fold on
     blanket_flatten): its grader and its standard sim name its own family, never the template's."""
@@ -1067,8 +1101,8 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", difficulty_words(rewrite_toml(rd("task.toml"), base, rec), rec).encode())
         fence = "`fence`" in rd("instruction.md")
-        put(t / "README.md", audit_words(r5_words(frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode), rec, mode, True).encode())
-        ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
+        put(t / "README.md", audit_words(r5_words(frame_words(flat_words(rewrite_readme(separation_words(rd("README.md"), f"{t.name}/README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode), rec, mode, True).encode())
+        ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(separation_words(rd("instruction.md"), f"{t.name}/instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
         ins = clock_words(r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode), mode)
         put(t / "instruction.md", audit_words(ins, rec, mode, False).encode())
