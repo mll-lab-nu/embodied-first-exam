@@ -13,6 +13,7 @@
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
 NO_TWIN=(roboolympics-)   # PROTOCOL §4b: RoboOlympics (owner, 2026-10-08), standard-realtime only
+STANDARD_ONLY_PREFIX=(cell-)   # standard and standard-realtime only, carrying their own frozen instance: RoboSafeBench (docs/benchmarks/robosafe.md; exception requested)
 STANDARD_ONLY=(robodojo-fold-clothes-i00-standard robodojo-fold-clothes-random-i00-standard robodojo-make-toast-random-i00-standard robodojo-pour-by-language-i00-standard robodojo-pour-liquid-into-cup-i00-standard robodojo-pour-liquid-into-cup-random-i00-standard)   # PROTOCOL §4.8 exception (owner, 2026-10-11)
 case "$n" in
   *-standard-realtime) base="${n%-standard-realtime}"; ref="$base-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too
@@ -23,6 +24,12 @@ esac
 if [ -n "$base" ]; then
   for s in "${STANDARD_ONLY[@]}"; do   # while its twin still exists (until the tasks change lands) the pair rules below apply
     if [ "$n" = "$s" ] && [ ! -e "$(dirname "$t")/$base-privileged" ]; then
+      [ -f "$t/$copy/instance.json" ] || { echo "FAIL $t: a standard-only task carries its frozen instance ($copy/instance.json)"; exit 1; }
+      exit 0
+    fi
+  done
+  for p in "${STANDARD_ONLY_PREFIX[@]}"; do
+    if [[ "$n" == "$p"* ]]; then
       [ -f "$t/$copy/instance.json" ] || { echo "FAIL $t: a standard-only task carries its frozen instance ($copy/instance.json)"; exit 1; }
       exit 0
     fi

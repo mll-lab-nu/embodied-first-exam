@@ -32,13 +32,14 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
+| RoboSafeBench | — | 3600 s (60 min) | 3600 s (60 min) | — / 294 / 15 |
 | RoboTangle | 7200 s (120 min) | 7200 s (120 min) | — | 52 / 52 / — |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
 | RoboWits | 3600 s (60 min) | 3600 s (60 min) | — | 15 / 15 / — |
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1676 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1985 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -112,3 +113,5 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-12 | LIBERO-MAX, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | MuJoCo Playground, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |
+| 2026-10-13 | RoboSafeBench, standard | (none) -> 3600 s | owner | the benchmark's first tasks: the protocol's default (D8); RoboSafeBench's own trials gave agents 40 minutes |
+| 2026-10-14 | RoboSafeBench, standard-realtime | (none) -> 3600 s | authors (with the standard-realtime tasks, pending owner decision) | the benchmark's first standard-realtime tasks: the standard tasks' number (D8 default); the episode's robot-time budget under the realtime clock (1800 s for the realtime set, RoboSafeBench 0.5.1) runs in real time from the first submit, so 3600 s leaves 1800 s for looking and planning before the clock starts (the harness's set-up and the service's start are outside or before it); the collect hook's finalize is outside the agent's time |

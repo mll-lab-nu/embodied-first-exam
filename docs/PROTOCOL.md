@@ -116,7 +116,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Item | Level | Basis |
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
-| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13) (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13) (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance; so does a task under the standard-only exception below) | MUST | suffix [CI]; shared instance [current] |
+| Exception, standard only because a privileged agent would read the answer (requested by the authors, pending owner decision): a benchmark whose task is to recognise something the agent must find for itself from the robot's sensors (RoboSafeBench: whether a request is hazardous in its scene) offers no privileged twin, since an agent that holds the simulator can read the hazard state, the family's rules and its verdict. Its standard tasks carry their own frozen instance in the sim sidecar (`ci_checks/check-instance-copies.sh` `STANDARD_ONLY_PREFIX`, `scripts/task_conventions.py` `NO_TWIN`) and are graded as every standard task (§4.8, two fresh replays). The same holds for its standard-realtime tasks (`cell-<slug>-i<NN>-standard-realtime`, §4b): no privileged twin either, each carrying its standard task's instance under the benchmark's realtime clock in its sim sidecar (the key says `"clock": "realtime"`, so the start hash is its own), graded as every standard-realtime task (§4b, two fresh replays of the applied rows). RoboSafeBench, all its tasks (`cell-`; [`benchmarks/robosafe.md`](benchmarks/robosafe.md)) | MAY, by owner decision | requested (2026-10-13; standard-realtime tasks 2026-10-14) |
 | Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13); its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
@@ -656,9 +657,9 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 ### 4.0 Versions
 | Version | Date | Content |
 |---|---|---|
-| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
+| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0, RoboFunOlympics and RoboSafeBench |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes and MuJoCo Playground's quadruped tasks |
-| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0, RoboSafeBench); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
 Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
@@ -852,6 +853,17 @@ settings.
     these tasks.
   The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
   stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
+- **RoboSafeBench** (requested by the authors, pending owner decision, 2026-10-14; `cell-<slug>-i<NN>-standard-realtime`,
+  [`benchmarks/robosafe.md`](benchmarks/robosafe.md), "Standard-realtime tasks"):
+  - no privileged twin: §2.2's standard-only exception for this benchmark (a privileged agent would read the hazard
+    state) covers its standard-realtime tasks too; each carries its standard task's instance under RoboSafeBench's
+    realtime clock (its own start hash) in the sim sidecar.
+  - pictures while the clock runs: the scene is rendered on the CPU (about 0.2 s a picture) by the simulator's thread.
+    Each picture a response carries is charged a fixed 0.24 s of robot time (the render's own wall time forgiven), so
+    the world moves on by the same amount whatever the host; a request returns pictures of at most 2 cameras and a watch
+    at most 2 pictures per second and no depth (`/spec.timing`; the rates above stalled under sweep load, the benchmark's
+    doc). Before the clock starts pictures cost nothing and every request may ask for every camera.
+  Everything else is this section's: S = 1, no reset, the service's evidence and stalls counted, never deciding.
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |

@@ -73,18 +73,25 @@ BENCHMARKS = [  # (directory prefix, label)
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
     ("robofunolympics-", "RoboFunOlympics"),
+    ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
     ("pandadyn-", "Panda Dynamic Scenes"),
 ]
-# Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
-# STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
-# does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard only, graded by the live episode.
+# Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN,
+# STANDARD_ONLY and STANDARD_ONLY_PREFIX). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only.
+# RoboDojo's six tasks whose physics does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard
+# only, graded by the live episode. RoboSafeBench (`cell-`; PROTOCOL §2.2, requested by the authors 2026-10-13, pending
+# owner decision): standard only, a privileged agent would read the hazard state.
 NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
            "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-liquid-into-cup-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
-           "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
+           "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+           "cell-": "— (none: standard only; a privileged agent holding the simulator would read the hazard state, docs/benchmarks/robosafe.md)"}
+# ... and the text of a standard-realtime task under the same exception, where it differs (RoboSafeBench's: PROTOCOL §2.2
+# and §4b, requested by the authors 2026-10-14, pending owner decision)
+NO_TWIN_REALTIME = {"cell-": "— (none: standard and standard-realtime only; a privileged agent holding the simulator would read the hazard state, docs/benchmarks/robosafe.md)"}
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
@@ -842,7 +849,9 @@ def render_readme(task: Path) -> str:
             ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
     # a standard or realtime task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
     # (an exempted name whose twin still exists, e.g. before a removal lands, keeps the twin)
-    no_twin = None if task.with_name(twin).is_dir() else next((v for p, v in NO_TWIN.items() if task.name.startswith(p)), None)
+    no_twin = None if task.with_name(twin).is_dir() else next(
+        (v for p, v in [*(NO_TWIN_REALTIME.items() if mode == "standard-realtime" else ()), *NO_TWIN.items()]
+         if task.name.startswith(p)), None)
     head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
                                      else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
