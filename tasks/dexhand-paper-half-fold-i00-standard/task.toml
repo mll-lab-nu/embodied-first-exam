@@ -17,6 +17,7 @@ hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "paper_half_fold"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 oracle_evidence = "solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (620 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."

@@ -14,6 +14,7 @@ simulator = "robolab"             # NVIDIA RoboLab v0.3.1 on Isaac Lab 2.3.2 / I
 robot = "franka-robotiq-2f85"
 family = "bbq_sauce_in_bin"
 mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/PROTOCOL.md §3)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-bbq-sauce-in-bin-i00__kHjYXj6 (robolab-bbq-sauce-in-bin-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/bbq_sauce_in_bin/unlimited/). Human review per family (PROTOCOL §2.7)."
 instance_seed = 0                 # scene = environment/instance.json (the full scene state after the seeded reset + its hash); identity = dataset.toml digest

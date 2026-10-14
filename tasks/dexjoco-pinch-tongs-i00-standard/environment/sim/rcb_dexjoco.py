@@ -54,6 +54,7 @@ import argparse
 import copy
 import hashlib
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -222,6 +223,21 @@ def water_aim_deg(model, data) -> float:
     return float(np.degrees(np.arccos(np.clip(c, -1.0, 1.0))))
 
 
+# instance.npz is in the agent's container (/app/instance.npz), and a task's reference solution is the actions of the
+# recording its instance was restored from: its `meta` must not say where the scene came from (PROTOCOL §2.7, no pointer
+# to a solution where the agent can reach). save_instance refuses such keys, and values that name a recording.
+PROVENANCE_KEYS = ("source", "demo", "dataset", "episode", "recording", "reference", "solution", "zarr", "url")
+PROVENANCE_VALUE = re.compile(r"demo|episode|dataset|recording|replay\.zarr|huggingface|https?://", re.I)
+
+
+def check_instance_meta(meta: dict) -> None:
+    """ValueError if an instance's `meta` says where its scene came from (keys or values; see PROVENANCE_KEYS)."""
+    bad = [k for k, v in meta.items() if any(p in str(k).lower() for p in PROVENANCE_KEYS)
+           or PROVENANCE_VALUE.search(json.dumps(v))]
+    if bad:
+        raise ValueError(f"instance meta {bad} names where the scene came from: the agent reads instance.npz")
+
+
 def _log(*a: Any) -> None:
     print("[rcb_dexjoco]", *a, file=sys.stderr, flush=True)
 
@@ -349,6 +365,7 @@ class Session:
         return h.hexdigest()[:16]
 
     def save_instance(self, path: str | Path, meta: dict | None = None) -> None:
+        check_instance_meta(meta or {})
         snap = self.snapshot()
         np.savez_compressed(path, task=self.task, physics=snap["physics"], mocap_pos=snap["mocap_pos"],
                  **{"model__" + k: v for k, v in snap["model"].items()},
@@ -803,15 +820,14 @@ def cmd_make_instance(a) -> None:
     restore_initial_state(s.env, a.task, s.cfg, state0)
     s._snapshot = s.snapshot()
     s._episode_reset()
-    meta = {"source": "DexJoCo-Datasets-Raw demo, initial state restored with dexjoco.tasks.state_restorers",
-            "demo": a.demo_name or os.path.basename(os.path.dirname(os.path.abspath(a.demo))), "dexjoco": "8d23b0f"}
-    s.save_instance(a.out, meta)
-    _log("instance", a.out, "sha", s.state_sha())
+    demo = a.demo_name or os.path.basename(os.path.dirname(os.path.abspath(a.demo)))
+    s.save_instance(a.out, {"dexjoco": "8d23b0f"})   # no provenance in the instance (check_instance_meta)
+    _log("instance", a.out, "sha", s.state_sha(), "from", demo)
     if a.oracle_out:
         A = np.asarray(root["data"]["action"], dtype=np.float64)
         s2 = Session(a.task, instance=a.out)
         st = s2.replay(A)
-        s2.save_trajectory(A[:st["replayed_rows"]], a.oracle_out, {"source": "demo actions", "demo": meta["demo"]})
+        s2.save_trajectory(A[:st["replayed_rows"]], a.oracle_out, {"source": "demo actions", "demo": demo})
         print(json.dumps({"oracle": a.oracle_out, **{k: st[k] for k in ("success", "reason", "replayed_rows", "rows", "state_sha")}}))
 
 

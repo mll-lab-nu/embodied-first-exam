@@ -26,6 +26,7 @@ simulator = "molmospaces"
 robot = "rainbow-rby1"
 family = "open-door"
 mode = "standard"                  # robot as a service: images + proprioception only; no object poses, no success check, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 expert_time_estimate_hours = 3.0
 oracle = "none"

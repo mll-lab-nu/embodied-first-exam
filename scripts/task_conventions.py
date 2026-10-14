@@ -22,6 +22,8 @@ What it does:
   memory cap from it, and the cap sits above the limit so that the monitor sees a violation before the OOM killer).
 - `instruction.md` ends with `## External material` (§2.11: the same text in every task) and `## Resource limits`, rendered
   from `[metadata.resources.limits]` (§2.10).
+- `[metadata] dynamics` (§2.14: `dynamic` when something in the scene other than the robot does work by a force other
+  than the robot's and gravity, else `static`) from `scripts/task_dynamics.toml`, the one table.
 - the agent's time cutoff (§2.12) from `scripts/task_cutoffs.toml`, the one table: `[agent] timeout_sec`, the standard
   modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, and the last section of `instruction.md`, `## Time
   limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
@@ -67,12 +69,13 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
-    ("robotangle-", "RoboTangle"),
+    ("roboarc-", "RoboARC"),
     ("roboolympics-", "RoboOlympics"),
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
     ("robofunolympics-", "RoboFunOlympics"),
+    ("pandadyn-", "Panda Dynamic Scenes"),
 ]
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
 # STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
@@ -91,6 +94,9 @@ DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budg
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
 # PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
+# PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` in task.toml (same list: ci_checks/check-dynamics.py)
+DYNAMICS_FILE = Path(__file__).resolve().parent / "task_dynamics.toml"
+DYNAMICS = ("static", "dynamic")
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
     "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
@@ -160,14 +166,14 @@ CUTOFF_NOTE = {
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 # A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
-# text says what its service counts (PROTOCOL §2.12). RoboTangle: its service ends the episode on a clock started with
-# the service, until its next task update (docs/benchmarks/robotangle.md, "To do").
+# text says what its service counts (PROTOCOL §2.12). None today: RoboARC's service counts from the first request
+# since its MuJoCo release (2026-10-13).
 _CUTOFF_NOTE_OWN_CLOCK = (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service "
     "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
-CUTOFF_NOTE_OWN = {("RoboTangle", "standard"): _CUTOFF_NOTE_OWN_CLOCK}   # (benchmark label, mode) -> its note
+CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
@@ -958,12 +964,48 @@ def normalize_seeds(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def dynamics_table() -> tuple[dict, dict]:
+    """scripts/task_dynamics.toml: ({benchmark: entry}, {benchmark: {family: entry}}), entry = {dynamics, why}."""
+    t = tomllib.loads(DYNAMICS_FILE.read_text()) if DYNAMICS_FILE.is_file() else {}
+    return t.get("benchmark", {}), t.get("family", {})
+
+
+def dynamics_for(task: Path) -> str | None:
+    """The task's `dynamics` (PROTOCOL §2.14): its family's entry in scripts/task_dynamics.toml, else its benchmark's.
+    None: the table has no row for the benchmark (ci_checks/check-dynamics.py fails such a task)."""
+    rows, fams = dynamics_table()
+    bench = bench_of(task)
+    e = fams.get(bench, {}).get(family_of(task)) or rows.get(bench)
+    if e is None:
+        return None
+    if e.get("dynamics") not in DYNAMICS:
+        raise RuntimeError(f"{task.name}: scripts/task_dynamics.toml gives dynamics {e.get('dynamics')!r}, not one of {DYNAMICS}")
+    return e["dynamics"]
+
+
+def normalize_dynamics(task: Path) -> None:
+    """Writes `dynamics = "..."` (PROTOCOL §2.14) right after `mode` in `[metadata]`, replacing an earlier line, when
+    scripts/task_dynamics.toml has a row for the task's benchmark."""
+    d = dynamics_for(task)
+    if d is None:
+        return
+    p = task / "task.toml"
+    s = re.sub(r'(?m)^dynamics = .*\n', "", p.read_text())
+    line = f'dynamics = "{d}"'
+    line += " " * max(1, 34 - len(line)) + "# scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml\n"
+    s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+    if n != 1:
+        raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
+    write_if_changed(p, s)
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
     if (task / "results").exists():
         shutil.rmtree(task / "results")
     normalize_toml(task)
+    normalize_dynamics(task)
     normalize_cutoff(task)
     normalize_resources(task)
     normalize_seeds(task)

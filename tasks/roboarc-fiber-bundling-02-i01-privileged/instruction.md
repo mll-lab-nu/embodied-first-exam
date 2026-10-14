@@ -1,0 +1,123 @@
+# RoboARC (simulator package `topogym`) · fiber_bundling — frozen instance
+
+You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; RoboARC on MuJoCo 3.14.0 physics, Nyx rendering) via Python.
+**Task:** Pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.
+
+## Success requirements
+
+- Pass every fiber tip first, then successive material points through to its root. The actual crossing history must be observed; placing fibers on the far side or passing only the tips is not completion.
+- All fiber points must finish beyond the exit side of the ring tube, allowing for fiber thickness. The branching face of the front sheath must also pass through and clear the tube with its full thickness. The fixed rear terminal must remain anchored and does not pass through.
+- Keep the angle between every pair of adjacent fiber segments at most 60 degrees in the final configuration.
+- Touch and grasp only the thick sheath with the gripper. Keep the completed passage valid through confirmation; holding is allowed, with no separate release or speed threshold.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Any gripper touch of a fine fiber at any time ends the episode in failure, including a brief or zero-force touch.
+- A fiber link falling more than 100 mm below the tabletop ends the episode in failure.
+
+## Grader details (in addition to the requirements above)
+
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that control step, so it stops pushing (the safety readings report these stops as static_guard).
+- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`s.safety()`, `s.status()["forcing"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
+- Sizes: ring inner radius 13.5 mm, ring tube radius 4 mm; 3 fibers of radius 1.2 mm; sheath radius 12 mm.
+- Each fiber is tracked at 11 points from tip to root. A point counts when it crosses the ring's plane less than 17.48 mm from the ring's axis, in tip-to-root order; a crossing out of order or outside that radius resets that point and every point behind it, and crossing back loses the credit.
+- At the end every fiber point must be more than 5.2 mm past the ring's plane (tube + fiber radius) and the centre of the sheath's front face more than 16 mm past it (tube + sheath radius). The exit side is the side opposite to where the fibers start.
+- The failure counts contact between a fine fiber and the gripper (fingers and hand, housing included); arm links touching a fiber do not count. Contact is sampled at all 4 solver substeps of every tick; if any tick since the start had incomplete contact coverage (a simulator-side condition), the episode can no longer succeed.
+- Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
+- A failure is reported in `s.status()["episode_end"]` as "fiber_gripper_contact", "Fiber below table" or "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
+
+The scene objects are the task's entities (`s.objects()`: `fiber_bundle`, `bundling_ring` (fixed), `cable_cradle_base` (fixed), `cable_cradle_post` (fixed), `cable_cradle_pad` (fixed), `cable_cradle_left` (fixed), `cable_cradle_right` (fixed), `ring_mount_base` (fixed), `ring_mount_post` (fixed)).
+Implementation reference: `FiberBundlingEasierTask.evaluate_state` (module `topogym.tasks.fiber_bundling.fiber_bundling_easier`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
+```python
+    def evaluate_state(self, state):
+        return self.evaluate_transition(state, self.task_state)[0:3]
+```
+
+This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
+and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+
+## Deliverable
+Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
+It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+
+## Startup and long-running commands
+
+- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
+  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
+- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
+  When a command is still running, retain its process/session identifier and continue waiting for that same command.
+  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
+  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
+  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
+  Use the corresponding wait/status operation if another command tool is provided.
+- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
+  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
+- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
+- Keep at most one live simulator process in this trial at a time. A new Python process calling `Session(...)`
+  creates another scene and consumes more GPU memory; separate replay/render CLI commands also create scenes.
+- Reuse the initialized Session for observations, actions, reset, and replay. Avoid separate initialization-only probes:
+  put the first useful actions and trajectory save in the same script that initializes the simulator.
+- Initialization consumes the agent budget. Save a real trajectory as soon as practical and keep saving progress.
+
+## Tooling (already installed; run `python` from any directory)
+```python
+from rcb_topogym import Session
+s = Session("fiber_bundling", instance="/app/instance.json")   # builds the frozen scene (instance.json) and compiles kernels
+s.reset()                          # back to the frozen initial state (unlimited; a restore of the first recorded state)
+p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
+s.objects()                        # objects: name -> position, orientation_wxyz, euler_xyz, bounds, size, velocity
+p["move_ee"]("arm", pos, quat_wxyz, linear=3)   # IK on the robot's model to a TCP pose, then joint interpolation
+p["move_joints"]("arm", q_arm); p["set_gripper"]("arm", 0.0); p["open_gripper"]("arm"); p["hold"](10)
+s.ee_pose("arm"); s.joint_positions(); s.ik("arm", pos, quat_wxyz)    # kinematics helpers (arms: ['arm'])
+s.render_frame("agentview")         # RGB uint8 (480, 848, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_depth("agentview")         # float32 (480, 848) z-depth in metres (0 = no reading), pixel-aligned with render_frame
+s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
+s.robot_spec()                     # joints (limits), grippers (the grasping rule), PD gains, tool frames ['arm_tcp']
+s.kinematics({"op": "fk", "q": q})   # stateless FK / IK on the robot's model; {"op": "ik", "targets": {"arm_tcp": pose7}, "seed": q}
+s.joint_velocities(); s.joint_efforts(); s.gripper_width("arm")   # measured state in action layout (efforts: the PD drives')
+s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object's pose / AABB; the state hash that replays compare
+p["object_in_hand"]("arm"); p["set_joint_targets"](row, steps=1); p["gripper_quat"](yaw, approach)   # help(p[...])
+s.step(action)                     # one low-level action (8 entries, below) = one control step (1/40 s)
+s.record_start(); ...; actions = s.record_stop()   # (T, 8) actions, one row per control step
+s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end', 'review', 'forcing'}
+s.safety()                         # since the last call: forcing / deepest contacts / rope volume / table-guard stops vs the limits
+s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.save_trajectory(actions, "/app/output/trajectory.npz")
+s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
+```
+The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
+are yours to build from them.
+
+CLI equivalent of the grader:
+`python /opt/tools/rcb_topogym.py replay --task fiber_bundling --instance /app/instance.json --traj /app/output/trajectory.npz`
+
+## Conventions
+- World frame: +z up. Quaternions are **WXYZ**. The ee_pose action and the proprio TCP pose are given in this world frame.
+- Action (8): arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec); absolute position targets tracked by PD controllers, out-of-limit
+  values clipped. `s.hold_action()` is the no-op.
+- Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget, but a trajectory may have at most
+  167000 rows (69.6 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops
+  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
+  (`## Time limit`) is your only budget. One control step takes about 0.086 s of wall clock here, so budget your experiments.
+- Grippers: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction).
+- Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [0.0, 0.0, 1.0], finger-closing axis = local [-0.0, -1.0, 0.0]. The ee_pose action, the proprio tcp pose and the IK use this frame.
+  `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
+- The task succeeds once its predicate has held continuously for 0.5 s; that, or one of its failure predicates,
+  ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
+  `s.reset()` starts over.
+- One `Session` per process (one simulator per process). Do not call `s.close()` before writing every output.
+
+## External material
+You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **12 GiB of GPU memory**, **32 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 16 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

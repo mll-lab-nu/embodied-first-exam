@@ -17,6 +17,7 @@ hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "sweep_dustpan"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 oracle_evidence = "solution/ (trajectory.json + parts) holds the accepted authoring episode's 132,521 Sharpa Wave control rows (2000 Hz, float64) plus 16,000 copies of the last row (8 s hold); replayed in the frozen scene the accepted rows reproduce the accepted run bit for bit and succeed after 132,392 steps in two fresh processes with identical state hashes."
