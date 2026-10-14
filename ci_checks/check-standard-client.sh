@@ -7,7 +7,7 @@
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
 #     build context, or the full pin list inline (name==version for every pin, nothing else).
 # A failure for the eai-standard/2.2 and 2.4 tasks, whose generators copy client.env and the pins (BEHAVIOR-1K, RoboLab,
-# RoboWits, RoboPaint; RoboTangle on 2.4). For every other task it only reports (a warning, never a failure) whether all standard tasks
+# RoboWits, RoboPaint; RoboARC on 2.4). For every other task it only reports (a warning, never a failure) whether all standard tasks
 # share the one client image of client.env (their own pip pins are their benchmark's business; PROTOCOL §7, open).
 # Usage: check-standard-client.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
