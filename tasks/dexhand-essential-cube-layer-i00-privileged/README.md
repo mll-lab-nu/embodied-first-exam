@@ -1,0 +1,56 @@
+# dexhand-essential-cube-layer-i00-privileged
+
+| | |
+|---|---|
+| Benchmark | DexHand |
+| Mode | privileged |
+| Twin | `dexhand-essential-cube-layer-i00-standard` |
+| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
+| Family / instance | `essential_cube_layer` |
+| Oracle | `full` — solution/trajectory.npz is the validated Sharpa Wave actuator trajectory of this frozen instance (450 controls at 50 Hz, physical contact only). The privileged oracle hands it in; the standard oracle submits the same rows as float64 through the client's request path (the service executes the validated targets bit for bit). Both replay to success in two fresh processes with identical final state hashes (scripts/dexhand/verify_oracles.py); float32-rounded copies of all six oracles also score 1. Human solvability review is pending; release status stays provisional. |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0` |
+
+## Task
+With the wrist locked, turn only the top layer +90 degrees, return it to zero, and turn it +90 degrees again. Stabilize the free cube body with other fingers; no external support or object actuation is allowed.
+
+## Difficulty
+hard: Keep a free cube body steady while independently turning its top layer through an ordered quarter-turn reversal.
+The scene uses free_cube_passive_top and independently controlled fingers with the wrist locked; every ordered stage and
+a terminal hold must be reached through contact alone.
+
+## Reference solution
+`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 450 finger-target rows at 50 Hz (9.0 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` hands it in unchanged as `/app/output/trajectory.npz`. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence by `scripts/dexhand/verify_oracles.py` (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). No Wuji trajectory is packaged: Wuji is selectable and graded identically, but not demonstrated.
+
+## Verification
+The separate verifier replays the submitted numeric rows twice in fresh processes, with the hand recorded in the archive.
+Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation, and identical final
+state hashes. Invariants and guards are checked at every 2 ms
+physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
+partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
+or out-of-range targets and wrist motion are rejected with reward 0. `scripts/dexhand/tests/test_essential_strict.py`
+covers the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases for both hands.
+Release status is provisional until independent solvability review.
+
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 2 GB | 2 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: 30 Harbor 0.23 trials of the six essential families (12 oracle, 12 nop, 6 Wuji smoke; rcb_monitor samples every 5 s, eai-dexhand:0.2.0, CPU-only, 2026-10-14) plus the hamburger and paper oracle/nop trials: agent container peak <= 0.03 GiB; one fresh replay process 0.25-0.32 GiB max RSS (os.wait4; paper 0.31 GiB, hamburger 0.28 GiB), the privileged verifier runs two at once (<= 0.65 GiB); standard sim service peak 0.65 GiB (VmHWM, held_joystick oracle episode), paper 0.51 GiB; one core per replay process; x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3 GiB each)
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 8 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 8 GiB memory. Limits measured: memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured.
+
+## Details
+
+### Notes
+Source: `scripts/dexhand/` (task folder `task_library/essential_cube_layer/`); the image recipe is `images/dexhand/`. Both
+modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes are pinned to MuJoCo Menagerie commit
+`0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). Wuji Hand 2.2 is the manufacturer's `hand2/hand2_2` model
+from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in
+the same wrist frame; its collision geoms are renamed to the predicate's finger/palm roles only. Object assets carry
+their own licenses and checksums under `object_assets/`. Renderer output is evidence; it never determines the verdict.

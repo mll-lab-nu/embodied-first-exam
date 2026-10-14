@@ -1,0 +1,243 @@
+{
+  "source_repository": "https://github.com/wuji-technology/wuji-description",
+  "source_commit": "829c9aa27cb12c3a49d5b8d63c9869dd8f656702",
+  "source_release": "v2026.10.12",
+  "upstream_model": "hand2/hand2_2",
+  "selection_note": "User selected https://github.com/wuji-technology/wuji-description/tree/main/hand2/hand2_2.",
+  "license": "MIT",
+  "runtime_subset": "MJCF, meshes, license and changelog used by physics; presentation-only USD files are not in the image",
+  "files": {
+    "CHANGELOG.md": {
+      "sha256": "ee8661dd8049a00b2152e75c8412decd3347cf835e0dcd02970e7a69896a2476",
+      "bytes": 21030
+    },
+    "LICENSE": {
+      "sha256": "38b27e3155e0c1c8d6f3e909e7a00359a302085dfd9ae963b52a91cbbe25afa3",
+      "bytes": 1072
+    },
+    "meshes/left/l_index_finger_distal.STL": {
+      "sha256": "47630a76817e938ec60141a1f100cf022394d9d2db7d96bb3ca6c258356e6574",
+      "bytes": 265884
+    },
+    "meshes/left/l_index_finger_middle.STL": {
+      "sha256": "5af2f99b93fb63669ce398a0bb8bded708e167dfbe95c4e1e9e484fc560f2560",
+      "bytes": 99784
+    },
+    "meshes/left/l_index_finger_proximal.STL": {
+      "sha256": "89e49d06793eedd081e59fadded28badd027a6f99b7bfe6554ebc2e7ed01e142",
+      "bytes": 57484
+    },
+    "meshes/left/l_index_finger_proximal_abd.STL": {
+      "sha256": "78f4806eec50b94779e2e987de7e6bab5ad7ea3d6e8a964a883993f7728a37ea",
+      "bytes": 51384
+    },
+    "meshes/left/l_index_finger_tip_sensor_frame.STL": {
+      "sha256": "4961c77d85083321feae6fdd4134084c7ac40b438cb416f74b29a77b20f14a71",
+      "bytes": 184084
+    },
+    "meshes/left/l_middle_finger_distal.STL": {
+      "sha256": "47630a76817e938ec60141a1f100cf022394d9d2db7d96bb3ca6c258356e6574",
+      "bytes": 265884
+    },
+    "meshes/left/l_middle_finger_middle.STL": {
+      "sha256": "b3bb4726751b29238baa84d5dfd4120c0567a3589674b4bf873ddb47bc520a4b",
+      "bytes": 99784
+    },
+    "meshes/left/l_middle_finger_proximal.STL": {
+      "sha256": "8eea0513ad131808b5d214199aa92aca987eb63285abcb819864f71697072f88",
+      "bytes": 57484
+    },
+    "meshes/left/l_middle_finger_proximal_abd.STL": {
+      "sha256": "78f372e549967c39eb564b34ed6d04cd54217d16d9ca05b1563ee8cb6ef6e240",
+      "bytes": 51384
+    },
+    "meshes/left/l_middle_finger_tip_sensor_frame.STL": {
+      "sha256": "4961c77d85083321feae6fdd4134084c7ac40b438cb416f74b29a77b20f14a71",
+      "bytes": 184084
+    },
+    "meshes/left/l_mount.STL": {
+      "sha256": "db56d3547765b5a679698bbe2c0444ced492449e6ed9f5720fe78da33e94465a",
+      "bytes": 665784
+    },
+    "meshes/left/l_pinky_distal.STL": {
+      "sha256": "19f4f22a89dcd60f7655ac9cd7c43d4f0ec696065ca9bcf36573de0106ab9675",
+      "bytes": 265884
+    },
+    "meshes/left/l_pinky_middle.STL": {
+      "sha256": "63061786518fd016e4a1430866811423ca1bf1bd7f1c25c0b1afdbbd127a1882",
+      "bytes": 105284
+    },
+    "meshes/left/l_pinky_proximal.STL": {
+      "sha256": "41939a3da70824bc50821eb2f20734a2f32228ddd85c646f6676a1bc66ad1813",
+      "bytes": 54984
+    },
+    "meshes/left/l_pinky_proximal_abd.STL": {
+      "sha256": "25fc27d8ec8dfd75b3bbc43d154de3cd16c16d3f232684099a11e604232a5224",
+      "bytes": 53784
+    },
+    "meshes/left/l_pinky_tip_sensor_frame.STL": {
+      "sha256": "b85eff25ea1c9df6cf8f10e2eaecea7bda2836435fe99df37d1f96823e4a3da7",
+      "bytes": 184084
+    },
+    "meshes/left/l_ring_finger_distal.STL": {
+      "sha256": "b149433ff04d032efb86b9ab600ba55a45717b7629aa392a70ec346841e52d7d",
+      "bytes": 265884
+    },
+    "meshes/left/l_ring_finger_middle.STL": {
+      "sha256": "65969a58aba7af89f847e2c431de67066a4d7728e53ac71ef74c97c04ebd228d",
+      "bytes": 99784
+    },
+    "meshes/left/l_ring_finger_proximal.STL": {
+      "sha256": "b8962bc4ac95acb90b75ce883274a19c8884ee74b924d09fd961d0ce8847cae9",
+      "bytes": 57484
+    },
+    "meshes/left/l_ring_finger_proximal_abd.STL": {
+      "sha256": "9b7aab081a9d1cc29f24891417d6ab03ee36f4a716a632528ec777963553fff9",
+      "bytes": 51384
+    },
+    "meshes/left/l_ring_finger_tip_sensor_frame.STL": {
+      "sha256": "cf69841d299dc170d3303aec327929a859f7bc2a91514165f13a2eb5fe43ca85",
+      "bytes": 184084
+    },
+    "meshes/left/l_thumb_distal.STL": {
+      "sha256": "0d89c323bf1608b2ee42b003286e4707cdfe267b7ff65db437b336ade758749c",
+      "bytes": 386984
+    },
+    "meshes/left/l_thumb_middle.STL": {
+      "sha256": "3a84286a4de13ad95771fcc43a277ece2a0c5bcf2476ea04f2292f8a022c70d0",
+      "bytes": 31284
+    },
+    "meshes/left/l_thumb_proximal.STL": {
+      "sha256": "5144d8ab958dcacbd70b12d413624ab5c74faab5fb3406502c1aa45f931802d0",
+      "bytes": 93484
+    },
+    "meshes/left/l_thumb_proximal_abd.STL": {
+      "sha256": "539f4df7100751ecf3463138023fb78535fc1114e73dccba2c1f3262e7ce13e7",
+      "bytes": 48984
+    },
+    "meshes/left/l_thumb_tip_sensor_frame.STL": {
+      "sha256": "e0b34bb387e3217b3f2dedf37c0980fb92693e0de617be613fb3e9dcb692a1db",
+      "bytes": 200084
+    },
+    "meshes/left/l_wrist.STL": {
+      "sha256": "cc3944120241f19effa9a95a7edb9b2cfd00f2796305d78c05b563962d6f5361",
+      "bytes": 396984
+    },
+    "meshes/right/r_index_finger_distal.STL": {
+      "sha256": "7b11dd372a4a155e2bf1305c7d3cf0bacfbfd526f6659c467ccf35efd7553b7d",
+      "bytes": 266684
+    },
+    "meshes/right/r_index_finger_middle.STL": {
+      "sha256": "9ba4bd6449d5c60255c1bbe1cdf3ec1bd7f9f0413f45f9ee20ca1e97165b5a93",
+      "bytes": 100384
+    },
+    "meshes/right/r_index_finger_proximal.STL": {
+      "sha256": "d07ffb4a0f107d53837b068ee3aafd30b58a2775271beabc26911ac8d4288ef3",
+      "bytes": 57584
+    },
+    "meshes/right/r_index_finger_proximal_abd.STL": {
+      "sha256": "373722f52678f818a311d7c5a4ec6ac711038cfbf36536c082325f9315853cb5",
+      "bytes": 51284
+    },
+    "meshes/right/r_index_finger_tip_sensor_frame.STL": {
+      "sha256": "d5a13c52478576aa461d9739957bcf4612b359be58e449bb199a9ad01cb75cb6",
+      "bytes": 184584
+    },
+    "meshes/right/r_middle_finger_distal.STL": {
+      "sha256": "7b11dd372a4a155e2bf1305c7d3cf0bacfbfd526f6659c467ccf35efd7553b7d",
+      "bytes": 266684
+    },
+    "meshes/right/r_middle_finger_middle.STL": {
+      "sha256": "5f88e7c641888fdc7fbae7c3b613b691b8ae4fc35af473b2daf40bead9198178",
+      "bytes": 100384
+    },
+    "meshes/right/r_middle_finger_proximal.STL": {
+      "sha256": "039bee058e2e24fa083c77c7512d30782aecced1654897c6b9fd7b3b68866f6c",
+      "bytes": 57584
+    },
+    "meshes/right/r_middle_finger_proximal_abd.STL": {
+      "sha256": "91e3f149f9cabc198b903881661db428fa17860af7f79b5f0a4e8ff555616d6e",
+      "bytes": 51284
+    },
+    "meshes/right/r_middle_finger_tip_sensor_frame.STL": {
+      "sha256": "d5a13c52478576aa461d9739957bcf4612b359be58e449bb199a9ad01cb75cb6",
+      "bytes": 184584
+    },
+    "meshes/right/r_mount.STL": {
+      "sha256": "302c1a168417f2c84abc30a148ff6ce364ce6621340f15190c8f53cfe50d6268",
+      "bytes": 664984
+    },
+    "meshes/right/r_pinky_distal.STL": {
+      "sha256": "6832e7482d550cec79298ac1c1a304fcfc64ce0e3c925948d04e62a6242b9dae",
+      "bytes": 266684
+    },
+    "meshes/right/r_pinky_middle.STL": {
+      "sha256": "609cc6cef5df1bd4a92ec8a889c670643a45f8fc559d124622b96ebc77f76122",
+      "bytes": 105684
+    },
+    "meshes/right/r_pinky_proximal.STL": {
+      "sha256": "c88defaf8c670dc4a12a489e653ee4732a79a32780046dbe3fe6d98d1a686680",
+      "bytes": 55184
+    },
+    "meshes/right/r_pinky_proximal_abd.STL": {
+      "sha256": "0d9493bc1a62162c89a1be7673d8d91ebc9f20383847d66e46ac35a3645f9701",
+      "bytes": 53484
+    },
+    "meshes/right/r_pinky_tip_sensor_frame.STL": {
+      "sha256": "22f19f242d73f10231f420ce91ef5ba4dd6d53d2b9c7a15e68b5da0ba1f7a359",
+      "bytes": 184584
+    },
+    "meshes/right/r_ring_finger_distal.STL": {
+      "sha256": "7b11dd372a4a155e2bf1305c7d3cf0bacfbfd526f6659c467ccf35efd7553b7d",
+      "bytes": 266684
+    },
+    "meshes/right/r_ring_finger_middle.STL": {
+      "sha256": "6fbcf92b159a2d9e3b097f459ac5df73577cda5ca2b62020284de287f49323e4",
+      "bytes": 100384
+    },
+    "meshes/right/r_ring_finger_proximal.STL": {
+      "sha256": "da1870bfe85621550c6081c944b91e4dafc7721a73f46be6a77f0c15dd0b214a",
+      "bytes": 57584
+    },
+    "meshes/right/r_ring_finger_proximal_abd.STL": {
+      "sha256": "df3787ff168f4c0fa21c77296fe34418240e8c8d357c1ede99c96cf2f89d32f0",
+      "bytes": 51284
+    },
+    "meshes/right/r_ring_finger_tip_sensor_frame.STL": {
+      "sha256": "d5a13c52478576aa461d9739957bcf4612b359be58e449bb199a9ad01cb75cb6",
+      "bytes": 184584
+    },
+    "meshes/right/r_thumb_distal.STL": {
+      "sha256": "273878b0f78e35ffd5e3ad416cb4c79368c6fc43a886ec047760c5f21a55b04d",
+      "bytes": 388384
+    },
+    "meshes/right/r_thumb_middle.STL": {
+      "sha256": "a04ebd10f24534121672721011c95d26a0c8f734ee65481c49b962fd0b573ea7",
+      "bytes": 31284
+    },
+    "meshes/right/r_thumb_proximal.STL": {
+      "sha256": "e3e9e7c1266c6d3e38287b074e38162bf508626de14d54e995e40e1d56d7247e",
+      "bytes": 93284
+    },
+    "meshes/right/r_thumb_proximal_abd.STL": {
+      "sha256": "2aaafd9ba420bf2b40d2e262f8328ba4937e647021a0ea188aa3620bde0d135a",
+      "bytes": 48684
+    },
+    "meshes/right/r_thumb_tip_sensor_frame.STL": {
+      "sha256": "4bb06fa7ee605b72a21f62debe43fe711e57da3fcc45c89ab2644ee476b0a4af",
+      "bytes": 197884
+    },
+    "meshes/right/r_wrist.STL": {
+      "sha256": "ece3f36af8ed61079d0061dd9d9b11e5eae76ce9640287d0975c1522f8731fc6",
+      "bytes": 399684
+    },
+    "mjcf/left.xml": {
+      "sha256": "9276aa40127671318ffd8b381cfb21f98d0758c960734bfd3067ac8f486cb4d8",
+      "bytes": 26024
+    },
+    "mjcf/right.xml": {
+      "sha256": "c11ab34b0fd0c1d520d108ffdefe45bfc05711bb2e97946a6bda96888cf02847",
+      "bytes": 26095
+    }
+  }
+}

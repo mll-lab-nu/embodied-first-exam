@@ -6713,3 +6713,83 @@ digest = "sha256:9837c4fea6b9d505b4e69910ceae58e4b6b766c8777aa57746a23b1f4ba50e5
 name = "robot-coding-bench/robofunolympics-vertical-jump-i00-standard"
 digest = "sha256:41c0af94ea445f2741cff4a052affe59ba18f19c89d61f035cc7eee90e06023d"
 
+[[tasks]]
+name = "robot-coding-bench/dexhand-assemble-hamburger-i00-privileged"
+digest = "sha256:b20969369a18474e8d1691846ce1df267b321fb40413b43e2e90764ddbba3b95"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-assemble-hamburger-i00-standard"
+digest = "sha256:87977a1d339ba5c377dbb5fe248ff4efd50d19610a8e20b85732a767db38047d"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-cube-layer-i00-privileged"
+digest = "sha256:133d7e17773460bcca12c2bf0ef623af62f427340b757fa382bd8c82271342e7"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-cube-layer-i00-standard"
+digest = "sha256:c7df4698bf8ec4a2a5d917c1c429cc88bfd7f8bddbf866cc30c896d088418828"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-cube-reorient-i00-privileged"
+digest = "sha256:f0f181445af687cf7ee72ec59fa14e84526fabb7add337546dc058ada6ce4d4b"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-cube-reorient-i00-standard"
+digest = "sha256:35857217e6b932d8427b1e4299c6e6c10c3523d8476be2fdb1a779b006accdf3"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-held-joystick-i00-privileged"
+digest = "sha256:53a09d7f121b1492329bfac55994f66f70452c3f7246544356403475a1ae013a"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-held-joystick-i00-standard"
+digest = "sha256:73822e75a6eca80b49a2538ef3d2c9a840c03f1fa98ec28c62ce86a97c6d5a56"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-pen-regrasp-i00-privileged"
+digest = "sha256:7eefdc7a5ac166372abba6b3bd20be0611ffcbf44ecf650da74bda9628ba0504"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-pen-regrasp-i00-standard"
+digest = "sha256:ec94213b5da858f60a1748890b83549a39ef145b81d9492a37cbfffc4104ddeb"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-rotary-gait-i00-privileged"
+digest = "sha256:2927b45e655d486f8dafe9899d25919b598dd55f02710c3dbcbd41f0d5d139ed"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-rotary-gait-i00-standard"
+digest = "sha256:2cd92b47d5d24b92728b637c06947153a080698d87acf67c2fba5f8a6d1cc37d"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-two-object-i00-privileged"
+digest = "sha256:756717ece42abda4f42c7448b4d6a99757cdd27eb94c7513de5969d001ff7a58"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-essential-two-object-i00-standard"
+digest = "sha256:23544e4d23f903b858db366b93a57d6cd5eade091ca99c5ab96783244673d2f8"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-paper-half-fold-i00-privileged"
+digest = "sha256:86ea973a0a30e5a54e4057f6bec3f569d2b6cf496876f481526bb1dcdab426f2"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-paper-half-fold-i00-standard"
+digest = "sha256:200577d9a0ff2eaf3e50a3a807cca7bdcac29087fb8afe07f522cb517ebfe5ae"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-pot-shelf-transfer-i00-privileged"
+digest = "sha256:1a584577757ef52ce0c30a9d6bb48d7ca8bef61d62e95dbbc5edf1d10270fcb1"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-pot-shelf-transfer-i00-standard"
+digest = "sha256:b6735c4a613eb22a3368535d482e53840c78e1d8dae359924d4aa3e911c13522"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-sweep-dustpan-i00-privileged"
+digest = "sha256:3a798a951cc9ccd97256ec602ae932727f4dc6f55b693ea3b609fd43d68fa447"
+
+[[tasks]]
+name = "robot-coding-bench/dexhand-sweep-dustpan-i00-standard"
+digest = "sha256:345dd70a89c041079123f9ef77c3bfbf41d4147770d83a0579da57c9078c35e4"
+

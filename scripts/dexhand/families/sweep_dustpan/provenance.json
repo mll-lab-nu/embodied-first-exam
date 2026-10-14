@@ -1,0 +1,25 @@
+{
+ "schema_version": 1,
+ "note": "Authoring provenance (never copied into a task directory): the accepted T13 episode whose controls are the oracle.",
+ "accepted_episode": "artifacts/everyday-dexterity-2026-10-13/sweeping/strong-index-cleanup/native-trial",
+ "accepted_report": "artifacts/everyday-dexterity-2026-10-13/sweeping/strong-index-cleanup/native-trial/report.json",
+ "acceptance": [
+  "artifacts/scene-expansion-50/reports/T13-manager.json",
+  "artifacts/scene-expansion-50/reports/QA-TRAJ-T13.json",
+  "artifacts/scene-expansion-50/evidence/manager-review/sweep-positive/replay.json",
+  "artifacts/everyday-dexterity-2026-10-13/delivery-v2/sweeping/replay-1/replay.json",
+  "artifacts/everyday-dexterity-2026-10-13/delivery-v2/sweeping/replay-2/replay.json"
+ ],
+ "approved_film": "artifacts/scene-expansion-50/evidence/trajectory-r1/T13/root-review/approved-success.mp4",
+ "authoring_sources": [
+  "scripts/everyday_dexterity/sweep_scene.py",
+  "scripts/everyday_dexterity/sweep_demo.py",
+  "scripts/everyday_dexterity/replay_sweep.py",
+  "artifacts/everyday-dexterity-2026-10-13/sweeping/strong-index-cleanup/run.py"
+ ],
+ "model_xml_sha256": "7679a0d29f5d277309aa65c40d15c83197db927edf07b45274086660de3fd7bc",
+ "trajectory_sha256": "723d0469c3c753e7b29ec1b551abb815f3f0532c9def84ad8864d824c439e0b3",
+ "native_initial_state_sha256": "204d504ccd9e3355a320d68e253ed8689d53a8a45bc325956767284a7c3c60e4",
+ "native_final_state_sha256": "7b440184258d4a249c2c4dc43d54e0ca97cbbbdf5856046d5978fc905c99e709",
+ "native_steps": 132521
+}
