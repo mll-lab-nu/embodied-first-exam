@@ -212,7 +212,7 @@ def main():
             a.out,
             extra,
         )
-        # MuJoCo's compiled RGB texture drops the source's rotor alpha mask.
+        # MuJoCo's compiled RGB texture drops alpha from the original PNG.
         # Preserve the original, already hash-verified RGBA asset for Blender.
         folder = a.out / "neural-fly"
         visual = json.loads((folder / "scene.json").read_text())
