@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Shared-source rules (PROTOCOL §2.1, D9: copies of shared sources are byte-identical). Two parts:
-# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, RoboARC, BiGym 2.0, YAMLab, RoboDojo, LabUtopia, AutoBio, Panda Dynamic Scenes and AM-Bench: within one benchmark, every mode, every copy of a shared file is byte-identical
+# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, LabUtopia, AutoBio, Panda Dynamic Scenes and AM-Bench: within one benchmark, every mode, every copy of a shared file is byte-identical
 #    (the generators copy them from the benchmark's template task unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
 #      finalize.sh, run.sh, rcb1.py);
 #    - the graders, tests/grade.py (one version per mode).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as check-robopaint-tooling.sh.
-# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, Panda Dynamic Scenes): the
+# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, LabUtopia, AutoBio, Panda Dynamic Scenes): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
@@ -40,7 +40,7 @@ tasks, src = sys.argv[1], sys.argv[2]
 sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.16)
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
-          "dexjoco": "rcb_dexjoco.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
+          "dexjoco": "rcb_dexjoco.py", "dexhand": "rcb_dexhand.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
           "labutopia": "rcb_labutopia.py", "autobio": "rcb_autobio.py", "robofunolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py"}
@@ -174,6 +174,6 @@ if bad:
     if len(bad) > 60:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
-print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / RoboARC / BiGym 2.0 / YAMLab / LabUtopia / AutoBio tasks")
+print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / DexHand / RoboARC / BiGym 2.0 / YAMLab / LabUtopia / AutoBio tasks")
       + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}")
 PY

@@ -62,7 +62,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("metaworldplus-", "MetaWorld+"),
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
     ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
-    ("molmospaces-", "MolmoSpaces"), ("myosuite-", "MyoSuite"), ("dexjoco-", "DexJoCo"),
+    ("molmospaces-", "MolmoSpaces"), ("myosuite-", "MyoSuite"), ("dexjoco-", "DexJoCo"), ("dexhand-", "DexHand"),
     ("labutopia-", "LabUtopia"),
     ("autobio-", "AutoBio"),
     ("vlabench-", "VLABench"),
