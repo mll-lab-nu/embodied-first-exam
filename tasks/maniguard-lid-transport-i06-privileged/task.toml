@@ -56,6 +56,13 @@ measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_p
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 30.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 6
+allowed = [6]
+oracle = []
+
 [verifier]
 timeout_sec = 23400.0             # two fresh-process replays, each at most max(3600, 900 + 0.2 x rows) s (tests/grade.py: an
                                   # Isaac Sim launch + scene load, then the rows at the slowest measured rate, 0.2 s; usually
