@@ -886,10 +886,11 @@ MUJOCO_ENV = (("NPY_DISABLE_CPU_FEATURES", "AVX512F,AVX512CD,AVX512_SKX,AVX512_C
 
 
 def direct_families() -> tuple[str, ...]:
-    """The families whose MuJoCo tasks render with nyx_direct.py: the tooling's own list (rcb_topogym.TASKS renderer
-    "direct", set in one loop there), read from the copy this release ships."""
-    m = re.search(r'(?ms)^for _name in \(([^)]*)\):\n\s+TASKS\[_name\]\["renderer"\] = "direct"', (SHARED / "rcb_topogym.py").read_text())
-    return tuple(re.findall(r'"([a-z0-9_]+)"', m.group(1))) if m else ()
+    """The families whose MuJoCo tasks render with nyx_direct.py: the tooling's own lists (rcb_topogym.TASKS renderer
+    "direct", set in loops there: the first families, then orbits and slotted_post_ring), read from the copy this release
+    ships. Every loop counts: a family missed here ships without nyx_direct.py and its service dies at the first frame."""
+    loops = re.findall(r'(?ms)^for _name in \(([^)]*)\):\n\s+TASKS\[_name\]\["renderer"\] = "direct"', (SHARED / "rcb_topogym.py").read_text())
+    return tuple(n for loop in loops for n in re.findall(r'"([a-z0-9_]+)"', loop))
 
 
 def nyx_direct(rec: dict) -> bool:
