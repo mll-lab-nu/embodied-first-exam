@@ -37,7 +37,7 @@
   "mujoco": "3.3.7"
  },
  "t0": {
-  "state_sha": "dcd959241767cf691d702fdec227b97de7c472e12889d9a92f01d0cf59e820d4",
+  "state_sha": "c9f6feba816000025bd2e59d58cdaf2115615d644a337c4e7647e084a8ddc9a1",
   "control_dt": 0.01,
   "horizon_steps": 1000,
   "raw_dim": 141,

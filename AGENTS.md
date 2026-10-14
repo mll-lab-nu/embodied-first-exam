@@ -39,6 +39,11 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   entry (required: CI compares every number with its last recorded value), `python3 scripts/task_cutoffs.py apply`, commit.
   A new benchmark: its label in `task_conventions.py` `BENCHMARKS` (the table's rows are named by it), then its row and a
   `[[history]]` entry (`from_sec = 0`) in the pull request that adds its first tasks. `ci_checks/check-cutoffs.py` fails when a task disagrees with the table.
+- Every task names its seeds (PROTOCOL §2.13, 2026-10-13): `[metadata.seeds]` `default` / `allowed` / `oracle` in
+  `task.toml`, completed by `normalize` (default = `instance_seed`, else 0); `allowed` is a list, `{ from, to }` or "any"
+  (the last two only with `build = "runtime"`: the task builds a seed's instance from a file `seed`); committed
+  non-default instances under the privileged task's `tests/seeds/<seed>/` (never under `environment/`); reference solutions
+  are per seed. The runner picks the seed (`scripts/task_seed.py materialize`); `ci_checks/check-seeds.py` checks it.
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
   + `tests/Dockerfile`) and the protocol check (`check-protocol.py`). New check =
   `check-<thing>.sh <task_dir>`, registered in `run_all.sh`; a rule that guards the trust boundary or the caps also gets a

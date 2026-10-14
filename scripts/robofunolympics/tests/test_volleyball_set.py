@@ -6,7 +6,8 @@ overhead or not with the hands, to a set that leaves downward, stays too low or 
 a second touch, to touching the net and to a foot beyond the centre line; yes to one overhead contact that sends the
 ball on faster than it came, over a metre above the net and into the target.
 
-The positive is an INJECTION: no setting controller exists for the H1-2. Real: the pass really flies from the back
+The positive is an INJECTION (the reference controller, oracles/volleyball-set, sets for real; this test does not
+depend on it). Real: the pass really flies from the back
 court and comes down on the fists of the robot, which really holds its arms up above its head (stand mode, where it
 started); the set ball really rises above 3.43 m and lands in the target 5 m along the net. Injected: the ball's
 velocity at that contact (what hands driven up through the ball would have given it; the ball is also moved 3 cm

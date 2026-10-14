@@ -98,21 +98,21 @@
   },
   "volleyball-bump": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 6.0,
-   "evidence": "positive by injection (the real 14 m/s float serve onto a real forearm platform, the ball's velocity set as it comes off); negatives: the passive rebound (lands 2.6 m off the target), below net height, the body, a second touch, held, under the net, a net touch, over the centre line. A still forearm returns the serve to the right height and distance; the direction changes by 3 m/s for 4 cm of standing place"
+   "evidence": "Reference: a walk to where the serve comes down, then a forearm platform on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 11.4 m/s in, 7.3 m/s out, up to 3.08 m, down 0.13 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: the passive rebound, below net height, the body, a second touch, held, under the net, a net touch, over the centre line"
   },
   "volleyball-set": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (the real toss onto really raised fists, the ball's velocity set at the contact: apex 4.50 m, 0.35 m from the target's centre); negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held"
+   "evidence": "Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held"
   },
   "volleyball-serve": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 6.0,
-   "evidence": "positive by injection (a real release and a real raised fist, the ball put above the fist and sent off at 13.9 m/s: over the net, into the court); negatives: a throw brushing the fist, a throw that touches nothing, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held. The slowest legal serve needs about 11 m/s; a full arm swing reaches a 7 m/s fist"
+   "evidence": "Reference: an underarm serve (left fist tosses, straight right arm and the trunk's turn hit) from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 2.2 m/s in, 11.4 m/s out, over the net into the court 1.8 m beyond it. Referee test negatives: a throw brushing the fist, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held"
   },
   "volleyball-spike": {
    "seed": 0,
@@ -182,21 +182,21 @@
   },
   "javelin": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (a real arm raise and release above the shoulder, the javelin's velocity set to 15.5 m/s at 38 degrees, a real exit from the runway); negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front. A legal release of the H1-2 gives 4.3 m/s (1.7 m); 20 m needs about 13.5 m/s"
+   "evidence": "Reference: a standing throw by the trunk's turn, the hand above the shoulder, from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 15.0 m/s at 37 degrees, head first at 21.58 m (the line is 20 m), then back 4 m behind the arc and standing. Open loop on the frozen start, not robust. Referee test negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front"
   },
   "shot-put": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (the real stance and a real arm push, the shot's velocity set to 8.3 m/s at 40 degrees, a real exit over the rim); negatives: the shot lowered, taken behind the shoulders, a sling, the other hand, out early, toes on the board, outside the sector, short, a front-half exit. The real push gives 2.6 m/s (0.82 m); 6 m needs about 7 m/s. In `stand` mode the robot topples under the 7.26 kg shot within seconds"
+   "evidence": "Reference: a standing put from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 8.1 m/s from 1.78 m, pushed (0.997), 8.20 m (the line is 6 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test: positive by injection; negatives: the shot lowered, taken behind the shoulders, a sling, the other hand, out early, toes on the board, outside the sector, short, a front-half exit"
   },
   "discus": {
    "seed": 0,
-   "oracle": "none",
+   "oracle": "full",
    "expert_hours": 8.0,
-   "evidence": "positive by injection (a real release and exit, the discus' velocity set to 13.5 m/s at 38 degrees with spin); negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit. A swing of the H1-2 gives 5.1 m/s (3.3 m); 15 m needs about 12 m/s"
+   "evidence": "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit"
   },
   "pitch-target": {
    "seed": 0,

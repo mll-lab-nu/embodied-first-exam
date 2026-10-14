@@ -90,7 +90,8 @@ class RoboFun:
                                  "imu_*: orientation quaternion (w, x, y, z; world from sensor), angular velocity "
                                  "(rad/s) and acceleration (m/s^2, gravity included) in the sensor's frame; holding_*: "
                                  "1 while that hand grips something; mode: 0 stand, 1 walk, 2 run, 3 run_arms, 4 joints / "
-                                 "lowcmd; cmd_*: the velocity command in force; time_s: the episode's time"},
+                                 "lowcmd, 5 walk_falcon, 6 walk_agile (the G1's); cmd_*: the velocity command in force; time_s: "
+                                 "the episode's time"},
             "referee": "once an attempt is over, every response's meta carries the referee's call: meta['outcome'] "
                        "('success' or the rule that ended it) and meta['stages_reached'] of meta['stages_total']",
         }

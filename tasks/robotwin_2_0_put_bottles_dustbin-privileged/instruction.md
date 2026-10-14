@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Put all three bottles into the dustbin that stands on the floor at the robot's left (x = -0.45). Only the left arm can reach the dustbin, so bottles on the right half of the table must be handed over from the right arm to the left arm in the air.
 
-The scene objects are attributes of the task env (`env.bottle_id`, `env.bottle_num`, `env.bottles`, `env.bottles_data`, `env.dustbin`, `env.right_middle_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.bottle_id`, `env.bottle_num`, `env.bottles`, `env.bottles_data`, `env.dustbin`; see `load_actors` in
 `/opt/RoboTwin/envs/put_bottles_dustbin.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

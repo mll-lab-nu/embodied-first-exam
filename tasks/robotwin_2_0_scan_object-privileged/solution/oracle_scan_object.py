@@ -54,6 +54,65 @@ def play_once(self):
         }
         return self.info
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (left_object_target_pose, right_object_target_pose; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        tag = np.random.randint(2)
+        if tag == 0:
+            scanner_x_lim = [-0.25, -0.05]
+            object_x_lim = [0.05, 0.25]
+        else:
+            scanner_x_lim = [0.05, 0.25]
+            object_x_lim = [-0.25, -0.05]
+        scanner_pose = rand_pose(
+            xlim=scanner_x_lim,
+            ylim=[-0.15, -0.05],
+            qpos=[0, 0, 0.707, 0.707],
+            rotate_rand=True,
+            rotate_lim=[0, 1.2, 0],
+        )
+        self.scanner_id = np.random.choice([0, 1, 2, 3, 4], 1)[0]
+        self.scanner = create_actor(
+            scene=self.scene,
+            pose=scanner_pose,
+            modelname="024_scanner",
+            convex=True,
+            model_id=self.scanner_id,
+        )
+
+        object_pose = rand_pose(
+            xlim=object_x_lim,
+            ylim=[-0.2, 0.0],
+            qpos=[0.5, 0.5, 0.5, 0.5],
+            rotate_rand=True,
+            rotate_lim=[0, 1.2, 0],
+        )
+        self.object_id = np.random.choice([0, 1, 2, 3, 4, 5], 1)[0]
+        self.object = create_actor(
+            scene=self.scene,
+            pose=object_pose,
+            modelname="112_tea-box",
+            convex=True,
+            model_id=self.object_id,
+        )
+        self.add_prohibit_area(self.scanner, padding=0.1)
+        self.add_prohibit_area(self.object, padding=0.1)
+        target_posi = [-0.2, -0.03, 0.2, -0.01]
+        self.prohibited_area.append(target_posi)
+        self.left_object_target_pose = [-0.03, -0.02, 0.95, 0.707, 0, -0.707, 0]
+        self.right_object_target_pose = [0.03, -0.02, 0.95, 0.707, 0, 0.707, 0]
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (play_once,):
     setattr(env, _f.__name__, types.MethodType(_f, env))

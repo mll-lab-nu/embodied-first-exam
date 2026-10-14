@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack.
 
-The scene objects are attributes of the task env (`env.middle_pos`, `env.mug`, `env.mug_id`, `env.rack`; see `load_actors` in
+The scene objects are attributes of the task env (`env.mug`, `env.mug_id`, `env.rack`; see `load_actors` in
 `/opt/RoboTwin/envs/hanging_mug.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

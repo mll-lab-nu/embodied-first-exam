@@ -192,6 +192,12 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   `fovy` cameras within 0.4 px before and after (their reported values are unchanged, as are those of the 21
   DexToolBench and 2 Panda standard tasks' other cameras: no other camera in `eai-mujoco` that a task serves has a
   sensor size; Barkour's `oak/rgb` has one and is not served). Images, physics, graders and pass rules are unchanged.
+- 2026-10-13 (board 0099), the tasks served by `images/mujoco/limited/server_mj.py`: the service gained PROTOCOL
+  §4.5's optional reset capability (`RCB_RESET_BUDGET`, default 0; `POST /reset` only with a budget; crash recovery
+  replays the current episode from its start), the client a `reset()` method, `final.json` and the graders'
+  `reward.json` the fields `resets` and `reset_budget`. DexToolBench's standard twins set 20 resets (owner decision,
+  [`dextoolbench.md`](dextoolbench.md)); the two ALOHA and two Panda standard tasks set none: `/reset` is a 404 and
+  `budget.reset` 0, so their episodes, observations and verdicts are unchanged.
 
 ## Files
 | | |

@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Trajectory tasks use `eai-standard/2.x`; policy adaptation uses `eai-policy/1.0` or `eai-policy/1.1` (§4p). Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -81,7 +81,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 13. The directory name ends in `-privileged`, `-standard` or `-standard-realtime`, matching `mode` (§2.2); no `results/` directory (D3). [CI]
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
 15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the usage gateway (D11). [new]
-16. Standard trajectory tasks also satisfy every MUST in §4; standard policy tasks follow §4p; standard-realtime tasks satisfy every MUST in §4 and §4b.
+16. Standard-mode tasks also satisfy every MUST in §4; standard-realtime tasks every MUST in §4 and §4b.
 17. `[metadata.resources]` states the minimum CPU cores, memory and GPU memory of the agent phase and the verifier
     phase, the GPU class and a recommended GPU; the README's `## Compute resources` shows the same values (§2.9). [CI] (v1.1.4)
 18. `[metadata.resources.limits]` states the agent phase's limits (GPU memory, memory, processes, disk) and the whole
@@ -95,6 +95,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
     `## Resource limits` ("You have N seconds to complete this task. Do not cheat by using online solutions or hints
     specific to this task.", then what the cutoff means in the task's mode), and states the limit nowhere else; a
     standard-mode `sim` service is told the same number (§2.12). [CI]
+21. `[metadata.seeds]` names the default seed, the allowed seeds (each a frozen instance; another seed's instance only
+    under `tests/seeds/<seed>/`) and the seeds the reference solution is for (§2.13). [CI]
 
 ## 2. Task contract
 
@@ -114,8 +116,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Item | Level | Basis |
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
-| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` (policy adaptation tasks follow §4p instead; a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
-| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13) (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
+| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13); its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
 ### 2.3 `task.toml`
@@ -125,10 +127,11 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[task].description`, `authors`, `keywords` | SHOULD | [current] |
 | `[metadata]`: `author_name`, `task_type ∈ {trajectory, policy}`, `simulator`, `robot`, `family`, `mode ∈ {privileged, standard, standard-realtime}`, `expert_time_estimate_hours` | MUST | [CI] |
 | `tier` | MUST NOT | [CI] (`privileged` → `mode = "privileged"`, `perception` → `mode = "standard"`) |
-| Standard trajectory tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard policy tasks: `protocol = "eai-policy/1.0"` or `"eai-policy/1.1"` (§4p); standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
+| Standard tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
 | `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [CI] |
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
-| `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| `instance_seed` (where present, equal to the default seed, §2.13); benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| `[metadata.seeds]`: `default`, `allowed`, `oracle` (§2.13) | MUST | [CI] (2026-10-13) |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
 | `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark); the number is the cutoff table's for the task (its benchmark and mode, unless the table gives its family or the task an exception), written by `scripts/task_conventions.py` (§2.12) | MUST / SHOULD / MUST | [CI] / [new] / [CI] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
@@ -136,14 +139,6 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[metadata.resources]`: the minimum compute (§2.9) | MUST | [CI] (v1.1.4) |
 | `[metadata.resources.limits]` and `[metadata.resources.caps]`: the agent phase's resource limits and the docker caps (§2.10) | MUST | [CI] (v1.1.5) |
 | `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
-
-**Full-lap Control Transfer exception (owner-requested, 2026-10-13).** Only
-`control-transfer-anycar-circuit-lap-v2-*` tasks use the 129600-second cap and
-family cutoff. The frozen scaled catalog reaches 3878.76 simulated seconds per lap;
-three rounds each contain three CPU-rendered laps. Worker, replay, HTTP and collection
-deadlines are separately bounded from public route duration. This is a long-budget
-development track, reported separately from the existing 14400-second Control Transfer
-tasks; their budgets are unchanged. Native runtime acceptance remains pending.
 
 **Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
 decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in the exception table of
@@ -233,7 +228,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
 | Agent egress allowlisted in `task.toml` (the model APIs and, since 2026-10-11, the package registries), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were open) |
 | `nop` scores 0 | MUST | [current] |
-| `oracle = "full"`: the oracle scores 1 | MUST | [current] |
+| `oracle = "full"`: the oracle scores 1 (on each seed in `seeds.oracle`, §2.13) | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
 
 **Human review** (any task whose `oracle` is not `full`): the PR is labelled `needs-human-review` and needs an approval
@@ -611,6 +606,31 @@ estimate of a trial's length reads `task.toml`. Not derived from the cutoff: the
 episode as long as the agent's time (RoboCasa's three benchmarks, RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K) hold for any
 shorter cutoff and are looked at when one is raised.
 
+### 2.13 Seeds (2026-10-13)
+
+The owner, 2026-10-13: "every task needs a default seed, but may also allow a change of seed, or name a list of seeds
+it allows, so that the task's submitter verifies which seeds are reasonable"; "we do not want the agent to memorise
+the answer: a reference solution can be the solution of one seed; from now on the answers are per seed"; "the seeds
+can be a list, a range, or any seed"; official batches draw a seed from the allowed ones for each trial. A seed names
+one instance of the task (its scene and start, replayed bit for bit as before); where an upstream has no seed of its
+own, seed 0 names the task's one frozen instance.
+
+| Item | Level | Basis |
+|---|---|---|
+| `[metadata.seeds]` in `task.toml`: `default` (an integer); `allowed`, the seeds a trial may run from, `default` among them: a list of distinct integers (`[0, 3, 7]`), a range with both ends included (`{ from = 0, to = 100 }`; TOML's `[0, 100]` would be the two seeds 0 and 100), or `"any"` (every seed; TOML has no null); `oracle` (the seeds the reference solution under `solution/` is for, a list of allowed seeds: not empty for `oracle = "full"` or `"partial"`, empty for `"none"`); `build`, `"frozen"` (the default: every seed in `allowed` is a committed instance) or `"runtime"` (the task builds a seed's instance itself; required for a range and for `"any"`, which cannot all be committed). A generator writes what it has; `scripts/task_conventions.py` completes the rest: `default` = `instance_seed` (0 without one), `allowed = [default]`, `oracle = [default]` or `[]` | MUST | [CI] (`ci_checks/check-seeds.py`) |
+| `instance_seed`, where present, equals `default`; a standard or standard-realtime task has its privileged twin's `default`, `allowed` and `build` | MUST | [CI] |
+| The default seed's frozen instance is the task's instance, where §2.2 and §3 put it. With `build = "frozen"`, every other allowed seed's frozen instance is `tests/seeds/<seed>/instance.json` (or `.npz`, the same kind as the default's) of the task that holds the pair's instance (the privileged twin; a task without one: itself); `tests/seeds/` holds nothing else (a `"runtime"` task may commit some seeds' instances there too) | MUST | [CI] |
+| `build = "runtime"`: given a file `seed` (the integer) next to its instance, the task's environment builds that seed's instance deterministically, and its verifier builds the same instance from its own copy of the file (never from anything the agent's container wrote) and grades on it; the same seed gives the same start hash in a fresh process. The benchmark's doc says how, and its generator's tests show it on a sample of seeds | MUST | [new] |
+| Another seed's instance, or a `seeds` directory, anywhere under `environment/` (where the agent's image, or a sidecar's that the agent's container could share, is built from); in privileged mode the agent reads the instance of its own trial's seed only, as before | MUST NOT | [CI] |
+| The runner chooses the seed, never the agent: `scripts/task_seed.py materialize <task> --seed <S> --out <dir>` writes a copy of the task whose instance copies are seed S's (a committed instance; else, for a `"runtime"` task, the file `seed` in each of those places) and whose `[metadata.seeds] default` says S, and refuses a seed that is not allowed; Harbor runs the copy. Results record the seed | MUST | [new] |
+| Official batches draw a seed uniformly from `allowed` for each trial (owner, 2026-10-13; `"any"`: from 0 to 2^31 - 1); a run on the default seed only says so | SHOULD | [new] |
+| The submitter allows only seeds they checked: the start is valid and the instruction holds for it (`nop` scores 0 on it; the oracle, a positive example or the human review of §2.7 covered it). For a range or `"any"`, they check the generator rather than each seed (its rule gives a valid start for every seed: say how in the benchmark's doc, and show it on a sample). A change of `allowed` is a new digest, recorded in the README's Change Log | MUST | [new] |
+| Reference solutions are per seed: `solution/` may hold a different solution per seed (it reads the seed of the instance it runs on), and scores 1 on every seed in `seeds.oracle`; it need not on the other allowed seeds. The oracle check (§2.7) runs on each seed in `seeds.oracle` | MUST | [new] |
+| Standard and standard-realtime modes: the seed and its instance stay in the service and the verifier, never in the agent's container (§4.5) | MUST | [current] |
+
+Until a benchmark's generator writes more, every task allows its default seed only (`allowed = [default]`): the 2026-10-13
+migration changed `task.toml` only (the instances, the instructions and the READMEs are unchanged).
+
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
 | Item | Level | Basis |
@@ -626,11 +646,9 @@ shorter cutoff and are looked at when one is raised.
 | Unlimited resets, privileged state, planning primitives, self-replay | MAY | [current] |
 | Tool API shape | task-defined | [current] (recommended: `Session` with `reset` / `replay` / `status` / `save_trajectory`) |
 | Self-reported cost (resets, simulation steps) in `agent_*` fields | SHOULD | [current] |
-| `task_type = "policy"` | MAY | standard-mode adaptation contract: §4p, `eai-policy/1.0` / `1.1` |
+| `task_type = "policy"` | MAY | rules defined with the first such task |
 
 ## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
-
-This section describes trajectory tasks. Standard policy-adaptation tasks use §4p instead of the trajectory wire protocol; the common isolation, resource, egress and verifier rules in §2 still apply.
 
 Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are in
 [`STANDARD_MODE.md`](STANDARD_MODE.md), one part per version. This section lists what is required.
@@ -750,6 +768,14 @@ results must state the reset budget and are compared only with results under the
   `RCB_RESET_BUDGET=0` still runs one episode; standard results recorded before this change ran with 0 and are
   reported separately ([`benchmarks/bigym2.md`](benchmarks/bigym2.md), [`benchmarks/kinder.md`](benchmarks/kinder.md)).
   BiGym2's standard-realtime tasks keep 0.
+- **DexToolBench** (owner, 2026-10-13; standard tasks): `budget.reset = 20`. With one episode the first grasp decided
+  the trial: all 21 of GPT-6 Astra's standard trials (2026-10-12) knocked the tool off the table at some point, the one
+  success included, most of the hour went into picking it up from the floor, and the same task gave unrelated results
+  from one run to the next (board 0098). A reset puts the robot, the tool and the goal sequence back to the frozen start
+  (the service's `Session.reset()`; the same state hash, images and proprioception). The MuJoCo service
+  (`images/mujoco/limited/server_mj.py`) implements the capability as above; its other tasks (MuJoCo Playground ALOHA,
+  Panda) keep 0. `RCB_RESET_BUDGET=0` still runs one episode; DexToolBench standard results recorded before this change
+  ran with 0 and are reported separately ([`benchmarks/dextoolbench.md`](benchmarks/dextoolbench.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
@@ -826,25 +852,6 @@ settings.
     these tasks.
   The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
   stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
-
-## 4p. Standard policy adaptation (`task_type = "policy"`, `eai-policy/1.x`)
-
-The first policy task, Neural Lander, defines the contract in [POLICY_MODE.md](POLICY_MODE.md).
-This is a separate protocol; declaring it does not claim compatibility with `/observe`, `/submit`, or RCB1.
-
-- The agent MAY train against an explicitly public nominal simulator. Its image MUST exclude deployment implementation, residual weights, frozen evaluation cases, reference solutions and oracle timing artifacts.
-- Bounded policy deployments on a fixed adaptation bank replace the single continuing episode in §4. Every accepted deployment consumes a round before simulation. Feedback MUST contain only the documented noisy sensor channels, commanded goals, own actions and camera images. Held-out cases and scores MUST NOT be queryable.
-- Submissions MUST be validated finite numeric data, never executable code or serialized objects. The first task fixes the controller family and accepts `landing-policy/2` parameters.
-- A seal freezes an eligible completed candidate. At trusted collection/deadline, an unsealed run selects its latest on-time completed candidate. Late/in-flight candidates cannot be selected. No submission is a normal failure; missing/corrupt/replay-inconsistent trusted evidence is an infrastructure error.
-- The sidecar MUST replay every held-out case twice in fresh processes and collect the exact feedback payloads, candidate history, private trajectory records, videos, reference-search evidence and final manifest. Only trusted collection starts grading; no public grade endpoint exists.
-- `reward.txt` remains binary success (all held-out cases safe). Numeric-only `reward.json` also reports `final_reward` on 0–100, `progress` on 0–1, success rate, replay determinism and infrastructure status.
-- Neural Lander is standard only: it has no privileged twin. Its sidecar and verifier carry byte-identical frozen `instance.json` files. The agent receives neither copy.
-- The agent and verifier use the common digest-pinned client base. Policy tasks may add their benchmark's pinned nominal simulator dependencies; Neural Lander's pins and public source allowlist are enforced by `check-policy.py`. Trajectory-task dependency rules are unchanged.
-
-The `eai-policy/1.1` extension supports family-specific numeric controller or bounded fixed-network policies and feedback schemas; see [POLICY_MODE.md](POLICY_MODE.md). Its public nominal and GPU training images may derive from the benchmark's pinned base, while the verifier uses the common client base. All roboEngineer deployment/held-out sidecars use CPU MuJoCo, NumPy policy inference and software rendering, without GPU devices. Runtime evidence is private to the operator. Local runs on a GPU host are explicitly not device-isolation evidence. The standard-only instance-copy and separate-verifier requirements apply to every policy family.
-
-Reference sources: `scripts/quadrotor_landing/native/`; generated examples: `tasks/quadrotor-landing-random-pad-i0{0,1}-standard/`.
-Checks: `ci_checks/check-policy.py`, its mutations in `check-ci-selftest.py`, generator reproducibility, instance-copy and common isolation checks. Native Harbor oracle/nop validation remains a release requirement; local contract tests do not prove container isolation.
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |
@@ -987,4 +994,6 @@ Decided (owner, 2026-10-02):
    (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
    image (§2.4) and to read the trajectory (§4.8).
 3. Kept as they are: one frozen instance per task (no per-run seeds), and what each benchmark exposes to the agent in
-   privileged mode (no hiding of reward or success checks).
+   privileged mode (no hiding of reward or success checks). Changed for seeds on 2026-10-13 (owner, §2.13): a task has
+   a default seed and may allow others, each a frozen instance; the runner draws one per trial; reference solutions
+   are per seed.

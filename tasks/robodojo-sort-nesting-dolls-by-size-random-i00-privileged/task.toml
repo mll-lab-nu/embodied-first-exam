@@ -53,6 +53,13 @@ measured = "GPU: 9.0 GiB per Isaac Session on the heaviest scene (rcb_monitor, p
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = []
+
 [verifier]
 timeout_sec = 7800.0              # ONE fresh-process replay (owner, 2026-10-12; two and 15000 s before) at tests/grade.py's
                                   # limit for the longest accepted trajectory (replay_timeout(15,000 actions) = 1200 s +

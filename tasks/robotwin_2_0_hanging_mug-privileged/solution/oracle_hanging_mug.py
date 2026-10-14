@@ -48,6 +48,48 @@ def play_once(self):
         self.info["info"] = {"{A}": f"039_mug/base{self.mug_id}", "{B}": "040_rack/base0"}
         return self.info
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (middle_pos; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        self.mug_id = np.random.choice([i for i in range(10)])
+        self.mug = rand_create_actor(
+            self,
+            xlim=[-0.25, -0.1],
+            ylim=[-0.05, 0.05],
+            ylim_prop=True,
+            modelname="039_mug",
+            rotate_rand=True,
+            rotate_lim=[0, 1.57, 0],
+            qpos=[0.707, 0.707, 0, 0],
+            convex=True,
+            model_id=self.mug_id,
+        )
+
+        rack_pose = rand_pose(
+            xlim=[0.1, 0.3],
+            ylim=[0.13, 0.17],
+            rotate_rand=True,
+            rotate_lim=[0, 0.2, 0],
+            qpos=[-0.22, -0.22, 0.67, 0.67],
+        )
+
+        self.rack = create_actor(self, pose=rack_pose, modelname="040_rack", is_static=True, convex=True)
+
+        self.add_prohibit_area(self.mug, padding=0.1)
+        self.add_prohibit_area(self.rack, padding=0.1)
+        self.middle_pos = [0.0, -0.15, 0.75, 1, 0, 0, 0]
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (play_once,):
     setattr(env, _f.__name__, types.MethodType(_f, env))

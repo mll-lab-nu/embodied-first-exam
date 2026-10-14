@@ -7,12 +7,13 @@ next to it (the RoboOlympics Unitree G1 or H1-2 in a sports venue, rfo/world.py)
 
 A control step is 10 ms (10 physics steps of 1 ms). An action is a row of one of the action types
 (`Session.action_types`; the widths below are the G1's, 29 joints with a 3-joint waist; the H1-2 has 27 joints, a
-1-joint waist and no running policy, so no `run` / `run_arms`):
+1-joint waist and no running policy and no FALCON / AGILE, so no `run` / `run_arms` / `walk_falcon` / `walk_agile`):
 
     stand     waist 3 + arms 14 joint targets + grips 2                      the platform holds the legs in the stance
     walk      vx, vy, wz + waist 3 + arms 14 + grips 2                       Unitree's walking policy drives the legs
     run       vx, vy, wz + grips 2                                           the running policy drives all 29 joints
     run_arms  vx, vy, wz + arms 14 + grips 2                                 the running policy drives legs and waist
+    walk_falcon / walk_agile  the walk row                                 FALCON's / AGILE's walking policy drives the legs
     joints    29 joint targets + grips 2                                     you drive every joint (default PD gains)
     lowcmd    29 x (q, dq, tau, kp, kd) + grips 2                            Unitree's LowCmd for every joint
 

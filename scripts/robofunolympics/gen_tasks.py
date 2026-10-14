@@ -51,6 +51,8 @@ CLIENT = dict(
 SHORT = {  # the action types' rows, in words (the layout itself is in instance.json / spec()); {w} waist joints, {n} joints
     "stand": "waist {w} + arms 14 joint targets",
     "walk": "`vx`, `vy`, `wz` + waist {w} + arms 14 joint targets",
+    "walk_falcon": "`vx`, `vy`, `wz` + waist {w} + arms 14 joint targets (as `walk`)",
+    "walk_agile": "`vx`, `vy`, `wz` + waist {w} + arms 14 joint targets (as `walk`)",
     "run": "`vx`, `vy`, `wz`",
     "run_arms": "`vx`, `vy`, `wz` + arms 14 joint targets",
     "joints": "all {n} joint targets",
@@ -71,8 +73,21 @@ NOTE_WALK = {
   zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
   come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
   steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
-  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find.""",
+  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The
+  G1's two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name)
+  they keep it upright but do not walk it.""",
 }
+NOTE_WALKERS = """- **`walk_falcon`** and **`walk_agile`** are two more walking policies for the G1's legs, with the same row as `walk`
+  (you keep the waist and the arms): FALCON (LeCAR-Lab, MIT; trained with arm motions and forces on the hands) and
+  AGILE's velocity-height policy (NVIDIA WBC-AGILE, Apache-2.0; trained while the arms and the waist moved), the
+  released weights run in numpy at 50 Hz on their own leg gains (kp 100 / 100 / 100 / 200 / 20 / 20 per leg). Both
+  hold still and follow the command better than `walk` while the arms move or carry something; FALCON also adds a small
+  correction to the wrists. FALCON zeroes speeds below 0.2 m/s and turns below 0.2 rad/s and stands with the pelvis at
+  about 0.74 m; AGILE zeroes commands of norm below 0.1, stands lower (about 0.68 m) and barely turns on the spot below
+  about 0.7 rad/s (walking at 0.2 m/s or more it turns as asked). Their command ranges are in the action table. A
+  walker takes the legs at once, from where they are (its memory starts afresh); `walk`, the other walker and `run`
+  take them from it the same way. Going from a walker straight to `stand` usually ends in a fall (`stand` holds
+  Unitree's stance and does not balance): give `walk` a zero command for about 2 s first."""
 NOTE_RUN = """- **`run`** runs RoboOlympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
   above that; the command changes at most 1.5 m/s per second), `|vy|` ≤ 0.12 m/s, `|wz|` ≤ 0.5 rad/s. `run_arms` gives
   you the arms while it keeps the legs and the waist; taking the arms away from its swing disturbs it. Switching to
@@ -103,7 +118,8 @@ def control_notes(t0: dict) -> str:
     r = t0["robot"]
     name = r.get("name", "unitree_g1")
     caps = lambda k: " / ".join(f"{r[k][i]:g}" for i in (0, 12, len(r[k]) - 1))  # noqa: E731 -- legs / waist / arms
-    parts = [NOTE_STAND, NOTE_WALK[name]] + ([NOTE_RUN] if r.get("run_command_range") else [])
+    parts = [NOTE_STAND, NOTE_WALK[name]] + ([NOTE_WALKERS] if "walk_falcon" in t0["action_types"] else []) + (
+        [NOTE_RUN] if r.get("run_command_range") else [])
     parts.append(NOTE_REST.replace("@@KP_MAX@@", caps("kp_max")).replace("@@KD_MAX@@", caps("kd_max")))
     return "What the platform does and does not do for you:\n\n" + "\n".join(parts)
 
@@ -137,6 +153,16 @@ def toml_str(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def walkers(t0: dict) -> str:
+    out = ""
+    for name in ("walk_falcon", "walk_agile"):
+        t = t0["action_types"].get(name)
+        if t:
+            lo, hi = t["lower"][:3], t["upper"][:3]
+            out += (f"; `{name}` {lo[0]:g} ≤ vx ≤ {hi[0]:g}, {lo[1]:g} ≤ vy ≤ {hi[1]:g}, {lo[2]:g} ≤ wz ≤ {hi[2]:g}")
+    return out
+
+
 def action_table(t0: dict, mode: str) -> str:
     rows = ["| type | row (then `grip_left`, `grip_right`) | floats | who drives what |", "|---|---|---|---|"]
     n = len(t0["robot"]["joints"])
@@ -147,7 +173,7 @@ def action_table(t0: dict, mode: str) -> str:
             if run else "")
     return "\n".join(rows) + (
         f"\n\nVelocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, "
-        f"rad/s). Bounds: `walk` |vx| ≤ {walk[0]:g}, |vy| ≤ {walk[1]:g}, |wz| ≤ {walk[2]:g}{runs}. Joint targets are absolute "
+        f"rad/s). Bounds: `walk` |vx| ≤ {walk[0]:g}, |vy| ≤ {walk[1]:g}, |wz| ≤ {walk[2]:g}{walkers(t0)}{runs}. Joint targets are absolute "
         "angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, "
         "< 0.5 opens it. " + (
             start_note(t0, mode)))

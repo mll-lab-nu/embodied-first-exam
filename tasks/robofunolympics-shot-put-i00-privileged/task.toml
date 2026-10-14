@@ -18,8 +18,8 @@ mode = "privileged"
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
-oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_shot_put.py: positive by injection (the real stance and a real arm push, the shot's velocity set to 8.3 m/s at 40 degrees, a real exit over the rim); negatives: the shot lowered, taken behind the shoulders, a sling, the other hand, out early, toes on the board, outside the sector, short, a front-half exit. The real push gives 2.6 m/s (0.82 m); 6 m needs about 7 m/s. In `stand` mode the robot topples under the 7.26 kg shot within seconds; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle = "full"
+oracle_evidence = "Reference: a standing put from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 8.1 m/s from 1.78 m, pushed (0.997), 8.20 m (the line is 6 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test: positive by injection; negatives: the shot lowered, taken behind the shoulders, a sling, the other hand, out early, toes on the board, outside the sector, short, a front-half exit Measured (make_oracles.py): success after 6.08 s of the 60 s limit, live and in a fresh replay, ending in the same state."
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
@@ -52,6 +52,13 @@ measured = "author estimate: no trials yet; memory under the 16 GiB cap by the m
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
 
 [verifier]
 timeout_sec = 900.0

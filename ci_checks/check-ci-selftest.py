@@ -25,6 +25,7 @@ RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
 POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
+SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -323,6 +324,13 @@ MUTATIONS = [
      RT, TOML, sub(r"^min_cpus = [0-9.]+", "min_cpus = 7.0"), RESOURCES, "min_cpus 7.0 > the CPU caps of all services together 6"),
     ("a declared cap that docker does not apply",
      STD, COMPOSE, sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 1024m\1"), RESOURCES, "declare the cap that is applied"),
+    # ---- seeds (PROTOCOL §2.13): the runner draws the seed; no other seed's instance where the agent's image is built
+    ("the default seed is not among the allowed ones",
+     TWIN_P, TOML, sub(r"^allowed = \[.*\]$", "allowed = [12345]"), SEEDS, "is not in seeds.allowed"),
+    ("an allowed seed without its frozen instance",
+     TWIN_P, TOML, sub(r"^allowed = \[(.*)\]$", r"allowed = [\1, 12345]"), SEEDS, "has no frozen instance"),
+    ("another seed's instance in the agent's build context",
+     TWIN_P, "+environment/seeds/7/instance.json", append("{}"), SEEDS, "a `seeds` directory where the agent's image"),
 ]
 
 
@@ -434,7 +442,7 @@ def main() -> int:
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS):
+            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
@@ -444,6 +452,11 @@ def main() -> int:
             shutil.copytree(clean[name], t)
             try:
                 for r, f in (mutate.items() if isinstance(mutate, dict) else [(rel, mutate)]):
+                    if r.startswith("+"):                   # a file the mutation adds
+                        r = r[1:]
+                        (t / r).parent.mkdir(parents=True, exist_ok=True)
+                        (t / r).write_text(f(""))
+                        continue
                     (t / r).write_text(f((t / r).read_text()))
             except (AssertionError, StopIteration, OSError) as e:
                 print(f"FAIL check-ci-selftest [{what}]: the mutation no longer applies to {name} ({e}): update MUTATIONS")
