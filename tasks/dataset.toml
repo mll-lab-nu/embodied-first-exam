@@ -7249,3 +7249,7 @@ digest = "sha256:ecd60cb3daba0eb99723c0a707c0a795d4e509203cc7de8202848ef11946dde
 name = "robot-coding-bench/pandadyn-s12-moving-bridge-puck-relay-i00-standard"
 digest = "sha256:71fcd2a9cec5e927de4bbd71116f3d366f256c45bd016462687c4c493e7a7c5f"
 
+[[tasks]]
+name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
+digest = "sha256:cbf09e39018231800ac65323bb8ff2e5e55e04b2558e0932504a4212aa1bfe62"
+

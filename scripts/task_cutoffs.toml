@@ -32,7 +32,7 @@
 "MetaWorld+"        = { privileged =  1800, standard =  1800 }
 "MolmoSpaces"       = { privileged =  3600, standard =  3600 }
 "MuJoCo Playground" = { privileged =  1800, standard =  1800 }
-"MyoSuite"          = { privileged =  3600, standard =  3600 }
+"MyoSuite"          = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "Panda Dynamic Scenes" = { privileged =  3600, standard =  3600 }
 "RoboCasa"          = { privileged =  3600, standard =  3600 }
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
@@ -258,3 +258,12 @@ from_sec = 0
 to_sec = 10800
 decided_by = "owner"
 note = "new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "MyoSuite"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the first standard-realtime task (table_tennis): the standard twin's number"
