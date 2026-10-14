@@ -11,7 +11,7 @@ files this check refuses:
   3. the name of a demonstration or dataset file (FILES): `*.hdf5`, `*.mcap`, `*.parquet`, `*.rlds`, a Hugging Face
      `datasets/<org>/<name>` id.
 A legitimate mention (a licence notice that must name its source) is listed in ALLOW with its reason. The egress
-allowlist is what stops a download; this check keeps the address out of the task. Board 0072: RoboARC's
+allowlist is what stops a download; this check keeps the address out of the task. Board 0072: RoboTangle's
 `reference_scene.json` carried `source_url` of the upstream demonstration, and one trial downloaded and replayed it.
 That file was in the simulator image, which this check cannot read: an image's own files are reviewed when the image
 is built (docs/LEAKAGE.md).
