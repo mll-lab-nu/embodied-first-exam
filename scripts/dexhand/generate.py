@@ -482,11 +482,14 @@ def _bound(name: str, interval) -> str:
     return f"`{name} >= {fmt(lo)}`" if lo is not None else f"`{name} <= {fmt(hi)}`"
 
 
-def predicate_section(spec: dict) -> str:
+def predicate_section(spec: dict, mode: str = "privileged") -> str:
     """The exact ordered predicate of a frozen essential instance, rendered from its catalog entry."""
+    where = ("the exact numbers are in `catalog.json` in `/opt/tools`" if mode == "privileged" else
+             "the verifier uses the frozen task's unrounded values, which differ from these only beyond the sixth "
+             "significant digit")
     lines = ["## Success predicate",
              "The verifier evaluates these conditions on features it computes from simulator state (values rounded "
-             "to six significant digits here; the exact numbers are in `catalog.json`). A stage or the terminal "
+             f"to six significant digits here; {where}). A stage or the terminal "
              "condition counts a control sample only if its bounds held at every 2 ms physics substep of that "
              "control interval; stages are completed in order and each starts after the previous one.", ""]
     for index, stage in enumerate(spec["stages"], 1):
@@ -827,7 +830,7 @@ Use the declared target values rather than copying measured wrist joint position
 change. Objects have no actuators, scripted motion or grasp attachments; they move through contact and normal gravity.
 
 {sharpa_only_hands(mode, offered_hands(spec["id"])[1]) if only_sharpa else hands_section(ESSENTIAL_WIDTHS, mode, ESSENTIAL_LAYOUT)}
-{predicate_section(spec)}"""
+{predicate_section(spec, mode)}"""
     if mode == "privileged":
         text = (
             intro

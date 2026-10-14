@@ -19,7 +19,7 @@ Sharpa rows: the six wrist targets, then `right_thumb_CMC_FE, right_thumb_CMC_AA
 The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
 
 ## Success predicate
-The verifier evaluates these conditions on features it computes from simulator state (values rounded to six significant digits here; the exact numbers are in `catalog.json`). A stage or the terminal condition counts a control sample only if its bounds held at every 2 ms physics substep of that control interval; stages are completed in order and each starts after the previous one.
+The verifier evaluates these conditions on features it computes from simulator state (values rounded to six significant digits here; the verifier uses the frozen task's unrounded values, which differ from these only beyond the sixth significant digit). A stage or the terminal condition counts a control sample only if its bounds held at every 2 ms physics substep of that control interval; stages are completed in order and each starts after the previous one.
 
 1. Stage `left`: `-0.4 <= joystick_x <= -0.2`, `-0.1 <= joystick_y <= 0.1`, `1 <= base_contacts <= 5`, for 5 consecutive control samples.
 2. Stage `front`: `-0.1 <= joystick_x <= 0.1`, `0.2 <= joystick_y <= 0.4`, `1 <= base_contacts <= 5`, for 5 consecutive control samples.

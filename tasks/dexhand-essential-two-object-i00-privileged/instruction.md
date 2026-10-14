@@ -19,7 +19,7 @@ Sharpa rows: the six wrist targets, then `right_thumb_CMC_FE, right_thumb_CMC_AA
 Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
 
 ## Success predicate
-The verifier evaluates these conditions on features it computes from simulator state (values rounded to six significant digits here; the exact numbers are in `catalog.json`). A stage or the terminal condition counts a control sample only if its bounds held at every 2 ms physics substep of that control interval; stages are completed in order and each starts after the previous one.
+The verifier evaluates these conditions on features it computes from simulator state (values rounded to six significant digits here; the exact numbers are in `catalog.json` in `/opt/tools`). A stage or the terminal condition counts a control sample only if its bounds held at every 2 ms physics substep of that control interval; stages are completed in order and each starts after the previous one.
 
 1. Stage `rotate_a_keep_b`: `0 <= a_quarter_turn_error <= 0.16`, `1 <= a_finger_contacts <= 5`, `0 <= speed <= 0.25`, for 5 consecutive control samples.
    While this stage is active (fail-fast): `a_hand_contacts >= 1`, `a_support == 0`, `0 <= a_position_error <= 0.035`, `0 <= speed <= 12`.
