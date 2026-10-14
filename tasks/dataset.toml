@@ -3887,7 +3887,7 @@ digest = "sha256:1d6a35e6284211353a0cab2bc757a22f6e60c1b6a6b779f57b9040ce3bb1a4c
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_barkour_joystick-standard"
-digest = "sha256:517c1e2cd2d15132b697d4b5fe68e290b68efbe5eb2bc3a1396e5ae0df277e8c"
+digest = "sha256:89cd39b7b2410d61570f42ae0b70755bf142c6b55927ab0eaa0a20c93d3092fa"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_footstand-privileged"
@@ -3895,7 +3895,7 @@ digest = "sha256:3c984314b0e25e2f5e4c213c948f2ff1d9c1c9b1941575e78854ec447e29ae2
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_footstand-standard"
-digest = "sha256:e07c6cdbe85667991c769c816d08aa6fc2561850b9ca3435c8eb24485f3d36a7"
+digest = "sha256:80910796714e3783d621d7f61ba42d70187c41db9d60d3be3422d2c581376f6c"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_getup-privileged"
@@ -3903,7 +3903,7 @@ digest = "sha256:9bf9c8cafa5c5bb29d5b500a6f0e70235afe220264b91c109d72af912929efa
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_getup-standard"
-digest = "sha256:f1f0bf9073c45acad59fbbc0278ea9937dc968252fae9d26755dbb57264246d7"
+digest = "sha256:d2bbae37db27aeab88ca76564ef911924cccff784c635f7bed4561858c486d34"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_handstand-privileged"
@@ -3911,7 +3911,7 @@ digest = "sha256:9b0317cbf3ace8b1112c426fa56c9868e474386d0d70ab82b86ed15629f0b7d
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_handstand-standard"
-digest = "sha256:8527e609134381baf609ad51a0eb1e331bdb59e5c899570f27fa0b78f86dcb00"
+digest = "sha256:24b15db01bcc1ed929bbaa27e2511abd55298af5209ca6edf611151a71ef1966"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_joystick_flat_terrain-privileged"
@@ -3919,7 +3919,7 @@ digest = "sha256:de973e7be3477984f23b7933dedf7c7e522ab3fb0fd0bc1900df5b295c37cae
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_joystick_flat_terrain-standard"
-digest = "sha256:6eccf1a3c8330106b4bc93d966820b1c022dbfcb34dd2ae810dc1c6ee8b058ef"
+digest = "sha256:2fb22b560da4bfc588bee335edef758d8712ca320a773e454112dab7a2d8697c"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_joystick_rough_terrain-privileged"
@@ -3927,7 +3927,7 @@ digest = "sha256:62bb142e72a6ea3979ca631b0400b9ed3790e453bb731b091d34fad277b436c
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_go1_joystick_rough_terrain-standard"
-digest = "sha256:c4927a6dd7fe8205e2472a3bd846b5c4167914d59e49bb09daad7b1788cc6427"
+digest = "sha256:cf5e5ba99c0db07873f45a1eabdff3e8aa95270b5fbb1b34b82ceddf87de6302"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_spot_flat_terrain_joystick-privileged"
@@ -3935,7 +3935,7 @@ digest = "sha256:1e3180329a4cff9cafa2fe7e21593e88c246ed948f86c4cdc6bf0e88b3453be
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_spot_flat_terrain_joystick-standard"
-digest = "sha256:f069efa3e6048f0eedc35d0ba050adfe3b7f542b958a381a8459d703744e37ae"
+digest = "sha256:cc431cac5d42cafa354a8a39503cc13421fdc61cacd2163e657a679cfd0c3624"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_spot_getup-privileged"
@@ -3943,7 +3943,7 @@ digest = "sha256:f60a4702d554233fc46d3bfe981596394b4be7c0bb6e0c78b6d60b01be42cb0
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_spot_getup-standard"
-digest = "sha256:e00902c6b338734f9f754a53bb6bebe22722be950f5c20eb50ba9f80a7c8fa10"
+digest = "sha256:17645cbe68958b52bee0773eb06741be3e99c5b3338f317d87f125fd13515e2d"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_spot_joystick_gait_tracking-privileged"
@@ -3951,7 +3951,7 @@ digest = "sha256:35545113323f55b62505c6f69cb6426a809774a43f853023c66e7b3dc713c66
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_spot_joystick_gait_tracking-standard"
-digest = "sha256:eaa38026df00a0deaccf228b679a7d288f2257729ffb07b766c1f36551f759d3"
+digest = "sha256:d3baf45ec988af3882b1f527219f892b2e8da70465fd62327e3c256d9b8c0146"
 
 [[tasks]]
 name = "robot-coding-bench/dexjoco-bimanual-assembly-i00-privileged"

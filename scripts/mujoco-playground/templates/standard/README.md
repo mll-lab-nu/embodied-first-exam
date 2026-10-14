@@ -2,14 +2,14 @@
 
 ## Task
 MuJoCo Playground `{{env}}` ({{robot_name}}) on the same frozen instance as `{{name}}-privileged`: {{task}}
-{{task_detail}} Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only
-the robot's own sensors and four cameras that follow it.
+{{task_detail}} Standard mode (eai-standard/2.2): the agent drives the robot through a client, with {{resets}} resets (only
+the last episode is graded), the robot's own sensors and the cameras that follow it.
 
 ## Difficulty
-Same instance and success check as `{{name}}-privileged`. In standard mode the agent loses resets, the simulator and
+Same instance and success check as `{{name}}-privileged`. In standard mode the agent loses free resets, the simulator and
 the world state: it sees camera images and proprioception (joints, IMU, foot contacts), acts in joint position chunks,
-and gets one episode, so it has to close the loop on the robot's own sensors and recover from its own mistakes without
-starting over.
+and gets {{resets}} resets (`RCB_RESET_BUDGET`, the compose file's default; PROTOCOL §4.5), so it has to close the loop
+on the robot's own sensors; only the last episode is graded.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged reference's rows (`solution/oracle.npy`, {{n_rows}} rows, float32-exact)
