@@ -1,6 +1,7 @@
 """Strict success/failure of the six fixed-wrist essential families, for both hands.
 
-Positive: the packaged oracle (task_library/<family>/solution/trajectory.npz) succeeds with the validated final hash.
+Positive: the packaged oracle (task_library/<family>/solution/trajectory.npz) succeeds with the validated final hash,
+and so does every packaged Wuji solution (task_library/<family>/solution/wuji/trajectory.npz).
 Negative: no-op, truncated oracle, a dropped object (hand slowly opened mid-task: fail-fast), forged archive metadata,
 wrong widths and ambiguous members all score 0; Wuji composes, is deterministic and its no-op fails.
 The rotary-gait oracle (15,620 rows) runs only with DEXHAND_SLOW=1; scripts/dexhand/verify_oracles.py covers it.
@@ -34,6 +35,17 @@ POSITIVE_SHA = {
     "essential_pen_regrasp": "b78e45ad7b5c8f5e0205d27116df8538cf2d4d685c9dba33391376ea63ea99d4",
     "essential_rotary_gait": "0c984212d34406ea438c1a8ff0b95c7c532c086f32bac8609ffae85c6429603f",
     "essential_two_object": "64d049dbd9b7f3459a4dd7be1b404ea442b35e7bccdabf1ae4bdeabf371448eb",
+}
+# Final hashes of the packaged Wuji Hand 2.2 reference solutions (task_library/<family>/solution/wuji/; evidence:
+# artifacts/ready-10-2026-10-14/wuji-success/<family>/, in-image grader and Harbor replays). Every family with a
+# solution/wuji/ folder must be listed here.
+WUJI_POSITIVE_SHA = {
+    "essential_held_joystick": "7e93a37fa658bd1660d0c0e6a45e5753ab7040203584eaedc87198d781a18cd4",
+    "essential_cube_reorient": "aa24c081855279160acafc4cb139ba8e537eaf971a3d8b7a215f2c3eb8ff36a8",
+    "essential_rotary_gait": "584dc881a4a72a3efa869791a5d453a23285584527dba591f9e53d7bac851aef",
+    "essential_cube_layer": "46a00e53b948765a6dec0def35d740916db0ef36fb583612b2a6a7a1020911df",
+    "essential_two_object": "ac0f52b8307a02432dcfaf1629ae134c81e2d4e1fc7fc92ffe35433275cce714",
+    "essential_pen_regrasp": "67ab8af449d82a8fc8f108a54c35d20f24d6baf1d1ecc1d16a623879566a07f2",
 }
 SLOW = os.environ.get("DEXHAND_SLOW") == "1"
 
@@ -84,6 +96,23 @@ def test_oracle_succeeds_with_validated_hash(family):
     status = run(Session(family), oracle(family))
     assert status["success"] and not status["failed"] and status["stage"] == status["total_stages"]
     assert status["state_sha"].startswith(POSITIVE_SHA[family])
+
+
+def test_every_wuji_solution_has_a_validated_hash():
+    packaged = {family for family in FAMILIES if (HERE / f"task_library/{family}/solution/wuji").is_dir()}
+    assert packaged == set(WUJI_POSITIVE_SHA)
+
+
+@pytest.mark.parametrize("family", sorted(WUJI_POSITIVE_SHA))
+def test_wuji_solution_succeeds_in_two_fresh_replays(family, tmp_path):
+    """solution/wuji/trajectory.npz: the packaged Wuji Hand 2.2 oracle (tools/ of the family folder made it)."""
+    path = HERE / f"task_library/{family}/solution/wuji/trajectory.npz"
+    first, second = replay_cli(family, path, tmp_path), replay_cli(family, path, tmp_path)
+    assert first["success"] and second["success"] and first["hand"] == "wuji" and first["bad_trajectory"] == 0
+    assert first["state_sha"] == second["state_sha"] == WUJI_POSITIVE_SHA[family]
+    with np.load(path, allow_pickle=False) as archive:   # the wrist stays locked in every Wuji row
+        rows = archive["actions"]
+    assert first["steps"] == len(rows) and np.all(rows[:, :6] == Session(family, hand="wuji").hold_action()[:6])
 
 
 @pytest.mark.parametrize("family", FAMILIES)

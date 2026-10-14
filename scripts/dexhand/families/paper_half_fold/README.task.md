@@ -32,7 +32,7 @@ any vertex outside the workspace box (x -0.03..0.19 m, y -0.09..0.09 m, z <= 0.4
 physics, or 1,500 controls without success. A trajectory whose width does not match its recorded hand (28 Sharpa,
 26 Wuji), with a wrong task or actuator order, out-of-range, non-finite or oversized is rejected (reward 0). The
 no-op, a fold without the crease press, an early stop before the 2 s hold and a pull of the sheet over the table edge
-all score 0. Wuji Hand 2.2 composes on the same wrist stage and is graded the same way; no Wuji success is claimed.
+all score 0. Wuji Hand 2.2 composes on the same wrist stage and is graded the same way.
 Release status is provisional pending human review.
 
 ## Details

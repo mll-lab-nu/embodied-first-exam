@@ -177,6 +177,16 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(a["hand"], "sharpa")
         self.assertEqual(a["model_sha256"], FROZEN_SHARPA_MODEL)
 
+    def test_wuji_reference_solution_succeeds_in_two_fresh_replays(self):
+        """solution/wuji/trajectory.npz (tools/wuji_gen.py): the packaged Wuji Hand 2.2 oracle."""
+        a, rc_a = run_replay(FAMILY / "solution/wuji/trajectory.npz")
+        b, rc_b = run_replay(FAMILY / "solution/wuji/trajectory.npz")
+        self.assertEqual((rc_a, rc_b), (0, 0))
+        self.assertTrue(a["success"] and b["success"])
+        self.assertEqual((a["hand"], a["steps"], a["n_actions"]), ("wuji", 554, 620))
+        self.assertEqual(a["state_sha"], b["state_sha"])
+        self.assertEqual(a["state_sha"], "adb93d95571774763087564f6ec092412c86e3a9898c67658af008b62276ec2d")
+
     def test_float32_rounded_oracle_still_succeeds(self):
         """The standard client sends float32 rows; the packaged hold margin absorbs the rounding."""
         with tempfile.TemporaryDirectory() as folder:

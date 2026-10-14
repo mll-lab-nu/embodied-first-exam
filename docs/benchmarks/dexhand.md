@@ -21,8 +21,9 @@ The default hand is a right (on the arms: a left and a right) **Sharpa Wave** wi
 families also run with the genuine **Wuji Hand 2.2** (20 finger joints) mounted in its place, selected per
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
-contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`).
-No Wuji success is claimed (see Hands).
+contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
+nine families (all but `sweep_dustpan`) also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
 (PROTOCOL §2.7). The agent's time limit is the benchmark's row of `scripts/task_cutoffs.toml` (3600 s in both modes).
@@ -89,7 +90,33 @@ rows are never padded, truncated or converted between hands. A missing file is r
 
 **Wuji acceptance.** In all ten families, the Wuji scene composes from the image's assets in both
 modes, a no-op scores 0, and short hold or seeded replays are deterministic in fresh processes. Wuji trajectories are
-graded exactly like Sharpa ones; no family packages a Wuji solution.
+graded exactly like Sharpa ones.
+
+**Wuji reference solutions.** A family may add a successful trajectory for a hand other than the default one by
+dropping it next to its Sharpa solution as `solution/<hand>/trajectory.npz` (or `trajectory.json` with parts below
+2 MB). The generator checks it (the archive's `hand` is that hand, rows of that hand's width, the family's task and
+row limit) and packages it as `solution/<hand>/` of both task directories, next to unchanged copies of the shared
+oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the folder of the selected hand
+(privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
+`spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
+single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Nine families package a
+Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
+copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
+success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
+control except for `essential_two_object` and `essential_pen_regrasp`, which need the float64 rows the oracles send):
+
+| Family | Wuji rows | success at | authoring script |
+|---|---|---|---|
+| `essential_cube_layer` | 940 x 26 | control 940 | `task_library/essential_cube_layer/tools/wuji_gen.py` (thumb pad drags the layer about its axis, lifting and landing again; `run_turn.py`, `thumb_turn.py`) |
+| `essential_held_joystick` | 146 x 26 | control 146 | `task_library/essential_held_joystick/tools/wuji_gen.py` (thumb on the stick cap, then thumb targets from short physics rollouts) |
+| `essential_pen_regrasp` | 1,571 x 26 | control 1,571 | `task_library/essential_pen_regrasp/tools/wuji_gen.py` (five beam searches over finger-target segments, `beam.py`); thin margins: stage-2 pen angle 0.913 rad (window up to 0.92), hold speed 0.057 (limit 0.06); float32 rows do not complete the hold |
+| `essential_two_object` | 266 x 26 | control 266 | `task_library/essential_two_object/tools/wuji_gen.py` (physics-shooting MPC rotates and returns walnut A, then a two-via-point release while ring and pinky keep B); thinnest margin: `b_finger_contacts` at its minimum 1 for a few substeps; float32 rows do not complete the release |
+| `essential_rotary_gait` | 1,498 x 26 | control 1,498 | `task_library/essential_rotary_gait/tools/wuji_gen.py` (index and middle fingers on antiphase joint-space orbits); thin margin: final angle 0.080 rad above the terminal window's lower bound |
+| `essential_cube_reorient` | 165 x 26 | control 165 | `task_library/essential_cube_reorient/tools/wuji_gen.py` (cross-entropy search over finger targets on model copies); thin margins: peak object speed 10.5 (limit 12), displacement 0.0615 m (limit 0.07 m) |
+| `assemble_hamburger` | 5,847 x 26 | control 5,847 | `families/assemble_hamburger/tools/wuji_gen.py` (pinch IK over wrist, thumb and index; per-layer parameters from `tools/wuji_layers.py`) |
+| `paper_half_fold` | 620 x 26 | control 554 | `families/paper_half_fold/tools/wuji_gen.py` (fingertip pads under the overhang, rigid rotation about the fold line, press, lift) |
+| `pot_shelf_transfer` | 8,266 x 54 | step 8,266 | `families/pot_shelf_transfer/tools/wuji_gen.py` (the Sharpa authoring controller's phases with a Wuji power-grip posture) |
 
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
 start cannot be held by the Wuji geometry; only hand joints (and, where physically necessary, the held objects' start
@@ -235,8 +262,11 @@ Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <=
 **Oracles.** Each family's `solution/trajectory.npz` (rotary gait: `trajectory.json` with two parts under 2 MB,
 concatenated and sha256-checked) is the validated Sharpa actuator trajectory of the frozen instance.
 `scripts/dexhand/verify_oracles.py` binds it to the recorded evidence (archive hash, Sharpa model hash, two fresh
-replays ending in the validated final state hash, and success of the float32-rounded rows).
-`scripts/dexhand/tests/test_essential_strict.py` covers the oracle, the no-op, a truncated oracle, a dropped object
+replays ending in the validated final state hash, and success of the float32-rounded rows). All six also carry a
+Wuji oracle, `solution/wuji/trajectory.npz` (see
+Wuji reference solutions), with its authoring script under the family folder's `tools/`.
+`scripts/dexhand/tests/test_essential_strict.py` covers the oracle (and each Wuji oracle: two fresh replays ending
+in its recorded final hash), the no-op, a truncated oracle, a dropped object
 (fail-fast and permanent), forged archive members, wrong widths and hand labels, task and actuator-name mismatches
 and NaN, empty and object arrays, for both hands. The Wuji resets are declared in
 `wuji_reset.json` (pen, knob, walnuts: finger targets, for the walnuts also their start poses) or neutral (cube,
@@ -257,7 +287,8 @@ exceeds 0.65 rad, unstable physics, or 7,500 controls (at 50 Hz) without success
 
 Cheese and lettuce are three passive elastic strips each; the other ingredients are rigid cylinder contacts with
 original decorative geometry. No continuum food elasticity, tearing or crushing is modelled. Oracle: the 6,090-row
-Sharpa witness (privileged; success at control 5,794) and the 5,793-row standard episode. Wuji Hand 2.2 mounts on the
+Sharpa witness (privileged; success at control 5,794) and the 5,793-row standard episode; with Wuji, the 5,847-row
+Wuji episode in both modes (`solution/wuji/`, success at control 5,847). Wuji Hand 2.2 mounts on the
 same wrist stage (26-wide rows, fingers at 0). Authoring tests: `test_task.py` (order, missing layer, drop, below
 table, workspace, bend limit, actuator-only knock-off, forged members, widths, hand labels, Wuji determinism).
 
@@ -281,7 +312,8 @@ yield; effective thickness 0.7 mm), a reduced model with uncalibrated material p
 XML compiles to the accepted model byte for byte (checked at every session start): 0.5 ms implicitfast, 40 substeps
 per control. The packaged oracle (1,108 accepted rows plus 250 copies of the last row, which float32 transport needs
 to finish the hold one control later and which a float64 replay never executes) reproduces every control-boundary
-state of the accepted episode exactly.
+state of the accepted episode exactly. The Wuji oracle (`solution/wuji/`, 620 rows) succeeds at control 554: the
+fingertip pads slide under the overhang and the hand turns rigidly about the fold line.
 
 ## Sweeping into a held dustpan (`sweep_dustpan`)
 
@@ -341,8 +373,8 @@ counted over the whole episode, the 2 s hold must be consecutive.
 
 The packaged oracle (the 8,850 accepted rows) reproduces every recorded state exactly and succeeds at row 8,602 (the
 remaining rows are not executed). The accepted release lets the pot drop about 13 mm (0.499 m/s peak, below the
-0.6 m/s limit). Wuji Hand 2.2 composes on the same arm mounts (54-wide rows, neutral fingers); no Wuji solution is
-claimed.
+0.6 m/s limit). Wuji Hand 2.2 composes on the same arm mounts (54-wide rows, neutral fingers); its packaged oracle
+(`solution/wuji/`, 8,266 rows) completes the hold at its last row with both hands bearing the pot during the carry.
 
 ## Modes and grading
 
@@ -371,25 +403,26 @@ never decides a verdict.
 re-saves the family's rows to `/app/output/trajectory.npz`; standard `solve.sh` submits the same rows as float64
 through the client's request path (`hold`, dt = 1 / control rate, chunks of at most 250 rows or 10 s) and resumes after
 a service restart. Rows above the repository's 2 MB file limit are stored as `trajectory.json` + `trajectory.partNN.npz`
-(`shared/solution/solution_parts.py`) and concatenated and sha256-checked before use.
+(`shared/solution/solution_parts.py`) and concatenated and sha256-checked before use. A family with a per-hand
+solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference solutions, above).
 
 **Harbor results** (Harbor 0.23, `eai-dexhand:0.2.0` built from this branch, CPU only, `RCB_LIMITS_ENFORCE=0`,
 2026-10-14; the pull request lists every trial):
 
 | Family | privileged oracle / nop | standard oracle / nop | standard oracle wall | peak GiB: privileged verifier / standard sim | Wuji |
 |---|---|---|---|---|---|
-| `essential_cube_layer` | 1 / 0 | 1 / 0 | 4 min | 0.39 / 0.61 | privileged nop 0; standard nop 0 |
-| `essential_held_joystick` | 1 / 0 | 1 / 0 | 4 min | 0.51 / 0.70 | standard nop 0 |
-| `essential_pen_regrasp` | 1 / 0 | 1 / 0 | 4 min | 0.41 / 0.63 | standard nop 0 |
-| `essential_two_object` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.67 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
-| `essential_rotary_gait` | 1 / 0 | 1 / 0 | 17 min | 0.49 / 0.70 | standard nop 0 |
-| `essential_cube_reorient` | 1 / 0 | 1 / 0 | 2 min | 0.39 / 0.61 | standard nop 0 |
-| `assemble_hamburger` | 1 / 0 | 1 / 0 | 9 min | 0.41 / 0.63 | standard nop 0 |
-| `paper_half_fold` | 1 / 0 | 1 / 0 | 5 min | 0.50 / 0.64 | privileged nop 0; standard nop 0 |
+| `essential_cube_layer` | 1 / 0 | 1 / 0 | 4 min | 0.39 / 0.61 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
+| `essential_held_joystick` | 1 / 0 | 1 / 0 | 4 min | 0.51 / 0.70 | Wuji oracle 1 in both modes; standard nop 0 |
+| `essential_pen_regrasp` | 1 / 0 | 1 / 0 | 4 min | 0.41 / 0.63 | Wuji oracle 1 in both modes; standard nop 0 |
+| `essential_two_object` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.67 | Wuji oracle 1 in both modes; nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
+| `essential_rotary_gait` | 1 / 0 | 1 / 0 | 17 min | 0.49 / 0.70 | Wuji oracle 1 in both modes; standard nop 0 |
+| `essential_cube_reorient` | 1 / 0 | 1 / 0 | 2 min | 0.39 / 0.61 | Wuji oracle 1 in both modes; standard nop 0 |
+| `assemble_hamburger` | 1 / 0 | 1 / 0 | 9 min | 0.41 / 0.63 | Wuji oracle 1 in both modes; standard nop 0 |
+| `paper_half_fold` | 1 / 0 | 1 / 0 | 5 min | 0.50 / 0.64 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
-| `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | privileged nop 0; standard nop 0 |
+| `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 
-The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`).
+The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`).
 
 ## Generator
 

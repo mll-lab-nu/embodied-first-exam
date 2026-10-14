@@ -23,3 +23,15 @@ The shell collision follows a three-piece CoACD convex decomposition of the actu
 Only the 28 hand/wrist targets are actuated; all six wrist targets are fixed. The controller has normal gravity and no world fixture, object actuator or replay-time pose assignment. All shell collision pieces participate in contact and support checks. The five ordered cardinal checkpoints and original body stability and terminal speed bounds are unchanged.
 
 `assets/provenance.json` records source licensing, transforms, articulated-part binding and collision decomposition. `assets/manifest.json` lists the offline meshes, textures and credits with checksums. Original GLB and source metadata remain authoring-only; no action policy is packaged.
+
+## Wuji reference solution
+
+`solution/wuji/trajectory.npz` (146 x 26 rows, `hand` = `wuji`, sha256 `eb0c14ee...`) completes all five cardinal
+checkpoints and the terminal hold with the Wuji Hand 2.2 (success at control 146, the last row; float32-rounded rows
+also succeed at control 146). Wrist targets stay at the locked pose in every row; only Wuji finger position targets
+change. Peaks: body rotation 0.071 rad (limit 0.24), body drift 0.8 mm (20 mm), force 2.2 N (80 N). The generator
+packages it as `solution/wuji/` of both task directories, and the oracle uses it when the run selects the Wuji hand.
+Authoring code (never copied into a task): `tools/ctrl.py` places the thumb pad on the stick cap (60 rows; middle and
+ring MCP curl to 0.3 rad to prop the shell), `tools/mpc.py` then picks thumb targets by short physics rollouts from
+snapshots of the authoring session (`tools/snap.py`), and `tools/wuji_gen.py` runs both and prints the rows' sha256
+(`eb51d40e...`). Evidence (2026-10-14): `artifacts/ready-10-2026-10-14/wuji-success/essential_held_joystick/`.

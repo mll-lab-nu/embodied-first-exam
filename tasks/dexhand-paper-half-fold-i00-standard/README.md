@@ -7,7 +7,7 @@
 | Twin | `dexhand-paper-half-fold-i00-privileged` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `paper_half_fold` |
-| Oracle | `full` |
+| Oracle | `full` — solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (620 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0` |
 
@@ -30,6 +30,8 @@ float32 finish the hold window one control later). The privileged oracle hands t
 standard oracle submits them through the client, one row per control. The solution is mounted only for the oracle
 agent; nothing in the agent's environment or image locates it.
 
+Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (620 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
+
 ## Verification
 standard mode. Privileged: the isolated verifier reads only `actions` and `hand` from `/app/output/trajectory.npz`,
 rebuilds the frozen scene for that hand and replays the rows twice in fresh processes; reward 1 iff both replays
@@ -45,7 +47,7 @@ any vertex outside the workspace box (x -0.03..0.19 m, y -0.09..0.09 m, z <= 0.4
 physics, or 1,500 controls without success. A trajectory whose width does not match its recorded hand (28 Sharpa,
 26 Wuji), with a wrong task or actuator order, out-of-range, non-finite or oversized is rejected (reward 0). The
 no-op, a fold without the crease press, an early stop before the 2 s hold and a pull of the sheet over the table edge
-all score 0. Wuji Hand 2.2 composes on the same wrist stage and is graded the same way; no Wuji success is claimed.
+all score 0. Wuji Hand 2.2 composes on the same wrist stage and is graded the same way.
 Release status is provisional pending human review.
 
 ## Compute resources

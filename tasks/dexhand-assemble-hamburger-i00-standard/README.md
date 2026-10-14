@@ -7,7 +7,7 @@
 | Twin | `dexhand-assemble-hamburger-i00-privileged` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `assemble_hamburger` |
-| Oracle | `full` — solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes; no Wuji solution is claimed. |
+| Oracle | `full` — solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (5,847 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0` |
 
@@ -25,7 +25,8 @@ the plate and a released stable hold. Any dropped, fallen or escaped ingredient 
 client, submitted through `rcb_client` in 250-row chunks. The authoring controller that produced it
 (`scripts/dexhand/families/assemble_hamburger/demo.py`) computes robot kinematics and motor targets only; it never
 drives an object pose or applies an object force, and it is never copied into the agent's environment or image.
-No Wuji Hand 2.2 solution is claimed; the Wuji scene is validated for composition, no-op failure and determinism.
+
+Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (5,847 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
 
 ## Verification
 standard mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive

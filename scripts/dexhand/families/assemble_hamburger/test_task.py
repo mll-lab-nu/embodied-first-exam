@@ -288,6 +288,13 @@ class TaskTests(unittest.TestCase):
         self.assertEqual(first["state_sha"], second["state_sha"])
         self.assertEqual(first["initial_sha"], s.initial_sha)
 
+    def test_wuji_reference_solution_succeeds(self):
+        """solution/wuji/trajectory.npz (tools/wuji_gen.py): the packaged Wuji Hand 2.2 oracle, about a minute."""
+        result = replay(Path(__file__).resolve().parent / "solution/wuji/trajectory.npz")
+        self.assertTrue(result["success"])
+        self.assertEqual((result["hand"], result["steps"], result["n_actions"]), ("wuji", 5847, 5847))
+        self.assertEqual(result["state_sha"], "7a907c6173c9138f8f7c6a188d8f76926c31a54a6ef0f75edd485a76500f4c80")
+
     def test_hand_label_and_width_must_agree(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "t.npz"

@@ -84,6 +84,15 @@ def test_oracle_scores_one_in_two_fresh_replays(staged, tmp_path):
     assert a["reason"] == "success" and a["hand"] == "sharpa" and reward["n_actions"] == len(ORACLE)
 
 
+def test_wuji_reference_solution_scores_one_in_two_fresh_replays(staged, tmp_path):
+    """solution/wuji/trajectory.npz (tools/wuji_gen.py): the packaged Wuji Hand 2.2 oracle."""
+    reward = grade(staged, FAMILY / "solution/wuji/trajectory.npz", tmp_path)
+    assert reward["success"] == 1 and reward["deterministic"] == 1 and reward["infra_error"] == 0
+    a, b = reward["replays"]
+    assert a["state_sha"] == b["state_sha"] == "2ac044592004d93953f70c54459112a149d0ea3f4a61fcc4ec68634b1049b069"
+    assert a["reason"] == "success" and a["hand"] == "wuji" and a["steps"] == reward["n_actions"] == 8266
+
+
 @pytest.mark.skipif(not TRACE.is_file(), reason="authoring trace not in this checkout")
 def test_packaged_scene_reproduces_the_recorded_states(sharpa):
     trace = dict(np.load(TRACE))

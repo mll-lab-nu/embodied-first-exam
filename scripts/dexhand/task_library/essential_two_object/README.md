@@ -25,3 +25,18 @@ Successful authoring actions and videos stay outside task directories and are ne
 ## Native physical validation
 
 A full actuator-only replay passes all three ordered stages and the original 25-control static dwell in 408 controls (8.16 seconds). Independent native float64 and float32-wire replays both pass at the same final state fingerprint. The stage transitions occur at controls 47, 160 and 284. Both free walnuts remain passive; there are 28 hand/wrist actuators, six locked-wrist equality constraints, and no object actuator or applied object force. Final A deposit distance is 16.37 mm and B orientation drift is 0.00218 rad. A release uses distal opening while retaining the proximal hand grip, followed by small real ring/pinky target corrections to stabilize B; this is demonstrated by actual contacts rather than object state writes. Successful controller files and movies remain outside the runtime task.
+
+## Wuji reference solution
+
+`solution/wuji/trajectory.npz` (266 x 26 rows, `hand` = `wuji`, sha256 `1dc1d5c8...`) completes the three stages
+(rotate walnut A +90 deg about palm Y at control 44, return it at 76, release A into the tray while B stays held at
+215) and the terminal hold with the Wuji Hand 2.2 (success at control 266, the last row). It starts from the packaged
+Wuji start (`wuji_reset.json`). Wrist targets stay at the locked pose, and walnut B's ring/pinky targets never change
+from their reset values. The thinnest margin is discrete: `b_finger_contacts` drops to 1 (the allowed minimum) for a
+few substeps in stages 1-2; `a_position_error` peaks at 0.0234 (limit 0.035). Float32-rounded rows do not complete the
+release (no failure, stage 3 not reached, also with up to 100 extra hold rows), so this oracle depends on float64
+rows like the sweep_dustpan Sharpa oracle; the standard oracle submits float64 and the replays are bit-deterministic.
+The generator packages it as `solution/wuji/` of both task directories, and the oracle uses it when the run selects
+the Wuji hand. `tools/wuji_gen.py` (authoring only, never copied into a task): physics-shooting MPC for stages 1-2,
+then a two-via-point opening of thumb/index/middle for the release; it rewrites the identical archive in about 4 min.
+Evidence (2026-10-14): `artifacts/ready-10-2026-10-14/wuji-success/essential_two_object/`.

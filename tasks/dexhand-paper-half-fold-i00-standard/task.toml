@@ -19,6 +19,7 @@ family = "paper_half_fold"
 mode = "standard"
 protocol = "eai-standard/2.2"
 oracle = "full"
+oracle_evidence = "solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (620 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
 expert_time_estimate_hours = 4.0
 difficulty = "hard"
 release_status = "provisional"

@@ -89,6 +89,10 @@ def test_plugin_pair_is_rendered(families, tmp_path):
     assert "DEXHAND_HAND: ${DEXHAND_HAND:-sharpa}" in compose and 'RCB_STARTUP_TIMEOUT_S: "600"' in compose
     assert (priv / "solution/solve.sh").stat().st_mode & 0o111 and (priv / "solution/oracle.py").is_file()
     assert (std / "solution/oracle_replay.py").is_file() and (std / "solution/trajectory.npz").is_file()
+    # without a per-hand solution the single-hand oracle runners are written byte for byte
+    assert (priv / "solution/solve.sh").read_bytes() == (generate.SOLUTION / "solve_privileged.sh").read_bytes()
+    assert (std / "solution/solve.sh").read_bytes() == (generate.SOLUTION / "solve_standard.sh").read_bytes()
+    assert not (priv / "solution/wuji").exists() and not (std / "solution/wuji").exists()
     assert (priv / "tests/grade.py").read_bytes() == (generate.SHARED / "grade.py").read_bytes()
     assert (std / "environment/sim/server.py").read_bytes() == (generate.SHARED / "standard/server.py").read_bytes()
 
@@ -118,6 +122,59 @@ def test_plugin_without_oracle_has_no_solution(families, tmp_path):
     assert not (priv / "solution").exists()
     meta = tomllib.loads((priv / "task.toml").read_text())["metadata"]
     assert meta["oracle"] == "none" and meta["oracle_evidence"] == "fixture evidence"
+
+
+def add_hand_solution(folder: Path, rows: int = 4, width: int = 26, hand: str = "wuji", task: str = "fixture_plugin",
+                      directory: str = "wuji") -> None:
+    (folder / "solution" / directory).mkdir(exist_ok=True)
+    np.savez(folder / "solution" / directory / "trajectory.npz", actions=np.zeros((rows, width)), hand=np.array(hand),
+             task=np.array(task))
+
+
+def test_hand_solution_is_packaged_for_both_modes(families, tmp_path):
+    folder = make_family(families)
+    add_hand_solution(folder)
+    out = tmp_path / "tasks"
+    generate.render(out, {"fixture_plugin"})
+    priv, std = out / "dexhand-fixture-plugin-i00-privileged", out / "dexhand-fixture-plugin-i00-standard"
+    for task, mode, runner in ((priv, "privileged", "oracle.py"), (std, "standard", "oracle_replay.py")):
+        solution = task / "solution"
+        assert (solution / "wuji/trajectory.npz").read_bytes() == (folder / "solution/wuji/trajectory.npz").read_bytes()
+        for name in (runner, "solution_parts.py"):   # unchanged copies of the shared runner next to the Wuji rows
+            assert (solution / "wuji" / name).read_bytes() == (generate.SOLUTION / name).read_bytes()
+            assert (solution / name).read_bytes() == (generate.SOLUTION / name).read_bytes()
+        assert (solution / "trajectory.npz").is_file()   # the default (Sharpa Wave) rows stay where they were
+        assert (solution / "solve.sh").read_bytes() == (generate.SOLUTION / f"solve_{mode}_by_hand.sh").read_bytes()
+        assert (solution / "solve.sh").stat().st_mode & 0o111
+        readme = (task / "README.md").read_text()
+        reference = readme[readme.index("## Reference solution"):readme.index("## Verification")]
+        assert "`solution/wuji/trajectory.npz`" in reference and "4 rows" in reference
+        meta = tomllib.loads((task / "task.toml").read_text())["metadata"]
+        assert "solution/wuji/trajectory.npz" in meta["oracle_evidence"] and "DEXHAND_HAND=wuji" in meta["oracle_evidence"]
+        assert "solution/" not in (task / "instruction.md").read_text()   # nothing the agent reads locates it
+
+
+def test_hand_solution_validation(families):
+    folder = make_family(families)
+    widths = {"sharpa": 28, "wuji": 26}
+    default = folder / "solution/trajectory.npz"
+    assert generate.hand_solutions(default, widths, "fixture_plugin") == {}
+    for change, message in (
+        ({"hand": "sharpa"}, "expected 'wuji'"),
+        ({"width": 28}, "width 26"),
+        ({"rows": 5}, "at most 4"),
+        ({"task": "other_task"}, "task 'other_task'"),
+    ):
+        add_hand_solution(folder, **change)
+        with pytest.raises(ValueError, match=message):
+            generate.hand_solutions(default, widths, "fixture_plugin", max_rows=4)
+    add_hand_solution(folder)
+    assert generate.hand_solutions(default, widths, "fixture_plugin", 4) == {"wuji": folder / "solution/wuji/trajectory.npz"}
+    with pytest.raises(ValueError, match="offered hand"):   # a family that does not offer Wuji
+        generate.hand_solutions(default, {"sharpa": 28}, "fixture_plugin")
+    add_hand_solution(folder, width=28, hand="sharpa", directory="sharpa")
+    with pytest.raises(ValueError, match="offered hand"):   # the default hand's rows are solution/ itself
+        generate.hand_solutions(default, widths, "fixture_plugin")
 
 
 def test_release_subset_lists_ten_families():

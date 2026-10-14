@@ -21,3 +21,20 @@ The writing instrument uses Chad / cpenfold's [Paper Mate Kilometrico model](htt
 A capsule of the same diameter follows the source's straight shaft, with convex collision meshes fitted to the actual writing tip and tail. All three physical parts count toward palm, hand and fingertip contact. Narrow painted rings show the fixed 30 mm wide grip band. The pen starts nearly horizontal with a measured central-palm contact, advances along its initial axis, and finishes with the required three named fingertips in that band. Other hand links may contribute contact, and the object receives only gravity and ordinary contact/joint forces.
 
 `assets/provenance.json` records the source, license, axis conversion and size adaptation; `assets/manifest.json` explicitly lists offline runtime assets and their checksums. Source GLB/provenance stay in authoring storage. The runtime package contains converted meshes, textures and credits, with no action policy.
+
+## Wuji reference solution
+
+`solution/wuji/trajectory.npz` (1,571 x 26 rows, `hand` = `wuji`, sha256 `ff5cb69c...`) completes both stages
+(advance the pen at control 552; turn it into the tripod grip at control 992) and the terminal hold with the Wuji
+Hand 2.2 (success at control 1,571, the last row). It starts from the packaged Wuji start (`wuji_reset.json`). Wrist
+targets stay at the locked pose; only Wuji finger position targets change. Margins are thin on two bounds: the pen
+angle when stage 2 completes is 0.913 rad (stage window 0.65..0.92 rad), and the peak pen speed during the terminal
+hold is 0.057 (limit 0.06); the largest object displacement is 39.8 mm (limit 70 mm). Float32-rounded rows do not
+complete the terminal hold (no failure; also with up to 200 extra hold rows), so this oracle depends on float64 rows
+like the sweep_dustpan Sharpa oracle; the standard oracle submits float64 and replays are bit-deterministic, so the
+margins matter only if the scene or `wuji_reset.json` changes. The generator packages it as `solution/wuji/`
+of both task directories, and the oracle uses it when the run selects the Wuji hand. Authoring code (never copied into
+a task): `tools/beam.py`, a sampling-based beam search over short Wuji finger-target segments executed by the task's
+own Session (states are forked only between candidates), and `tools/wuji_gen.py`, which runs its five recorded
+searches and rewrites the identical archive (about 12 min with 3 workers).
+Evidence (2026-10-14): `artifacts/ready-10-2026-10-14/wuji-success/essential_pen_regrasp/`.

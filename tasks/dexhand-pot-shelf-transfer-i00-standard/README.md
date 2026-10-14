@@ -7,7 +7,7 @@
 | Twin | `dexhand-pot-shelf-transfer-i00-privileged` |
 | Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `pot_shelf_transfer` |
-| Oracle | `full` — solution/trajectory.npz: the 8,850 authoring rows of the accepted episode (bit-for-bit replay of the recorded states, tools/verify_oracle.py). Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (two fresh-process replays with identical state hashes; standard: live = replay). |
+| Oracle | `full` — solution/trajectory.npz: the 8,850 authoring rows of the accepted episode (bit-for-bit replay of the recorded states, tools/verify_oracle.py). Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (two fresh-process replays with identical state hashes; standard: live = replay). solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (8,266 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0` |
 
@@ -32,6 +32,8 @@ episode reaches the 2 s released hold at row 8,602, where it ends. The rows are 
 scene (every physics state equals the authoring recording). Privileged: `solve.sh` re-saves the rows as the
 deliverable. Standard: `solve.sh` submits them through the client with `dt = 0.002 s`. The solution is never copied
 into the agent's environment or image.
+
+Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (8,266 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
 
 ## Verification
 Privileged: the isolated verifier rebuilds the frozen scene with the trajectory's `hand` (default `sharpa`) and replays
@@ -79,4 +81,4 @@ Modelling scope: estimated mass, inertia and contact compliance, no fluid, heat 
 self-contact is not judged. Open kitchen shelf, not a narrow-cupboard challenge. The pot's 438 mm handles span the
 board's depth direction, so at the target the front handle reaches about 32 mm past the board's open front edge; the
 compartment test therefore admits at most 50 mm of overhang at the open front (all other faces are strict). Wuji Hand
-2.2 composes on the same arm mounts with neutral fingers; a successful Wuji trajectory is not claimed.
+2.2 composes on the same arm mounts with neutral fingers.

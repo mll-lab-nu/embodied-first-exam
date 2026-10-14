@@ -19,7 +19,7 @@ family = "assemble_hamburger"
 mode = "privileged"
 
 oracle = "full"
-oracle_evidence = "solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes; no Wuji solution is claimed."
+oracle_evidence = "solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (5,847 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
 expert_time_estimate_hours = 3.0
 difficulty = "hard"
 release_status = "provisional"

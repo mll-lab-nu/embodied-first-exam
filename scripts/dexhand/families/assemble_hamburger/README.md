@@ -13,8 +13,30 @@ mounted by `hands.replace_wave_hands` in place of the Wave body under the unchan
 ranges, gains and start targets; vendor finger joints, actuators and contact geometry unchanged. Per-hand start
 targets are `initial_targets` in `task.json` (Sharpa keeps the accepted pose; Wuji fingers start at 0).
 `save_trajectory` writes `actions`, `hand` and `task`; `replay.py` rebuilds the scene with the archive's hand and
-rejects a width that does not match it. Only the Sharpa witness is a successful trajectory; for Wuji the scene,
-a no-op failure and deterministic replays are validated.
+rejects a width that does not match it. Both hands have a successful trajectory: the Sharpa witness
+(`solution/privileged.npz`, `solution/standard.npz`) and a Wuji one (`solution/wuji/trajectory.npz`, below).
+
+## Wuji reference solution
+
+`solution/wuji/trajectory.npz` (5,847 x 26 rows, `hand` = `wuji`, sha256 `1e30c0db...`) assembles the whole stack
+with the Wuji Hand 2.2: success at control 5,847 (the last row; the released-stack condition held for controls
+5,748-5,847), 6/6 layers aligned, largest center error 7.5 mm (cheese; limit 12 mm), peak bend 0.024 rad, no
+fail-fast event. Rows are wrist-stage and finger position targets only; no object pose, weld or force is written.
+The generator packages the file as `solution/wuji/` of both task directories, and the oracle uses it when the run
+selects the Wuji hand. Authoring code (never copied into a task): `tools/wuji_demo.py` ports `demo.py` to Wuji
+(least-squares pinch IK over the wrist stage, thumb and index joints; side pinch between the thumb and index
+fingertips; middle, ring and pinky curled away; the Sharpa controller's gravity feed-forward), `tools/wuji_layers.py`
+ran a greedy per-layer search (each variant a deterministic continuation of the accepted prefix: timing, placement
+gap, grip squeeze, transport duration, lift height; the thin cheese and lettuce needed a firmer squeeze and a slower
+carry), and `tools/wuji_gen.py` replays the accepted parameters without search and writes the identical archive:
+
+```bash
+PYTHONPATH=tasks/dexhand-assemble-hamburger-i00-privileged/environment \
+  python3 scripts/dexhand/families/assemble_hamburger/tools/wuji_gen.py --out $OUT/wuji.npz   # about 70 s
+```
+
+Evidence (2026-10-14): `artifacts/ready-10-2026-10-14/wuji-success/assemble_hamburger/`,
+`artifacts/ready-10-2026-10-14/reports/w-wujisucc-assemble_hamburger.md`.
 
 ## Success predicate
 

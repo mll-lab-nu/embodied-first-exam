@@ -308,23 +308,109 @@ def solution_files(source: Path) -> list[tuple[Path, str]]:
     return [(source, "trajectory.npz")]
 
 
-def write_solution(task: Path, mode: str, trajectory: Path) -> None:
+HAND_TITLES = {"sharpa": "Sharpa Wave", "wuji": "Wuji Hand 2.2"}
+
+
+def solution_shape(source: Path) -> tuple[int, int, str, str | None]:
+    """(rows, width, hand, task or None) of a `.npz` solution or a `trajectory.json` parts manifest."""
+    if source.suffix == ".json":
+        manifest = json.loads(source.read_text())
+        return int(manifest["rows"]), int(manifest["width"]), str(manifest.get("hand", "sharpa")), manifest.get("task")
+    import numpy as np
+
+    with np.load(source, allow_pickle=False) as archive:
+        actions = archive["actions"]
+        if actions.ndim != 2:
+            raise ValueError(f"{source}: actions must be a 2-D array")
+        hand = str(archive["hand"]) if "hand" in archive.files else "sharpa"
+        task = str(archive["task"]) if "task" in archive.files else None
+        return int(actions.shape[0]), int(actions.shape[1]), hand, task
+
+
+def hand_solutions(solution: Path, widths: dict, family: str, max_rows: int | None = None) -> dict[str, Path]:
+    """Reference solutions for a hand other than the default one, by convention next to the family's (Sharpa Wave)
+    solution: `<solution dir>/<hand>/trajectory.npz`, or `<hand>/trajectory.json` + parts above 2 MB. Dropping one in
+    is all a family does; the generator packages it as `solution/<hand>/` of both modes, and the oracle uses it when
+    the run selects that hand (privileged: DEXHAND_HAND; standard: the sim service's hand). A hand without one keeps
+    the default oracle unchanged."""
+    found = {}
+    for hand in sorted(HAND_TITLES):
+        folder = solution.parent / hand
+        if not folder.is_dir():
+            continue
+        if hand == "sharpa" or hand not in widths:
+            raise ValueError(f"{family}: {folder.name}/ next to the solution must name an offered hand other than the "
+                             f"default sharpa (offered: {sorted(widths)})")
+        source = folder / "trajectory.json"
+        source = source if source.is_file() else folder / "trajectory.npz"
+        if not source.is_file():
+            raise ValueError(f"{family}: {hand}/ needs trajectory.npz (or trajectory.json with its parts)")
+        rows, width, recorded, task = solution_shape(source)
+        if recorded != hand or width != widths[hand] or rows < 1 or (max_rows and rows > max_rows) \
+                or task not in (None, family):
+            raise ValueError(f"{family}: {hand}/{source.name} holds {rows} rows of width {width} for hand {recorded!r}"
+                             f" and task {task!r}; expected {hand!r} rows of width {widths[hand]}"
+                             + (f", at most {max_rows}" if max_rows else ""))
+        found[hand] = source
+    return found
+
+
+def hand_solution_text(hands: dict[str, Path], mode: str | None = None) -> str:
+    """The generator's own sentence about per-hand reference solutions (README for a mode, else task.toml)."""
+    texts = []
+    for hand, source in sorted(hands.items()):
+        rows, title = solution_shape(source)[0], HAND_TITLES[hand]
+        label = solution_label(source, code=mode is not None, folder=f"solution/{hand}/")
+        if mode is None:
+            texts.append(f"{label} is a validated {title} trajectory of this instance ({rows:,} controls, motor targets "
+                         f"only, physical contact only); the oracle uses it when the run selects {hand} (privileged: "
+                         f"DEXHAND_HAND={hand}; standard: the sim service's hand), and it replays to success in two "
+                         "fresh processes with identical state hashes.")
+        elif mode == "privileged":
+            texts.append(f"{title}: {label} is a validated {title} trajectory of this instance ({rows:,} rows of motor "
+                         f"targets, physical contact only). With `DEXHAND_HAND={hand}` set for the oracle, `solve.sh` "
+                         f"hands it in instead of the Sharpa Wave rows; the verifier replays it with the {title}.")
+        else:
+            texts.append(f"{title}: {label} is a validated {title} trajectory of this instance ({rows:,} rows of motor "
+                         f"targets, physical contact only). When the sim service runs the {title} "
+                         f"(`DEXHAND_HAND={hand}`, `spec()[\"hand\"]`), `solve.sh` submits these rows as float64 instead "
+                         "of the Sharpa Wave rows.")
+    return " ".join(texts)
+
+
+def with_hand_solutions(readme_text: str, hands: dict[str, Path], mode: str) -> str:
+    """End a README's `## Reference solution` section with the per-hand solution paragraph (generator-owned)."""
+    if not hands:
+        return readme_text
+    start = readme_text.find("\n## Reference solution\n")
+    if start < 0:
+        raise ValueError("README without a ## Reference solution section")
+    end = readme_text.find("\n## ", start + 5)
+    end = len(readme_text) if end < 0 else end
+    return (readme_text[:end].rstrip("\n") + "\n\n" + hand_solution_text(hands, mode) + "\n"
+            + readme_text[end:])
+
+
+def write_solution(task: Path, mode: str, trajectory: Path, hands: dict[str, Path] | None = None) -> None:
     """Generator-owned oracle runners (one source for every family) plus the family's validated rows.
 
     Rows above the repository's 2 MB file limit are stored as `trajectory.json` + `trajectory.partNN.npz`
     (shared/solution/solution_parts.py `split`); the oracle concatenates and sha256-checks them before use.
+    A per-hand solution (`hand_solutions`) becomes `solution/<hand>/`: its rows next to unchanged copies of the shared
+    oracle runner and `solution_parts.py`, and `solve.sh` is then the `*_by_hand.sh` runner that picks the selected
+    hand's folder. A task without one keeps the single-hand runner byte for byte.
     """
-    for source, name in solution_files(trajectory):
-        if source.stat().st_size >= MAX_FILE_BYTES:
-            OVERSIZED.add(str(source.relative_to(ROOT) if source.is_relative_to(ROOT) else source))
-        copy(source, task / "solution" / name)
-    copy(SOLUTION / "solution_parts.py", task / "solution/solution_parts.py")
-    if mode == "privileged":
-        copy(SOLUTION / "solve_privileged.sh", task / "solution/solve.sh")
-        copy(SOLUTION / "oracle.py", task / "solution/oracle.py")
-    else:
-        copy(SOLUTION / "solve_standard.sh", task / "solution/solve.sh")
-        copy(SOLUTION / "oracle_replay.py", task / "solution/oracle_replay.py")
+    runner = "oracle.py" if mode == "privileged" else "oracle_replay.py"
+    folders = [(trajectory, task / "solution")]
+    folders += [(source, task / "solution" / hand) for hand, source in sorted((hands or {}).items())]
+    for rows, target in folders:
+        for source, name in solution_files(rows):
+            if source.stat().st_size >= MAX_FILE_BYTES:
+                OVERSIZED.add(str(source.relative_to(ROOT) if source.is_relative_to(ROOT) else source))
+            copy(source, target / name)
+        copy(SOLUTION / "solution_parts.py", target / "solution_parts.py")
+        copy(SOLUTION / runner, target / runner)
+    copy(SOLUTION / f"solve_{mode}{'_by_hand' if hands else ''}.sh", task / "solution/solve.sh")
     (task / "solution/solve.sh").chmod(0o755)
 
 
@@ -430,13 +516,13 @@ def predicate_section(spec: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def solution_label(source: Path, code: bool = False) -> str:
+def solution_label(source: Path, code: bool = False, folder: str = "solution/") -> str:
     q = "`" if code else ""
     if source.suffix == ".json":
         parts = len(json.loads(source.read_text())["parts"])
-        return (f"{q}solution/trajectory.json{q} with its {parts} parts ({q}trajectory.partNN.npz{q}, concatenated in "
+        return (f"{q}{folder}trajectory.json{q} with its {parts} parts ({q}trajectory.partNN.npz{q}, concatenated in "
                 f"order and sha256-checked by the oracle)")
-    return f"{q}solution/trajectory.npz{q}"
+    return f"{q}{folder}trajectory.npz{q}"
 
 
 def solution_rows(source: Path) -> int:
@@ -488,6 +574,7 @@ def essential_manifest(spec: dict) -> dict | None:
     if solution.is_file():
         rows = solution_rows(solution)
         manifest["solution"] = solution
+        manifest["hand_solutions"] = hand_solutions(solution, manifest["action_dim"], spec["id"])
         manifest["metadata"] = {
             "oracle": "full",
             "oracle_evidence": (
@@ -636,6 +723,8 @@ def toml(spec: dict, mode: str, name: str, manifest: dict | None = None) -> str:
     if manifest is not None:
         oracle = meta.get("oracle", "none")
         evidence = meta.get("oracle_evidence", "")
+        if manifest.get("hand_solutions"):
+            evidence = (evidence + " " + hand_solution_text(manifest["hand_solutions"])).strip()
         robot = (f'robot = {json.dumps(manifest.get("robot", "sharpa-wave-floating"))}\n'
                  f'hands = {json.dumps(manifest.get("hands", ["sharpa", "wuji"]))}\ndefault_hand = "sharpa"')
         keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave"]
@@ -1021,9 +1110,11 @@ def essential_readme(spec: dict, mode: str, name: str, twin: str) -> str:
             "the validated evidence by `scripts/dexhand/verify_oracles.py` (byte-identical trajectory, model hash, two "
             "fresh-process replays with the validated final state hash). "
             + (f"The Wuji Hand 2.2 is not offered in this family ({why})." if only_sharpa else
+               hand_solution_text(manifest["hand_solutions"], mode) if manifest.get("hand_solutions") else
                "No Wuji trajectory is packaged: Wuji is selectable and graded identically, but not demonstrated.")
         )
-        oracle_row = "full (validated Sharpa Wave trajectory); human review pending"
+        oracle_row = ("full (validated Sharpa Wave and Wuji Hand 2.2 trajectories); human review pending"
+                      if manifest.get("hand_solutions") else "full (validated Sharpa Wave trajectory); human review pending")
     else:
         reference = "No low-level oracle is provided."
         oracle_row = "none; provisional solvability, human review required"
@@ -1147,11 +1238,15 @@ def render(destination: Path, only: set[str] | None = None) -> list[Path]:
             task = destination / name
             if task.exists():
                 shutil.rmtree(task)
+            if manifest is not None and manifest.get("metadata", {}).get("oracle", "none") != "none":
+                manifest = {**manifest, "hand_solutions": hand_solutions(
+                    _family_file(folder, manifest["solution"]["privileged"]), manifest["action_dim"], spec["id"],
+                    manifest.get("max_rows"))}
             write(task / "task.toml", toml(spec, mode, name, manifest or essential_manifest(spec)))
             if manifest is not None:
                 instruction_text, readme_text = plugin_texts(folder, manifest, spec, mode, name)
                 write(task / "instruction.md", with_archive_note(instruction_text) if mode == "privileged" else instruction_text)
-                write(task / "README.md", readme_text)
+                write(task / "README.md", with_hand_solutions(readme_text, manifest.get("hand_solutions", {}), mode))
             else:
                 text = instruction(spec, mode)
                 write(task / "instruction.md", with_archive_note(text) if mode == "privileged" else text)
@@ -1235,9 +1330,10 @@ WORKDIR /tests
 """,
                 )
             if manifest is not None and manifest.get("metadata", {}).get("oracle", "none") != "none":
-                write_solution(task, mode, _family_file(folder, manifest["solution"][mode]))
+                write_solution(task, mode, _family_file(folder, manifest["solution"][mode]), manifest["hand_solutions"])
             elif (essential_manifest(spec) or {}).get("solution"):
-                write_solution(task, mode, essential_manifest(spec)["solution"])
+                write_solution(task, mode, essential_manifest(spec)["solution"],
+                               essential_manifest(spec)["hand_solutions"])
             write(
                 task / "tests/test.sh",
                 """#!/bin/bash

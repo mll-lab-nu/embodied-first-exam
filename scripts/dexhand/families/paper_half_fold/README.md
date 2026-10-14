@@ -50,7 +50,25 @@ Sharpa Wave is the accepted scene. Wuji Hand 2.2: `hands.replace_wave_hands` swa
 stage and mount frame; unreferenced Sharpa mesh assets are then dropped so the compiled Wuji model (and its hash) does
 not depend on MuJoCo's process-wide mesh cache. Wuji reset: the same six wrist targets, fingers curled
 (`wuji_initial_fingers`) so nothing touches the table or paper at reset (straight fingers would start 19 mm inside
-the table). No Wuji success is claimed.
+the table). A Wuji success is packaged: `solution/wuji/trajectory.npz` (see Wuji reference solution).
+
+## Wuji reference solution
+
+`solution/wuji/trajectory.npz` (620 x 26 rows, `hand` = `wuji`, sha256 `5e470618...`) folds and creases the sheet
+with the Wuji Hand 2.2; success at control 554 (all four stages, then the 100-sample released hold), so 66 rows of
+slack remain. Rows are wrist-stage and finger position targets only. The script `tools/wuji_gen.py` writes it:
+roll the hand palm up below the table edge and slide the four fingertip pads under the 25 mm overhang, rotate the
+hand rigidly about the fold line by 2.95 rad (the free half turns with the pads and the fold-line hinges yield),
+press lightly on the folded stack, then lift 6 cm and hold still. The generator packages the file as
+`solution/wuji/` of both task directories, and the oracle uses it when the run selects the Wuji hand. 15 of 16
+one-parameter variants of the script also succeed, and float32-rounded rows succeed.
+
+```bash
+PYTHONPATH=tasks/dexhand-paper-half-fold-i00-privileged/environment \
+  python3 scripts/dexhand/families/paper_half_fold/tools/wuji_gen.py --out $OUT/wuji.npz   # the identical archive
+```
+
+Evidence (2026-10-14): `artifacts/ready-10-2026-10-14/wuji-success/paper_half_fold/`.
 
 ## Checks and evidence
 

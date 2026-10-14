@@ -12,7 +12,6 @@ the plate and a released stable hold. Any dropped, fallen or escaped ingredient 
 client, submitted through `rcb_client` in 250-row chunks. The authoring controller that produced it
 (`scripts/dexhand/families/assemble_hamburger/demo.py`) computes robot kinematics and motor targets only; it never
 drives an object pose or applies an object force, and it is never copied into the agent's environment or image.
-No Wuji Hand 2.2 solution is claimed; the Wuji scene is validated for composition, no-op failure and determinism.
 
 ## Verification
 {{MODE}} mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive

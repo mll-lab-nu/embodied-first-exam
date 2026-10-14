@@ -51,4 +51,4 @@ Modelling scope: estimated mass, inertia and contact compliance, no fluid, heat 
 self-contact is not judged. Open kitchen shelf, not a narrow-cupboard challenge. The pot's 438 mm handles span the
 board's depth direction, so at the target the front handle reaches about 32 mm past the board's open front edge; the
 compartment test therefore admits at most 50 mm of overhang at the open front (all other faces are strict). Wuji Hand
-2.2 composes on the same arm mounts with neutral fingers; a successful Wuji trajectory is not claimed.
+2.2 composes on the same arm mounts with neutral fingers.

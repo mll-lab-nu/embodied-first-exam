@@ -16,7 +16,7 @@
   "solution": {"privileged": "solution/privileged.npz", "standard": "solution/standard.npz"},
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes; no Wuji solution is claimed.",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory (privileged: 6,090 controls, success after 5,794; standard: the recorded 5,793-control public-client episode). Both pass two fresh-process replays with identical state hashes.",
     "expert_time_estimate_hours": 3.0,
     "keywords": ["food-assembly", "stacking", "thin-layers"]
   },
