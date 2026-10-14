@@ -18,8 +18,8 @@ mode = "privileged"
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
-oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/robofunolympics/tests/test_discus.py: positive by injection (a real release and exit, the discus' velocity set to 13.5 m/s at 38 degrees with spin); negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit. A swing of the H1-2 gives 5.1 m/s (3.3 m); 15 m needs about 12 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle = "full"
+oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured (make_oracles.py): success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state."
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
@@ -58,7 +58,7 @@ main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
-oracle = []
+oracle = [0]
 
 [verifier]
 timeout_sec = 900.0
