@@ -317,7 +317,9 @@ by `scripts/robosafe/make_rt_instances.py`; `scripts/robosafe/check_double_build
 | Robots | realtime tasks are served on the UR5e; the FR3 members of c01, c02 and a05 are standard-only in this release (`make_rt_instances.py` `REALTIME_ROBOTS`: only the UR5e has RoboSafeBench's realtime admission, the realtime instruction text and the picture-cost and watch-rate probes) |
 | Names | the standard task's name with `-standard-realtime` in place of `-standard` |
 | Instance | the standard task's instance with `"clock": "realtime"` in its key; its start hash is RoboSafeBench's realtime start (the paused state plus the empty plan's digest), frozen in the image; the service refuses to start on another |
-| Clock | real time (`RCB_SLOWDOWN` 1), 50 control steps per second from the agent's first `submit` (or watch); no reset |
+| Clock | real time (slowdown S = 1, `RCB_SLOWDOWN`'s default and `[metadata] slowdown`; PROTOCOL §4b), 50 control steps per second from the agent's first `submit` (or watch); no reset (PROTOCOL §4b's exception for this benchmark, pending the owner's confirmation: a harm done cannot be reset away, and the standard tasks have none either) |
+| Real-time factor | 3.4 (robot seconds per wall second, the clock running flat out with `RCB_SLOWDOWN` = 0.01, the sim service's 6-CPU cap, `cell-c01-i00-standard-realtime`'s reference: 39.8 s of robot time in 11.7 s; the reference workstation mll-4090-1, 2026-10-14, board 0114); RTF ≥ 3, so S = 1 (PROTOCOL §4b) |
+| Scene dynamics | `[metadata] dynamics` from `scripts/task_dynamics.toml` (PROTOCOL §2.14): RoboSafeBench is `static` except the families with scripted movers, launches or pushes (`a05`, `c01`, `c05` to `c13`, `e02`), which are `dynamic`; of the realtime set `c02` (a label turned away), `c03` (a lamp that changes colour) and `c04` (smoke shown at once) are `static` scenes whose hazard appears mid-task |
 | Episode | ends at an exit, at the agent's time limit, or after `max_control_steps` steps of the clock: RoboSafeBench 0.5.1's robot-time budget under the realtime clock, 1800 s for the realtime set (900 s, the paused budget, before 0.5.1), which run in real time once the clock has started |
 | Cutoff | 3600 s (`scripts/task_cutoffs.toml`, as the standard tasks): 1800 s of robot time leave 1800 s for looking and planning before the clock starts. The finalize is outside the agent's time: two fresh-process replays of up to 90000 rows side by side (a 600 s think gap replays in 87 s of wall time on a node of a university HPC cluster, RoboSafeBench's measurement: about 4-5 min for 1800 s, twice that on a loaded node) and the video, inside the collect hook's 840 s |
 
@@ -578,7 +580,9 @@ an exit (`Service._end`), the operator's last answer in `/status` and the messag
 
 ### Owner review
 Things this benchmark asks the owner to decide (the shared-files commit carries them; neither PROTOCOL entry changes
-the protocol's own rules):
+the protocol's own rules). Status 2026-10-14 (board 0114): item 1 is covered by the owner's decision that a benchmark may
+ship any subset of the modes (E6); items 2 and 3 were accepted on review; the realtime tasks' reset budget 0 (an
+exception to PROTOCOL §4b's 10 by default) waits for the owner's confirmation:
 1. **Standard only.** A privileged agent holds the simulator and could read the hazard state, the family's rules and
    its verdict: the task would no longer test whether the agent recognises a hazard. The tasks have no privileged twin
    (`ci_checks/check-instance-copies.sh` `STANDARD_ONLY_PREFIX`, `scripts/task_conventions.py` `NO_TWIN`; PROTOCOL §2.2,
