@@ -8,7 +8,7 @@ otherwise, and the shipped clients accept every 2.x service. Which parts are req
 | Version | Content | Part | Declared by (`metadata.protocol`, `/spec.protocol`) | Implementation |
 |---|---|---|---|---|
 | `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise, crash recovery; the optional reset capability | Part 1 | the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, BiGym 2.0, Robo, RoboFunOlympics | each benchmark's own service (Part 1 names them) |
-| `eai-standard/2.2` | 2.1 + MAY capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer with crash recovery | Part 2 (§1–§18) | the standard tasks of BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio, DexHand and MuJoCo Playground (quadrupeds) | [`scripts/eai_standard/`](../scripts/eai_standard/) |
+| `eai-standard/2.2` | 2.1 + MAY capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer with crash recovery | Part 2 (§1–§18) | the standard tasks of BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, DexHand and MuJoCo Playground (quadrupeds) | [`scripts/eai_standard/`](../scripts/eai_standard/) |
 | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | every standard-realtime task (HumanoidBench, BiGym 2.0, RoboOlympics) | `scripts/humanoidbench/shared/realtime/rcb_realtime.py` |
 | `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | the standard tasks of RoboARC | [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/) |
 
@@ -228,10 +228,10 @@ episode is graded. Results with `N > 0` are reported separately and never ranked
 > says otherwise, every 2.2 addition is a MAY capability, and a request written for 2.0 or 2.1 gets the same answer as
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
-**Who serves it.** The standard twins of fourteen benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces,
-MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, Panda Dynamic Scenes and DexHand ([docs/benchmarks/](benchmarks/); MyoSuite and AutoBio: MuJoCo on the CPU, resume class `exact`; YAMLab: Isaac
+**Who serves it.** The standard twins of twelve benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces,
+MyoSuite, DexJoCo, YAMLab, RoboDojo, Panda Dynamic Scenes and DexHand ([docs/benchmarks/](benchmarks/); MyoSuite: MuJoCo on the CPU, resume class `exact`; YAMLab: Isaac
 Lab with CPU PhysX, resume class `exact`; RoboDojo: Isaac Lab with GPU PhysX, resume class `exact`, `approx` for its six
-standard-only tasks graded by the live episode; LabUtopia: Isaac Sim, PhysX on the CPU, resume class `exact`; Panda Dynamic Scenes:
+standard-only tasks graded by the live episode; Panda Dynamic Scenes:
 ManiSkill / SAPIEN with CPU PhysX, resume class `exact`; DexHand:
 MuJoCo 3.4.0 on the CPU, resume class `exact`), and MuJoCo Playground's quadruped tasks. The RoboTwin and the other MuJoCo standard tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
 
@@ -381,7 +381,7 @@ parameters of the scene (mass, friction, damping, inertia, restitution; the robo
 the success predicate. Provided: a detailed goal, object names and inventories, categories, sizes and colours where the
 task needs them, qualitative relations, the robot and its tool, camera calibration, world conventions (BEHAVIOR's floor at
 z = 0 defines its frame), the budget. `rcb_limited.check_spec` refuses to start a service whose `/spec` names a forbidden
-field or puts a position into `static`; `ci_checks/check-standard-texts.sh` checks the texts of these six benchmarks and of LabUtopia and AutoBio (other
+field or puts a position into `static`; `ci_checks/check-standard-texts.sh` checks the texts of these six benchmarks and of RoboARC and YAMLab (other
 benchmarks decide for themselves, D7); `ci_checks/check-standard-protocol.py` checks every response of a live service.
 Accepted consequence: a calibrated camera aimed at the workspace tells roughly where the workspace is.
 
@@ -407,7 +407,7 @@ response with fewer rows executed; `rcb_client` exposes `Result.stopped` and pri
 
 A third bound keeps one call from exhausting the service's memory (every frame is held until the response is sent):
 - **`max_frames_per_call`** (`/spec`, where the adapter states one: DexJoCo and MyoSuite 1000, RoboARC 2000, RoboWits
-  1500, RoboPaint 640, RoboDojo 3000; LabUtopia and AutoBio state a bound per camera): the images a call may return, cameras x frames
+  1500, RoboPaint 640, RoboDojo 3000): the images a call may return, cameras x frames
   with per-frame depth counted again (as four images in RoboARC, RoboWits and RoboPaint, what a depth frame costs).
   A request over it is a 400 before anything is executed (`rcb_limited.check_frames`); a camera named twice is one
   camera. Where the length of a call is known only while it runs (RoboARC's and RoboWits' `ee_pose` rows), the
@@ -446,7 +446,7 @@ The resume check depends on the simulator's determinism class, which the adapter
 
 | class | rule | benchmarks |
 |---|---|---|
-| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics); YAMLab (Isaac, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact); LabUtopia (Isaac Sim, CPU PhysX, a fresh process as RoboLab; one control step is one physics step); AutoBio (MuJoCo 3.3, CPU physics; one control step is one physics step); RoboDojo (Isaac, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); Panda Dynamic Scenes (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step); DexHand (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps) |
+| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics); YAMLab (Isaac, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact); RoboDojo (Isaac, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); Panda Dynamic Scenes (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step); DexHand (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps) |
 | `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly); ManiGuard (OmniGibson 3.7.2; not measured yet); RoboDojo's six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit; PROTOCOL §4.8) |
 
 This relaxes "the hash checked" of PROTOCOL §4.7 for declared-nondeterministic simulators only. It cannot raise a score:

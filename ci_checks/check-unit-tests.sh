@@ -38,7 +38,7 @@ lane() { grep -qE 'socket|free_port|_PORT|Popen|serve|import test_' "$root/scrip
 run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: queue it when in scope
   want "$2" && cmds+="$(lane "$2")bash $self --one $*"$'\n'
 }
-for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
+for t in robolab/tests/test_grade_standard.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
          tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py \
@@ -63,12 +63,11 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            humanoidbench/tests/test_standard_service.py humanoidbench/tests/test_realtime_service.py \
            kinder/tests/test_standard_service.py \
            behavior/tests/test_fall.py behavior/tests/test_grading.py behavior/tests/test_standard_service.py \
-           labutopia/tests/test_grade_privileged.py labutopia/tests/test_server_validation.py labutopia/tests/test_service_stub.py \
            molmospaces/tests/test_ms.py robolab/tests/test_grade_privileged.py robolab/tests/test_server.py \
            robolab/tests/test_tooling_units.py robotwin/tests/test_gripper_state.py robotwin/tests/test_standard_service.py \
            robopaint_strict/tests/test_server_requests.py roboarc/tests/test_server_requests.py \
            mujoco-playground/tests/test_standard_2_1_servers.py dexjoco/tests/test_standard_server.py \
-           dexjoco/tests/test_grade_privileged.py \
+           dexjoco/tests/test_grade_privileged.py dexjoco/tests/test_server_validation.py \
            myosuite/tests/test_standard_server.py robowits/tests/test_server_frames.py \
            robodojo/tests/test_privileged_grading.py; do
     run 900 "$t"
