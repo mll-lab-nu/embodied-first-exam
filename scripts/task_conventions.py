@@ -75,10 +75,16 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robofunolympics-", "RoboFunOlympics"),
     ("pandadyn-", "Panda Dynamic Scenes"),
 ]
-# Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
-# STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
-# does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard only, graded by the live episode.
-NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
+# Modes (PROTOCOL §2.14, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
+# standard-realtime task without a privileged twin is expected when its benchmark has no privileged mode (no privileged
+# number in its row of scripts/task_cutoffs.toml); in a benchmark that has one, the task is listed here with the reason
+# its README's Twin row gives (ci_checks/check-instance-copies.sh fails a missing twin that is neither). RoboDojo's six
+# tasks whose physics does not replay bit for bit (PROTOCOL §4.8, owner 2026-10-11): standard only, graded by the live
+# episode. The three RoboOlympics tasks keep the wording their READMEs were written with (2026-10-08).
+_RO_NO_TWIN = "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)"
+NO_TWIN = {"roboolympics-airhockey-match-i00-standard-realtime": _RO_NO_TWIN,
+           "roboolympics-badminton-match-i00-standard-realtime": _RO_NO_TWIN,
+           "roboolympics-tabletennis-match-i00-standard-realtime": _RO_NO_TWIN,
            "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
@@ -577,6 +583,22 @@ def cutoff_for(task: Path) -> int | None:
     return table.get(bench, {}).get(mode)
 
 
+def no_twin_reason(task: Path) -> str | None:
+    """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §2.14), as its
+    README's Twin row says it; None for a privileged task and for one that must have its twin. Whether the twin exists
+    is not looked at: the answer is the same before and after a generator has rendered it."""
+    if mode_of(task) not in SIDECAR_MODES:
+        return None
+    for prefix, why in NO_TWIN.items():
+        if task.name.startswith(prefix):
+            return why
+    bench = bench_of(task)
+    row = cutoff_table().get(bench)
+    if row and "privileged" not in row:
+        return f"— (none: {bench} has no privileged mode, PROTOCOL §2.14)"
+    return None
+
+
 def cutoff_sec(bench: str, mode: str) -> int:
     """The benchmark's number for a mode (`[cutoff_sec]`): what a generator that still writes the number (task.toml,
     the sim service's wall clock) takes it from, so that no generator keeps a copy of its own. A family's or a task's
@@ -840,9 +862,9 @@ def render_readme(task: Path) -> str:
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
-    # a standard or realtime task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
-    # (an exempted name whose twin still exists, e.g. before a removal lands, keeps the twin)
-    no_twin = None if task.with_name(twin).is_dir() else next((v for p, v in NO_TWIN.items() if task.name.startswith(p)), None)
+    # a standard or realtime task has its privileged twin unless no_twin_reason() says why not (PROTOCOL §2.14), even
+    # when a generator renders it first (an exempted name whose twin still exists, e.g. before a removal lands, keeps it)
+    no_twin = None if task.with_name(twin).is_dir() else no_twin_reason(task)
     head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
                                      else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),

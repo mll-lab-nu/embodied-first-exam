@@ -17,7 +17,8 @@ scripts/task_cutoffs.toml gives the seconds per benchmark and mode, with optiona
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3).
 Repository level (no task given): the table itself is usable, has a number for exactly the benchmark-mode pairs that
-have tasks, every exception names a family or a task that exists, every number equals its last recorded value (its
+have tasks, privileged and standard have one number wherever both exist (a benchmark's row, a family's entry, a task
+and its standard twin), every exception names a family or a task that exists, every number equals its last recorded value (its
 newest `[[history]]` entry, else scripts/task_cutoffs.baseline.toml: a change without its entry fails), and
 docs/CUTOFFS.md is what `python3 scripts/task_cutoffs.py apply` renders from it.
 
@@ -160,6 +161,24 @@ def check_repo(tasks: list[Path]) -> list[str]:
     for name in sorted(by_task):
         if name not in names:
             errs.append(f"scripts/task_cutoffs.toml: [task_cutoff_sec] names {name!r}, which is not a task directory")
+    # a benchmark may ship any subset of the modes (PROTOCOL §2.14), but where a task has both a privileged and a standard
+    # version their cutoffs are one number (owner, 2026-10-12): in a benchmark's row, a family's entry and every pair
+    for bench, row in sorted(table.items()):
+        if "privileged" in row and "standard" in row and row["privileged"] != row["standard"]:
+            errs.append(f"scripts/task_cutoffs.toml: {bench} gives privileged {row['privileged']} s and standard "
+                        f"{row['standard']} s; the two modes have the same cutoff (PROTOCOL §2.12)")
+    for bench, rows in sorted(families.items()):
+        for family, row in sorted(rows.items()):
+            if "privileged" in row and "standard" in row and row["privileged"] != row["standard"]:
+                errs.append(f"scripts/task_cutoffs.toml: [family_cutoff_sec] {bench} {family!r} gives privileged "
+                            f"{row['privileged']} s and standard {row['standard']} s; the two modes have the same cutoff")
+    for t in tasks:
+        if tc.mode_of(t) == "privileged" and (t.with_name(tc.base_of(t) + "-standard") / "task.toml").is_file():
+            s = t.with_name(tc.base_of(t) + "-standard")
+            a, b = tc.cutoff_for(t), tc.cutoff_for(s)
+            if a != b:
+                errs.append(f"{t.name} has a cutoff of {a} s and its standard twin {s.name} {b} s; the two modes have "
+                            "the same cutoff (PROTOCOL §2.12)")
     errs += task_cutoffs.history_errors()     # every number equals its last recorded value: a change has its [[history]] entry
     doc = ROOT / "docs/CUTOFFS.md"
     if not doc.is_file() or doc.read_text(encoding="utf-8") != task_cutoffs.render_doc(tasks):
