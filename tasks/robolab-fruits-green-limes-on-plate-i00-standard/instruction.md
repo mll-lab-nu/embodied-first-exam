@@ -1,7 +1,7 @@
 # RoboLab · fruits_green_limes_on_plate — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put all the green fruit on the plate. Success: Both green limes must end on the flat beige plate, and the gripper must touch neither. "On" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put all the green fruit on the plate. Success: Both green limes must end on the flat beige plate, and, at that moment, the gripper must touch neither (let go of both at the end). "On" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the

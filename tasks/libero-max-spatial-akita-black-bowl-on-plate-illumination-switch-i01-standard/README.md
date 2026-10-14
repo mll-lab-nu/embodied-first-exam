@@ -86,3 +86,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   /reset` ends the episode as `error` (`sim_error = 1`), not `reset` (reachable only when a run grants resets; the
   default is none). The scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps
   its name.
+- 2026-10-14 (board 0113, from board 0086): the instruction says that a moved object or receptacle jumps alone: what rests in or on it stays where it was (LIBERO-MAX moves one entity; board 0086 saw a basket jump through a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check and the verifier are unchanged, so the task keeps its name.

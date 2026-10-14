@@ -43,3 +43,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Instance | the initial state of official demonstration episode 0 (`demo_1`, v0.1/multi_stage/washing_dishes/PreSoakPan/2024-05-10); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `d4f029590af2…`, checked on load) |
 | Deliverable | `(T, 12)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
 | Success | the environment's own check (`_check_success`) on the state after the last action |
+
+### Change Log
+- 2026-10-14 (board 0113, from board 0086): the success text now says that the faucet handle has two hinges at one pivot: the water on / off hinge (range 0 to 0.52 rad) and a temperature hinge (about ±0.79 rad) that never turns the water on or off, and that "off" means turned back toward 0 on that hinge, not lowered (board 0086: runs moved the temperature hinge or pressed the handle down). Text only: the scene, the frozen instance, the reference solution, the environment's success check and the verifier are unchanged, so the task keeps its name.

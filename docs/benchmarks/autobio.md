@@ -176,7 +176,9 @@ they still succeed (the success step moves by at most 22 control steps).
   not its transfer: the check is on the tip's position relative to the surface and on the plunger command.
 - **The rotor check holds only while the tube is held, in this instance.** After AutoBio's own expert lets go, the tube
   rests 5.0 to 5.1 mm from the check's reference point, just outside its 5 mm; the check holds for 0.41 s while the
-  tube is being lowered. Under rule `first` that moment is the success.
+  tube is being lowered. Under rule `first` that moment is the success. Both instructions state this since 2026-10-14, with the
+  standard text's missing height window (0.955-0.961 m) and the fact that the reference is computed at the episode's start
+  (a rotor turned by the agent moves the slot away from it).
 - **Contact with a named finger.** `pickup` and `screw_loose` look for contact between the cap and the first arm's
   left finger; a grasp between both fingers satisfies it, and the instructions say so.
 - **AutoBio's own evaluator shows a frozen mixer display** after its first two frames (the helper described under
