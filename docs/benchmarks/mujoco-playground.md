@@ -163,6 +163,12 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   installed; the PyPI packages `playground` and `envpool` carry Playground's task sources, PROTOCOL §2.11). Scenes, instances, tooling and pass rules
   are unchanged; results from before this date were obtained with open egress. The quadruped pairs were already on the
   allowlist.
+- 2026-10-14 (review of board 0105, B1-m2), the nine quadruped privileged tasks, `tests/grade.py` only: a replay
+  process that died or timed out (`replay_failed`), a rebuilt start that does not match the instance's hash
+  (`instance_mismatch`) and an exception of the verifier write `infra_error = 1` beside `grader_error = 1` (no verdict
+  on the agent, PROTOCOL: infrastructure vs agent failure); before, `grader_error` alone, which counted as the agent's
+  0. Every `reward.json` carries `infra_error`. Each task README has the entry. Scenes, instances, pass rules and
+  references are unchanged; `scripts/mujoco-playground/tests/test_grade_privileged.py` covers the three paths.
 - 2026-10-13 (board 0086), `mujoco_playground_aloha_single_peg_insertion`, both modes: **the success rule's rear
   bound.** `rcb_aloha.Session.check` required `0 <= t <= 0.75` for the peg tip's axial parameter, and the texts said
   "t ≤ 0.75, t = 0 at the rear wall, at least 25 % of the depth inside". Site `socket_rear` is at the tube's centre:
