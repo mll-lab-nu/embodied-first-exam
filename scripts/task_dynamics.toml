@@ -12,7 +12,7 @@
 # scripts/task_conventions.py (`normalize`) writes `[metadata] dynamics` into every task.toml from this file; never edit
 # it in a task, a template or a generator: ci_checks/check-dynamics.py fails a task that disagrees with this table, a
 # benchmark without a row, and an exception that matches no family. To change a value: edit it here (with its `why`),
-# then `python3 scripts/task_cutoffs.py apply` (normalizes every task and refreshes tasks/dataset.toml, ~3 min).
+# then `python3 scripts/task_cutoffs.py apply` (normalizes every task and refreshes each DIGEST, ~3 min).
 # The benchmark names are the labels of scripts/task_conventions.py BENCHMARKS; a family is `[metadata] family`.
 # A dynamic task may get a `-standard-realtime` twin (PROTOCOL §4b); static tasks need none. Per-family evidence
 # (file:line): agentboard task 0106, dynamic_tasks.csv.

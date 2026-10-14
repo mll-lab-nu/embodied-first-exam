@@ -7,7 +7,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, `tasks/dataset.toml`, its row in `scripts/task_cutoffs.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, its row in `scripts/task_cutoffs.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/STANDARD_MODE.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
@@ -79,7 +79,7 @@ python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. script
 #   and check that `git diff --exit-code tasks/` is empty
 harbor run -p tasks/<task> -a oracle               # on a sample: >= 2 tasks per mode
 harbor run -p tasks/<task> -a nop                  # must score 0
-cd tasks && harbor add --scan . && cd ..           # refresh tasks/dataset.toml
+python3 scripts/task_conventions.py tasks/<your tasks>    # after a hand edit: normalize, which also refreshes each DIGEST
 ```
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
 the matching state hashes.
@@ -94,9 +94,9 @@ The checklist is in PROTOCOL §2.7.
 1. Static checks run on every pull request (`.github/workflows/static-checks.yml`), on what the pull request can
    affect (`ci_checks/ci_scope.py`, from the diff against `main`): when it changes only one benchmark's own paths (its
    `tasks/<prefix>*`, `scripts/<bench>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`; plus the benchmarks that
-   share code with it), the per-task checks and `task_conventions.py --check` on that benchmark's tasks, its generator's
-   check and its unit tests; the cheap repo-level checks (dataset digests, cutoffs, resources, protocol, ...) always run
-   on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
+   share code with it), the per-task checks (incl. each task's `DIGEST`) and `task_conventions.py --check` on that
+   benchmark's tasks, its generator's check and its unit tests; the cheap repo-level checks (cutoffs, resources,
+   protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
    (`task_conventions.py`, `task_cutoffs.*`, `task_dynamics.toml`, `task_resources.toml`, `eai_standard/`,
    `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, `docs/PROTOCOL.md` and the other protocol documents, or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual

@@ -54,8 +54,10 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   `ci_checks/ci_scope.py` (one benchmark's own paths -> its tasks, generator check and unit tests; shared code -> the full
   suite); pushes to main and the nightly run are the full suite. A new benchmark gets its row in `ci_scope.py` `UNITS`
   (without one, its pull requests run the full suite).
-- `tasks/dataset.toml`: task manifest with a digest per task; refresh with `cd tasks && harbor add --scan .` after any
-  change to a task (`ci_checks/check-dataset-manifest.sh` recomputes the digests).
+- `tasks/<task>/DIGEST`: the task's content digest (PROTOCOL §2.8), written last by `normalize` (generators and
+  `task_cutoffs.py apply` refresh it; after a hand edit: `python3 scripts/task_conventions.py tasks/<task>`);
+  `ci_checks/check-dataset-manifest.sh` recomputes it. The release manifest `tasks/dataset.toml` is generated
+  (`scripts/dataset_manifest.py write`) and not committed: pull requests no longer conflict on it.
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.
