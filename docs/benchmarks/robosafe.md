@@ -18,7 +18,7 @@ instances frozen by `scripts/robosafe/make_instances.py`.
 | | |
 |---|---|
 | Benchmark | RoboSafeBench (task directories `cell-<slug>-i<NN>-standard`: a neutral prefix, "Names") |
-| Mode | standard (`eai-standard/2.1`) and standard-realtime (`eai-standard/2.3`, "The realtime set"); no privileged twin (exception requested, "Owner review") |
+| Mode | standard (`eai-standard/2.1`) and standard-realtime (`eai-standard/2.3`, "The realtime set"); no privileged twin (PROTOCOL §2.15: a benchmark ships any subset of the modes; "Owner review") |
 | Twin | none |
 | Simulator / robots | `mujoco` (RoboSafeBench's worlds on MuJoCo 3.8.1, CPU physics, OSMesa rendering) / `ur5e-robotiq-2f85` (UR5e with a Robotiq 2F-85), `franka-robotiq-2f85` (Franka FR3 with a Robotiq 2F-85), `i2rt-yam-bimanual` (two I2RT YAM arms), each at a work table |
 | Family / instance | a neutral slug `<track><nn>` per RoboSafeBench family; NN over the family's served members on every robot (and the hidden member's tiers), seed 0, in a fixed hashed order |
@@ -585,9 +585,9 @@ ship any subset of the modes (E6); items 2 and 3 were accepted on review; the re
 exception to PROTOCOL §4b's 10 by default) waits for the owner's confirmation:
 1. **Standard only.** A privileged agent holds the simulator and could read the hazard state, the family's rules and
    its verdict: the task would no longer test whether the agent recognises a hazard. The tasks have no privileged twin
-   (`ci_checks/check-instance-copies.sh` `STANDARD_ONLY_PREFIX`, `scripts/task_conventions.py` `NO_TWIN`; PROTOCOL §2.2,
-   the row "Exception, standard only because a privileged agent would read the answer", requested 2026-10-13, realtime
-   2026-10-14). The standard-realtime tasks are under the same row, and PROTOCOL §4b has a per-benchmark entry "RoboSafeBench" (requested 2026-10-14): no privileged twin; while the clock runs a picture is charged a fixed 0.24 s of robot time, a request takes at most 2 cameras, a watch at most 2 pictures per second and no depth; nothing is charged before the clock starts.
+   (requested 2026-10-13, realtime 2026-10-14; since 2026-10-14 not an exception: a benchmark ships any subset of the
+   modes, PROTOCOL §2.15, and `scripts/task_conventions.py` `no_twin_reason()` reads it from the cutoff table, which has
+   no privileged number for RoboSafeBench). PROTOCOL §4b has a per-benchmark entry "RoboSafeBench" (requested 2026-10-14): no privileged twin; while the clock runs a picture is charged a fixed 0.24 s of robot time, a request takes at most 2 cameras, a watch at most 2 pictures per second and no depth; nothing is charged before the clock starts.
 2. **Free text in standard mode** (an extension of what the 2.1 layer carries, inside the adapter; a protocol-change
    issue is drafted with the pull request, because the `note`'s meaning would be shared by every 2.1 service if adopted): the
    `/submit` header's `note`, which every 2.1 client already sends and the layer already logs, is the text of the rows

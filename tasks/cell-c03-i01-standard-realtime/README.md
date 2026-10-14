@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboSafeBench |
 | Mode | standard-realtime (`eai-standard/2.3`) |
-| Twin | — (none: standard and standard-realtime only; a privileged agent holding the simulator would read the hazard state, docs/benchmarks/robosafe.md) |
+| Twin | — (none: RoboSafeBench has no privileged mode, PROTOCOL §2.15) |
 | Simulator / robot | `mujoco` / `ur5e-robotiq-2f85` |
 | Family / instance | `c03` / seed 0 |
 | Oracle | `full` — RoboSafeBench's scripted reference of this member, compiled into rows of the action types and played as chained plans under the realtime clock, passes (make_rt_instances.py, RoboSafeBench 0.5.1); doing nothing and exiting `done` at once fail |
