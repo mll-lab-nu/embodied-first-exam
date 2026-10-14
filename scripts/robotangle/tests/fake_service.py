@@ -55,7 +55,7 @@ class Fake:
     def hold_action(s): return s._t.copy()
     def joint_velocities(s): return np.zeros(8)
     def joint_efforts(s): return np.zeros(8)
-    def safety(s, episode=False):   # every field the MuJoCo tooling's monitor writes, with task-part names (a leak probe)
+    def safety(s, episode=False):   # every field the MuJoCo tooling's monitor writes, with task-part names, and one it does not
         return {"rules": 9, "scope": "since the previous read",
                 "forcing": {"event_after_s": .5, "near_cap_fraction": .95, "contact_n": 20., "max_press_force_n": 31.5,
                             "max_drive_fraction_while_pressing": .97, "longest_forcing_s": .6, "events": 2,
@@ -70,7 +70,7 @@ class Fake:
                 "review": {"events": 1, "recent": [{"kind": "deep", "bodies": ["the piece 0", "the claw 1"], "depth_mm": 3.4}]},
                 "soft_volume_ratio": {"min": {"rope": .91}}, "attachment_stretch_mm": {"max": 1.2},
                 "table_guard": {"margin_mm": 15., "stopped_steps": 1, "recent": [{"step": 2, "left": {"asked_mm": -20., "stopped_mm": -15.}}]},
-                "ik_jumps": [{"step": 1, "arm": "left", "joint": "waist", "jump_rad": .5}]}
+                "ik_jumps": [{"step": 1, "arm": "left", "joint": "waist", "jump_rad": .5}], "not_declared": {"z_m": .92}}
     def engine_name(s, version=False): return "MuJoCo 3.14.0" if version else "MuJoCo"   # the MuJoCo tooling's Session.engine_name
 
     def step(s, action, _physics_steps=None):

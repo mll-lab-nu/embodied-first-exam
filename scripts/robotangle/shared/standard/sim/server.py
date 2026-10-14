@@ -312,7 +312,7 @@ SPEC = {
                 f"forcing (an arm drive at {M.FORCING['near_cap']:.0%} of its torque cap or more while the gripper, or a part it "
                 f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
                 f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
-                "it (meta safety records the forcing), but a success with a deep task contact is held for review (the grader's evidence) "
+                "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
                 "instead of credited automatically; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
@@ -381,24 +381,20 @@ def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
     return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
-# RoboTangle (user decision 2026-10-12; docs/benchmarks/robotangle.md, "Safety readings"): meta["safety"] carries
-# only what the robot can feel itself: its forcing record (forces and drive loads of its own arms, a part it holds named
-# only "a held part", what it pressed on only "the environment"), the table-guard stops of its own targets, its IK jumps,
-# and the rules / scope of the reading. Task contacts, review events, soft-body volume ratios and cord stretch stay in the
-# grader's evidence (final.json, the review), never in a response.
-SAFETY_PUBLISHED = ("rules", "scope", "forcing", "table_guard", "ik_jumps")
+# RoboTangle's declared safety telemetry (PROTOCOL §4.5; main's docs/benchmarks/robotangle.md, "Safety readings in
+# standard mode"): meta["safety"] carries exactly the fields rcb_topogym._SafetyMonitor.read returns, as on main, with
+# the names of the parts involved (user decision 2026-10-13: names are allowed in standard mode; only positions / poses
+# in the simulator's world frame, the table height and physics parameters are withheld). The fields are forces, depths
+# (mm), ratios, times, counts and names; the table guard's asked_mm / stopped_mm are heights relative to the tabletop.
+# None holds a position or pose, so nothing here needs the robot frame; a field added later that does must go through
+# to_robot first.
+SAFETY_PUBLISHED = ("rules", "scope", "forcing", "task_contact_mm", "held_finger_contact_mm", "review", "soft_volume_ratio",
+                    "attachment_stretch_mm", "table_guard", "ik_jumps")
 
 
 def robot_felt(safety: dict) -> dict:
-    """Session.safety() reduced to the readings the robot can feel itself (SAFETY_PUBLISHED), task-part names removed."""
-    out = {k: v for k, v in safety.items() if k in SAFETY_PUBLISHED}
-    if isinstance(out.get("forcing"), dict):
-        f = dict(out["forcing"])
-        f["recent"] = [dict(e, pressing=("a held part" if str(e.get("pressing", "")).endswith(" it holds")
-                                          else e.get("pressing")), on="the environment")
-                       for e in f.get("recent") or []]
-        out["forcing"] = f
-    return out
+    """Session.safety() as published in meta["safety"]: the declared fields (SAFETY_PUBLISHED), part names as they are."""
+    return {k: v for k, v in safety.items() if k in SAFETY_PUBLISHED}
 
 
 def meta_common(cams) -> dict:

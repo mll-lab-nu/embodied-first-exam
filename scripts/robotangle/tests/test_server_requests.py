@@ -8,9 +8,9 @@ eai-standard/2.4 layer, with a stub Session (fake_service.py; needs numpy, no si
   3. one call holds at most /spec max_frames_per_call images (review R3 B-M2): a request that would exceed it for certain
      is a 400 that moves nothing, the largest default request is served, a camera named several times is one camera, and
      rows that take longer than their `dt` (the joint-speed limit) stop adding frames at the budget without being cut short.
-  4. meta["safety"] holds only what the robot feels itself (forcing with "a held part" / "the environment", table-guard
-     stops, IK jumps, rules / scope): no task contact, review event, soft-body ratio, cord stretch or task-part name
-     (user decision 2026-10-12).
+  4. meta["safety"] holds the declared fields as on main (rules, scope, forcing, task_contact_mm, held_finger_contact_mm,
+     review, soft_volume_ratio, attachment_stretch_mm, table_guard, ik_jumps), with the names of the parts involved, and
+     no other field of the reading (user decision 2026-10-13: names are allowed, positions are not).
 usage: python3 scripts/robotangle/tests/test_server_requests.py [repo root]"""
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
 import numpy as np
@@ -155,18 +155,20 @@ try:
                     f"{ {k: m.get(k) for k in ('executed_rows', 'control_steps_chunk', 'frames_skipped')} }")
 finally:
     svc.close()
-svc = Service("native")     # 4. RoboTangle: meta["safety"] holds only what the robot feels (no task contact, no part name)
+svc = Service("native")     # 4. RoboTangle: meta["safety"] holds the declared fields, part names as the tooling gives them
 try:
     code, m = post(svc.port, "/submit", {**BASE, "dt": 0.025}, OK); saf = m.get("safety") or {}; n += 1
-    dropped = {"task_contact_mm", "held_finger_contact_mm", "review", "soft_volume_ratio", "attachment_stretch_mm"}
+    declared = {"rules", "scope", "forcing", "task_contact_mm", "held_finger_contact_mm", "review", "soft_volume_ratio",
+                "attachment_stretch_mm", "table_guard", "ik_jumps"}
     text = json.dumps(saf)
-    names = [w for w in ("piece 0", "claw 1", "goal post", "rope") if w in text]
-    if code != 200 or set(saf) - {"rules", "scope", "forcing", "table_guard", "ik_jumps"} or dropped & set(saf) or names:
-        errs.append(f"meta safety: HTTP {code}, keys {sorted(saf)}, part names {names}")
+    names = [w for w in ("piece 0", "claw 1", "goal post", "rope") if w not in text]
+    if code != 200 or set(saf) != declared or names:
+        errs.append(f"meta safety: HTTP {code}, keys {sorted(saf)} (want {sorted(declared)}), part names missing {names}")
     rec = (saf.get("forcing") or {}).get("recent") or [{}, {}]; n += 1
-    if [(e.get("pressing"), e.get("on")) for e in rec] != [("a held part", "the environment"), ("the right gripper's finger", "the environment")] \
+    if [(e.get("pressing"), e.get("on")) for e in rec] != [("the piece 0 it holds", "the claw 1"), ("the right gripper's finger", "the goal post")] \
+            or saf.get("review", {}).get("recent", [{}])[0].get("bodies") != ["the piece 0", "the claw 1"] \
             or not saf.get("table_guard") or not saf.get("ik_jumps") or saf["forcing"].get("max_press_force_n") != 31.5:
-        errs.append(f"meta safety kept fields: {text[:300]}")
+        errs.append(f"meta safety fields: {text[:300]}")
 finally:
     svc.close()
 shutil.rmtree(TMP, ignore_errors=True)
