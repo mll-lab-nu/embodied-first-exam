@@ -50,8 +50,10 @@ root = pathlib.Path(__file__).resolve().parents[1]
 mode = sys.argv[1] if len(sys.argv) > 1 else ""
 # Benchmarks whose agents have open egress by a documented exception (PROTOCOL §2.11; the same prefixes:
 # ci_checks/check-verifier-isolation.sh OPEN_EGRESS, scripts/task_conventions.py EXTERNAL_OPEN): `allowlist` leaves
-# their tasks alone, and a runner does not narrow their copies to the gateway (`open-prefixes` prints the list).
-OPEN_EGRESS = ("robofunolympics-",)
+# their tasks alone, and a runner does not narrow their copies to the gateway (`open-prefixes` prints the list). Only
+# their tasks without an [agent] network policy are open: one that declares the allowlist (RoboOlympics' exported tasks)
+# is kept on it here, and the runner narrows its copy as any other's.
+OPEN_EGRESS = ("roboolympics-",)
 if mode == "package-hosts":
     print(",".join(PACKAGE_HOSTS)); sys.exit(0)
 if mode == "open-prefixes":
@@ -71,7 +73,8 @@ if mode != "allowlist":      # a run's or an experiment's copy, never the reposi
         sys.exit(f"`{mode}` takes copies of task directories, outside {root / 'tasks'}" + (f": {inside[0]}" if inside else ""))
 dirs = dirs or sorted(p for p in (root / "tasks").iterdir() if (p / "task.toml").is_file())
 if mode == "allowlist":
-    dirs = [d for d in dirs if not d.name.startswith(OPEN_EGRESS)]
+    dirs = [d for d in dirs if not d.name.startswith(OPEN_EGRESS)
+            or re.search(r'(?m)^network_mode\s*=\s*"allowlist"', (d / "task.toml").read_text().partition("[agent]\n")[2].partition("\n[")[0])]
 done = 0
 for d in dirs:
     p = d / "task.toml"; s = p.read_text()

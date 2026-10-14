@@ -40,9 +40,8 @@
 "RoboCasa-GR1" = { dynamics = "static", why = "Fixed-base GR1 at kitchen counters; objects move only by the robot or gravity." }
 "RoboCasa365" = { dynamics = "static", why = "PandaOmron in RoboCasa365 kitchens; fixtures change only visual sites or on/off states, objects move only by the robot or gravity." }
 "RoboDojo" = { dynamics = "static", why = "Two fixed ARX X5 arms at a table; objects move only by the robot or gravity (cloth and liquid moved by the robot)." }
-"RoboFunOlympics" = { dynamics = "static", why = "A humanoid (floating base) at a venue whose ball / implement is at rest until the robot touches it; only the robot and gravity do work." }
 "RoboLab" = { dynamics = "static", why = "Fixed Franka + Robotiq at a table; objects move only by the robot or gravity." }
-"RoboOlympics" = { dynamics = "dynamic", why = "Real-time sports against a scripted opponent: an incoming ball / shuttle / puck and an opponent that moves by itself." }
+"RoboOlympics" = { dynamics = "static", why = "A humanoid (floating base) at a venue whose ball / implement is at rest until the robot touches it; only the robot and gravity do work (formerly RoboFunOlympics; renamed 2026-10-14)." }
 "RoboPaint" = { dynamics = "static", why = "Fixed Franka painting or writing; paint deposits only where the robot's brush touches." }
 "RoboSafeBench" = { dynamics = "static", why = "A fixed arm (UR5e, Franka FR3) or two fixed YAM arms at a work table; in most families things move only by the robot or gravity; a lamp changing colour, smoke or a puddle appearing at once and messages or notes are state or visual changes only; the families with scripted movers are listed below." }
 "RoboTwin 2.0" = { dynamics = "static", why = "Dual-arm aloha-agilex at a table; objects move only by the robot or gravity (RoboTwin's envs set no object velocities)." }
@@ -74,7 +73,14 @@
 "pick_from_conveyor_by_image" = { dynamics = "dynamic", why = "A powered conveyor belt carries the four objects during the episode." }
 "play_tic_tac_toe" = { dynamics = "dynamic", why = "An opponent arm (support_arm0) places its pieces, running in parallel with the agent's actions." }
 
-[family."RoboFunOlympics"]
+[family."RoboOlympics"]
+# RoboOlympics' exported tasks (PROTOCOL §4c, scripts/roboolympics/exported.toml)
+"badminton_match" = { dynamics = "dynamic", why = "Exported match: a scripted opponent returns the shuttle in flight." }
+"soccer_match" = { dynamics = "dynamic", why = "Exported match: a scripted team of two Booster T1 plays the ball." }
+"soccer_ssl_match" = { dynamics = "dynamic", why = "Exported match: a scripted team of five wheeled robots plays the ball." }
+"tabletennis_match" = { dynamics = "dynamic", why = "Exported match: a scripted opponent serves and returns the ball." }
+"badminton_act_skill" = { dynamics = "dynamic", why = "Exported skill task: every graded request starts from a match state with the shuttle in flight (a policy task: no realtime twin)." }
+"tabletennis_hit_skill" = { dynamics = "dynamic", why = "Exported skill task: every graded request starts from a match state with the ball in flight (a policy task: no realtime twin)." }
 "catch" = { dynamics = "dynamic", why = "A launcher 40 m away fires the baseball at t = 1 s (21 m/s)." }
 "catch_and_shoot" = { dynamics = "dynamic", why = "A machine throws the chest pass at a fixed time." }
 "header" = { dynamics = "dynamic", why = "The cross is launched toward the robot at launch_time_s." }

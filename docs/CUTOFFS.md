@@ -32,9 +32,8 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 50 / 50 / 1 |
 | RoboDojo | 3600 s (60 min) | 3600 s (60 min) | — | 48 / 54 / — |
-| RoboFunOlympics | 7200 s (120 min) | 7200 s (120 min) | — | 50 / 50 / — |
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
-| RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
+| RoboOlympics | 7200 s (120 min) | 7200 s (120 min) | 7200 s (120 min) | 50 / 52 / 6 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
 | RoboSafeBench | — | 3600 s (60 min) | 3600 s (60 min) | — / 294 / 15 |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
@@ -42,7 +41,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-2164 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
+2169 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
 
 ## Exceptions (per family, per task)
 
@@ -56,7 +55,11 @@ A benchmark's row is the default of all its tasks in a mode. The table may give 
 "roboarc-cast-coil-05-i01-standard" = 10800
 ```
 
-No exception is in use: every task takes its benchmark's number.
+| Kind | Applies to | Mode | Cutoff | Tasks that take it |
+|---|---|---|---|---|
+| task | `roboolympics-badminton-match-i01-standard-realtime` | standard-realtime | 14400 s (240 min) | 1 |
+| task | `roboolympics-badminton-match-i02-standard-realtime` | standard-realtime | 14400 s (240 min) | 1 |
+| task | `roboolympics-soccerssl-match-i00-standard-realtime` | standard-realtime | 14400 s (240 min) | 1 |
 
 ## What the agent is told
 
@@ -90,7 +93,7 @@ A change of a cutoff changes the task in place: the scene, the frozen instance, 
 - **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which reads `task.toml`.
 - **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
-- **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).
+- **RoboOlympics' exported matches**: the cutoff has to stay above a match's wall time at its slowdown plus the frozen reviews between points (wheeled soccer: 2.9 h at S = 10; badminton: 1.3 to 1.6 h at S = 20).
 - **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.
 
 ## History
@@ -121,6 +124,13 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-13 | RoboARC, privileged, standard | (none) -> 10800 s | owner | new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap |
 | 2026-10-13 | RoboSafeBench, standard | (none) -> 3600 s | owner | the benchmark's first tasks: the protocol's default (D8); RoboSafeBench's own trials gave agents 40 minutes |
 | 2026-10-14 | RoboSafeBench, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the benchmark's first standard-realtime tasks: the standard tasks' number (D8 default); the episode's robot-time budget under the realtime clock (1800 s for the realtime set, RoboSafeBench 0.5.1) runs in real time from the first submit, so 3600 s leaves 1800 s for looking and planning before the clock starts (the harness's set-up and the service's start are outside or before it); the collect hook's finalize is outside the agent's time |
+| 2026-10-14 | RoboOlympics, standard-realtime | 7200 s -> (removed) | owner (board 0107, E7) | removed: the three standard-realtime tasks on this repository's eai-standard/2.3 adapter (table tennis, badminton, air hockey) are deleted; their results are moved out of the pool (jobs-backup), not carried over |
+| 2026-10-14 | RoboFunOlympics, privileged, standard | 7200 s -> (removed) | owner (board 0107, E7) | removed: the benchmark is renamed RoboOlympics (next entry); the same 100 tasks, renamed robofunolympics-* -> roboolympics-* |
+| 2026-10-14 | RoboOlympics, privileged, standard | (none) -> 7200 s | owner (board 0107, E7) | RoboFunOlympics' row under its new name (its entry of 2026-10-12, 0 -> 7200, owner): the same tasks and the same number; no result was recorded under the old name |
+| 2026-10-14 | RoboOlympics, standard-realtime | (none) -> 7200 s | owner (board 0107, E7; proposed in #180) | the matches RoboOlympics exports with its own service (PROTOCOL §4c; table tennis, humanoid soccer): a match at its slowdown plus the frozen reviews between points fits in 7200 s; RoboOlympics' skill-engineering tasks (standard, policy) take the benchmark's standard number, 7200 s |
+| 2026-10-14 | `roboolympics-soccerssl-match-i00-standard-realtime` | (none) -> 14400 s | owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-13) | wheeled soccer 5 v 5 exported by RoboOlympics: two halves and a shoot-out are about 1035 s of game time, 2.9 h of wall time at its slowdown S = 10, plus the frozen reviews; at S = 5 its four overhead cameras cannot be rendered in time (51 % busy at S = 10); the D8 cap |
+| 2026-10-14 | `roboolympics-badminton-match-i01-standard-realtime` | (none) -> 14400 s | owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14) | badminton stays at RoboOlympics' slowdown S = 20 (at 10 its camera-only reference player loses level 1, 0 of 20: its swing planning takes up to 0.89 s, p90); a game to 11 at S = 20 took the reference alone 78 to 93 min, so a model with its reviews needs more than 7200 s; the D8 cap |
+| 2026-10-14 | `roboolympics-badminton-match-i02-standard-realtime` | (none) -> 14400 s | owner (board 0107, E7; proposed in #180 by RoboOlympics' owner, 2026-10-14) | as roboolympics-badminton-match-i01-standard-realtime (the same match at opponent level 2) |
 | 2026-10-14 | MyoSuite, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the first standard-realtime task (table_tennis): the standard twin's number |
 | 2026-10-14 | DexHand, privileged, standard | (none) -> 3600 s | DexHand tasks pull request (D8 default; team meeting 2026-10-14) | the benchmark's first tasks: the protocol's default; a scene builds in 1-12 s and the recorded reference episodes replay in seconds to 10 minutes on one core (the longest, sweep_dustpan, is 66 s of robot time at 2 kHz), so the hour is mostly the agent's own work |
 | 2026-10-14 | Panda Dynamic Scenes, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the standard-realtime twins of the 19 dynamic families: the standard twin's number |

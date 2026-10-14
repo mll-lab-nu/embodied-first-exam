@@ -121,9 +121,9 @@ def check_task(task: Path) -> list[str]:
     readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
     if f"| Agent time budget | {sec} s;" not in readme:
         errs.append(f"README.md's `Agent time budget` row does not say {sec} s")
-    if mode in tc.SIDECAR_MODES:
-        c = task / "environment/docker-compose.yaml"
-        text = c.read_text() if c.is_file() else ""
+    c = task / "environment/docker-compose.yaml"
+    text = c.read_text() if c.is_file() else ""
+    if mode in tc.SIDECAR_MODES and re.search(r"(?m)^  sim:", text):   # a task without a sim service has no budget to tell
         vals = re.findall(rf"""{tc.WALL_CLOCK_ENV}:[ \t]*["']?([^"'\s#]+)""", text)
         if not vals:
             errs.append(f"environment/docker-compose.yaml does not give the sim service {tc.WALL_CLOCK_ENV} (the "

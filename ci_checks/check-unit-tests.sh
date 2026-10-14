@@ -7,8 +7,8 @@
 #     eai-standard/2.2 and 2.4 selftests: crash recovery, request checks; the rcb_service and realtime layers) and the
 #     benchmarks' service and grader tests. Run when both modules can be imported (the CI job `unit-tests` installs
 #     them), skipped with a note otherwise; `--all` makes a missing module a failure.
-# Not here: tests that need a simulator image or media libraries (scripts/roboolympics/tests/test_adapter.py: the
-# eai-olympiad image; scripts/maniguard/tests/test_mg_*.py: imageio, Pillow), run by hand as each benchmark's
+# Not here: tests that need a simulator image or media libraries (scripts/roboolympics/tests/: the
+# eai-robofunolympics image; scripts/maniguard/tests/test_mg_*.py: imageio, Pillow), run by hand as each benchmark's
 # docs/benchmarks/<bench>.md says. The resource monitor's own tests are run by check-monitor.py.
 # Usage: check-unit-tests.sh [--all] [--only <path prefix>...]   (repo-level; run_all.sh calls it once)
 #   --only: just the tests whose path (scripts/...) starts with one of the prefixes (a pull request's scope,
@@ -41,7 +41,8 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: 
 for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
-         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py; do
+         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py \
+         roboolympics/tests/test_skill_sandbox.py; do
   run 300 "$t"
 done
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
