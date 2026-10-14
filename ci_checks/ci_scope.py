@@ -78,7 +78,7 @@ UNITS: dict[str, list[str]] = {
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "docs/RUNNING.md",
                   "docs/REVIEWING.md", ".gitignore")
-# tasks/dataset.toml: check-dataset-manifest.sh is repo-level and always checks every digest
+# tasks/dataset.toml: no longer committed (generated for a release; check-dataset-manifest.sh fails when it is tracked)
 REPO_LEVEL_ONLY = ("tasks/dataset.toml",)
 REF = re.compile(r"\b(scripts|images)/([A-Za-z0-9_.-]+)")
 
