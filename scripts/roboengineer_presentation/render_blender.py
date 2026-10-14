@@ -398,9 +398,10 @@ center = (base_min + base_max) / 2
 room_center = np.array([center[0], center[1], 0])
 half = max(6, float(np.max(base_max[:2] - base_min[:2])) / 2 + 5)
 # G1 and Go2's actual floor is z=0; AnyCar's physical surface boxes top out at z=0.
+ground_z = float(spec.get("ground_z", 0.0))
 box(
     "Studio foundation",
-    (room_center[0], room_center[1], -0.142),
+    (room_center[0], room_center[1], ground_z - 0.142),
     (half + 8, half + 8, 0.14),
     floor_mat,
     0.045,
@@ -408,7 +409,10 @@ box(
 for sx in np.arange(room_center[0] - half, room_center[0] + half, 1.5):
     curve(
         "Concrete expansion seam",
-        [(sx, room_center[1] - half, -0.0015), (sx, room_center[1] + half, -0.0015)],
+        [
+            (sx, room_center[1] - half, ground_z - 0.0015),
+            (sx, room_center[1] + half, ground_z - 0.0015),
+        ],
         0.002,
         dark,
     )
@@ -625,6 +629,11 @@ def set_frame(index):
         target = pos + Vector((0, 0, 0.13))
         offset = Vector((1.0, -1.65, 0.72))
         camera_data.lens = 43
+    elif name == "anycar-jump":
+        # Broadside tracking preserves the physical gap and both ramp slopes.
+        target = Vector((pos.x + 0.35, 0, 0.25))
+        offset = Vector((0.45, -3.8, 1.5))
+        camera_data.lens = 46
     elif name == "g1":
         target = Vector((pos.x + 0.25, pos.y, 0.86))
         offset = Vector((2.35, -3.5, 1.1))

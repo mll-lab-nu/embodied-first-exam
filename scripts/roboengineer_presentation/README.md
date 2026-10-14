@@ -33,6 +33,20 @@ The capture interpreter needs MuJoCo 3.5.0, NumPy 2.3.1, Pillow and the existing
 
 For one still, run Blender with `--python render_blender.py -- --capture <capture-dir> --output <preview-dir> --preview <frame-index>`. `capture --only` and `render_all --only` allow independent task processing. `deliver --collection-only` rebuilds the gallery and montage from already encoded full videos.
 
+### Extra AnyCar ramp-jump demo
+
+The optional ninth demo uses the frozen ramp-jump prototype at commit `8f798faae74458bc51ed280fdb499b889f049b3d`. Export that commit's `scripts/control_transfer` tree to an operator-only directory and supply its archived `ramp-jump-v1` evidence:
+
+```bash
+python -m scripts.roboengineer_presentation.capture_jump \
+  --source-root "$FROZEN_JUMP_SOURCE" --evidence "$JUMP_EVIDENCE" \
+  --out "$JUMP_PRESENTATION"
+python -m scripts.roboengineer_presentation.render_all \
+  --blender "$BLENDER_453" --root "$JUMP_PRESENTATION" --gpu 0 --only anycar-jump
+```
+
+The default selection is instance 0, held-out case 0. Capture requires exact state, policy, dynamics, metrics and feedback agreement with the archived record before exporting 200 poses. The complete eight-second clip plays at real time; the camera shows the launch, physical gap, descending landing ramp and stop. The studio foundation stays below the source pit at z=-1.2 m. This scripted reference replay is additional to the original eight-objective collection and does not establish native Harbor or coding-agent acceptance. Its separate provenance JSON and download preserve the original montage and ZIP.
+
 ## Scope and interpretation
 
 - These clips show scripted or trained reference policies, not Astra/Luna/Sol or other coding-agent scores.

@@ -27,6 +27,8 @@ def sha(path):
 
 
 def export(name, model, frames, record, source, destination, extra=None):
+    extra = dict(extra or {})
+    ground_z = extra.pop("ground_z", 0.0)
     assert np.allclose(np.diff([t for t, _ in frames]), 1 / 25, rtol=0, atol=1e-8), (
         "Nonuniform replay timestamps"
     )
@@ -122,7 +124,7 @@ def export(name, model, frames, record, source, destination, extra=None):
         source_record_sha256=sha(source),
         original_state_sha256=record.get("state_sha256"),
         qpos_sha256=hashlib.sha256(poses.tobytes()).hexdigest(),
-        ground_z=0.0,
+        ground_z=ground_z,
         robot_motion="Exact saved states at 25 Hz; no motion retargeting or physics in Blender",
         presentation_only=True,
         agent_feedback=False,

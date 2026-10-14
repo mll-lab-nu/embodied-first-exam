@@ -55,7 +55,8 @@ def overlay(spec, destination, index, width=1920, height=1080):
     d.text((40, 102), spec["subtitle"], font=font(22), fill=(195, 210, 218, 255))
     d.text(
         (width - 40, 22),
-        f"{index + 1:02d} / 08    •    BLENDER CYCLES",
+        (f"{index + 1:02d} / 08" if index is not None else "EXTRA DEMO")
+        + "    •    BLENDER CYCLES",
         anchor="ra",
         font=font(19),
         fill=(195, 210, 218, 255),
@@ -150,7 +151,7 @@ def encode(root, name):
     out = root / "delivery"
     out.mkdir(exist_ok=True)
     overlay_path = out / (name + "-overlay.png")
-    overlay(spec, overlay_path, ORDER.index(name))
+    overlay(spec, overlay_path, ORDER.index(name) if name in ORDER else None)
     video = out / (name + ".mp4")
     run(
         [
@@ -193,7 +194,7 @@ def encode(root, name):
             "-v",
             "error",
             "-ss",
-            str(min(spec["duration_s"] * 0.35, 5)),
+            str(spec.get("poster_time_s", min(spec["duration_s"] * 0.35, 5))),
             "-i",
             str(video),
             "-frames:v",
@@ -322,7 +323,7 @@ def collection(root):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", type=Path, required=True)
-    p.add_argument("--only", choices=ORDER)
+    p.add_argument("--only", choices=ORDER + ["anycar-jump"])
     p.add_argument("--collection-only", action="store_true")
     a = p.parse_args()
     if not a.collection_only:
