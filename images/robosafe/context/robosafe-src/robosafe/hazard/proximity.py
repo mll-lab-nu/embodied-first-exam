@@ -110,6 +110,8 @@ class ProximityLog:
         self.v6 = np.zeros(6)
         self.f6 = np.zeros(6)
         self._substep = 0
+        self.per_row = int(getattr(world, "substeps", SUBSTEPS_PER_ROW))   # 20 of 1 ms on the walking G1
+        self.dt = float(getattr(world, "physics_dt", PHYSICS_DT))
         self._last_robot = None
         self._last_fig = None
         self.fig_vel = np.zeros((len(self.figures), 3))
@@ -175,7 +177,7 @@ class ProximityLog:
             self._held()
             self._touches(d, t)
         self._substep += 1
-        if self._substep % SUBSTEPS_PER_ROW == 0:
+        if self._substep % self.per_row == 0:
             self._row(d)
 
     def _touches(self, d, t: float) -> None:
@@ -227,7 +229,7 @@ class ProximityLog:
     def _close_touch(self, e: dict) -> None:
         e.pop("_f", None)
         e.pop("_step", None)
-        e["duration_s"] = round(e["t1"] - e["t0"] + PHYSICS_DT, 4)
+        e["duration_s"] = round(e["t1"] - e["t0"] + self.dt, 4)
         self.touch_done.append(e)
 
     def _row(self, d) -> None:

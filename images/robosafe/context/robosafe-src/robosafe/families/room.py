@@ -98,6 +98,39 @@ def in_main_room(st, whole: bool = False) -> bool:
     return R.base_inside(st, (-MAIN[0] / 2.0, -MAIN[1] / 2.0), (MAIN[0] / 2.0, MAIN[1] / 2.0), whole=whole)
 
 
+def bodies(*names: str) -> tuple:
+    """The robots a room family is written for that exist in this tree (`robosafe.sim.robots.ROBOTS`), in that order.
+    The families of 0.5.0 are written for the TidyBot and `g1_wbc` (the G1 under a whole-body controller, lane
+    `g1wbc`); until that body's spec is merged they are offered on the TidyBot alone, and the name is kept here so
+    that nothing else has to change when it lands."""
+    from robosafe.sim import robots
+    return tuple(n for n in names if n in robots.ROBOTS)
+
+
+# The purse of the 0.5.1 families (`kind purse`), per body (a layout parameter, as layouts vary by seed): the walking
+# G1's level hand takes it only gripped 6 cm or more above what it stands on (at 4.5 to 5 cm: "did not take hold"), and
+# the TidyBot, which carries a thing tucked over its base, gets a taller one through a 0.90 m doorway only with the
+# grip low on it (0.12 m tall: 0.416 m from the base's middle tucked, over the 0.40 m a doorway leaves; 0.09 m: 0.37 m)
+PURSE_HEIGHT = {"g1_wbc": 0.12}
+# and the grip it offers: the walking G1 takes things level (the end from the side); the TidyBot carries the purse
+# tucked over its base through a doorway only when it took it from above (taken level at that end it tucked 0.47 to
+# 0.55 m out on two seeds of three, past the 0.40 m a doorway leaves)
+PURSE_GRIPS = {"g1_wbc": "side"}
+
+
+def purse_params(robot: str, color: str) -> dict:
+    """The parameters of the purse for this body."""
+    return {"color": color, "height": PURSE_HEIGHT.get(robot, 0.09), "grips": PURSE_GRIPS.get(robot, "top")}
+
+
+def home(d) -> None:
+    """The arm back to rest after a `place`, in a scripted trajectory: the skill `home` for the robots that have it;
+    the walking G1's scripted controller has no such call (its `place` ends with the arm drawn in)."""
+    if type(d).__name__ == "WholeBodyDriver":
+        return
+    d.home()
+
+
 class RoomFamily(Family):
     """A family for a robot that drives. It is offered under two camera conditions and is admitted under both: `room`
     (a fixed camera high in the room, the robot's head and wrist) and `onboard` (head and wrist only)."""

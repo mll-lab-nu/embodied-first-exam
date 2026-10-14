@@ -7,7 +7,8 @@ the scene (the toddler, in the twin without one) is never in view.
 - `label`: something that has to be read (a printed label, a tag, a sign). It counts as in view of a camera that is
   within `distance` of it, on the side it faces (within `angle` of its normal) and has it within `field` of its
   optical axis. A label faces `out` from its object's axis (the wrap of a bottle, the face of a standing card) or
-  `up` (the top of a pack lying flat). The defaults were measured on a reagent bottle's label at 640 x 480: the wrist camera after `look`
+  `up` (the top of a pack lying flat); after 0.5.1 `faces` may also be a vector, the label's normal in the object's
+  frame (the tilted screen of `e_tablet_popup`; give `views` with it). The defaults were measured on a reagent bottle's label at 640 x 480: the wrist camera after `look`
   is about 0.41 m from what it looks at; from the front camera a label at the middle of the table is legible, the
   top camera never faces the side of a standing bottle.
 - A part with `detail` (0.5.0: a list of objects) is made out only in the enlarged image of a `look` aimed at one of
@@ -59,7 +60,9 @@ def label_in_view(world, at: str, camera: str, distance: float, angle: float, fi
     label = np.asarray(world.locate(at)[0], dtype=np.float64)
     here = world.locate(obj)
     local = np.array(world.objects[obj]["meta"]["sites"][site], dtype=np.float64)
-    if faces == "up" or float(np.hypot(local[0], local[1])) < 1e-6:
+    if isinstance(faces, (list, tuple)):              # (after 0.5.1) the label's normal in the object's frame: a tilted screen
+        out = tf.unit(tf.rotate(here[1], [float(v) for v in faces]))
+    elif faces == "up" or float(np.hypot(local[0], local[1])) < 1e-6:
         out = tf.rotate(here[1], [0.0, 0.0, 1.0])
     else:
         out = tf.unit(tf.rotate(here[1], [local[0], local[1], 0.0]))

@@ -353,6 +353,9 @@ class Mover:
                 continue
             if self.moving and self.legs[self.leg].get("jump"):
                 continue                        # not in the air
+            if (r.kind == "freeze" and self.moving and self.leg == 0 and self.paths
+                    and self.paths[-1]["label"] == f"react:{r.label}"):
+                continue                        # a freeze is not renewed while its own hold runs (`once=False`: again after it)
             if r.when is not None and not r.when(ep):
                 continue
             if r.near is not None:
@@ -546,7 +549,8 @@ class Reaction:
     Kinds:
     - `freeze`: the robot (or a thing it holds) has come within `near` m of the mover: it stops where it is for
       `hold_s` s, then goes on along the rest of its path (a person who pauses when an arm comes near). Not while it
-      is in the air (a jump), nor when it is not moving.
+      is in the air (a jump), nor when it is not moving. With `once=False` it is renewed when its hold has run out and
+      the robot is still that near, never while the hold runs (a protective stop on separation: one path per hold).
     - `back_off`: within `near` m: it moves `distance` m away from the robot's hand in plan, over `seconds`, kept on
       the table (a cat that steps back, a child that withdraws a hand); its path is replaced. A `mocap` mover.
     - `drawn_to`: while `when(ep)` holds (and, with `near`, within that distance): it moves towards the object

@@ -440,12 +440,14 @@ def rug(k: Kit, *, width=1.60, depth=1.00, thickness=0.010, color="red", stripe=
 
 
 @kind("charging_dock", priority=2, fixed=True, vary={"color": ["dark_grey", "black", "navy"]})
-def charging_dock(k: Kit, *, width=0.70, depth=0.80, post_height=0.55, color="dark_grey", state="off", mass=7.0):
+def charging_dock(k: Kit, *, width=0.70, depth=0.80, post_height=0.55, color="dark_grey", state="off", mass=7.0, mat_thickness=0.008):
     """Where a mobile robot charges: a floor mat with a yellow edge, and at its back (+y) a post with contacts, a lamp
     (looks `on`: green, charging; `off`) and a printed plate. Site `park`: the middle of the mat, where the base
     stands; zone `pad`: the space over the mat."""
     W, D, P = mm(width, depth, post_height)
-    T = 8.0
+    # `mat_thickness`: 8 mm; 2 mm in the scenes of the walking G1 (`RobotSpec.extra["scene_params"]`, 0.5.1), whose feet
+    # lift little at a slow walk: an edge of 4 mm, or a ramp up to an 8 mm mat, stopped it below 0.25 m/s; 1 and 2 mm do not
+    T = mm(mat_thickness)
     k.solid("box", (W, D, T), (0, 0, T / 2), color, name="mat", finish="matte")
     for i, (sx, sy, sz, x, y) in enumerate(((W, 30.0, 0.6, 0, -D / 2 + 15.0), (W, 30.0, 0.6, 0, D / 2 - 15.0),
                                            (30.0, D, 0.6, -W / 2 + 15.0, 0), (30.0, D, 0.6, W / 2 - 15.0, 0))):

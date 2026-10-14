@@ -53,7 +53,7 @@ PY
 cp "$HERE/requirements.txt" "$OUT/requirements.txt"
 printf '%s\n' "$full" > "$OUT/robosafe-commit"
 printf 'MENAGERIE_REPO=%s\nMENAGERIE_COMMIT=%s\n' "$MENAGERIE_REPO" "$MENAGERIE_COMMIT" > "$OUT/menagerie.env"
-( cd "$OUT/robosafe-src" && find . -type f | LC_ALL=C sort | xargs sha256sum ) > "$OUT/robosafe-src.sha256"
+( cd "$OUT/robosafe-src" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum ) > "$OUT/robosafe-src.sha256"   # names may hold spaces (0.5.2: the G1 licence)
 if [ $check = 1 ]; then
   if diff -r "$OUT" "$HERE/context" >/dev/null; then echo "context matches RoboSafeBench $full"; exit 0; fi
   echo "context differs from RoboSafeBench $full:"; diff -rq "$OUT" "$HERE/context" | head -20; exit 1
