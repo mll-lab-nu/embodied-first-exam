@@ -1187,7 +1187,7 @@
    },
    "template": "cast-keyhole-easy-i00",
    "variation": "cast_keyhole_double_maze",
-   "design": "Double maze: two plates, gold and silver, each with a slot grid, threaded through each other at right angles (Jianwen's design dm4b)",
+   "design": "Double maze: two plates, gold and silver, each with a slot grid, threaded through each other at right angles (design dm4b)",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (keyhole_gold, keyhole_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his contact_weld_v1 pre-weld: the grippers start closed on keyhole_gold, keyhole_silver)",

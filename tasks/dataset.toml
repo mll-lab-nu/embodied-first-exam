@@ -6571,11 +6571,11 @@ digest = "sha256:5276bd9fbae04cd893a5bf3b40f1bc5d7fa433f0a1d9c5a88a138b7f77b30fc
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-06-i01-privileged"
-digest = "sha256:da6eb5eca3295c31e8178b3b71ac3300ad502f5fd4cf5bc722a40725fd2a5f4e"
+digest = "sha256:ca98b21b8a70e689214da4a460d42ff31e38287d605ad0ef13ee523511dece0f"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-keyhole-06-i01-standard"
-digest = "sha256:d9673e0d013e6aa35cce447881d0edcfeb2cf18a549ffa4c2a6957ac19a1fd5d"
+digest = "sha256:dd7e1326f3d714ddc7d3751329e7fe6360a521354b2fcf0e7f38e29c6b7a8df0"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-fiber-bundling-01-i01-privileged"

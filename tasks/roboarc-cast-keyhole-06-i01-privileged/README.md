@@ -81,4 +81,4 @@ Separate and place the entire silver keyhole piece inside the green dashed goal 
 - Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
 
 ### Change Log
-- 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of cast_keyhole: Double maze: two plates, gold and silver, each with a slot grid, threaded through each other at right angles (Jianwen's design dm4b). Its task files start from the Genesis 1.2.1 task `cast-keyhole-easy-i00` (privileged mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.
+- 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of cast_keyhole: Double maze: two plates, gold and silver, each with a slot grid, threaded through each other at right angles (design dm4b). Its task files start from the Genesis 1.2.1 task `cast-keyhole-easy-i00` (privileged mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.
