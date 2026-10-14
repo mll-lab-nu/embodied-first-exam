@@ -16,6 +16,7 @@ simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / 
 robot = "ambench-fahexa"
 family = "press_button_fahexa"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 2.0
