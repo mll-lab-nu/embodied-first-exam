@@ -216,11 +216,11 @@ def render_doc(tasks: list[Path]) -> str:
         "(PROTOCOL D8).",
         "",
         "```toml",
-        "[family_cutoff_sec.\"RoboTangle\"]              # benchmark; then one line per family, a number per mode",
+        "[family_cutoff_sec.\"RoboARC\"]              # benchmark; then one line per family, a number per mode",
         "\"cast_coil\" = { privileged = 14400, standard = 14400 }",
         "",
         "[task_cutoff_sec]                              # one line per task directory",
-        "\"robotangle-cast-coil-hard-i00-standard\" = 10800",
+        "\"roboarc-cast-coil-05-i01-standard\" = 10800",
         "```",
         "",
     ]
@@ -279,9 +279,9 @@ def render_doc(tasks: list[Path]) -> str:
         "`meta[\"time_left_s\"]`, counted from the agent's first request to the service (any endpoint; kept through a "
         "restart of the service), never from the service's start: the service is up before the agent's phase begins, so a "
         "clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is "
-        "what stops the agent. RoboTangle's service still ends the episode itself when its own count reaches 0; since its "
+        "what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its "
         "MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to "
-        "become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).",
+        "become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).",
         "- **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that "
         "were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 "
         "`COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the "
