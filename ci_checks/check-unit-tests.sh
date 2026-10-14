@@ -23,7 +23,7 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]
 for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
-         tests/test_codex_tools_off.py tests/test_task_seed.py; do
+         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py; do
   run 300 "$t"
 done
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged

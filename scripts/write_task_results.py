@@ -4,6 +4,7 @@
 usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <a Python file with ANALYSIS = {family: {"U": text, "L": text}}>]"""
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import base, canonical, mode as mode_of  # noqa: E402
+import account_failure_check  # noqa: E402
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 root = pathlib.Path(__file__).resolve().parents[1]
 if "--out" not in sys.argv: sys.exit("--out <dir> is required: results are published on the results site, not committed (PROTOCOL D3)")
@@ -23,28 +24,55 @@ def last_msgs(trial, k=3):
         d = json.load(open(glob.glob(str(trial / "agent/trajectory.json"))[0]))
         return [s["message"].strip().replace("\n", " ") for s in d.get("steps", []) if s.get("source") == "agent" and (s.get("message") or "").strip()][-k:]
     except Exception: return []
-NOT_A_RESULT = "**not a result** — infrastructure error (`infra_error` / `grader_error` in the verifier line): run it again; it is not the agent's 0"
+NOT_A_RESULT = "**not a result** — infrastructure error ({}): run it again; it is not the agent's 0"
+def not_a_result(trial, r, rw):
+    """Why a trial that is not a success is no result either (PROTOCOL §2.6, §2.12: an infrastructure failure is neither a
+    success nor the agent's 0; only the agent's own end, its deliverable or the cutoff, AgentTimeoutError, is a result),
+    or None. Board 0105 F-M2: a trial whose verifier never ran (no reward.json: `docker compose up` failed, e.g. a CPU
+    cap above the host's; the verifier timed out) was published as the agent's 0."""
+    if rw.get("infra_error") or rw.get("grader_error"):
+        return "`infra_error` / `grader_error` in the verifier line"
+    ex = (r.get("exception_info") or {}).get("exception_type") or ""
+    if not rw:
+        return "the verifier wrote no reward.json" + (f"; Harbor: `{ex}`" if ex else "")
+    if ex and ex != "AgentTimeoutError":
+        return f"Harbor ended the trial with `{ex}`"
+    try:
+        if account_failure_check.check(str(trial)).get("stop"):
+            return "a model-account or configuration failure (scripts/account_failure_check.py)"
+    except Exception:
+        pass
+    return None
+def load_reward(trial):
+    try:
+        d = json.load(open(trial / "verifier/reward.json"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
 n = 0
 for trial in sorted((jobs / job).glob("*__*")):
     if not (trial / "result.json").exists(): continue
     r = json.load(open(trial / "result.json")); task = canonical(r["task_name"].split("/")[-1])   # also pre-v1.0 jobs
     tdir = root / "tasks" / task
     if not tdir.is_dir(): continue
-    rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}
+    rw = load_reward(trial)
     ar = r.get("agent_result") or {}; mode = mode_of(task); limited = mode != "privileged"; fam = base(task).replace("robotwin_2_0_", "")
     out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
     for f in ("replay.mp4", "replay.last.png"):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
     gw = json.load(open(trial / "gateway/totals.json")) if (trial / "gateway/totals.json").exists() else {}
     over = bool(gw.get("over_token_budget"))               # PROTOCOL §5: over the token budget = failed
-    # PROTOCOL §2.6: infra_error (or a grader error) = not a result, neither a success nor the agent's 0
+    # PROTOCOL §2.6: infra_error (or a grader error) = not a result, neither a success nor the agent's 0; so is a trial
+    # the verifier never graded, or that Harbor or the model account ended (not_a_result). A verdict of success with no
+    # infrastructure flag stands; over the token budget is the agent's failure unless the verifier flagged infrastructure.
     infra = bool(rw.get("infra_error") or rw.get("grader_error"))
     ok = rw.get("success") == 1 and not over and not infra
+    why = None if ok or (over and not infra) else not_a_result(trial, r, rw)
     an = analysis.get(fam, {}).get("L" if limited else "U", "")
     lines = [f"# {label} — {task}\n",
              f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'standard-realtime': 'standard-realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
              "| | |", "|---|---|",
-             f"| result | {'**1 (success)**' if ok else NOT_A_RESULT if infra else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
+             f"| result | {'**1 (success)**' if ok else NOT_A_RESULT.format(why) if why else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",
              f"| actions / physics steps | {rw.get('steps') or rw.get('n_actions') or '—'} / {rw.get('sim_steps') or '—'} |",
              f"| tokens in / out | {ar.get('n_input_tokens')} / {ar.get('n_output_tokens')} |",

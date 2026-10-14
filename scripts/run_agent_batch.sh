@@ -36,6 +36,10 @@
 #   RESULTS      a directory OUTSIDE the repository: after each job scripts/write_task_results.py writes the per-task results
 #                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL D3: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
+#   HOST_CPUS    the host's CPU count (`nproc`): a task's CPU cap above it ([environment] / [verifier.environment] cpus,
+#                a compose service's cpus) is clamped to it in the job's own copy of the task ($JOBS/.tasks/<job>/,
+#                removed afterwards), as PROTOCOL §2.10 requires of a runner (docker refuses a larger cap); tasks/ keeps its
+#                values (scripts/clamp_cpus.py)
 #   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
 #   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
 #                calls through scripts/usage_gateway/gateway.py, which forwards
@@ -78,6 +82,8 @@ JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
 GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"; GATEWAY_START_WAIT="${GATEWAY_START_WAIT:-10}"
 GATEWAY_EGRESS="${GATEWAY_EGRESS:-gateway}"
+HOST_CPUS="${HOST_CPUS:-$(nproc)}"
+[[ "$HOST_CPUS" =~ ^[1-9][0-9]*$ ]] || { echo "HOST_CPUS must be a positive integer (the host's CPU count)" >&2; exit 2; }
 case "$GATEWAY_EGRESS" in gateway|task) ;; *) echo "GATEWAY_EGRESS must be gateway or task" >&2; exit 2 ;; esac
 # absolute paths: with the gateway on, Harbor is started from the job's own copy of the task (run_job), not from the repository
 abspath() { case "$1" in ""|/*) printf '%s' "$1" ;; *) printf '%s/%s' "$PWD" "$1" ;; esac; }
@@ -320,15 +326,46 @@ gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task wit
   done
 }
 
+plain_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task as it is
+  local dir="$1" a; shift
+  rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
+  while [ $# -gt 0 ]; do
+    a="$1"; shift
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; fi
+  done
+}
+
+task_dirs() {  # <root> <harbor -i args...>: the task directories the -i arguments name under <root>/tasks
+  local root="$1" a; shift
+  while [ $# -gt 0 ]; do
+    a="$1"; shift
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then printf '%s\n' "$root/tasks/$1"; shift; fi
+  done
+}
+
 run_job() {  # <job> <concurrency> <harbor -i args...>
   local job="$1" n="$2"; shift 2
   local envf=(); [ -n "$ENV_FILE" ] && envf=(--env-file "$ENV_FILE")
-  local root="$R" f
-  if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
+  local root="$R" f dirs=()
+  mapfile -t dirs < <(task_dirs "$R" "$@")
+  # PROTOCOL §2.10: a CPU cap above the host's CPU count is clamped to it in the copy the job runs (docker refuses such a
+  # container: "range of CPUs is from 0.01 to 8.00"), never in tasks/
+  local clamp=0; python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" --needs "${dirs[@]}" >/dev/null && clamp=1
+  if { [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; } || [ "$clamp" = 1 ]; then
     [[ "$job" =~ ^[A-Za-z0-9._-]+$ ]] || { log "FAILED $job: not a job name (letters, digits, . _ -); not started"; return 1; }
     root="$JOBS/.tasks/$job"
-    gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy (the gateway and the package registries as the only egress) ($root); not started"; rm -rf "$root"; return 1; }
+    if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
+      gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy (the gateway and the package registries as the only egress) ($root); not started"; rm -rf "$root"; return 1; }
+    else
+      plain_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy ($root); not started"; rm -rf "$root"; return 1; }
+    fi
     for f in .env .env.local; do [ -e "$R/$f" ] && ln -s "$R/$f" "$root/$f"; done     # what Harbor would load from the repository
+    if [ "$clamp" = 1 ]; then
+      mapfile -t dirs < <(task_dirs "$root" "$@")
+      python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" "${dirs[@]}" | sed "s#^$root/tasks/#[$job] clamped #" | tee -a "$LOG" >/dev/null \
+        && ! python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" --needs "${dirs[@]}" >/dev/null \
+        || { log "FAILED $job: could not clamp its CPU caps to the host's $HOST_CPUS ($root); not started"; rm -rf "$root"; return 1; }
+    fi
   fi
   stamp_task_dirs "$root" "$@"
   log "start $job: $* (concurrency $n, attempts $K)"
