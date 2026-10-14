@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generate this benchmark's tasks: tasks/<bench>-<slug>-i00-privileged and tasks/<bench>-<slug>-i00-standard.
+"""Generate this benchmark's tasks: tasks/<bench>-<slug>-i00-privileged and tasks/<bench>-<slug>-i00-standard, and
+tasks/<bench>-<slug>-i00-standard-realtime for the environments whose scene is dynamic (REALTIME; PROTOCOL §4b, §2.14).
 
     python3 scripts/<bench>/generate.py            # every verified environment in frozen/report.json
     python3 scripts/<bench>/generate.py PreSoakPan
@@ -602,6 +603,279 @@ services:
 """
 
 
+# -- standard-realtime twins (PROTOCOL §4b; owner 2026-10-14, board 0112) -----------------------------------------
+# The dynamic environments (scripts/task_dynamics.toml; PROTOCOL §2.14) get a `-standard-realtime` twin: the same frozen
+# instance and success check, served by shared/realtime/server.py (rcb_service.Sim on casa_tool.Session) behind the
+# shared eai-standard/2.3 layer (rcb_realtime.py, rcb_service.py, rcb_client.py, grade.py: unchanged copies of
+# scripts/humanoidbench/shared/; check-tooling-identity.sh). Per environment: the slowdown S, from the real-time factor
+# RTF of that service measured on the reference workstation (PROTOCOL §4b: S = 1 when RTF >= 3, else ~1.5 / RTF
+# rounded up), and how it was measured (docs/benchmarks/robocasa365.md, "Standard-realtime").
+REALTIME = {
+    "TurnOnToasterOven": {
+        "slowdown": 2,
+        "rtf": "1.27-1.29",
+        "measured": "2026-10-14, board 0112, ws-1 (32 cores, load 35-45), the service capped at 4 CPUs: 1.29 with "
+                    "the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 3 episodes of 600 control steps), 1.27 "
+                    "for the bare physics holding still; S = ceil(1.5 / 1.29) = 2",
+        "why": "the timer knob, once set, turns back by itself (1/3000 of its range per simulated second)",
+    },
+}
+RT_RESET_BUDGET = 10   # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
+RT_MAX_STEPS = MAX_STEPS   # an episode's control steps: the privileged deliverable's cap (150 s of robot time)
+RT_REVIEW_PR = "205"   # the pull request that adds the realtime twins (human review, PROTOCOL §2.7)
+RT = SHARED / "realtime"
+
+
+def rt_compose(rec: dict) -> str:
+    S = REALTIME[rec["env"]]["slowdown"]
+    return f"""# Standard-realtime mode (PROTOCOL §4b): the simulator runs in the `sim` sidecar (the agent cannot open it), on its own clock
+# once an episode starts (sim/rcb_realtime.py, the shared eai-standard/2.3 layer, with sim/server.py, this benchmark's
+# adapter on casa_tool); the agent only reaches port 8000. No `expose`/`ports` on sim: under Harbor's egress control it
+# shares main's network namespace (localhost:8000).
+# CPU only, as the standard twin (MuJoCo physics, OSMesa rendering, about 0.12 s a 320 x 240 frame): no GPU reservation.
+# Crash recovery: compose restarts the service, which resumes the same episode, paused, never a reset.
+# Knobs: ${{NAME:-default}} takes NAME from the shell that runs harbor. The defaults are the task's configuration;
+# results under other settings are reported separately.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: {IMAGE}
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: python /srv/rcb_realtime.py
+    restart: on-failure:6          # a resume continues the episode, paused
+    environment:
+      RCB_INSTANCE: /srv/instance.npz
+      RCB_DATA: /data
+      RCB_STARTUP_TIMEOUT_S: "600"
+      RCB_MAX_CONTROL_STEPS: "{RT_MAX_STEPS}"     # an episode's control steps ({RT_MAX_STEPS * 0.05:g} s of robot time)
+      PYTHONPATH: /srv
+      RCB_SLOWDOWN: "${{RCB_SLOWDOWN:-{S}}}"                # S = {S}: the world runs at 1/S of real speed (this task's measured RTF; PROTOCOL §4b)
+      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RT_RESET_BUDGET}}}"        # {RT_RESET_BUDGET} resets (PROTOCOL §4b default); 0: one episode
+"""
+
+
+def realtime_instruction(rec: dict) -> str:
+    env, dim, rt = rec["env"], rec["action_dim"], REALTIME[rec["env"]]
+    S, cams, typ = rt["slowdown"], ", ".join(rec["cameras"]), ACTION_TYPE[dim]
+    return f"""# {TITLE} · {env} — STANDARD-REALTIME MODE (robot as a service; time does not stop)
+
+{ROBOT_TEXT[0].upper() + ROBOT_TEXT[1:]} {SCENE}: {ENV_DOC.format(env=env)} (robosuite, MuJoCo).
+**Task: {rec["instruction"]}**
+The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
+
+You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open, you reach it
+only through a client, and like real hardware it does not wait for you: once an episode is running, the robot (and the
+kitchen: {rt["why"]}) moves on while you think.
+
+**Slowdown: S = {S}.** The world runs at 1/S of real speed: one control step (0.05 s of robot time) every
+S x 0.05 s = {0.05 * S:g} s of wall-clock time. `spec()["timing"]["slowdown"]` states it.
+
+## Rules (real-robot rules)
+- **Time does not stop.** An episode starts paused, on the frozen starting state, holding still. Its clock starts at
+  your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs one control step every {0.05 * S:g} s of
+  wall-clock time, whether or not you send anything, until the episode ends. Between your commands it executes what you
+  planned; when the plan runs out it holds still (velocity channels zero, targets, grip and mode kept). Nothing pauses
+  for you, not your thinking, not your tool calls.
+- **Drive it with a program.** One turn of yours (a model response, a tool call) takes seconds: write a controller (Python
+  in your container, with numpy and the client) that plans or streams the commands, in the background
+  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground; use your turns to start
+  episodes, read what happened, and improve the program.
+- **Episodes and resets.** An episode ends at the first control step after which the environment's success check holds
+  (success), after {RT_MAX_STEPS} control steps ({RT_MAX_STEPS * 0.05:g} s of robot time; failed), when your time is up, or
+  on a simulator error. You have **{RT_RESET_BUDGET} resets** (`spec()["budget"]["reset"]`, which is authoritative: if it
+  says 0, there is no reset and the one episode is the run). `r.reset(cameras=[])` rebuilds the same frozen starting state
+  (it takes about 15-20 s) and starts a new episode, paused until your next `submit`, either abandoning the running
+  episode or after one has ended. Reset with `cameras=[]` and ask for images afterwards: the service holds image
+  requests back for about four times as long as the last request that rendered took, and a reset that renders counts
+  as one (so after `r.reset()` with cameras, images come back only about a minute later). Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until
+  you reset. **Only the last episode is graded**: an episode you reset away is never graded, a success ends the run at
+  once (no reset after it), and when your time is up the episode then running is the one graded.
+- **No privileged state.** You see what the robot's cameras see (RGB, optional depth) and the robot's own state:
+  joints, end effector, the command in force, and each camera's current pose. No object poses, no scene layout, no
+  success signal: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
+  `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
+- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
+  simulator and grades the replay. Keep the controller at `/app/output/gen.py` for the record.
+- Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
+- Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+
+## Scoring
+The episode is graded by the environment's own success check for `{env}` (`_check_success`, run twice after every
+control step, as in the privileged verifier) on the state after its last control step; the episode ends the moment it
+holds. The fresh replay of the recorded episode, the commands the robot actually executed at each control step, must
+succeed as well and end in the same state.
+
+{success_text(rec)}
+## Time and streaming
+- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
+  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on.
+  `res.meta["control_steps"]` is the number of steps run so far in this episode, `res.meta["plan_end_step"]` where the
+  plan now ends. A chunk covers at most 10 s of robot time; `at` may be up to `spec()["timing"]["max_ahead_steps"]`
+  steps ahead, so plan a longer movement in several chunks (`at=0`, `at=200`, ...).
+- A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]`); in a gap before
+  `at` the last row in force is repeated, velocity channels included.
+- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and
+  returns what the cameras saw meanwhile. `cameras=[]` skips the images (the fastest call); rendering takes about 0.12
+  s a camera on the service's CPU and the robot does not wait for it.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
+Its docstring is the full reference (`python -c "import rcb_client; help(rcb_client)"`).
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects and waits until the scene is ready (about a minute) |
+| `r.spec()` | `GET /spec` | `control_dt` (0.05 s), `timing`, the action layout and limits, the cameras (intrinsics), `proprio_layout`, `budget` |
+| `r.status()` | `GET /status` | `control_steps`, `done`, `reason`, `running`, `planned_steps`, `lag_s`, `episode`, `resets_left` |
+| `r.submit("{typ}", A, dt=0.05, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of {dim} channels `dt` apart, from step `at`; answers at once; the first one starts the clock |
+| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
+| `r.reset(cameras=[])` | `POST /reset` | a new episode from the frozen starting state, paused (at most {RT_RESET_BUDGET} in all); `cameras=[]`: no images (see Rules) |
+
+The answers come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`, `clipped`), `res.last[camera]`,
+`res.frames` / `res.video`, `res.depth`, `res.proprio`.
+- Action `{typ}`: the robot's native controller command, one row per control step (`control_dt` = 0.05 s).
+  {action_text(dim, "standard")}
+- Cameras: {cams} (320 x 240, mounted on the robot; intrinsics in `spec()["cameras"]`). Each proprioception row ends with
+  every camera's current pose, `cam_<camera>_x, _y, _z` (position, m) and `_r00 .. _r22` (the camera-to-world rotation,
+  row by row; OpenGL axes: x right, y up, looking along -z).
+- World frame: metres, z up.
+"""
+
+
+def realtime_readme(rec: dict) -> str:
+    env, rt = rec["env"], REALTIME[rec["env"]]
+    base, S = f"{BENCH}-{rec['slug']}-i00", rt["slowdown"]
+    head = [line.replace(f"`{base}-privileged`", f"`{base}-privileged`") for line in readme_head(rec, "standard")]
+    head[0] = f"# {base}-standard-realtime"
+    head = [h.replace("standard (`eai-standard/2.1`)", "standard-realtime (`eai-standard/2.3`)") for h in head]
+    task = (
+        f"Standard-realtime mode (`eai-standard/2.3`, slowdown S = {S}) of `{base}-privileged`: the same frozen instance "
+        "and success check, served by the `sim` sidecar on a clock that does not stop (the shared realtime layer of "
+        "HumanoidBench, BiGym 2.0 and RoboOlympics with `environment/sim/server.py`, this benchmark's adapter on "
+        "`casa_tool`). The scene is dynamic (scripts/task_dynamics.toml): " + rt["why"] + ". The agent sees the robot's "
+        "cameras (RGB-D; intrinsics, and each camera's pose in every proprioception row), its own joints and end effector, "
+        f"and the instruction; {RT_RESET_BUDGET} resets, only the last episode graded."
+    )
+    reference = (
+        f"`solution/`: none for this mode. Solvability: the privileged reference's {rec['n_actions']} actions planned "
+        "from step 0 (`submit(..., at=0)`, then `at=200`) through this service at S = 2 succeed live (at control step 256) "
+        "and in the fresh replay, deterministic, with no stall (board 0112, 2026-10-14)."
+    )
+    verification = (
+        "The sim service judges the episode live (it ends at the first step after which the success check holds), "
+        "records every control step it ran, and after the agent's time replays the graded episode in a fresh simulator "
+        "and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, "
+        "the replay succeeds and ends in the same state. The clock's record (`stalls`, `max_lag_s`, ...) is copied into "
+        "`reward.json` and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), "
+        "reward 0."
+    )
+    details = [
+        ("Slowdown", f"S = {S} (`RCB_SLOWDOWN`'s default): measured RTF {rt['rtf']} ({rt['measured']})"),
+        ("Episode", f"at most {RT_MAX_STEPS} control steps ({RT_MAX_STEPS * 0.05:g} s of robot time; the privileged "
+                    "deliverable's cap); ends at the first success"),
+        ("Reset budget", f"{RT_RESET_BUDGET} (`RCB_RESET_BUDGET`; PROTOCOL §4b); a reset rebuilds the scene (about 20 s)"),
+        ("Action type", f"`{ACTION_TYPE[rec['action_dim']]}` ({rec['action_dim']} channels, `control_dt` 0.05 s)"),
+        ("Cameras", ", ".join(f"`{c}`" for c in rec["cameras"]) + " (robot-mounted; poses in the proprioception)"),
+    ]
+    text = readme(head, task, DIFFICULTY_STANDARD.replace("\n", " ").replace("finish in one episode without a reset",
+                  "act on a clock that does not stop, with resets"), reference, verification, details)
+    return text + ("\n### Change Log\n- 2026-10-14 (owner, board 0112): added. The scene is dynamic (PROTOCOL §2.14), so "
+                   f"the task gets a standard-realtime twin, S = {S}, {RT_RESET_BUDGET} resets.\n")
+
+
+def realtime_toml(rec: dict) -> str:
+    rt = REALTIME[rec["env"]]
+    ev = ("the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh "
+          f"replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #{RT_REVIEW_PR}")
+    return f"""schema_version = "1.3"
+artifacts = [
+  {{ source = "/data/final.json", service = "sim" }},
+  {{ source = "/data/episode.jsonl", service = "sim" }},
+  {{ source = "/data/trajectory.npz", service = "sim" }},
+  {{ source = "/data/trajectory_live.f64", service = "sim" }},
+  {{ source = "/data/replay.mp4", service = "sim" }},
+  {{ source = "/data/replay.last.png", service = "sim" }},
+  {{ source = "/data/ticks.f64", service = "sim" }},
+  {{ source = "/data/calls.jsonl", service = "sim" }},
+  {{ source = "/data/submitted.f64", service = "sim" }},
+  {{ source = "/data/startups.jsonl", service = "sim" }},
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-standard-realtime"
+description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = {rt["slowdown"]}): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The robot and the kitchen move on while the agent thinks ({rt["why"]}), so the agent plans or streams native controller commands from a program of its own through the client (calibrated RGB-D cameras, the robot's own joints and end effector); {RT_RESET_BUDGET} resets, only the last episode graded; no object poses; the sim service records every executed control step and grades a fresh replay of the last episode."
+authors = [{{ name = "{AUTHOR}" }}]
+keywords = [{KEYWORDS.format(bench=BENCH)}, "standard-realtime-mode"]
+
+[metadata]
+author_name = "{AUTHOR}"
+author_org = "{ORG}"
+task_type = "trajectory"
+simulator = "robosuite"
+robot = "{ROBOT}"
+family = "{BENCH}/{rec["env"]}"
+mode = "standard-realtime"
+protocol = "eai-standard/2.3"
+oracle = "none"
+oracle_evidence = "{ev}"
+expert_time_estimate_hours = 6.0
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# The agent's time is up: stop whatever it left running in its container, so nothing drives the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which replays the graded
+# episode (at most {RT_MAX_STEPS} control steps) in a fresh simulator and writes the verdict ("finalized": true) before any
+# video; the hook waits for it until 840 s, then for the replay video ("video_pending") until 870 s.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\\"finalized\\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\\"video_pending\\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+{agent_block("standard-realtime")}
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 600.0
+"""
+
+
+def make_realtime(rec: dict) -> Path:
+    fz = FROZEN / rec["slug"]
+    r = TASKS / f"{BENCH}-{rec['slug']}-i00-standard-realtime"
+    reset_dir(r)
+    put(r / "task.toml", realtime_toml(rec))
+    put(r / "instruction.md", realtime_instruction(rec))
+    put(r / "README.md", realtime_readme(rec))
+    put(r / "environment/Dockerfile", STD_ENV_DOCKERFILE)
+    put(r / "environment/docker-compose.yaml", rt_compose(rec))
+    put(r / "environment/rcb_client.py", src=RT / "rcb_client.py")
+    put(r / "environment/rcb1.py", src=SHARED / "rcb1.py")
+    for name in ("rcb_realtime.py", "rcb_service.py", "server.py"):
+        put(r / "environment/sim" / name, src=RT / name)
+    put(r / "environment/sim/casa_tool.py", src=SHARED / "casa_tool.py")
+    put(r / "environment/sim/rcb1.py", src=SHARED / "rcb1.py")
+    put(r / "environment/sim/instance.npz", src=fz / "instance.npz")
+    put(r / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
+    put(r / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
+    put(r / "tests/grade.py", src=RT / "grade.py")
+    normalize(r)
+    return r
+
+
 def reset_dir(d: Path) -> None:
     """Start from an empty directory (agent results are not kept in the repository: PROTOCOL D3)."""
     if d.exists():
@@ -659,6 +933,8 @@ def make(rec: dict) -> None:
     put(s / "solution/oracle.npz", src=fz / "oracle.npz")
     normalize(p)
     normalize(s)
+    if rec["env"] in REALTIME:
+        make_realtime(rec)
 
 
 def verified(rec: dict) -> bool:
@@ -680,7 +956,7 @@ def main(envs: list[str]) -> None:
             continue
         make(rec)
         n += 1
-    print(f"generated {2 * n} task directories")
+    print(f"generated {2 * n + sum(1 for e in envs if e in REALTIME)} task directories")
 
 
 def tree(d: Path) -> dict:

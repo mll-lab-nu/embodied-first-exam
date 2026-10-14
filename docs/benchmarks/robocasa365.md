@@ -1,7 +1,8 @@
 # RoboCasa365
 
 50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
-(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks.
+(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one standard-realtime twin (since 2026-10-14):
+`tasks/robocasa365-turn-on-toaster-oven-i00-standard-realtime`, the benchmark's one dynamic task.
 
 | | |
 |---|---|
@@ -60,6 +61,42 @@ service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: ve
 hook's budget, request validation). Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint,
 not MuJoCo's left-eye camera 3.4 cm to its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results
 from before used the offset calibration.
+
+## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic tasks (PROTOCOL §2.14, `scripts/task_dynamics.toml`) get a
+`-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
+by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
+it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged
+  (`scripts/robocasa365/shared/realtime/rcb_realtime.py`, `rcb_service.py`, `rcb_client.py`, `grade.py`: byte-identical
+  copies of `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with
+  `scripts/robocasa365/shared/realtime/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
+  twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
+  check (`_check_success`, twice per control step), cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU) and fresh
+  replay (a new `casa_tool.Session` in the same process, as the standard service). The robot's cameras move with it:
+  their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
+  twin's `cam2world_gl`). Not served: the 2.1 service's per-response calibration dictionary.
+- **Episode.** The standard twin grades the state after the last step of an episode as long as the agent's time; on a
+  clock that does not stop that episode, and its replay, would be up to an hour long. Here an episode ends at the first
+  control step after which the success check holds (the privileged rule applied to the trajectory up to that step),
+  after 3000 control steps (150 s of robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the
+  agent's time is up, or on a simulator error. **10 resets** (PROTOCOL §4b); a reset rebuilds the scene (15-20 s,
+  clock paused). The instruction tells the agent to reset with `cameras=[]`: the shared layer holds image requests back
+  four times as long as the last rendering request took, and a reset that renders counts as one, so after a reset with
+  cameras, images came back only about a minute later (measured: a `get_obs` waited 19.5 s, until the episode ended).
+  A shared-layer change would remove this (a reset's time is not a render's); not made here.
+- **Slowdown S = 2.** Real-time factor (ws-1, 32 cores at load 35-45, the service capped at 4 CPUs; board 0112,
+  2026-10-14): 1.29 with the realtime clock flat out (`RCB_SLOWDOWN=0.01`, 3 episodes of 600 control steps), 1.27 for
+  the bare physics holding still (0089: 0.97-1.25 for the standard service); PROTOCOL §4b: S = ceil(1.5 / 1.29) = 2,
+  one control step every 0.1 s of wall time. An OSMesa frame takes about 0.12 s per camera; `server.py` makes the
+  renderer at start and after every reset (a new OSMesa context takes about 2 s: before, the first image of the first
+  episode stalled the clock 2.4 s).
+- **Checked at S = 2** (board 0112): the privileged reference (271 rows) planned from step 0 (`at=0`, then `at=200`)
+  succeeds live at control step 256 and in the fresh replay, deterministic, no stall; nop (no request): `timeout`,
+  not a success; 3 episodes (2 resets with `cameras=[]`, 200-step cap for the test) driven by a controller
+  streaming one row per control step with an image every 0.5 s: no stall, largest lag 0.05 s, an image in 44-65 ms,
+  the graded episode's replay deterministic.
+- **Cutoff** 3600 s, the standard twin's.
 
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no
