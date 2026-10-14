@@ -1,0 +1,4 @@
+# Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but Python (the sim service replayed and judged the episode).
+FROM @@CLIENT_IMAGE@@
+COPY test.sh grade.py /tests/
+RUN chmod +x /tests/test.sh

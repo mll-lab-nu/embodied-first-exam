@@ -212,7 +212,7 @@ def check_limits(task: Path, d: dict, r: dict, env_gpu: bool, services: list[str
             f"(run python3 scripts/task_conventions.py {task.relative_to(ROOT) if task.is_relative_to(ROOT) else task})"
         )
     # ... and, just before it, the `## External material` paragraph every task states in the same words (PROTOCOL §2.11)
-    elif not ins[: -len(want)].endswith("\n" + render_external(task.name) + "\n"):
+    elif not ins[: -len(want)].endswith("\n" + render_external(task) + "\n"):
         errs.append("instruction.md does not state `## External material` (PROTOCOL §2.11; scripts/task_conventions.py "
                     "EXTERNAL_TEXT) just before `## Resource limits`")
     return errs

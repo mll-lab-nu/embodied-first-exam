@@ -1,260 +1,463 @@
 #!/usr/bin/env python3
-"""RoboOlympics task generator (docs/benchmarks/roboolympics.md): renders tasks/roboolympics-*-standard-realtime from
-tasks.toml, sports.toml, templates/ and shared/.
+"""Generate the RoboOlympics tasks: tasks/roboolympics-<family>-i00-privileged and -standard (eai-standard/2.1)
+for every family in scripts/roboolympics/families.json (docs/benchmarks/roboolympics.md).
 
-    python3 scripts/roboolympics/gen_tasks.py render [NAME ...]   write the task directories
-    python3 scripts/roboolympics/gen_tasks.py check               exit 1 if tasks/ differs from a fresh render (CI:
-                                                                  ci_checks/check-generated-tasks.sh)
+    python3 scripts/roboolympics/gen_tasks.py render     # (re)write every task dir; `git diff tasks/` stays empty
+    python3 scripts/roboolympics/gen_tasks.py check      # write nothing; exit 1 if a task dir differs
+    python3 scripts/roboolympics/gen_tasks.py render --only sprint,penalty-kick --out /tmp/x    # some families, elsewhere
+Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 3 (no simulator).
 
-A task directory is:
-  environment/sim/       the sidecar (mounted at /srv): the eai-standard/2.3 layer, copied unchanged from HumanoidBench
-                         (scripts/humanoidbench/shared/realtime/rcb_realtime.py, shared/standard/rcb_service.py, rcb1.py),
-                         the RoboOlympics adapter and its entry point (shared/sim/rcb_olympics.py, server.py), the
-                         RoboOlympics core and renderers it needs (shared/sim/core, shared/sim/renderers) and the sport
-                         (shared/sports/<sport>/ as sport/, without its built-in players and its own grader); the players'
-                         visual meshes are in the eai-olympiad image (RO_LOD_DIR), checked against lod.json
-  environment/           the agent's image: the client (scripts/humanoidbench/shared/realtime/rcb_client.py, rcb1.py) and
-                         the client pins (scripts/eai_standard/client-requirements.txt)
-  tests/                 the verifier (shared/tests/grade.py)
-  solution/              the oracle: oracle/oracle_play.py and the sport's builtin_players.py
-Standard library only (CI runs `check` without the simulator); every file is copied or filled from a template, then
-scripts/task_conventions.py normalizes the task.
-"""
-from __future__ import annotations
+Inputs, all in the repository:
+  scripts/roboolympics/families.json           per family: the seed, the oracle level, the review evidence
+  scripts/roboolympics/instances/<f>-i00.json  the frozen instance + the texts and numbers the tasks quote
+                                                  (make_instances.py, in the simulator image)
+  scripts/roboolympics/shared/                 the tooling (rcb_rfo.py), the world package (rfo/: the core, and one
+                                                  module per family under rfo/tasks/, copied as rfo_task.py), grade.py,
+                                                  the sim service (standard/: the adapter server.py on rcb_service.py),
+                                                  the clients, the oracle drivers (solution/)
+  scripts/roboolympics/oracles/<family>/       oracle.py (privileged) and standard_rows.npz (make_oracles.py)
+  scripts/roboolympics/templates/<mode>/       every other task file; *.tmpl is filled with the instance's values
+  scripts/eai_standard/client.env                 the standard agent image and its pip pins
+  images/robofunolympics/VERSION                  the base image tag
+Every task is written to a scratch directory, passed through scripts/task_conventions.py's normalize() and synced into
+tasks/: a task dir holds exactly what the generator writes."""
 
-import ast
-import filecmp
-import json
-import re
-import shutil
-import sys
-import tempfile
-import textwrap
-import tomllib
-from pathlib import Path
+import argparse, json, os, pathlib, sys, tempfile
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent.parent
-TASKS_DIR = ROOT / "tasks"
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+HERE = ROOT / "scripts/roboolympics"
 SHARED = HERE / "shared"
-TEMPLATES = HERE / "templates"
-HB = ROOT / "scripts" / "humanoidbench" / "shared"
-CLIENT = ROOT / "scripts" / "eai_standard"
-CLIENT_ENV = dict(l.split("=", 1) for l in (CLIENT / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
-CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
-CLIENT_REQUIREMENTS = CLIENT / CLIENT_ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
-LAYER = {"rcb_realtime.py": HB / "realtime" / "rcb_realtime.py", "rcb_service.py": HB / "standard" / "rcb_service.py",
-         "rcb1.py": HB / "standard" / "rcb1.py"}
-# the sport's files that stay out of the simulator: its built-in players (the oracle's, in solution/), RoboOlympics'
-# own grader, and table tennis' duel and low level (these tasks play format match at the high level)
-NOT_IN_SIM = {"builtin_players.py", "grade.py", "duel.py", "workers.py", "ipc.py", "robot_model.py", "seat",
-              "tt_duel.xml"}
-# the agent reaches the model APIs and the package registries only (scripts/set_agent_egress.py HOSTS; the same list as every allowlist task)
-HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-         "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
-REVIEW_PR = 106          # the pull request that adds the tasks (their oracle evidence)
+REGISTRY = "ghcr.io/mll-lab-nu"
+PREFIX = "roboolympics"
+RESET_BUDGET = 50        # standard mode's attempts (PROTOCOL §4.5 per-benchmark default; owner, 2026-10-12)
+BENCHMARK = "RoboOlympics"   # this benchmark's row of scripts/task_cutoffs.toml (the label of task_conventions.BENCHMARKS)
 
 
-def load() -> tuple[dict, list[dict], dict]:
-    cfg = tomllib.loads((HERE / "tasks.toml").read_text())
-    return cfg["defaults"], cfg["tasks"], tomllib.loads((HERE / "sports.toml").read_text())
-
-
-def adapter_facts() -> dict:
-    """From shared/sim/rcb_olympics.py, without importing it (it needs numpy): BREAK_S and, per sport profile, the
-    sport.toml [spec] entries it drops (they describe RoboOlympics' own interface) and the literal ones it adds."""
-    tree = ast.parse((SHARED / "sim" / "rcb_olympics.py").read_text())
-    out = {"profiles": {}}
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", None) == "BREAK_S":
-            out["break_s"] = ast.literal_eval(node.value)
-        if isinstance(node, ast.ClassDef):
-            p = {}
-            for st in node.body:
-                if isinstance(st, ast.Assign) and getattr(st.targets[0], "id", None) in ("drop", "rules"):
-                    try:
-                        p[st.targets[0].id] = ast.literal_eval(st.value)
-                    except ValueError:
-                        pass
-            out["profiles"][node.name] = p
-        if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", None) == "PROFILES":
-            out["names"] = {k.value: v.id for k, v in zip(node.value.keys, node.value.values)}
-    return out
-
-
-def fill(template: str, ctx: dict) -> str:
-    missing: list[str] = []
-
-    def one(m: re.Match) -> str:
-        if m.group(1) not in ctx:
-            missing.append(m.group(1))
-            return m.group(0)
-        return str(ctx[m.group(1)])
-    out = re.sub(r"\{\{(\w+)\}\}", one, template)
-    if missing:
-        raise KeyError(f"template placeholders with no value: {sorted(set(missing))}")
-    return out
-
-
-def flow(text: str) -> str:
-    """One paragraph per blank-line-separated block (the TOML texts are wrapped at ~120 columns)."""
-    return "\n\n".join(" ".join(p.split()) for p in text.strip().split("\n\n"))
-
-
-RULES_NOTE = ("The rule texts come from RoboOlympics' `sport.toml`. Where they name RoboOlympics' own interface "
-              "(`{'type': 'act', ...}`, `{'type': 'toss', ...}`, `{'type': 'none'}`, `{'type': 'target', ...}`, "
-              "`state.*`, `game spec`, `/spec`), read: your `stroke`, `toss`, `rest`, `mallet` and `stop` rows, the "
-              "proprio columns and `spec()`; where they say the world freezes for reviews, read: the break.\n")
-
-
-def rules_md(sport_toml: dict, facts: dict, profile: str) -> str:
-    """The rules from the sport's sport.toml: [spec] (without the entries about RoboOlympics' own interface, with the
-    adapter's replacements), the tiebreaks and the deviations from the rulebook."""
-    p = facts["profiles"].get(profile, {})
-    spec = {k: v for k, v in (sport_toml.get("spec") or {}).items() if k not in set(p.get("drop", ()))}
-    spec.update({k: v for k, v in p.get("rules", {}).items() if isinstance(v, str)})
-    lines = [RULES_NOTE] + [f"- `{k}`: {' '.join(str(v).split())}" for k, v in spec.items()]
-    tb = (sport_toml.get("tiebreaks") or {}).get("text")
-    if tb:
-        lines.append(f"- Winner: {' '.join(tb.split())}")
-    rb = sport_toml.get("rulebook") or {}
-    if rb.get("name"):
-        lines.append(f"- Rulebook: {rb['name']}" + (f", {rb['version']}" if rb.get("version") else ""))
-    for d in sport_toml.get("deviations") or []:
-        lines.append(f"- Deviation {d['id']} ({d['rule']}): {' '.join(d['text'].split())}")
-    return "\n".join(lines)
-
-
-def _cutoff_sec() -> int:
-    sys.path.insert(0, str(ROOT / "scripts"))
+def agent_timeout() -> int:
+    """The agent's time limit (PROTOCOL §2.12): the cutoff table's, the same in both modes. normalize writes it into
+    task.toml, RCB_WALL_CLOCK_S and the closing `## Time limit`; the templates never state it as a number."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
     from task_conventions import cutoff_sec
-    return cutoff_sec("RoboOlympics", "standard-realtime")
+    p, s = cutoff_sec(BENCHMARK, "privileged"), cutoff_sec(BENCHMARK, "standard")
+    assert p == s, (p, s)
+    return int(p)
+CORE = ("__init__.py", "scene.py", "looks.py", "world.py", "referee.py", "task.py")   # the rfo package in a task (no other family)
+MODES = ("privileged", "standard")
+CLIENT = dict(
+    line.split("=", 1)
+    for line in (ROOT / "scripts/eai_standard/client.env").read_text().splitlines()
+    if "=" in line and not line.startswith("#")
+)
+SHORT = {  # the action types' rows, in words (the layout itself is in instance.json / spec()); {w} waist joints, {n} joints
+    "stand": "waist {w} + arms 14 joint targets",
+    "walk": "`vx`, `vy`, `wz` + waist {w} + arms 14 joint targets",
+    "walk_falcon": "`vx`, `vy`, `wz` + waist {w} + arms 14 joint targets (as `walk`)",
+    "walk_agile": "`vx`, `vy`, `wz` + waist {w} + arms 14 joint targets (as `walk`)",
+    "run": "`vx`, `vy`, `wz`",
+    "run_arms": "`vx`, `vy`, `wz` + arms 14 joint targets",
+    "joints": "all {n} joint targets",
+    "lowcmd": "all {n} joints × (`q`, `dq`, `tau`, `kp`, `kd`): {n} targets, then {n} velocities, {n} torques, {n} kp, {n} kd",
+}
+NOTE_STAND = """- **`stand`** holds the legs at the standing pose with stiff gains and a gravity-support torque. It is not a balance
+  controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a
+  few seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two."""
+NOTE_WALK = {
+    "unitree_g1": """- **`walk`** runs Unitree's own G1 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks at
+  about 0.6 m/s; `vy` up to 0.5 and `wz` up to 1.57 rad/s; it follows with lag and barely moves in its first second.
+  At a zero command it marks time on the spot (the pelvis sways and drifts a centimetre or two per second) and
+  recovers from small disturbances, which `stand` does not. When the legs come to it from another mode it first blends
+  them to the stance (0.3 s) and holds a zero command until the robot is steady (up to 2 s). It was trained with the
+  arms at rest: moving the arms and the waist disturbs it.""",
+    "unitree_h1": """- **`walk`** runs Unitree's own H1-2 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks at
+  about 0.6 m/s and its heading drifts (close the loop on the IMU); `vy` up to 0.5 and `wz` up to 1.57 rad/s. At a
+  zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
+  come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
+  steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
+  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The
+  G1's two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name)
+  they keep it upright but do not walk it.""",
+}
+NOTE_WALKERS = """- **`walk_falcon`** and **`walk_agile`** are two more walking policies for the G1's legs, with the same row as `walk`
+  (you keep the waist and the arms): FALCON (LeCAR-Lab, MIT; trained with arm motions and forces on the hands) and
+  AGILE's velocity-height policy (NVIDIA WBC-AGILE, Apache-2.0; trained while the arms and the waist moved), the
+  released weights run in numpy at 50 Hz on their own leg gains (kp 100 / 100 / 100 / 200 / 20 / 20 per leg). Both
+  hold still and follow the command better than `walk` while the arms move or carry something; FALCON also adds a small
+  correction to the wrists. FALCON zeroes speeds below 0.2 m/s and turns below 0.2 rad/s and stands with the pelvis at
+  about 0.74 m; AGILE zeroes commands of norm below 0.1, stands lower (about 0.68 m) and barely turns on the spot below
+  about 0.7 rad/s (walking at 0.2 m/s or more it turns as asked). Their command ranges are in the action table. A
+  walker takes the legs at once, from where they are (its memory starts afresh); `walk`, the other walker and `run`
+  take them from it the same way. Going from a walker straight to `stand` usually ends in a fall (`stand` holds
+  Unitree's stance and does not balance): give `walk` a zero command for about 2 s first."""
+NOTE_RUN = """- **`run`** runs RoboOlympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
+  above that; the command changes at most 1.5 m/s per second), `|vy|` ≤ 0.12 m/s, `|wz|` ≤ 0.5 rad/s. `run_arms` gives
+  you the arms while it keeps the legs and the waist; taking the arms away from its swing disturbs it. Switching to
+  `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first (from 2.4 m/s that takes
+  about 2 s and 2.3 m)."""
+NOTE_REST = """- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`, evaluated
+  at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit. `joints`
+  uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to @@KP_MAX@@ and kd up to
+  @@KD_MAX@@ for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
+- **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
+- **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
+  10 cm along the forearm) with a grip: while `grip_left` / `grip_right` ≥ 0.5 the hand holds the nearest grippable
+  object whose surface is within 3.5 cm of the palm point (the middle of the pad, 4.5 cm beyond the wrist flange along
+  the forearm) and that moves at most 6 m/s relative to it; below 0.5 it lets go at once. Since the palm point is inside
+  the pad, an object can be gripped where it touches one of the pad's two broad faces, not at its narrow sides or its
+  far end. What is grippable is the task's own equipment, named in the rules.
+- **A tool on a hand** (a racket, a paddle, a club; where the task has one) is fixed to the wrist in place of the pad.
+  It collides with the world, the ball and the rest of your own body.
+- **The air** is real: balls and implements feel drag and, when they spin, lift.
+- **If the physics diverges** (a numerical blow-up, typically from a violent joint command), the attempt ends as a
+  failure: "the simulation became unstable"."""
 
 
-def context(t: dict, defaults: dict, sports: dict, facts: dict) -> dict:
-    s = sports[t["sport"]]
-    sport_toml = tomllib.loads((SHARED / "sports" / t["sport"] / "sport.toml").read_text())
-    slowdown = int(defaults["slowdown"])
-    break_s = float(facts["break_s"])
-    actions = re.findall(r"^\| `(\w+)` \|", s["actions"], re.M)
+def control_notes(t0: dict) -> str:
+    r = t0["robot"]
+    name = r.get("name", "unitree_g1")
+    caps = lambda k: " / ".join(f"{r[k][i]:g}" for i in (0, 12, len(r[k]) - 1))  # noqa: E731 -- legs / waist / arms
+    parts = [NOTE_STAND, NOTE_WALK[name]] + ([NOTE_WALKERS] if "walk_falcon" in t0["action_types"] else []) + (
+        [NOTE_RUN] if r.get("run_command_range") else [])
+    parts.append(NOTE_REST.replace("@@KP_MAX@@", caps("kp_max")).replace("@@KD_MAX@@", caps("kd_max")))
+    return "What the platform does and does not do for you:\n\n" + "\n".join(parts)
+
+
+def rulebook_block(inst: dict) -> str:
+    if not inst.get("rulebook"):
+        return ""
+    out = f"**Rule book:** {inst['rulebook']}."
+    if inst.get("deviations"):
+        out += " Where this task departs from it:\n\n" + "\n".join(f"- {d}" for d in inst["deviations"])
+    else:
+        out += " This task departs from it in nothing that the referee judges."
+    return out + "\n\n"
+
+
+
+def task_dir(fam: str, mode: str) -> str:
+    return f"{PREFIX}-{fam}-i00-{mode}"
+
+
+def fill(text: str, values: dict) -> str:
+    for k, v in values.items():
+        text = text.replace(f"@@{k}@@", str(v))
+    if "@@" in text:
+        raise RuntimeError(f"unfilled placeholder near {text[text.index('@@'):][:40]!r}")
+    return text
+
+
+def toml_str(text: str) -> str:
+    """The inside of a basic TOML string."""
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def walkers(t0: dict) -> str:
+    out = ""
+    for name in ("walk_falcon", "walk_agile"):
+        t = t0["action_types"].get(name)
+        if t:
+            lo, hi = t["lower"][:3], t["upper"][:3]
+            out += (f"; `{name}` {lo[0]:g} ≤ vx ≤ {hi[0]:g}, {lo[1]:g} ≤ vy ≤ {hi[1]:g}, {lo[2]:g} ≤ wz ≤ {hi[2]:g}")
+    return out
+
+
+def action_table(t0: dict, mode: str) -> str:
+    rows = ["| type | row (then `grip_left`, `grip_right`) | floats | who drives what |", "|---|---|---|---|"]
+    n = len(t0["robot"]["joints"])
+    for name, t in t0["action_types"].items():
+        rows.append(f"| `{name}` | {SHORT[name].format(w=n - 26, n=n)} | {t['dim']} | {t['meaning']} |")
+    walk, run = t0["robot"]["walk_command_max"], t0["robot"].get("run_command_range")
+    runs = (f"; `run` and `run_arms` {run[0][0]:g} ≤ vx ≤ {run[0][1]:g}, |vy| ≤ {run[1][1]:g}, |wz| ≤ {run[2][1]:g}"
+            if run else "")
+    return "\n".join(rows) + (
+        f"\n\nVelocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, "
+        f"rad/s). Bounds: `walk` |vx| ≤ {walk[0]:g}, |vy| ≤ {walk[1]:g}, |wz| ≤ {walk[2]:g}{walkers(t0)}{runs}. Joint targets are absolute "
+        "angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, "
+        "< 0.5 opens it. " + (
+            start_note(t0, mode)))
+
+
+def start_row(t0: dict) -> list:
+    """The joint targets in force at t = 0, one per joint (the instance's hold row; the legs' stance in `stand`)."""
+    r, h = t0["robot"], t0["hold"]
+    n = len(r["joints"])
+    if h["type"] == "stand":
+        return list(r["stance_legs_rad"]) + list(h["row"][:-2])
+    if h["type"] in ("joints", "lowcmd"):
+        return list(h["row"][:n])
+    return list(r["stance_legs_rad"]) + list(h["row"][3:-2])     # walk, run_arms: a velocity command, then the upper body
+
+
+def start_note(t0: dict, mode: str) -> str:
+    r, h = t0["robot"], t0["hold"]
+    row = "[" + ", ".join(f"{x:g}" for x in h["row"]) + "]"
+    where = ("`s.hold()` returns it" if mode == "privileged" else
+             "`spec()[\"start_command\"]` has it, and `get_obs(seconds=...)` keeps the command in force")
+    grips = [side for side, g in zip(("left", "right"), h["row"][-2:]) if g >= 0.5]
+    held = f" The {' and the '.join(grips)} grip{'s are' if len(grips) > 1 else ' is'} closed at the start." if grips else ""
+    if h["type"] == "stand":
+        rest = list(r["rest_upper_rad"])
+        if max(abs(a - b) for a, b in zip(h["row"][:-2], rest)) < 1e-3 and not grips:
+            return ("At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the "
+                    "table's start angles and both grips open keeps it there.")
+        return ("At the start the robot is in `stand` mode, but not with the arms at rest (the venue text says how it "
+                "starts): the joint table's last column has the angles in force." + held + " The `stand` row that "
+                f"keeps the start as it is: `{row}` ({where}); a `stand` row with other angles or grips moves the "
+                "arms or lets go.")
+    return (f"At the start the robot is not in the plain standing pose (the venue text says how it starts): it is held "
+            f"in `{h['type']}` mode." + held + f" The row that keeps the command in force: {where}.")
+
+
+def joint_table(t0: dict) -> str:
+    r = t0["robot"]
+    rest = start_row(t0)
+    assert len(rest) == len(r["joints"]), (len(rest), len(r["joints"]), t0["hold"]["type"])
+    rows = ["| # | joint | range (rad) | speed (rad/s) | torque (N m) | kp | kd | at the start (rad) |", "|---|---|---|---|---|---|---|---|"]
+    for i, j in enumerate(r["joints"]):
+        lo, hi = r["range_rad"][i]
+        rows.append(f"| {i} | `{j}` | [{lo:g}, {hi:g}] | {r['speed_limit_rad_s'][i]:g} | {r['torque_limit_nm'][i]:g} | "
+                    f"{r['default_kp'][i]:g} | {r['default_kd'][i]:g} | {rest[i]:g} |")
+    return "\n".join(rows)
+
+
+def values(fam: str, spec: dict, inst: dict, version: str) -> dict:
+    t0, texts = inst["t0"], inst["texts"]
+    rob = t0["robot"]
+    sentence = texts["sentence"]
+    full = spec["oracle"] == "full"
+    measured = measured_std = ""
+    if full:      # what make_oracles.py measured when it recorded the reference solution
+        res = json.loads((HERE / "oracles" / fam / "result.json").read_text())
+        measured = (f" Measured (make_oracles.py): success after {res['time_s']:g} s of the {res['time_limit_s']:g} s "
+                    "limit, live and in a fresh replay, ending in the same state.")
+        measured_std = (f" The privileged twin's reference rows ({res['steps']} control steps, success after "
+                        f"{res['time_s']:g} s) streamed through the client.")
+    test = f"scripts/roboolympics/tests/test_{fam.replace('-', '_')}.py"
+    review = spec.get("review", "")
+    none_ev = ("no reference solution; the referee is tested by " + test + ": " + spec["evidence"] + "; human review "
+               + (f"in PR #{review}" if review else "in the pull request that adds the benchmark") + " (PROTOCOL §2.7)")
     return {
-        **{k: t[k] for k in ("name", "sport", "source", "family", "robot", "format", "action_level", "seed", "level",
-                             "sim_cpus")},
-        "title": s["title"], "title_lower": s["title"].lower(), "unit": s["unit"],
-        "ball": {"tabletennis": "ball", "badminton": "shuttle", "airhockey": "puck"}[t["sport"]],
-        "intro": flow(s["intro"]), "intro_line": " ".join(s["intro"].split()),
-        "task_text": s["task_text"], "episode_text": s["episode_text"],
-        "actions": s["actions"].strip(), "action_list": ", ".join(f"`{a}`" for a in actions),
-        "first_action": actions[0], "proprio": flow(s["proprio"]), "cameras": flow(s["cameras"]), "tip": flow(s["tip"]),
-        "robot_text": s["robot"], "rules": rules_md(sport_toml, facts, facts["names"][t["sport"]]),
-        "refused_example": {"tabletennis": "a stroke whose contact time has already passed",
-                            "badminton": "a toss when it is not your serve",
-                            "airhockey": "a mallet target at a step where the rally is already over; a row planned for a step "
-                                         "inside a break is dropped and does not count"}[t["sport"]],
-        "revision": sport_toml["sport"]["revision"], "slowdown": slowdown,
-        "wall_s_per_step": f"{0.01 * slowdown:g}", "break_s": f"{break_s:g}", "break_wall_s": f"{break_s * slowdown:g}",
-        # the agent's time limit: the cutoff table's (scripts/task_cutoffs.toml, PROTOCOL §2.12); normalize writes it into
-        # task.toml, the service's RCB_WALL_CLOCK_S and instruction.md's closing `## Time limit` section, and no template states it
-        "agent_timeout_sec": _cutoff_sec(), "image": defaults["image"],
-        "client_image": CLIENT_IMAGE, "allowed_hosts": json.dumps(HOSTS), "upstream": defaults["upstream"],
-        "review_pr": REVIEW_PR,
+        "FAMILY": fam,
+        "FAMILY_ID": fam.replace("-", "_"),
+        "CATEGORY": inst["category"],
+        "TITLE": inst["title"],
+        "SEED": inst["seed"],
+        "SENTENCE": sentence,
+        "SENTENCE_TOML": toml_str(sentence),
+        "VENUE": texts["venue"],
+        "RULES": texts["rules"],
+        "DIFFICULTY": texts["difficulty"],
+        "START_NOTE": "",
+        "STAGES": " → ".join(inst["stages"]),
+        "HORIZON_STEPS": t0["horizon_steps"],
+        "HORIZON_S": f"{inst['time_limit_s']:g}",
+        "RAW_DIM": t0["raw_dim"],
+        "CAMERAS": ", ".join(f"`{c}`" for c in t0["cameras"]),
+        "ACTION_TABLE": action_table(t0, "privileged"),
+        "ACTION_TABLE_STD": action_table(t0, "standard"),
+        "VENUE_CAMERAS": ", ".join(f"`{c}`" for c in t0["cameras"] if not c.startswith("head_")),
+        "WALK_DIM": t0["action_types"]["walk"]["dim"],
+        "ROBOT_SHORT": {"unitree_g1": "G1", "unitree_h1": "H1-2"}[rob["name"]],
+        "JOINT_TABLE": joint_table(t0),
+        "CONTROL_NOTES": control_notes(t0),
+        "RULEBOOK": rulebook_block(inst),
+        "RULEBOOK_ROW": ((inst.get("rulebook") or "none (not a rule-book event)") + (
+            "; deviations: " + " · ".join(inst["deviations"]) if inst.get("deviations") else "")).replace("|", "/"),
+        "ROBOT_LINE": (f"{rob['title']} humanoid robot ({len(rob['joints'])} joints, {rob['height_m']:g} m tall, "
+                       f"{rob['mass_kg']:.0f} kg; the RoboOlympics simulator on MuJoCo)"),
+        "ROBOT_TITLE": rob["title"], "ROBOT_ID": {"unitree_g1": "unitree-g1", "unitree_h1": "unitree-h1-2"}[rob["name"]],
+        "ROBOT_KW": {"unitree_g1": "unitree-g1", "unitree_h1": "unitree-h1-2"}[rob["name"]],
+        "NJ": len(rob["joints"]),
+        "AGENT_TIMEOUT": agent_timeout(),
+        "RESET_BUDGET": RESET_BUDGET,
+        "PRIV": task_dir(fam, "privileged"),
+        "STD": task_dir(fam, "standard"),
+        "SHA": t0["state_sha"],
+        "IMAGE": f"{REGISTRY}/eai-robofunolympics:{version}",
+        "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
+        "EXPERT_HOURS": spec.get("expert_hours", 3.0),
+        "EXPERT_HOURS_STD": spec.get("expert_hours_standard", spec.get("expert_hours", 3.0) + 2.0),
+        "ORACLE": spec["oracle"],
+        "ORACLE_EVIDENCE": toml_str(spec["evidence"] + measured if full else none_ev),
+        "ORACLE_EVIDENCE_STD": toml_str(spec["evidence"] + measured_std if full else none_ev),
+        "REFERENCE": (
+            "`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, "
+            "and writes the trajectory (`solution/solve.sh`). " + spec["evidence"] + measured) if full else (
+            "None. No reference controller exists for this family yet: " + spec["evidence"] + "."),
+        "REFERENCE_STD": (
+            "`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the "
+            "client (`solution/rows.npz`, recorded by scripts/roboolympics/make_oracles.py). "
+            + spec["evidence"] + measured_std) if full else f"None (as `{task_dir(fam, 'privileged')}`).",
+        "REVIEW": "" if full else ("No oracle; human review " + (f"in PR #{review}" if review else
+                                   "in the pull request that adds the benchmark") + " (PROTOCOL §2.7)."),
     }
 
 
-def write(out: Path, rel: str, text: str) -> None:
-    p = out / rel
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text.rstrip("\n") + "\n")
-    if rel.endswith(".sh"):
-        p.chmod(0o755)
-
-
-def copy_tree(src: Path, dst: Path, skip=frozenset()) -> None:
-    for f in sorted(src.rglob("*")):
-        rel = f.relative_to(src)
-        if "__pycache__" in rel.parts or any(part in skip for part in rel.parts) or not f.is_file():
+def files_of(tdir: pathlib.Path, vals: dict) -> dict[str, tuple[bytes, int]]:
+    out = {}
+    for p in sorted(tdir.rglob("*")):
+        if not p.is_file() or "__pycache__" in p.parts:
             continue
-        (dst / rel).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(f, dst / rel)
+        rel = p.relative_to(tdir).as_posix()
+        if rel.endswith(".tmpl"):
+            rel, data = rel[:-5], fill(p.read_text(), vals).encode()
+        else:
+            data = p.read_bytes()
+        out[rel] = (data, 0o755 if rel.endswith(".sh") else 0o644)
+    return out
 
 
-def render(t: dict, defaults: dict, sports: dict, facts: dict, tasks_dir: Path = TASKS_DIR) -> Path:
+def world_files(fam: str, base: str) -> dict[str, tuple[bytes, int]]:
+    """The tooling, the rfo package's core and this family's rules under `base` (environment, tests, environment/sim)."""
+    out = {f"{base}/rcb_rfo.py": ((SHARED / "rcb_rfo.py").read_bytes(), 0o644),
+           f"{base}/rfo_task.py": ((SHARED / "rfo/tasks" / f"{fam.replace('-', '_')}.py").read_bytes(), 0o644)}
+    for name in CORE:
+        out[f"{base}/rfo/{name}"] = ((SHARED / "rfo" / name).read_bytes(), 0o644)
+    return out
+
+
+def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
+    """{task dir name: {relative path: (content, mode)}} for the two modes of one family."""
+    path = HERE / "instances" / f"{fam}-i00.json"
+    raw = path.read_bytes()
+    inst = json.loads(raw)
+    if inst["family"] != fam or inst["seed"] != spec.get("seed", 0):
+        raise RuntimeError(f"{path.name} does not match families.json (family, seed)")
+    vals = values(fam, spec, inst, version)
+    std, sol, orc = SHARED / "standard", SHARED / "solution", HERE / "oracles" / fam
+    full = spec["oracle"] == "full"
+    out = {}
+    for mode in MODES:
+        if mode == "privileged":
+            files = files_of(HERE / "templates/privileged", vals)
+            files.update(world_files(fam, "environment"))
+            files.update(world_files(fam, "tests"))
+            for rel in ("environment/instance.json", "tests/instance.json"):
+                files[rel] = (raw, 0o644)
+            files["tests/grade.py"] = ((SHARED / "grade.py").read_bytes(), 0o644)
+            if full:
+                files["solution/solve.sh"] = ((sol / "solve_privileged.sh").read_bytes(), 0o755)
+                files["solution/run_oracle.py"] = ((sol / "run_oracle.py").read_bytes(), 0o644)
+                files["solution/oracle.py"] = ((orc / "oracle.py").read_bytes(), 0o644)
+        else:
+            v = dict(vals, REFERENCE=vals["REFERENCE_STD"], ACTION_TABLE=vals["ACTION_TABLE_STD"])
+            files = files_of(HERE / "templates/standard", v)
+            files["environment/rcb_client.py"] = ((std / "rcb_client.py").read_bytes(), 0o644)
+            files["environment/rcb1.py"] = ((std / "rcb1.py").read_bytes(), 0o644)
+            req = CLIENT["CLIENT_REQUIREMENTS"].strip()
+            files["environment/client-requirements.txt"] = ((ROOT / "scripts/eai_standard" / req).read_bytes(), 0o644)
+            for name in ("server.py", "rcb_service.py", "rcb1.py"):
+                files[f"environment/sim/{name}"] = ((std / name).read_bytes(), 0o644)
+            files.update(world_files(fam, "environment/sim"))
+            files["environment/sim/instance.json"] = (raw, 0o644)
+            files["tests/grade.py"] = ((std / "grade.py").read_bytes(), 0o644)
+            if full:
+                files["solution/solve.sh"] = ((sol / "solve_standard.sh").read_bytes(), 0o755)
+                files["solution/oracle_replay.py"] = ((sol / "oracle_replay.py").read_bytes(), 0o644)
+                files["solution/rows.npz"] = ((orc / "standard_rows.npz").read_bytes(), 0o644)
+        out[task_dir(fam, mode)] = files
+    return out
+
+
+def normalized(planned: dict, normalize) -> dict:
+    """Write the tasks to a scratch tasks/ dir, run task_conventions.normalize() on each and read them back."""
+    out = {}
+    with tempfile.TemporaryDirectory(prefix="robofun_gen_") as td:
+        for name, files in planned.items():
+            for rel, (data, mode) in files.items():
+                p = pathlib.Path(td) / name / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes(data)
+                os.chmod(p, 0o755 if mode & 0o100 else 0o644)
+        for name in planned:
+            normalize(pathlib.Path(td) / name)
+        for name in planned:
+            t = pathlib.Path(td) / name
+            out[name] = {
+                p.relative_to(t).as_posix(): (p.read_bytes(), 0o755 if p.stat().st_mode & 0o100 else 0o644)
+                for p in sorted(t.rglob("*"))
+                if p.is_file() and "__pycache__" not in p.parts
+            }
+    return out
+
+
+def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
+    """Make `task` hold exactly `files`. Returns the differences (written unless check)."""
+    diffs = []
+    have = {p.relative_to(task).as_posix() for p in task.rglob("*") if p.is_file() or p.is_symlink()} if task.exists() else set()
+    have = {h for h in have if "__pycache__" not in h.split("/")}
+    for rel in sorted(have - set(files)):
+        diffs.append(f"remove {task.name}/{rel}")
+        if not check:
+            (task / rel).unlink()
+    for rel, (data, mode) in sorted(files.items()):
+        p = task / rel
+        same = p.is_file() and not p.is_symlink() and p.read_bytes() == data and bool(p.stat().st_mode & 0o100) == bool(mode & 0o100)
+        if not same:
+            diffs.append(f"write  {task.name}/{rel}")
+            if not check:
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes(data)
+                os.chmod(p, 0o755 if mode & 0o100 else 0o644)
+    if not check and task.exists():
+        for d in sorted((p for p in task.rglob("*") if p.is_dir()), key=lambda p: -len(p.parts)):
+            if not any(d.iterdir()):
+                d.rmdir()
+    return diffs
+
+
+def exported_names() -> set[str]:
+    """The task directories RoboOlympics exports itself (exported.toml, written by its tools/export_fexam.py): its own
+    service unchanged inside the task (docs/benchmarks/roboolympics.md, "Tasks exported by RoboOlympics"); not rendered
+    here. Their names never take a family name of this generator (the sport's id and a format: tabletennis-match,
+    badminton-actskill; the families here are dashed event names: table-tennis-return)."""
+    p = HERE / "exported.toml"
+    if not p.is_file():
+        return set()
+    import tomllib
+    return {t["name"] for t in tomllib.loads(p.read_text()).get("tasks", [])}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("cmd", choices=("render", "check"))
+    ap.add_argument("--only", default="", help="comma-separated families (default: all)")
+    ap.add_argument("--out", default=str(ROOT / "tasks"), help="the tasks directory to write (default: tasks/)")
+    a = ap.parse_args()
+    check = a.cmd == "check"
+    os.umask(0o022)
+    fams = json.loads((HERE / "families.json").read_text())["families"]
+    only = [f for f in a.only.split(",") if f]
+    if unknown := sorted(set(only) - set(fams)):
+        raise SystemExit(f"unknown families: {unknown}")
+    version = (ROOT / "images/robofunolympics/VERSION").read_text().strip()
     sys.path.insert(0, str(ROOT / "scripts"))
     from task_conventions import normalize
-    ctx = context(t, defaults, sports, facts)
-    out = tasks_dir / t["name"]
-    if out.exists():
-        shutil.rmtree(out)
-    tpl = lambda name: fill((TEMPLATES / name).read_text(), ctx)  # noqa: E731
-    write(out, "task.toml", tpl("task.toml"))
-    write(out, "instruction.md", tpl("instruction.md"))
-    write(out, "README.md", tpl("README.md"))
-    write(out, "environment/docker-compose.yaml", tpl("docker-compose.yaml"))
-    write(out, "environment/Dockerfile", tpl("Dockerfile"))
-    write(out, "tests/Dockerfile", tpl("tests.Dockerfile"))
-    write(out, "tests/test.sh", tpl("test.sh"))
-    write(out, "solution/solve.sh", tpl("solve.sh"))
-    sim = out / "environment" / "sim"
-    copy_tree(SHARED / "sim", sim)
-    for name, src in LAYER.items():
-        shutil.copyfile(src, sim / name)
-    copy_tree(SHARED / "sports" / t["sport"], sim / "sport", skip=NOT_IN_SIM)
-    shutil.copyfile(HB / "realtime" / "rcb_client.py", out / "environment" / "rcb_client.py")
-    shutil.copyfile(HB / "standard" / "rcb1.py", out / "environment" / "rcb1.py")
-    shutil.copyfile(CLIENT_REQUIREMENTS, out / "environment" / "client-requirements.txt")
-    shutil.copyfile(SHARED / "tests" / "grade.py", out / "tests" / "grade.py")
-    shutil.copyfile(HERE / "oracle" / "oracle_play.py", out / "solution" / "oracle_play.py")
-    shutil.copyfile(SHARED / "sports" / t["sport"] / "builtin_players.py", out / "solution" / "builtin_players.py")
-    normalize(out)
-    return out
 
-
-def cmd_render(names: list[str]) -> int:
-    defaults, tasks, sports = load()
-    facts = adapter_facts()
-    for t in tasks:
-        if not names or t["name"] in names:
-            print("rendered", render(t, defaults, sports, facts).relative_to(ROOT))
-    return 0
-
-
-def _diff(c: filecmp.dircmp, prefix: str) -> list[str]:
-    out = [f"tasks/{prefix}/{x}: differs from its render" for x in c.diff_files]
-    out += [f"tasks/{prefix}/{x}: not rendered" for x in c.left_only] + [f"tasks/{prefix}/{x}: missing" for x in c.right_only]
-    for sub, sc in c.subdirs.items():
-        out += _diff(sc, f"{prefix}/{sub}")
-    return out
-
-
-def cmd_check() -> int:
-    """tasks/ must be what render writes from today's sources, with no stale roboolympics-* directory."""
-    defaults, tasks, sports = load()
-    facts = adapter_facts()
-    failed: list[str] = []
-    with tempfile.TemporaryDirectory() as tmp:
-        rendered = {render(t, defaults, sports, facts, Path(tmp)).name for t in tasks}
-        for name in sorted(rendered):
-            if not (TASKS_DIR / name).is_dir():
-                failed.append(f"tasks/{name}: missing")
-                continue
-            failed += _diff(filecmp.dircmp(TASKS_DIR / name, Path(tmp) / name, ignore=["__pycache__"]), name)
-            for f in sorted((Path(tmp) / name).rglob("*")):     # filecmp ignores modes: test.sh, solve.sh
-                g = TASKS_DIR / name / f.relative_to(Path(tmp) / name)
-                if f.is_file() and g.is_file() and (f.stat().st_mode & 0o111) != (g.stat().st_mode & 0o111):
-                    failed.append(f"tasks/{name}/{f.relative_to(Path(tmp) / name)}: executable bit differs")
-    failed += [f"tasks/{p.name}: no longer rendered" for p in sorted(TASKS_DIR.glob("roboolympics-*"))
-               if p.name not in rendered]
-    print("\n".join(f"FAIL {x}" for x in failed) or f"check: {len(rendered)} task dirs are what render writes")
-    return 1 if failed else 0
-
-
-def main(argv: list[str]) -> int:
-    if not argv or argv[0] not in ("render", "check"):
-        print(textwrap.dedent(__doc__).strip().splitlines()[2:4][0])
-        print("usage: gen_tasks.py render [NAME ...] | check")
-        return 2
-    return cmd_render(argv[1:]) if argv[0] == "render" else cmd_check()
+    out = pathlib.Path(a.out)
+    diffs, made = [], set()
+    for fam, spec in fams.items():
+        if only and fam not in only:
+            continue
+        for name, files in normalized(plan(fam, spec, version), normalize).items():
+            made.add(name)
+            diffs += sync(out / name, files, check)
+    if not only:
+        exported = exported_names()      # written by RoboOlympics' own exporter (exported.toml), not by this generator
+        for t in sorted(out.glob(f"{PREFIX}-*")):
+            if t.is_dir() and t.name not in made and t.name not in exported:
+                diffs.append(f"stale  {t.name} (no family for it: remove it)")
+        diffs += [f"clash  {n}: rendered here and listed in exported.toml" for n in sorted(made & exported)]
+        if out.resolve() == (ROOT / "tasks").resolve():
+            diffs += [f"missing {n}: listed in exported.toml, no task directory" for n in sorted(exported)
+                      if not (out / n / "task.toml").is_file()]
+    for d in diffs:
+        print(d)
+    print(f"{'checked' if check else 'generated'} {len(made)} RoboOlympics task dirs ({len(made) // 2} families): {len(diffs)} difference(s)")
+    return 1 if (check and diffs) else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

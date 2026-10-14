@@ -38,8 +38,7 @@ import rcb_service  # noqa: E402
 KEEP = 0.93            # of the nominal control steps (the host that runs this may be busy)
 SECONDS = 3.0          # per load
 GRADERS = {"humanoidbench": HERE.parents[0] / "shared" / "standard" / "grade.py",
-           "bigym2": ROOT / "scripts" / "bigym2" / "shared" / "standard" / "grade.py",
-           "roboolympics": ROOT / "scripts" / "roboolympics" / "shared" / "tests" / "grade.py"}
+           "bigym2": ROOT / "scripts" / "bigym2" / "shared" / "standard" / "grade.py"}
 
 
 class Sim(FakeSim):

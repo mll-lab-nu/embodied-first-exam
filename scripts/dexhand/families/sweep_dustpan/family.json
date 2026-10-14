@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "sweep_dustpan",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "checker.py"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": []
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
+  "max_rows": 160000,
+  "control_hz": 2000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": {
+    "privileged": "readme/privileged.md",
+    "standard": "readme/standard.md"
+  },
+  "solution": {
+    "privileged": "solution/trajectory.json",
+    "standard": "solution/trajectory.json"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/ (trajectory.json + parts) holds the accepted authoring episode's 132,521 Sharpa Wave control rows (2000 Hz, float64) plus 16,000 copies of the last row (8 s hold); replayed in the frozen scene the accepted rows reproduce the accepted run bit for bit and succeed after 132,392 steps in two fresh processes with identical state hashes.",
+    "expert_time_estimate_hours": 4.0,
+    "keywords": [
+      "bimanual",
+      "tool_use",
+      "sweeping",
+      "marvin"
+    ]
+  },
+  "timeouts": {
+    "verifier_privileged_sec": 3600,
+    "verifier_standard_sec": 600,
+    "collect_sec": 7200,
+    "replay_sec": 2400,
+    "video_sec": 2400
+  },
+  "notes": {
+    "layout": "This task uses two hands of one model on the two arms of a fixed robot: Sharpa Wave (default) or Wuji Hand 2.2. Every row holds both arms' joint targets and both hands' finger targets (layout below). With Wuji, both hands start closed on the same broom and dustpan (assets/reset_wuji.npz: the frozen arm, tool, debris and bristle coordinates with Wuji finger joints)."
+  }
+}

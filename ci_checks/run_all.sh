@@ -69,7 +69,7 @@ targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in "${
 [ "$scope" = none ] || add python3 ci_checks/check-agent-pointers.py"$targs"
 # repo-level, cheap: always on everything, or on the given task dirs as before
 pargs=""; [ $explicit -eq 1 ] && pargs="$targs"
-add bash ci_checks/check-dataset-manifest.sh                # tasks/dataset.toml: every task listed, every digest current
+add bash ci_checks/check-dataset-manifest.sh"$targs"        # every task's DIGEST is the digest of its files; tasks/dataset.toml not committed
 add bash ci_checks/check-robopaint-tooling.sh               # RoboPaint: tooling byte-identical within a family / stack
 add bash ci_checks/check-tooling-identity.sh                # D9 shared sources; the eai-standard/2.2 layer = scripts/eai_standard/
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
