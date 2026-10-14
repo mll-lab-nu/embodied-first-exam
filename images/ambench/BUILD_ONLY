@@ -1,0 +1,71 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-ambench:<images/ambench/VERSION> is never pushed to a public registry (docs/PROTOCOL.md §2.4,
+D5). Every evaluation host builds it locally; the AM-Bench tasks reference that tag and Harbor finds it in the local Docker
+image store.
+
+Why
+  The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the pip wheels of the Isaac stack (from pypi.nvidia.com).
+  NVIDIA licenses them for use, not for redistribution, so the built image may not be published. Everything else in it may
+  be: AM-Bench (github.com/ambench/ambench @ 60bf5b7, Apache-2.0, including its robot and object USDs; a few files derived
+  from Isaac Lab stay BSD-3-Clause, THIRD_PARTY_NOTICES.md in /opt/ambench), Isaac Lab (github.com/isaac-sim/IsaacLab
+  @ f4aa17f, BSD-3-Clause), Pyroki (AM-Bench's fork github.com/ambench/pyroki @ 2eafc99, MIT) and acados
+  (github.com/acados/acados @ fa0af20, BSD-2-Clause, built with qpOASES).
+
+What the builder accepts
+  - the NVIDIA Isaac Sim / Omniverse license agreement (the image sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and every
+    container that runs it accepts it again at launch);
+  - NVIDIA's terms for the isaacsim wheels on pypi.nvidia.com and for the assets of NVIDIA's asset bucket listed in
+    images/ambench/web_assets.txt;
+  - the licences above (Apache-2.0, BSD-3-Clause, MIT, BSD-2-Clause).
+  No account, key or token is needed: everything is downloaded anonymously.
+
+What is left out on purpose
+  AM-Bench's scripted experts (source/ambench/ambench/policies/scripted/: they solve the tasks; the task registrations'
+  pointer to them is blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history.
+  The build fails if anything left in /opt/ambench/source still names them. The reference solutions live in the task
+  directories' solution/ only (recorded by scripts/ambench/freeze.py with the expert mounted from a checkout outside the
+  image).
+
+Data
+  The web assets the scenes would otherwise load from NVIDIA's asset bucket at run time are baked in under /opt/isaac-assets,
+  mirroring the bucket's layout (images/ambench/web_assets.txt, each checked against its sha256): Isaac Lab's default
+  ground, the wall's material, the TossBall bin's geometry (Container_B06, a payload: without it the bin has no collision)
+  with its materials, the button's material and the robot's paint. The tooling points Isaac's asset root at the copies and
+  localize_assets.py rewrites the URLs in four of AM-Bench's USDs to them. A task container has no general network access
+  (the agent reaches only the model APIs and the package registries, the verifiers nothing), and Isaac Sim starts and
+  renders offline. The frozen task instances live in the task directories.
+
+Host
+  Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports (Isaac
+  renders with RTX even headless, and AM-Bench runs PhysX on the GPU). Checked on an RTX 4090 (AMD Ryzen 9 7950X, driver
+  580.159). Build: ~60 GB of free disk during the build (the image is ~21.5 GB), network access to github.com, astral.sh,
+  pypi.org, download.pytorch.org, pypi.nvidia.com and omniverse-content-production.s3*.amazonaws.com, about 30-45 min (acados
+  compiles). Run: a camera-free simulator (the default, and the grader's replays) takes ~3 GB of host RAM and ~3 GB of GPU
+  memory; with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) ~13 GB and ~6.5 GB
+  (Isaac's initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU). Physics runs on the
+  GPU, so the recorded state hashes are those of this GPU model; another GPU model may need its own reference run (Check a
+  build). Camera rendering makes GPU PhysX timing-dependent: only camera-free runs reproduce the hashes
+  (docs/benchmarks/ambench.md, Determinism).
+
+Build (from the repository root)
+  docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/eai-ambench:$(cat images/ambench/VERSION) .
+  The build follows AM-Bench's scripts/setup/install.sh (torch 2.7.0+cu128, Isaac Sim 5.1.0, Isaac Lab at YAMLab's commit,
+  Pyroki with JAX 0.4.28 on the CPU, acados with qpOASES, AM-Bench), then sets every Python package to
+  images/ambench/requirements.lock (the reference build's `uv pip freeze`) without resolving and fails unless the environment
+  is exactly the lock.
+
+Check a build
+  The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of the reference trajectory
+  must succeed and end in its recorded hash. With a task directory at hand:
+    t=tasks/ambench-press-button-fahexa-i00-privileged
+    docker run --rm --gpus all --shm-size 8g --network none -v $PWD/$t:/t ghcr.io/mll-lab-nu/eai-ambench:$(cat images/ambench/VERSION) \
+      bash -c "cd /tmp && python /t/environment/rcb_ambench.py run-actions --instance /t/environment/instance.json \
+                 --actions /t/solution/oracle_actions.npy --out /tmp/t.npz && \
+               python /t/environment/rcb_ambench.py replay --instance /t/environment/instance.json --traj /tmp/t.npz"
+  expects instance_matches true, success true and, from the replay, the end state_sha of the task README's Verification
+  section (the oracle's hash; both commands run camera-free). Or run `harbor run -p tasks/ambench-press-button-fahexa-i00-privileged -a oracle`.
+
+On a CI machine (maintainers)
+  A self-hosted runner with such a GPU builds the image with the command above when images/ambench/ changes, runs the check,
+  and keeps the image in its local Docker store (or in a registry the organization keeps private), never on a public
+  registry. Hosts of the same organization may copy a built image among themselves (docker save ... | zstd, docker load); a
+  new VERSION means a rebuild on every host.

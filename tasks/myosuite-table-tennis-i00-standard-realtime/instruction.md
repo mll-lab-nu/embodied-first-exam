@@ -93,7 +93,7 @@ Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec(
 
 ### Action type `actuators` (275)
 275 real numbers per control step, one per actuator in order: 273 muscles and 2 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05] (position of joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of joint pelvis_y). Columns in `spec()["action_types"]["actuators"]["layout"]` order; rows `dt` apart, `interpolate="linear"`
-(default: a straight line from the commands in force) or `"hold"`; the client sends them as float32. The control rate
+(default: a straight line from the commands in force) or `"hold"`; the realtime client sends them as float64. The control rate
 is 100 Hz (5 physics substeps).
 
 ## External material
