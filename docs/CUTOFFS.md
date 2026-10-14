@@ -11,14 +11,12 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | Benchmark | privileged | standard | standard-realtime | Tasks (P / S / RT) |
 |---|---|---|---|---|
 | AM-Bench | 3600 s (60 min) | — | — | 3 / — / — |
-| AutoBio | 3600 s (60 min) | 3600 s (60 min) | — | 9 / 9 / — |
 | BEHAVIOR-1K | 7200 s (120 min) | 7200 s (120 min) | — | 100 / 100 / — |
 | BiGym 2.0 | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 13 / 13 / 13 |
 | DexJoCo | 3600 s (60 min) | 3600 s (60 min) | — | 11 / 11 / — |
 | DexToolBench | 3600 s (60 min) | 3600 s (60 min) | — | 21 / 21 / — |
 | HumanoidBench | 3600 s (60 min) | 3600 s (60 min) | 3600 s (60 min) | 10 / 10 / 10 |
 | KinDER | 3600 s (60 min) | 3600 s (60 min) | — | 5 / 5 / — |
-| LabUtopia | 3600 s (60 min) | 3600 s (60 min) | — | 9 / 9 / — |
 | LIBERO-MAX | 1800 s (30 min) | 1800 s (30 min) | — | 64 / 64 / — |
 | ManiGuard | 3600 s (60 min) | 3600 s (60 min) | — | 30 / 30 / — |
 | MetaWorld+ | 1800 s (30 min) | 1800 s (30 min) | — | 50 / 50 / — |
@@ -40,7 +38,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1814 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
+1778 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted).
 
 ## Exceptions (per family, per task)
 
@@ -119,3 +117,5 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-13 | RoboARC, privileged, standard | (none) -> 10800 s | owner | new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap |
 | 2026-10-14 | MyoSuite, standard-realtime | (none) -> 3600 s | owner (board 0112: a realtime twin's cutoff equals its standard twin's) | the first standard-realtime task (table_tennis): the standard twin's number |
 | 2026-10-14 | AM-Bench, privileged | (none) -> 3600 s | proposal (D8 default) | the benchmark's first tasks (privileged only): the protocol's default; every Python process pays a few minutes of Isaac Sim start, which the hour includes |
+| 2026-10-14 | AutoBio, privileged, standard | 3600 s -> (removed) | owner | removed: the benchmark's tasks are deleted from the repo (board 0119); its pool results were moved to jobs-backup/autobio-labutopia-removed-1014 |
+| 2026-10-14 | LabUtopia, privileged, standard | 3600 s -> (removed) | owner | removed: the benchmark's tasks are deleted from the repo (board 0119); its pool results were moved to jobs-backup/autobio-labutopia-removed-1014 |

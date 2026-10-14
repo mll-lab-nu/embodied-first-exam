@@ -31,7 +31,7 @@ REALTIME = [sys.executable, str(ROOT / "ci_checks/check-realtime.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
-HEAVY = "labutopia-heat-liquid-i00-standard"                   # an allowlist; a sidecar with a large verifier minimum
+HEAVY = "maniguard-cabinet-pickup-i19-standard"                # an allowlist; a sidecar with a large verifier minimum
 RT = "roboolympics-airhockey-match-i00-standard-realtime"      # min_cpus = the sum of its two services' caps
 # benchmarks whose generators have no check mode: their shared files are held together by check-tooling-identity.sh
 DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbench_hammer_claw_hammer_swing_down-privileged"
@@ -280,9 +280,9 @@ MUTATIONS = [
     ("... its grader", TWIN_P, "tests/grade.py", append("# drift\n"), IDENTITY, "robotwin_2_0: 2 versions of privileged tests/grade.py"),
     # ---- caps and minimums (PROTOCOL §2.10)
     ("a sidecar's memory cap below the verifier phase's declared minimum (the kernel would kill it at a cap the task itself says is too low)",
-     HEAVY, None, {TOML: sub(r"^(sim = \{ cpus = [0-9.]+, memory_gb = )[0-9.]+", r"\g<1>24.0"),
-                   COMPOSE: sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 24576m\1")},
-     RESOURCES, "verifier_min_memory_gb 27.0 > the memory cap of the sidecar"),
+     HEAVY, None, {TOML: sub(r"^(sim = \{ cpus = [0-9.]+, memory_gb = )[0-9.]+", r"\g<1>20.0"),
+                   COMPOSE: sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 20480m\1")},
+     RESOURCES, "verifier_min_memory_gb 22.0 > the memory cap of the sidecar"),
     ("the CPU minimum above the CPU caps of all services together",
      RT, TOML, sub(r"^min_cpus = [0-9.]+", "min_cpus = 7.0"), RESOURCES, "min_cpus 7.0 > the CPU caps of all services together 6"),
     ("a declared cap that docker does not apply",
