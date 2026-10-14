@@ -11,7 +11,7 @@ for k in ["author_name", "task_type", "simulator", "robot", "family", "expert_ti
     if k not in m: fail(f"[metadata].{k} missing")
 if m.get("task_type") not in ("trajectory", "policy"): fail("task_type must be trajectory|policy")
 # Protocol v1.1.1 (§2.2, §2.3, D12): the directory ends in its mode (-privileged, -standard, -standard-realtime, or a mode
-# added to the registry, §2.15) and `mode` says the same; no `tier`. The suffix is the whole mode name, longest first:
+# added to the registry, §2.16) and `mode` says the same; no `tier`. The suffix is the whole mode name, longest first:
 # -standard-realtime is not -realtime. The modes: RCB_MODES_TABLE (run_all.sh) or scripts/task_conventions.py MODE_REGISTRY.
 import os
 table = os.environ.get("RCB_MODES_TABLE", "")

@@ -16,6 +16,7 @@ simulator = "robodojo"            # RoboDojo @ cb2a37d on its Isaac Lab 2.3 fork
 robot = "arx-x5-bimanual"
 family = "classify_objects_by_language"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142"
 expert_time_estimate_hours = 2.0

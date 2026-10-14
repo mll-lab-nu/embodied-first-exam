@@ -34,7 +34,7 @@ def seeds(task: Path) -> dict:
 
 
 def holder(task: Path) -> Path:
-    twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §2.15)
+    twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §2.16)
     return twin if twin is not None and twin.is_dir() else task
 
 

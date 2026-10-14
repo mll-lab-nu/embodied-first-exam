@@ -118,6 +118,7 @@ ENVS = {
                      "xml": "locomotion/go1/xmls/scene_mjx_flat_terrain.xml"},
 }
 SETTLE, LIN_TOL, YAW_TOL, HOLD, TILT, POSE_HOLD, POSE_TOL, GAIT_TOL = 25, 0.2, 0.3, 25, 10, 100, 30, 0.05
+RESET_BUDGET = 10  # standard mode's default reset budget (owner, 2026-10-14; PROTOCOL §4.5, docs/benchmarks/mujoco-playground.md)
 
 PRIV_ENV_DOCKERFILE = f"""# MuJoCo Playground quadruped task (privileged): plain MuJoCo with Playground's and Menagerie's assets
 # (images/mujoco/prepare_assets.sh), the task's tooling and its frozen instance.
@@ -179,6 +180,7 @@ services:
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in about a second
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RESET_BUDGET}}}"   # Playground quadrupeds standard: {RESET_BUDGET} resets (PROTOCOL §4.5); 0: one episode
 """
 
 
@@ -247,7 +249,8 @@ def values(env: str, inst: dict) -> dict:
         "kp": e["kp"], "kd": e["kd"], "sim_dt": e["sim_dt"], "dt": f"{e.get('dt', 0.02):g}",
         "substeps": round(e.get("dt", 0.02) / e["sim_dt"]), "xml": e["xml"], "gains": gains(e),
         "cameras": CAMERAS[e["robot"]], "n_rows": fa["reference_rows"], "selection": selection_text(env), "author": AUTHOR,
-        "org": ORG, "allowed_hosts": ", ".join(json.dumps(h) for h in HOSTS),
+        "org": ORG, "allowed_hosts": ", ".join(json.dumps(h) for h in HOSTS), "resets": RESET_BUDGET,
+        "episodes": RESET_BUDGET + 1,
     }
     if e["kind"] == "joystick":
         rough = "Rough" in env
@@ -440,13 +443,26 @@ STD_CHANGES_R2 = [
     "`wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out their timeout (up to "
     "an hour). The adapter, the collect hook, the grader, the scene and the pass rule are unchanged.",
 ]
+STD_CHANGES_RESETS = [
+    f"2026-10-14 (owner decision C1, board 0113): {RESET_BUDGET} resets (PROTOCOL §4.5). The service "
+    "(`environment/sim/server.py`) gained the optional reset capability: `RCB_RESET_BUDGET` (the compose file's default "
+    f"{RESET_BUDGET}; 0 restores the old single episode), `POST /reset` abandons the running or ended episode and starts a "
+    "new one from the same frozen start (no physics), refused (409) after a success, once the agent's time is up and once "
+    "the budget is spent; only the last episode is graded (`trajectory.npz` holds its rows, replayed twice from the "
+    "frozen start as before); `/status` and every `meta` add `episode`, `resets_left` and `control_steps_total`; "
+    "`final.json` and `reward.json` add `resets`, `reset_budget` and `episodes`. A crash resumes the current episode "
+    "(the journal is replayed with the committed resets). The instruction's rules, the client example (`POST /reset` "
+    "through `Robot._post`) and this README say so. The scene, the instance, the success check and the grader's pass "
+    "rule are unchanged; results recorded before this change ran with one episode and are reported separately.",
+]
 
 
 def make(env: str, out: Path) -> tuple[Path, Path]:
     inst_path = HERE / "instances" / f"{env}.json"
     inst = json.loads(inst_path.read_text())
     v = values(env, inst)
-    v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []) + STD_CHANGES_R2)
+    v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []) + STD_CHANGES_R2
+                                    + STD_CHANGES_RESETS)
     oracle = HERE / "oracles" / f"{env}.npy"
 
     p = out / f"{v['name']}-privileged"

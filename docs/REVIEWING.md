@@ -32,13 +32,13 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
-- Modes (PROTOCOL §2.14): a benchmark may ship any subset of privileged, standard and standard-realtime; a missing
+- Modes (PROTOCOL §2.15): a benchmark may ship any subset of privileged, standard and standard-realtime; a missing
   mode is not a reason to block, but the benchmark's doc says which modes it ships and why the others are left out.
   Where a family has twins, do they share the frozen instance, success rule and seeds, and is the cutoff of privileged
   and standard one number? A standard or standard-realtime task without a twin: does it carry its own frozen instance,
   and, in a benchmark that has a privileged mode, is it listed in `scripts/task_conventions.py` `NO_TWIN` with the
   reason (a deleted or misnamed twin must not pass silently)?
-- A new mode (PROTOCOL §2.15): does the pull request have everything §2.15 lists: the name / suffix and `mode` value,
+- A new mode (PROTOCOL §2.16): does the pull request have everything §2.16 lists: the name / suffix and `mode` value,
   its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are
   infrastructure and which the agent's), the `MODE_REGISTRY` entry and `CUTOFF_NOTE`, CI support keyed on the registry
   (no new hard-coded list of mode names anywhere) with a self-test case, at least one benchmark using it, the TAXONOMY

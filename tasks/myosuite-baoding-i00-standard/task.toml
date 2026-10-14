@@ -27,6 +27,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myohand"
 family = "baoding"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #65"

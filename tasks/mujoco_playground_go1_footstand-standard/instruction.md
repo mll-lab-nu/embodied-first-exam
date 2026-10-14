@@ -2,15 +2,23 @@
 
 **Task:** Make the Unitree Go1 stand up on its hind legs, nose up, front legs in the air, and balance there for 2 s.
 
-You control the Unitree Go1 quadruped — **as if it were real hardware** — in one episode of MuJoCo Playground's
+You control the Unitree Go1 quadruped — **as if it were real hardware** — in MuJoCo Playground's
 `Go1Footstand` environment (plain MuJoCo 3.3.7 with Playground's scene, commit 4057c14). The simulator runs in a service you
-cannot open. You get one client and one episode.
+cannot open. You get one client and up to 11 episodes.
 
 ## The episode
 The robot starts standing at Playground's `home` pose with a random base velocity (Playground's reset). You have 500 control steps (10 s).
 
 ## Rules (real-robot rules)
-- **No reset.** One episode. You see four cameras that follow the robot (RGB, depth if you ask) and the robot's own
+- **Episodes and resets.** You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it
+  says 0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the robot back on the
+  same frozen starting state and starts a new episode, either abandoning the running one or after one has ended; it
+  takes no simulated time and returns the start's images and proprioception. Once an episode has ended, `submit`
+  raises `EpisodeOver` until you reset. **Only the last episode is graded**: an episode you reset away is never graded,
+  a success ends the run at once (no reset after it), and when your time is up the episode then running is the one
+  graded. The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the
+  episodes (`meta["control_steps"]` is the current episode's).
+- **No privileged state.** You see the cameras that follow the robot (RGB, depth if you ask) and the robot's own
   sensors: joint positions, velocities and torques, the IMU (gyro, accelerometer, gravity's direction, the trunk's
   velocity), foot contacts. No world positions, no success check.
 - **The episode ends** the moment the pose has been held for 100 control steps in a row (success), when the robot meets the termination rule (the trunk's up axis below -0.25 (z component of the IMU frame's z axis), or any part of a front leg other than its foot (thigh, calf, hip) touching the floor (Playground's rule as its code reads it), or the same for a hind leg (the list its Footstand sets up but never reads; without it, sitting on a hind hip would count): a failure), after 500 control steps (`spec["max_control_steps"]`), when you submit `done`, or when your time is up.
@@ -19,8 +27,8 @@ The robot starts standing at Playground's `home` pose with a random base velocit
   `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
   from your first request to the service: it never runs out before your time does, so plan by it.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
-- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
-  reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
+- **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (a crash
+  is never a reset and costs none) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
 - Nothing is put into your context automatically: images come back as arrays in Python objects.
 
 ## Client (`/opt/tools/rcb_client.py`)
@@ -33,7 +41,8 @@ res = r.submit("joint_position", A, dt=0.02)   # A: (T, 12) rows dt apart; res.p
 obs = r.get_obs(seconds=1.0, video="mp4")      # hold the current targets and watch for 1 s (max 30)
 r.fk(q); r.ik({"FR": [x, y, z, 1, 0, 0, 0]}, seed=q)   # feet in the trunk frame <-> joints (no physics)
 r.submit("done", [])                           # end the episode now
-r.status()                                     # calls, control steps, done, reason, elapsed time
+r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
+obs = r._post("/reset", {"cameras": ["track"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
 Cameras: `track`, `side`, `back`, `top` (they follow the robot); `spec["cameras"]` gives each one's mounting and intrinsics, and every response carries its pose. Proprioception (`spec["proprio_groups"]`): `joint_pos`, `joint_vel`, `joint_effort` (12 each, action
 order), `imu_gyro`, `imu_accelerometer`, `imu_gravity`, `imu_linvel` (3 each, IMU frame: x forward, y left, z up),

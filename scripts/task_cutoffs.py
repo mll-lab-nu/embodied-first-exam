@@ -33,7 +33,7 @@ import task_conventions as tc  # noqa: E402
 DOC = ROOT / "docs/CUTOFFS.md"
 BASELINE = ROOT / "scripts/task_cutoffs.baseline.toml"   # the table on the day it was created: never edited
 MANIFEST = ROOT / "tasks/dataset.toml"
-SHORT = {m: d["short"] for m, d in tc.MODE_REGISTRY.items()}   # the mode registry (PROTOCOL §2.15)
+SHORT = {m: d["short"] for m, d in tc.MODE_REGISTRY.items()}   # the mode registry (PROTOCOL §2.16)
 
 
 def all_tasks() -> list[Path]:

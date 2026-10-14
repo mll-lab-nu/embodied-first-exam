@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
 sys.path.insert(0, str(ROOT / "scripts"))
-import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.15)
+import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.16)
 # the `protocol` values each mode may declare: standard 2.1 / 2.2 / 2.4 (2.4: the operations capability, issue #89),
 # standard-realtime 2.3 (the realtime capability, §4b), privileged none
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}

@@ -37,7 +37,7 @@ python3 - "${1:-$root/tasks}" "$root/scripts/eai_standard" <<'PY'
 import collections, hashlib, os, re, sys, tomllib
 from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
-sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.15)
+sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.16)
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",

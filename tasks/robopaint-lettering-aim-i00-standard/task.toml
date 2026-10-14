@@ -31,6 +31,7 @@ simulator = "maniskill"
 robot = "franka-panda"
 family = "robopaint_lettering_aim"
 mode = "standard"                  # camera RGB + proprioception only; no sheet readout, no score, no reset, no pen model
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
 oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; the lettering family redesigned on 2026-10-09, generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 998 and mark_width_mm 0.43, against the colouring-in limits 3000 mm and 0.12 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Lettering)."

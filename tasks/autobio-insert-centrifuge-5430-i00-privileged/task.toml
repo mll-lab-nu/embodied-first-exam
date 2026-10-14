@@ -15,6 +15,7 @@ simulator = "autobio"             # AutoBio @ 0850421 on MuJoCo 3.3.0 (CPU)
 robot = "ur5e-robotiq-2f85"
 family = "insert_centrifuge_5430"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "hard"              # AutoBio's own level for the task
 success_rule = "first"

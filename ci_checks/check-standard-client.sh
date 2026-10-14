@@ -15,7 +15,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root/scripts/eai_standard" <<'PY'
 import os, re, shlex, sys, tomllib
 tasks, src = sys.argv[1], sys.argv[2]
-sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.15)
+sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.16)
 env = dict(l.split("=", 1) for l in open(os.path.join(src, "client.env")).read().splitlines() if "=" in l and not l.startswith("#"))
 IMAGE = env["CLIENT_IMAGE"].strip()
 req_path = os.path.join(src, env.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip())

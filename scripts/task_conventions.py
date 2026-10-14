@@ -22,6 +22,8 @@ What it does:
   memory cap from it, and the cap sits above the limit so that the monitor sees a violation before the OOM killer).
 - `instruction.md` ends with `## External material` (§2.11: the same text in every task) and `## Resource limits`, rendered
   from `[metadata.resources.limits]` (§2.10).
+- `[metadata] dynamics` (§2.14: `dynamic` when something in the scene other than the robot does work by a force other
+  than the robot's and gravity, else `static`) from `scripts/task_dynamics.toml`, the one table.
 - the agent's time cutoff (§2.12) from `scripts/task_cutoffs.toml`, the one table: `[agent] timeout_sec`, the standard
   modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, and the last section of `instruction.md`, `## Time
   limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
@@ -75,7 +77,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robofunolympics-", "RoboFunOlympics"),
     ("pandadyn-", "Panda Dynamic Scenes"),
 ]
-# Modes (PROTOCOL §2.14, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
+# Modes (PROTOCOL §2.15, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
 # standard-realtime task without a privileged twin is expected when its benchmark has no privileged mode (no privileged
 # number in its row of scripts/task_cutoffs.toml); in a benchmark that has one, the task is listed here with the reason
 # its README's Twin row gives (ci_checks/check-instance-copies.sh fails a missing twin that is neither). RoboDojo's six
@@ -91,11 +93,11 @@ NO_TWIN = {"roboolympics-airhockey-match-i00-standard-realtime": _RO_NO_TWIN,
            "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-liquid-into-cup-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
-# PROTOCOL §2.15 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
+# PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the cutoff table's columns, the limits' scope, the checks under ci_checks/, which get it once per run through
 # `python3 scripts/task_conventions.py modes`). A new mode is one entry here plus its protocol section, by a mode
-# pull request (PROTOCOL §2.15 lists what it must contain). Fields:
+# pull request (PROTOCOL §2.16 lists what it must contain). Fields:
 #   short          the column label in docs/CUTOFFS.md
 #   section        the PROTOCOL section that defines the mode
 #   sidecar        the simulator runs in a trusted `sim` sidecar the agent's container talks to (robot as a service):
@@ -118,16 +120,24 @@ MODES = tuple(MODE_REGISTRY)
 SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (§4, §4b)
 for _m, _d in MODE_REGISTRY.items():   # a registry that cannot parse names is refused at import (every check imports it)
     assert re.fullmatch(r"[a-z]+(?:-[a-z]+)*", _m) and not any(_m.endswith("-" + o) for o in MODE_REGISTRY if o != _m), \
-        f"mode {_m!r}: lower-case words joined by '-', not ending in another mode's suffix (PROTOCOL §2.15)"
+        f"mode {_m!r}: lower-case words joined by '-', not ending in another mode's suffix (PROTOCOL §2.16)"
     assert _d["limit_scope"] in ("trial", "agent") and _d["twin"] in (None, *MODE_REGISTRY) \
-        and _d["same_cutoff_as"] in (None, *MODE_REGISTRY), f"mode {_m!r}: a bad registry field (PROTOCOL §2.15)"
+        and _d["same_cutoff_as"] in (None, *MODE_REGISTRY), f"mode {_m!r}: a bad registry field (PROTOCOL §2.16)"
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
-               "Base image"}
+               "Real time", "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
 # PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
+# PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` in task.toml (same list: ci_checks/check-dynamics.py)
+DYNAMICS_FILE = Path(__file__).resolve().parent / "task_dynamics.toml"
+DYNAMICS = ("static", "dynamic")
+# PROTOCOL §4b: a standard-realtime task states its slowdown S, `[metadata] slowdown` in task.toml, written from its sim
+# service's `RCB_SLOWDOWN` default (environment/docker-compose.yaml); its reset budget is the `RCB_RESET_BUDGET` default
+# there (same rules: ci_checks/check-realtime.py)
+SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
+RESET_RE = re.compile(r'RCB_RESET_BUDGET:\s*"?\$\{RCB_RESET_BUDGET:-([0-9]+)\}"?')
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
     "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
@@ -221,14 +231,14 @@ def replace_words(s: str) -> str:
     return s
 
 
-# PROTOCOL D12 / §2.15: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
+# PROTOCOL D12 / §2.16: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
 # its complete suffix only, longest first: `-standard-realtime` is never `-standard` (it does not end in it).
 def mode_of(task: Path) -> str:
     for mode in sorted(MODES, key=len, reverse=True):   # longest suffix first
         if task.name.endswith(f"-{mode}"):
             return mode
     raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
-                     + " (docs/PROTOCOL.md §2.2, the modes of §2.15)")
+                     + " (docs/PROTOCOL.md §2.2, the modes of §2.16)")
 
 
 def base_of(task: Path) -> str:
@@ -628,7 +638,7 @@ def cutoff_for(task: Path) -> int | None:
 
 
 def no_twin_reason(task: Path) -> str | None:
-    """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §2.14), as its
+    """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §2.15), as its
     README's Twin row says it; None for a privileged task and for one that must have its twin. Whether the twin exists
     is not looked at: the answer is the same before and after a generator has rendered it."""
     twin = MODE_REGISTRY[mode_of(task)]["twin"]
@@ -640,7 +650,7 @@ def no_twin_reason(task: Path) -> str | None:
     bench = bench_of(task)
     row = cutoff_table().get(bench)
     if row and twin not in row:
-        return f"— (none: {bench} has no {twin} mode, PROTOCOL §2.14)"
+        return f"— (none: {bench} has no {twin} mode, PROTOCOL §2.15)"
     return None
 
 
@@ -907,7 +917,7 @@ def render_readme(task: Path) -> str:
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
-    # a standard or realtime task has its privileged twin unless no_twin_reason() says why not (PROTOCOL §2.14), even
+    # a standard or realtime task has its privileged twin unless no_twin_reason() says why not (PROTOCOL §2.15), even
     # when a generator renders it first (an exempted name whose twin still exists, e.g. before a removal lands, keeps it)
     no_twin = None if task.with_name(twin).is_dir() else no_twin_reason(task)
     head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
@@ -916,8 +926,14 @@ def render_readme(task: Path) -> str:
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")
               + (f" (allowed seeds: {seeds_text(sd['allowed'])}; §2.13)" if sd["allowed"] != [sd["default"]] else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
-             ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (PROTOCOL §5)"),
-             ("Base image", f"`{image_of(task)}`")]
+             ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (PROTOCOL §5)")]
+    rt = realtime_of(task)
+    if rt is not None:
+        head.append(("Real time", f"slowdown S = {slowdown_text(rt[0])} (the world runs at 1/S of real speed: one control "
+                                  f"step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default)"
+                                  + (f"; reset budget {rt[1]} (`RCB_RESET_BUDGET`'s default)" if rt[1] is not None else "")
+                                  + " (PROTOCOL §4b)"))
+    head.append(("Base image", f"`{image_of(task)}`"))
     used = set()
     task_text = intro or meta.get("task", {}).get("description", "")
     difficulty = secd.get("Difficulty") or default_difficulty(task, rowd)
@@ -1026,12 +1042,84 @@ def normalize_seeds(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def dynamics_table() -> tuple[dict, dict]:
+    """scripts/task_dynamics.toml: ({benchmark: entry}, {benchmark: {family: entry}}), entry = {dynamics, why}."""
+    t = tomllib.loads(DYNAMICS_FILE.read_text()) if DYNAMICS_FILE.is_file() else {}
+    return t.get("benchmark", {}), t.get("family", {})
+
+
+def dynamics_for(task: Path) -> str | None:
+    """The task's `dynamics` (PROTOCOL §2.14): its family's entry in scripts/task_dynamics.toml, else its benchmark's.
+    None: the table has no row for the benchmark (ci_checks/check-dynamics.py fails such a task)."""
+    rows, fams = dynamics_table()
+    bench = bench_of(task)
+    e = fams.get(bench, {}).get(family_of(task)) or rows.get(bench)
+    if e is None:
+        return None
+    if e.get("dynamics") not in DYNAMICS:
+        raise RuntimeError(f"{task.name}: scripts/task_dynamics.toml gives dynamics {e.get('dynamics')!r}, not one of {DYNAMICS}")
+    return e["dynamics"]
+
+
+def normalize_dynamics(task: Path) -> None:
+    """Writes `dynamics = "..."` (PROTOCOL §2.14) right after `mode` in `[metadata]`, replacing an earlier line, when
+    scripts/task_dynamics.toml has a row for the task's benchmark."""
+    d = dynamics_for(task)
+    if d is None:
+        return
+    p = task / "task.toml"
+    s = re.sub(r'(?m)^dynamics = .*\n', "", p.read_text())
+    line = f'dynamics = "{d}"'
+    line += " " * max(1, 34 - len(line)) + "# scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml\n"
+    s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+    if n != 1:
+        raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
+    write_if_changed(p, s)
+
+
+def realtime_of(task: Path) -> tuple[float, int | None] | None:
+    """A standard-realtime task's (slowdown S, reset budget) as its sim service starts by default: the `RCB_SLOWDOWN`
+    and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (PROTOCOL §4b). None: not a standard-realtime task,
+    or a service without `RCB_SLOWDOWN` (ci_checks/check-realtime.py fails a 2.3 one)."""
+    if mode_of(task) != "standard-realtime":
+        return None
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    m, r = SLOWDOWN_RE.search(c), RESET_RE.search(c)
+    if not m:
+        return None
+    return float(m.group(1)), (int(r.group(1)) if r else None)
+
+
+def slowdown_text(S: float) -> str:
+    return f"{S:g}"
+
+
+def normalize_slowdown(task: Path) -> None:
+    """Writes `slowdown = S` (PROTOCOL §4b) right after `dynamics` (else `mode`) in `[metadata]` of a standard-realtime
+    task, from its sim service's `RCB_SLOWDOWN` default, replacing an earlier line."""
+    rt = realtime_of(task)
+    p = task / "task.toml"
+    s = re.sub(r'(?m)^slowdown = .*\n', "", p.read_text())
+    if rt is not None:
+        line = f"slowdown = {slowdown_text(rt[0])}"
+        line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md "
+                                                 "§4b); RCB_SLOWDOWN's default\n")
+        s, n = re.subn(r'(?m)^(dynamics = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+        if n != 1:
+            s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+        if n != 1:
+            raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
+    write_if_changed(p, s)
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
     if (task / "results").exists():
         shutil.rmtree(task / "results")
     normalize_toml(task)
+    normalize_dynamics(task)
+    normalize_slowdown(task)
     normalize_cutoff(task)
     normalize_resources(task)
     normalize_seeds(task)
@@ -1049,7 +1137,7 @@ def snapshot(task: Path) -> dict[str, bytes]:
 
 
 def main(argv: list[str]) -> int:
-    if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.15)
+    if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.16)
         print(modes_table())
         return 0
     check = "--check" in argv

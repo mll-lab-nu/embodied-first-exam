@@ -229,7 +229,7 @@ OWN_NETWORK = ("network_mode", "networks")
 # Files of the task or the host handed to a container by another road than `volumes:`; `build` replaces Harbor's own
 # build of main (context: environment/) or a sidecar's pinned image.
 HANDS_FILES = ("secrets", "configs", "env_file", "build")
-# the mode registry (PROTOCOL §2.15): RCB_MODES_TABLE from run_all.sh, "<mode> <sidecar 0|1> <twin>" longest first
+# the mode registry (PROTOCOL §2.16): RCB_MODES_TABLE from run_all.sh, "<mode> <sidecar 0|1> <twin>" longest first
 import os
 _table = os.environ.get("RCB_MODES_TABLE", "")
 if not _table:

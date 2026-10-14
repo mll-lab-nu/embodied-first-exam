@@ -9,6 +9,7 @@
 | Family / instance | `walk` / seed 0 |
 | Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (834.80 / 700 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (51.46 / 700 there); published RL passes as well (SAC 854, FastTD3 928, on upstream's MuJoCo 3.1.6); in realtime, the same rows planned into the episode from step 0 (submit's `at`) run at the same control steps and are graded the same; human review in PR #83 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 50 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` |
 
 ## Task
