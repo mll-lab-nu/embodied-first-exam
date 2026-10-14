@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Render the tasks of RoboTangle (BENCH below; docs/benchmarks/<BENCH>.md): the MuJoCo release, which replaces the
-Genesis release (user decision 2026-10-13: the previous robotangle-*-i00 tasks are deleted; until then this generator
-lived in scripts/robotangle-new/ as a benchmark of its own):
-tasks/<BENCH>-<family>-<tier>-i01-privileged and its standard twin -standard (eai-standard/2.4).
+"""Render the tasks of RoboARC (BENCH below; docs/benchmarks/<BENCH>.md): the MuJoCo release, which replaces the
+Genesis release (user decision 2026-10-13: the previous Genesis -i00 tasks are deleted; until then this generator
+lived in its own directory as a benchmark of its own):
+tasks/<BENCH>-<family>-<NN>-i01-privileged and its standard twin -standard (eai-standard/2.4); NN is the base's number in
+its family and the difficulty is task.toml's `difficulty` (roboarc_names.json: old base -> new base, family, number,
+difficulty; owner, 2026-10-13).
 
 The benchmark's name is one parameter, BENCH: the task prefix, the image (ghcr.io/mll-lab-nu/eai-<BENCH>,
 images/<BENCH>/VERSION) and this directory (scripts/<BENCH>/). Renaming it: BENCH here and in
@@ -30,25 +32,25 @@ the GPU for its physics as well as for Nyx.
 Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py --onto on dev/robotangle_mujoco
 (Python standard library only, plus scripts/task_conventions.normalize):
   release.json   the release (dev/robotangle_mujoco commit, simulator source, runtime, tooling) and, per base, where its
-                 frozen instance comes from (ported_from: the RoboTangle Genesis base whose scene it ports; template:
+                 frozen instance comes from (ported_from: the RoboARC Genesis base whose scene it ports; template:
                  the base whose texts a new variation starts from), its texts' facts (grasp_rules, physics_dt_s) and
                  the oracle runs that are its evidence
   shared/        the tooling rcb_topogym.py with render_bridge.py and nyx_direct.py (dev/robotangle_mujoco's), the
                  graders, the sim service adapter (server.py, replay.py, finalize.sh), the standard oracle player
   scripts/eai_standard/v2_4/ + scripts/eai_standard/   the eai-standard/2.4 layer, copied unchanged
   packages/      per task, the upstream texts (task.toml, README.md, instruction.md, Dockerfiles, compose files, test.sh):
-                 the RoboTangle base's texts it ports, renamed, with the family's own texts over them for a changed or
+                 the RoboARC base's texts it ports, renamed, with the family's own texts over them for a changed or
                  new design; and the instance's lock (runtime_binding.upstream.json)
   oracles/       the references (privileged.npz; standard.npz is the same file)
   assets.json    the frozen instances, not in git: the private HF dataset eai-v2-internal/robotangle-assets (the same
-                 dataset as RoboTangle's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
+                 dataset as RoboARC's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
                  keeps its runtime_binding.json and stages its instance from the image (/opt/robotangle/stage_instance.py).
 Nothing at run time imports repository code: the tooling and the sim layer are copies (PROTOCOL D9).
 """
 from __future__ import annotations
 import argparse, filecmp, hashlib, json, math, os, pathlib, re, shutil, sys, tempfile, tomllib, zipfile
 
-BENCH = "robotangle"   # the benchmark's name: task prefix, image eai-<BENCH>, scripts/<BENCH>/, docs/benchmarks/<BENCH>.md
+BENCH = "roboarc"   # the benchmark's name: task prefix, image eai-<BENCH>, scripts/<BENCH>/, docs/benchmarks/<BENCH>.md
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 TASKS = ROOT / "tasks"
@@ -81,7 +83,7 @@ EGRESS_OLD = "# egress: Harbor default (public). `scripts/set_agent_egress.py al
 _HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text()).group(1)
 EGRESS_NEW = ('network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11\n'
               "allowed_hosts = [" + ", ".join(f'"{h}"' for h in re.findall(r'"([^"]+)"', _HOSTS)) + "]\n")
-ASSETS = json.loads((HERE / "assets.json").read_text())        # the pinned HF dataset (scripts/robotangle/assets.py)
+ASSETS = json.loads((HERE / "assets.json").read_text())        # the pinned HF dataset (scripts/roboarc/assets.py)
 STAGED = "/tmp/robotangle-instance"                             # where the standard sim stages its instance   # nop runs on this release's build (very_easy / easier)
 VERSION = (ROOT / "images" / BENCH / "VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-{BENCH}:{VERSION}"
@@ -104,11 +106,11 @@ def dash(s: str) -> str:
 def text(s: str) -> str:
     """User-facing rename (README, instruction, task.toml); code identifiers (topogym, rcb_topogym) stay."""
     s = re.sub(r"\btopogym-([a-z0-9-]+-i\d\d-(?:privileged|standard))\b", BENCH + r"-\1", s)
-    s = s.replace("docs/benchmarks/robotangle.md", f"docs/benchmarks/{BENCH}.md")
+    s = s.replace("docs/benchmarks/robotangle.md", f"docs/benchmarks/{BENCH}.md")   # the released texts' page
     s = IMAGE_RX.sub(IMAGE, s)
     for a, b in ROBOT_WORDS.items():
         s = s.replace(a, b)
-    s = s.replace("TopoGym", "RoboTangle").replace(*PROTO)
+    s = s.replace("TopoGym", "RoboARC").replace(*PROTO)
     s = re.sub(r"\bhis (?=[a-z]+(?:_[a-z0-9]+)*_v\d)", "the ", s)
     return s.replace("his qualification record", "the author's qualification record")
 
@@ -116,7 +118,7 @@ def text(s: str) -> str:
 # ---------------------------------------------------------------- MuJoCo bases (dev/robotangle_mujoco, the MuJoCo release)
 MUJOCO_WORDS = (("(ALOHA 2, Genesis)", "(ALOHA 2, MuJoCo)"),
                 ("(Franka Panda + Robotiq 2F-85, Genesis)", "(Franka Panda + Robotiq 2F-85, MuJoCo)"),
-                ("RoboTangle on Genesis 1.2.1", "RoboTangle on MuJoCo 3.14.0"),
+                ("RoboARC on Genesis 1.2.1", "RoboARC on MuJoCo 3.14.0"),
                 ("`topogym`) on Genesis 1.2.1 physics", "`topogym`) on MuJoCo 3.14.0 physics"),
                 ('"genesis",', '"mujoco",'), ("(Genesis initialises once)", "(one simulator per process)"))
 STEP_RX = re.compile(r"One control step takes about ([0-9.]+) s of wall clock")
@@ -323,7 +325,7 @@ def mujoco_text(s: str, rec: dict) -> str:
                                      "one host; the\nfinal-state hashes (`deterministic`) are still diagnostic" if rec.get("gpu_physics")
                                      else "The physics runs on the CPU and is bit-deterministic on one host; the\nfinal-state "
                                      "hashes (`deterministic`) are still diagnostic"), s)
-    s = s.replace("RoboTangle on MuJoCo 3.14.0 (CUDA physics, Nyx RGB)", "RoboTangle on MuJoCo 3.14.0 ("
+    s = s.replace("RoboARC on MuJoCo 3.14.0 (CUDA physics, Nyx RGB)", "RoboARC on MuJoCo 3.14.0 ("
                   + ("CPU physics, CUDA cloth step" if rec.get("gpu_physics") else "CPU physics") + ", Nyx RGB)")
     if rec.get("step_s"):
         s = STEP_RX.sub(f"One control step takes about {rec['step_s']:g} s of wall clock", s)
@@ -331,7 +333,7 @@ def mujoco_text(s: str, rec: dict) -> str:
 
 
 # ---------------------------------------------------------------- fixes of the 2026-10-10 review (board 0067)
-# Applied here, on top of the release's texts and Dockerfiles, until dev/jianwen carries them (docs/benchmarks/robotangle.md,
+# Applied here, on top of the release's texts and Dockerfiles, until dev/jianwen carries them (docs/benchmarks/roboarc.md,
 # "Fixes applied on main"). Every replacement asserts that its source text is still there: a new release that rewords
 # it fails the render instead of silently losing the fix.
 MAX_STEPS = 200000        # rcb_topogym.MAX_STEPS (RCB_MAX_STEPS): the runaway guard on an episode's / a trajectory's length
@@ -415,11 +417,15 @@ def clock_words(s: str, mode: str) -> str:
 TIERS = ("very_easy", "easier", "easy", "medium", "hard")
 
 
-def difficulty_words(s: str, rec: dict) -> str:
-    """task.toml `difficulty` = the variation's tier (TAXONOMY), in both modes: a text templated on another tier kept the
-    template's value, and some packages had no key (audits S2 / S3). A design that is not one of the five tiers (double
-    maze, owl, ...) keeps what its package says."""
-    tier = re.sub(r"^(rd|v2)_|_chain$", "", rec.get("tier") or "")
+NAMES = json.loads((HERE / "roboarc_names.json").read_text())   # owner's mapping: old base -> new base, family, number, difficulty
+DIFFICULTY = {v["new"].removeprefix(BENCH + "-"): v["difficulty"] for v in NAMES.values()}
+
+
+def difficulty_words(s: str, rec: dict, base: str = "") -> str:
+    """task.toml `difficulty` (TAXONOMY), in both modes: the owner's value for the base (roboarc_names.json; the names
+    carry no difficulty), else the variation's tier: a text templated on another tier kept the template's value, and
+    some packages had no key (audits S2 / S3)."""
+    tier = DIFFICULTY.get(base) or re.sub(r"^(rd|v2)_|_chain$", "", rec.get("tier") or "")
     if tier not in TIERS:
         return s
     line = f'difficulty = "{tier}"'
@@ -673,7 +679,7 @@ def limits_env(name: str, s: str, base: str, mode: str) -> str:
     if name == "tests/Dockerfile":
         env += f" RCB_VERIFIER_BUDGET_S={verifier_timeout((PKG / f'{base}-privileged' / 'task.toml').read_text()):.0f}"
     line = "ENV PYTHONPATH=/opt/tools:/opt/topogym\n" if name == "environment/Dockerfile" else "ENV PYTHONPATH=/tests:/opt/topogym\n"
-    return swap(s, line, line + "# the longest trajectory the verifier replays within its timeout (scripts/robotangle/mk_tasks.py row_cap)\n" + env + "\n",
+    return swap(s, line, line + "# the longest trajectory the verifier replays within its timeout (scripts/roboarc/mk_tasks.py row_cap)\n" + env + "\n",
                 f"{base} {name}")
 
 
@@ -711,8 +717,8 @@ def evidence_text(base: str, rec: dict) -> str:
 
 
 def since_evidence(rec: dict) -> str:
-    """What changed between the evidence build and this release (release.json; docs/benchmarks/robotangle.md, Evidence)."""
-    end = " The oracle was not re-run on this build (docs/benchmarks/robotangle.md, Evidence)."
+    """What changed between the evidence build and this release (release.json; docs/benchmarks/roboarc.md, Evidence)."""
+    end = " The oracle was not re-run on this build (docs/benchmarks/roboarc.md, Evidence)."
     if rec["family"] == "blanket_flatten" and REL.get("blanket_change"):
         return REL["blanket_change"] + end
     shared = REL.get("release_change", "")
@@ -766,7 +772,7 @@ def ref_solution(mode: str, rec: dict) -> str:
     same = since_evidence(rec)
     if mode == "privileged":
         return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
-                f"`/app/output/`: the trajectory the author's oracle (the RoboTangle planner on dev/jianwen) produced on "
+                f"`/app/output/`: the trajectory the author's oracle (the RoboARC planner on dev/jianwen) produced on "
                 f"{run_words(ev)}, where the verifier scored it 1 in two fresh-process replays. " + same)
     return ("`solution/solve.sh` streams the recorded rows of the author's standard-mode oracle episode "
             "(`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`) through the client "
@@ -788,16 +794,16 @@ def provenance(base: str, rec: dict) -> str:
     rows = [f"- Frozen instance: built by TopoGym source `{rec['creation_source']}` (graded package "
             f"`{rec['instance_package']}/topogym-{base}-privileged` on the lab host); bound to this release's runtime "
             f"(source `{REL['runtime']['source']['sha256'][:8]}`, tooling `{REL['tooling_sha256'][:8]}`). An exact-restore "
-            "preflight on this build is pending (docs/benchmarks/robotangle.md, Pending)."]
+            "preflight on this build is pending (docs/benchmarks/roboarc.md, Pending)."]
     rows.append(f"- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF "
                 f"dataset `{ASSETS['repo']}` at `{ASSETS['revision'][:12]}`, under `instances/{base}/` "
-                "(scripts/robotangle/assets.json pins each file's sha256). The image carries them, and "
+                "(scripts/roboarc/assets.json pins each file's sha256). The image carries them, and "
                 "`/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, "
                 "which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at "
                 "every session start.")
     rows.append(f"- Release: dev/jianwen `{REL['release_commit'][:9]}` (task templates `{REL['template_commit'][:9]}`), "
-                f"image `{IMAGE}` (images/robotangle/).")
-    rows.append("- Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the "
+                f"image `{IMAGE}` (images/roboarc/).")
+    rows.append("- Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the "
                 "simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.")
     return "\n".join(rows)
 
@@ -809,43 +815,43 @@ def mujoco_provenance(base: str, rec: dict) -> str:
             f"`{REL['tooling_sha256'][:8]}`).",
             f"- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF "
             f"dataset `{ASSETS['repo']}` at `{ASSETS['revision'][:12]}`, under `instances/{base}/` "
-            "(scripts/robotangle/assets.json pins each file's sha256). The image carries them, and "
+            "(scripts/roboarc/assets.json pins each file's sha256). The image carries them, and "
             "`/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, "
             "which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at "
             "every session start.",
             f"- Release: dev/robotangle_mujoco `{rec['release_commit'][:9]}`, image `{IMAGE}` (images/{BENCH}/).",
-            "- Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the "
+            "- Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the "
             "simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables."]
     return "\n".join(rows)
 
 
 def rewrite_toml(s: str, base: str, rec: dict) -> str:
     s = mujoco_text(text(instance_facts(s, rec, "privileged")), rec)
-    s = re.sub(r'(?m)^simulator = "topogym"', 'simulator = "robotangle"', s)
+    s = re.sub(r'(?m)^simulator = "topogym"', f'simulator = "{BENCH}"', s)
     s = re.sub(r'(?m)^robot = "([a-z_]+)"', lambda m: f'robot = "{ROBOT.get(m.group(1), m.group(1))}"', s)
     s = re.sub(r'(?m)^author_name = "jianwen"', 'author_name = "Jianwen Lyu"', s)
     s = s.replace('authors = [{ name = "jianwen" }]', 'authors = [{ name = "Jianwen Lyu" }]')
-    s = s.replace('"topogym",', '"robotangle",')
+    s = s.replace('"topogym",', f'"{BENCH}",')
     s = re.sub(r'(?m)^tooling_version = "\d+"', f'tooling_version = "{REL["tooling_version"]}"', s)
     s = swap(s, EGRESS_OLD, EGRESS_NEW, f"{base} agent egress")
     s = re.sub(r'(?m)^oracle_evidence = .*\n', "", s)
-    if {"privileged", "standard"} <= set(rec["evidence"]):   # a passing oracle run in both modes (docs/benchmarks/robotangle.md)
+    if {"privileged", "standard"} <= set(rec["evidence"]):   # a passing oracle run in both modes (docs/benchmarks/roboarc.md)
         s = re.sub(r'(?m)^oracle = .*\n', 'oracle = "full"\n', s, count=1)
     else:
         s = re.sub(r'(?m)^oracle = .*\n', f'oracle = "none"\noracle_evidence = {toml_str(evidence_text(base, rec))}\n', s, count=1)
     return s
 
 
-PORT_TASK = ("- {date}: new task of {bench} (RoboTangle on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): the scene, goal "
-             "and rules of RoboTangle's `robotangle-{old}-{mode}` (Genesis 1.2.1), ported to MuJoCo: its own frozen "
+PORT_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): the scene, goal "
+             "and rules of the Genesis 1.2.1 task `{old}` ({mode} mode), ported to MuJoCo: its own frozen "
              "instance and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the "
              "render bridge next to the tooling (Nyx frames).")
-DESIGN_TASK = ("- {date}: new task of {bench} (RoboTangle on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): a new design of "
-               "RoboTangle's `robotangle-{old}-{mode}` (Genesis 1.2.1): {design}. Its own frozen instance, task text, rules, "
+DESIGN_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): a new design of "
+               "the Genesis 1.2.1 task `{old}` ({mode} mode): {design}. Its own frozen instance, task text, rules, "
                "goal and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the "
                "render bridge next to the tooling.")
-NEW_TASK = ("- {date}: new task of {bench} (RoboTangle on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): variation "
-            "`{variation}` of {family}{design}. Its task files start from `{bench}-{template}-{mode}`, with this design's "
+NEW_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): variation "
+            "`{variation}` of {family}{design}. Its task files start from the Genesis 1.2.1 task `{template}` ({mode} mode), with this design's "
             "own task text, rules and goal, its own frozen instance and its own reference.")
 
 
@@ -869,7 +875,7 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
     cap = (f"\nA trajectory may have at most {row_cap(base)} rows (`RCB_MAX_STEPS`: two replays must fit the verifier's "
            "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
-    log = mujoco_changes(mode, rec)      # a new benchmark: the RoboTangle task's own history stays with that task
+    log = mujoco_changes(mode, rec)      # a new benchmark: the RoboARC task's own history stays with that task
     return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(log) + "\n"
 
 
@@ -981,7 +987,7 @@ GPU_OLD = ("# Nyx renders through Vulkan, so the container needs the NVIDIA grap
            "# with NVIDIA_DRIVER_CAPABILITIES=all (`capabilities: [gpu]` alone injects compute only).\n")
 GPU_NEW = ("# Nyx renders through Vulkan: the device reservation below passes exactly one GPU (Nyx needs exactly one), and\n"
            "# NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the driver's graphics libraries, which the image's\n"
-           "# Vulkan ICD and EGL vendor files name (images/robotangle/Dockerfile). No `runtime: nvidia`: with the image's\n"
+           "# Vulkan ICD and EGL vendor files name (images/roboarc/Dockerfile). No `runtime: nvidia`: with the image's\n"
            "# NVIDIA_VISIBLE_DEVICES=all it can expose every GPU of the host.\n")
 
 
@@ -1000,9 +1006,9 @@ def image_lines(s: str) -> str:
     return re.sub(r"(?m)^(\s*image:\s*)" + IMAGE_RX.pattern, lambda m: m.group(1) + IMAGE, s)
 
 
-STAGE = "RUN python /opt/robotangle/stage_instance.py {base} {dest} --purge   # the frozen instance, from the image (scripts/robotangle/assets.json), checked against runtime_binding.json"
-ENTRY = ('    # The frozen instance comes from the image (scripts/robotangle/assets.json): the entrypoint stages it next to a copy of\n'
-         '    # runtime_binding.json and checks it (images/robotangle/stage_instance.py), then runs the command.\n'
+STAGE = "RUN python /opt/robotangle/stage_instance.py {base} {dest} --purge   # the frozen instance, from the image (scripts/roboarc/assets.json), checked against runtime_binding.json"
+ENTRY = ('    # The frozen instance comes from the image (scripts/roboarc/assets.json): the entrypoint stages it next to a copy of\n'
+         '    # runtime_binding.json and checks it (images/roboarc/stage_instance.py), then runs the command.\n'
          '    entrypoint: ["sh", "-c", "python /opt/robotangle/stage_instance.py {base} ' + STAGED + ' --binding /srv/runtime_binding.json && exec \\"$$@\\"", "stage"]\n')
 
 
@@ -1048,15 +1054,15 @@ def nyx_direct(rec: dict) -> bool:
 CPU_PHYSICS = (("# The verifier replays in the simulator, which needs the GPU (CUDA physics, Nyx camera images for the replay video).",
                 "# The verifier replays in the simulator: MuJoCo physics on the CPU; the GPU renders the Nyx camera images of the replay video."),
                ("# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx.",
-                "# RoboTangle runs its physics on MuJoCo (CPU) and renders camera images with Nyx on the GPU."))
+                "# RoboARC runs its physics on MuJoCo (CPU) and renders camera images with Nyx on the GPU."))
 GPU_PHYSICS = (("# The verifier replays in the simulator, which needs the GPU (CUDA physics, Nyx camera images for the replay video).",
                 "# The verifier replays in the simulator, which needs the GPU (the cloth's CUDA step, Nyx camera images for the replay video)."),
                ("# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx.",
-                "# RoboTangle runs its physics on MuJoCo with the cloth's CUDA step on the GPU, and renders camera images with Nyx."))
+                "# RoboARC runs its physics on MuJoCo with the cloth's CUDA step on the GPU, and renders camera images with Nyx."))
 
 
 def mujoco_lines(name: str, s: str, rec: dict) -> str:
-    """A MuJoCo task: the SIMD masking in the images that run a Session (privileged agent and verifier: the RoboTangle
+    """A MuJoCo task: the SIMD masking in the images that run a Session (privileged agent and verifier: the RoboARC
     image) and in the standard sim service; render_bridge.py (and nyx_direct.py for its families) copied next to the
     privileged tooling; the compose comments say where the physics runs (the GPU reservation itself is unchanged: Nyx,
     and a GPU physics profile, need it)."""
@@ -1081,7 +1087,7 @@ def mujoco_lines(name: str, s: str, rec: dict) -> str:
         for a, b in (GPU_PHYSICS if rec.get("gpu_physics") else CPU_PHYSICS):
             s = s.replace(a, b)
         s = s.replace("# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx: the GPU goes to the sidecar.",
-                      "# RoboTangle renders camera images with Nyx" + (" and steps its cloth on CUDA" if rec.get("gpu_physics")
+                      "# RoboARC renders camera images with Nyx" + (" and steps its cloth on CUDA" if rec.get("gpu_physics")
                                                                         else "") + ": the GPU goes to the sidecar.")
         assert "CUDA physics" not in s and "TopoGym runs its physics" not in s, f"{name}: a Genesis-era GPU comment is left"
     return s
@@ -1112,10 +1118,10 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
     for mode in ("privileged", "standard"):
         t = out / f"{BENCH}-{base}-{mode}"; up = PKG / f"{base}-{mode}"; dirs.append(t)
         rd = lambda n: (up / n).read_text()  # noqa: E731
-        put(t / "task.toml", difficulty_words(rewrite_toml(rd("task.toml"), base, rec), rec).encode())
+        put(t / "task.toml", difficulty_words(rewrite_toml(rd("task.toml"), base, rec), rec, base).encode())
         fence = "`fence`" in rd("instruction.md")
         put(t / "README.md", audit_words(r5_words(frame_words(flat_words(rewrite_readme(separation_words(rd("README.md"), f"{t.name}/README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode), rec, mode, True).encode())
-        ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(separation_words(rd("instruction.md"), f"{t.name}/instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
+        ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(separation_words(rd("instruction.md"), f"{t.name}/instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboARC", "RoboARC (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
         ins = clock_words(r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode), mode)
         put(t / "instruction.md", audit_words(ins, rec, mode, False).encode())
@@ -1123,6 +1129,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
                 text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode)
+                text_n = text_n.replace("docs/benchmarks/robotangle.md", f"docs/benchmarks/{BENCH}.md")   # the benchmark's page
                 put(t / n, family_words(n, mujoco_lines(n, text_n, rec) if mujoco else text_n, rec).encode())
         goal_images(up, t, (t / "instruction.md").read_text())
         put(t / "tests/test.sh", family_words("tests/test.sh", (up / "tests/test.sh").read_text(), rec).encode(), exe=True)
@@ -1238,17 +1245,17 @@ def main(argv: list[str]) -> int:
                 cur = TASKS / t.name
                 if a.check:
                     if not cur.is_dir() or snapshot(cur) != snapshot(t):
-                        bad.append(f"tasks/{t.name}: differs from a fresh render (run scripts/robotangle/mk_tasks.py)")
+                        bad.append(f"tasks/{t.name}: differs from a fresh render (run scripts/roboarc/mk_tasks.py)")
                 else:
                     if cur.exists():
                         shutil.rmtree(cur)
                     shutil.copytree(t, cur, symlinks=False)
         known = {f"{BENCH}-{b}-{m}" for b in REL["bases"] for m in ("privileged", "standard")}
         stray = sorted(p.name for p in TASKS.glob(f"{BENCH}-*") if p.name not in known)
-        bad += [f"tasks/{n}: not in scripts/robotangle/release.json" for n in stray]
+        bad += [f"tasks/{n}: not in scripts/roboarc/release.json" for n in stray]
         tools = {sha(p.read_bytes()) for p in TASKS.glob(f"{BENCH}-*/**/rcb_topogym.py")}
         if tools - {sha((SHARED / "rcb_topogym.py").read_bytes())}:
-            bad.append("a task's rcb_topogym.py differs from scripts/robotangle/shared/rcb_topogym.py")
+            bad.append("a task's rcb_topogym.py differs from scripts/roboarc/shared/rcb_topogym.py")
     for b in bad:
         print("FAIL", b)
     if not bad:

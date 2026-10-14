@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a libuipc build into its own prefix (images/robotangle/Dockerfile): <wheels> holds one wheel and its
+"""Install a libuipc build into its own prefix (images/roboarc/Dockerfile): <wheels> holds one wheel and its
 uipc-build.json. The wheel must have the sha256 its uipc-build.json records; after the install, the version and the CUDA
 backend's sha256 are checked against that record too, as images/topogym/verify_uipc_wheel.py install does for the audited
 wheel in site-packages. rcb_topogym.select_uipc_build() puts <prefix>/site-packages first on sys.path on the GPUs the

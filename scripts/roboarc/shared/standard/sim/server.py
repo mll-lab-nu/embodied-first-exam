@@ -253,7 +253,7 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
     "joint_effort": [3 * N + 8 * len(ARMS), N, "the force each PD drive applied (N m; gripper entries: the actuated finger drive): a "
                                                "motor-current analogue that rises when the arm pushes against something"],
 }
-WORLD_FRAME = (f"RoboTangle's world frame: origin at the robot's root link ({BASE_LINK}) on its mounting, +z up, the table top horizontal; "
+WORLD_FRAME = (f"RoboARC's world frame: origin at the robot's root link ({BASE_LINK}) on its mounting, +z up, the table top horizontal; "
                "no positions of the scene are given; every pose, camera extrinsic and kinematics answer of this service is in it "
                "(robot_spec.base)")
 SPEC = {
@@ -381,7 +381,7 @@ def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
     return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
-# RoboTangle's declared safety telemetry (PROTOCOL §4.5; main's docs/benchmarks/robotangle.md, "Safety readings in
+# RoboARC's declared safety telemetry (PROTOCOL §4.5; main's docs/benchmarks/roboarc.md, "Safety readings in
 # standard mode"): meta["safety"] carries exactly the fields rcb_topogym._SafetyMonitor.read returns, as on main, with
 # the names of the parts involved (user decision 2026-10-13: names are allowed in standard mode; only positions / poses
 # in the simulator's world frame, the table height and physics parameters are withheld). The fields are forces, depths

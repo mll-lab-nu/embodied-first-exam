@@ -1,4 +1,4 @@
-"""Launcher for test_server_requests.py: RoboTangle's real standard server.py on the real eai-standard/2.4 layer, with a
+"""Launcher for test_server_requests.py: RoboARC's real standard server.py on the real eai-standard/2.4 layer, with a
 stub Session instead of the simulator (numpy only; no Genesis, no GPU).
 usage: fake_service.py <sim dir> <data dir> <port> <gripper space: native | width>"""
 import hashlib, json, os, runpy, sys, types

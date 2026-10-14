@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""RoboTangle's large files (the frozen MuJoCo instances; scripts/robotangle/assets.py with this directory's pins): the private Hugging Face dataset eai-v2-internal/robotangle-assets, pinned by commit and
-by the sha256 of every file in scripts/robotangle/assets.json. They are kept out of git (CONTRIBUTING: no files > 2 MB).
+"""RoboARC's large files (the frozen MuJoCo instances; scripts/roboarc/assets.py with this directory's pins): the private Hugging Face dataset eai-v2-internal/robotangle-assets, pinned by commit and
+by the sha256 of every file in scripts/roboarc/assets.json. They are kept out of git (CONTRIBUTING: no files > 2 MB).
 
 usage:
-  python3 scripts/robotangle/assets.py fetch <dir>      download the pinned revision into <dir> and check every sha256
-  python3 scripts/robotangle/assets.py check <dir>      check an existing copy only
-  python3 scripts/robotangle/assets.py pin <dir> <rev>  maintainers: write assets.json from a local copy of revision <rev>
+  python3 scripts/roboarc/assets.py fetch <dir>      download the pinned revision into <dir> and check every sha256
+  python3 scripts/roboarc/assets.py check <dir>      check an existing copy only
+  python3 scripts/roboarc/assets.py pin <dir> <rev>  maintainers: write assets.json from a local copy of revision <rev>
 
 The dataset holds:
   instances/<base>/instance.json, instance_assets/**   the frozen instance of each task base. Task directories keep only
                                                        runtime_binding.json, which pins the same hashes; the image stages
-                                                       the instance (images/robotangle/stage_instance.py)
+                                                       the instance (images/roboarc/stage_instance.py)
   image/release-<commit9>.tar.gz                       git archive of the release commit (release.json), the paths the
                                                        image copies
   image/uipc-prebuilt/                                 the audited libuipc wheel and its uipc-build.json
@@ -51,7 +51,7 @@ def check(d: pathlib.Path, pin: dict) -> list[str]:
         if not p.is_file():
             bad.append(f"{rel}: missing")
         elif file_sha(p) != want:
-            bad.append(f"{rel}: sha256 differs from scripts/robotangle/assets.json")
+            bad.append(f"{rel}: sha256 differs from scripts/roboarc/assets.json")
     for base, rec in sorted(pin["instances"].items()):
         p = d / "instances" / base / "instance.json"
         if p.is_file() and canonical_sha(p) != rec["instance_sha256"]:
@@ -99,7 +99,7 @@ def main(argv: list[str]) -> int:
     for b in bad:
         print("FAIL", b)
     if not bad:
-        print(f"ok {pin['repo']}@{pin['revision'][:12]}: {len(pin['files'])} files match scripts/robotangle/assets.json ({d})")
+        print(f"ok {pin['repo']}@{pin['revision'][:12]}: {len(pin['files'])} files match scripts/roboarc/assets.json ({d})")
     return 1 if bad else 0
 
 

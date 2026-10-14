@@ -1,4 +1,4 @@
-"""Synthetic test of the RoboTangle standard sim service (scripts/robotangle/shared/standard/sim/server.py) on the real
+"""Synthetic test of the RoboARC standard sim service (scripts/roboarc/shared/standard/sim/server.py) on the real
 eai-standard/2.4 layer, with a stub Session (fake_service.py; needs numpy, no simulator, no GPU; about 20 s):
   1. malformed request fields are a 400 that moves nothing and leaves the episode alive (PROTOCOL §4.6), including JSON
      integers beyond the float range, which were a 500 that ended the episode as an infrastructure error (review
@@ -11,7 +11,7 @@ eai-standard/2.4 layer, with a stub Session (fake_service.py; needs numpy, no si
   4. meta["safety"] holds the declared fields as on main (rules, scope, forcing, task_contact_mm, held_finger_contact_mm,
      review, soft_volume_ratio, attachment_stretch_mm, table_guard, ik_jumps), with the names of the parts involved, and
      no other field of the reading (user decision 2026-10-13: names are allowed, positions are not).
-usage: python3 scripts/robotangle/tests/test_server_requests.py [repo root]"""
+usage: python3 scripts/roboarc/tests/test_server_requests.py [repo root]"""
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts/eai_standard"))
 import rcb1  # noqa: E402
 TMP = tempfile.mkdtemp(prefix="rt_srv_")
 SIM = os.path.join(TMP, "sim"); os.makedirs(SIM)       # the sim directory of a task, assembled from the sources
-for src in ("scripts/robotangle/shared/standard/sim/server.py", "scripts/robotangle/shared/rcb_topogym.py",
+for src in ("scripts/roboarc/shared/standard/sim/server.py", "scripts/roboarc/shared/rcb_topogym.py",
             "scripts/eai_standard/v2_4/rcb_limited.py", "scripts/eai_standard/rcb1.py"):
     shutil.copy(os.path.join(ROOT, src), SIM)
 
@@ -155,7 +155,7 @@ try:
                     f"{ {k: m.get(k) for k in ('executed_rows', 'control_steps_chunk', 'frames_skipped')} }")
 finally:
     svc.close()
-svc = Service("native")     # 4. RoboTangle: meta["safety"] holds the declared fields, part names as the tooling gives them
+svc = Service("native")     # 4. RoboARC: meta["safety"] holds the declared fields, part names as the tooling gives them
 try:
     code, m = post(svc.port, "/submit", {**BASE, "dt": 0.025}, OK); saf = m.get("safety") or {}; n += 1
     declared = {"rules", "scope", "forcing", "task_contact_mm", "held_finger_contact_mm", "review", "soft_volume_ratio",
@@ -173,5 +173,5 @@ finally:
     svc.close()
 shutil.rmtree(TMP, ignore_errors=True)
 for e in errs: print("FAIL", e)
-print(f"{'FAIL' if errs else 'ok'} robotangle standard service: {n} checks, {len(errs)} failed")
+print(f"{'FAIL' if errs else 'ok'} roboarc standard service: {n} checks, {len(errs)} failed")
 sys.exit(1 if errs else 0)

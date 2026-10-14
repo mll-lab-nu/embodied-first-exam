@@ -1,33 +1,31 @@
-# RoboTangle (MuJoCo release)
+# RoboARC (MuJoCo release)
 
-RoboTangle's topological puzzle families on MuJoCo 3.14.0 physics. This release **replaces** the Genesis release (user
-decision, 2026-10-13): the previous tasks `robotangle-<family>-<tier>-i00-*` (52 bases, image `eai-robotangle:0.2.22`),
-their generator, their dataset entries and their benchmark page are removed from the repository; their results are not
-comparable with this release's and are not carried over. The new image is built FROM the published
-`eai-robotangle:0.2.22` (pinned by digest), whose recipe is kept as `images/robotangle/Dockerfile.genesis-0.2.22`.
+RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`. This release
+**replaces** the Genesis release of these puzzles (user decision, 2026-10-13): the previous Genesis tasks
+`<family>-<tier>-i00` (52 bases, image `eai-robotangle:0.2.22`), their generator, their dataset entries and their
+benchmark page are removed from the repository; their results are not comparable with this release's and are not
+carried over. The new image is built FROM that published image (pinned by digest), whose recipe is kept as
+`images/roboarc/Dockerfile.genesis-0.2.22`.
 
-- Name: `robotangle` / RoboTangle. Until 2026-10-13 the release was prepared as a benchmark of its own under the working
-  name `robotangle`; the name is one parameter (Registration, below).
-- History of the name in records: the Harbor trials of the first delivery (2026-10-13) ran on task dirs named
-  `robotangle-*` with image tags `eai-robotangle:0.1.0-r3*`; the delivered dirs differ in the benchmark name and the
-  image tag strings only (the images are the same, retagged `eai-robotangle:0.3.1-r3*`).
-- Layout: the generator directory is `scripts/robotangle/` (it was `scripts/robotangle/`), the image directory
-  `images/robotangle/`.
+- Name: RoboARC (display) / `roboarc` (task prefix, image `eai-roboarc`, `scripts/roboarc/`, `images/roboarc/`, this
+  page; owner, 2026-10-13). Until then the release was prepared under the working names `robotangle-new` and
+  `robotangle`; Harbor records and image tags of those runs keep the names they had. Code identifiers keep the
+  simulator's name: the package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables, the family keys
+  (`interlocked_claws`), and the development branch dev/robotangle_mujoco with its `scripts/robotangle/` and
+  `images/robotangle/`; inside the image, `/opt/robotangle/` (the instances and `stage_instance.py`).
 
 ## Tasks
 
-`robotangle-<family>-<tier>-i01-{privileged,standard}` (PROTOCOL §2.2):
+`roboarc-<family>-<NN>-i01-{privileged,standard}` (PROTOCOL §2.2):
 - `<family>` with dashes (`interlocked-claws`); `[metadata].family` keeps the underscores.
-- `<tier>`: the variation id without the family prefix, with dashes. A ported tier keeps RoboTangle's tier
-  (`very-easy`, `easier`, `easy`, `medium`, `hard`); a redesigned set has its own ids (`rd-very-easy` … `rd-hard`); a
-  new variation its own name (e.g. `double-maze`). No version in a task name: a redesign of a tier is another instance.
-- `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<tier>-i01/`); RoboTangle's Genesis instance of the
-  same scene is its `i00`.
-- `i02`: the redesigned instance of the same tier: `cast-coil-{very-easy,easier,easy}-i02` (the redesigned Cast Coil,
-  internal variation ids `cast_coil_v2_*`), beside the ported `cast-coil-<tier>-i01`.
+- `<NN>`: two digits, the base's number in its family. A number is never reused: removing a task leaves a gap. The
+  difficulty is not in the name: it is `[metadata].difficulty` in task.toml (TAXONOMY).
+- `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<NN>-i01/`).
+- `scripts/roboarc/roboarc_names.json` maps every base of the working names to its RoboARC name: old base -> new base,
+  family, number, difficulty.
 
-Every task is RoboTangle's task contract (the same tooling `rcb_topogym.py`, graders, sim service and eai-standard/2.4
-layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "Standard mode") with these differences:
+Every task is RoboARC's task contract (the same tooling `rcb_topogym.py`, graders, sim service and eai-standard/2.4
+layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standard mode") with these differences:
 - physics: MuJoCo 3.14.0, CPU float64 (the blanket families' cloth: a deterministic CUDA step, `blanket_vbd_gpu`);
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
@@ -37,18 +35,19 @@ layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "
 
 ## Generator and release
 
-- `scripts/robotangle/mk_tasks.py` (`--check` in CI) renders the task dirs from this directory: `release.json`,
-  `packages/` (the texts of the RoboTangle base each task ports, renamed, with the family's own texts over them),
+- `scripts/roboarc/mk_tasks.py` (`--check` in CI) renders the task dirs from this directory: `release.json`,
+  `packages/` (the texts of the RoboARC base each task ports, renamed, with the family's own texts over them),
   `oracles/`, `assets.json`, `shared/` (the tooling and the graders). Generated tasks end with
   `scripts/task_conventions.py` normalize.
-- The release files are written by `scripts/robotangle/release_rebuild.py --bench robotangle --onto <main>` on
-  dev/robotangle_mujoco: image, instances made in the image, release files, render, checks, Harbor oracle / nop.
-- Large files: the frozen instances are in the private HF dataset `eai-v2-internal/robotangle-assets` (RoboTangle's),
-  under `instances/<base>/`, pinned file by file in `scripts/robotangle/assets.json`.
-- Image: `ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>`, built FROM the published
+- The release files are written by `scripts/robotangle/release_rebuild.py --onto <main>` on dev/robotangle_mujoco
+  (its `mujoco_release.json` names each base: a tier through its family's `numbers`, a new design by its key): image,
+  instances made in the image, release files, render, checks, Harbor oracle / nop.
+- Large files: the frozen instances are in the private HF dataset `eai-v2-internal/robotangle-assets` (shared with the
+  Genesis release), under `instances/<base>/`, pinned file by file in `scripts/roboarc/assets.json`.
+- Image: `ghcr.io/mll-lab-nu/eai-roboarc:<images/roboarc/VERSION>`, built FROM the published
   `eai-robotangle:0.2.22` with the release commit's simulator source and the frozen MuJoCo instances
-  (`images/robotangle/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:
-  `scripts/robotangle/fetch_image_context.sh`).
+  (`images/roboarc/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:
+  `scripts/roboarc/fetch_image_context.sh`).
 
 ## Time budget (D8)
 
@@ -84,7 +83,7 @@ else of the simulator's contact state is published:
 These are forces, depths, ratios and the names of the parts involved, never a pose: no field says where an object is.
 A change to this list is a change of the declaration and goes through the protocol-change process (PROTOCOL §6).
 
-User decision 2026-10-13: this release publishes main's declared fields again, with the names of the parts involved (names are allowed in standard mode; only positions / poses in the simulator's world frame, the table height and physics parameters are withheld). The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`); `scripts/robotangle/tests/test_server_requests.py` checks the list and the names.
+User decision 2026-10-13: this release publishes main's declared fields again, with the names of the parts involved (names are allowed in standard mode; only positions / poses in the simulator's world frame, the table height and physics parameters are withheld). The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`); `scripts/roboarc/tests/test_server_requests.py` checks the list and the names.
 
 ## Standard mode, world frame, network
 
@@ -103,12 +102,9 @@ or robot base position either.
 
 ## Registration (the lines a rename changes)
 
-`BENCH` in `scripts/robotangle/mk_tasks.py` and `BENCH` in dev/robotangle_mujoco's
-`scripts/robotangle/release_rebuild.py` (or `--bench`); `git mv` of `scripts/robotangle/`, `images/robotangle/`
-and this page; then the registration lines: `scripts/task_conventions.py` (`BENCHMARKS`),
-`scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml` (six `^robotangle-` rules),
-`ci_checks/check-task-fields.sh` (`BUDGET_EXCEPTIONS`: the default cap, because of the prefix overlap), `ci_checks/check-tooling-identity.sh` (`MODULE`),
-`ci_checks/check-generated-tasks.sh`, `ci_checks/check-unit-tests.sh`, `docs/TAXONOMY.md`, `README.md`, and the
-`docs/CUTOFFS.md` render (`python3 scripts/task_cutoffs.py apply "<label>"`). The rename of 2026-10-13 (`robotangle-new` -> `robotangle`)
-changed exactly these, removed the Genesis generator, tasks and resource rules, and emptied `CUTOFF_NOTE_OWN` in
-`scripts/task_conventions.py` (the service now counts from the first request).
+`BENCH` in `scripts/roboarc/mk_tasks.py` and `--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
+`git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
+(`BENCHMARKS`, `CUTOFF_CAP_EXCEPTIONS`), `scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml`
+(the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
+(`ci_checks/check-tooling-identity.sh` `MODULE`, `check-standard-texts.sh`, `check-generated-tasks.sh`,
+`check-unit-tests.sh`), and the `docs/CUTOFFS.md` render (`python3 scripts/task_cutoffs.py apply "<label>"`).
