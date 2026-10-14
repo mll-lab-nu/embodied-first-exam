@@ -26,6 +26,7 @@ robot = "unitree-h1-2"
 family = "volleyball_spike"
 category = "football-and-volleyball"
 mode = "standard"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50

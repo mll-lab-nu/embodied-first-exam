@@ -132,6 +132,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
 | `instance_seed` (where present, equal to the default seed, §2.13); benchmark-specific fields registered in TAXONOMY | MAY | [current] |
 | `[metadata.seeds]`: `default`, `allowed`, `oracle` (§2.13) | MUST | [CI] (2026-10-13) |
+| `[metadata] dynamics ∈ {static, dynamic}` (§2.14), from `scripts/task_dynamics.toml` | MUST | [CI] (2026-10-14) |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
 | `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark); the number is the cutoff table's for the task (its benchmark and mode, unless the table gives its family or the task an exception), written by `scripts/task_conventions.py` (§2.12) | MUST / SHOULD / MUST | [CI] / [new] / [CI] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
@@ -632,6 +633,36 @@ own, seed 0 names the task's one frozen instance.
 
 Until a benchmark's generator writes more, every task allows its default seed only (`allowed = [default]`): the 2026-10-13
 migration changed `task.toml` only (the instances, the instructions and the READMEs are unchanged).
+
+### 2.14 Scene dynamics (2026-10-14, draft: board 0106)
+
+The owner, 2026-10-14: "every task runs in standard mode by default; a subset, the dynamic tasks, gets a
+standard-realtime mode as well". A task is **dynamic** when something in its scene other than the robot can do work by
+a force other than the robot's own and gravity ("非机器人力和重力原因下能够做功的"): a body that starts with a velocity
+(a thrown, served, rolling or sliding object; a pendulum already swinging), an actuated or scripted body (a conveyor, a
+motor-driven rail or turntable, a scripted push, a timer that moves a part), an opponent or another agent. Everything
+else is **static**: the world waits while the agent thinks, and objects move only because the robot moves them or
+gravity pulls them. Decided with it (board 0106, owner 2026-10-14):
+
+- settling under gravity after reset, cloth / liquid / granular material the robot moves, a falling domino chain the
+  robot started: static (gravity does the work);
+- passive springs, joint stiffness and elastic material that only give back what the robot put in (a spring button, a
+  self-closing latch, a springboard, an elastic rope): static;
+- a world change applied once and instantly when the robot comes near (LIBERO-MAX's on-proximity relocations): static;
+  a change on a clock, or a mechanism that keeps moving bodies after the robot started it (a venue that launches a
+  ball at t = 2 s, a goalkeeper that moves after the kick, a timer dial that turns back by itself): dynamic;
+- visual-only or state-only change (a faucet's water and a burner's flame drawn as a site, cooking and freezing
+  states, an on/off flag): static;
+- an episode horizon or step cap is not a force: static;
+- a robot that must balance actively (a floating-base humanoid or legged robot, a hovering drone) does not make a task
+  dynamic by itself (owner, 2026-10-14: HumanoidBench needs no realtime mode by this definition).
+
+| Item | Level | Basis |
+|---|---|---|
+| `[metadata] dynamics ∈ {static, dynamic}` in `task.toml`, the value of the one table `scripts/task_dynamics.toml` for the task (its family's exception, else its benchmark's row; every entry gives its reason, `why`), written by `scripts/task_conventions.py` (`normalize`); never edited in a task, a template or a generator | MUST | [CI] (`ci_checks/check-dynamics.py`) |
+| A new benchmark adds its row (and its families' exceptions) to the table in the pull request that adds its tasks | MUST | [CI] |
+| The same family has the same value in every mode (the field describes the scene, not the mode) | MUST | [CI] (the table is keyed by family) |
+| A `dynamic` task may have a `-standard-realtime` twin (§4b); a `static` one needs none | MAY | [new] (owner, 2026-10-14) |
 
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 

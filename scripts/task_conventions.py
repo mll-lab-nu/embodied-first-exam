@@ -22,6 +22,8 @@ What it does:
   memory cap from it, and the cap sits above the limit so that the monitor sees a violation before the OOM killer).
 - `instruction.md` ends with `## External material` (§2.11: the same text in every task) and `## Resource limits`, rendered
   from `[metadata.resources.limits]` (§2.10).
+- `[metadata] dynamics` (§2.14: `dynamic` when something in the scene other than the robot does work by a force other
+  than the robot's and gravity, else `static`) from `scripts/task_dynamics.toml`, the one table.
 - the agent's time cutoff (§2.12) from `scripts/task_cutoffs.toml`, the one table: `[agent] timeout_sec`, the standard
   modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, and the last section of `instruction.md`, `## Time
   limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
@@ -90,6 +92,9 @@ DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budg
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
 # PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
+# PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` in task.toml (same list: ci_checks/check-dynamics.py)
+DYNAMICS_FILE = Path(__file__).resolve().parent / "task_dynamics.toml"
+DYNAMICS = ("static", "dynamic")
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
     "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
@@ -957,12 +962,48 @@ def normalize_seeds(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def dynamics_table() -> tuple[dict, dict]:
+    """scripts/task_dynamics.toml: ({benchmark: entry}, {benchmark: {family: entry}}), entry = {dynamics, why}."""
+    t = tomllib.loads(DYNAMICS_FILE.read_text()) if DYNAMICS_FILE.is_file() else {}
+    return t.get("benchmark", {}), t.get("family", {})
+
+
+def dynamics_for(task: Path) -> str | None:
+    """The task's `dynamics` (PROTOCOL §2.14): its family's entry in scripts/task_dynamics.toml, else its benchmark's.
+    None: the table has no row for the benchmark (ci_checks/check-dynamics.py fails such a task)."""
+    rows, fams = dynamics_table()
+    bench = bench_of(task)
+    e = fams.get(bench, {}).get(family_of(task)) or rows.get(bench)
+    if e is None:
+        return None
+    if e.get("dynamics") not in DYNAMICS:
+        raise RuntimeError(f"{task.name}: scripts/task_dynamics.toml gives dynamics {e.get('dynamics')!r}, not one of {DYNAMICS}")
+    return e["dynamics"]
+
+
+def normalize_dynamics(task: Path) -> None:
+    """Writes `dynamics = "..."` (PROTOCOL §2.14) right after `mode` in `[metadata]`, replacing an earlier line, when
+    scripts/task_dynamics.toml has a row for the task's benchmark."""
+    d = dynamics_for(task)
+    if d is None:
+        return
+    p = task / "task.toml"
+    s = re.sub(r'(?m)^dynamics = .*\n', "", p.read_text())
+    line = f'dynamics = "{d}"'
+    line += " " * max(1, 34 - len(line)) + "# scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml\n"
+    s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
+    if n != 1:
+        raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
+    write_if_changed(p, s)
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
     if (task / "results").exists():
         shutil.rmtree(task / "results")
     normalize_toml(task)
+    normalize_dynamics(task)
     normalize_cutoff(task)
     normalize_resources(task)
     normalize_seeds(task)
