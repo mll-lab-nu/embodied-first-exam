@@ -67,6 +67,13 @@ measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> m
 main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
 sim = { cpus = 16.0, memory_gb = 24.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
+
 [verifier]
 timeout_sec = 600.0
 environment_mode = "separate"

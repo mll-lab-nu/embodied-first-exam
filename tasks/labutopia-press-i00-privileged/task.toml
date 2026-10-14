@@ -53,6 +53,13 @@ measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> m
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
+
 [verifier]
 timeout_sec = 5400.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 27 minutes); 300 s of margin: tests/grade.py
 environment_mode = "separate"
