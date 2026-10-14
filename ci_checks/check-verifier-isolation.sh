@@ -3,7 +3,7 @@
 # task.toml: [verifier].environment_mode = "separate"; tests/Dockerfile exists, FROMs a pinned registry image and ships
 # /tests/test.sh; any compose sidecar image is pinned. Agent egress (PROTOCOL §2.11, owner 2026-10-10): every task is on
 # the allowlist, and its hosts are those of scripts/set_agent_egress.py (one list for every task; an empty one breaks the
-# agent's model API). A benchmark is open only if OPEN_EGRESS below names it with its reason (RoboFunOlympics).
+# agent's model API). A benchmark is open only if OPEN_EGRESS below names it with its reason (RoboOlympics).
 # PROTOCOL §2.6 adds two rules, because Harbor mounts /logs/verifier read-write into the agent's container and some
 # simulators keep a cache of generated code:
 # - tests/test.sh empties /logs/verifier before anything else (a planted reward.json must not survive a grader crash):
@@ -53,7 +53,7 @@ elif ag.get("network_mode") == "allowlist":
 OPEN_EGRESS: dict[str, str] = {
     # owner, 2026-10-11: single-humanoid sports; the agent may search for and download public tools, robot models and
     # pretrained controllers (PROTOCOL §2.11 exception; scripts/task_conventions.py EXTERNAL_OPEN has the same prefix)
-    "robofunolympics-": "open egress: public tools and pretrained controllers are allowed",
+    "roboolympics-": "open egress: public tools and pretrained controllers are allowed",
 }
 # Harbor lets a step's own policy override [agent] (trial/network_policy.py: `[[steps]]` with `[steps.agent]`): no task has
 # steps, and one that sets a network policy there would open what [agent] closes, and what a run's gateway-only copy narrows

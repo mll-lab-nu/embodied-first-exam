@@ -5658,18 +5658,6 @@ name = "robot-coding-bench/libero-max-spatial-black-bowl-on-yellow-plate-target-
 digest = "sha256:fab053e482e198b48993a0eb1e81e3efcc5528ff804193bd2b1014f4e73855ce"
 
 [[tasks]]
-name = "robot-coding-bench/roboolympics-airhockey-match-i00-standard-realtime"
-digest = "sha256:6e08dc289d2e3beb78d3b433b9700b9aa76e0bda5f9091492dc4d679bcf9b2c6"
-
-[[tasks]]
-name = "robot-coding-bench/roboolympics-badminton-match-i00-standard-realtime"
-digest = "sha256:430cb9369e9d97cd4099fb1131ce29549b7bbfca97732c13dfff00f40b1669dd"
-
-[[tasks]]
-name = "robot-coding-bench/roboolympics-tabletennis-match-i00-standard-realtime"
-digest = "sha256:020bfcbcd7a8cf2f879b2dd152d0c4778aaf592b8345c311bdb7c8b5381f971a"
-
-[[tasks]]
 name = "robot-coding-bench/bigym2-dishwasher-close-i00-privileged"
 digest = "sha256:c63388c33c9f2463fe75c34a561908f5d6adec1c26b1d2a651e819f20f0c6dbf"
 
@@ -6650,406 +6638,6 @@ name = "robot-coding-bench/robodojo-sweep-blocks-random-i00-standard"
 digest = "sha256:65a3cd1e5e436781cd34ee4bd8c7fff3630f88c2bb7c722bd871363ab4da0f09"
 
 [[tasks]]
-name = "robot-coding-bench/robofunolympics-backflip-i00-privileged"
-digest = "sha256:73c148922d3617a10c8df7b84d3688fca1c37b66150d5dc976d045c47b43f5e1"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-backflip-i00-standard"
-digest = "sha256:ad1871853aded96cd43afb67a396551458b3e8a5e2cd7b754a8879de9e1c9de1"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-balance-beam-i00-privileged"
-digest = "sha256:a82406111443132f2683333d71bcc94b1f667ee5d396ac647c5f98b79fc9dceb"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-balance-beam-i00-standard"
-digest = "sha256:05c9a18aa5a9d36f9d2e1914144805e0379a0c9b0b245b428434faf06772b3c0"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-basketball-dribble-i00-privileged"
-digest = "sha256:001532a7d2f14c585fbc4bd4b49794c963d10e37d0dd5d1f166e478604e41c83"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-basketball-dribble-i00-standard"
-digest = "sha256:5d6fbff29382bee92021fd3ca68f74135aceaee0ff660b84030306b07f5de8a5"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-bowling-i00-privileged"
-digest = "sha256:40f1612608d9f2d452ef100cbf4ccb35e0c90f862bca60983d9713ca9f124a17"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-bowling-i00-standard"
-digest = "sha256:dc0feea0389729f44b05c9b0e35c56fb9276e2dc3e6c0cd773e48f8b7a3a964a"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-box-jump-i00-privileged"
-digest = "sha256:ec36cd93359335e97932c721951bdfe22be9fb32a7b3572256a54629cdbafc00"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-box-jump-i00-standard"
-digest = "sha256:85c77da6e74375a86767f19c74c2b923f560daa9c0ac1a7dcb9c7c190f6d2a33"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-boxing-i00-privileged"
-digest = "sha256:252a2b19f39215916e34c011d1dfb323d2d106279cbda0bf915917373c09ad7f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-boxing-i00-standard"
-digest = "sha256:bd90c5b19cf10ccef08612207d36782cf1259833bdb5887415d67cb12435bed1"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-catch-and-shoot-i00-privileged"
-digest = "sha256:98142a31bfe02dbc2530c945cf2b65fc555b2f802e7bf69b23639c7126efca4d"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-catch-and-shoot-i00-standard"
-digest = "sha256:cbe4785e52c848cc349828e7a5173b5d69702076086889ccfc3f2a75e4c2f031"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-catch-i00-privileged"
-digest = "sha256:208789cfa9747608ac03e7819ea4507d247215972d6b79fb6131800391426e60"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-catch-i00-standard"
-digest = "sha256:2bff3591ec01b84a6f0667333ea2af715bcab2b23e125717ca9c10e0c307a71c"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-crawl-i00-privileged"
-digest = "sha256:6c64c79978ac5e1e091798bf0b7f337aeaa832d3f10109ea59ec52e644c8be4e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-crawl-i00-standard"
-digest = "sha256:751183f913681fb503c3a0f31bb999bcdd2128cdf910320703c676f86f31920a"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-discus-i00-privileged"
-digest = "sha256:b38b5b191cbac54c7224ae4991e91e7698330f97c164df5213a96edb95eb2956"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-discus-i00-standard"
-digest = "sha256:a629881e722bdf7666b906a77ccb2de2e81d05f973c65d2cb1d6b94e15a510f2"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-dribble-slalom-i00-privileged"
-digest = "sha256:dcb7e426a015e014d8b814a05615d488ad78f8b9bc1de461d14ba4ff77df68b4"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-dribble-slalom-i00-standard"
-digest = "sha256:10ad6f5708b70cfc5655fbbf15febf67383730e2e1b944c82c42e9e8ad922e78"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-dunk-i00-privileged"
-digest = "sha256:3dd0e0fc9def4c69f71d0ab6eb756e70614ef3e4588fe11c6827db6733f3a47f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-dunk-i00-standard"
-digest = "sha256:1a414940e17945e42def5813ff02f5e41d30fa82d51dc55da5271088c263534b"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-free-throw-i00-privileged"
-digest = "sha256:ce4b1652592cc95ba19018803351a671d1bf1cee11ee43f49086c12c0808ce6e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-free-throw-i00-standard"
-digest = "sha256:aba2aef6ce41aeda43e187579bc8e03123fadeba4f1331b05e8590a93171c569"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-golf-putt-i00-privileged"
-digest = "sha256:343c3d7543d1e40c5673d1864abb971ef36b6fae5d0b4c323105b838011e53b0"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-golf-putt-i00-standard"
-digest = "sha256:b8247bb0df279a55e6d01f0e9f363c91e90bcb907bc350f6c5809bbebcdf6dfc"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-header-i00-privileged"
-digest = "sha256:6ed82a2ee979f0b03dc1ded4ae05ed2278035083a468bb60378f870e390c7ff3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-header-i00-standard"
-digest = "sha256:806aca1b1c279ab4881e1a906e67f60a5b8eb4d6a34279b5955438bfd779491d"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-high-bar-swing-i00-privileged"
-digest = "sha256:c9fc7f32bd5f666c8af3cfd92ae61aed72b9cf5174b347905b03d8eaf2a6b69f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-high-bar-swing-i00-standard"
-digest = "sha256:24fdabf638052ae9ac54c0e8107a64ad7bc6bb7c7b2ea6b7184c56d61396cdb3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-high-jump-i00-privileged"
-digest = "sha256:a71de6b781ef62e3e0a32d205e03e3c4d44d952a5693d2c99278e4a6bf5eb29f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-high-jump-i00-standard"
-digest = "sha256:ef0a91f90c4e1549814284b255af141e29ae2b279248efeeb29861737300c6f6"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-hurdles-i00-privileged"
-digest = "sha256:31844b369fed767f65f784c5b7e1a5be403fdb43bd626eac3e51707efb3f9323"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-hurdles-i00-standard"
-digest = "sha256:15876d879bbfc1596f99a70418a33c8a9f722a3c46ad11e5b64faffcfeeb30b2"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-javelin-i00-privileged"
-digest = "sha256:9862c12c72590d0299457bc0e82990228a022c1ffad574e3975552e318610565"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-javelin-i00-standard"
-digest = "sha256:a4b0e4a74cccc73d28ab9f2396d6aaa3751aadeca2f3c8a9675c3065fb6e2598"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-juggling-i00-privileged"
-digest = "sha256:913ec4d109632bbb533177a2f9fd092dc2afea04197e43fa478b0856f396884f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-juggling-i00-standard"
-digest = "sha256:b37b2e26979fbeb5fc773797aaa54832caf3f3db8a94b8ffdb4c4d1bf9d2e155"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-kick-target-i00-privileged"
-digest = "sha256:b592392444351436bbc5aad1c8f2474ca3fcf468b68580a7cac10ff5a8b0e6c3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-kick-target-i00-standard"
-digest = "sha256:bb1a3cfac8cd848255e4ba03216190a7a4d50d4af5d7c83d1ccc8e0795a012fa"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-layup-i00-privileged"
-digest = "sha256:15db3cc346b95b61006065caf01c64da1f6cf5267c17335676a3181c748844ff"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-layup-i00-standard"
-digest = "sha256:9364e1ff6c9374645c20e32c765434455e3a67e0b9cb424df266cf4a3f21b904"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-long-jump-i00-privileged"
-digest = "sha256:efbbe5604ea3196627b27ce24acb98eaab760c70c60c703a54a235eeaa451657"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-long-jump-i00-standard"
-digest = "sha256:ce2a49ab6f8904b1515eb87adb5ddd8c4de20f493339bce363d5df43c5f272ca"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-paddle-bounce-i00-privileged"
-digest = "sha256:e2e61a945cbfc858d4241b8f3ba5f819eab1d7243cb2d824acba7576937f2a99"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-paddle-bounce-i00-standard"
-digest = "sha256:00f53371d392055d6681464766e86dd3e754cb82527b794b60f5e54ec4f94c9d"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-penalty-kick-i00-privileged"
-digest = "sha256:b48ca09c65a14d0a86733fd2d39117bc6dd8a4efea859b4c597cd7d39217eead"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-penalty-kick-i00-standard"
-digest = "sha256:fa010e74c4a65e1919124a29bc64c5ec6d2457480594e2b4118ad410f51e92b3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-pitch-target-i00-privileged"
-digest = "sha256:ada0c4144127b59ab69552eb54821356a7c51428124dd1b4f9824bfbaf403e94"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-pitch-target-i00-standard"
-digest = "sha256:5754e6e87bc41d410184d4b69fda37dcb2fdc4a98bb7a9049004b36840bdcc40"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-pole-vault-i00-privileged"
-digest = "sha256:3e8610727b4c0bead7bb65187e75bf696897faa9fcc5816e4181f22dff65656d"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-pole-vault-i00-standard"
-digest = "sha256:833649a797eb94bff357fccae8ace02873ce0501eea067fedede6caf16b39624"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-shot-put-i00-privileged"
-digest = "sha256:16caea8461dd3361db3e35b119a7d92afde69780b11b0a3552c6c9a04d05d2da"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-shot-put-i00-standard"
-digest = "sha256:f8d9f79df28d8732bfa15e16d5232e748b10807b57464c67e661fc3063c437a9"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-shuttle-run-i00-privileged"
-digest = "sha256:d51da727ea84cd9a04a088d26ade5819c88867ceebdff1c119aaba776b5592fa"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-shuttle-run-i00-standard"
-digest = "sha256:34577bcb2e201fc99b2110693eac9a5372a71de0e3ba69a3d4e286aac836744c"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-slalom-i00-privileged"
-digest = "sha256:67ab2318438c55a9ca06ca998d79164eb0356f3c3ffe2803cafeb7c74c98aca4"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-slalom-i00-standard"
-digest = "sha256:f506188d9077b06a7ffc383e472af8ba1429b6e373d8200ef179b3ae8baeb685"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-sprint-i00-privileged"
-digest = "sha256:f66492c020c70716d03a38397a4a2f1f919b6379af49ccac355e834ac19bba6e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-sprint-i00-standard"
-digest = "sha256:0231a4ff96a3f0fa5e5594c21c974813e602d562395fe9e610b1321475807d18"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-standing-long-jump-i00-privileged"
-digest = "sha256:b5a75b4a187d879f435546492c95256d98d3284ed655a0007218c24a2f2e3c7a"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-standing-long-jump-i00-standard"
-digest = "sha256:2d95f6738113bbf101ca7340124ed0925f0de23032d8b4d6fae1247cd5115ff5"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-table-tennis-return-i00-privileged"
-digest = "sha256:b4d67e22aaed8c231df6aa013947457697c032fcd93824a2a8f2e8213a57f13e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-table-tennis-return-i00-standard"
-digest = "sha256:3655100349468e58a072b2739de20037073baf9ca2aa48776527c7f64704c483"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-tennis-return-i00-privileged"
-digest = "sha256:0c90769259a7d8d9a6e3fb3820f4e8be9a30b4630122af52c7c2e7552f3fe14f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-tennis-return-i00-standard"
-digest = "sha256:92f317133c4c213e66da33387d46cdb36c7a0b8a318a210f6a895c71a1cffe92"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-tennis-serve-i00-privileged"
-digest = "sha256:b43b1b038708fc144eafbea2643a619c8c826bf20075e3d29323a12b967026a4"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-tennis-serve-i00-standard"
-digest = "sha256:e21ca2af8ad42e8600998de46e2d1c30fad7bb6c17c0d832d04932009354a457"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-trap-ball-i00-privileged"
-digest = "sha256:2fb6419d32ca24c505f7ad7a06c04832071a141cc948b87d95a022aa5d3c2704"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-trap-ball-i00-standard"
-digest = "sha256:8133738457e80852da303b5ba3388577815d2c0c5e14344ec923b5255232a253"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-triple-jump-i00-privileged"
-digest = "sha256:2b1a26e72347dd545482efea41ae7ecd7c387a4ce1b6f98ee8f2469e990cb457"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-triple-jump-i00-standard"
-digest = "sha256:06d70f97ccf7c47f7a211fd3bb78f22981579f21b0c72b3506f5a4a283f41c90"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volley-shot-i00-privileged"
-digest = "sha256:5b614ae0cae78a3fe580ed9ebc0f1549ef9dc8a69e2a6e9f33409dc1728533a3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volley-shot-i00-standard"
-digest = "sha256:e1af5229a41ec7a716ee9a573b22e21919e38862c68d3e68852faa0ec1f9e34e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-bump-i00-privileged"
-digest = "sha256:35765e349acdab61ee137ecfe5057222df0e3590d8771105eda1433c3fb47a2e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-bump-i00-standard"
-digest = "sha256:0aa494cf96882600bcfa84398887dd43c95768d13c56ed0aae1c4914dab70097"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-serve-i00-privileged"
-digest = "sha256:b41ce93303cfa4d99db9bc1cdb18f7d12a95fe8906446bda07c1f9b01eb2d154"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-serve-i00-standard"
-digest = "sha256:807fc90d2c5b6bf21e94bb29598cac86b04b48cc3247933690d8552b8fe92971"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-set-i00-privileged"
-digest = "sha256:530329a70847feffa5c5772bce6ee6577ca75c7913ddfa2da5fa4f960135ece3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-set-i00-standard"
-digest = "sha256:61cb305dfebdc977c811df66b8069b2c0a6fd2953ba95f27f97e310dd1b6ef26"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-spike-i00-privileged"
-digest = "sha256:012552d87eeb55dec6f383bdbd654df22b0bfd2d27f37ca90cb59eb0bf190de1"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-volleyball-spike-i00-standard"
-digest = "sha256:67ade4fef73ed92924ac037375acef92ae314e184258ae1ef64dd0c7288719ba"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-wall-ball-i00-privileged"
-digest = "sha256:ffdef27570f728bc50207d760192fcab23c5c6149270f4513e4ae39609367883"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-wall-ball-i00-standard"
-digest = "sha256:4702e441f6f372ccedea073135dcbfb5cbd12ea8521715dc1ea30fe393d328e3"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-balance-board-i00-privileged"
-digest = "sha256:2c67499c7b611712a5889c43e025fd91d689121fd7444b24d219fcf48316bf65"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-balance-board-i00-standard"
-digest = "sha256:23c9c67f1902267e62230bfdbb6fd810f5128bf2fa622094eb0619bac94f343c"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-clean-and-jerk-i00-privileged"
-digest = "sha256:09acf858dfed7dd2b3655644e3938bc6b5c520606602c3e00c23948b73a792fe"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-clean-and-jerk-i00-standard"
-digest = "sha256:384f7100d3d671570ccc72205aaf809140de371292eb3b46463e219441c3297a"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-juggle-three-i00-privileged"
-digest = "sha256:9e5f1e4026182b18fe9815700685a97eefbbc3f5fa8b880f59a85fe7066e8d55"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-juggle-three-i00-standard"
-digest = "sha256:46ef1a728b797b41fb0907d718feb9304c46bc95613afc7d6c358b107bd49c09"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-steeplechase-i00-privileged"
-digest = "sha256:eafc2fd889cfda88ea41270b42e08427aebf637c1ecf7244ae320b4778d7f43f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-steeplechase-i00-standard"
-digest = "sha256:3f082e048287fddd308db5406984a69c560b14f1c1a2725456bd68211296025e"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-toes-to-bar-i00-privileged"
-digest = "sha256:5473be664b15f371bed79bfa9aaee6d02d23867702c984a9604baece54105f0a"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-toes-to-bar-i00-standard"
-digest = "sha256:40cde7f26ad5f09cd5bf4b3875b6b97f351341d1da619f3a84435c60406d4662"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-vault-i00-privileged"
-digest = "sha256:0d1c31d70727a3e0b65a7965ec12a9c5b36a8d5c0368e0f9de07fa56eee97bb2"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-vault-i00-standard"
-digest = "sha256:7297d9c2013282cec2a6f48eeaba3f123151fb7a5f66dc6493fd2384858d2d48"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-vertical-jump-i00-privileged"
-digest = "sha256:9837c4fea6b9d505b4e69910ceae58e4b6b766c8777aa57746a23b1f4ba50e5f"
-
-[[tasks]]
-name = "robot-coding-bench/robofunolympics-vertical-jump-i00-standard"
-digest = "sha256:41c0af94ea445f2741cff4a052affe59ba18f19c89d61f035cc7eee90e06023d"
-
-[[tasks]]
 name = "robot-coding-bench/pandadyn-d01-reciprocal-cup-relay-i00-privileged"
 digest = "sha256:30697dfe5dfa5e9a8f2d4ec9369621a01a5fbc2fa5bb2e8b0fc31dc6cd42d2ea"
 
@@ -7248,4 +6836,404 @@ digest = "sha256:4ca7077cfcca599a7e8df35c95b332695d31e62c08101d0124a9a85b172d1ad
 [[tasks]]
 name = "robot-coding-bench/pandadyn-s12-moving-bridge-puck-relay-i00-standard"
 digest = "sha256:d0e961dfa6779d6bb6ca0f1c493ef789da28ae149f3022692037187f1833772c"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-backflip-i00-privileged"
+digest = "sha256:0a3013179808302de5c68fbc36bff0d442407bb72044c739cdd854b6fae8ce30"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-backflip-i00-standard"
+digest = "sha256:d60e312148cbbe8949eb4c7dc90c19b7bc2d8c8dff80d7336aecd909b32b0e3b"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-balance-beam-i00-privileged"
+digest = "sha256:c31155b8d6be22c290d7632dbfffb026bd8c2d3adbba40c75a95f6caa6e676dd"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-balance-beam-i00-standard"
+digest = "sha256:e3ba4e2b942956a30b15f3ba241a46888c1a83578385aadaa7e6199a811980c7"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-balance-board-i00-privileged"
+digest = "sha256:1384ebdb23d6467234a23b0ec18ac7b7ee6aa942039fadc525b6eacd600882ad"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-balance-board-i00-standard"
+digest = "sha256:8ff76d9ceee2805b086c5532a82f9c5388f41a9ea04afe83181b921b2f53fef9"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-basketball-dribble-i00-privileged"
+digest = "sha256:439360c82e25a642aae3b78b961b6bf1889645c81fd2b33ccdfb27de57dcfd6c"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-basketball-dribble-i00-standard"
+digest = "sha256:43dad84c8624ce793073a5b49f0c3bf217f1bb7c5d3d0986a0a8e2463d283987"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-bowling-i00-privileged"
+digest = "sha256:6055d0b6d6b4b86367f91643bb6e1a584cdee4634a1e244fe521291022f39193"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-bowling-i00-standard"
+digest = "sha256:8460ff5f88becc760f5307492eeaa20ecc1343981d16c922718cd2c52c0663fe"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-box-jump-i00-privileged"
+digest = "sha256:f1954d17a7a254ba35ebaf51db649eedd761c6f708d61dc51f166f501b3b574e"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-box-jump-i00-standard"
+digest = "sha256:44056c0b8bc819c58fdd6447f9abd9dbdf55a08f84e899d8bdc8922d0c29d89d"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-boxing-i00-privileged"
+digest = "sha256:19a017f3af034f2ba16ccdcef8d07d49abe713346740bcfb0f4e43870b648119"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-boxing-i00-standard"
+digest = "sha256:33ff95de7ecae9eedb4a0a402f6aad6796419b6613ef6e2871e9f5bb2336d68a"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-catch-and-shoot-i00-privileged"
+digest = "sha256:931657f84be39b9b920fcd0477f4eb1524d0488860eaecf3fa9d72a36fa01a3f"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-catch-and-shoot-i00-standard"
+digest = "sha256:e28ed6ad61b2263f62694b3208c492b04825b03dc62914df01c72d449b18894b"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-catch-i00-privileged"
+digest = "sha256:e948d37510ec59b4c48c63aeef26b3b305e3262ba9a009e8d532c6ee1e85ca2b"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-catch-i00-standard"
+digest = "sha256:7bb5516c57997bac8133e91196b4a060231556c9d37be82a3aa15f6be01f59e9"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-clean-and-jerk-i00-privileged"
+digest = "sha256:a4b7ff1a4e17dd54dd2f0fcee645fb9ae039687eddc972c80de09efb7fb67408"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-clean-and-jerk-i00-standard"
+digest = "sha256:34d230a7090b2c60b9089b784a19f264f157041aecd951d610af8835bfc6db13"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-crawl-i00-privileged"
+digest = "sha256:682238359f6be64743c01e808437d86092909041e230731838cbc7ed26f35616"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-crawl-i00-standard"
+digest = "sha256:68f4767c95b852a6a77400782ab67907bf4ec1ca714bf772203ece9b1ba1aca1"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-discus-i00-privileged"
+digest = "sha256:56d4eab52f592cd661eb61035559f7c53477cb83a877ae5629f8b7acc5280b43"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-discus-i00-standard"
+digest = "sha256:b9d274f85ce231bd9343ddda41358bb6e4ed9ee49950d51a50aca8ee591a0ecb"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-dribble-slalom-i00-privileged"
+digest = "sha256:e09265aa01a4360716eee9289dfe844131b2ed8d2b928ca557520d47d2edf730"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-dribble-slalom-i00-standard"
+digest = "sha256:e492fd22dafcf6d24d58723cfdb8f1b08f123fac5a693920b066db1b653296f1"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-dunk-i00-privileged"
+digest = "sha256:592aea09b6f396b2f91878d71a97406e9cecc7e02e93aa7ac6e8e0b87659892d"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-dunk-i00-standard"
+digest = "sha256:182911e598c8b0ec5db2d3146936fd009d84010c15739567da7feff96726fb54"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-free-throw-i00-privileged"
+digest = "sha256:7c83d30608e70e611002125e749632bfa8f14db203bc597e38ce08deec44da30"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-free-throw-i00-standard"
+digest = "sha256:1b4b29119bf134b04a913e93e3ea5321f70d35e64d6416df816125c329ad5a2b"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-golf-putt-i00-privileged"
+digest = "sha256:c9f10db74c8286b3257c5e14049050e5fec83ceb9499ddd90c166f5d54ee38e4"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-golf-putt-i00-standard"
+digest = "sha256:2e32e72c175fc27278318e0c74afac1b7e18b20fc68f25d1040a6df4e8823822"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-header-i00-privileged"
+digest = "sha256:837785db60b1ff63f0e0373c67e88fbad5b500ad5b7138c7f377df566d6a7a70"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-header-i00-standard"
+digest = "sha256:dc25ea14e61fda78adc066010a696b57a217856eba9f4acbdd95c036167b5ce5"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-high-bar-swing-i00-privileged"
+digest = "sha256:3e360c06dc0c4a05c59d64a27d907e5f28cff782369e1c5803042748dfc32523"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-high-bar-swing-i00-standard"
+digest = "sha256:d89cffc6d8f79a663cf89178c5f8217beb96e8e686575bd72e86c15c54a393a7"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-high-jump-i00-privileged"
+digest = "sha256:3a0c15403eb7b1a4a25113a9e7b4eee0b4c36aaf79e5db31c8399727dcfbb76a"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-high-jump-i00-standard"
+digest = "sha256:1b3a47b057bd8937f7b112f51dbd8e5b5471ef46e68d1578dc5425ec57cffd6f"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-hurdles-i00-privileged"
+digest = "sha256:05476cf3e4223cef9f6e342d6692a40484746331f557f6a01f4da51f0d0f32a1"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-hurdles-i00-standard"
+digest = "sha256:d2f8ec918afc6609ef3b07a4c69411e02f3a4a5d00656d81120ce90e993cc725"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-javelin-i00-privileged"
+digest = "sha256:82089d9e4480b960db6599a94bf219cc02640125dc8bce4dfeece89c4fc92432"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-javelin-i00-standard"
+digest = "sha256:b84d50ad3d8b9d4c6d715e860824a166f89825e96869af7ebb3279edaf7bec4a"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-juggle-three-i00-privileged"
+digest = "sha256:702c8bd0aa2391161b2213d1cfdc1ab357caace9564f1464f15bbbab614f1af3"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-juggle-three-i00-standard"
+digest = "sha256:471e8ecc7c575dd7cdc6e3866d07faa7fdc59d4abe9a5ebb2826dd302aae3293"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-juggling-i00-privileged"
+digest = "sha256:f125ac8928f61db146a1bdf7ade61221e9fbe47be11a85c6210e8ae324d04412"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-juggling-i00-standard"
+digest = "sha256:ec0255fc51611279a885247131a5f9bd14ddb90fa1c583be58b9c936e0b330de"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-kick-target-i00-privileged"
+digest = "sha256:7f3d38b2624ccf3501744260d71aed3e8e5e75aca3df6e68532d1664ae3f002c"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-kick-target-i00-standard"
+digest = "sha256:7c908c90c863c704320eb31ac7f24df0382873595f707709f90b92acfae695cc"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-layup-i00-privileged"
+digest = "sha256:cae418cf64eaaa93cd64ca823f119f5e8feef5c9c8420c98172b509ee9186a23"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-layup-i00-standard"
+digest = "sha256:8ecd545cd461bd40d9e7064bb39e610c3661b5b01155fc8436205cb963f9a61d"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-long-jump-i00-privileged"
+digest = "sha256:6561ae077e017e73d928f7c230a55d945b43c3fe9dfc261a1a1a25ca4c2629c2"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-long-jump-i00-standard"
+digest = "sha256:b5e8c8153ba08225aec86e6efb35c72fe8ba342a053dff1d1b4cbc33ae27381d"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-paddle-bounce-i00-privileged"
+digest = "sha256:3892ac8c9c384cd3f0402b7f9d6b6f37455aaaaa5b1df76e69892dd644694c0b"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-paddle-bounce-i00-standard"
+digest = "sha256:0a4cca23bd492f4a9ab4449b8b884ef355572d6cae5ed7adfbe885e48e4ee24c"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-penalty-kick-i00-privileged"
+digest = "sha256:a8a1bee566149463af782f441528c8575f6f01e6337fb6f83cbbd1fa8630d847"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-penalty-kick-i00-standard"
+digest = "sha256:75360e4220ca33807bcb74a6132494be37fba79160ab64ceffeaa7ce9636df39"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-pitch-target-i00-privileged"
+digest = "sha256:59814f49a6faadf869a95b254ab0e87b0a4eaa2851dbdf9231ccfef7a38e7ce0"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-pitch-target-i00-standard"
+digest = "sha256:f86cd1788739a11f9cfd1542c9fe932913c4671bdc5f952820eda04ba397ecdf"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-pole-vault-i00-privileged"
+digest = "sha256:d6321984349c709242c3bad48cc547dddf25a74f1acc4a803c2d74c7972ec9ed"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-pole-vault-i00-standard"
+digest = "sha256:5e276ecd0a660f396fecceac71d78994a3f6f55118087f3458e3c597b51851d6"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-shot-put-i00-privileged"
+digest = "sha256:1b0d381182dc5e9e064759aaa1ee10747f4429e362614bb1425ccfb6985744bb"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-shot-put-i00-standard"
+digest = "sha256:f25c5d2844d0d54c28754ac1dc2d6e1d4693ebb943b032e0745bca911cd4f693"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-shuttle-run-i00-privileged"
+digest = "sha256:893975f7f41e2895f7e616c00fbfbe34c54ec55d69f0003272cdae177c0c7661"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-shuttle-run-i00-standard"
+digest = "sha256:e5804c7c20c1ed2a29038c8ee4c3c25bd558a66bab1d1c9613a5276388f1e82a"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-slalom-i00-privileged"
+digest = "sha256:a0c28404c3310de8dfc489fdaf55b2a2c17d4ee7ccfade192a7d18f69eb8fd93"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-slalom-i00-standard"
+digest = "sha256:2a598cf887b312a02621ae0ca437691a53b860d66ad95367a7848d1f3c649e78"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-sprint-i00-privileged"
+digest = "sha256:7a02fd3e0d328287644860c014f854feaebb284718d24039e5c819cf8a785b94"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-sprint-i00-standard"
+digest = "sha256:dc805a502e013611cea285798a8b1646344044c8b12e0c0c17e4077002cefe2c"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-standing-long-jump-i00-privileged"
+digest = "sha256:00c4a975eb43ffcc143204d3188c256e529e249769f4236c7536a7fd4c0d2b30"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-standing-long-jump-i00-standard"
+digest = "sha256:2c1c2cd96a4c69b42d594f8fef5e44933c829818fbb355f3a126421e3a07e89e"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-steeplechase-i00-privileged"
+digest = "sha256:0628cec03c53cddf0584dda343592a07ee1934ce71472b5fb31b646775eb6701"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-steeplechase-i00-standard"
+digest = "sha256:e95997190537c6e205b6b98940ddff59c6ed58f0cb04c871d0c8f3ea627f008c"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-table-tennis-return-i00-privileged"
+digest = "sha256:1b5fe0c211946de80610e25ed49d8292ae856dc6bc9c9636bfa6a882d3335f0d"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-table-tennis-return-i00-standard"
+digest = "sha256:a66639e9e9594ab939df1ec8cf4ac5b1258307b3a24e2092c9d47cd716b010aa"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tennis-return-i00-privileged"
+digest = "sha256:cb07f505bf003ea791bb4f0619220f86dde093b290f2feff30d2df48f84e61de"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tennis-return-i00-standard"
+digest = "sha256:e0c3ff963d2475068bf9a61ea4db1d39a12e9f57e95920214016389d68dcd2b3"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tennis-serve-i00-privileged"
+digest = "sha256:0fa65cfa5fab1dafd5e04aae6ae20a20615d6171aaf717adfce7896ca3881383"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tennis-serve-i00-standard"
+digest = "sha256:976a4d6ab83bd51fc2ade46d0ce92a5cddbf86134ee582b7a7989df9013a8617"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-toes-to-bar-i00-privileged"
+digest = "sha256:5f14aadf8f864ebf043da7246bdf245d9f61cf9a12101c15eb00e1174f29f7d4"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-toes-to-bar-i00-standard"
+digest = "sha256:5c1dd8cd71ca82a2ca6963787d76b28fff3414c48f1296f68f295adfed7eb251"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-trap-ball-i00-privileged"
+digest = "sha256:e9264383d482d78585ca9e3ae25296c744c2a2ca1fb1572912450ef40a293c16"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-trap-ball-i00-standard"
+digest = "sha256:539de521f8e70d032257c902212e7318432386ccc786f1e5a9ddaa5298d85a64"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-triple-jump-i00-privileged"
+digest = "sha256:406408c3d29ae231261fc9e4b5196194f10faf0bf9279531189a554919aacbc6"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-triple-jump-i00-standard"
+digest = "sha256:fcccc81922eac23da907c7d45de80724c22d417f670df6ec66102616412a1518"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-vault-i00-privileged"
+digest = "sha256:e967886b80ea27a313c8d322aeb255e39ae88e993026f71f83f635ea803d8257"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-vault-i00-standard"
+digest = "sha256:689be5425a89d88185163b9376d5428aa5a8fe27732a3f80fd73986a686832ec"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-vertical-jump-i00-privileged"
+digest = "sha256:78a95356d0721a7bb1b03674c023bf83757fa3e0cd112f7b3384158b982e730e"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-vertical-jump-i00-standard"
+digest = "sha256:c255e6159999b86be87684863117360e122874cc6dae89378e77c12cd2a73a0a"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volley-shot-i00-privileged"
+digest = "sha256:3eb5a59be869d4adce5fbbc6ee03a7d90045dd4e6806ea01b0b554d4a1179f7e"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volley-shot-i00-standard"
+digest = "sha256:f5d39d64d007180180d1af6d3ae91a223b7faa53b250696625aa80019a4d1791"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-bump-i00-privileged"
+digest = "sha256:2f18efda808ed9d28bd1b9cb4eae00608e8a42078b07bb690967313581e6e2e7"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-bump-i00-standard"
+digest = "sha256:df7d097ffb6d1c0c214eec8fdbc4ec3aacbe22b4da2c1bd457004f1c3cb99527"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-serve-i00-privileged"
+digest = "sha256:26f87bf7cae8f082fd855903562bbac65d5cfee2eb7996ed11b04b790677395e"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-serve-i00-standard"
+digest = "sha256:e5731158921811db37a42f476becc52e5de76af38d4ec799c5f80686770d1281"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-set-i00-privileged"
+digest = "sha256:d660722d248eabe7c01d814762a4febf7dcea69208a0de2c6301104a9278527b"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-set-i00-standard"
+digest = "sha256:82b4f8654a9655d5a904b90dd8a025645b7824c3256883fb605e2b4f5fd6f466"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-spike-i00-privileged"
+digest = "sha256:306856a0f44e97a8f36c7951e90e6867c9810fd30af31188e29c26693b75d1cd"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-volleyball-spike-i00-standard"
+digest = "sha256:111cd647f763ecbe7c693cdb3e64f7f787c7cdeea6af70bfdd93c34bb9775350"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-wall-ball-i00-privileged"
+digest = "sha256:e66fa9bded67614dc1356b133161ead1ef772fa1ac559084503e7d230d20b7c9"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-wall-ball-i00-standard"
+digest = "sha256:9dbfc400db9bb6763abb0bd78d9be8b5082d4e061d033fbed470942cff41f155"
 

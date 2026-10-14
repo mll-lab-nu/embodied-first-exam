@@ -286,7 +286,6 @@ def render_doc(tasks: list[Path]) -> str:
         "were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 "
         "`COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the "
         f"cap of {tc.CUTOFF_CAP} s.",
-        "- **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).",
         "- **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step "
         "caps, verifier timeouts.",
         "",

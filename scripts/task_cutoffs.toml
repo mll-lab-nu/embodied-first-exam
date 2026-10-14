@@ -38,9 +38,8 @@
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
 "RoboCasa365"       = { privileged =  3600, standard =  3600 }
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
-"RoboFunOlympics"   = { privileged =  7200, standard =  7200 }
 "RoboLab"           = { privileged =  3600, standard =  3600 }
-"RoboOlympics"      = { standard-realtime = 7200 }
+"RoboOlympics"      = { privileged =  7200, standard =  7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
 "RoboARC"           = { privileged = 10800, standard = 10800 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
@@ -258,3 +257,30 @@ from_sec = 0
 to_sec = 10800
 decided_by = "owner"
 note = "new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboOlympics"
+modes = ["standard-realtime"]
+from_sec = 7200
+to_sec = 0
+decided_by = "owner (board 0107, E7)"
+note = "removed: the three standard-realtime tasks on this repository's eai-standard/2.3 adapter (table tennis, badminton, air hockey) are deleted; their results are moved out of the pool (jobs-backup), not carried over"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboFunOlympics"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 0
+decided_by = "owner (board 0107, E7)"
+note = "removed: the benchmark is renamed RoboOlympics (next entry); the same 100 tasks, renamed robofunolympics-* -> roboolympics-*"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "RoboOlympics"
+modes = ["privileged", "standard"]
+from_sec = 0
+to_sec = 7200
+decided_by = "owner (board 0107, E7)"
+note = "RoboFunOlympics' row under its new name (its entry of 2026-10-12, 0 -> 7200, owner): the same tasks and the same number; no result was recorded under the old name"

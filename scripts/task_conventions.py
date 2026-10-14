@@ -68,18 +68,16 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
     ("roboarc-", "RoboARC"),
-    ("roboolympics-", "RoboOlympics"),
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("robofunolympics-", "RoboFunOlympics"),
+    ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
     ("pandadyn-", "Panda Dynamic Scenes"),
 ]
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
-# STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
-# does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard only, graded by the live episode.
-NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
-           "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+# STANDARD_ONLY). RoboDojo's six tasks whose physics does not replay bit for bit (PROTOCOL §4.8 exception, owner
+# 2026-10-11): standard only, graded by the live episode.
+NO_TWIN = {"robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
@@ -118,10 +116,10 @@ EXTERNAL_TEXT = (
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
 # Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
-# the agent's egress is open and finding existing tools and controllers is part of the task. RoboFunOlympics (owner,
-# 2026-10-11): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
+# the agent's egress is open and finding existing tools and controllers is part of the task. RoboOlympics (owner,
+# 2026-10-11, as RoboFunOlympics): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
 EXTERNAL_OPEN = {
-    "robofunolympics-": (
+    "roboolympics-": (
         "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
         "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
         "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "

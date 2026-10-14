@@ -7,8 +7,8 @@
 #     eai-standard/2.2 and 2.4 selftests: crash recovery, request checks; the rcb_service and realtime layers) and the
 #     benchmarks' service and grader tests. Run when both modules can be imported (the CI job `unit-tests` installs
 #     them), skipped with a note otherwise; `--all` makes a missing module a failure.
-# Not here: tests that need a simulator image or media libraries (scripts/roboolympics/tests/test_adapter.py: the
-# eai-olympiad image; scripts/maniguard/tests/test_mg_*.py: imageio, Pillow), run by hand as each benchmark's
+# Not here: tests that need a simulator image or media libraries (scripts/roboolympics/tests/: the
+# eai-robofunolympics image; scripts/maniguard/tests/test_mg_*.py: imageio, Pillow), run by hand as each benchmark's
 # docs/benchmarks/<bench>.md says. The resource monitor's own tests are run by check-monitor.py.
 # Usage: check-unit-tests.sh [--all]   (repo-level; run_all.sh calls it once)
 set -uo pipefail

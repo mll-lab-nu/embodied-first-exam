@@ -309,7 +309,7 @@ stamp_task_dirs() {  # <root> <harbor -i args...>: give every file of each task 
   done
 }
 
-OPEN_EGRESS_RE="$(python3 "$R/scripts/set_agent_egress.py" open-prefixes 2>/dev/null || true)"   # e.g. robofunolympics-
+OPEN_EGRESS_RE="$(python3 "$R/scripts/set_agent_egress.py" open-prefixes 2>/dev/null || true)"   # e.g. roboolympics-
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1

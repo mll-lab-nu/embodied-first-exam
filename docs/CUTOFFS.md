@@ -30,16 +30,15 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
 | RoboDojo | 3600 s (60 min) | 3600 s (60 min) | — | 48 / 54 / — |
-| RoboFunOlympics | 7200 s (120 min) | 7200 s (120 min) | — | 50 / 50 / — |
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
-| RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
+| RoboOlympics | 7200 s (120 min) | 7200 s (120 min) | — | 50 / 50 / — |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
 | RoboWits | 3600 s (60 min) | 3600 s (60 min) | — | 15 / 15 / — |
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1810 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1807 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -87,7 +86,6 @@ A change of a cutoff changes the task in place: the scene, the frozen instance, 
 - **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which reads `task.toml`.
 - **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
-- **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).
 - **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.
 
 ## History
@@ -116,3 +114,6 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-13 | Panda Dynamic Scenes, privileged, standard | (none) -> 3600 s | proposal #177 (D8 default) | the benchmark's first tasks: the protocol's default; a scene builds in seconds and simulates at 60-150 control steps per second, so the hour is the agent's own work |
 | 2026-10-13 | RoboTangle, privileged, standard | 7200 s -> (removed) | owner | removed: the benchmark is renamed RoboARC (next entry) and its Genesis tasks are deleted; RoboARC's MuJoCo release replaces them, and results recorded under this row are not carried over |
 | 2026-10-13 | RoboARC, privileged, standard | (none) -> 10800 s | owner | new row: RoboARC, the MuJoCo release that replaces RoboTangle's Genesis tasks (prepared as RoboTangle-New, then RoboTangle; their entries, 0 -> 7200 on 2026-10-12 and 7200 -> 10800 on 2026-10-13, are folded into this one): 3 h wall clock for every family, within the default cap |
+| 2026-10-14 | RoboOlympics, standard-realtime | 7200 s -> (removed) | owner (board 0107, E7) | removed: the three standard-realtime tasks on this repository's eai-standard/2.3 adapter (table tennis, badminton, air hockey) are deleted; their results are moved out of the pool (jobs-backup), not carried over |
+| 2026-10-14 | RoboFunOlympics, privileged, standard | 7200 s -> (removed) | owner (board 0107, E7) | removed: the benchmark is renamed RoboOlympics (next entry); the same 100 tasks, renamed robofunolympics-* -> roboolympics-* |
+| 2026-10-14 | RoboOlympics, privileged, standard | (none) -> 7200 s | owner (board 0107, E7) | RoboFunOlympics' row under its new name (its entry of 2026-10-12, 0 -> 7200, owner): the same tasks and the same number; no result was recorded under the old name |

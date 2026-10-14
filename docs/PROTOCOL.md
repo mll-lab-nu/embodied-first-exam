@@ -493,7 +493,7 @@ under an unrelated name would be missed.
 | LIBERO-MAX | `libero`, `hf-libero`, `rlinf-libero`, `rpent-libero`, `praxis-libero`, `libero-infinity`, `rlinf-liberopro`, `rpent-liberopro`, `rlinf-liberoplus` | LIBERO's goal definitions and initial states; no meshes, no demonstrations, not LIBERO-MAX's events |
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
-ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
+ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, BiGym, YAMLab, Panda Dynamic Scenes
 (not published at all: its environment package is this repository's `images/pandadyn/`); Isaac Sim does not install from pypi.org.
 
 **Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
@@ -502,8 +502,8 @@ prefix in each): `ci_checks/check-verifier-isolation.sh` `OPEN_EGRESS` (the task
 Harbor's default, open), `scripts/task_conventions.py` `EXTERNAL_OPEN` (the benchmark's own `## External material`
 paragraph) and `scripts/set_agent_egress.py` `OPEN_EGRESS` (`allowlist` leaves these tasks alone). Its results are
 compared only with results under the same network setting.
-- **RoboFunOlympics** (owner, 2026-10-11; `robofunolympics-<family>-i<NN>`, single-humanoid sports,
-  [`benchmarks/robofunolympics.md`](benchmarks/robofunolympics.md)): the agent may search for, download and use public
+- **RoboOlympics** (owner, 2026-10-11, as RoboFunOlympics, renamed 2026-10-14; `roboolympics-<family>-i<NN>`, single-humanoid sports,
+  [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)): the agent may search for, download and use public
   tools, robot models and pretrained controllers (a published Unitree G1 walking, jumping or whole-body policy), and
   is encouraged to: finding existing work and adapting it to the robot is part of what these tasks measure. The honour
   rule that remains is not to look up the benchmark's own source and reference solutions. Nothing an agent can reach
@@ -658,9 +658,9 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 ### 4.0 Versions
 | Version | Date | Content |
 |---|---|---|
-| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
+| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboOlympics |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes and MuJoCo Playground's quadruped tasks |
-| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
 Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
@@ -750,10 +750,10 @@ results must state the reset budget and are compared only with results under the
   no simulator to practise in, so a single episode is one blind attempt. `RCB_RESET_BUDGET=0` still runs one episode;
   HumanoidBench standard results recorded before 2026-10-07 ran with 0 and are reported separately
   ([`benchmarks/humanoidbench.md`](benchmarks/humanoidbench.md)).
-- **RoboFunOlympics** (owner, 2026-10-12):
+- **RoboOlympics** (owner, 2026-10-12, as RoboFunOlympics; its single-robot sports families):
   `budget.reset = 50`, HumanoidBench's value for the same reason. A sport is attempts: a jump, a throw or a kick is over
   in a second or two and ends at the first foul or fall, and the agent has no simulator to practise in. `RCB_RESET_BUDGET=0`
-  still runs one attempt ([`benchmarks/robofunolympics.md`](benchmarks/robofunolympics.md)).
+  still runs one attempt ([`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)).
 - **MyoSuite** (owner, 2026-10-09; standard tasks): `budget.reset = 10`. MyoSuite's own termination ends most episodes
   within a second or two of simulated time (a dropped object, an object off the reference motion), and the agent has no
   simulator to practise in, so a single episode is one blind attempt at muscle-level control. `RCB_RESET_BUDGET=0` still
@@ -832,7 +832,7 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | Grading replays the targets the simulator **applied** at each control step (the journal), so the replay equals the live run whatever the timing; latency and jitter are recorded (`ticks.f64`; `max_lag_s`, `stalls`, `held_steps`, `late_steps` in `final.json`) and never decide the verdict | MUST | [new] |
 | How well the clock was kept is evidence in `final.json`, and the grader repeats it in `reward.json` as numbers (a missing one is 0): `clock_s` (wall seconds the clock ran, over the trial), `max_lag_s` (the furthest a control step ran behind its time), `stalls` (the times the service, more than 0.5 s behind, dropped the debt instead of fast-forwarding the robot), `stalled_s` (the wall time dropped that way: the robot stood still while its clock should have run), `stalled_share` = `stalled_s` / `clock_s`, `held_steps`, `late_steps`, and what the requests cost: `requests_refused` (answered 4xx), `request_busy_s` (simulator-thread time spent on requests). They decide no verdict: a trial whose clock stalled is flagged by these fields, not failed or voided (whether a stalled trial counts is an open owner decision) | SHOULD | [new] (v1.2-rc: review R2 M1; before, only RoboOlympics' grader exported `stalls`, and `max_lag_s` never passed 0.5) |
 | What a request can cost the clock is bounded by the service: the body is read, decoded and checked off the simulator's thread, so a refused or malformed request never reaches it (a body with more than 1 MiB of JSON text is parsed by a separate process; the 64 MB limit of §4 stands); behind the clock, control steps run before waiting requests, which are served once it has caught up (they queue behind each other: an `/observe` may take longer to answer, the robot's time does not slow down), and a rendering request that is a stall by itself (more than 0.5 s) holds the next one back four times as long, so requests take at most a fifth of the clock's time; and the cameras are rendered at most once per control step however many requests and watches ask | SHOULD | [new] (v1.2-rc: review R2 M1) |
-| Slowdown S: `RCB_SLOWDOWN`, default **1** (real time; per-benchmark exceptions below: RoboOlympics 10). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use S = 1, or the benchmark's documented S | MUST | [new] |
+| Slowdown S: `RCB_SLOWDOWN`, default **1** (real time; per-benchmark exceptions below). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use S = 1, or the benchmark's documented S | MUST | [new] |
 | Reset budget: **no reset by default** (`budget.reset = 0`), as in standard mode; per-benchmark exceptions only as in §4.5 (HumanoidBench: 50; MyoSuite has no standard-realtime tasks). The reset capability is §4.5's; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget | MUST | [new] (v1.1.2, #102: v1.1 and v1.1.1 wrongly made HumanoidBench's 50 the mode's default) |
 | A simulator crash is an infrastructure failure, never the agent's: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed` (no call spans a crash: `/submit` answers at once), a failed resume `resume_failed`, and a simulator error that ends the graded episode (`reason = "error"`) — all with `infra_error = 1` | MUST | [new] (owner, 2026-10-08) |
 | The agent's controller runs in the agent's own container and streams targets through the client; no agent code runs next to the simulator | MUST | [new] |
@@ -844,16 +844,8 @@ exception list), in the same way as HumanoidBench's reset budget (§4.5) and Rob
 interface, the encoding, crash recovery and the evidence are never excepted: every standard-realtime task serves
 `eai-standard/2.3`. That benchmark's results state what differs and are compared only with results under the same
 settings.
-- **RoboOlympics** (owner, 2026-10-08; `roboolympics-<sport>-<format>-i<NN>-standard-realtime`, real-time sports
-  against a scripted opponent, [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)):
-  - slowdown: `RCB_SLOWDOWN` defaults to **10**, RoboOlympics' official slowdown of these sports (a rally is over in a
-    few seconds, faster than a model's turn); it stays an override, and the results state S and are reported
-    separately (as every S ≠ 1).
-  - no privileged twin: the sports measure play from camera images against an opponent; there is no trajectory
-    deliverable. `ci_checks/check-instance-copies.sh` and `scripts/task_conventions.py` (`NO_TWIN`) exempt exactly
-    these tasks.
-  The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
-  stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
+- **RoboOlympics** (owner, 2026-10-08): its three tasks on this repository's 2.3 adapter (table tennis, badminton, air
+  hockey; S = 10, no privileged twin) were removed on 2026-10-14 (owner, board 0107 E7), and with them this exception.
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |

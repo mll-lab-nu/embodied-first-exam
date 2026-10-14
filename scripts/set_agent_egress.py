@@ -51,7 +51,7 @@ mode = sys.argv[1] if len(sys.argv) > 1 else ""
 # Benchmarks whose agents have open egress by a documented exception (PROTOCOL §2.11; the same prefixes:
 # ci_checks/check-verifier-isolation.sh OPEN_EGRESS, scripts/task_conventions.py EXTERNAL_OPEN): `allowlist` leaves
 # their tasks alone, and a runner does not narrow their copies to the gateway (`open-prefixes` prints the list).
-OPEN_EGRESS = ("robofunolympics-",)
+OPEN_EGRESS = ("roboolympics-",)
 if mode == "package-hosts":
     print(",".join(PACKAGE_HOSTS)); sys.exit(0)
 if mode == "open-prefixes":

@@ -30,13 +30,13 @@ SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
 HEAVY = "labutopia-heat-liquid-i00-standard"                   # an allowlist; a sidecar with a large verifier minimum
-RT = "roboolympics-airhockey-match-i00-standard-realtime"      # min_cpus = the sum of its two services' caps
+RT = "humanoidbench-loco-walk-i00-standard-realtime"           # a standard-realtime task: main and sim capped
 # benchmarks whose generators have no check mode: their shared files are held together by check-tooling-identity.sh
 DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbench_hammer_claw_hammer_swing_down-privileged"
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "robofunolympics-sprint-i00-standard"                   # open egress by a documented exception (PROTOCOL §2.11)
+OPEN = "roboolympics-sprint-i00-standard"                      # open egress by a documented exception (PROTOCOL §2.11)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -282,7 +282,7 @@ MUTATIONS = [
                    COMPOSE: sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 24576m\1")},
      RESOURCES, "verifier_min_memory_gb 27.0 > the memory cap of the sidecar"),
     ("the CPU minimum above the CPU caps of all services together",
-     RT, TOML, sub(r"^min_cpus = [0-9.]+", "min_cpus = 7.0"), RESOURCES, "min_cpus 7.0 > the CPU caps of all services together 6"),
+     RT, TOML, sub(r"^min_cpus = [0-9.]+", "min_cpus = 9.0"), RESOURCES, "min_cpus 9.0 > the CPU caps of all services together 8"),
     ("a declared cap that docker does not apply",
      STD, COMPOSE, sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 1024m\1"), RESOURCES, "declare the cap that is applied"),
     # ---- seeds (PROTOCOL §2.13): the runner draws the seed; no other seed's instance where the agent's image is built
