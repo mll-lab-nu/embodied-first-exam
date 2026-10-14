@@ -57,6 +57,23 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
 
 REL = json.loads((HERE / "release.json").read_text())
+
+
+def tooling_check() -> list[str]:
+    """The tooling files in shared/ are the release's (release.json tooling_sha256, render_bridge_sha256,
+    nyx_direct_sha256): a render or a check on any other copy is refused (2026-10-13: a rename had put an older
+    rcb_topogym.py under the release, and the bindings were stamped with it)."""
+    bad = []
+    for key, name in (("tooling_sha256", "rcb_topogym.py"), ("render_bridge_sha256", "render_bridge.py"), ("nyx_direct_sha256", "nyx_direct.py")):
+        want = REL.get(key)
+        if want and REL.get("bases"):
+            f = HERE / "shared" / name
+            got = hashlib.sha256(f.read_bytes()).hexdigest() if f.is_file() else "missing"
+            if got != want:
+                bad.append(f"scripts/{BENCH}/shared/{name}: sha256 {got[:16]}, release.json {key} {want[:16]}")
+    return bad
+
+
 # Agent egress (owner, 2026-10-10 / 10-11, board 0072): the model APIs and the package registries. The packages' task.toml carry the release's line (open
 # egress); rewrite_toml puts the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
 # list for every task: ci_checks/check-verifier-isolation.sh).
@@ -370,7 +387,8 @@ def frame_words(s: str, where: str, mode: str = "privileged") -> str:
 R5_ANCHOR = "stalls at that torque."
 R5_SENTENCE = (" An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its "
                "joint targets become its measured joints for that control step, so it stops pushing ({report}).")
-R5_REPORT = {"privileged": "the safety readings report these stops as static_guard", "standard": "reported in clipped[]"}
+R5_REPORT = {"privileged": "the safety readings report these stops as static_guard",
+             "standard": "the response does not report these stops"}   # the standard service has no clipped[] entry for them (audit S21)
 
 
 def r5_words(s: str, mode: str) -> str:
@@ -390,6 +408,47 @@ def clock_words(s: str, mode: str) -> str:
         return s
     s = s.replace(CLOCK_OLD, "The episode ends on", 1)
     assert "service comes up" not in s and "since the service first started" not in s, "standard text still dates the clock from the service start"
+    return s
+
+
+TIERS = ("very_easy", "easier", "easy", "medium", "hard")
+
+
+def difficulty_words(s: str, rec: dict) -> str:
+    """task.toml `difficulty` = the variation's tier (TAXONOMY), in both modes: a text templated on another tier kept the
+    template's value, and some packages had no key (audits S2 / S3). A design that is not one of the five tiers (double
+    maze, owl, ...) keeps what its package says."""
+    tier = re.sub(r"^(rd|v2)_|_chain$", "", rec.get("tier") or "")
+    if tier not in TIERS:
+        return s
+    line = f'difficulty = "{tier}"'
+    if re.search(r'(?m)^difficulty = ', s):
+        return re.sub(r'(?m)^difficulty = "[^"]*"', line, s, count=1)
+    s, n = re.subn(r'(?m)^(family = "[^"]*"[^\n]*\n)', lambda m: m.group(1) + line + "\n", s, count=1)
+    assert n == 1, "task.toml: no family line to put difficulty after"
+    return s
+
+
+VOLUME_RULES = re.compile(r"(?m)^- (?:Keep the rope volume intact|Invalid rope volume ends the episode)[^\n]*\n")
+STIFFNESS = (re.compile(r" \(Young's modulus [0-9.]+ kPa\)"), re.compile(r" \([^()\n]*N m/rad per joint\)"))
+
+
+def audit_words(s: str, rec: dict, mode: str, readme: bool) -> str:
+    """The text audits of 2026-10-13 (tmp/2026-10-13_status/AUDIT_LEAKAGE.md, AUDIT_PACKAGING.md), as rules:
+    B4  a chain base has no rope volume, so the released volume rules go (the chain sentence says nothing about volume
+        ends the episode);
+    B5  a standard text carries no privileged grading line (two replays of a submitted trajectory);
+    S19 standard texts state no physical parameter of the task objects (stiffness numbers); privileged keeps them;
+    S2  a README's lower oracle row agrees with its key table."""
+    if rec.get("chain"):
+        s = VOLUME_RULES.sub("", s)
+        s = s.replace('as "rope_volume_invalid: <what>" or "forced_breakdown: <what>"', 'as "forced_breakdown: <what>"')
+    if mode == "standard":
+        s = re.sub(r"(?m)^- Grading: the verifier replays your trajectory twice[^\n]*\n", "", s)
+        for rx in STIFFNESS:
+            s = rx.sub("", s)
+    if readme and rec.get("oracle") != "none" and rec.get("evidence"):
+        s = s.replace('| oracle | none yet (`oracle = "none"`, no `solution/`) |', '| oracle | `full` (`solution/`) |')
     return s
 
 
@@ -552,8 +611,8 @@ def review_fixes(s: str, name: str, base: str, mode: str) -> str:
         s, n = re.subn(r'- \*\*Your wall-clock budget is \d+ min \(\d+ s\)\*\* \(`meta\["time_left_s"\]` counts it down\); ',
                        "- **Your only budget is the time limit (`## Time limit`)**; ", s)
         assert n == 1, f"{base}: the standard budget sentence"
-        s, n = re.subn(r"(One control step takes about [0-9.]+ s of wall clock here\.)\n(?=- There is nothing to hand in)",
-                       lambda m: m.group(1) + SERVICE_END, s)
+        s, n = re.subn(r" One control step takes about [0-9.]+ s of wall clock here\.\n(?=- There is nothing to hand in)",
+                       lambda m: SERVICE_END, s)        # the step time stays once, under "Time per call" (audit S8)
         assert n == 1, f"{base}: the standard budget bullet's end"
         s = swap(s, "steps are unlimited. Actions and\n  simulated time are reported as cost.",
                  f"there is no step budget, but the\n  episode ends after {MAX_STEPS} control steps, watches included ({MAX_STEPS / hz / 60:.0f} min "
@@ -595,8 +654,9 @@ def run_words(e: dict) -> str:
     return f"{e['release']} (source {e['source']}, tooling {e['tooling']}; lab run {run}{old})"
 
 
-NO_REFERENCE = ("No reference solution in this release. Physics accepted on the family's acceptance rounds plus a smoke "
-                "stress round on this instance (see release notes).")   # release.json oracle "none" (user 2026-10-13)
+NO_REFERENCE = ("No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing "
+                "is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress "
+                "round on this instance.")   # release.json oracle "none" (user 2026-10-13); main's wording for the first clause
 
 
 def evidence_text(base: str, rec: dict) -> str:
@@ -625,8 +685,21 @@ def since_evidence(rec: dict) -> str:
     return f"This family's task, geometry and asset files are unchanged from that build to this release; {shared}." + end
 
 
+NOT_CONFIRMED = {"not_run": "No Harbor oracle trial of it has been run yet",
+                 "running": "Its Harbor oracle trial was still running when this release was rendered and is not confirmed"}
+
+
 def ref_solution(mode: str, rec: dict) -> str:
     ev = rec["evidence"].get(mode)
+    if is_mujoco(rec) and ev and ev.get("status", "passed") != "passed":     # a reference without a passing Harbor record
+        why = NOT_CONFIRMED[ev["status"]]
+        if mode == "privileged":
+            return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
+                    f"`/app/output/`: the MuJoCo reference, which its author replayed to success with a reproducible end "
+                    f"state outside Harbor. {why}, so no score is claimed here.")
+        return ("`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`, one "
+                "`joint_position` row per 25 ms control step, `hold`; the same rows as the privileged reference) through the "
+                f"client (`solution/oracle_replay.py`). {why} on this standard service, so no score is claimed here.")
     if is_mujoco(rec) and ev:
         if mode == "privileged":
             route = ("this design's oracle, recorded on MuJoCo" if rec.get("template") or rec.get("design") else
@@ -639,7 +712,7 @@ def ref_solution(mode: str, rec: dict) -> str:
                 "privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and "
                 f"fresh replay) on {run_words(ev)}.")
     if rec.get("oracle") == "none":
-        return NO_REFERENCE + " `oracle = \"none\"`; Harbor checks the nop agent only."
+        return NO_REFERENCE + " `oracle = \"none\"`: there is no `solution/`, and Harbor checks the nop agent only."
     if not ev:
         return ("None in this release: the author is fixing this tier's oracle (it follows in a later pull request). "
                 "`oracle = \"none\"`, human review (PROTOCOL §2.7).")
@@ -655,8 +728,10 @@ def ref_solution(mode: str, rec: dict) -> str:
 
 def nop_words(base: str, mode: str, rec: dict) -> str:
     n = rec.get("nop")
+    if n and n.get("status", "passed") != "passed":
+        return f"`nop`: no record yet on this base (`harbor run -p tasks/{BENCH}-{base}-{mode} -a nop`)."
     if n:
-        return f"`nop` scored 0 on this base in both modes on this build ({n['run']}; {n['date']}, {n['host']})."
+        return f"`nop` scored 0 on this base in both modes ({n['run']}; {n['date']}, {n['host']})."
     return f"`nop`: pending (`harbor run -p tasks/{BENCH}-{base}-{mode} -a nop`, docs/benchmarks/{BENCH}.md)."
 
 
@@ -906,11 +981,17 @@ MUJOCO_ENV = (("NPY_DISABLE_CPU_FEATURES", "AVX512F,AVX512CD,AVX512_SKX,AVX512_C
 
 
 def direct_families() -> tuple[str, ...]:
-    """The families whose MuJoCo tasks render with nyx_direct.py: the tooling's own lists (rcb_topogym.TASKS renderer
-    "direct", set in loops there: the first families, then orbits and slotted_post_ring), read from the copy this release
-    ships. Every loop counts: a family missed here ships without nyx_direct.py and its service dies at the first frame."""
-    loops = re.findall(r'(?ms)^for _name in \(([^)]*)\):\n\s+TASKS\[_name\]\["renderer"\] = "direct"', (SHARED / "rcb_topogym.py").read_text())
-    return tuple(n for loop in loops for n in re.findall(r'"([a-z0-9_]+)"', loop))
+    """The families whose MuJoCo tasks render with nyx_direct.py: the tooling's own settings (rcb_topogym.TASKS renderer
+    "direct"), read from the copy this release ships. The tooling sets it in loops (`for _name in (...)`) and in single
+    assignments (`TASKS["cast_coil"]["renderer"] = "direct"`); both forms are read, and the count of assignments in the
+    file must equal the count understood here: a family missed ships without nyx_direct.py and its service dies at the
+    first frame (2026-10-13: slotted_post_ring, orbits, then cast_coil and cast_keyhole)."""
+    src = (SHARED / "rcb_topogym.py").read_text()
+    loops = re.findall(r'(?ms)^for _name in \(([^)]*)\):\n\s+TASKS\[_name\]\["renderer"\] = "direct"', src)
+    singles = re.findall(r'(?m)^TASKS\["([a-z0-9_]+)"\]\["renderer"\] = "direct"', src)
+    total = len(re.findall(r'\["renderer"\] = "direct"', src))
+    assert total == len(loops) + len(singles), f"rcb_topogym.py sets renderer \"direct\" {total} times, {len(loops) + len(singles)} understood"
+    return tuple(n for loop in loops for n in re.findall(r'"([a-z0-9_]+)"', loop)) + tuple(singles)
 
 
 def nyx_direct(rec: dict) -> bool:
@@ -984,13 +1065,13 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
     for mode in ("privileged", "standard"):
         t = out / f"{BENCH}-{base}-{mode}"; up = PKG / f"{base}-{mode}"; dirs.append(t)
         rd = lambda n: (up / n).read_text()  # noqa: E731
-        put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
+        put(t / "task.toml", difficulty_words(rewrite_toml(rd("task.toml"), base, rec), rec).encode())
         fence = "`fence`" in rd("instruction.md")
-        put(t / "README.md", r5_words(frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode).encode())
+        put(t / "README.md", audit_words(r5_words(frame_words(flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode), rec, mode, True).encode())
         ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
         ins = clock_words(r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode), mode)
-        put(t / "instruction.md", ins.encode())
+        put(t / "instruction.md", audit_words(ins, rec, mode, False).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
@@ -1080,7 +1161,9 @@ def main(argv: list[str]) -> int:
             r = REL["bases"][b]
             print(f"{b:34s} instance {r['creation_source']}  " + "  ".join(f"{m}: {e['release']}:{e['source']}" for m, e in r["evidence"].items()) or "oracle pending")
         return 0
-    bad = []
+    bad = tooling_check()
+    if bad and not a.check:
+        print("\n".join(bad), file=sys.stderr); return 1
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         for b in bases:

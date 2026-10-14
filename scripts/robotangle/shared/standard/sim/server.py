@@ -297,7 +297,9 @@ SPEC = {
     # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
     # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS) ends the episode (reason step_guard) at
     # that many control steps, /observe watches included
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800")),
+               "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
+                        "that, so it never runs out before the harness's limit does"},   # STANDARD_MODE §5 (the 2.2 layer's key)
     "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "
