@@ -44,6 +44,47 @@ for g in "roboolympics/gen_tasks.py check" "roboarc/mk_tasks.py --check" "yamlab
          "robotwin_sync_shared.py --check"; do   # RoboTwin 2.0: every task's shared files are the template tasks' (no simulator needed)
   [ -f "$root/scripts/${g%% *}" ] && gens+=("$g")
 done
+if [ -f "$root/scripts/roboarc/mk_tasks.py" ]; then   # RoboARC (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/roboarc/mk_tasks.py" --check 2>&1); then echo "ok scripts/roboarc/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/roboarc/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/yamlab/mk_tasks.py" ]; then   # YAMLab (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/yamlab/mk_tasks.py" --check 2>&1); then echo "ok scripts/yamlab/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/yamlab/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/pandadyn/mk_tasks.py" ]; then   # Panda Dynamic Scenes (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/pandadyn/mk_tasks.py" --check 2>&1); then echo "ok scripts/pandadyn/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/pandadyn/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/robodojo/mk_tasks.py" ]; then   # RoboDojo (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/robodojo/mk_tasks.py" --check 2>&1); then echo "ok scripts/robodojo/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/robodojo/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/bigym2/gen_tasks.py" ]; then   # BiGym 2.0 (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/bigym2/gen_tasks.py" check 2>&1); then echo "ok scripts/bigym2/gen_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/bigym2/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/roboolympics/gen_tasks.py" ]; then   # RoboOlympics (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/roboolympics/gen_tasks.py" check 2>&1); then echo "ok scripts/roboolympics/gen_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/roboolympics/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/labutopia/generate.py" ]; then   # LabUtopia (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/labutopia/generate.py" --check 2>&1); then echo "ok scripts/labutopia/generate.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/labutopia/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/molmospaces/mk_tasks.py" ]; then   # MolmoSpaces
+  if out=$(python3 "$root/scripts/molmospaces/mk_tasks.py" --check 2>&1); then echo "ok scripts/molmospaces/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/molmospaces/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/autobio/generate.py" ]; then   # AutoBio (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/autobio/generate.py" --check 2>&1); then echo "ok scripts/autobio/generate.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/autobio/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/robotwin_sync_shared.py" ]; then   # RoboTwin 2.0: every task's shared files are the template tasks' (no simulator needed)
+  if out=$(python3 "$root/scripts/robotwin_sync_shared.py" --check 2>&1); then echo "ok scripts/robotwin_sync_shared.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/robotwin_sync_shared.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+exit $rc
 cmds=""
 for g in "${gens[@]}"; do
   read -r script mode <<<"$g"
@@ -55,8 +96,6 @@ cd "$root" && printf %s "$cmds" | python3 ci_checks/parallel.py
 if [ -f "$root/scripts/robosafe/gen_tasks.py" ]; then   # RoboSafeBench (its tasks pull request adds the generator)
   if out=$(python3 "$root/scripts/robosafe/gen_tasks.py" check 2>&1); then echo "ok scripts/robosafe/gen_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robosafe/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
-fi
 if [ -f "$root/scripts/robosafe/gen_realtime.py" ]; then   # RoboSafeBench's standard-realtime tasks
   if out=$(python3 "$root/scripts/robosafe/gen_realtime.py" check 2>&1); then echo "ok scripts/robosafe/gen_realtime.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robosafe/gen_realtime.py check:"; echo "$out" | tail -n 40; rc=1; fi
-fi

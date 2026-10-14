@@ -7,7 +7,7 @@ otherwise, and the shipped clients accept every 2.x service. Which parts are req
 
 | Version | Content | Part | Declared by (`metadata.protocol`, `/spec.protocol`) | Implementation |
 |---|---|---|---|---|
-| `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise, crash recovery; the optional reset capability | Part 1 | the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics | each benchmark's own service (Part 1 names them) |
+| `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise, crash recovery; the optional reset capability | Part 1 | the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, BiGym 2.0, Robo, RoboFunOlympics | each benchmark's own service (Part 1 names them) |
 | `eai-standard/2.2` | 2.1 + MAY capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer with crash recovery | Part 2 (§1–§18) | the standard tasks of BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio, DexHand and MuJoCo Playground (quadrupeds) | [`scripts/eai_standard/`](../scripts/eai_standard/) |
 | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | every standard-realtime task (HumanoidBench, BiGym 2.0, RoboOlympics) | `scripts/humanoidbench/shared/realtime/rcb_realtime.py` |
 | `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | the standard tasks of RoboARC | [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/) |
@@ -552,14 +552,14 @@ for `include_depth` and ignore the new parts and keys).
 
 Time does not stop. The wire protocol of the standard-realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
 standard-realtime tasks only (`<base>-standard-realtime`, `mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
-`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics', BiGym 2.0's, MyoSuite's, Panda Dynamic Scenes', RoboCasa365, MuJoCo Playground's tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which BiGym 2.0's, MyoSuite, which RoboOlympics', BiGym 2.0's, MyoSuite's, Panda Dynamic Scenes', RoboCasa365, MuJoCo Playground's tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
 addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
 recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
 time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
 Defaults of the mode: `budget.reset = 10` (since 2026-10-14; before, 0 as in standard mode: the optional reset capability of
-Part 1; `RCB_RESET_BUDGET` overrides it; HumanoidBench's per-benchmark exception is 50, BiGym 2.0's and RoboOlympics' 0,
+Part 1; `RCB_RESET_BUDGET` overrides it; HumanoidBench's per-benchmark exception is 50, BiGym 2.0's 0,
 PROTOCOL §4b), and S stated per task (`[metadata] slowdown`, RCB_SLOWDOWN's default: 1 unless the service's measured
-real-time factor is below 3, PROTOCOL §4b; RoboOlympics' is 10).
+real-time factor is below 3, PROTOCOL §4b).
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.

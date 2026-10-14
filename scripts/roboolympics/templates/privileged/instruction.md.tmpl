@@ -1,0 +1,75 @@
+# roboolympics @@FAMILY@@ — instance i00
+
+You control a simulated @@ROBOT_LINE@@
+via Python. **Task:** @@SENTENCE@@
+
+This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.
+Your deliverable is **one replayable trajectory**, not a general policy.
+
+## The venue
+@@VENUE@@
+
+Frame: metres; the origin is on the floor under your pelvis at the start, +x is the way you face at the start, +y is
+to your left, +z is up; the floor is z = 0. @@START_NOTE@@
+
+## The rules
+@@RULEBOOK@@@@RULES@@
+
+A referee decides this from the simulator's state after every physics step (1 ms): the events that must happen, in
+order, are **@@STAGES@@**. The attempt ends at the success (that moment is the success), at the first rule violation,
+or after @@HORIZON_S@@ s (@@HORIZON_STEPS@@ control steps). `s.status()` shows the referee's record at any time:
+`stages`, `failed` (the rule that ended the attempt), `metrics`, `events`.
+
+## Deliverable
+Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human reads your work
+afterwards, so keep them short and factual.
+
+| file | what goes in it |
+|---|---|
+| `trajectory.npz` | the trajectory, written with `s.save_trajectory()` (below): `actions`, one sim row of @@RAW_DIM@@ floats per control step. Replayed open-loop from the frozen start in two fresh processes, one row per control step until the referee ends the attempt; scored 1 if both replays succeed and end in the same state, else 0. The rows must reach the success: when they run out the attempt is judged as it stands. At most @@HORIZON_STEPS@@ rows are used; every one of them must be finite, also those after the attempt's end (a file with a NaN or an infinite value scores 0) |
+| `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
+| `NOTES.md` | **at most 20 lines**: your final approach and why it works, the approaches that failed and what each told you, and what you downloaded or installed, if anything |
+
+The tooling also appends its own log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set
+`RCB_SESSION_LOG`.
+
+**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
+match) whenever you have a better one.** The time limit (`## Time limit`) ends without warning; a run
+that ends with no file scores zero. Do not stop early: keep improving until the time is up.
+
+## Tooling (already installed; run `python` from any directory)
+```python
+from rcb_rfo import Session
+s = Session()                          # /app/instance.json; under a second
+s.action_types                         # every action type: dim, layout, lower, upper, meaning (table below)
+typ, row = s.hold()                    # the row that keeps the command in force with zero velocity (stand still)
+done = s.step("walk", row)             # one control step (10 ms) of one row; True once the attempt is over
+s.rows                                 # the sim rows of every step since the last reset: what save_trajectory() writes
+s.status()                             # the referee: success, done, failed, stages, progress, metrics, events
+s.state()                              # privileged state: pelvis (x, y, z, yaw), centre of mass, joints, the palms,
+                                       # what each hand holds, and the task's objects under "task"
+s.world                                # everything: s.world.m, s.world.d (MuJoCo model and data), s.world.robot
+                                       # (addresses, limits), s.world.ref (the referee), s.world.task (the rules)
+s.image("head_left")                   # a camera's RGB image (270 x 480; the cameras: @@CAMERAS@@)
+s.proprio()                            # the robot's own sensors as one row (s.ep.proprio_layout)
+s.reset()                              # back to the frozen start (unlimited, instant); clears s.rows
+s.replay()                             # what the verifier does with s.rows, here, in a fresh world
+s.save_trajectory()                    # writes the SCORED file /app/output/trajectory.npz from s.rows
+```
+The simulator is deterministic on the CPU: the same rows from the frozen start give the same state, so a trajectory you
+generate closed-loop (reading `s.state()`, `s.world`) replays exactly. `python /opt/tools/rcb_rfo.py replay --instance
+/app/instance.json --traj /app/output/trajectory.npz --out /tmp/r.json` runs the verifier's replay from the shell. The
+world's source is in `/opt/tools/rfo/` (the robot and action layer `world.py`, the referee's toolkit `referee.py`) and
+this task's rules, as code, in `/opt/tools/rfo_task.py`; the robot library (model, meshes, limits, the walking and
+running policies' weights) is in `/opt/roboolympics/`. You may build your own copies of the world to plan or learn in.
+
+## Actions
+One row is one control step (10 ms; the physics runs at 1 kHz). Every row ends with `grip_left`, `grip_right`.
+
+@@ACTION_TABLE@@
+
+Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains:
+
+@@JOINT_TABLE@@
+
+@@CONTROL_NOTES@@

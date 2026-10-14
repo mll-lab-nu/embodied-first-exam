@@ -1,0 +1,35 @@
+# Robot badminton: implement the robot's `act` skill (Agent as Robotics Engineer)
+
+You are the robotics engineer of a robot that plays robot badminton (robot singles badminton on a small court). The platform's
+high level gives players a skill `act`; here you implement it yourself, for the real robot's joint interface and
+limits, from the robot's model and a disclosed toolkit. There is no match and no simulator of the world in your
+container: your skill is graded after your session, offline.
+
+- Skill API: the contract (request ranges, what is measured, the tolerances, success) is `skill_contract` in `/opt/robot/skill_spec.json`.
+- Deliverable: `/app/output/skill/act.py` (plus any files it needs in `/app/output/skill/`) with
+  `act(t, pos, normal, vel, base=None, *, state, spec) -> one low-level command ({'type': 'traj', 'q': rows of 9 targets [base_x, base_y, q1..q7], row i for control step state['step'] + i} | {'type': 'none'}) or None`; optional: `step(*, state, spec) -> a command or None (called every 20 ms between acts)`. It may use numpy, scipy, mujoco, the toolkit under /opt/robot (robot_only.xml, assets, lib/bm_kinematics.py, lib/bm_servo.py) and files inside /app/output/skill; module-level memory between calls of one run; state = the low level's observe state (no images, no shuttle coordinates) with step, spec = game spec's joints, limits, toolkit, skill_contract; no network, no other files, no other processes. It must be deterministic; time limits per call: load 30 s, act 5 s, step 1 s.
+- Toolkit: `/opt/robot/toolkit.toml` lists everything you are given (joint_interface, robot_model, robot_meshes, ik_library, servo_model); not given: act.
+- Practice requests: `/opt/robot/act_cases_public.jsonl` (public; the evaluation uses 246 other requests of the same kind, not shown to you).
+- The `spec` keyword every call receives (the robot's kinematics and limits, the toolkit, `skill_contract`) is in
+  `/opt/robot/skill_spec.json`; `state` is the robot's low-level state (the practice requests show its fields).
+- Your robot's own model is /opt/robot/robot_only.xml (MJCF: the base, the pedestal, the arm and the racket only, nothing of the world; meshes in /opt/robot/assets), with MuJoCo at the simulator's version. Your toolkit (/opt/robot/toolkit.toml) also holds two optional libraries: /opt/robot/lib/bm_kinematics.py (RacketKinematics: forward kinematics and Jacobians of the 9 joints, damped least-squares IK of the racket head centre and string-face normal with the base at a given position, the self-collision clearance, the base's go-to law) and /opt/robot/lib/bm_servo.py (RobotSim: your robot's own servo law on the robot-only model, to roll your joint targets out before you send them, from the observed state q, qd, q_target, servo; it models the joint-velocity rule: the servo runs the arm at 0.9 of its velocity limits, and an arm joint faster than 1.05 x its limit stops the robot for 1 s - game spec limits.velocity_rule, the state's servo.reflex). There is no act skill or stroke controller at this level: implementing act(t, pos, normal, vel[, base]) is your engineering task (skill_contract in /opt/robot/skill_spec.json; the practice requests /opt/robot/act_cases_public.jsonl: each the request, the robot's state and our implementation's plan). The act contract: the racket head centre at pos, its string-face normal along normal (either face) and its velocity vel at the contact step (base, when the request gives it: where your base stands at contact; it is passed as a fifth positional argument only when given) k_c = k_eff + round(t / 0.01) (k_eff: the step your act's command takes effect); within 2 cm, 3 degrees and 0.15 m/s + 10 % of |vel|, with no refused command. The match itself is graded as before. Start the match (`game start`) within the start window (timing.start_timeout_s, 30 minutes) even if your skill is not finished: a seat that has not started by then loses by no-show; you can keep improving the skill during the reviews between points
+
+## How you are graded
+After your session the platform takes your FINAL `/app/output/skill/` and runs the API test in a separate,
+isolated container (no network; your skill in its own process as an unprivileged user, a fresh process per request;
+time limits per call {"load": 30, "act": 5, "step": 1} s): 246 requests of the same kind as the practice
+requests, each from its recorded start state in the full simulation (the world in play, the robot as the match left
+it). Each request succeeds if the contract's measurement is within its tolerances (`skill_contract`). **Success: at
+least 80 % of the requests.** The reward file also reports the rate and the errors.
+Keep your notes and scripts in `/app/output/` too (only `/app/output/skill/` is evaluated).
+
+## External material
+You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for your agent environment, your own container only: at most **4 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 2 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

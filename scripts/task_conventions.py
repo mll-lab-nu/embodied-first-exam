@@ -75,11 +75,10 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
     ("roboarc-", "RoboARC"),
-    ("roboolympics-", "RoboOlympics"),
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("robofunolympics-", "RoboFunOlympics"),
+    ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
     ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
@@ -89,11 +88,19 @@ BENCHMARKS = [  # (directory prefix, label)
 # number in its row of scripts/task_cutoffs.toml); in a benchmark that has one, the task is listed here with the reason
 # its README's Twin row gives (ci_checks/check-instance-copies.sh fails a missing twin that is neither). RoboDojo's six
 # tasks whose physics does not replay bit for bit (PROTOCOL §4.8, owner 2026-10-11): standard only, graded by the live
-# episode. The three RoboOlympics tasks keep the wording their READMEs were written with (2026-10-08).
-_RO_NO_TWIN = "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)"
-NO_TWIN = {"roboolympics-airhockey-match-i00-standard-realtime": _RO_NO_TWIN,
-           "roboolympics-badminton-match-i00-standard-realtime": _RO_NO_TWIN,
-           "roboolympics-tabletennis-match-i00-standard-realtime": _RO_NO_TWIN,
+# episode.
+# RoboOlympics' exported tasks (PROTOCOL §4c, owner 2026-10-14; scripts/roboolympics/exported.toml): its own service and
+# grader, matches and skill tasks with no trajectory deliverable, in a benchmark that has a privileged mode.
+_RO_EXPORTED = "— (none: a task RoboOlympics exports with its own service, PROTOCOL §4c)"
+NO_TWIN = {**{n: _RO_EXPORTED for n in (
+               "roboolympics-badminton-actskill-i00-standard",
+               "roboolympics-badminton-match-i01-standard-realtime",
+               "roboolympics-badminton-match-i02-standard-realtime",
+               "roboolympics-soccer-match-i00-standard-realtime",
+               "roboolympics-soccerssl-match-i00-standard-realtime",
+               "roboolympics-tabletennis-hitskill-i00-standard",
+               "roboolympics-tabletennis-match-i01-standard-realtime",
+               "roboolympics-tabletennis-match-i02-standard-realtime")},
            "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
@@ -145,6 +152,8 @@ DYNAMICS = ("static", "dynamic")
 # there (same rules: ci_checks/check-realtime.py)
 SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
 RESET_RE = re.compile(r'RCB_RESET_BUDGET:\s*"?\$\{RCB_RESET_BUDGET:-([0-9]+)\}"?')
+# a task a benchmark exports with its own service (PROTOCOL §4c) sets S its own way: RoboOlympics `RO_SLOWDOWN: "10"`
+OWN_SLOWDOWN_RE = re.compile(r'^\s*RO_SLOWDOWN:\s*"?([0-9.]+)"?\s*$', re.M)
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
     "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
@@ -171,10 +180,12 @@ EXTERNAL_TEXT = (
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
 # Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
-# the agent's egress is open and finding existing tools and controllers is part of the task. RoboFunOlympics (owner,
-# 2026-10-11): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
+# the agent's egress is open and finding existing tools and controllers is part of the task. It covers the benchmark's
+# tasks that set no [agent] network policy; one of its tasks that declares the allowlist (RoboOlympics' exported tasks,
+# scripts/roboolympics/exported.toml) is an allowlist task like any other and gets EXTERNAL_TEXT. RoboOlympics (owner,
+# 2026-10-11, as RoboFunOlympics): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
 EXTERNAL_OPEN = {
-    "robofunolympics-": (
+    "roboolympics-": (
         "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
         "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
         "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
@@ -509,10 +520,10 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     amounts = (f"at most {gpu}**{_num(lim['max_memory_gb'])} GiB of memory**, **{int(lim['max_processes'])} processes** "
                f"and **{_num(lim['max_disk_gb'])} GiB** of new files under {_paths(lim['disk_paths'])}")
     if lim["scope"] == "agent":
-        text = ("Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
-                f"benchmark's and does not count): {amounts}; your container has no GPU." if gpu_gb == 0 else
-                "Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
-                f"benchmark's and does not count): {amounts}.")
+        sim = (" (the simulator in the `sim` service is the benchmark's and does not count)" if sidecars else "")   # a
+        # standard task without a sim service (a policy task, PROTOCOL §4c) has no simulator to leave out
+        text = (f"Limits for your agent environment, your own container only{sim}: {amounts}; your container has no GPU."
+                if gpu_gb == 0 else f"Limits for your agent environment, your own container only{sim}: {amounts}.")
     else:
         owned = [s for s in sidecars if rcb_monitor_inject.kind_of(mode, s) == "observe"]   # the benchmark's own
         sidecars = [s for s in sidecars if s not in owned]
@@ -539,10 +550,22 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
-def render_external(task_name: str = "") -> str:
+def declares_allowlist(task: Path) -> bool:
+    """The task's [agent] puts the agent on the allowlist (`network_mode = "allowlist"`; PROTOCOL §2.11)."""
+    try:
+        return tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("network_mode") == "allowlist"
+    except (OSError, ValueError):
+        return False
+
+
+def render_external(task: "Path | str" = "") -> str:
     """instruction.md's `## External material` (PROTOCOL §2.11): the same words in every task, except the benchmarks of
-    EXTERNAL_OPEN, whose agents may download tools and controllers."""
-    text = next((v for p, v in EXTERNAL_OPEN.items() if task_name.startswith(p)), EXTERNAL_TEXT)
+    EXTERNAL_OPEN, whose agents may download tools and controllers (only their tasks without an allowlist: given a
+    task directory, one that declares the allowlist gets the common words)."""
+    name = task.name if isinstance(task, Path) else task
+    if isinstance(task, Path) and declares_allowlist(task):
+        name = ""
+    text = next((v for p, v in EXTERNAL_OPEN.items() if name and name.startswith(p)), EXTERNAL_TEXT)
     return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
@@ -759,7 +782,7 @@ def normalize_instruction(task: Path) -> None:
         s = strip_cutoff(s)
     for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = s.rstrip() + "\n\n" + render_external(task.name)
+    s = s.rstrip() + "\n\n" + render_external(task)
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
@@ -878,9 +901,9 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
 def image_of(task: Path) -> str:
     if mode_of(task) in SIDECAR_MODES:
         c = read_text(task / "environment/docker-compose.yaml") or ""
-        m = re.search(r"^\s*image:\s*(\S+)", c, re.M)
-        if m:
-            return m.group(1)
+        imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if "/eai-monitor:" not in i]   # not the monitor's
+        if imgs:
+            return imgs[0]
     d = read_text(task / "environment/Dockerfile") or ""
     m = re.search(r"^FROM\s+(\S+)", d, re.M)
     return m.group(1) if m else ""
@@ -935,7 +958,7 @@ def render_readme(task: Path) -> str:
     rt = realtime_of(task)
     if rt is not None:
         head.append(("Real time", f"slowdown S = {slowdown_text(rt[0])} (the world runs at 1/S of real speed: one control "
-                                  f"step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default)"
+                                  f"step every S x control_dt s of wall time; `{slowdown_var(task)}`'s default)"
                                   + (f"; reset budget {rt[1]} (`RCB_RESET_BUDGET`'s default)" if rt[1] is not None else "")
                                   + " (PROTOCOL §4b)"))
     head.append(("Base image", f"`{image_of(task)}`"))
@@ -1089,10 +1112,16 @@ def realtime_of(task: Path) -> tuple[float, int | None] | None:
     if mode_of(task) != "standard-realtime":
         return None
     c = read_text(task / "environment/docker-compose.yaml") or ""
-    m, r = SLOWDOWN_RE.search(c), RESET_RE.search(c)
+    m, r = SLOWDOWN_RE.search(c) or OWN_SLOWDOWN_RE.search(c), RESET_RE.search(c)
     if not m:
         return None
     return float(m.group(1)), (int(r.group(1)) if r else None)
+
+
+def slowdown_var(task: Path) -> str:
+    """The setting S comes from: `RCB_SLOWDOWN`, or a §4c service's own (RoboOlympics `RO_SLOWDOWN`)."""
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    return "RCB_SLOWDOWN" if SLOWDOWN_RE.search(c) or not OWN_SLOWDOWN_RE.search(c) else "RO_SLOWDOWN"
 
 
 def slowdown_text(S: float) -> str:
@@ -1108,7 +1137,7 @@ def normalize_slowdown(task: Path) -> None:
     if rt is not None:
         line = f"slowdown = {slowdown_text(rt[0])}"
         line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md "
-                                                 "§4b); RCB_SLOWDOWN's default\n")
+                                                 f"§4b); {slowdown_var(task)}'s default\n")
         s, n = re.subn(r'(?m)^(dynamics = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
         if n != 1:
             s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)

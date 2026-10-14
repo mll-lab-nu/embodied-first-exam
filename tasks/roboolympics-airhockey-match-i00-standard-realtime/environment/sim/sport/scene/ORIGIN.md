@@ -1,1 +1,0 @@
-Robot joint transforms, inertias, limits and motors derived from AirHockeyChallenge/air_hockey_challenge, commit 34729081d4327141dcf560c0fb8274cd4882e82c, qualifying-2025. MIT license retained. Visual meshes replaced by self-authored capsule primitives; no external mesh files. New benchmark table/cameras/referee/controllers are not the official challenge tournament.
