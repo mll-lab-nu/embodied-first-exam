@@ -7251,5 +7251,5 @@ digest = "sha256:71fcd2a9cec5e927de4bbd71116f3d366f256c45bd016462687c4c493e7a7c5
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
-digest = "sha256:cbf09e39018231800ac65323bb8ff2e5e55e04b2558e0932504a4212aa1bfe62"
+digest = "sha256:2b4a1f23b409a8a84a0a19684412ac27f61ac7ee69d460842bb4bf8063261cac"
 
