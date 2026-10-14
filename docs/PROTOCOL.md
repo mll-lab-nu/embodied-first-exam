@@ -144,7 +144,7 @@ decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in
 number within the cap, §2.12). A standard sidecar's wall
 clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it, in every benchmark (§2.12) [CI]. That benchmark's results state the budget and are
 compared only with results under the same budget (D8). The token budget (D10) is unchanged.
-- **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task. The topological puzzles are much
+- **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task of its Genesis release. Its MuJoCo release (2026-10-13, which replaces the Genesis tasks) uses 10800 s, within the default cap, so the exception is not in use today. The topological puzzles are much
   harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
   owner sets the budget to probe the capability ceiling. Simulator speed-ups add interaction within it; they never
   shorten it (`docs/benchmarks/robotangle.md`, added with the tasks in #81).
@@ -559,7 +559,7 @@ was a constant, a data value or a literal in each of 26 generators.
 | "Do not cheat" is §2.11's honour rule, not a second rule: installing packages is allowed and is not cheating (the second paragraph says so and points to `## External material`, which keeps the substance: what counts as a solution, that trials are reviewed, what the network reaches); a trial that fetched a solution is flagged and decided by the owner (§2.11, §5) | MUST (how it is read) | [new] |
 | What stops the agent is Harbor's agent timeout, `[agent] timeout_sec`, with no multiplier in official runs. Harbor counts it around the agent's run only (its trial's agent phase: `asyncio.wait_for(agent.run(...), timeout=...)`): after the environment has been built and started and after the agent's harness has been installed, each of which has a timeout of its own, not from the container's start. In the standard modes the `sim` service starts with the environment, so whatever start-up it has not finished by then is waited out inside the agent's time | MUST | [current] (Harbor 0.23; official runs pass only a multiplier for the harness's set-up) |
 | At the cutoff the trial is graded as it stands: privileged, what is in `/app/output/` at that moment; standard modes, the episode as the `sim` service holds it (the collect hook ends and records it, §4.8). A timeout is a result, not an infrastructure error, and is not retried | MUST | [current] |
-| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing. It counts from the agent's first request to the service (any endpoint; logged, so a restarted service keeps it), never from the service's start or the end of its scene build: the sidecar is up before the agent's phase begins, and a clock started then runs ahead of the harness's (STANDARD_MODE.md, "The agent's clock"). So `time_left_s` never runs out before the cutoff, and the instruction tells the agent to plan by it. A service that ends the episode on its own clock says so in the benchmark's own text and keeps the earlier closing sentence: today RoboTangle's, counted from the service's first start, which becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number and the service layers' tests (`check-unit-tests.sh`); [new] (2026-10-13, owner; before, RoboCasa's three benchmarks and twelve `eai-standard/2.2` services, LabUtopia among them, counted from the service's start) |
+| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing. It counts from the agent's first request to the service (any endpoint; logged, so a restarted service keeps it), never from the service's start or the end of its scene build: the sidecar is up before the agent's phase begins, and a clock started then runs ahead of the harness's (STANDARD_MODE.md, "The agent's clock"). So `time_left_s` never runs out before the cutoff, and the instruction tells the agent to plan by it. A service that ends the episode on its own clock says so in the benchmark's own text and keeps the earlier closing sentence: today RoboTangle's, which since its MuJoCo release (2026-10-13) counts from the first request like the others and still ends the episode at 0 (its instruction says so); it becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number and the service layers' tests (`check-unit-tests.sh`); [new] (2026-10-13, owner; before, RoboCasa's three benchmarks and twelve `eai-standard/2.2` services, LabUtopia among them, counted from the service's start) |
 | Changing a cutoff: edit the table, add an entry to its `[[history]]` (what changed, from and to, date, who decided, why; `apply` and CI refuse a number that differs from its last recorded value: its newest entry, or `scripts/task_cutoffs.baseline.toml`, the table of 2026-10-11, for a number that never changed), run `python3 scripts/task_cutoffs.py apply`, commit; an owner decision, like the cap's exceptions. The task changes in place and keeps its name (§2.8); the `[[history]]` entry is the record, there is no Change Log entry in each task's README (owner, 2026-10-12); results recorded under another cutoff are reported separately (D8) | MUST | [new] |
 | A new benchmark needs two things before its tasks pass: its label in `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name; the table's rows are named by it), which goes in its shared-files pull request (D6), and its row in the table with a `[[history]]` entry (`from_sec = 0`), which goes in the pull request that adds its first tasks: the one line of a shared file a tasks pull request carries, because a row without tasks and tasks without a row both fail | MUST | [CI] |
 
@@ -574,7 +574,7 @@ Standard and standard-realtime modes, second paragraph:
 
 > This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Installing packages is not cheating (`## External material` above).
 
-RoboTangle's standard tasks, whose service counts on a clock of its own (below), keep the sentence used until 2026-10-13 in its place: "The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left."
+No benchmark keeps the earlier sentence today ("The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left."): RoboTangle's standard tasks did until its MuJoCo release (2026-10-13), whose service counts from the first request.
 
 Seconds only, because the sentence is then the same in every task and the number is the one in `task.toml`; a second
 unit is a second number to keep right. The sentence pair opens the section and the explanation follows it, because the
@@ -704,18 +704,11 @@ depends on it (the agent is judged, or its success is held for review, on a read
 `docs/benchmarks/<bench>.md` declares exactly which fields are published and why. Nothing but the declared fields is
 published; object poses, scene files, seeds, the success predicate and segmentation stay MUST NOT, and a reading that
 gives an object's pose is not covered. Benchmarks that use it are listed here.
-- **RoboTangle** (standard tasks): `meta["safety"]` of every response: the forcing record (the largest force an arm
-  or a part it holds pressed with, the drive load meanwhile, forcing events), the deepest task contact and
-  held-finger contact with their review limits, the review events (with the names of the parts in contact), the lowest soft-body volume ratio and the worst cord
-  attachment stretch, the table-guard stops and IK jumps
-  ([`benchmarks/robotangle.md`](benchmarks/robotangle.md), "Safety readings in standard mode"). The benchmark's
-  physical-validity policy holds a success with a deep contact for human review and ends an episode on a collapsed soft
-  body, so the agent must be able to see the reading it is judged on.
-- **RoboTangle-New** (standard tasks; owner, PENDING): `meta["safety"]` reduced to what the robot feels itself: the
+- **RoboTangle** (standard tasks; the MuJoCo release's reduced reading, user 2026-10-12, owner confirmation PENDING; the Genesis release published more: task-contact depths, review events with part names, soft-body readings): `meta["safety"]` reduced to what the robot feels itself: the
   forcing record (the largest force an arm or a part it holds pressed with, the drive load meanwhile, the longest forcing
   run, the forcing events, task parts named only "a held part" / "the environment"), the table-guard stops of its gripper
   targets, its IK jumps, and the rules / scope of the reading; no task-contact depth, review event, soft-body reading or
-  task-part name ([`benchmarks/robotangle-new.md`](benchmarks/robotangle-new.md), "Safety readings in standard mode").
+  task-part name ([`benchmarks/robotangle.md`](benchmarks/robotangle.md), "Safety readings in standard mode").
   The agent can be judged on its own forcing (a breakdown it forced is its failure), so it must see it.
 
 **Per-benchmark reset defaults.** A benchmark's standard or standard-realtime tasks may default to a reset budget N > 0 only by owner
@@ -935,9 +928,9 @@ Open:
    table. No cutoff changed; scenes, instances, tooling, services and success rules are unchanged, earlier results
    stand, and trials started before the change read the earlier wording. The generators' own copies of the number
    are gone. Stricter values are set in the table afterwards, by owner decision, each with its `[[history]]` entry.
-   Open: RoboTangle's standard service ends the episode on its own wall clock, started with the service, a little before
-   the agent's session; it becomes report-only, like every other service's, at RoboTangle's next task update
-   (docs/benchmarks/robotangle.md, "To do").
+   Open: RoboTangle's standard service ends the episode on its own wall clock (since its MuJoCo release, 2026-10-13,
+   started at the agent's first request, so never before the harness's cutoff); it becomes report-only, like every
+   other service's, at RoboTangle's next task update (docs/benchmarks/robotangle.md, "Time budget").
 8. The agent's clock in the standard modes (§2.12; owner, 2026-10-12, boards 0085 and 0087; landed 2026-10-13): every
    service's `meta.time_s` / `meta.time_left_s` count from the agent's first request to the service, and a resumed
    service keeps that moment (STANDARD_MODE.md, "The agent's clock"). The services that counted from their own start
@@ -950,7 +943,7 @@ Open:
    Every standard instruction's closing `## Time limit` paragraph changed in place (what `time_left_s` counts from, and
    that the agent can plan by it), and the sentence "approximate: the harness's own deadline is authoritative" is gone
    from the instructions and `/spec` texts that had it (RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground). No
-   service ended an episode on this clock (RoboTangle's apart, unchanged and still open as in 7), so no verdict
+   service ended an episode on this clock (RoboTangle's apart, still open as in 7), so no verdict
    depended on it: scenes, instances, success rules and graders are unchanged and earlier results stand. What
    changes for an agent is that `time_left_s` no longer reaches 0 while it still has the harness's set-up time left (the
    service was up a median of 79 s before the agent's phase over 2,322 recorded standard trials, board 0085).
