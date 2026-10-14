@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "e8d336eed8e9a45fab4a179101f1dc828e98717f91fd8036bc6158bbc7ffc11d",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/wire_base_base_0_c39c97628cbaabeb.obj": "c39c97628cbaabeb85427b35ea400e4e325355523fe761e34b9b555a086b8b6f",
+    "instance_assets/mujoco/meshes/wire_base_base_1_b9f8b94fb397ba83.obj": "b9f8b94fb397ba83143068dc45265e8f3cd8c93ceeaf47df289d681f7dc30deb",
+    "instance_assets/mujoco/meshes/wire_base_base_2_a64509e0f9a1cccf.obj": "a64509e0f9a1cccfaf4f8c3fbe4ac4d3b2f8469d3c439766f82bd3c0968f7942",
+    "instance_assets/mujoco/meshes/wire_base_base_3_62e134b7be74297a.obj": "62e134b7be74297a38d410aa96ee01c9b2d3e1e9163a92b3f2a8b5d8cb8ae98a",
+    "instance_assets/mujoco/meshes/wire_base_base_4_a6a6bfe626d38eaf.obj": "a6a6bfe626d38eaf872c27a7c6ce7a24c4552de963950d45f653e9b87fd5c075",
+    "instance_assets/mujoco/meshes/wire_base_base_5_c584d0f7833c1b73.obj": "c584d0f7833c1b73d2f09d79e959dceb4bb5fa40c7fa952e7c56768993cd7bed",
+    "instance_assets/mujoco/scene.json": "5cc6a01f3bd08252726294c4e2fac655f0641d9541a2f3cf18e608af87c3e4b0",
+    "instance_assets/mujoco/scene.xml": "d4a6d58172bad7cb28da431026c364021bbb711f2494c9b241434b9cb10e03fb"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "058462135522eefeeb10b1de0f3905fc14b615e791371e8bbbaacf1ee03a5caf",
+    "files": 444
+  },
+  "runtime": {
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  }
+}
