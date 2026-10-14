@@ -67,7 +67,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
-    ("robotangle-", "RoboTangle"),
+    ("roboarc-", "RoboARC"),
     ("roboolympics-", "RoboOlympics"),
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
@@ -161,14 +161,14 @@ CUTOFF_NOTE = {
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 # A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
-# text says what its service counts (PROTOCOL §2.12). RoboTangle: its service ends the episode on a clock started with
-# the service, until its next task update (docs/benchmarks/robotangle.md, "To do").
+# text says what its service counts (PROTOCOL §2.12). None today: RoboARC's service counts from the first request
+# since its MuJoCo release (2026-10-13).
 _CUTOFF_NOTE_OWN_CLOCK = (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service "
     "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
-CUTOFF_NOTE_OWN = {("RoboTangle", "standard"): _CUTOFF_NOTE_OWN_CLOCK}   # (benchmark label, mode) -> its note
+CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
