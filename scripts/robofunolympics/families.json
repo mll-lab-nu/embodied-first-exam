@@ -1,0 +1,304 @@
+{
+ "families": {
+  "sprint": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 2.0,
+   "evidence": "Reference: stand through the start procedure, react to the gun, then the running policy at 3.5 m/s steered to the lane's centre; 9 of 10 perturbed runs at 2.5 to 4.0 m/s finished when it was written."
+  },
+  "hurdles": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the H1-2 given 2.0 m/s forward and 5.5 m/s up over each standing 1.067 m hurdle, a real walk to the line); negatives: knocked with a hand, arm or trunk, under the top, beside the hurdle, a leg beside it, left the lane, down. The H1-2's pelvis stands at 1.035 m and walks at 0.7 m/s (50 m alone is 71 s of the 140 s); nothing known lifts it over the bar"
+  },
+  "shuttle-run": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 4.0,
+   "evidence": "positive by injection (real running on all four legs, the three about-turns set by hand: 23.0 s); negatives: turning short, a foot only on the line, two legs only, arms over the finish without the torso, down, walking. With the built-in gaits a leg takes about 6 s and an about-turn on the walking policy 3.4 s: about 33 s against the 30 s limit"
+  },
+  "slalom": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 5.0,
+   "evidence": "positive by injection (the robot moved from waypoint to waypoint along the prescribed path inside the limit; a real walk round the whole path latches all 12 gates but takes 126.6 s); negatives: a skipped leg, the wrong side, turning back, a cone not rounded, the wrong finish half, a cone touched, down. The running policy turns at most 0.5 rad/s"
+  },
+  "high-jump": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (one foot lifted by the robot's own motors, then 1.5 m/s forward and 5.0 m/s up: over the bar at 1.00 m with 0.28 m to spare, onto the mat); negatives: walking under or round, a two-foot take-off, the bar off its supports. No jumping controller exists for the H1-2 (its open-loop squat jump leaves the ground at 1.8 m/s)"
+  },
+  "long-jump": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (at the board, 3.6 m/s forward and 2.5 m/s up: a mark of 1.50 m in the sand); negatives: running through, landing short or beside the pit, a foot over the line, a take-off beside the board, a stride with the feet pulled up, into the sand without a flight. The running policy's strides come down 0.25 m beyond the line; nothing known jumps out of a run"
+  },
+  "standing-long-jump": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (3.5 m/s forward and 2.5 m/s up from the stance, a perfect landing: a mark of 1.54 m, the stand is the robot's own); negatives: too short, a fall, a dive, a foot over the line, a step or shuffle before the take-off, a leg tuck. The published best for this robot is 0.90 m; a real open-loop push-off of ours takes off legally and lands on its head"
+  },
+  "triple-jump": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (three take-offs with the legs swapped in the air by the robot's own motors: hop 2.64 m, step 5.87 m, mark 8.65 m); negatives: a foot over the line, a two-foot hop, the hop or the step on the wrong foot, another part on the ground, the landing foot down again half a metre on (travelling between two phases), not into the sand. No single-leg take-off exists for this robot"
+  },
+  "vertical-jump": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 6.0,
+   "evidence": "positive by injection (the arm raised by the robot's own motors, then 2.8 m/s up: the hand touches the vane 0.30 m above its standing reach, lands and stands); negatives: no touch, lifted without a jump, a step before the take-off, the stand touched, the vane touched without a jump or with another part. A balanced open-loop jump of ours raises the pelvis 0.23 m of the 0.31 m needed; an unbalanced one reaches the vane and falls"
+  },
+  "pole-vault": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by injection (the run-up, the plant and the swing-up are injected: the robot is put on the planted pole 20 degrees short of vertical; from there it really hangs, passes 4 cm over the 2.00 m bar, lets go and lands on the mat); negatives: the bar off its pegs, the ground beyond the zero line before the clearance, a hand moved up the pole, a clearance without the planted pole, round or under the bar, a hand steadying the bar"
+  },
+  "penalty-kick": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real walk-up and foot contact, the ball's velocity set at the contact to 20 m/s into the corner; also a chip over the keeper); negatives: an 8 m/s shot saved by the keeper, a weak kick, wide, over the bar, a second touch, in without a kick, a body contact. Beating the keeper takes about 12 m/s to a corner; a G1 foot running into the ball at 4 m/s gives 3 to 5 m/s"
+  },
+  "dribble-slalom": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 5.0,
+   "evidence": "positive by injection (the robot really walks the whole course in 54 s, the ball escorted 0.45 m ahead of it); negatives: the ball or the robot on the wrong side, straight back instead of weaving, the ball more than 2 m away, a cone touched, a handball. A walking kick gives the ball about 2 m/s: kick-and-chase inside the 2 m limit was not attempted"
+  },
+  "trap-ball": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 5.0,
+   "evidence": "positive by injection (the real 8 m/s pass onto the foot of the standing robot, the ball's speed set to 0.3 m/s as it comes off); negatives: a planted foot (the ball is 7 m away after 3 s), rolling away, first touch a shin, a handball, too close before the pass. The pass arrives at 6 m/s; a still foot sends it off at 5 m/s"
+  },
+  "volley-shot": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the real cross onto the foot, the ball's velocity set at the contact: in at 11.7, out at 18.4 m/s, into the goal); negatives: a still leg (the ball leaves slower than it came), a body contact, carried, wide, at the keeper, a second touch, too close, in without a volley"
+  },
+  "juggling": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real release, then ten real head contacts with the ball sent up again at 2.6 m/s each time); negatives: passive bouncing (one counted touch), nine then the ground, rises too small, a handball, the trunk, carried, a re-grip. Nothing built in stands on one leg"
+  },
+  "header": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the real cross onto the head, the ball's velocity set at the contact: in at 11.7, out at 14.6 m/s, into the goal); negatives: a still head (the ball leaves slower than it came), the chest, a hand, wide, a second touch, too close, in without a header. An open-loop hip lunge moves the head at 6.2 m/s"
+  },
+  "volleyball-bump": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 6.0,
+   "evidence": "Reference: a walk to where the serve comes down, then a forearm platform on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 11.4 m/s in, 7.3 m/s out, up to 3.08 m, down 0.13 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: the passive rebound, below net height, the body, a second touch, held, under the net, a net touch, over the centre line"
+  },
+  "volleyball-set": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 8.0,
+   "evidence": "Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held"
+  },
+  "volleyball-serve": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 6.0,
+   "evidence": "Reference: an underarm serve (left fist tosses, straight right arm and the trunk's turn hit) from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 2.2 m/s in, 11.4 m/s out, over the net into the court 1.8 m beyond it. Referee test negatives: a throw brushing the fist, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held"
+  },
+  "volleyball-spike": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real arm, the real set onto the fist at 2.69 m, a 3.2 m/s ghost jump, the ball's velocity set, a softened landing); negatives: a leg tuck or a lift without a jump, a still fist in a jump, from the floor, before the apex, upward, into the net, long, the antenna, a second touch, a net touch, the centre line. No jump or landing controller exists for the H1-2"
+  },
+  "free-throw": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 6.0,
+   "evidence": "positive by injection (a real underhand swing and release at 7.4 m/s, the ball's velocity set to 8.1 m/s at 58 degrees: a real flight and ring); negatives: not released in 5 s, the floor, touched again, the line, the semi-circle, from below, a fall. The shot needs 8.06 m/s at 58 degrees; the arm reaches 11 m/s with the elbow fired late, and about 400 search evaluations came within 0.37 m of the ring's centre"
+  },
+  "catch-and-shoot": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 6.0,
+   "evidence": "the catch is real (an open palm on the pass line takes the 7.2 m/s ball and the robot stays up); the shot is an injection (8.7 m/s at 52 degrees set at the release); negatives: not caught, touched before the pass, a leg, the pivot foot, a third step, touched again, the floor, from below, held, a fall"
+  },
+  "layup": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real arm raise and two real walking steps, a 2.6 m/s ghost take-off, a real release in flight with a 4.4 m/s toss set at the release); negatives: a third step, the same foot twice, not in the air, in the air without a take-off, too far from the ring, a miss, touched again, from below, a fall. The H1-2 has no jump"
+  },
+  "dunk": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by injection (a real arm raise, a 4.5 m/s ghost take-off, the gripped ball really taken down through the ring; the landing is injected too); negatives: let go before the dunk, from below, through without a hand on it, a third step, a fall. Standing, the gripped ball reaches 2.37 m; the ring is at 3.05 m"
+  },
+  "basketball-dribble": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real 14 m walk in 20 s with 42 real floor bounces and palm touches; each push is the ball's velocity set at the real touch); negatives: dribbling on the spot, a carry, the ball more than 2 m away, out of bounds, a double touch, both hands, another body part, a fall. A real palm push was not attempted"
+  },
+  "tennis-return": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the real 30 m/s serve, bounce and contact with the strings; the robot moved 2.9 m sideways and the return's velocity set at the contact: 24 m/s at 9 degrees); negatives: two bounces, the own side, outside the court, through the net, a volley, the body, a double hit, carried, a net touch. The serve reaches the baseline at 15 m/s after 1.1 s, 1.5 m from the robot, which moves 1.2 m in that time"
+  },
+  "tennis-serve": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real rest and release, a 0.3 m fall onto the level racket, the ball's velocity set at the contact: 20 m/s at 11 degrees, into the diagonal box; the let is played out with a real net cord); negatives: unstruck, no added speed, a ball thrown at the racket (faster than a toss), not at rest, a foot fault, struck before clear, a throw past the net, a double hit, carried, the own side, into the net, outside the box, a second let. The slowest legal serve needs 12 m/s; the H1-2 stays up to a head speed of about 9.6 m/s"
+  },
+  "table-tennis-return": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real waist-turn stroke with the robot put at the end line in its pre-stroke pose; the contact, the flight and the landing are real); negatives: two bounces, the return on the own court (a real still-blade block), obstruction, another part, struck twice, the table's side, the floor, the net, the free hand on the table. The drawn serve is short: the ball is in reach for 0.14 s, and the stroke returns it in 11 of 25 nearby variants"
+  },
+  "paddle-bounce": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 4.0,
+   "evidence": "Reference: the paddle kept level under the ball and tapped up at each bounce, closed loop on the ball's state: 20 bounces, each back to the drop height; 11 of 11 perturbations when it was written. A still blade gets 6 to 13 bounces of the 0.15 m rise alone, which is why each bounce must also reach the drop height."
+  },
+  "golf-putt": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 3.0,
+   "evidence": "Reference: a pendulum stroke from the shoulder that holes the 3 m putt; 16 of 16 perturbed runs when it was written. The hole takes a centred ball up to 1.48 m/s."
+  },
+  "javelin": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 8.0,
+   "evidence": "Reference: a standing throw by the trunk's turn, the hand above the shoulder, from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 15.0 m/s at 37 degrees, head first at 21.58 m (the line is 20 m), then back 4 m behind the arc and standing. Open loop on the frozen start, not robust. Referee test negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front"
+  },
+  "shot-put": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 8.0,
+   "evidence": "Reference: a standing put from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 8.1 m/s from 1.78 m, pushed (0.997), 8.20 m (the line is 6 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test: positive by injection; negatives: the shot lowered, taken behind the shoulders, a sling, the other hand, out early, toes on the board, outside the sector, short, a front-half exit"
+  },
+  "discus": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 8.0,
+   "evidence": "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (RoboOlympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit"
+  },
+  "pitch-target": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real stand on the mound and release, the ball's velocity set to 22 m/s: a strike; a 14.5 m/s lob at 29 degrees is a strike too); negatives: no foot on the plate, a bounce, high, wide, touched after the release. An arm swing of the H1-2 gives 6.8 m/s, 9.9 m/s with the trunk (and a fall)"
+  },
+  "bowling": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real release, the ball laid 0.35 m past the line at 8 m/s into the pocket: a strike); negatives: over the foul line, a gutter ball, a head-pin hit that is no strike, touched after the release, a foul after the delivery. Strikes exist from 4 m/s on (2 of 17 entry lines 1 cm apart); a swing of the H1-2 gives 3.3 m/s and it falls during the swing"
+  },
+  "catch": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the real launch and flight; below 3 m the ball is put 0.12 m above the upturned palm at 3 m/s and really gripped); negatives: onto the trunk, touched while rising, dropped after the catch, a fall. The ball comes down 1.25 m from the robot after 3 s at 16.6 m/s: the walk and a palm placed within centimetres are the task"
+  },
+  "juggle-three": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by injection (the hands still, real grip releases and catches, each released ball put on an arc to the other palm); negatives: a ball coming down on its own hand, gripped by its own hand, a low pass, out of order, the waiting ball pushed, onto the head. With still hands the outgoing ball always meets the incoming one: a cascade needs hands that move"
+  },
+  "wall-ball": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a real release, the ball's velocity set to 20 m/s: the target hit, the rebound's last 0.8 m replaced as in `catch`); negatives: over the line, outside the target, a bounce before the wall, the rebound onto the body or the floor, taken back before the wall, dropped. An arm swing gives 6.9 m/s; the throw needs 16 to 20 m/s"
+  },
+  "boxing": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 4.0,
+   "evidence": "Reference: a straight right from the guard behind a trunk turn, then the walking policy to stay up: 15.7 N s on the 30 kg bag (the line is 12), a 0.07 s touch; 12 of 12 variations when it was written. The meter reads a known injected impulse 1.5 % low."
+  },
+  "kick-target": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a stiff posed leg and the whole robot given 1.0 m/s: 26.7 N s in 0.054 s; then put back on its feet); negatives: a slower kick, a touch over the bound, the other leg, below the band, walking in, the bag swinging back onto the robot. Leg swings on servo-held joints gave 2 to 8 N s; there is no balance on one leg"
+  },
+  "balance-beam": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the robot slid along the 10 cm beam in its tandem pose, 4 mm per step); negatives: `stand` mode (off in 1.5 s), the walking policy (off in 0.5 s), stopping short, past the end, lying on it, beside it. The tandem hold on joint targets is stable; a real walk on a 10 cm beam was not attempted"
+  },
+  "steeplechase": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a flight over the 0.914 m hurdle and the pit; a landing in the pit with a second hop out; from standing on the bar); negatives: under, round, a trailing foot, to the side of the water jump. The H1-2's open-loop squat jump raises its centre of mass 0.16 m; the walking policy does not climb the pit's slope"
+  },
+  "box-jump": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (1.6 m/s forward and 3.7 m/s up onto the 0.61 m box, a perfect landing, the stand is the robot's own); negatives: touching the box before the jump, landing on the floor, a leg tuck, a one-foot take-off, the box's side, not on the feet, the floor after the landing, a fall. The H1-2's open-loop squat jump leaves the ground at 1.8 m/s"
+  },
+  "vault": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a ballistic handspring: 3.5 m/s forward, 5.3 m/s up, 6.2 rad/s; both hands really on the 1.35 m table; stopped at touchdown); negatives: not over the table, another part on the table, no hand on it, not on the feet, off the mat"
+  },
+  "backflip": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by injection (3.4 m/s up and 9 rad/s backwards: 360 degrees in 0.70 s of flight, the rotation stopped at touchdown, the stand is the robot's own); a salto that lands on its feet 36 degrees short of upright has its turn and landing counted; negatives: no turn, a forward flip, two thirds of a turn, a spin about the vertical with the pelvis on its side, a head-first landing, a roll on the ground, a hop shorter than the minimum flight, not from the feet. An open-loop squat jump of the G1 has 2.7 m/s and 0.55 s of air"
+  },
+  "crawl": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (the robot laid prone, 0.27 m high, and dragged under the 21 wires by a force on the pelvis); negatives: walking upright into a wire, on hands and knees (0.46 m: a wire touched), round, over, not under, stopping inside. No crawling controller exists"
+  },
+  "high-bar-swing": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 4.0,
+   "evidence": "Reference: from the dead hang a leg pump that tucks on the way up and extends elsewhere takes the extended body over the top: one full giant swing at 23.6 s; 8 of 8 parameter sets (24 to 35 s) when it was written."
+  },
+  "toes-to-bar": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 3.0,
+   "evidence": "Reference: a knee-tuck snap with bent elbows, timed on the back-swing: 5 repetitions in 7.8 s; 12 of 12 variants when it was written."
+  },
+  "clean-and-jerk": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 8.0,
+   "evidence": "positive by injection (a crane force on the 45 kg barbell and a balance force on the trunk; the final 2 s are carried by the robot's own locked arms and legs); negatives: the bar off the platform without both hands, let go, down before the signal, overhead without a clean, bent elbows or knees, split feet, another part on the platform. At the shoulders the elbows need 34 of their 18 N m; overhead with straight arms the robot holds the bar about 1 s"
+  },
+  "balance-board": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 6.0,
+   "evidence": "positive by injection (a spring-damper force on the torso, a helper's hand, for the 30 s); negatives: the do-nothing agent (the deck is down at 2.6 s), the walking policy, leaning, left alone after 20 s, off the board. A linear feedback on leg sway rides the full 30 s from the exact start but falls after 14 to 28 s when started 1 mm off, so it is not shipped as a reference solution"
+  }
+ }
+}

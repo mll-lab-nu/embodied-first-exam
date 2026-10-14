@@ -1,0 +1,14 @@
+{
+ "family": "shot-put",
+ "steps": 608,
+ "time_s": 6.08,
+ "time_limit_s": 60.0,
+ "metrics": {
+  "stance_neck_distance_m": 0.184,
+  "release_speed_m_s": 8.09,
+  "release_height_m": 1.777,
+  "release_push_fraction": 0.997,
+  "distance_m": 8.195
+ },
+ "deterministic": true
+}

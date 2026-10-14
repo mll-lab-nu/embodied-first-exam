@@ -72,6 +72,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
+    ("robofunolympics-", "RoboFunOlympics"),
 ]
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
 # STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
@@ -115,6 +116,17 @@ EXTERNAL_TEXT = (
     "to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or "
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
+# Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
+# the agent's egress is open and finding existing tools and controllers is part of the task. RoboFunOlympics (owner,
+# 2026-10-11): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
+EXTERNAL_OPEN = {
+    "robofunolympics-": (
+        "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
+        "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
+        "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
+        "The one thing not to look up is a solution to this exact task: this benchmark's own source code and reference "
+        "solutions. This is an honour rule; trials are reviewed."),
+}
 
 # PROTOCOL §2.12 (owner, 2026-10-11 / 12, board 0080): the agent's time cutoff. One table, scripts/task_cutoffs.toml
 # (seconds per benchmark and mode, with optional exceptions per family and per task), from which normalize writes
@@ -131,17 +143,31 @@ CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by us
 CUTOFF_HEADING = "## Time limit"
 CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text names the limit: never a duration
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
+# owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
+# high and stopped early; every agent gets the same way to know it (a command, not a guess).
+_CUTOFF_CLOCK = (" Your session started when you received this task: run `date` now, and again before you decide that time "
+                 "is short; work out the time left from those readings, never from a guess.")
 CUTOFF_NOTE = {
     "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
                    "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
                    "graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better "
-                   "one." + _CUTOFF_CLOSE),
+                   "one." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
     "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
                  "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
-                 "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-                 "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOSE),
+                 "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
+                 "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
+                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
+# A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
+# text says what its service counts (PROTOCOL §2.12). RoboTangle: its service ends the episode on a clock started with
+# the service, until its next task update (docs/benchmarks/robotangle.md, "To do").
+_CUTOFF_NOTE_OWN_CLOCK = (
+    "This is wall-clock time from the start of your session; the time you wait for the simulator service "
+    "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
+    "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
+    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+CUTOFF_NOTE_OWN = {("RoboTangle", "standard"): _CUTOFF_NOTE_OWN_CLOCK}   # (benchmark label, mode) -> its note
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
@@ -446,9 +472,11 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
-def render_external() -> str:
-    """instruction.md's `## External material` (PROTOCOL §2.11)."""
-    return EXTERNAL_HEADING + "\n" + EXTERNAL_TEXT + "\n"
+def render_external(task_name: str = "") -> str:
+    """instruction.md's `## External material` (PROTOCOL §2.11): the same words in every task, except the benchmarks of
+    EXTERNAL_OPEN, whose agents may download tools and controllers."""
+    text = next((v for p, v in EXTERNAL_OPEN.items() if task_name.startswith(p)), EXTERNAL_TEXT)
+    return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
 _CUTOFFS: tuple[dict, dict, dict] | None = None
@@ -559,10 +587,11 @@ def cutoff_sec(bench: str, mode: str) -> int:
         raise KeyError(f"{CUTOFFS_FILE.name} has no cutoff for {bench!r} in {mode} mode") from None
 
 
-def render_cutoff(sec: int, mode: str) -> str:
+def render_cutoff(sec: int, mode: str, bench: str = "") -> str:
     """instruction.md's last section (PROTOCOL §2.12): the heading, the cutoff sentence, then what the cutoff means in
-    the mode."""
-    return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + CUTOFF_NOTE[mode] + "\n"
+    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note)."""
+    note = CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
+    return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
 
 
 def strip_cutoff(s: str) -> str:
@@ -647,12 +676,12 @@ def normalize_instruction(task: Path) -> None:
         s = strip_cutoff(s)
     for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = s.rstrip() + "\n\n" + render_external()
+    s = s.rstrip() + "\n\n" + render_external(task.name)
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
     if sec is not None:
-        s += "\n" + render_cutoff(sec, mode_of(task))
+        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task))
     write_if_changed(p, s)
 
 
@@ -805,6 +834,7 @@ def render_readme(task: Path) -> str:
     mode = md.get("mode", mode_of(task))
     twin = base_of(task) + ("-privileged" if mode in SIDECAR_MODES else "-standard")
     seed = md.get("instance_seed")
+    sd = seeds_of(md)
     oracle = md.get("oracle", "")
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
@@ -815,7 +845,8 @@ def render_readme(task: Path) -> str:
     head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
                                      else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
-             ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
+             ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")
+              + (f" (allowed seeds: {seeds_text(sd['allowed'])}; §2.13)" if sd["allowed"] != [sd["default"]] else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
              ("Agent time budget", f"{int(float(ag.get('timeout_sec', 0)))} s; tokens: protocol default (PROTOCOL §5)"),
              ("Base image", f"`{image_of(task)}`")]
@@ -864,6 +895,69 @@ def assert_converted(task: Path) -> None:
             raise RuntimeError(f"{f}: client accepts only rcb-limited/2.x (update CLIENT_ASSERT_OLD)")
 
 
+def seeds_of(md: dict) -> dict:
+    """`[metadata.seeds]` (PROTOCOL §2.13) as the generator wrote it, completed: `default` = the generator's, else
+    `instance_seed`, else 0 (then 0 names the task's one frozen instance); `allowed` = [default] unless given (a list,
+    a range `{from, to}` with both ends included, or "any"); `oracle` = the seeds the reference solution is for: the
+    generator's (else [default]) for an `oracle` of "full" or "partial", [] for "none"; `build` = "frozen" (every
+    allowed seed a committed instance) unless the generator says "runtime" (the task builds a seed's instance itself)."""
+    given = md.get("seeds") if isinstance(md.get("seeds"), dict) else {}
+    default = int(given.get("default", md.get("instance_seed", 0)))
+    allowed = given.get("allowed", [default])
+    if isinstance(allowed, list):
+        allowed = [int(x) for x in allowed]
+    elif isinstance(allowed, dict):
+        allowed = {"from": int(allowed["from"]), "to": int(allowed["to"])}
+    if md.get("oracle") in ("full", "partial"):
+        oracle = [int(x) for x in given.get("oracle", [])] or [default]
+    else:                                  # (a task copied from a template with a reference solution keeps none of it)
+        oracle = []
+    return {"default": default, "allowed": allowed, "oracle": oracle, "build": given.get("build", "frozen")}
+
+
+def seed_allowed(sd: dict, seed: int) -> bool:
+    a = sd["allowed"]
+    if a == "any":
+        return True
+    if isinstance(a, dict):
+        return a["from"] <= seed <= a["to"]
+    return seed in a
+
+
+def seeds_text(allowed) -> str:
+    """`allowed` as task.toml writes it: a list, `{ from = A, to = B }` or "any"."""
+    if isinstance(allowed, dict):
+        return f"{{ from = {allowed['from']}, to = {allowed['to']} }}"
+    if isinstance(allowed, str):
+        return f'"{allowed}"'
+    return "[" + ", ".join(str(x) for x in allowed) + "]"
+
+
+def normalize_seeds(task: Path) -> None:
+    """Writes `[metadata.seeds]` (PROTOCOL §2.13) after the `[metadata]` keys and their `[metadata.resources*]` tables,
+    replacing an earlier block; the values a generator wrote are kept."""
+    p = task / "task.toml"
+    s = p.read_text()
+    sd = seeds_of(tomllib.loads(s).get("metadata", {}))
+    s = re.sub(r"(?ms)^\[metadata\.seeds\]\n.*?(?=^\[|\Z)", "", s)
+    m = re.search(r"(?m)^\[metadata\]\n", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [metadata] table")
+    at = len(s)
+    for h in re.finditer(r"(?m)^\[([^\]]+)\]", s[m.end():]):
+        if not h.group(1).startswith("metadata.resources"):
+            at = m.end() + h.start()
+            break
+    block = ("[metadata.seeds]\n# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a "
+             "runner may draw\n# from (a list, { from = A, to = B } or \"any\"), and the ones the reference solution under "
+             "solution/ is for\n"
+             f"default = {sd['default']}\nallowed = {seeds_text(sd['allowed'])}\noracle = {seeds_text(sd['oracle'])}\n"
+             + (f'build = "{sd["build"]}"\n' if sd["build"] != "frozen" else ""))
+    head = s[:at].rstrip("\n") + "\n\n"
+    s = head + block + ("\n" + s[at:] if at < len(s) else "")
+    write_if_changed(p, s)
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
@@ -872,6 +966,7 @@ def normalize(task: Path) -> None:
     normalize_toml(task)
     normalize_cutoff(task)
     normalize_resources(task)
+    normalize_seeds(task)
     normalize_main_cap(task)
     normalize_text_files(task)
     normalize_instruction(task)

@@ -23,7 +23,7 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]
 for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
-         tests/test_codex_tools_off.py; do
+         tests/test_codex_tools_off.py tests/test_task_seed.py; do
   run 300 "$t"
 done
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
@@ -50,7 +50,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
   # service test that apply to it, run against that copy
   RCB_SERVICE_DIR="$root/scripts/libero-max/shared/standard" run 900 humanoidbench/tests/test_standard_service.py \
-    Endpoints Submit Observe ResetCapability ResetChecks Client Boot
+    Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot
   # the realtime clock under request load: the classes that do not depend on the runner's speed (TestClockUnderLoad
   # measures step counts under floods of requests; run the whole file by hand on a quiet host)
   run 900 humanoidbench/tests/test_realtime_load.py TestRequests TestStallEvidence TestGraders

@@ -21,11 +21,16 @@ def req(path, body=None):
     except urllib.error.HTTPError as e: return e.code, e.read()
 ok = True
 try:
-    for _ in range(100):
-        try:
-            if req("/status")[0] == 200: break
-        except Exception: time.sleep(0.2)
+    for _ in range(100):               # ready, found without a request (what a healthcheck may do)
+        try: socket.create_connection(("127.0.0.1", port), timeout=2).close(); break
+        except OSError: time.sleep(0.2)
     else: raise SystemExit("service did not start: " + open(os.path.join(tmp, "server.log")).read()[-2000:])
+    # the agent's clock: from its first request (rcb_limited.agent_time), not from the service's first start, which is
+    # before the agent's phase (until 2026-10-13 time_left_s counted from startups.jsonl's first line)
+    time.sleep(1.5); t = time.time(); sys.path.insert(0, srv); import rcb1
+    c0, raw = req("/observe", {"video": "none"}); lag = time.time() - t; m = rcb1.decode(raw)[0] if c0 == 200 else {}
+    print(f"clock: first request {lag:.2f} s ago, time_s {m.get('time_s')}, time_left_s {m.get('time_left_s')}")
+    ok &= c0 == 200 and m["time_s"] <= lag + 0.1 and m["time_left_s"] >= 5400 - lag - 0.2
     row = [[0.1] * 9]
     bad_submit = [{"dt": None, "note": 5}, {"dt": "0.0167"}, {"dt": [1 / 60]}, {"dt": float("inf")}, {"dt": 0.02}, {"dt": True}, {"video_fps": 0},
                   {"cameras": 5}, {"cameras": "wrist_cam"}, {"cameras": [["camera_1"]]}, {"note": {"a": 1}}, {"note": 7}, {"interpolate": None},

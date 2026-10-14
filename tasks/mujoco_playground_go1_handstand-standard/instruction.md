@@ -17,7 +17,7 @@ The robot starts standing at Playground's `home` pose with a random base velocit
 - **Success** is 100 control steps in a row (2 s) with the trunk's forward axis (the IMU frame's x axis) within 30 deg of straight down, the IMU at least 0.4 m above the floor, and the hind (RR, RL) feet off the ground, without a termination before; judged after every control step.
 - Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
   `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
-  from your first call to the service; approximate — the harness's own deadline is authoritative.
+  from your first request to the service: it never runs out before your time does, so plan by it.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
@@ -55,4 +55,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

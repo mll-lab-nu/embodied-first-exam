@@ -62,6 +62,7 @@ MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
+E["t_first"] = None  # the agent's first request (its clock starts there: _touch, _agent_time)
 
 # SIGUSR1 (the collect hook's "episode over") may arrive before the service is ready, e.g. during a resume replay; its
 # default action would kill the process. Until the real handler is installed, only remember it.
@@ -140,16 +141,6 @@ with open(os.path.join(DATA, "startups.jsonl"), "a") as _f:
 # A video that was being rendered when the process died is not resumed: clear its marker and its partial file at once
 # (before the scene is rebuilt), so the collect hook stops waiting for it. The verdict on disk is not touched.
 _remove(VIDEO_PENDING, VIDEO_TMP, VIDEO_TMP[:-4] + ".last.png")
-# time_left_s counts from the first start of this process: the sidecar starts together with the agent's container, so
-# that is the agent's own clock to within a second or two (earlier, when the harness sets the agent up first), not the
-# end of the scene build 20-60 s later. The episode's own clock (E["t0"]: time_s, elapsed_s) starts when the service is
-# ready.
-try:
-    with open(os.path.join(DATA, "startups.jsonl")) as _f:
-        T_BOOT = float(json.loads(_f.readline())["ts"])
-except Exception:  # noqa: BLE001
-    T_BOOT = time.time()
-
 # Back off before rebuilding after a failed start: compose restarts immediately.
 _n_starts = sum(1 for _ in open(os.path.join(DATA, "startups.jsonl")))
 if _n_starts > 1 and not os.path.exists(os.path.join(DATA, "episode.jsonl")):
@@ -227,23 +218,38 @@ def grab(cams, depth: bool):
     return imgs, dep
 
 
+def cam2world(cam: str) -> np.ndarray:
+    """Camera-to-world pose (4x4, OpenGL convention: x right, y up, looks along -z) of the viewpoint the mono RGB / depth
+    image is rendered from, in the current state (as server_mj.py). A model camera (every RoboCasa camera): data.cam_xpos
+    / data.cam_xmat, which is what the renderer reads. A free camera: the scene's two eye cameras share their axes and sit
+    ipd/2 to either side of the viewpoint, so the viewpoint is their mean. scene.camera[0] alone is the LEFT eye, ipd/2 =
+    3.4 cm to the left of the viewpoint: until 2026-10-13 that was reported for every camera."""
+    cid, _ = CAMS[cam]
+    if cid is not None:
+        R = np.array(S.data.cam_xmat[cid], float).reshape(3, 3)
+        pos = np.array(S.data.cam_xpos[cid], float)
+    else:
+        r = _renderer(False)
+        _update(r, cam)
+        a, b = r.scene.camera[0], r.scene.camera[1]
+        fwd = np.array(a.forward, float)
+        up = np.array(a.up, float)
+        pos = 0.5 * (np.array(a.pos, float) + np.array(b.pos, float))
+        R = np.column_stack([np.cross(fwd, up), up, -fwd])
+    return np.vstack([np.column_stack([R, pos]), [0.0, 0.0, 0.0, 1.0]])
+
+
 def calib() -> dict:
-    """Per camera: pinhole intrinsics and camera-to-world pose (OpenGL convention: looks along -z, +y up)."""
+    """Per camera: pinhole intrinsics and the camera-to-world pose in the current state (see cam2world). The RoboCasa
+    cameras are given by their vertical field of view (no sensor size), so pixels are square: fx = fy = (H / 2) /
+    tan(fovy / 2), principal point at the image centre."""
     out = {}
-    r = _renderer(False)
     for c in CAMS:
-        _update(r, c)
-        gl = r.scene.camera[0]
-        fwd = np.array(gl.forward, float)
-        up = np.array(gl.up, float)
-        pos = np.array(gl.pos, float)
-        right = np.cross(fwd, up)
-        R = np.column_stack([right, up, -fwd])
         fovy = float(S.model.cam_fovy[CAMS[c][0]]) if CAMS[c][0] is not None else float(S.model.vis.global_.fovy)
         f = 0.5 * H / np.tan(np.deg2rad(fovy) / 2)
         out[c] = {
             "intrinsic_cv": [[f, 0, W / 2], [0, f, H / 2], [0, 0, 1]],
-            "cam2world_gl": np.vstack([np.column_stack([R, pos]), [0, 0, 0, 1]]).tolist(),
+            "cam2world_gl": cam2world(c).tolist(),
             "width": W,
             "height": H,
             "fovy_deg": fovy,
@@ -292,9 +298,35 @@ SPEC = {
     },
     "proprio_layout": PROPRIO_LAYOUT,
     "frames": "world frame: metres, z up; robot-mounted cameras move with the robot (calibration in every response)",
-    "budget": {"reset": 0, "wall_clock_s": WALL_CLOCK_S},
+    "budget": {
+        "reset": 0,
+        "wall_clock_s": WALL_CLOCK_S,
+        "clock": (
+            "meta time_s / time_left_s count from your first request to the service (any endpoint), not from the "
+            "service's start, and keep running through a restart of the service; time_left_s = budget.wall_clock_s - "
+            "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
+            "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
+            "first request. Plan by time_left_s."
+        ),
+    },
     "episode": "runs until your time is up; the state after the last executed control step is graded",
 }
+
+
+def _agent_time() -> float:
+    """Seconds since the agent's first request to the service (0 before it): the agent's clock. Harbor counts the
+    agent's cutoff around the agent's run only, and the sidecar starts with the environment, before the harness is
+    installed: counted from this process's first start (until 2026-10-13) the clock ran ahead of the agent's by that
+    set-up time (a median of 79 s over the recorded trials) and time_left_s reached 0 that much too early."""
+    return 0.0 if E["t_first"] is None else time.time() - E["t_first"]
+
+
+def _touch() -> None:
+    """Every request passes here: the first one starts the agent's clock (logged, so a resume keeps it). A probe that
+    must not start it connects to the port without sending a request."""
+    if E["t_first"] is None:
+        E["t_first"] = time.time()
+        log({"ev": "first_request", "ts": E["t_first"]})
 
 
 def meta_common() -> dict:
@@ -304,8 +336,8 @@ def meta_common() -> dict:
         "control_steps": len(RECORD),
         "sim_steps": len(RECORD),
         "sim_time_s": round(len(RECORD) * CTRL_DT, 4),
-        "time_s": round(time.time() - E["t0"], 2),
-        "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - T_BOOT), 1)),
+        "time_s": round(_agent_time(), 2),
+        "time_left_s": max(0.0, round(WALL_CLOCK_S - _agent_time(), 1)),
         "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio().tolist()},
         "task": task_info(),
         "cameras": calib(),  # robot-mounted cameras move: their calibration is current
@@ -722,6 +754,7 @@ class Hd(BaseHTTPRequestHandler):
         return b, {}
 
     def do_GET(self):
+        _touch()
         if self.path == "/spec":
             return self._json(200, SPEC)
         if self.path == "/status":
@@ -740,6 +773,7 @@ class Hd(BaseHTTPRequestHandler):
         return self._json(404, {"error": "no such endpoint"})
 
     def do_POST(self):
+        _touch()
         if self.path not in ("/submit", "/observe"):
             return self._json(404, {"error": "no such endpoint"})
         try:
@@ -793,7 +827,8 @@ def _end_from_signal():
     start_finalize()
 
 
-calib()  # opens the renderer before the first request
+_renderer(False)  # opens the renderer before the first request
+calib()
 
 
 def _resume_or_start() -> None:
@@ -842,6 +877,9 @@ def _resume_or_start() -> None:
     E["calls"] = int(last.get("call", 0))
     E["rows"] = int(last.get("rows_total", 0))
     E["t0"] = float(starts[0]["ts"])
+    first = [e for e in ev if e.get("ev") == "first_request"]
+    if first:
+        E["t_first"] = float(first[0]["ts"])  # the agent's clock keeps running through a crash, never back to full
     ended = [e for e in ev if e.get("ev") == "end"]
     if ended:
         E["done"] = True

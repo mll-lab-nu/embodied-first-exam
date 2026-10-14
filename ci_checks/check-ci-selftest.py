@@ -25,6 +25,7 @@ RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
 POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
+SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -35,6 +36,7 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
+OPEN = "robofunolympics-sprint-i00-standard"                   # open egress by a documented exception (PROTOCOL §2.11)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -135,6 +137,9 @@ MUTATIONS = [
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("... a task of a benchmark that was open until 2026-10-10",
      TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
+    ("a task of an open-egress benchmark sets a network policy of its own (its egress is the exception's, not the task's)",
+     OPEN, TOML, sub(r'^\[agent\]\n', '[agent]\nnetwork_mode = "allowlist"\nallowed_hosts = ["pypi.org"]\n'), ISOLATION,
+     "sets a network policy"),
     ("the instruction no longer states the external-material rule",
      STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
     ("the frozen instance the agent reads names where its scene came from",
@@ -262,6 +267,13 @@ MUTATIONS = [
      RT, TOML, sub(r"^min_cpus = [0-9.]+", "min_cpus = 7.0"), RESOURCES, "min_cpus 7.0 > the CPU caps of all services together 6"),
     ("a declared cap that docker does not apply",
      STD, COMPOSE, sub(r"^    mem_limit: \d+m(   # rcb-monitor)$", r"    mem_limit: 1024m\1"), RESOURCES, "declare the cap that is applied"),
+    # ---- seeds (PROTOCOL §2.13): the runner draws the seed; no other seed's instance where the agent's image is built
+    ("the default seed is not among the allowed ones",
+     TWIN_P, TOML, sub(r"^allowed = \[.*\]$", "allowed = [12345]"), SEEDS, "is not in seeds.allowed"),
+    ("an allowed seed without its frozen instance",
+     TWIN_P, TOML, sub(r"^allowed = \[(.*)\]$", r"allowed = [\1, 12345]"), SEEDS, "has no frozen instance"),
+    ("another seed's instance in the agent's build context",
+     TWIN_P, "+environment/seeds/7/instance.json", append("{}"), SEEDS, "a `seeds` directory where the agent's image"),
 ]
 
 
@@ -373,7 +385,7 @@ def main() -> int:
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS):
+            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
@@ -383,6 +395,11 @@ def main() -> int:
             shutil.copytree(clean[name], t)
             try:
                 for r, f in (mutate.items() if isinstance(mutate, dict) else [(rel, mutate)]):
+                    if r.startswith("+"):                   # a file the mutation adds
+                        r = r[1:]
+                        (t / r).parent.mkdir(parents=True, exist_ok=True)
+                        (t / r).write_text(f(""))
+                        continue
                     (t / r).write_text(f((t / r).read_text()))
             except (AssertionError, StopIteration, OSError) as e:
                 print(f"FAIL check-ci-selftest [{what}]: the mutation no longer applies to {name} ({e}): update MUTATIONS")

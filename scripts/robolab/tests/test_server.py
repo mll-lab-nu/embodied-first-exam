@@ -13,7 +13,7 @@ def check(ok, what):
 def free_port():
     s = socket.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close(); return p
 class Srv:
-    def __init__(self, bench, env=None):
+    def __init__(self, bench, env=None, probe="status"):
         self.td = tempfile.mkdtemp(prefix=f"srv_{bench}_"); self.port = free_port(); self.bench = bench
         e = {"PATH": "/usr/bin:/bin", "RCB_DATA": os.path.join(self.td, "data"), "TEST_PORT": str(self.port), "RCB_WALL_CLOCK_S": "5400",
              "PYTHONDONTWRITEBYTECODE": "1", **(env or {})}
@@ -22,6 +22,8 @@ class Srv:
                                    os.path.join(HERE, "stubs", bench), LAYER], env=e, stdout=self.log, stderr=subprocess.STDOUT, cwd=self.td)
         for _ in range(100):
             try:
+                if probe == "connect":       # ready, found without a request (what a healthcheck may do): the agent's clock stays at 0
+                    socket.create_connection(("127.0.0.1", self.port), timeout=2).close(); return
                 self.get("/status"); return
             except Exception:
                 if self.p.poll() is not None: break
@@ -115,5 +117,12 @@ def run(bench, dim, ee_dim, hz):
     fin = json.load(open(os.path.join(s.td, "data", "final.json"))); check(fin["reason"] == "step_guard" and fin["finalized"] is False and os.path.exists(os.path.join(s.td, "data", "trajectory.npz")),
                                                                          f"{bench} episode dumped for the collect hook (final.json reason {fin['reason']})")
     s.stop()
-run("robolab", 8, 8, 15); run("yamlab", 14, 16, 30)
+def clock(bench):
+    """meta time_s / time_left_s count from the agent's first request (rcb_limited.agent_time), not from the service's start."""
+    s = Srv(bench, probe="connect"); time.sleep(1.5)                  # up and idle: the harness is still being installed
+    t = time.time(); spec = s.get("/spec"); code, m = s.post("/observe", {"seconds": None}); lag = time.time() - t
+    check("first request" in spec["budget"].get("clock", "") and code == 200 and m["time_s"] <= lag + 0.1 and m["time_left_s"] >= 5400 - lag - 0.2,
+          f"{bench} the clock starts at the first request, not with the service: time_s {m.get('time_s')}, time_left_s {m.get('time_left_s')} of 5400 ({lag:.2f} s after it)")
+    s.stop()
+run("robolab", 8, 8, 15); run("yamlab", 14, 16, 30); clock("robolab"); clock("yamlab")
 print("server:", "ALL OK" if not bad else f"{bad} FAILED"); sys.exit(1 if bad else 0)

@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** There is a can and a pot on the table, use one arm to pick up the can and move it to beside the pot.
 
-The scene objects are attributes of the task env (`env.arm_tag`, `env.can`, `env.can_id`, `env.orig_z`, `env.pot`, `env.pot_id`, `env.target_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.arm_tag`, `env.can`, `env.can_id`, `env.orig_z`, `env.pot`, `env.pot_id`; see `load_actors` in
 `/opt/RoboTwin/envs/move_can_pot.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):
@@ -77,4 +77,4 @@ Limits for the whole trial, all its processes together (every simulator you star
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

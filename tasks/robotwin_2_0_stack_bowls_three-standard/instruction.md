@@ -9,7 +9,7 @@ cannot open. You get one client and one episode. **Task:** Stack the three bowls
 - **No privileged state.** You see what the cameras see (RGB, optional depth) plus the robot's own joint positions,
   gripper state and end-effector poses. No object poses, no success predicate.
 - Steps are unlimited; your wall-clock budget is the limit (`meta["time_left_s"]`, counted from your first request to
-  the service; approximate: the harness's own deadline is authoritative). Actions and simulated time are reported as cost.
+  the service: it never runs out before your time does, so plan by it). Actions and simulated time are reported as cost.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -78,4 +78,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

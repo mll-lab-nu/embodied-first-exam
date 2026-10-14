@@ -51,6 +51,13 @@ measured = "GPU: 8.6 GiB on a 48 GB card, 6.9 on 24 GB (batch_eval_live vram_pro
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 91573
+allowed = [91573]
+oracle = [91573]
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

@@ -163,6 +163,41 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   installed; the PyPI packages `playground` and `envpool` carry Playground's task sources, PROTOCOL §2.11). Scenes, instances, tooling and pass rules
   are unchanged; results from before this date were obtained with open egress. The quadruped pairs were already on the
   allowlist.
+- 2026-10-13 (board 0086), `mujoco_playground_aloha_single_peg_insertion`, both modes: **the success rule's rear
+  bound.** `rcb_aloha.Session.check` required `0 <= t <= 0.75` for the peg tip's axial parameter, and the texts said
+  "t ≤ 0.75, t = 0 at the rear wall, at least 25 % of the depth inside". Site `socket_rear` is at the tube's centre:
+  t = 0 is mid-tube, the inner face of the red rear wall is at t = −0.833 (the wall box is at x = −0.044 ± 0.004 m in
+  the socket frame, 0.048 m per unit of t) and the cavity is 88 mm deep, so "t ≤ 0.75" is 12 mm inside its open end
+  (14 %), and a peg pushed past the middle, the fully inserted one included, was graded a failure. Upstream has no
+  success predicate; its shaped reward peaks with the tip at the tube's centre and never treats a deeper insertion as
+  a failure, so the lower bound was ours. The rule is now `t_min <= t <= 0.75` with `t_min` read from the model (the
+  wall's extent along the axis) minus `REAR_MARGIN_M` = 2 mm for the contact's give: −0.875. A tip behind the wall
+  stays a failure. Checked on the CPU in `eai-mujoco:0.1.2`: the oracle passes as before (t = 0.437, 1.8 mm, the same
+  final state hash), an empty or motionless trajectory fails, a tip set along the axis passes exactly for −0.875 <= t
+  <= 0.75 within 5 mm, and the one recorded episode the old bound failed (Opus, pool job 45653: tip 2.1 mm off the
+  axis, t = −0.8336, the peg on the rear wall) replays to the same state and passes. Scene, instance and the 5 mm
+  tolerance are unchanged; every trajectory that passed still passes.
+- 2026-10-13 (board 0086), the two ALOHA standard tasks: **the intrinsics given to the agent changed.**
+  `images/mujoco/limited/server_mj.py` reported fx = fy = (H / 2) / tan(fovy / 2) for every camera. That is MuJoCo's
+  rule for a camera defined by its field of view. ALOHA's `overhead_cam`, `wrist_cam_left` and `wrist_cam_right` are
+  defined by their sensor (`focal="1.93e-3 1.93e-3" sensorsize="3896e-6 2140e-6"`), and MuJoCo (3.3.7) renders such a
+  camera with the sensor's own extent in each direction, squeezed into the 320 x 240 image: fx = 320 × 1.93 / 3.896 =
+  158.52 px, fy = 240 × 1.93 / 2.140 = 216.45 px. The reported fx was 1.37 times too large. The service now reports,
+  for a camera with `cam_sensorsize` > 0, fx = W × focal_x / sensor_x, fy = H × focal_y / sensor_y, cx = W / 2 − W ×
+  principal_x / sensor_x, cy = H / 2 + H × principal_y / sensor_y, and the field-of-view rule otherwise. Checked
+  against CPU renders in the image: synthetic cameras of each kind (`fovy`; `focal` + `sensorsize`; with `principal`;
+  `focalpixel` + `principalpixel`) within 0.2 px, and the service's own calibration on the real scenes, a marker
+  placed at 40 known 3-D points per camera: ALOHA's three sensor cameras 0.1 to 0.2 px from the projection on average
+  (15 to 19 px, up to 35 px, before); `teleoperator_pov`, the Panda tasks' four free cameras and DexToolBench's four
+  `fovy` cameras within 0.4 px before and after (their reported values are unchanged, as are those of the 21
+  DexToolBench and 2 Panda standard tasks' other cameras: no other camera in `eai-mujoco` that a task serves has a
+  sensor size; Barkour's `oak/rgb` has one and is not served). Images, physics, graders and pass rules are unchanged.
+- 2026-10-13 (board 0099), the tasks served by `images/mujoco/limited/server_mj.py`: the service gained PROTOCOL
+  §4.5's optional reset capability (`RCB_RESET_BUDGET`, default 0; `POST /reset` only with a budget; crash recovery
+  replays the current episode from its start), the client a `reset()` method, `final.json` and the graders'
+  `reward.json` the fields `resets` and `reset_budget`. DexToolBench's standard twins set 20 resets (owner decision,
+  [`dextoolbench.md`](dextoolbench.md)); the two ALOHA and two Panda standard tasks set none: `/reset` is a 404 and
+  `budget.reset` 0, so their episodes, observations and verdicts are unchanged.
 
 ## Files
 | | |

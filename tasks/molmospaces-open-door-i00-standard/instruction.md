@@ -14,8 +14,8 @@ client and one episode.
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: the door's hinge is open at least 67% of its 90-degree range. The task has to hold at the
   end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
-- Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s`, `elapsed_s` and `time_left_s`
-  count from its own start, a few minutes earlier, so `time_left_s` reaches 0 a little before your time is up).
+- Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s` and `time_left_s`
+  count from your first request to it, so `time_left_s` never reaches 0 before your time is up: plan by it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -57,4 +57,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

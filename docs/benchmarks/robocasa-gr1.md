@@ -56,6 +56,8 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect
 hook is `scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte
 (`docs/benchmarks/robocasa.md`: verdict final before the video, the hook's budget, request validation).
+Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint, not MuJoCo's left-eye camera 3.4 cm to
+its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results from before used the offset calibration.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image

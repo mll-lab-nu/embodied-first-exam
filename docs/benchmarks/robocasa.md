@@ -95,7 +95,13 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
    (PROTOCOL §4.6); `null` means "not given". Only an error while the simulator executes is a 500 and ends the
    episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
    "last frame only". `dt = 0` used to mean `control_dt` and is now a 400.
-9. `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
+9. Since 2026-10-13 `time_s` and `time_left_s` count from the agent's first request to the service (any endpoint;
+   logged as `first_request` in `episode.jsonl`, which a resume reads back), as in every other benchmark
+   (STANDARD_MODE.md, "The agent's clock"). The rule of 2026-10-10 below started the clock too early: Harbor counts
+   the agent's cutoff around the agent's run only, and the sidecar starts with the environment, before the harness
+   is installed (a median of 79 s earlier over the recorded trials, board 0085), so `time_left_s` reached 0 while the
+   agent still had that time. 2026-10-10 to 2026-10-13:
+   `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
    sidecar starts together with the agent's container, so this is the agent's own clock to within a second or two
    (oracle trial: 1.1 s after it; earlier when the harness sets the agent up first). Before, it counted from the end
    of the scene build (27 s later in that trial, more after a failed start) and overstated what was left by that
@@ -103,6 +109,20 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
 
 Synthetic tests of 6–8 (a stub in place of the simulator; no MuJoCo) were run for the change; they are not part of the
 repository's checks.
+
+10. **Camera calibration = the rendered viewpoint** (2026-10-13, board 0093; found in board 0086). `cam2world_gl` is
+   `data.cam_xpos` / `data.cam_xmat` of the camera, the pose the renderer draws the mono RGB and depth images from
+   (`cam2world()`, as `server_mj.py` since #135). Until 2026-10-13 it was MuJoCo's left-eye camera `scene.camera[0]`,
+   which sits half the camera's interpupillary distance (`cam_ipd` 0.068 m) to its left: 3.4 cm off, in all three
+   RoboCasa benchmarks. Checked with MuJoCo's own renders of 4 mm marker spheres at known world points (nothing else
+   drawn), every served camera, at the start and after the robot had moved: the marker's projection through the
+   reported calibration was 10.5–10.7 px median (up to 28 px for near points, always to the same side) from where it was
+   drawn, and is now 0.15 px median, at most 0.4 px. The intrinsics (`fx = fy = (H / 2) / tan(fovy / 2)`, principal
+   point at the image centre) were already right: every camera of these models is given by its `fovy` (no
+   `sensorsize`, checked on the RoboCasa, RoboCasa365 and RoboCasa-GR1 models), unlike ALOHA's (#164). **Standard-mode
+   results from before 2026-10-13 used the offset calibration** (a point located from the images came out about
+   3.4 cm to the side; agents missed a microwave button by 3.5 cm) and are not strictly comparable with later ones.
+   The service is copied into each task (`environment/sim/server_casa.py`, mounted into the sidecar): no image rebuild.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries

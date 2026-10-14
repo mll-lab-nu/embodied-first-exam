@@ -6,14 +6,21 @@ against a stand-in tool module: no MuJoCo, no GPU. The services under test are t
 
 Covers, for each service: a negative or non-numeric Content-Length is a 400 and the service stays up (read(-1) would
 read without a bound); a camera named many times is rendered once, before the frame budget is counted; a port held by
-another process at start is waited for, not a crash. RoboTwin's service has the same tests in
-scripts/robotwin/tests/test_standard_service.py.
+another process at start is waited for, not a crash; the agent's clock (meta time_s / time_left_s) is not started by
+the service's start or by a probe that only connects to the port, starts at the first request, and is not set back by
+a resume (RoboTwin's service has these tests in scripts/robotwin/tests/test_standard_service.py); a camera's reported
+pose is the viewpoint its image is rendered from, not MuJoCo's left-eye camera. server_mj.py's optional reset capability
+(PROTOCOL §4.5; DexToolBench standard grants 20): no /reset without a budget; with one, a reset restores the start state,
+the budget is enforced (409 after it, after the agent's time), a crash resumes the current episode, and only the last
+episode is graded.
 """
 from __future__ import annotations
 
 import json
+import math
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -37,12 +44,20 @@ import numpy as np
 CONTROL_DT = 0.02; N = 2; JOINT_NAMES = ACTION_NAMES = ["a", "b"]; CAMERAS = ("cam",); GOAL_TIMEOUT_STEPS = 0; MAX_STEPS = 3000
 ACTION_TYPE = {"name": "ee_delta"}; CAMERA_VIEWS = {"cam": {"camera": "cam"}}; PROPRIO_LAYOUT = ["a_pos", "b_pos"]
 def scene_option(): return None
-class _Cam: name = "cam"; id = 0; forward = (1.0, 0.0, 0.0); up = (0.0, 0.0, 1.0); pos = (0.0, 0.0, 0.0)
-class _Scene: camera = [_Cam(), _Cam()]
+class _Cam:
+    name = "cam"; id = 0; forward = (1.0, 0.0, 0.0); up = (0.0, 0.0, 1.0); pos = (0.5, 0.2, 1.0)
+    def __init__(self, pos=(0.5, 0.2, 1.0)): self.pos = pos
+# MuJoCo's two eye cameras (left, right) sit ipd/2 = 3.4 cm to either side of the viewpoint (data.cam_xpos), which is
+# what the mono image is rendered from; looking along +x with +z up, the camera's left is +y.
+class _Scene: camera = [_Cam((0.5, 0.234, 1.0)), _Cam((0.5, 0.166, 1.0))]
 class _Model:
     ncam = 1; cam_mode = [0]; cam_bodyid = [0]; cam_fovy = [45.0]; body_jntnum = [0]; body_mocapid = [-1]; body_parentid = [0]
+    cam_sensorsize = [[0.0, 0.0]]; cam_intrinsic = [[0.01, 0.01, 0.0, 0.0]]      # a camera given by its fovy (MuJoCo's defaults)
+    if os.environ.get("STUB_SENSOR"):   # a camera given by its sensor: "focal_x focal_y principal_x principal_y sensor_x sensor_y fovy"
+        _v = [float(x) for x in os.environ["STUB_SENSOR"].split()]
+        cam_intrinsic = [_v[:4]]; cam_sensorsize = [_v[4:6]]; cam_fovy = [_v[6]]
     def camera(self, i): return _Cam()
-class _Data: cam_xmat = [np.eye(3).ravel()]; cam_xpos = [np.zeros(3)]
+class _Data: cam_xmat = [np.array([0.0, 0, -1, -1, 0, 0, 0, 1, 0])]; cam_xpos = [np.array([0.5, 0.2, 1.0])]   # x right = -y, y up = +z, looks along +x
 class _Renderer:
     scene = _Scene()
     def __init__(self, model, h, w): self.h, self.w, self.depth = h, w, False
@@ -66,6 +81,11 @@ class Session:
     def state(self): return {"q": self.q, "qd": np.zeros(len(self.q)), "targets": self.targets}
     def state_sha(self): return hashlib.sha1(np.concatenate([self.q, self.targets]).tobytes()).hexdigest()[:16]
     def check(self): return {"success": False}
+    def reset(self): n = len(self.q); self.q = np.zeros(n); self.targets = np.zeros(n); self.n = 0
+    def replay(self, A):
+        self.reset()
+        for row in A: self.step(row)
+        return {"state_sha": self.state_sha(), "success": False, "steps": self.n}
 '''
 
 
@@ -123,6 +143,29 @@ class ServerCase:
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read() or b"{}")
 
+    def wait_port(self, timeout: float = 30) -> None:
+        """Ready, found the way a healthcheck may: by connecting to the port and sending nothing."""
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            self.assertIsNone(self.proc.poll(), f"the service exited: {(self.tmp / 'log').read_text()[-2000:]}")
+            try:
+                socket.create_connection(("127.0.0.1", self.port), timeout=2).close()
+                return
+            except OSError:
+                time.sleep(0.05)
+        self.fail("the service did not come up")
+
+    def meta(self) -> dict:
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/observe", data=json.dumps({"video": "none"}).encode())
+        return rcb1.decode(urllib.request.urlopen(req, timeout=60).read())[0]
+
+    def first_requests(self) -> list:
+        try:
+            ev = [json.loads(x) for x in (self.data / "episode.jsonl").read_text().splitlines() if x.strip()]
+        except OSError:
+            return []
+        return [e for e in ev if e.get("ev") == "first_request"]
+
     def renders(self) -> int:
         try:
             return (self.data / "renders").stat().st_size
@@ -137,6 +180,45 @@ class ServerCase:
         self.assertIsNone(self.proc.poll())
         self.assertEqual(self.wait_up()["calls"], 0)                 # refused before a call began: nothing was executed
         self.assertEqual(self.observe({"video": "none"})[0], 200)
+
+    def intrinsic(self) -> list:
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/observe", data=json.dumps({"video": "none"}).encode())
+        return rcb1.decode(urllib.request.urlopen(req, timeout=60).read())[0]["cameras"]["cam"]["intrinsic_cv"]
+
+    def test_intrinsics_follow_how_the_camera_is_defined(self):
+        """MuJoCo renders a camera given by its sensor with the sensor's own extent in each direction, whatever the
+        image's aspect, so fx != fy in a 320 x 240 image of ALOHA's 3.896 x 2.140 mm sensor (checked against CPU renders
+        in the eai-mujoco image; the service reported fx = fy from the vertical field of view until 2026-10-13)."""
+        if self.SERVER.name != "server_mj.py":
+            self.skipTest("the MuJoCo service's rule (the MetaWorld+ and RoboCasa scenes have no sensor-defined camera)")
+        self.start(); self.wait_up()
+        K = self.intrinsic()                                         # fovy 45 deg: square pixels, the image centre
+        f = 120 / math.tan(math.radians(45.0) / 2)
+        for got, want in zip(sum(K, []), [f, 0, 160, 0, f, 120, 0, 0, 1]):
+            self.assertAlmostEqual(got, want, places=6)
+        self.proc.kill(); self.proc.wait(); self.log.close(); shutil.rmtree(self.data); self.data.mkdir()
+        self.ENV = {**self.ENV, "STUB_SENSOR": "1.93e-3 1.93e-3 0 0 3896e-6 2140e-6 58.008"}     # ALOHA's overhead and wrist cameras
+        self.start(); self.wait_up()
+        K = self.intrinsic()
+        for got, want in zip(sum(K, []), [158.5216, 0, 160, 0, 216.4486, 120, 0, 0, 1]):
+            self.assertAlmostEqual(got, want, places=3)
+        self.proc.kill(); self.proc.wait(); self.log.close(); shutil.rmtree(self.data); self.data.mkdir()
+        self.ENV = {**self.ENV, "STUB_SENSOR": "2e-3 2.5e-3 0.4e-3 -0.25e-3 4e-3 3e-3 61.928"}    # with a principal-point offset
+        self.start(); self.wait_up()
+        K = self.intrinsic()                                         # fx = 320 * 2 / 4, fy = 240 * 2.5 / 3, cx = 160 - 320 * 0.4 / 4, cy = 120 + 240 * -0.25 / 3
+        for got, want in zip(sum(K, []), [160, 0, 128, 0, 200, 100, 0, 0, 1]):
+            self.assertAlmostEqual(got, want, places=6)
+
+    def test_the_calibration_is_the_rendered_viewpoint(self):
+        """cam2world_gl is the pose the mono image is rendered from (data.cam_xpos / cam_xmat of a model camera), not
+        MuJoCo's left-eye camera scene.camera[0], 3.4 cm to its left: the services reported that one until #135
+        (2026-10-10: server_mj.py, server_mw.py) and 2026-10-13 (server_casa.py, board 0093)."""
+        self.start(); self.wait_up()
+        T = self.meta()["cameras"]["cam"]["cam2world_gl"]
+        want = [[0, 0, -1, 0.5], [-1, 0, 0, 0.2], [0, 1, 0, 1.0], [0, 0, 0, 1]]
+        for got_row, want_row in zip(T, want):
+            for got, w in zip(got_row, want_row):
+                self.assertAlmostEqual(got, w, places=9)
 
     def test_a_repeated_camera_is_rendered_once(self):
         self.start(); self.wait_up()
@@ -168,6 +250,114 @@ class ServerCase:
             self.assertIn("waiting for it to be free", (self.tmp / "log").read_text())
             self.assertIsNone(self.proc.poll())
         self.assertEqual(self.wait_up()["calls"], 0)
+
+
+    def test_the_agents_clock_starts_at_its_first_request_and_survives_a_resume(self):
+        self.start(); self.wait_port()
+        ready = time.time()
+        time.sleep(2.0)                                              # up and idle: the harness is still being installed
+        self.wait_port()                                             # a probe that connects again
+        self.assertEqual(self.first_requests(), [], "the service's start or a connect without a request started the clock")
+        t_req = time.time()
+        spec = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/spec", timeout=5).read())   # the first request
+        self.assertIn("first request", spec["budget"]["clock"])
+        m0 = self.meta(); lag = time.time() - t_req
+        self.assertLessEqual(m0["time_s"], lag + 0.1, f"time_s counts from the service's start ({time.time() - ready:.1f} s ago)")
+        self.assertGreaterEqual(m0["time_left_s"], spec["budget"]["wall_clock_s"] - lag - 0.2)
+        first = self.first_requests()
+        self.assertEqual(len(first), 1)
+        self.assertLessEqual(abs(first[0]["ts"] - t_req), lag + 0.1)
+        time.sleep(1.5)
+        self.proc.kill(); self.proc.wait(); self.log.close()         # a crash: compose restarts the container
+        self.start(); self.wait_port()
+        m1 = self.meta(); since = time.time() - t_req
+        self.assertGreaterEqual(m1["time_s"], m0["time_s"] + 1.5, "the resume set the agent's clock back")
+        self.assertGreaterEqual(m1["time_s"], since - lag - 0.3)
+        self.assertLessEqual(m1["time_s"], since + 0.1)
+        self.assertLessEqual(m1["time_left_s"], m0["time_left_s"] - 1.5)
+        self.assertEqual(len(self.first_requests()), 1, "a resume logged a second first_request")
+        self.assertEqual(self.wait_up()["calls"], 2)                 # the same episode: both observes are counted
+
+
+    # ---- server_mj.py's reset capability
+    def post(self, path: str, meta: dict):
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", data=json.dumps(meta).encode())
+        try:
+            m, parts = rcb1.decode(urllib.request.urlopen(req, timeout=60).read())
+            return 200, m
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+
+    def events(self) -> list:
+        return [json.loads(x) for x in (self.data / "episode.jsonl").read_text().splitlines() if x.strip()]
+
+    def submit(self, rows: list):
+        return self.post("/submit", {"type": "joint_position", "dt": 0.02, "actions": rows, "video": "none"})
+
+    def reset_case(self, budget: str | None) -> None:
+        if self.SERVER.name != "server_mj.py":
+            self.skipTest("the reset capability of the MuJoCo service (DexToolBench)")
+        if budget is not None:
+            self.ENV = {**self.ENV, "RCB_RESET_BUDGET": budget}
+        self.start(); self.wait_up()
+
+    def test_no_reset_without_a_budget(self):
+        self.reset_case(None)
+        spec = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/spec", timeout=5).read())
+        self.assertEqual(spec["budget"]["reset"], 0); self.assertNotIn("reset", spec)
+        self.assertEqual(self.post("/reset", {})[0], 404)
+        code, m = self.submit([[0.5, 0.5]] * 3)
+        self.assertEqual(code, 200); self.assertNotIn("episode", m); self.assertNotIn("resets_left", m)
+        self.assertEqual(self.wait_up()["control_steps"], 3)
+
+    def test_resets_restore_the_start_and_the_budget_is_enforced(self):
+        self.reset_case("2")
+        spec = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/spec", timeout=5).read())
+        self.assertEqual(spec["budget"]["reset"], 2); self.assertIn("only the last episode", spec["reset"])
+        start_sha = self.events()[0]["state_sha"]
+        code, m = self.submit([[0.5, -0.5]] * 4)
+        self.assertEqual((code, m["episode"], m["resets_left"], m["control_steps"]), (200, 1, 2, 4))
+        self.assertEqual(self.post("/reset", {"cameras": ["cam"], "video": "frames", "include_depth": "x" == "y"})[0], 200)
+        st = self.wait_up()
+        self.assertEqual((st["episode"], st["resets_left"], st["control_steps"], st["control_steps_total"]), (2, 1, 0, 4))
+        resets = [e for e in self.events() if e["ev"] == "reset"]
+        self.assertEqual(len(resets), 1); self.assertEqual(resets[0]["state_sha"], start_sha)   # the start state again
+        self.assertEqual([e["reason"] for e in self.events() if e["ev"] == "end"], ["reset"])  # the abandoned episode
+        self.assertEqual(self.post("/reset", {"video": "gif"})[0], 400)          # a bad request changes nothing
+        self.assertEqual(self.wait_up()["resets_left"], 1)
+        self.assertEqual(self.submit([[0.2, 0.2]] * 3)[0], 200)
+        code, m = self.post("/reset", {})
+        self.assertEqual((code, m["episode"], m["resets_left"], m["control_steps_total"]), (200, 3, 0, 7))
+        code, m = self.post("/reset", {})
+        self.assertEqual(code, 409); self.assertEqual(m["error"], "reset budget exhausted")
+        self.assertEqual(self.submit([[0.1, -0.1]] * 2)[0], 200)
+        # a crash: compose restarts the container, the same (third) episode resumes from the journal
+        self.proc.kill(); self.proc.wait(); self.log.close()
+        self.start(); st = self.wait_up()
+        self.assertEqual((st["episode"], st["resets_left"], st["control_steps"], st["control_steps_total"], st["done"]), (3, 0, 2, 9, False))
+        self.assertEqual([e["ev"] for e in self.events()].count("resumed"), 1)
+        self.assertEqual(self.submit([[0.1, -0.1]] * 1)[0], 200)
+        # the agent's time is up: the collect hook's SIGUSR1 ends the episode; only the last one is graded
+        os.kill(self.proc.pid, signal.SIGUSR1)
+        t0 = time.time()
+        while time.time() - t0 < 30 and not json.loads((self.data / "final.json").read_text()).get("video_done"):
+            time.sleep(0.1)
+        fin = json.loads((self.data / "final.json").read_text())
+        self.assertEqual((fin["reset_budget"], fin["resets"], fin["episodes"], fin["control_steps"], fin["control_steps_total"]), (2, 2, 3, 3, 10))
+        self.assertTrue(fin["deterministic"], fin)                   # the last episode's rows, replayed from the start
+        import numpy as np
+        self.assertEqual(np.load(self.data / "trajectory.npz")["actions"].shape, (3, 2))
+
+    def test_no_reset_once_the_time_is_up(self):
+        self.reset_case("5")
+        self.assertEqual(self.submit([[0.5, 0.5]] * 2)[0], 200)
+        os.kill(self.proc.pid, signal.SIGUSR1)
+        t0 = time.time()
+        while time.time() - t0 < 30 and not (self.data / "final.json").exists() or not json.loads((self.data / "final.json").read_text()).get("finalized"):
+            time.sleep(0.1)
+        code, m = self.post("/reset", {})
+        self.assertEqual(code, 409); self.assertIn("time is up", m["error"])
+        self.assertEqual(json.loads((self.data / "final.json").read_text())["resets"], 0)
 
 
 class TestServerMj(ServerCase, unittest.TestCase):

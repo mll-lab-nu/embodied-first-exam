@@ -568,8 +568,8 @@ def cameras_of(meta: dict) -> list:
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
-            "sim_time_s": round(n * DT, 3), "time_s": round(time.time() - E["t0"], 2),
-            "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
+            "sim_time_s": round(n * DT, 3), "time_s": round(L.agent_time(E), 2),
+            "time_left_s": max(0.0, round(WALL_CLOCK_S - L.agent_time(E), 1)),
             "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             "cameras": {c: camera_info(c) for c in cams}}
 

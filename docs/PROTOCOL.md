@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -87,13 +87,16 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 18. `[metadata.resources.limits]` states the agent phase's limits (GPU memory, memory, processes, disk) and the whole
     trial's expected peak, `[metadata.resources.caps]` the docker caps per service; `instruction.md` has the
     `## Resource limits` paragraph rendered from them, just before the closing `## Time limit` (§2.10). [CI] (v1.1.5)
-19. `[agent] network_mode = "allowlist"` with the one host list (the model APIs and the package registries);
+19. `[agent] network_mode = "allowlist"` with the one host list (the model APIs and the package registries; a
+    benchmark with open egress by a documented exception, §2.11, sets no network policy and has its own paragraph);
     `instruction.md` states `## External material` just before `## Resource limits` (and `## Time limit` last, item 20); the task itself needs no download
     at run time (§2.11). [CI]
 20. `instruction.md` ends with `## Time limit`, rendered from the cutoff table, after `## External material` and
     `## Resource limits` ("You have N seconds to complete this task. Do not cheat by using online solutions or hints
     specific to this task.", then what the cutoff means in the task's mode), and states the limit nowhere else; a
     standard-mode `sim` service is told the same number (§2.12). [CI]
+21. `[metadata.seeds]` names the default seed, the allowed seeds (each a frozen instance; another seed's instance only
+    under `tests/seeds/<seed>/`) and the seeds the reference solution is for (§2.13). [CI]
 
 ## 2. Task contract
 
@@ -113,8 +116,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Item | Level | Basis |
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
-| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
-| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13) (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
+| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`, and its default and allowed seeds (§2.13); its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
 ### 2.3 `task.toml`
@@ -127,7 +130,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Standard tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
 | `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [CI] |
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
-| `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| `instance_seed` (where present, equal to the default seed, §2.13); benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| `[metadata.seeds]`: `default`, `allowed`, `oracle` (§2.13) | MUST | [CI] (2026-10-13) |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
 | `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark); the number is the cutoff table's for the task (its benchmark and mode, unless the table gives its family or the task an exception), written by `scripts/task_conventions.py` (§2.12) | MUST / SHOULD / MUST | [CI] / [new] / [CI] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
@@ -224,7 +228,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
 | Agent egress allowlisted in `task.toml` (the model APIs and, since 2026-10-11, the package registries), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were open) |
 | `nop` scores 0 | MUST | [current] |
-| `oracle = "full"`: the oracle scores 1 | MUST | [current] |
+| `oracle = "full"`: the oracle scores 1 (on each seed in `seeds.oracle`, §2.13) | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
 
 **Human review** (any task whose `oracle` is not `full`): the PR is labelled `needs-human-review` and needs an approval
@@ -487,8 +491,25 @@ under an unrelated name would be missed.
 | LIBERO-MAX | `libero`, `hf-libero`, `rlinf-libero`, `rpent-libero`, `praxis-libero`, `libero-infinity`, `rlinf-liberopro`, `rpent-liberopro`, `rlinf-liberoplus` | LIBERO's goal definitions and initial states; no meshes, no demonstrations, not LIBERO-MAX's events |
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
-ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboTangle, RoboOlympics, BiGym, YAMLab; Isaac Sim does not
+ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboTangle, RoboOlympics, RoboFunOlympics, BiGym, YAMLab; Isaac Sim does not
 install from pypi.org.
+
+**Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
+decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists that implement it (the same directory
+prefix in each): `ci_checks/check-verifier-isolation.sh` `OPEN_EGRESS` (the task sets no `[agent]` network policy:
+Harbor's default, open), `scripts/task_conventions.py` `EXTERNAL_OPEN` (the benchmark's own `## External material`
+paragraph) and `scripts/set_agent_egress.py` `OPEN_EGRESS` (`allowlist` leaves these tasks alone). Its results are
+compared only with results under the same network setting.
+- **RoboFunOlympics** (owner, 2026-10-11; `robofunolympics-<family>-i<NN>`, single-humanoid sports,
+  [`benchmarks/robofunolympics.md`](benchmarks/robofunolympics.md)): the agent may search for, download and use public
+  tools, robot models and pretrained controllers (a published Unitree G1 walking, jumping or whole-body policy), and
+  is encouraged to: finding existing work and adapting it to the robot is part of what these tasks measure. The honour
+  rule that remains is not to look up the benchmark's own source and reference solutions. Nothing an agent can reach
+  in the task or its image holds a solution, as everywhere (§2.7). An official run still goes through the usage gateway
+  for the model API, and the runner leaves the rest of the egress open for these tasks. With open egress the gateway
+  is no longer the only road to a model provider (the provider key is in the agent's container): its token accounting
+  and its budget (§5) bind only what the harness itself sends, so these runs' usage is reported as harness-reported,
+  and a trial that called a model API directly is flagged in review.
 
 Who reaches what in a trial (Harbor's egress control puts `main` and every compose service without its own network
 setting in one network namespace; §2.6 forbids such a setting on any service but the monitor):
@@ -541,7 +562,7 @@ was a constant, a data value or a literal in each of 26 generators.
 | "Do not cheat" is §2.11's honour rule, not a second rule: installing packages is allowed and is not cheating (the second paragraph says so and points to `## External material`, which keeps the substance: what counts as a solution, that trials are reviewed, what the network reaches); a trial that fetched a solution is flagged and decided by the owner (§2.11, §5) | MUST (how it is read) | [new] |
 | What stops the agent is Harbor's agent timeout, `[agent] timeout_sec`, with no multiplier in official runs. Harbor counts it around the agent's run only (its trial's agent phase: `asyncio.wait_for(agent.run(...), timeout=...)`): after the environment has been built and started and after the agent's harness has been installed, each of which has a timeout of its own, not from the container's start. In the standard modes the `sim` service starts with the environment, so whatever start-up it has not finished by then is waited out inside the agent's time | MUST | [current] (Harbor 0.23; official runs pass only a multiplier for the harness's set-up) |
 | At the cutoff the trial is graded as it stands: privileged, what is in `/app/output/` at that moment; standard modes, the episode as the `sim` service holds it (the collect hook ends and records it, §4.8). A timeout is a result, not an infrastructure error, and is not retried | MUST | [current] |
-| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing; it counts from the service's start or from the agent's first request, so the instruction calls it the service's own count. A service that ends the episode on its own clock says so in the benchmark's own text: today RoboTangle's, counted from the service's first start, which becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number; [current] |
+| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing. It counts from the agent's first request to the service (any endpoint; logged, so a restarted service keeps it), never from the service's start or the end of its scene build: the sidecar is up before the agent's phase begins, and a clock started then runs ahead of the harness's (STANDARD_MODE.md, "The agent's clock"). So `time_left_s` never runs out before the cutoff, and the instruction tells the agent to plan by it. A service that ends the episode on its own clock says so in the benchmark's own text and keeps the earlier closing sentence: today RoboTangle's, counted from the service's first start, which becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number and the service layers' tests (`check-unit-tests.sh`); [new] (2026-10-13, owner; before, RoboCasa's three benchmarks and twelve `eai-standard/2.2` services, LabUtopia among them, counted from the service's start) |
 | Changing a cutoff: edit the table, add an entry to its `[[history]]` (what changed, from and to, date, who decided, why; `apply` and CI refuse a number that differs from its last recorded value: its newest entry, or `scripts/task_cutoffs.baseline.toml`, the table of 2026-10-11, for a number that never changed), run `python3 scripts/task_cutoffs.py apply`, commit; an owner decision, like the cap's exceptions. The task changes in place and keeps its name (§2.8); the `[[history]]` entry is the record, there is no Change Log entry in each task's README (owner, 2026-10-12); results recorded under another cutoff are reported separately (D8) | MUST | [new] |
 | A new benchmark needs two things before its tasks pass: its label in `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name; the table's rows are named by it), which goes in its shared-files pull request (D6), and its row in the table with a `[[history]]` entry (`from_sec = 0`), which goes in the pull request that adds its first tasks: the one line of a shared file a tasks pull request carries, because a row without tasks and tasks without a row both fail | MUST | [CI] |
 
@@ -554,7 +575,9 @@ was a constant, a data value or a literal in each of 26 generators.
 
 Standard and standard-realtime modes, second paragraph:
 
-> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Installing packages is not cheating (`## External material` above).
+
+RoboTangle's standard tasks, whose service counts on a clock of its own (below), keep the sentence used until 2026-10-13 in its place: "The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left."
 
 Seconds only, because the sentence is then the same in every task and the number is the one in `task.toml`; a second
 unit is a second number to keep right. The sentence pair opens the section and the explanation follows it, because the
@@ -583,6 +606,31 @@ estimate of a trial's length reads `task.toml`. Not derived from the cutoff: the
 episode as long as the agent's time (RoboCasa's three benchmarks, RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K) hold for any
 shorter cutoff and are looked at when one is raised.
 
+### 2.13 Seeds (2026-10-13)
+
+The owner, 2026-10-13: "every task needs a default seed, but may also allow a change of seed, or name a list of seeds
+it allows, so that the task's submitter verifies which seeds are reasonable"; "we do not want the agent to memorise
+the answer: a reference solution can be the solution of one seed; from now on the answers are per seed"; "the seeds
+can be a list, a range, or any seed"; official batches draw a seed from the allowed ones for each trial. A seed names
+one instance of the task (its scene and start, replayed bit for bit as before); where an upstream has no seed of its
+own, seed 0 names the task's one frozen instance.
+
+| Item | Level | Basis |
+|---|---|---|
+| `[metadata.seeds]` in `task.toml`: `default` (an integer); `allowed`, the seeds a trial may run from, `default` among them: a list of distinct integers (`[0, 3, 7]`), a range with both ends included (`{ from = 0, to = 100 }`; TOML's `[0, 100]` would be the two seeds 0 and 100), or `"any"` (every seed; TOML has no null); `oracle` (the seeds the reference solution under `solution/` is for, a list of allowed seeds: not empty for `oracle = "full"` or `"partial"`, empty for `"none"`); `build`, `"frozen"` (the default: every seed in `allowed` is a committed instance) or `"runtime"` (the task builds a seed's instance itself; required for a range and for `"any"`, which cannot all be committed). A generator writes what it has; `scripts/task_conventions.py` completes the rest: `default` = `instance_seed` (0 without one), `allowed = [default]`, `oracle = [default]` or `[]` | MUST | [CI] (`ci_checks/check-seeds.py`) |
+| `instance_seed`, where present, equals `default`; a standard or standard-realtime task has its privileged twin's `default`, `allowed` and `build` | MUST | [CI] |
+| The default seed's frozen instance is the task's instance, where §2.2 and §3 put it. With `build = "frozen"`, every other allowed seed's frozen instance is `tests/seeds/<seed>/instance.json` (or `.npz`, the same kind as the default's) of the task that holds the pair's instance (the privileged twin; a task without one: itself); `tests/seeds/` holds nothing else (a `"runtime"` task may commit some seeds' instances there too) | MUST | [CI] |
+| `build = "runtime"`: given a file `seed` (the integer) next to its instance, the task's environment builds that seed's instance deterministically, and its verifier builds the same instance from its own copy of the file (never from anything the agent's container wrote) and grades on it; the same seed gives the same start hash in a fresh process. The benchmark's doc says how, and its generator's tests show it on a sample of seeds | MUST | [new] |
+| Another seed's instance, or a `seeds` directory, anywhere under `environment/` (where the agent's image, or a sidecar's that the agent's container could share, is built from); in privileged mode the agent reads the instance of its own trial's seed only, as before | MUST NOT | [CI] |
+| The runner chooses the seed, never the agent: `scripts/task_seed.py materialize <task> --seed <S> --out <dir>` writes a copy of the task whose instance copies are seed S's (a committed instance; else, for a `"runtime"` task, the file `seed` in each of those places) and whose `[metadata.seeds] default` says S, and refuses a seed that is not allowed; Harbor runs the copy. Results record the seed | MUST | [new] |
+| Official batches draw a seed uniformly from `allowed` for each trial (owner, 2026-10-13; `"any"`: from 0 to 2^31 - 1); a run on the default seed only says so | SHOULD | [new] |
+| The submitter allows only seeds they checked: the start is valid and the instruction holds for it (`nop` scores 0 on it; the oracle, a positive example or the human review of §2.7 covered it). For a range or `"any"`, they check the generator rather than each seed (its rule gives a valid start for every seed: say how in the benchmark's doc, and show it on a sample). A change of `allowed` is a new digest, recorded in the README's Change Log | MUST | [new] |
+| Reference solutions are per seed: `solution/` may hold a different solution per seed (it reads the seed of the instance it runs on), and scores 1 on every seed in `seeds.oracle`; it need not on the other allowed seeds. The oracle check (§2.7) runs on each seed in `seeds.oracle` | MUST | [new] |
+| Standard and standard-realtime modes: the seed and its instance stay in the service and the verifier, never in the agent's container (§4.5) | MUST | [current] |
+
+Until a benchmark's generator writes more, every task allows its default seed only (`allowed = [default]`): the 2026-10-13
+migration changed `task.toml` only (the instances, the instructions and the READMEs are unchanged).
+
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
 | Item | Level | Basis |
@@ -608,7 +656,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 ### 4.0 Versions
 | Version | Date | Content |
 |---|---|---|
-| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX and BiGym 2.0 |
+| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard and MuJoCo Playground's quadruped tasks |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
@@ -700,6 +748,10 @@ results must state the reset budget and are compared only with results under the
   no simulator to practise in, so a single episode is one blind attempt. `RCB_RESET_BUDGET=0` still runs one episode;
   HumanoidBench standard results recorded before 2026-10-07 ran with 0 and are reported separately
   ([`benchmarks/humanoidbench.md`](benchmarks/humanoidbench.md)).
+- **RoboFunOlympics** (owner, 2026-10-12):
+  `budget.reset = 50`, HumanoidBench's value for the same reason. A sport is attempts: a jump, a throw or a kick is over
+  in a second or two and ends at the first foul or fall, and the agent has no simulator to practise in. `RCB_RESET_BUDGET=0`
+  still runs one attempt ([`benchmarks/robofunolympics.md`](benchmarks/robofunolympics.md)).
 - **MyoSuite** (owner, 2026-10-09; standard tasks): `budget.reset = 10`. MyoSuite's own termination ends most episodes
   within a second or two of simulated time (a dropped object, an object off the reference motion), and the agent has no
   simulator to practise in, so a single episode is one blind attempt at muscle-level control. `RCB_RESET_BUDGET=0` still
@@ -716,6 +768,14 @@ results must state the reset budget and are compared only with results under the
   `RCB_RESET_BUDGET=0` still runs one episode; standard results recorded before this change ran with 0 and are
   reported separately ([`benchmarks/bigym2.md`](benchmarks/bigym2.md), [`benchmarks/kinder.md`](benchmarks/kinder.md)).
   BiGym2's standard-realtime tasks keep 0.
+- **DexToolBench** (owner, 2026-10-13; standard tasks): `budget.reset = 20`. With one episode the first grasp decided
+  the trial: all 21 of GPT-6 Astra's standard trials (2026-10-12) knocked the tool off the table at some point, the one
+  success included, most of the hour went into picking it up from the floor, and the same task gave unrelated results
+  from one run to the next (board 0098). A reset puts the robot, the tool and the goal sequence back to the frozen start
+  (the service's `Session.reset()`; the same state hash, images and proprioception). The MuJoCo service
+  (`images/mujoco/limited/server_mj.py`) implements the capability as above; its other tasks (MuJoCo Playground ALOHA,
+  Panda) keep 0. `RCB_RESET_BUDGET=0` still runs one episode; DexToolBench standard results recorded before this change
+  ran with 0 and are reported separately ([`benchmarks/dextoolbench.md`](benchmarks/dextoolbench.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
@@ -908,6 +968,22 @@ Open:
    Open: RoboTangle's standard service ends the episode on its own wall clock, started with the service, a little before
    the agent's session; it becomes report-only, like every other service's, at RoboTangle's next task update
    (docs/benchmarks/robotangle.md, "To do").
+8. The agent's clock in the standard modes (§2.12; owner, 2026-10-12, boards 0085 and 0087; landed 2026-10-13): every
+   service's `meta.time_s` / `meta.time_left_s` count from the agent's first request to the service, and a resumed
+   service keeps that moment (STANDARD_MODE.md, "The agent's clock"). The services that counted from their own start
+   changed in place: RoboCasa, RoboCasa365 and RoboCasa-GR1 (`environment/sim/server_casa.py`: from the container's
+   first start) and the twelve benchmarks on the shared `eai-standard/2.2` layer whose adapter counted from the
+   service's start or readiness (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo,
+   YAMLab, RoboDojo, LabUtopia, AutoBio: `environment/sim/rcb_limited.py`, `server.py`, and the client's docstring).
+   RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground, KinDER, HumanoidBench, BiGym 2.0, VLABench, LIBERO-MAX and
+   RoboOlympics already counted from the first request; their code is unchanged apart from the wording of `/spec`.
+   Every standard instruction's closing `## Time limit` paragraph changed in place (what `time_left_s` counts from, and
+   that the agent can plan by it), and the sentence "approximate: the harness's own deadline is authoritative" is gone
+   from the instructions and `/spec` texts that had it (RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground). No
+   service ended an episode on this clock (RoboTangle's apart, unchanged and still open as in 7), so no verdict
+   depended on it: scenes, instances, success rules and graders are unchanged and earlier results stand. What
+   changes for an agent is that `time_left_s` no longer reaches 0 while it still has the harness's set-up time left (the
+   service was up a median of 79 s before the agent's phase over 2,322 recorded standard trials, board 0085).
 
 Decided (owner, 2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
@@ -918,4 +994,6 @@ Decided (owner, 2026-10-02):
    (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
    image (§2.4) and to read the trajectory (§4.8).
 3. Kept as they are: one frozen instance per task (no per-run seeds), and what each benchmark exposes to the agent in
-   privileged mode (no hiding of reward or success checks).
+   privileged mode (no hiding of reward or success checks). Changed for seeds on 2026-10-13 (owner, §2.13): a task has
+   a default seed and may allow others, each a frozen instance; the runner draws one per trial; reference solutions
+   are per seed.

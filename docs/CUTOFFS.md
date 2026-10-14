@@ -28,6 +28,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
 | RoboDojo | 3600 s (60 min) | 3600 s (60 min) | — | 48 / 54 / — |
+| RoboFunOlympics | 7200 s (120 min) | 7200 s (120 min) | — | 50 / 50 / — |
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
@@ -37,7 +38,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1576 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1676 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -60,11 +61,13 @@ Every `instruction.md` ends with the same section, written by `scripts/task_conv
 > ## Time limit
 > You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 >
-> This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
+> This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
 
 In the standard and standard-realtime modes the second paragraph is:
 
-> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
+
+(RoboTangle, whose service counts on a clock of its own, keeps the earlier sentence there: "The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left.")
 
 What a benchmark adds about its own time (a simulator's start-up, what its service counts) stands in its own text and names no number: it says "the time limit (`## Time limit`)".
 
@@ -81,7 +84,7 @@ A change of a cutoff changes the task in place: the scene, the frozen instance, 
 ## What follows the number, and what does not
 
 - **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which reads `task.toml`.
-- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the service's start or from the agent's first request. Harbor's timeout is what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).
+- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
 - **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).
 - **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.
@@ -93,6 +96,7 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | Date | What | Change | Decided by | Note |
 |---|---|---|---|---|
 | 2026-10-11 | RoboDojo, privileged, standard | 5400 s -> 3600 s | owner | #155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart |
+| 2026-10-12 | RoboFunOlympics, privileged, standard | (none) -> 7200 s | owner | the benchmark's first tasks (#161): the agent may go online and is asked to find, download and adapt controllers, or to build one, which an hour does not hold |
 | 2026-10-12 | BEHAVIOR-1K, privileged, standard | 14400 s -> 7200 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 14400 s are kept and reported as such |
 | 2026-10-12 | ManiGuard, privileged, standard | 7200 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such |
 | 2026-10-12 | RoboPaint, privileged, standard | 7200 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such |

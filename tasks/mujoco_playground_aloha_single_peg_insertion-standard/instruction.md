@@ -14,7 +14,7 @@ client and one episode.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
 - Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
-  request to the service; approximate — the harness's own deadline is authoritative. There is nothing to hand in: the
+  request to the service: it never runs out before your time does, so plan by it. There is nothing to hand in: the
   service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
   record.
 - Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
@@ -22,8 +22,11 @@ client and one episode.
 
 ## Scoring
 At the **end of the trajectory** the peg's tip (site `peg_end2`) is within **5 mm** of the socket's axis (the line
-through sites `socket_rear` and `socket_entrance`) and at least **25 % of the socket's depth inside** it
-(axial parameter `t ≤ 0.75`, where t = 0 at the rear wall and 1 at the entrance). The service applies exactly this rule.
+through sites `socket_rear` and `socket_entrance`) and **inside the socket, at least 12 mm from its open end**: the
+axial parameter `t` is in `[-0.875, 0.75]`, where t = 0 at `socket_rear` (the middle of the tube), t = 1 at
+`socket_entrance` (the open end; 48 mm per unit of t) and t = -0.833 at the inner face of the red rear wall (the cavity
+is 88 mm deep; the lower bound leaves 2 mm for the contact's give). A peg pushed all the way in counts.
+The service applies exactly this rule.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
@@ -50,7 +53,8 @@ time is up; the **final state** is graded (so end in the pose you want graded, a
   **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
   axis, in metres. The overhead and teleoperator cameras are fixed. The two wrist cameras move with the arms (`spec["cameras"][cam]["moving"]`):
   for them a response with several frames also carries one pose per frame, `res.raw["cam2world_gl/<cam>"]["data"]`,
-  float64 `(n_frames, 4, 4)`.
+  float64 `(n_frames, 4, 4)`. `intrinsic_cv` is `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the 320 x 240 image; fx and fy
+  differ for the overhead and wrist cameras (their sensor is wider than the image): use both.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
@@ -61,4 +65,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

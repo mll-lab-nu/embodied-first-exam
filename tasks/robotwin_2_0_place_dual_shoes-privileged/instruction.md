@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left.
 
-The scene objects are attributes of the task env (`env.left_shoe`, `env.right_shoe`, `env.right_shoe_middle_pose`, `env.shoe_box`, `env.shoe_id`; see `load_actors` in
+The scene objects are attributes of the task env (`env.left_shoe`, `env.right_shoe`, `env.shoe_box`, `env.shoe_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_dual_shoes.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):
@@ -80,4 +80,4 @@ Limits for the whole trial, all its processes together (every simulator you star
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

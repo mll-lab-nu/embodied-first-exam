@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/dextoolbench_screwdriver_short_screwdriver_spin_vertical-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) short_screwdriver / spin_vertical in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the short screwdriver through the 76 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) short_screwdriver / spin_vertical in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the short screwdriver through the 76 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades a fresh replay of the last one."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -61,6 +61,13 @@ measured = "GPU: 2.1 GiB on a 48 GB card (batch_eval_live vram_profile (per-tria
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
 
 [verifier]
 timeout_sec = 1200.0

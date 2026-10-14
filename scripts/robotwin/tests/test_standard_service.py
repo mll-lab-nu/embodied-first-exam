@@ -67,20 +67,39 @@ class Service:
         self.env = {k: str(v) for k, v in env.items()}
         self.port = free_port(); self.proc = None
 
-    def start(self, wait: bool = True):
+    def start(self, wait: bool = True, serve: bool = True, timeout: float = 60):
+        """wait: until the service's PID file is written. serve (with wait): and until the port accepts connections. The
+        PID file is written just before the port is bound, so a request sent on the PID file alone can be refused (seen on
+        a loaded CI runner); serve=False where the service is not to answer (it gave up and idles, or the test holds the
+        port). The probe connects and sends nothing, which does not start the agent's clock."""
         env = {**os.environ, "RCB_DATA": str(self.data), "RCB_PORT": str(self.port), "PYTHONDONTWRITEBYTECODE": "1", **self.env}
         self.proc = subprocess.Popen([sys.executable, str(self.srv / "server.py")], env=env, cwd=self.srv,
                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        t0 = time.time()
-        while wait and time.time() - t0 < 30:
-            if (self.data / "server.pid").exists() and (self.data / "server.pid").read_text() == str(self.proc.pid):
+        if not wait:
+            return self
+        deadline = time.time() + timeout
+        pid = self.data / "server.pid"
+        while not (pid.exists() and pid.read_text() == str(self.proc.pid)):
+            self._alive(deadline, "write its PID file")
+        if not serve:
+            return self
+        while True:
+            try:
+                socket.create_connection(("127.0.0.1", self.port), timeout=2).close()
                 return self
-            if self.proc.poll() is not None:
-                raise RuntimeError(f"service exited with {self.proc.returncode}")
-            time.sleep(0.05)
-        if wait:
-            raise RuntimeError("service did not come up")
-        return self
+            except OSError:
+                pass
+            last = (self.data / "episode.jsonl").read_text().splitlines()[-1:] if (self.data / "episode.jsonl").exists() else []
+            if last and '"restart_refused"' in last[0]:                 # _give_up(): it idles and never binds the port
+                raise RuntimeError(f"the service gave up instead of serving: {last[0]}")
+            self._alive(deadline, f"accept connections on port {self.port}")
+
+    def _alive(self, deadline: float, what: str) -> None:
+        if self.proc.poll() is not None:
+            raise RuntimeError(f"service exited with {self.proc.returncode} before it would {what}")
+        if time.time() > deadline:
+            raise RuntimeError(f"the service did not {what} in time")
+        time.sleep(0.05)
 
     def stop(self):
         if self.proc and self.proc.poll() is None:
@@ -230,7 +249,7 @@ class Requests(ServiceCase):
         self.svc = s = Service(self.tmp)
         with socket.socket() as held:                                  # e.g. a process of the agent, in the shared network namespace
             held.bind(("0.0.0.0", s.port)); held.listen(1)
-            s.start()
+            s.start(serve=False)                                       # the port is held: it cannot answer yet
             time.sleep(1.5)
             self.assertIsNone(s.proc.poll(), "the service died on the busy port (that would count as a crash)")
         self.assertEqual(s.wait_up()["calls"], 0)
@@ -260,6 +279,8 @@ class Requests(ServiceCase):
     def test_the_clock_starts_at_the_first_request(self):
         s = self.service()
         time.sleep(1.5)                                   # the agent's set-up: the service is up, nobody has called it
+        socket.create_connection(("127.0.0.1", s.port), timeout=10).close()   # a probe that connects and sends nothing
+        self.assertNotIn('"first_request"', (s.data / "episode.jsonl").read_text())
         spec = s.get("/spec")
         self.assertIn("first request", spec["budget"]["wall_clock_note"])
         _, m, _ = s.post("/observe", {})
@@ -269,9 +290,11 @@ class Requests(ServiceCase):
         self.assertEqual(len(first), 1)
         s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)])
         s.stop(); time.sleep(1.0)                         # a crash: the resumed service keeps the clock's origin
-        s.start(); s.wait_up()                            # the PID file is written just before the port is bound
+        s.start(); s.wait_up()
         _, m2, _ = s.post("/observe", {})
         self.assertGreater(m2["time_s"], 1.0)
+        self.assertLess(m2["time_left_s"], m["time_left_s"] - 1.0)   # never back to full
+        self.assertEqual((s.data / "episode.jsonl").read_text().count('"first_request"'), 1)
         self.assertEqual(m2["step"], 1)
 
     def test_the_service_uses_robotwins_own_gripper_rule(self):
@@ -311,7 +334,7 @@ class Verdicts(ServiceCase):
         out = s.grade()
         self.assertEqual((out["success"], out["finalized"], out["infra_error"]), (1, 0, 0))
         s.stop()                                          # the service dies while rendering; compose restarts it
-        s.start()
+        s.start(serve=False)                              # it keeps the verdict and idles (does not serve)
         d = s.final()
         self.assertEqual((d["success"], d["replay_success"], d["deterministic"], d["finalized"]), (True, True, True, True))
         self.assertEqual(s.grade()["success"], 1)
@@ -339,12 +362,24 @@ class Verdicts(ServiceCase):
         s.start(wait=False)
         self.assertNotEqual(s.proc.wait(timeout=30), 0)   # first start: crash, compose retries
         self.assertEqual(s.final(), {})
-        s.start()                                         # second start: say so and idle (the hook finds final.json at once)
+        s.start(serve=False)                              # second start: say so and idle (the hook finds final.json at once)
         d = s.final()
         self.assertTrue(d["reason"].startswith("instance_mismatch"), d)
         self.assertEqual((d["finalized"], d["infra_error"], d["success"]), (True, 1, False))
         out = s.grade()
         self.assertEqual((out["success"], out["infra_error"], out["instance_mismatch"]), (0, 1, 1))
+
+    def test_the_tools_row_cap_is_not_the_episodes(self):
+        """rcb_traj.Session refuses to save or replay more rows than the privileged verifier grades (MAX_T). A standard
+        episode has no row cap, so the service lifts it for its own Session: a longer episode still gets its verdict."""
+        s = self.service(RCB_STUB_MAX_T=3)                # the stand-in tool's cap: 3 rows
+        code, m, _ = s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)] * 4)
+        self.assertEqual(code, 200)
+        os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook: save, replay, verdict
+        d = s.wait_final()
+        self.assertGreater(d["n_actions"], 3)
+        self.assertEqual((d.get("finalize_error"), d["replay_success"], d["deterministic"]), (None, False, True))
+        self.assertEqual(s.grade()["infra_error"], 0)
 
 
 class StandardGrader(unittest.TestCase):

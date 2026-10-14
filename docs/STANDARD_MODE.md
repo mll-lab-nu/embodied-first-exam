@@ -7,7 +7,7 @@ otherwise, and the shipped clients accept every 2.x service. Which parts are req
 
 | Version | Content | Part | Declared by (`metadata.protocol`, `/spec.protocol`) | Implementation |
 |---|---|---|---|---|
-| `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise, crash recovery; the optional reset capability | Part 1 | the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX and BiGym 2.0 | each benchmark's own service (Part 1 names them) |
+| `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise, crash recovery; the optional reset capability | Part 1 | the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics | each benchmark's own service (Part 1 names them) |
 | `eai-standard/2.2` | 2.1 + MAY capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer with crash recovery | Part 2 (§1–§18) | the standard tasks of BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio and MuJoCo Playground (quadrupeds) | [`scripts/eai_standard/`](../scripts/eai_standard/) |
 | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | every standard-realtime task (HumanoidBench, BiGym 2.0, RoboOlympics) | `scripts/humanoidbench/shared/realtime/rcb_realtime.py` |
 | `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | the standard tasks of RoboTangle | [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/) |
@@ -62,9 +62,8 @@ unpack f dir`) is shipped with the client.
 the response ends in (the `last` frame, the final sample of `frames` / `depth`): static cameras never move, the wrist
 cameras move with the arms, and for each requested wrist camera the response carries the part `cam2world_gl/<cam>`
 (float64 [N,4,4], one pose per returned frame; `spec.camera_calibration`). Until 2026-10-10 the service sent the
-calibration of its start, which was wrong for the wrist cameras once an arm had moved. `time_s` / `time_left_s` count from the agent's first
-request to the service (any endpoint; `spec.budget.wall_clock_note`), not from the service's start, and are
-approximate: the harness's own deadline is authoritative. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
+calibration of its start, which was wrong for the wrist cameras once an arm had moved. `time_s` / `time_left_s` are the agent's clock
+(below; RoboTwin's `/spec` states it in `budget.wall_clock_note`, the other services in `budget.clock`). `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
 [{row,index,reason}], n_clipped, plan [{row,left,right}] (ee_pose), ok`; `/observe` adds `obs_id, seconds, physics_steps_watch`.
 
 ### `/submit` semantics
@@ -99,6 +98,23 @@ the wall clock; the simulated time is recorded as cost.
 ### Episode semantics
 The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
 when the agent phase ends (`timeout`) or on an error. The predicate is evaluated once more at episode end. No reset.
+
+**The agent's clock (every 2.x service, since 2026-10-13).** `meta.time_s` is the wall time since the agent's **first
+request** to the service, whatever the endpoint (`GET /spec`, which the shipped clients send first, counts), and
+`meta.time_left_s` = `spec.budget.wall_clock_s` − `time_s`, never below 0. The clock does not start with the service,
+when the scene is ready, or with a probe that only connects to the port; the first request is logged in
+`episode.jsonl` (`first_request`) and a resumed service reads it back, so a restart never sets the clock back to
+full. `GET /status` `elapsed_s` and the `elapsed_s` of `final.json` are the episode's own time, from the service's
+start of the episode. Why: Harbor counts the agent's cutoff around the agent's run only (PROTOCOL §2.12), and the
+sidecar starts with the environment, before the harness is installed; a clock started with the service, or at the
+end of a scene build that finished before the agent began, ran ahead of the agent's (a median of 79 s over 2,322
+recorded trials, board 0085) and `time_left_s` reached 0 that much too early. With this rule the service's clock is
+never ahead of the harness's: `time_left_s` never runs out before the agent is stopped, and the agent's real time left
+is `time_left_s` minus what it spent before its first request (seconds, where the service is up before the agent; the
+part of a slow start-up that falls inside the agent's phase otherwise). No service ends an episode on this clock, with
+one exception: RoboTangle's (Part 4) still counts from its own first start and ends the episode at 0 until its next
+task update (`docs/benchmarks/robotangle.md`). A readiness probe added to a compose file or a runner must not send a
+request to the service before the agent runs: connecting to the port is enough.
 
 **Service crashes (no reset, no lost episode).** Every executed physics step is journaled (`trajectory_live.f64`) and every
 completed call logs a checkpoint (step count + state hash) in `episode.jsonl`. If the service dies mid-episode, compose
@@ -168,15 +184,16 @@ Same endpoints and RCB1 frames, served by `images/mujoco/limited/server_mj.py`. 
 is a multiple of `control_dt` (1/60 s DexToolBench, 1/50 s Playground), hold or linear interpolation per control step.
 Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing).
 `meta.task` carries the task definition (DexToolBench: current goal pose and index; Playground: the target) and
-`meta.cameras` each camera's intrinsics and camera-to-world pose: the viewpoint the image is rendered from, in the state
+`meta.cameras` each camera's intrinsics (`intrinsic_cv` = `[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]` for the returned image; fx = fy for a camera defined by its field of view, fx ≠ fy for one defined by its sensor size, which MuJoCo renders with the sensor's extent in each direction: ALOHA's overhead and wrist cameras, 158.52 and 216.45 px; until 2026-10-13 the service reported fx = fy = 216.45 for them) and camera-to-world pose: the viewpoint the image is rendered from, in the state
 the response ends in (`spec.camera_calibration`; until 2026-10-10 the position was MuJoCo's left-eye camera, 3.4 cm to
 the side, and the pose was the one at service start). Cameras carry `moving` (true for ALOHA's wrist cameras); for a
 requested moving camera the response also has the part `cam2world_gl/<cam>` (float64 [N,4,4], one pose per returned
-frame). `time_s` / `time_left_s` count from the agent's first request (`spec.budget.clock`). `final.json` is `finalized`
+frame). `time_s` / `time_left_s` are the agent's clock (above; `spec.budget.clock`). `final.json` is `finalized`
 as soon as the replay's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the
 collect hook waits for, so the video never decides or delays a verdict (the MetaWorld+ service,
 `images/metaworld/standard/server_mw.py`, follows the same rules; docs/benchmarks/metaworldplus.md). DexToolBench's own eval gives each goal 10 s; here the
-standard twins have **no per-goal limit** (one episode, no reset) and an episode cap of 360,000 control steps (100 min of
+standard twins have **no per-goal limit** and **20 resets** (owner, 2026-10-13: the optional reset capability below;
+until then one episode, no reset) and an episode cap of 360,000 control steps (100 min of
 robot time, `spec.max_control_steps`; the 60 min agent budget ends first), while the privileged tasks give each goal 30 s
 (replayed offline, free resets). DexToolBench episodes end when all goals are reached, at the cap, or when the agent's
 time is up; Playground episodes run to the end of the agent phase and the final state is graded. The MuJoCo service
@@ -195,8 +212,8 @@ tables. A request body over 64 MB gets 413 before it is decoded.
 Off by default (`budget.reset = 0`): one trial is one episode, in standard and standard-realtime mode alike. Exception, by
 owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
 to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`; BiGym2's and KinDER's standard
-tasks (2026-10-11) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
-on the service (implemented by the KinDER, HumanoidBench, BiGym2 and MyoSuite services; MyoSuite's 2.2 client has no `reset()`,
+tasks (2026-10-11) to `budget.reset = 10`; DexToolBench's standard tasks (2026-10-13) to `budget.reset = 20`. A run may set `RCB_RESET_BUDGET=N`
+on the service (implemented by the KinDER, HumanoidBench, BiGym2, MyoSuite and MuJoCo (`server_mj.py`: DexToolBench, Playground ALOHA / Panda) services; MyoSuite's 2.2 client has no `reset()`,
 so its instruction calls `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
 same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a
@@ -287,7 +304,9 @@ stopped the call early (§12).
 ### 5. `/spec`
 2.0/2.1 keys, unchanged: `protocol` (`"eai-standard/2.2"`), `simulator`, `robot`, `task_text`, `control_hz`,
 `physics_substeps`, `max_chunk_s`, `max_watch_s`, `cameras`, `action_types`, `proprio_layout`, `proprio_groups`, `static`
-(scene facts: names, sizes, colours; never a position), `budget` (`{"reset": 0, "steps": null, "wall_clock_s"}`). 2.2 adds:
+(scene facts: names, sizes, colours; never a position), `budget` (`{"reset": 0, "steps": null, "wall_clock_s",
+"clock"}`; `clock` says what `time_s` / `time_left_s` count from: the agent's first request, Part 1 "The agent's clock";
+the shared layer fills it in and keeps the clock, `rcb_limited.agent_time`). 2.2 adds:
 
 | key | content |
 |---|---|
@@ -404,8 +423,8 @@ The 2.2 implementation of PROTOCOL §4.7, with the semantics of the RoboTwin and
   (`restart: on-failure:6`, same container and record). The new process finds the episode's `start` event and resumes:
   it replays the journal up to the last checkpoint (no rendering), truncates the journal there (the call in flight is lost
   as a whole: its caller got a connection error, not a result), checks the state (below), restores the counters, the
-  episode end if one was logged, and the `persist` keys, and continues the SAME episode, never a reset. The wall clock
-  keeps running from the first start. `spec.on_service_error` tells the agent to wait for `GET /status` (client:
+  episode end if one was logged, and the `persist` keys, and continues the SAME episode, never a reset. The agent's
+  clock keeps running from its first request (the logged `first_request`), the episode's `elapsed_s` from the first start. `spec.on_service_error` tells the agent to wait for `GET /status` (client:
   `Robot.wait_ready()`) and check `calls` / `control_steps`.
 - **Limits.** At most `RCB_MAX_RESUMES` (2) resumes; a third crash ends the episode: `sim_crashed_on_call` if every crash
   happened while a call was being served (the agent's failure), else `sim_crashed` (`infra_error = 1`). A journal shorter

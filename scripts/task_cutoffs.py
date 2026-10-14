@@ -243,6 +243,10 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         "> " + tc.CUTOFF_NOTE["standard"],
         "",
+        "(" + ", ".join(sorted({b for b, _ in tc.CUTOFF_NOTE_OWN})) + ", whose service counts on a clock of its own, keeps "
+        "the earlier sentence there: \"The service's `time_left_s` is its own count of this limit, from the service's "
+        "start or from your first request, so it can differ from the time you really have left.\")",
+        "",
         "What a benchmark adds about its own time (a simulator's start-up, what its service counts) stands in its own "
         f"text and names no number: it says \"{tc.CUTOFF_REF}\".",
         "",
@@ -271,7 +275,9 @@ def render_doc(tasks: list[Path]) -> str:
         "- **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which "
         "reads `task.toml`.",
         "- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec[\"budget\"][\"wall_clock_s\"]` and "
-        "`meta[\"time_left_s\"]`, counted from the service's start or from the agent's first request. Harbor's timeout is "
+        "`meta[\"time_left_s\"]`, counted from the agent's first request to the service (any endpoint; kept through a "
+        "restart of the service), never from the service's start: the service is up before the agent's phase begins, so a "
+        "clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is "
         "what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, "
         "running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: "
         "`docs/benchmarks/robotangle.md`).",

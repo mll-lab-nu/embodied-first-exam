@@ -194,7 +194,17 @@ CHANGES = {
         "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), "
         "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
         "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
-        "this date were obtained with open egress."],
+        "this date were obtained with open egress.",
+        "2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, "
+        "`environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and "
+        "`meta[\"time_left_s\"]` count from the agent's first request to the service (any endpoint), and a restarted "
+        "service keeps that moment; before, they counted from the service's own start of the episode (when its scene "
+        "was ready). Where the service is ready before the agent's phase begins (the harness is installed in "
+        "between: a median of 79 s over the recorded standard trials), that clock ran ahead of the agent's and "
+        "`time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from "
+        "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
+        "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
+        "are unchanged, so the task keeps its name and earlier results stand."],
 }
 
 

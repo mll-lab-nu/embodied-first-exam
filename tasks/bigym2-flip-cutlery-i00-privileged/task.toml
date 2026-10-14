@@ -53,6 +53,13 @@ measured = "GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by c
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
 
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = []
+
 [verifier]
 timeout_sec = 1800.0
 # grade.py runs in its own container (tests/Dockerfile): the agent's container is gone by then and only /app/output/

@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Pick up the scanner with one arm and the tea box with the other, hold the tea box up in front of the robot, and point the scanner's head at the box from 0 to 7 cm away so it can be scanned. Keep both grippers closed at the end (nothing is put down).
 
-The scene objects are attributes of the task env (`env.left_object_target_pose`, `env.object`, `env.object_id`, `env.right_object_target_pose`, `env.scanner`, `env.scanner_id`; see `load_actors` in
+The scene objects are attributes of the task env (`env.object`, `env.object_id`, `env.scanner`, `env.scanner_id`; see `load_actors` in
 `/opt/RoboTwin/envs/scan_object.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):
@@ -71,4 +71,4 @@ Limits for the whole trial, all its processes together (every simulator you star
 ## Time limit
 You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
