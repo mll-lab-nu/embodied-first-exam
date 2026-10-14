@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "id": "paper_half_fold",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "shell.py",
+      "scene_sharpa.xml"
+    ],
+    "dirs": [],
+    "shared": []
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 28,
+    "wuji": 26
+  },
+  "robot": "sharpa-wave-floating",
+  "max_rows": 1500,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "",
+    "expert_time_estimate_hours": 4.0,
+    "keywords": [
+      "deformable",
+      "paper-folding"
+    ]
+  },
+  "control_hz": 50,
+  "timeouts": {
+    "verifier_privileged_sec": 3600,
+    "verifier_standard_sec": 600,
+    "collect_sec": 3600,
+    "replay_sec": 900,
+    "video_sec": 1200
+  },
+  "notes": {
+    "layout": "The first six targets of a row drive the wrist stage that carries the hand: `wrist_x`, `wrist_y`, `wrist_z` (metres, world frame) and `wrist_rx`, `wrist_ry`, `wrist_rz` (radians, serial XYZ joints); the finger targets follow in the hand's native actuator order. Sharpa starts in a near-edge pregrasp; Wuji starts at the same six wrist targets with its fingers curled clear of the paper."
+  }
+}

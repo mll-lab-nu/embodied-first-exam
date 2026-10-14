@@ -1,0 +1,3 @@
+Nintendo Switch Joycon by Hayley Jacka (HayleyJacka).
+Licensed under Creative Commons Attribution 4.0 International.
+Modified: dimensions uniformly scaled to 80%; axis changed to Z-up; articulated meshes rebased at the stick pivot; convex collision decomposition; OBJ and texture extraction.

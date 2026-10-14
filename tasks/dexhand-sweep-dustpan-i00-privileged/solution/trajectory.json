@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "task": "sweep_dustpan",
+  "hand": "sharpa",
+  "rows": 148521,
+  "width": 58,
+  "dtype": "<f8",
+  "rows_sha256": "e506e81d26ec0459d992bb1ba234ac8f8152be76e972930a99e55ac17c428fb8",
+  "source_sha256": "0355a80e69e183ce96b6844488a6f76659414fdf4fbf29267f4d567fa4f1c32d",
+  "parts": [
+    {
+      "file": "trajectory.part00.npz",
+      "rows": 29704,
+      "bytes": 1707051,
+      "sha256": "9d7f4a4bb81c57cca42eaa7011e423483e38d3fd727b5cd6a07846761f7761d3"
+    },
+    {
+      "file": "trajectory.part01.npz",
+      "rows": 29704,
+      "bytes": 1719873,
+      "sha256": "283b99c86010254d5a06e6fc6a46d09a84318388498a5465b5f1a6715bf2b4a9"
+    },
+    {
+      "file": "trajectory.part02.npz",
+      "rows": 29705,
+      "bytes": 1676561,
+      "sha256": "99355a81e82c6133a21d21cb89db220c6db8b988d62ba9d3b0452678241cfa6a"
+    },
+    {
+      "file": "trajectory.part03.npz",
+      "rows": 29704,
+      "bytes": 1711137,
+      "sha256": "bb0edf7a17b5a9de6d99432d9f9ae3d2b0ab5d9892841c3371039b81db43fc67"
+    },
+    {
+      "file": "trajectory.part04.npz",
+      "rows": 29704,
+      "bytes": 855966,
+      "sha256": "f61affb755452dfc003d40008fa3101a6c5b85d11fa576f98d2b760881ee1e93"
+    }
+  ]
+}

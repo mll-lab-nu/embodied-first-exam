@@ -1,0 +1,126 @@
+{
+  "category": "deformable_manipulation",
+  "config": {
+    "anchor_columns": 5,
+    "bending_rigidity_nm": 0.0002,
+    "collision_radius_m": 0.00035,
+    "control_dt": 0.02,
+    "edge_timeconst_s": 0.002,
+    "goal_alignment_m": 0.018,
+    "goal_crease_angle_rad": 2.2,
+    "goal_crease_coverage": 0.9,
+    "goal_fold_angle_rad": 2.6,
+    "goal_hold_steps": 100,
+    "grid": [
+      9,
+      5
+    ],
+    "hand_contact_timeconst_s": 0.003,
+    "id": "paper_half_fold",
+    "initial_hand": [
+      0.28275287801230187,
+      -0.07980672184684776,
+      0.3432976467847125,
+      -1.5707963267948966,
+      0.0,
+      3.13,
+      0.8620323073938214,
+      -0.1756327723017774,
+      0.5151536580551138,
+      0.006339906422429659,
+      0.7488997037762108,
+      1.0178220134845117,
+      0.007017134817394401,
+      0.8222462132034465,
+      0.7132798877893927,
+      1.3101286458746328,
+      -0.00626790960551115,
+      1.4958729055197295,
+      0.8999999999999958,
+      1.200980925572015,
+      -0.017385462507574674,
+      1.1684874218847112,
+      0.8941435822996746,
+      0.08823437688478225,
+      0.7789176140854405,
+      0.03983315438495634,
+      1.4314950058985159,
+      0.9
+    ],
+    "length_m": 0.16,
+    "mass_kg": 0.00128,
+    "max_steps": 1500,
+    "max_strain": 0.08,
+    "minimum_bending_ratio": 0.1,
+    "paper_contact_timeconst_s": 0.002,
+    "paper_z_m": 0.3012,
+    "physics_dt": 0.0005,
+    "plastic_weakening_rate": 1.0,
+    "plasticity": true,
+    "schema_version": 1,
+    "weakening_onset_rad": 2.0,
+    "width_m": 0.1,
+    "yield_angle_rad": 0.5
+  },
+  "default_hand": "sharpa",
+  "description": "Fold the free half of a 160 x 100 mm sheet over its adhered half with a Sharpa Wave hand, press a permanent crease, release, and keep the fold on the table.",
+  "difficulty": "hard",
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "id": "paper_half_fold",
+  "instruction": "Fold the sheet of paper on the table in half: lift its free half over its fixed half, press a permanent crease along the marked center line, take the hand away, and leave the folded sheet lying on the table. The 160 x 100 mm sheet (1.28 g) lies flat on the table top. Its left half is glued to a backing patch next to a dark clamp and cannot move; the right half is free, and its last 25 mm overhang the table edge. Success requires 100 consecutive 50 Hz control samples (2 s) in which no part of the hand touches the paper and all of these hold: fold angle of the free half above 2.6 rad, permanent (plastic) crease on the center line above 2.2 rad on average with at least 90% of its hinges above 2.2 rad, free edge within 18 mm of the fixed edge, stretch below 8%, and the whole sheet over the table top: every paper vertex within the table's extent (x from -0.345 to 0.135 m, y from -0.30 to 0.30 m) and at most 2 mm below the table top (z >= 0.298 m). The episode ends with that success, or fails immediately and permanently if any paper vertex sinks more than 10 mm below the table top (z < 0.29 m, for example bent down over the table edge) or leaves the workspace box (x from -0.03 to 0.19 m, y from -0.09 to 0.09 m, z <= 0.45 m), if the paper stretches by more than 8%, or the simulation becomes unstable. A fold that springs back, a crease that is not permanent, or a hand still touching the paper is not a success. Only the robot's motor targets act on the paper; there are no grasp welds, scripted paper motion or applied forces. The episode allows at most 1500 controls at 50 Hz (30 s).",
+  "mechanism": "passive elastic-plastic triangular paper shell with an adhered support half",
+  "model_sha256": {
+    "sharpa": "665706cd6ef8a63dddba743a9d715e7ca289ccc16f9f0514c4cbcd72693afd51"
+  },
+  "robot": "sharpa-wave-floating",
+  "scene_xml": "scene_sharpa.xml",
+  "schema_version": 1,
+  "support": {
+    "below_table_tolerance_m": 0.01,
+    "released_on_table_tolerance_m": 0.002,
+    "table_top_z_m": 0.3,
+    "table_x_m": [
+      -0.345,
+      0.135
+    ],
+    "table_y_m": [
+      -0.3,
+      0.3
+    ],
+    "workspace_x_m": [
+      -0.03,
+      0.19
+    ],
+    "workspace_y_m": [
+      -0.09,
+      0.09
+    ],
+    "workspace_z_max_m": 0.45
+  },
+  "title": "Fold a sheet of paper in half with a permanent crease",
+  "wuji_initial_fingers": [
+    0.3,
+    0.0,
+    0.3,
+    0.3,
+    1.3,
+    -0.3,
+    1.2,
+    0.8,
+    1.0,
+    0.0,
+    1.2,
+    0.8,
+    1.0,
+    0.0,
+    1.2,
+    0.8,
+    1.0,
+    0.0,
+    1.2,
+    0.8
+  ]
+}
