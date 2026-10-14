@@ -1,0 +1,52 @@
+# RoboOlympics tasks exported by RoboOlympics' own exporter (CHIGUI0/roboolympics tools/export_fexam.py; private, MIT):
+# our simulator service runs unchanged inside each task (docs/benchmarks/roboolympics.md, "Tasks exported by
+# RoboOlympics"). They are not rendered by gen_tasks.py, which skips the directories listed here; written by
+# `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in RoboOlympics.
+
+[[tasks]]
+name = "roboolympics-badminton-actskill-i00-standard"
+source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-badminton-match-i01-standard-realtime"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-badminton-match-i02-standard-realtime"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-soccer-match-i00-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-standard"
+revision = "soccer-2v2-10+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-soccerssl-match-i00-standard-realtime"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+revision = "soccer_ssl-1"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-tabletennis-hitskill-i00-standard"
+source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i01-standard-realtime"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i02-standard-realtime"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]

@@ -1,0 +1,203 @@
+{
+ "format": "match",
+ "formats": {
+  "duel": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A",
+    "B"
+   ]
+  },
+  "duel_onboard": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A",
+    "B"
+   ]
+  },
+  "match": {
+   "default_level": 2,
+   "levels": [
+    1,
+    2,
+    3
+   ],
+   "opponent": true,
+   "seats": [
+    "A"
+   ]
+  },
+  "match_onboard": {
+   "default_level": 2,
+   "levels": [
+    1,
+    2,
+    3
+   ],
+   "opponent": true,
+   "seats": [
+    "A"
+   ]
+  },
+  "team": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A0",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "B0",
+    "B1",
+    "B2",
+    "B3",
+    "B4"
+   ],
+   "sides": {
+    "A0": "A",
+    "A1": "A",
+    "A2": "A",
+    "A3": "A",
+    "A4": "A",
+    "B0": "B",
+    "B1": "B",
+    "B2": "B",
+    "B3": "B",
+    "B4": "B"
+   }
+  }
+ },
+ "official": {
+  "first_any": true,
+  "hidden_seeds": {
+   "cells": {
+    "duel": [
+     "5f372ebb69ac93d7df0c6eff8a52feb45f275295210b6faea930822a92d3dd8b",
+     "9b9e5e2d193762f6352570348846bd47cc27d584a326380365bbe562318c2608",
+     "78ef055031b636ca6b5226f9c629279278cc618b32e2ce7607620074935f1d29",
+     "1715019f4b26c30c570ede2b54a9e536bd6d393d49b247169f56b74287c1976b",
+     "6bc127be581c64692083ffbec7e9c026df2d68dd357292e4898dc0ce8f5f4fb6",
+     "705d464728e25303a4d5af3bc0f4d6bf9cdfef1687a94d5ab61d49c1610cdd19",
+     "579a8a80d8b086816d264999369a899338028822c62d19aaba4a09c5904aa5a7",
+     "7d01f6d026c52a75de3a5176b300c42f8cb473e8085dcb52222c6c0f2d4e4de2",
+     "04a99bff965fc88435c3f6432eafc0bf2971f9e3be12e5cccb7ece034718a602",
+     "bc767176db59204e8d5c57e748445a5fa4e4425ff7ccdd5529239d198ee047be",
+     "d8cd0d8158d89d6be4164c02a1893a4dddb1c5c85317773c5fee8d83b8773495",
+     "f49fbc8537241057979469a92a9ef61ae3249cfb853f6043a0527a98d775e1dc",
+     "f349ba1abaf9604d4570b7d2cd8561b6a3d7d2785e7a0744e1f031669fcae40a",
+     "265a362989752daaf1c66562f92557138c28c42b4c7dca51a1101113d25f34e1",
+     "390edc7ba0356f5369e7e1569094ca82655dc5b1ec6333484ebca347f44fcf58",
+     "d6f3d90457f840a8fd721eae316bc928f137986c971811ee90e3a794725621ad",
+     "4a9377a5c249b59e9f0ad8502c8bbf29fe42e862619dfab0f6644d59feec1bbb",
+     "c9b157209245809d54c25cfb4f2c4deed6e93ea7f37ff8212f44a5767995ab71",
+     "1f989c250452d78024dd9e234f81d8ead611621d8e6d38363e4cc628b1a89e93",
+     "16eb421e6695209537470ac51dcd4b65383ab30303032b506dcae8b26f4a88f6"
+    ],
+    "match/L2": [
+     "1451e23dc9c36d72c2a87427dd45003e02ce30029579af3d7898b670f526ffa5",
+     "9571eb38c44785d7142d82fc6b388ab57ec269b5cc79a3d1eef4512f4c4cd88d",
+     "0544c0b8b3620e76fc93ecc6f1222887508d3a5282071b2d4ec95ec3fadc1f99",
+     "54e9143ac9acc0442b5554dcb804af03acf1d76f20b5f88808b2b18f740ba38a",
+     "4b94fb49ea92131ed6805523c4918ed638e2206ae2e8c0e538446b701a361669",
+     "49f3f8c4188c369cb7ba80a82790d04ed302b1dd64d2afefb31c2e32b477251b",
+     "d9f8b8325758b19bddd5ee23ccfe73a23739ad7bf4c54e835653743a92481e76",
+     "d4da0f74f45631bfee1f9af9a238cda85b9480046304040a1fe96cfa4f1f0052",
+     "fe7046dbbe6dc489ef2532752e977350f76ef4c50db40a092aa6e22b774d6c73",
+     "8bfbc303c7a2cff820670cade3f199df0ea9f0376a641f29025461a69be9c7d3",
+     "4212ee9e303ddeb1fe70378f6a52e9ef3d5e8e57c0a515351690f744fc97a439",
+     "08053d63532c635d1eec55036811b789a38b03e62001c2c89024ccf97ff1e285",
+     "32b9665f21ffce3747674763fd9d9281e11abbc736c0ed0bf0246d2115248e40",
+     "50791e867122ca43f99501c71b51a6e6c004ac767b845943423e2b41e83671cb",
+     "ee78f32408bb1437d22d823598cad36f3e6cc6abb2cf1392f28e8c36612912fe",
+     "b3765d88d548721716054d00017685db7923ce468a19b81c905653386862529e",
+     "4884b326b2b2235f8c6d03d1f43f264a7cb854e21eb5d96b1b81c3b1f26df6a5",
+     "f33329663dcb3b029f41dff7cc7971217c5e95cee8fe708fed92252b9ee63cc3",
+     "27cb7f338fedf25cd40eafc47487e86cb2f536b7c8ee3e5146666393b67e7ee6",
+     "3c16414bed04aedc33c518185d3f2781277680f3441e2fdf3f41470ae8d0b2d6"
+    ],
+    "match/L3": [
+     "e0acd9f56c4fd6dedcd4b7d5d0835276d2b272dfbaedc3b823cda9843e863549",
+     "2e80d6c4f1b61997934fdc99345e12158a2a03d754ea6260cab810e75dfe69cd",
+     "ce26672d1db689dcc30380f237975fc542bf4ecb5522cd467838a98bb19fe18d",
+     "3105f8f5cad213467ae05ba9c2c8143c476e7650797b25241a27a6851db4c7c9",
+     "7683ab39e19700891fc19887df04910b351161a041d07a5fb96efa52c25924e9",
+     "f441d867ef1826d59b045406cf94c8bbbde576a2420d84489c0ba391b7968cc7",
+     "59abad7aeed10fd17332f5f072e35433e7024ee4ed6f5a0a15357e4be2c018a7",
+     "2048199d163cbb4f1576252d0a5fd9b066f16149a261214ff17edf6de9c469f3",
+     "2095d24f6df18979b5bbe4e6fcbd377f613321205569db5c27129f1836dd71a7",
+     "7a49cc057a3083884ab8c35bd57daf939096dadb286f18418b17ba22c48863c4",
+     "813b0378b5ec1dd14c879533afffb94b6cb78a8b037a8e83eec7aa265def57c9",
+     "83a9d29826c9fc8363c1d2c26f6af5a34210253144ac899879d8421ba3de5aa1",
+     "cc2a4d3298ef7dc59d7caa856568a9e311bfbf986a7747fdbee3aee8a86687aa",
+     "14f85f0050bb69d3de490210f1beb1f0adaf8c20f89305b128598c0ce0c339a4",
+     "409cbcb8d6c830f4e66e9b6a9c5edabb5bcbe559f4cf95a22673b1128cc49dce",
+     "87b6d20d9c45568ba7311a1d6f31922e4de05d42d600fe6ec37f250197770ead",
+     "bf65a36432886291185b38a8251304ce22c76bfdf673beb5a78031a92ebd7d65",
+     "d3de91c4b4b80f78fce80b81aa4d9bbd4f9bf8a75d0229b878100341e1c44dd8",
+     "cdd4a908ca65d5f1674dfe382c2daa428ce3e88465c3775e7ea85d3dbdfd92c5",
+     "717060335a62f9d1fe32a0b6e9a19322e426f0e71eb5e4a7732c46bed1f7a4f0"
+    ],
+    "team": [
+     "3fec8fbe0588be2c11e5aa97a266aa7327bbd75719a6c18092e71b6e5c689950",
+     "4520f60263f90e4d517a40ef246fcc901365374f4e150e8e8f34420382473b5a",
+     "f38e746061871002708b800b4a5d29bd7b48935a16061103d114f4d0aa9dffec",
+     "e4b8bce489307bacf98119707105d3b4bd388ac2f9af866a599a1ce767e86f2f",
+     "69ce1b6f73d164c25c58292dde908b43d7d0d54e5f32ad77a7493802e782c115",
+     "993efaf47a3e821429f07d0013f41da0378535dfb0eb1d052bcd2bdf3ea51c4a",
+     "1cf82b5fde59d53e47f77edfd6169c6d1ca4d068e9133b15d0ba74ef6d2efc5c",
+     "38b925b3c426eac1cd6bd282d4001e6633ada8fecd942bce7b79658844667c84",
+     "fea4800b62c5c875a5a4c204a1e82807f8abc416f4106b565515a6ac84a126ce",
+     "0583efbd63ac9f229927bf2e613836be63557a6aadcc42c058ad462166ca4e52",
+     "fa63ca3825f0cf0b41b9eb79a9349cadfd2f4022c5d24b221caa3af93e253bbd",
+     "98d8565a62c8b20b956108555ad99fb809a86f670b0152fcac38eb54469a177b",
+     "6d6757fbee49b73c801e6708334dbc221077bba450f9c2d459426cd07087b693",
+     "cd960bc93fb4ab245034b010f11ee84d66f48c05d5db67bd0d86e7f7fccaf2a0",
+     "daeee012b6ab4fd6fdc9e48068d6ed2ed7c5316aed98f3db5ebc6880484faa71",
+     "7510bdc72c6ecd61658180d0238def7641a02192c3e7adff35e6dd68ab6c6ecd",
+     "0796ea4340e9914b7df95156628fb7f743ceb8f1600095733b10dd5f045a2f16",
+     "fe029fe14d4a42340827774ecafe55d691b7fb0b15026976a9a3d257e7d3e5b5",
+     "36192c4bb48b4ea812b68e6d40295b3f1705452ff4884d06959c3c5e2cc72021",
+     "a6fddc171e81896ef49161b65885abd0636d3881664d239137e6a2928fc17b3c"
+    ]
+   },
+   "counts": {
+    "duel": 20,
+    "match/L2": 20,
+    "match/L3": 20,
+    "team": 20
+   },
+   "sha256": "0199230bdf2c189da8cb02edcf92f463735f9b17d837ee7e12a828d2bf38bd5e"
+  },
+  "levels": [
+   2,
+   3
+  ],
+  "seeds": [
+   1,
+   2,
+   3
+  ]
+ },
+ "protocol": "realtime",
+ "score": {
+  "forfeit": -10,
+  "from": "margin",
+  "name": "goal_margin",
+  "range": [
+   -10,
+   10
+  ],
+  "text": "goals scored minus goals conceded in the two halves (the shoot-out does not count; a match ends at 10 goals at the latest, so the margin lies within -10..10)"
+ },
+ "sport": "soccer_ssl",
+ "task": "soccer_ssl-match-wallclock-program-standard"
+}

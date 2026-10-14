@@ -7237,3 +7237,35 @@ digest = "sha256:e66fa9bded67614dc1356b133161ead1ef772fa1ac559084503e7d230d20b7c
 name = "robot-coding-bench/roboolympics-wall-ball-i00-standard"
 digest = "sha256:9dbfc400db9bb6763abb0bd78d9be8b5082d4e061d033fbed470942cff41f155"
 
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tabletennis-hitskill-i00-standard"
+digest = "sha256:e9a32515a26fe7dc2c25ac53096eb2d154042f8912f96ca899d2f7e4dfdf6f51"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tabletennis-match-i01-standard-realtime"
+digest = "sha256:2666cb62be3ce8a4ade89d32d99ddf63cf6e951b66c5a8dda7a2eaa30cacb21a"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tabletennis-match-i02-standard-realtime"
+digest = "sha256:f70c76341d3b0245fe0f337083dcff52ca11521671e6c062e3e950cbeddfa04d"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-soccer-match-i00-standard-realtime"
+digest = "sha256:39c79171821b763127e4f9f06379ad3a4ae53c9c2fcb5b9e7dcfda5fa3b447e8"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-badminton-actskill-i00-standard"
+digest = "sha256:b5e1a849e5e345c944c3ecf57d8a82e9825722c31dde2dff944ea3255fce2e06"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-badminton-match-i01-standard-realtime"
+digest = "sha256:e75c4904a7fc54f2d3604b5d4d739eec0e1b2aafa25854228f79c9f0a1e13726"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-badminton-match-i02-standard-realtime"
+digest = "sha256:724783a36f9e061856b5fef9e0c7dbc38b545169f4973d15fc60ff059683dbee"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-soccerssl-match-i00-standard-realtime"
+digest = "sha256:556c58bb601f3f3bafff6caee3fa9262e5635bb9f4b779874b68dc2ccae80773"
+
