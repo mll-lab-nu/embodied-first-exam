@@ -18,6 +18,6 @@ for t in "$@"; do
   done
   bash "$root/ci_checks/check-robopaint-leak.sh" "$t" || rc=1     # RoboPaint tasks only (the script skips others)
   bash "$root/ci_checks/check-maniguard-leak.sh" "$t" || rc=1     # ManiGuard tasks only (the script skips others)
-  bash "$root/ci_checks/check-standard-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboARC, YAMLab, LabUtopia, AutoBio: no world coordinates
+  bash "$root/ci_checks/check-standard-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboARC, YAMLab: no world coordinates
 done
 exit $rc

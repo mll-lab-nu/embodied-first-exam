@@ -39,8 +39,7 @@ for g in "roboolympics/gen_tasks.py check" "roboarc/mk_tasks.py --check" "yamlab
          "pandadyn/mk_tasks.py --check" "ambench/mk_tasks.py --check" "robodojo/mk_tasks.py --check" \
          "bigym2/gen_tasks.py check" "robofunolympics/gen_tasks.py check" \
          "dexhand/generate.py --check --release" \
-         "labutopia/generate.py --check" \
-         "molmospaces/mk_tasks.py --check" "autobio/generate.py --check" \
+         "molmospaces/mk_tasks.py --check" \
          "robotwin_sync_shared.py --check"; do   # RoboTwin 2.0: every task's shared files are the template tasks' (no simulator needed)
   [ -f "$root/scripts/${g%% *}" ] && gens+=("$g")
 done
