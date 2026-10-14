@@ -1,5 +1,0 @@
-{
- "K": 1,
- "interpolate": "hold",
- "rows": "the recorded joint_position rows of the evidence episode (README.md, Reference solution)"
-}
