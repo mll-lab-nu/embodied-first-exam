@@ -6,6 +6,11 @@ Two replays, each in its own fresh process (`rcb_quadruped.py replay`: the froze
 task's success check on the whole trajectory). success = both replays succeed and end in the same state. Writes
 /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders replay.mp4, after the
 verdict is on disk (it never changes it).
+
+Failures that are not the agent's (docs/PROTOCOL.md: infra vs agent failure) carry `grader_error` = 1 and `infra_error`
+= 1, so they are no verdict on the agent: a replay process that died or timed out, an image that no longer rebuilds the
+frozen start (`instance_mismatch`), and any exception of the verifier itself. A file the agent got wrong is the agent's
+0 (`bad_trajectory`, infra_error 0). Every reward.json carries success, deterministic, grader_error and infra_error.
 """
 import argparse
 import json
@@ -22,8 +27,12 @@ TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_quadruped.p
 REPLAY_TIMEOUT_S = 300  # a 1000-step replay takes a few seconds; the video replay renders 4 views every 2nd step
 
 
+BASE = {"success": 0, "deterministic": 0, "grader_error": 0, "infra_error": 0}
+
+
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    out = {**BASE, **out}
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)
@@ -96,11 +105,11 @@ def main() -> int:
                           "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost})
             return 0
         runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
-        if any("error" in r and not r.get("bad_trajectory") for r in runs):
-            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, **cost})
+        if any("error" in r and not r.get("bad_trajectory") for r in runs):  # the replay process died / timed out
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, "replay_failed": 1, **cost})
             return 0
         if not all(r.get("instance_ok") for r in runs):  # the image no longer builds the frozen start: not the agent's 0
-            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, "instance_mismatch": 1, **cost})
             return 0
         all_success = all(bool(r.get("success")) for r in runs)
         deterministic = runs[0].get("state_sha") == runs[1].get("state_sha")
@@ -116,7 +125,7 @@ def main() -> int:
         write(ok, out)  # the verdict, before any video
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "deterministic": 0, "grader_error": 1, **cost})
+        write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, **cost})
         return 0
     try:  # the video, for humans: it never changes the verdict
         if replay(a.instance, a.traj, os.path.join(LOG_DIR, "replay.mp4")).get("video"):

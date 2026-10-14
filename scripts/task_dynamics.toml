@@ -32,6 +32,8 @@
 "MolmoSpaces" = { dynamics = "static", why = "Franka or RB-Y1 (holonomic base) in house scenes; objects and doors move only by the robot or gravity." }
 "MuJoCo Playground" = { dynamics = "static", why = "Arms or legged robots on flat / rough terrain; joystick commands are targets, not bodies; nothing in the scene moves by itself." }
 "MyoSuite" = { dynamics = "static", why = "Musculoskeletal arm / hand / legs; objects move only by the model's muscles or gravity." }
+"Panda Dynamic Scenes" = { dynamics = "dynamic", why = "One or two Pandas in scenes whose balls, pucks, carts, conveyors, rails and pendulums move by themselves (initial velocities, driven rails / conveyors, scripted impulses); the six static families are listed below." }
+"RoboARC" = { dynamics = "static", why = "Fixed-base arm(s) on MuJoCo puzzles, ropes and cloth that move only when the robot moves them (rope / cloth elasticity only returns the robot's energy)." }
 "RoboCasa" = { dynamics = "static", why = "PandaOmron in robosuite kitchens; fixtures change only visual sites or on/off states, objects move only by the robot or gravity." }
 "RoboCasa-GR1" = { dynamics = "static", why = "Fixed-base GR1 at kitchen counters; objects move only by the robot or gravity." }
 "RoboCasa365" = { dynamics = "static", why = "PandaOmron in RoboCasa365 kitchens; fixtures change only visual sites or on/off states, objects move only by the robot or gravity." }
@@ -40,7 +42,6 @@
 "RoboLab" = { dynamics = "static", why = "Fixed Franka + Robotiq at a table; objects move only by the robot or gravity." }
 "RoboOlympics" = { dynamics = "dynamic", why = "Real-time sports against a scripted opponent: an incoming ball / shuttle / puck and an opponent that moves by itself." }
 "RoboPaint" = { dynamics = "static", why = "Fixed Franka painting or writing; paint deposits only where the robot's brush touches." }
-"RoboTangle" = { dynamics = "static", why = "Fixed-base arm(s) on puzzles, ropes and cloth that move only when the robot moves them." }
 "RoboTwin 2.0" = { dynamics = "static", why = "Dual-arm aloha-agilex at a table; objects move only by the robot or gravity (RoboTwin's envs set no object velocities)." }
 "RoboWits" = { dynamics = "static", why = "Fixed bimanual Marvin at a table; objects move only by the robot or gravity (a domino chain falls under gravity after the robot's push)." }
 "VLABench" = { dynamics = "static", why = "Fixed Franka at a table; objects move only by the robot or gravity." }
@@ -51,6 +52,14 @@
 
 [family."MyoSuite"]
 "table_tennis" = { dynamics = "dynamic", why = "The ping-pong ball is served toward the player with an initial velocity set at reset (5.6 m/s, measured in the frozen instance), kinetic energy not from the robot." }
+
+[family."Panda Dynamic Scenes"]
+"d05_moving_ramp_relay" = { dynamics = "static", why = "Nothing moves by itself; the ball only rolls under gravity once the robot puts it in the channel." }
+"d08_pendulum_energy_relay" = { dynamics = "static", why = "Passive pendulum at rest at t = 0; only the arms put energy into it." }
+"d11_moving_fixture_unlock" = { dynamics = "static", why = "Free fixture at rest; its latch spring only returns energy the robot put in (spring-return)." }
+"d12_reciprocal_sliding_transfer" = { dynamics = "static", why = "Cube at rest on a slippery scoop; nothing moves by itself." }
+"d13_supported_cube_flip_relay" = { dynamics = "static", why = "Cube at rest on the tray; nothing moves by itself." }
+"s06_cube_flip_route_recover" = { dynamics = "static", why = "Cube at rest; it slides down the chute only under gravity after the robot's push." }
 
 [family."RoboCasa365"]
 "robocasa365/TurnOnToasterOven" = { dynamics = "dynamic", why = "The toaster oven's timer dial, once set by the robot, turns back by itself over time (set_joint_state each step: val - elapsed/3000)." }

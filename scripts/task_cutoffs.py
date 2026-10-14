@@ -216,11 +216,11 @@ def render_doc(tasks: list[Path]) -> str:
         "(PROTOCOL D8).",
         "",
         "```toml",
-        "[family_cutoff_sec.\"RoboTangle\"]              # benchmark; then one line per family, a number per mode",
+        "[family_cutoff_sec.\"RoboARC\"]              # benchmark; then one line per family, a number per mode",
         "\"cast_coil\" = { privileged = 14400, standard = 14400 }",
         "",
         "[task_cutoff_sec]                              # one line per task directory",
-        "\"robotangle-cast-coil-hard-i00-standard\" = 10800",
+        "\"roboarc-cast-coil-05-i01-standard\" = 10800",
         "```",
         "",
     ]
@@ -243,9 +243,10 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         "> " + tc.CUTOFF_NOTE["standard"],
         "",
-        "(" + ", ".join(sorted({b for b, _ in tc.CUTOFF_NOTE_OWN})) + ", whose service counts on a clock of its own, keeps "
-        "the earlier sentence there: \"The service's `time_left_s` is its own count of this limit, from the service's "
-        "start or from your first request, so it can differ from the time you really have left.\")",
+        ("(" + ", ".join(sorted({b for b, _ in tc.CUTOFF_NOTE_OWN})) + ", whose service counts on a clock of its own, keeps "
+         "the earlier sentence there: \"The service's `time_left_s` is its own count of this limit, from the service's "
+         "start or from your first request, so it can differ from the time you really have left.\")") if tc.CUTOFF_NOTE_OWN else
+        "(No benchmark keeps the earlier, weaker sentence today: every service counts from the agent's first request.)",
         "",
         "What a benchmark adds about its own time (a simulator's start-up, what its service counts) stands in its own "
         f"text and names no number: it says \"{tc.CUTOFF_REF}\".",
@@ -278,9 +279,9 @@ def render_doc(tasks: list[Path]) -> str:
         "`meta[\"time_left_s\"]`, counted from the agent's first request to the service (any endpoint; kept through a "
         "restart of the service), never from the service's start: the service is up before the agent's phase begins, so a "
         "clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is "
-        "what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, "
-        "running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: "
-        "`docs/benchmarks/robotangle.md`).",
+        "what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its "
+        "MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to "
+        "become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).",
         "- **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that "
         "were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 "
         "`COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the "
