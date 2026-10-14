@@ -41,7 +41,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            labutopia/tests/test_grade_privileged.py labutopia/tests/test_server_validation.py labutopia/tests/test_service_stub.py \
            molmospaces/tests/test_ms.py robolab/tests/test_grade_privileged.py robolab/tests/test_server.py \
            robolab/tests/test_tooling_units.py robotwin/tests/test_gripper_state.py robotwin/tests/test_standard_service.py \
-           robopaint_strict/tests/test_server_requests.py robotangle/tests/test_server_requests.py \
+           robopaint_strict/tests/test_server_requests.py roboarc/tests/test_server_requests.py \
            mujoco-playground/tests/test_standard_2_1_servers.py dexjoco/tests/test_standard_server.py \
            myosuite/tests/test_standard_server.py robowits/tests/test_server_frames.py \
            robodojo/tests/test_privileged_grading.py; do
