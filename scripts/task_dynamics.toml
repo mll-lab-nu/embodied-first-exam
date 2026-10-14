@@ -18,6 +18,7 @@
 # (file:line): agentboard task 0106, dynamic_tasks.csv.
 
 [benchmark]
+"AM-Bench" = { dynamics = "static", why = "A hovering hexarotor with an arm (it balances actively, which does not count) at a wall-mounted button, slider or valve; the button's spring only gives back what the robot pushed in, the valve and slider have no drive, so nothing moves except by the robot or gravity." }
 "AutoBio" = { dynamics = "static", why = "Fixed-base arms on a laboratory bench; devices (centrifuge, thermal cycler, mixer, pipette) move only when the robot moves them." }
 "BEHAVIOR-1K" = { dynamics = "static", why = "R1Pro (wheeled base) in household scenes; objects move only by the robot or gravity; cooking / freezing / toggled states change no motion." }
 "BiGym 2.0" = { dynamics = "static", why = "G1 (legs held by the GR00T-WBC policy) at kitchen fixtures; objects and fixtures move only by the robot or gravity." }

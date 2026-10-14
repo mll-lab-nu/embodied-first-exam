@@ -1,0 +1,40 @@
+{
+ "modes": [
+  "privileged"
+ ],
+ "tasks": {
+  "press_button": {
+   "id": 0,
+   "env_id": "PressButton-Am-FAHexa-Abs-PID-Direct-v0",
+   "seed": 0,
+   "initial_sha": "c125ec8a4fdd266248f2224493e8e50fd06b6648f7a21ca8568d8dd84267acd8",
+   "oracle_rows": 1027,
+   "oracle_final_sha": "fcd4de9b60a77009d4e58851b0984a81c9de0cd5407c99d84d0fba593a56d278",
+   "provenance": "AM-Bench's scripted expert for the task (policies/scripted, no injected noise), run in closed loop on this instance by scripts/ambench/freeze.py, followed by 2 s of holding its last command",
+   "recorded": "2026-10-14",
+   "verified": "2026-10-14: two fresh-process replays with the grader's CLI succeed at control step 1027 and end in the same state"
+  },
+  "push_slider": {
+   "id": 0,
+   "env_id": "PushSlider-Am-FAHexa-Abs-PID-Direct-v0",
+   "seed": 0,
+   "initial_sha": "9bd26bad8cd1cd81a7fcc11043a996206a0550e7e00f2a74253efe1822ced584",
+   "oracle_rows": 1353,
+   "oracle_final_sha": "01a85d356fead490fb2deb77025673bc0b11df3f13613f21af945eea16ca470c",
+   "provenance": "AM-Bench's scripted expert for the task (policies/scripted, no injected noise), run in closed loop on this instance by scripts/ambench/freeze.py, followed by 2 s of holding its last command",
+   "recorded": "2026-10-14",
+   "verified": "2026-10-14: two fresh-process replays with the grader's CLI succeed at control step 1353 and end in the same state"
+  },
+  "rotate_valve": {
+   "id": 0,
+   "env_id": "RotateValve-Am-FAHexa-Abs-PID-Direct-v0",
+   "seed": 0,
+   "initial_sha": "5bfceb57120de994dca306348115910883573b611ba46d353754ebd5911772d4",
+   "oracle_rows": 1002,
+   "oracle_final_sha": "1b976104a88384d6d7c889a32d307a7f6f91f2563660710c4b4ab3ef3cfadc1e",
+   "provenance": "AM-Bench's scripted expert for the task (policies/scripted, no injected noise), run in closed loop on this instance by scripts/ambench/freeze.py, followed by 2 s of holding its last command",
+   "recorded": "2026-10-14",
+   "verified": "2026-10-14: two fresh-process replays with the grader's CLI succeed at control step 1002 and end in the same state"
+  }
+ }
+}
