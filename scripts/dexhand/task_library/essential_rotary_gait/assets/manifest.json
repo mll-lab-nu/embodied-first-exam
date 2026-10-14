@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "runtime_files": [
+    "encoder_knob_visual.obj",
+    "encoder_knob_collision_convex.obj",
+    "CREDITS.txt",
+    "controller_case_visual.obj",
+    "controller_panel_visual.obj",
+    "controller_panel.png"
+  ],
+  "assets": [
+    {
+      "name": "encoder_knob",
+      "author": "Luis Aros Illanes",
+      "license": "CC-BY-4.0",
+      "source_url": "https://sketchfab.com/3d-models/8be27bec97ba4a0499b478f22f101a22",
+      "geometry": "authentic printable encoder cap",
+      "dimensions_m": [
+        0.05372826767,
+        0.05372826767,
+        0.015
+      ],
+      "collision": "convex hull of actual outer profile; bore omitted"
+    },
+    {
+      "name": "controller_housing_and_panel",
+      "author": "benchmark authors",
+      "license": "repository license",
+      "source": "original CAD and original text artwork",
+      "collision": "stationary housing box approximation; 2.5 mm visual corner bevel"
+    }
+  ],
+  "sha256": {
+    "encoder_knob_visual.obj": "735296467b0af0b9a15105bf065088ddb4d8e1773c1fb5e0589837368d2dce69",
+    "encoder_knob_collision_convex.obj": "5e69f044558fc70bee1075db816f6a6ee26a4b42a6edd894fdfd9ece1b6458c4",
+    "CREDITS.txt": "b5013ffb20d857dfb7f9b261c4df2bb5ca211cb87d220d12ff4984fb8b59e70c",
+    "controller_case_visual.obj": "a6cc5dfededad2c08510052503335c62856cfb126367ddcb1a97fedfa7fb2849",
+    "controller_panel_visual.obj": "e6c806bd748dc0081c78cc42c211a1d1478ff8395b5b577fe6f38bad04edb813",
+    "controller_panel.png": "8df24f580612dfcdd1b4fd98a672f29318359200e9f47b00830882b9fa251899"
+  }
+}

@@ -1,0 +1,1175 @@
+{
+  "schema_version": 1,
+  "asset_dir": "images/everyday_dexterity/assets/tianji",
+  "product_reference": "https://en.tianjizn.com/products/marvin-pro/",
+  "dependencies": {
+    "python": "3.12",
+    "mujoco": "3.4.0",
+    "numpy": "2.3.5",
+    "scipy": "1.16.3",
+    "trimesh": "4.11.2"
+  },
+  "archive": {
+    "url": "https://huggingface.co/datasets/DexForceAI/embodichain_data/resolve/48317bd8733182f36d306cc2a7a60ae5e47ed2c9/robot_assets/TianjiMarvin.zip",
+    "revision": "48317bd8733182f36d306cc2a7a60ae5e47ed2c9",
+    "filename": "TianjiMarvin.zip",
+    "bytes": 67613073,
+    "sha256": "b04bde4417413c195befa8f246fdfa2daee1aae4fe3da88596887f9eac603bed",
+    "md5": "af91dbcc352fae3469a3190d0c6e1756",
+    "license": "Apache-2.0",
+    "cache_candidates": [
+      "images/everyday_dexterity/assets/tianji/downloads/TianjiMarvin.zip",
+      "../artifacts/everyday-dexterity-2026-10-13/tianji-assets/TianjiMarvin.zip"
+    ]
+  },
+  "inertia_asset": {
+    "url": "https://huggingface.co/datasets/Genesis-Intelligence/assets/resolve/deffbe1685e5ce6aa289efdd541f762f1eb3353f/dual_arms_primitives.urdf",
+    "revision": "deffbe1685e5ce6aa289efdd541f762f1eb3353f",
+    "path": "genesis_dual_arms_primitives.urdf",
+    "bytes": 18276,
+    "sha256": "650267de2b874b3a888d1f732d7b9c2cf42f36b0d5e9d79d1bff7e6906ad8c05",
+    "license": "MIT"
+  },
+  "source_files": [
+    {
+      "path": "collision/left_hand_base_link.obj",
+      "bytes": 165061,
+      "sha256": "04e8d0e72e41a904717bac8f28fb34e5fa606fc6f4b216dd0c24887693814ad4"
+    },
+    {
+      "path": "collision/left_hand_finger_1_link.obj",
+      "bytes": 139869,
+      "sha256": "0da0889b5dc52ac94e63f254618b4ffe2607e0899456106b57492ac92c7b3a16"
+    },
+    {
+      "path": "collision/left_hand_finger_2_link.obj",
+      "bytes": 151007,
+      "sha256": "420fb10f1af46f1c442fb403efb93c2bc249ac7c1e7969663ca88b3f89d5e0a3"
+    },
+    {
+      "path": "collision/right_hand_base_link.obj",
+      "bytes": 154645,
+      "sha256": "213f8bab60786f0531f3e7950f88849d76b6805ab101d2d6500cef390b4f9de5"
+    },
+    {
+      "path": "collision/right_hand_finger_1_link.obj",
+      "bytes": 137825,
+      "sha256": "13d3fe72a9578476d1f6aeac72707f499dcc287a99968a3d18eaeef602f4bdea"
+    },
+    {
+      "path": "collision/right_hand_finger_2_link.obj",
+      "bytes": 163274,
+      "sha256": "0e49473c000a1aed60d96bcfef1fd7c356571a0e7749f90dac6ac19ea0f011f0"
+    },
+    {
+      "path": "collision/elbow_pitch_l_j3_link.obj",
+      "bytes": 24078,
+      "sha256": "711c263946dfb48c7c399425ad3417e80342f60fcc6b3a08ba3da081547efc65"
+    },
+    {
+      "path": "collision/elbow_pitch_r_j3_link.obj",
+      "bytes": 19686,
+      "sha256": "dcc0601a6d2948ebb02f85bd85fa9b39810b55bb4bbd996551fb67473db55dbc"
+    },
+    {
+      "path": "collision/elbow_yaw_l_j4_link.obj",
+      "bytes": 20816,
+      "sha256": "41ca3456feeefe6c4f4194fb792ec417cac22c5ea75614a64a9b4eeada251529"
+    },
+    {
+      "path": "collision/elbow_yaw_r_j4_link.obj",
+      "bytes": 23948,
+      "sha256": "a7e5f35a59854e6d1a7b8aef530c35586d437ab1c2c28862545fb073324a1cda"
+    },
+    {
+      "path": "collision/left_arm_base.obj",
+      "bytes": 30624,
+      "sha256": "10b09d53170422af9a034373148c7053cb6f86ac08370ce496fc12201e8339d7"
+    },
+    {
+      "path": "collision/left_ee.obj",
+      "bytes": 12677,
+      "sha256": "310dffe4e79adcd7ccce149259f10a5368c423e163dcc1f8227af1e6274f549f"
+    },
+    {
+      "path": "collision/right_arm_base.obj",
+      "bytes": 17007,
+      "sha256": "6fdf1bb689ff8908eab88b364e58404343f1f7e3e926a413880597aa721db5af"
+    },
+    {
+      "path": "collision/right_ee.obj",
+      "bytes": 19452,
+      "sha256": "1a5f948c8f3c7e374a04974dcee0ffcc52c4615855cdf456f47149bcbb4c6a66"
+    },
+    {
+      "path": "collision/shoulder_pitch_l_j1_link.obj",
+      "bytes": 24021,
+      "sha256": "5525b006470b0319b057a77c3df2fefbcecb2a72665d4df798c5678e93b93711"
+    },
+    {
+      "path": "collision/shoulder_pitch_r_j1_link.obj",
+      "bytes": 19919,
+      "sha256": "1465eaf469c8db69cb3d44c22dd33636762e4f34548ed73a12351cfb829f28e6"
+    },
+    {
+      "path": "collision/shoulder_roll_l_j2_link.obj",
+      "bytes": 23843,
+      "sha256": "91ede90fb1123eaabb0df90e2d2b52be76a0fd7770c059fb4a8aee798f187eba"
+    },
+    {
+      "path": "collision/shoulder_roll_r_j2_link.obj",
+      "bytes": 19889,
+      "sha256": "9c7690703254be2f81fdfe2fbd506a2e1e173dcedd999dfddc9f71a50626fba2"
+    },
+    {
+      "path": "collision/torso_base.obj",
+      "bytes": 23831,
+      "sha256": "7c1abec31c74a7bc3c9ede0cc9720a00a770447b3de110336bae83c83ccb41eb"
+    },
+    {
+      "path": "collision/wrist_pitch_l_j5_link.obj",
+      "bytes": 24048,
+      "sha256": "e2ca4760c56ddec4cb73d6fc1712e3945a9f11e6a3bb94d14c55d36df5771b2b"
+    },
+    {
+      "path": "collision/wrist_pitch_r_j5_link.obj",
+      "bytes": 21042,
+      "sha256": "14c4da7cd70b1c61c6e746767fa30c175e5d5ae7c16129d764bb50b54ee0547a"
+    },
+    {
+      "path": "collision/wrist_roll_l_j7_link.obj",
+      "bytes": 24021,
+      "sha256": "59368817a7f5d0a10febd1b29662ca1592de75a659458cbf3035a3e75526c85a"
+    },
+    {
+      "path": "collision/wrist_roll_r_j7_link.obj",
+      "bytes": 24023,
+      "sha256": "c782aa92158010c7861d7ff38c452b4019136003146e9889da6f44aac51c9021"
+    },
+    {
+      "path": "collision/wrist_yaw_l_j6_link.obj",
+      "bytes": 16783,
+      "sha256": "d8092a20ee9cfaf02850cf98873fc485c19fed8645aeba247c7a4a18bda40128"
+    },
+    {
+      "path": "collision/wrist_yaw_r_j6_link.obj",
+      "bytes": 25582,
+      "sha256": "92713001b3c01e61dec4111a93120422d7c4b5569dbc866e763d1009c7cc6e86"
+    },
+    {
+      "path": "collision/base_link.obj",
+      "bytes": 86205,
+      "sha256": "f6e16edc8f766a23a4bd3fe349ae588d8d2002a281e2f6389f7b7ce03087aedc"
+    },
+    {
+      "path": "Collision/base_link_auto_convex.obj",
+      "bytes": 92630,
+      "sha256": "7db5f43763e435c61ae49d044011c8e7b74c7f7e9e4a56df4e52769a7a574799"
+    },
+    {
+      "path": "Collision/shoulder_pitch_l_j1_link_auto_convex.obj",
+      "bytes": 347579,
+      "sha256": "6c36cf2435cd130c3602b5ab8ff2e2eb7dbbb5c4580d3a09cabcfdbf33864082"
+    },
+    {
+      "path": "Collision/shoulder_roll_l_j2_link_auto_convex.obj",
+      "bytes": 314570,
+      "sha256": "0da4065ccfb8ea4a5d3cc73dab57006db14015e76c7a7b10999738c8dcd1e5ea"
+    },
+    {
+      "path": "Collision/elbow_pitch_l_j3_link_auto_convex.obj",
+      "bytes": 329272,
+      "sha256": "720f50025135b860c4241c396ff959f2afcd0b3266c969c4a4f54f578cfa524d"
+    },
+    {
+      "path": "Collision/elbow_yaw_l_j4_link_auto_convex.obj",
+      "bytes": 330255,
+      "sha256": "4f66a6787e287a5530e2f5e91f917cd68285562464a9cb13b3726254151633ac"
+    },
+    {
+      "path": "Collision/wrist_pitch_l_j5_link_auto_convex.obj",
+      "bytes": 257231,
+      "sha256": "f8b059ed51699ce9dd724aa949cffd5e7def78e5b16c83724f761ac2c58c01c2"
+    },
+    {
+      "path": "Collision/wrist_yaw_l_j6_link_auto_convex.obj",
+      "bytes": 305156,
+      "sha256": "0ca8a4c3161afc19a8083ec98affc9e698841b1d356595bc76d63788bb563cde"
+    },
+    {
+      "path": "Collision/wrist_roll_l_j7_link_auto_convex.obj",
+      "bytes": 330975,
+      "sha256": "38eaac512e8f334515038103de708e98b5c61d9d71abdebe834a8d12c18444fd"
+    },
+    {
+      "path": "Collision/shoulder_pitch_r_j1_link_auto_convex.obj",
+      "bytes": 366305,
+      "sha256": "c73796b8c7540af52855406c4d6090fe527bdbd1a76a7b02333edec3e1152e63"
+    },
+    {
+      "path": "Collision/shoulder_roll_r_j2_link_auto_convex.obj",
+      "bytes": 304145,
+      "sha256": "9ddb8c5b654865bb8110aa96be5c54aa0ba92030c5a521781738e19797395356"
+    },
+    {
+      "path": "Collision/elbow_pitch_r_j3_link_auto_convex.obj",
+      "bytes": 321160,
+      "sha256": "72204e69c95b100568ef13b1b700d4f7fc5359f007da623b6dfca64787bb10e0"
+    },
+    {
+      "path": "Collision/elbow_yaw_r_j4_link_auto_convex.obj",
+      "bytes": 330584,
+      "sha256": "8718e76d5770c6fdca1c8ee9917c095d6d32bb4bf2d5246673273dd030cf4034"
+    },
+    {
+      "path": "Collision/wrist_pitch_r_j5_link_auto_convex.obj",
+      "bytes": 265675,
+      "sha256": "c96d6a5afa1cea62198b2bf907bc4eb2d8708f5052e737f0e12cf2270b19446a"
+    },
+    {
+      "path": "Collision/wrist_yaw_r_j6_link_auto_convex.obj",
+      "bytes": 212770,
+      "sha256": "0164ec9071232d907bc63dd855a4c4d13ad31177e765d71b1a34a94e946abd87"
+    },
+    {
+      "path": "Collision/wrist_roll_r_j7_link_auto_convex.obj",
+      "bytes": 310392,
+      "sha256": "1aed5c373ae7765821561a5db863e2171cdd2626f812625452cdacc9c464602c"
+    },
+    {
+      "path": "Collision/left_hand_base_link_auto_convex.obj",
+      "bytes": 141636,
+      "sha256": "7da437d15d0ff48bbc2de3bc6130dbf883cef9662495174dbade3b1344aaf75d"
+    },
+    {
+      "path": "Collision/left_hand_finger_1_link_auto_convex.obj",
+      "bytes": 95823,
+      "sha256": "1baa6e94c0598ca3f9c210928c44b9275767ad792f4078f7b26efef045da14fe"
+    },
+    {
+      "path": "Collision/left_hand_finger_2_link_auto_convex.obj",
+      "bytes": 99077,
+      "sha256": "e52c9365e6c67a0a99857364b11e64bbe65b2ed23861bb1e2fea956ccc12d25d"
+    },
+    {
+      "path": "Collision/right_hand_base_link_auto_convex.obj",
+      "bytes": 137351,
+      "sha256": "24d69d0ac945323ad4114eccf24f4c99db7e69dba9b59aeaa5ef2bbc35c43920"
+    },
+    {
+      "path": "Collision/right_hand_finger_1_link_auto_convex.obj",
+      "bytes": 91438,
+      "sha256": "c28eb3fc1ce437c73413999a4d492787e2d98ace879e21672fa3ae052f90bcde"
+    },
+    {
+      "path": "Collision/right_hand_finger_2_link_auto_convex.obj",
+      "bytes": 97076,
+      "sha256": "7925becf7dd7de15aab37f0d611eb81c89b2465ee8d6ee8dcdf202f16e788fb2"
+    },
+    {
+      "path": "visual/glb_refined/base_link.glb",
+      "bytes": 5278260,
+      "sha256": "403bc9896e0fdc478a59455e969e106c326d6b849ff329d0f4b9c8c0a1ca24b4"
+    },
+    {
+      "path": "visual/glb_refined/shoulder_pitch_l_j1_link.glb",
+      "bytes": 4751376,
+      "sha256": "0eb4425e55db81a71acb39200626c841430a294e0c377423dd4146983ffa136c"
+    },
+    {
+      "path": "visual/glb_refined/shoulder_roll_l_j2_link.glb",
+      "bytes": 317124,
+      "sha256": "06f6f84649da207283dd7b7ba0c367b0bdf39a4dfc48331d00f75de0703ae17f"
+    },
+    {
+      "path": "visual/glb_refined/elbow_pitch_l_j3_link.glb",
+      "bytes": 231220,
+      "sha256": "0dd4184c1c34dbdfc2bbc48d46f35380d76b95caa9c8212d49fbd32bfd9c557e"
+    },
+    {
+      "path": "visual/glb_refined/elbow_yaw_l_j4_link.glb",
+      "bytes": 362012,
+      "sha256": "462ac907b7fe5f610eb055140c722e0bcbbc3e7829581998e9c23b19dcb8876c"
+    },
+    {
+      "path": "visual/glb_refined/wrist_pitch_l_j5_link.glb",
+      "bytes": 218196,
+      "sha256": "f872cf91c10f2758597cf9819ffd09ed2ae11008bec84b6e360e7670b416d515"
+    },
+    {
+      "path": "visual/glb_refined/wrist_yaw_l_j6_link.glb",
+      "bytes": 261612,
+      "sha256": "564028a21d1038f8eadef49d1303a7fbdeeaf68000a41c1a9daaf3cfef980e2c"
+    },
+    {
+      "path": "visual/glb_refined/wrist_roll_l_j7_link.glb",
+      "bytes": 4416912,
+      "sha256": "a08ab6cb2b77697575c971ea5154822b43646892773ac6c0b964b94a9837843c"
+    },
+    {
+      "path": "visual/glb_refined/shoulder_pitch_r_j1_link.glb",
+      "bytes": 4751376,
+      "sha256": "056b532416d1d6bd08da9bfc4f3578d56fd6115b6c186473e836d65a301d1861"
+    },
+    {
+      "path": "visual/glb_refined/shoulder_roll_r_j2_link.glb",
+      "bytes": 317160,
+      "sha256": "68ab0bea2f30973caf856499ba6d1313e3ebd02b0e251bf0f05af5050520329c"
+    },
+    {
+      "path": "visual/glb_refined/elbow_pitch_r_j3_link.glb",
+      "bytes": 231220,
+      "sha256": "135bd0cf37914cb2b0f1104a7f09a49c41e4df753457e7d901204d4bb7c76565"
+    },
+    {
+      "path": "visual/glb_refined/elbow_yaw_r_j4_link.glb",
+      "bytes": 362012,
+      "sha256": "52778d1d7c66bcadd0ba91cc7a9f1057ba34bdcc50f84690ad71d3033d3e914b"
+    },
+    {
+      "path": "visual/glb_refined/wrist_pitch_r_j5_link.glb",
+      "bytes": 237136,
+      "sha256": "331d1a9927f0b2b592448c671c0dc648522943b3f91d7057d764773bb402a387"
+    },
+    {
+      "path": "visual/glb_refined/wrist_yaw_r_j6_link.glb",
+      "bytes": 261828,
+      "sha256": "aaf547040d57c51faa8c95a5a1abdd34c5aad7ee1de9f703f304f76104b367b8"
+    },
+    {
+      "path": "visual/glb_refined/wrist_roll_r_j7_link.glb",
+      "bytes": 4416912,
+      "sha256": "9ec83b14cb26a0bec9aa55b7c29acef06cda0e761c44740e102331508ba3ae54"
+    },
+    {
+      "path": "visual/glb/left_hand_base_link.glb",
+      "bytes": 1246924,
+      "sha256": "0964df971e345dfbb65a4b257b2b2f68b05e727d9539a2655e44c5da8b6efb94"
+    },
+    {
+      "path": "visual/glb/left_hand_finger_1_link.glb",
+      "bytes": 103764,
+      "sha256": "584f7db79bd1b8f365d0a71ab0cd17cad9c2b85d9aed24c888a5bc7100c9207d"
+    },
+    {
+      "path": "visual/glb/left_hand_finger_2_link.glb",
+      "bytes": 103764,
+      "sha256": "6602483e58ce179b1efede9d37886177e186e293de2aedc15483b71e762259ae"
+    },
+    {
+      "path": "visual/glb/right_hand_base_link.glb",
+      "bytes": 1246928,
+      "sha256": "d56f1a62432f03d65b7da5b1b878ea73f8bf7db007af6a31b4d56a01c9b58ba3"
+    },
+    {
+      "path": "visual/glb/right_hand_finger_1_link.glb",
+      "bytes": 103768,
+      "sha256": "104d5f665ad18f952d2613bdcb7b3b2d5e8805744a1cb22d005352291fa36e08"
+    },
+    {
+      "path": "visual/glb/right_hand_finger_2_link.glb",
+      "bytes": 103768,
+      "sha256": "fbc67e3f78fa77ed12fd9e52850b34fbf05858595eb983a58a772169532ad4a7"
+    },
+    {
+      "path": "visual/glb/base_link.glb",
+      "bytes": 2499000,
+      "sha256": "1883194db3805a1e093f42c41048cc71eb7d9ae0d64e6fa3511630f90ce83264"
+    },
+    {
+      "path": "visual/glb/shoulder_pitch_l_j1_link.glb",
+      "bytes": 783404,
+      "sha256": "08b99f2c931ffdab5097a06ce10c142ed401482caadb751eaf3c04da2678ee99"
+    },
+    {
+      "path": "visual/glb/shoulder_roll_l_j2_link.glb",
+      "bytes": 1536280,
+      "sha256": "8a4698c321300acbc930f6da0010edac2410e93e368566bc2bccae27b18c44cd"
+    },
+    {
+      "path": "visual/glb/elbow_pitch_l_j3_link.glb",
+      "bytes": 764308,
+      "sha256": "c34d88aa74504c0ea05ab75cc3d69cd7279002c3ed8008f58e06a68cc30ac3c2"
+    },
+    {
+      "path": "visual/glb/elbow_yaw_l_j4_link.glb",
+      "bytes": 1517908,
+      "sha256": "571894a3753e96270f2aa6c54fa07d81ffc4e53e9bce146fd78b84734ebba1d8"
+    },
+    {
+      "path": "visual/glb/wrist_pitch_l_j5_link.glb",
+      "bytes": 1413032,
+      "sha256": "54bf9d787944be0e9260e5891e95c523407b5c8837a0a759ba0fdb9cb741abb5"
+    },
+    {
+      "path": "visual/glb/wrist_yaw_l_j6_link.glb",
+      "bytes": 374780,
+      "sha256": "61f6cdf5dc92b2129a798fb4fe916ccc09e5a0bc93701e5726aa14772ded9d6a"
+    },
+    {
+      "path": "visual/glb/wrist_roll_l_j7_link.glb",
+      "bytes": 6131988,
+      "sha256": "3ca2fc74c42988616d92fade8d69ee37960b5f61d7a10def70058a77a2b41efb"
+    },
+    {
+      "path": "visual/glb/shoulder_pitch_r_j1_link.glb",
+      "bytes": 783404,
+      "sha256": "27b39c0918eb205b5c2ef5a0bdb9f65a410f0b4789c33170b68b2dad9e9aec63"
+    },
+    {
+      "path": "visual/glb/shoulder_roll_r_j2_link.glb",
+      "bytes": 1536280,
+      "sha256": "6cef02b27676b29a1348e14c00f0db5cb2b5cf4fb5513f261bd101bda1a51fab"
+    },
+    {
+      "path": "visual/glb/elbow_pitch_r_j3_link.glb",
+      "bytes": 764308,
+      "sha256": "5d0e4bef46bb73ea4cdfd808ec54757b3a7f37fe9ef2c2360afcd2b91362e3fc"
+    },
+    {
+      "path": "visual/glb/elbow_yaw_r_j4_link.glb",
+      "bytes": 1517908,
+      "sha256": "febcf1f8e869c81ed5e1ed0ab8a7aa46e1b5fd8cf2264f657fdf5daf5a150949"
+    },
+    {
+      "path": "visual/glb/wrist_pitch_r_j5_link.glb",
+      "bytes": 1437752,
+      "sha256": "236490c192f1d42e4c320f937fe8b666396c3c34b45eaed9b6c76ad36099a323"
+    },
+    {
+      "path": "visual/glb/wrist_yaw_r_j6_link.glb",
+      "bytes": 374780,
+      "sha256": "eddaa2dfafe72ff3e3261d427270bb571483bd1cb62863ee2a5ed6daf7088e0c"
+    },
+    {
+      "path": "visual/glb/wrist_roll_r_j7_link.glb",
+      "bytes": 6131988,
+      "sha256": "b628c045ab2755835217d40f39c6eaf916d9ca2a92df70f62d8633355096f19f"
+    },
+    {
+      "path": "visual/glb/left_ee.glb",
+      "bytes": 9200,
+      "sha256": "a668a4de35c42dcea520ebb86e62f5717256a104d22fc45466ba2cf419f93b31"
+    },
+    {
+      "path": "visual/glb/right_ee.glb",
+      "bytes": 9204,
+      "sha256": "223813b6e0085568d8de2e5d30dffa2faf361f814ec3bd250650a84d47389594"
+    },
+    {
+      "path": "visual/stl/remesh_base_link.stl",
+      "bytes": 12633684,
+      "sha256": "274cec252633c51b16a4f7906f636e34e2b876e026ff67a2b7b0810e06c80d30"
+    },
+    {
+      "path": "visual/stl/remesh_shoulder_pitch_l_j1_link.stl",
+      "bytes": 10149784,
+      "sha256": "f28c98506d2be8c133a2c288a0b924f5a8e0477ca62b0a845f78f051a24006d6"
+    },
+    {
+      "path": "visual/stl/remesh_shoulder_pitch_r_j1_link.stl",
+      "bytes": 10149784,
+      "sha256": "f28c98506d2be8c133a2c288a0b924f5a8e0477ca62b0a845f78f051a24006d6"
+    },
+    {
+      "path": "visual/stl/remesh_shoulder_roll_l_j2_link.stl",
+      "bytes": 829284,
+      "sha256": "4c154fb8c80266a18a612bb702da3050df47aa7bd283c30c441b36f75b111ff6"
+    },
+    {
+      "path": "visual/stl/remesh_shoulder_roll_r_j2_link.stl",
+      "bytes": 829384,
+      "sha256": "f5d089578e8fe4dc6f7df8f000e020597596aad452d43a9b2f143d54935998d6"
+    },
+    {
+      "path": "visual/stl/remesh_elbow_pitch_l_j3_link.stl",
+      "bytes": 587284,
+      "sha256": "e1f7f56e9c157e069ed73c13739d252592174f9fd837f97d40a4f074e8843dcd"
+    },
+    {
+      "path": "visual/stl/remesh_elbow_pitch_r_j3_link.stl",
+      "bytes": 587284,
+      "sha256": "e1f7f56e9c157e069ed73c13739d252592174f9fd837f97d40a4f074e8843dcd"
+    },
+    {
+      "path": "visual/stl/remesh_elbow_yaw_l_j4_link.stl",
+      "bytes": 953984,
+      "sha256": "e4ec90fee0e4fa5d7c931674128651b3c966d52b0c7892ab1fedbcab15d38140"
+    },
+    {
+      "path": "visual/stl/remesh_elbow_yaw_r_j4_link.stl",
+      "bytes": 953984,
+      "sha256": "e4ec90fee0e4fa5d7c931674128651b3c966d52b0c7892ab1fedbcab15d38140"
+    },
+    {
+      "path": "visual/stl/remesh_wrist_pitch_l_j5_link.stl",
+      "bytes": 536184,
+      "sha256": "e10d0fe3e3a27b650acff7a3c1819334166b0bb703b99b5b245340cd077077eb"
+    },
+    {
+      "path": "visual/stl/remesh_wrist_pitch_r_j5_link.stl",
+      "bytes": 580584,
+      "sha256": "a3447273f2acf4d2e58708c12c6e69adffb1792d70435dbf530b07d41b6b7751"
+    },
+    {
+      "path": "visual/stl/remesh_wrist_yaw_l_j6_link.stl",
+      "bytes": 645384,
+      "sha256": "5cb5b3e8ba22621f2741d6bf2c7e77f31343c8013d0ec18f655ae2aea266b491"
+    },
+    {
+      "path": "visual/stl/remesh_wrist_yaw_r_j6_link.stl",
+      "bytes": 645984,
+      "sha256": "b80b375f341bfb0abf734634f78687741de970c775654a0d24b7a60cf4ec5b2e"
+    },
+    {
+      "path": "visual/stl/remesh_wrist_roll_l_j7_link.stl",
+      "bytes": 9629934,
+      "sha256": "470e255ede3cc3fcbb284c2c5c647209048b5073c438f78578de82c0a12d67b9"
+    },
+    {
+      "path": "visual/stl/remesh_wrist_roll_r_j7_link.stl",
+      "bytes": 9629934,
+      "sha256": "470e255ede3cc3fcbb284c2c5c647209048b5073c438f78578de82c0a12d67b9"
+    },
+    {
+      "path": "visual/stl/remesh_left_ee.stl",
+      "bytes": 334684,
+      "sha256": "dbf53acd4ec271dbc54bf83df75ae197283b21d3371f05119e861fff05c94c6a"
+    },
+    {
+      "path": "visual/stl/remesh_right_ee.stl",
+      "bytes": 334684,
+      "sha256": "dbf53acd4ec271dbc54bf83df75ae197283b21d3371f05119e861fff05c94c6a"
+    },
+    {
+      "path": "visual/stl/base_link.stl",
+      "bytes": 6940884,
+      "sha256": "df0f7b3cdf5fbab9d62a7e358c79728154f51dd0e0fa06903d3f8c264b9bd873"
+    },
+    {
+      "path": "visual/stl/elbow_pitch_l_j3_link.stl",
+      "bytes": 635484,
+      "sha256": "be5126b437ac3f5f194f310f6d84245d060c5ab71002071a990eeb60cde9aaf4"
+    },
+    {
+      "path": "visual/stl/elbow_pitch_r_j3_link.stl",
+      "bytes": 635484,
+      "sha256": "b41040e39c21e43eb4d9fdd33595bdd5b97ae38d9a6c264f7dd715f5fa554340"
+    },
+    {
+      "path": "visual/stl/elbow_yaw_l_j4_link.stl",
+      "bytes": 1263484,
+      "sha256": "6b94fbf689d01c1008b264d7beecab2740ad90b64ace9fae90291356af657af4"
+    },
+    {
+      "path": "visual/stl/elbow_yaw_r_j4_link.stl",
+      "bytes": 1263484,
+      "sha256": "6b94fbf689d01c1008b264d7beecab2740ad90b64ace9fae90291356af657af4"
+    },
+    {
+      "path": "visual/stl/left_ee.stl",
+      "bytes": 6284,
+      "sha256": "131ee3817f88b2f8e72f7f4831b8779f4dfae2afabaf170a7a0a7306a2e2e309"
+    },
+    {
+      "path": "visual/stl/left_hand_base_link.stl",
+      "bytes": 1297284,
+      "sha256": "7669777f8c0b67bc42e394602fdb8883f682c2f0e89823afa2bc21b1f99cb85d"
+    },
+    {
+      "path": "visual/stl/left_hand_finger_1_link.stl",
+      "bytes": 106484,
+      "sha256": "493eedbf80de6c7a7e532c3528c8bfe10279178a6f2d435084f2d650742ddf45"
+    },
+    {
+      "path": "visual/stl/left_hand_finger_2_link.stl",
+      "bytes": 106484,
+      "sha256": "e48b0f43a9d83280d75728186939b8b05bea47645999861d266b99ab1d55eb05"
+    },
+    {
+      "path": "visual/stl/right_ee.stl",
+      "bytes": 6284,
+      "sha256": "131ee3817f88b2f8e72f7f4831b8779f4dfae2afabaf170a7a0a7306a2e2e309"
+    },
+    {
+      "path": "visual/stl/right_hand_base_link.stl",
+      "bytes": 1297284,
+      "sha256": "7669777f8c0b67bc42e394602fdb8883f682c2f0e89823afa2bc21b1f99cb85d"
+    },
+    {
+      "path": "visual/stl/right_hand_finger_1_link.stl",
+      "bytes": 106484,
+      "sha256": "493eedbf80de6c7a7e532c3528c8bfe10279178a6f2d435084f2d650742ddf45"
+    },
+    {
+      "path": "visual/stl/right_hand_finger_2_link.stl",
+      "bytes": 106484,
+      "sha256": "e48b0f43a9d83280d75728186939b8b05bea47645999861d266b99ab1d55eb05"
+    },
+    {
+      "path": "visual/stl/shoulder_pitch_l_j1_link.stl",
+      "bytes": 2171084,
+      "sha256": "770259260d5704f6b54580ab149d3e6618060df70d1bb19c217f0560c53a4b1c"
+    },
+    {
+      "path": "visual/stl/shoulder_pitch_r_j1_link.stl",
+      "bytes": 2171084,
+      "sha256": "770259260d5704f6b54580ab149d3e6618060df70d1bb19c217f0560c53a4b1c"
+    },
+    {
+      "path": "visual/stl/shoulder_roll_l_j2_link.stl",
+      "bytes": 1278784,
+      "sha256": "215332cf103ab00ac91dcd0f656ac1f1c8fc3fa022976a322428b953e0561250"
+    },
+    {
+      "path": "visual/stl/shoulder_roll_r_j2_link.stl",
+      "bytes": 1278784,
+      "sha256": "f8883dbcd80a152432e54d97c74a6c23267c695a7e009788e52401d3788c4e62"
+    },
+    {
+      "path": "visual/stl/wrist_pitch_l_j5_link.stl",
+      "bytes": 1176084,
+      "sha256": "bf78811fabcabf22308fdb0a13cc3e6a8daefb7fe5d8617df358ead32d731125"
+    },
+    {
+      "path": "visual/stl/wrist_pitch_r_j5_link.stl",
+      "bytes": 1196684,
+      "sha256": "ef9db069c5e4f9b73414d750b29bae9c36edb83bf61193b9ee89eedddd7e10e4"
+    },
+    {
+      "path": "visual/stl/wrist_roll_l_j7_link.stl",
+      "bytes": 2577384,
+      "sha256": "fc50bc1928579af3d067387fbf5383cb2a5273e54c5db2cebba5c2d0851a90f7"
+    },
+    {
+      "path": "visual/stl/wrist_roll_r_j7_link.stl",
+      "bytes": 2577384,
+      "sha256": "fc50bc1928579af3d067387fbf5383cb2a5273e54c5db2cebba5c2d0851a90f7"
+    },
+    {
+      "path": "visual/stl/wrist_yaw_l_j6_link.stl",
+      "bytes": 310884,
+      "sha256": "8aab44c2996cfa2f29354f9997a4184624a82dba7781975ed729be648308f3c5"
+    },
+    {
+      "path": "visual/stl/wrist_yaw_r_j6_link.stl",
+      "bytes": 310884,
+      "sha256": "5449391db9dde6b4fe705610d29efaffaff7cb81e3f09d020d26725591c15aa8"
+    },
+    {
+      "path": "robot_acd.urdf",
+      "bytes": 17989,
+      "sha256": "511fc081e4b7a75c94f6acb285c43e72be6a3a8b4110d6e3ed821ce7d341ff9d"
+    },
+    {
+      "path": "robot_with_ee_acd.urdf",
+      "bytes": 25488,
+      "sha256": "691a5f5a08d3335a1e1a50487b0f886f17eb30da4ea7703bf320a0bf9eac874f"
+    }
+  ],
+  "converted_mesh_files": [
+    {
+      "path": "converted_collision/collision_base_link_0.stl",
+      "bytes": 6984,
+      "sha256": "ae21ceba927267c520bb7c76645d221575261886361b4455e961af1c93186394"
+    },
+    {
+      "path": "converted_collision/collision_base_link_1.stl",
+      "bytes": 31584,
+      "sha256": "6e091faf36f7a949ea132e4e5e6eaa23d413bea07040b0076b2bca6bdd23f1f9"
+    },
+    {
+      "path": "converted_collision/collision_base_link_2.stl",
+      "bytes": 8384,
+      "sha256": "fcdb0aa9962fd67315254466a36088b23d9624108777b8bf9e9224d2e3b6332e"
+    },
+    {
+      "path": "converted_collision/collision_base_link_3.stl",
+      "bytes": 1384,
+      "sha256": "3dfa29e88dcd41d848afd6b147002d69c8145151838c8e88504d866df982afb0"
+    },
+    {
+      "path": "converted_collision/collision_base_link_4.stl",
+      "bytes": 12984,
+      "sha256": "dd2c341b7cf9f267ab6b0b1bc839c32a52c9c6315ddb34c7789dd5474ae79440"
+    },
+    {
+      "path": "converted_collision/collision_base_link_5.stl",
+      "bytes": 21084,
+      "sha256": "83cc6e671bf914aaf703c8e94efda287c455053cec5d9acd5efa49b1a40a4f11"
+    },
+    {
+      "path": "converted_collision/collision_base_link_6.stl",
+      "bytes": 19484,
+      "sha256": "6e3dca04208c9ec33bb6b8a970b7cf44fe28748dd7a5c1d68c450e5ad11d7042"
+    },
+    {
+      "path": "converted_collision/collision_base_link_7.stl",
+      "bytes": 3684,
+      "sha256": "9ede79d653381fb8d1dfc7805d16af79376da06ebb97271a5c6abc9c50d17255"
+    },
+    {
+      "path": "converted_collision/collision_base_link_8.stl",
+      "bytes": 5684,
+      "sha256": "1bc8999dc64f90d1eb0a7a51a5d04dcc3b60fd4f79faa5248783db2e3d9ca65f"
+    },
+    {
+      "path": "converted_collision/collision_base_link_9.stl",
+      "bytes": 28784,
+      "sha256": "971a33613993808927e827c9397289bf44593e60504879faff2ced1c074a9e14"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_l_j3_link_0.stl",
+      "bytes": 173984,
+      "sha256": "44ce5542e2aa0693990ba62783cbda1b1d4552e9b68457ccabd93286facbfe09"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_l_j3_link_1.stl",
+      "bytes": 9284,
+      "sha256": "f11cb83ef98a3bd9571eaed975c5f67285d19aa6ee5e88a58d9ce6194ec170ad"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_l_j3_link_2.stl",
+      "bytes": 40284,
+      "sha256": "2d934635876249c9ebf2d47d9d49400faceaa697ea66972be92abe31f08f7bc7"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_l_j3_link_3.stl",
+      "bytes": 251284,
+      "sha256": "618cba2c9578e7386c013175e9341488531ce7101d69ce52cdf8478642424413"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_r_j3_link_0.stl",
+      "bytes": 192584,
+      "sha256": "1add900d544f421adc568c16bf746a67aa7f74ccb68191e6df002115fff457e9"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_r_j3_link_1.stl",
+      "bytes": 62984,
+      "sha256": "351e2c5d2f291c7bf32e82e1233b959775c000e3c0aed8d161b5278ac7c2d825"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_r_j3_link_2.stl",
+      "bytes": 19184,
+      "sha256": "c64a2c67c737596f9bdbe55770cabaa5ab0e9ac6b78e653b94410bfccc19b5a3"
+    },
+    {
+      "path": "converted_collision/collision_elbow_pitch_r_j3_link_3.stl",
+      "bytes": 189084,
+      "sha256": "d87046baccd024904cbb26b6875588be0101d2772c331f7f009a24668aa489e5"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_l_j4_link_0.stl",
+      "bytes": 195184,
+      "sha256": "21dfd4b1f64af38db99f6ddea98dcb117cd8ddd7d4acb20bfe8458a554e44aef"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_l_j4_link_1.stl",
+      "bytes": 194584,
+      "sha256": "5f990fb06c823d005011e6def4b39c1138dc582938bebb32ed04dc7384dc8b32"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_l_j4_link_2.stl",
+      "bytes": 10784,
+      "sha256": "f60fd20561d818c7f4ab17c4cfc7d8af0c8bae6adf7b988c362c6d7561a0936c"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_l_j4_link_3.stl",
+      "bytes": 77284,
+      "sha256": "7fad9079492ce886906e2272eac62b269f4a18fc184dbc88b6b302076309e9ed"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_r_j4_link_0.stl",
+      "bytes": 73784,
+      "sha256": "a95ca14c1505bb068afa4869df78fc331d72854110dd2eb62f894252c64853d0"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_r_j4_link_1.stl",
+      "bytes": 184884,
+      "sha256": "0f0c1ba75538d9f58cdd92cc84c1326679b6ff0c7e32aef8a59d46b4a0e3b7d8"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_r_j4_link_2.stl",
+      "bytes": 186384,
+      "sha256": "5904c0a269712bf5f9c078d2281afe673db629aaef5991a2a74d98e5177d6702"
+    },
+    {
+      "path": "converted_collision/collision_elbow_yaw_r_j4_link_3.stl",
+      "bytes": 33384,
+      "sha256": "2218419b55cfdc67807a97e3f911d05a1f7a1656eefe9e74bf99a08b8f021521"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_l_j1_link_0.stl",
+      "bytes": 186584,
+      "sha256": "0bc8d4a2e23da0dac1b2064739c73f16f959ee51c0356fb9bf16cde58daf0025"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_l_j1_link_1.stl",
+      "bytes": 265784,
+      "sha256": "8b3a9f2304139a1902384701f6697b86f092183a8d332b36ee750258e999bef1"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_l_j1_link_2.stl",
+      "bytes": 29484,
+      "sha256": "159a391604532ce72bbc730992b0336478124c72e6acdca8fe65b982f453ee40"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_l_j1_link_3.stl",
+      "bytes": 19984,
+      "sha256": "2327470b1cc5c316a459de551a56535c01a3e69f2843b22e01575b11f38a9bca"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_r_j1_link_0.stl",
+      "bytes": 281884,
+      "sha256": "24e3dc5be2c1d73d321f08f70b483f45562d8f5e38b15ac1f0a2dd088fada65d"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_r_j1_link_1.stl",
+      "bytes": 49684,
+      "sha256": "fe966d9b05064a3c4c8f8e4a862128b6896bd3b2629fa37da78188cc4a31f749"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_r_j1_link_2.stl",
+      "bytes": 41784,
+      "sha256": "813e11b505e5cc27724d0c52425985829ff5a45b7dced71f41b3b8c1c0e6b7f7"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_pitch_r_j1_link_3.stl",
+      "bytes": 154384,
+      "sha256": "7b4e196721d2ec131558dc2eaf50c8e80b0454fc9c2270348dc228e7ba093c47"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_l_j2_link_0.stl",
+      "bytes": 205284,
+      "sha256": "2e74e6efb94b6b1c175a8a5054d4a863380e58daec5aecf62bf225323509ae18"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_l_j2_link_1.stl",
+      "bytes": 53884,
+      "sha256": "26f5c1851663740dba5276cc014c3d6e8dc4c49092ab5c007a4d06f843626765"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_l_j2_link_2.stl",
+      "bytes": 168084,
+      "sha256": "5ab54d4ca4c28730907aff952e1f0df4f742a517fdb409bef042da33f40c48cc"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_l_j2_link_3.stl",
+      "bytes": 28484,
+      "sha256": "748da94d61e9072b8ee5240d931a40eac953aeedd20b4765d9502cf01bdb185b"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_r_j2_link_0.stl",
+      "bytes": 192284,
+      "sha256": "bd03e1eeaf5ea9fa57a8c365c5d3da76c92c310007c7cc6ce7b15304e1727bee"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_r_j2_link_1.stl",
+      "bytes": 47684,
+      "sha256": "034a505acbb7200a9955f69c38816cf6adbd5a424795d362802e706d9529bf6b"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_r_j2_link_2.stl",
+      "bytes": 172984,
+      "sha256": "0f5472c47de39a3709a6978cb80fa62a59276b23f69e0817f51d3677c95fa022"
+    },
+    {
+      "path": "converted_collision/collision_shoulder_roll_r_j2_link_3.stl",
+      "bytes": 27784,
+      "sha256": "3b57df35ed299dadc8b62831193138b0dbd5a7c8ec9630adceb50d351e2373c9"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_l_j5_link_0.stl",
+      "bytes": 63284,
+      "sha256": "0a7e4f9487e0375899da2accf51d5abf59743fafca97decb24e2ec109f8c5ccd"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_l_j5_link_1.stl",
+      "bytes": 140484,
+      "sha256": "7f9e602bc7313790ad85a5d34258da70279cdfaa2bc4d70aa2a97bbd2c3289b6"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_l_j5_link_2.stl",
+      "bytes": 66084,
+      "sha256": "ca53e099182203b2e8ea5b5500ef19d96538d38f3d2894306d2c1466f5874f71"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_l_j5_link_3.stl",
+      "bytes": 102484,
+      "sha256": "9717ca7e8ef669aca015fd48a430d989be22e73206c993571f439e915337262a"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_r_j5_link_0.stl",
+      "bytes": 188184,
+      "sha256": "5362d2f2b5841001ff8c98d1a0073aeab7e7beea1531eb4449ee4b512943ab0d"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_r_j5_link_1.stl",
+      "bytes": 46084,
+      "sha256": "6057ab070835f1eda0e3ec30867731c732532547df9c3fb169842f94eb28029a"
+    },
+    {
+      "path": "converted_collision/collision_wrist_pitch_r_j5_link_2.stl",
+      "bytes": 149884,
+      "sha256": "b34a6143dc3666b4bacbcfd4564d0f1882aefbb25f3cc05ca0307df191d00816"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_l_j7_link_0.stl",
+      "bytes": 94384,
+      "sha256": "433667ebab9ea5f84b3250d24babf6c6d3e6bc9203a78d3c48d745e856ae6634"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_l_j7_link_1.stl",
+      "bytes": 137584,
+      "sha256": "5a0cfee8f28b5904baea21155c2129ffb98cab223c6a8265991cf2bd3c53bea3"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_l_j7_link_2.stl",
+      "bytes": 171384,
+      "sha256": "6f90f8c4107c646b09bda07c098bdb6f89d28b9166cdc2179bf535ab49600f05"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_l_j7_link_3.stl",
+      "bytes": 75684,
+      "sha256": "4f0b6ebfa85cf915b5df0b3cc218b76735104b552ef5eccf358c25095f2c7f7f"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_r_j7_link_0.stl",
+      "bytes": 83284,
+      "sha256": "59b9a2326e48c5dc8d1e5aac38777506487c6f0cc69615cb15446d15de9c9f62"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_r_j7_link_1.stl",
+      "bytes": 137284,
+      "sha256": "9cc60f87b26147f83aedf6912d1dfd250908ec4de462cf2d3d972eb787af1809"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_r_j7_link_2.stl",
+      "bytes": 164384,
+      "sha256": "b45a9d670194709d931359a9ba25d4e98682db9c07525d8859f0e5b45c42d9f3"
+    },
+    {
+      "path": "converted_collision/collision_wrist_roll_r_j7_link_3.stl",
+      "bytes": 64684,
+      "sha256": "f99f3c29459b070084f9178393857784c9b32dc3323e25a07244dc140e852daa"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_l_j6_link_0.stl",
+      "bytes": 144584,
+      "sha256": "ffbfd6e30e9bba75cdb0d21734986296bb7d8dda71b7da21934b1da7113ff450"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_l_j6_link_1.stl",
+      "bytes": 200584,
+      "sha256": "f17fad11be6000df44cfadb4fa1090114da591e1b6bd6b82bfdfe45a57c11445"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_l_j6_link_2.stl",
+      "bytes": 69584,
+      "sha256": "830555aff5a3f684b1864310d6294c857013cea7e1f9b3009de47022775e225a"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_l_j6_link_3.stl",
+      "bytes": 28384,
+      "sha256": "d008cd48f2fa920a41a5cc1d77dd23f16832acb263ff8963af11fcaaf2a75ec3"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_r_j6_link_0.stl",
+      "bytes": 188984,
+      "sha256": "7521086298154f40f6ad14509ba9b63c98ae55bde9379bcdb86ea06c35b828e6"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_r_j6_link_1.stl",
+      "bytes": 59284,
+      "sha256": "aa4570f4bdba03f54e1f719f3f0127ad17903135a0230148f9f0917769696628"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_r_j6_link_2.stl",
+      "bytes": 38384,
+      "sha256": "f8a33591012b9d10a4517109fa44bd4f3eca55e5450118124f8e18fcac778e2b"
+    },
+    {
+      "path": "converted_collision/collision_wrist_yaw_r_j6_link_3.stl",
+      "bytes": 23584,
+      "sha256": "f58cbb2979d0168a544a6174edf8f31ed38bf34f50a1ecc56bddf2d527292f4a"
+    },
+    {
+      "path": "converted_visual/visual_base_link_0.stl",
+      "bytes": 630684,
+      "sha256": "452e30d231b4dc8cde59a6ed46fb45de8c0b27fea95a83d372b23782f8ad1bc5"
+    },
+    {
+      "path": "converted_visual/visual_base_link_1.stl",
+      "bytes": 4460384,
+      "sha256": "aff3d5f2ebdcb09ae97c8f0bb68027343df12a5aaa8d90a910ff7623112dd8eb"
+    },
+    {
+      "path": "converted_visual/visual_base_link_2.stl",
+      "bytes": 5733984,
+      "sha256": "22fae00672e305c6e1e1b45cd66d05087b49de3c281b2e2ce488bd4562a3f715"
+    },
+    {
+      "path": "converted_visual/visual_base_link_3.stl",
+      "bytes": 1198684,
+      "sha256": "8557276fcf7728c03989d7440a192e62ff8165adad898f6560a8c3c05e382904"
+    },
+    {
+      "path": "converted_visual/visual_base_link_4.stl",
+      "bytes": 610284,
+      "sha256": "719cb0a0d4d1ce0e8ff77b1460a0d9e812a98d4f24314364c8c40f37860e9ed2"
+    },
+    {
+      "path": "converted_visual/visual_elbow_pitch_l_j3_link_0.stl",
+      "bytes": 587284,
+      "sha256": "154ed36ada94d508c5be59a6ff51aa19871bc8ec7a97871b6ac0f554b33a6b2b"
+    },
+    {
+      "path": "converted_visual/visual_elbow_pitch_r_j3_link_0.stl",
+      "bytes": 587284,
+      "sha256": "154ed36ada94d508c5be59a6ff51aa19871bc8ec7a97871b6ac0f554b33a6b2b"
+    },
+    {
+      "path": "converted_visual/visual_elbow_yaw_l_j4_link_0.stl",
+      "bytes": 953984,
+      "sha256": "7bbb5b32c9e4f81990d50319b9f29ed6ad1991cc8a7f5b87160e4ac2fbe0492f"
+    },
+    {
+      "path": "converted_visual/visual_elbow_yaw_r_j4_link_0.stl",
+      "bytes": 953984,
+      "sha256": "7bbb5b32c9e4f81990d50319b9f29ed6ad1991cc8a7f5b87160e4ac2fbe0492f"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_pitch_l_j1_link_0.stl",
+      "bytes": 7400784,
+      "sha256": "0c6938404b3d87205b2dba5e089c81859de4698a3fa11be7c599715b360b33aa"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_pitch_l_j1_link_1.stl",
+      "bytes": 887734,
+      "sha256": "974cad4a227395c248162f8d6c5c76d395d7cf0bd4e791efeb9c8415377c1f82"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_pitch_l_j1_link_2.stl",
+      "bytes": 1861434,
+      "sha256": "00c08ae35037aa4e16693d14e39adf092d007156272c55f7dece5deaf3d9afcf"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_pitch_r_j1_link_0.stl",
+      "bytes": 7400784,
+      "sha256": "0c6938404b3d87205b2dba5e089c81859de4698a3fa11be7c599715b360b33aa"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_pitch_r_j1_link_1.stl",
+      "bytes": 887734,
+      "sha256": "974cad4a227395c248162f8d6c5c76d395d7cf0bd4e791efeb9c8415377c1f82"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_pitch_r_j1_link_2.stl",
+      "bytes": 1861434,
+      "sha256": "00c08ae35037aa4e16693d14e39adf092d007156272c55f7dece5deaf3d9afcf"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_roll_l_j2_link_0.stl",
+      "bytes": 829284,
+      "sha256": "7448e6b35924fcd4d28ce6ec949b784b441496f2631a695874c1a44395deb96b"
+    },
+    {
+      "path": "converted_visual/visual_shoulder_roll_r_j2_link_0.stl",
+      "bytes": 829384,
+      "sha256": "bac31daecfadcaf754cb8d4964a71b403e3728933995608e7debe3c8754932e7"
+    },
+    {
+      "path": "converted_visual/visual_wrist_pitch_l_j5_link_0.stl",
+      "bytes": 536184,
+      "sha256": "e4d55bb32d4aaf0c5f8402fec83759ac45018bb62940e510d2c0f8ff063d1867"
+    },
+    {
+      "path": "converted_visual/visual_wrist_pitch_r_j5_link_0.stl",
+      "bytes": 580584,
+      "sha256": "9814c69f0670867d716cdaacbfe6ad97d06ce20dfeb36b8d2d496529fec0f18a"
+    },
+    {
+      "path": "converted_visual/visual_wrist_roll_l_j7_link_0.stl",
+      "bytes": 6558734,
+      "sha256": "eae0943bee866e288b766a53fd6526f23b89541ba0433b203c970f0274fc3e3e"
+    },
+    {
+      "path": "converted_visual/visual_wrist_roll_l_j7_link_1.stl",
+      "bytes": 3071284,
+      "sha256": "97b8bbeb695185f8fbf7e9b4d36476be217f8dcd821deec5e2284ae86e0f9aef"
+    },
+    {
+      "path": "converted_visual/visual_wrist_roll_r_j7_link_0.stl",
+      "bytes": 6558734,
+      "sha256": "eae0943bee866e288b766a53fd6526f23b89541ba0433b203c970f0274fc3e3e"
+    },
+    {
+      "path": "converted_visual/visual_wrist_roll_r_j7_link_1.stl",
+      "bytes": 3071284,
+      "sha256": "97b8bbeb695185f8fbf7e9b4d36476be217f8dcd821deec5e2284ae86e0f9aef"
+    },
+    {
+      "path": "converted_visual/visual_wrist_yaw_l_j6_link_0.stl",
+      "bytes": 645384,
+      "sha256": "2a65f9a9c5fb6be528e6468f2888337380b8dccbda539c81e33da3af17c9b378"
+    },
+    {
+      "path": "converted_visual/visual_wrist_yaw_r_j6_link_0.stl",
+      "bytes": 645984,
+      "sha256": "64d90f9ac969d907bf2ce64ee1eec0bba2a8bce8ae05092333fc34e5ebaa82e2"
+    }
+  ],
+  "frozen_model": {
+    "path": "arm_only.xml",
+    "canonical_sha256": "ebfdaa1e0e13836da6262e4430029fbb3958a0d73142ba72776e1158058a15ce",
+    "path_normalization": "Replace the absolute ASSET_DIR prefix by ${ASSET_DIR} before SHA256.",
+    "expected_nq": 14,
+    "expected_nv": 14,
+    "expected_nu": 14,
+    "expected_geoms": 90,
+    "expected_collision_exclusions": 4,
+    "arm_order": "left J1-J7, right J1-J7",
+    "source_force_limits_nm": [
+      108,
+      108,
+      66,
+      66,
+      18,
+      18,
+      18,
+      108,
+      108,
+      66,
+      66,
+      18,
+      18,
+      18
+    ]
+  },
+  "license_files": [
+    {
+      "path": "LICENSE-DEXFORCE.txt",
+      "bytes": 11353,
+      "sha256": "0e03d9c309205f8f650b58157f30eef0e3f61ee08ea81d8e33157c5a33aff299",
+      "text": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [2025] [DexForce Technology]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+    },
+    {
+      "path": "LICENSE-GENESIS-MIT.txt",
+      "bytes": 1238,
+      "sha256": "0313f3f9316f80a4e1eba9042f7514bd42e824743b0a08cbf91fd3f52afee571",
+      "text": "MIT License\n\nDataset publisher: Genesis Intelligence.\nLicense declaration: GENESIS_DATASET_CARD.json (MIT).\nThe following is the standard MIT license text; the upstream asset provides no separate copyright notice.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+    },
+    {
+      "path": "DEXFORCE_DATASET_CARD.json",
+      "bytes": 190,
+      "sha256": "b9922a2b29c6b59bc0133101dcd5a5af9e32d140eb9dc6404ddf9a437636ea41",
+      "text": "{\n  \"id\": \"DexForceAI/embodichain_data\",\n  \"sha\": \"48317bd8733182f36d306cc2a7a60ae5e47ed2c9\",\n  \"cardData\": {\n    \"license\": \"apache-2.0\"\n  },\n  \"lastModified\": \"2026-10-10T05:28:54.000Z\"\n}\n"
+    },
+    {
+      "path": "GENESIS_DATASET_CARD.json",
+      "bytes": 183,
+      "sha256": "fc862bebd873896b4f4ca57b3a374d0d68eed8a3790488e562f05729ced2b09f",
+      "text": "{\n  \"id\": \"Genesis-Intelligence/assets\",\n  \"sha\": \"deffbe1685e5ce6aa289efdd541f762f1eb3353f\",\n  \"cardData\": {\n    \"license\": \"mit\"\n  },\n  \"lastModified\": \"2026-10-01T20:54:15.000Z\"\n}\n"
+    }
+  ]
+}

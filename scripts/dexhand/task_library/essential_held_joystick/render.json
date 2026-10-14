@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "camera": {
+    "distance": 0.37,
+    "azimuth": 135,
+    "elevation": -35,
+    "lens": 48
+  },
+  "style": "reference_studio",
+  "reference": "jianglongye/dexterous-astra",
+  "note": "Authoring-only presentation settings. No policy or trajectory is packaged into tasks.",
+  "materials": {
+    "joycon_grey": {
+      "roughness": 0.45,
+      "metallic": 0,
+      "textures": {
+        "base_color": "joycon_grey_base_color.png",
+        "normal": "joycon_grey_normal.png",
+        "orm": "joycon_grey_orm.png"
+      }
+    },
+    "joycon_red": {
+      "roughness": 0.45,
+      "metallic": 0,
+      "textures": {
+        "base_color": "joycon_red_base_color.png",
+        "normal": "joycon_red_normal.png",
+        "orm": "joycon_red_orm.png"
+      }
+    },
+    "joycon_led": {
+      "roughness": 0.45,
+      "metallic": 0,
+      "textures": {
+        "base_color": "joycon_led_base_color.png",
+        "normal": "joycon_led_normal.png",
+        "orm": "joycon_led_orm.png"
+      }
+    }
+  }
+}

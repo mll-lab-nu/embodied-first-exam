@@ -23,6 +23,7 @@
 "AutoBio"           = { privileged =  3600, standard =  3600 }
 "BEHAVIOR-1K"       = { privileged =  7200, standard =  7200 }
 "BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"DexHand"           = { privileged =  3600, standard =  3600 }
 "DexJoCo"           = { privileged =  3600, standard =  3600 }
 "DexToolBench"      = { privileged =  3600, standard =  3600 }
 "HumanoidBench"     = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
@@ -268,6 +269,15 @@ from_sec = 0
 to_sec = 3600
 decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
 note = "the first standard-realtime task (table_tennis): the standard twin's number"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "DexHand"
+modes = ["privileged", "standard"]
+from_sec = 0
+to_sec = 3600
+decided_by = "DexHand tasks pull request (D8 default; team meeting 2026-10-14)"
+note = "the benchmark's first tasks: the protocol's default; a scene builds in 1-12 s and the recorded reference episodes replay in seconds to 10 minutes on one core (the longest, sweep_dustpan, is 66 s of robot time at 2 kHz), so the hour is mostly the agent's own work"
 
 [[history]]
 date = "2026-10-14"
