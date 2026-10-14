@@ -26,10 +26,8 @@ if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
 if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
 else:
-    # PROTOCOL §2.3: 14400 s cap; per-benchmark exceptions by owner decision, recorded in PROTOCOL §2.3 (task-directory prefix -> cap)
-    BUDGET_EXCEPTIONS = {"robotangle-": 21600}   # RoboTangle, owner 2026-10-08 (issue #87)
-    cap = next((c for p, c in BUDGET_EXCEPTIONS.items() if t.name.startswith(p)), 14400)
-    if d["agent"]["timeout_sec"] > cap:
-        fail(f"[agent].timeout_sec > {cap} s cap" + (" (4h, PROTOCOL §2.3)" if cap == 14400 else " (documented exception, PROTOCOL §2.3)"))
+    # PROTOCOL D8 / §2.3: 14400 s cap, no benchmark excepted (the same cap: scripts/task_conventions.py CUTOFF_CAP)
+    if d["agent"]["timeout_sec"] > 14400:
+        fail("[agent].timeout_sec > 14400 s cap (4h, PROTOCOL §2.3)")
 sys.exit(rc)
 PY

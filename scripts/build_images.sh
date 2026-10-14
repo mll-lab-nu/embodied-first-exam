@@ -10,7 +10,7 @@ D=docker; docker ps >/dev/null 2>&1 || D="sg docker -c"
 for dir in images/*/; do
   name="$(basename "$dir")"
   VER="$(cat "$dir/VERSION" 2>/dev/null || cat images/VERSION)"; CTX=.; [ -f "$dir/.build-context-self" ] && CTX="$dir"
-  if [ -f "$dir/BUILD_CONTEXT" ]; then   # a context prepared by a script (BUILD_ONLY images; e.g. images/robotangle/)
+  if [ -f "$dir/BUILD_CONTEXT" ]; then   # a context prepared by a script (BUILD_ONLY images; e.g. images/roboarc/)
     CTX="$dir$(cat "$dir/BUILD_CONTEXT")"; [ -d "$CTX" ] || { echo "skip $name: $CTX missing (see $dir/BUILD_ONLY)"; continue; }
   fi
   cmd="docker build -t $REG/eai-$name:$VER -t $REG/eai-$name:latest -f $dir/Dockerfile $CTX"
