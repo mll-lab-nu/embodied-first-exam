@@ -147,7 +147,7 @@ harbor view jobs
 tasks/                 Harbor tasks (one directory per task and mode) and dataset.toml (manifest with digests)
 images/<sim>/          simulator base images (simulator installs only)
 scripts/               task generators, image build/push, the egress allowlist, results and report tools
-ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
+ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh; scoped by ci_scope.py)
 docs/                  PROTOCOL.md (contract), STANDARD_MODE.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
                        RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
