@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -809,6 +809,13 @@ results must state the reset budget and are compared only with results under the
   (`images/mujoco/limited/server_mj.py`) implements the capability as above; its other tasks (MuJoCo Playground ALOHA,
   Panda) keep 0. `RCB_RESET_BUDGET=0` still runs one episode; DexToolBench standard results recorded before this change
   ran with 0 and are reported separately ([`benchmarks/dextoolbench.md`](benchmarks/dextoolbench.md)).
+- **MuJoCo Playground, quadrupeds** (owner, 2026-10-14, board 0113; the nine `mujoco_playground_{go1,spot,barkour}_*`
+  standard tasks): `budget.reset = 10`. A fall, a failed turn or a wrong first chunk used to end the trial. A reset
+  restores the frozen start (`rcb_quadruped.Session.reset()`: the same state hash and proprioception). The quadrupeds'
+  2.2 service (`scripts/mujoco-playground/shared/standard/server.py`) implements the capability as above, as MyoSuite's
+  does (its instruction calls `POST /reset` through `Robot._post`). The ALOHA and Panda standard tasks keep 0.
+  `RCB_RESET_BUDGET=0` still runs one episode; quadruped standard results recorded before this change ran with 0 and
+  are reported separately ([`benchmarks/mujoco-playground.md`](benchmarks/mujoco-playground.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
