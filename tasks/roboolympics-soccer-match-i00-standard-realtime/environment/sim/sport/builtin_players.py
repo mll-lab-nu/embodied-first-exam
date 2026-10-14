@@ -53,6 +53,7 @@ LV = dict(vmax=0.8, vlat=0.4, wmax=1.0, pos_tol=0.05, yaw_tol=0.08, shoot_m=7.0)
 # line up on the kicking foot's line STEP_STAGE behind the ball (the ball still in the head camera's view, which
 # starts ~0.55 m ahead), then send the kick walking in; the kick waits for the step that reaches the ball
 STEP_LINE, STEP_STAGE, STEP_LAT_TOL, STEP_YAW_TOL, STEP_V = 0.16, 0.7, 0.06, 0.15, 0.5
+TRUNK_TOP_Z = 0.85                            # overhead formats: the height at which a robot's shoulders are seen
 
 
 def in_own_area(p, margin=0.0):
@@ -292,6 +293,42 @@ def step_striker(me, ball, aim, power_far=0.6, first_touch=False, others=(), opp
               opps=[o for o in opps if np.hypot(*(o - ball)) > 0.6] + close)
 
 
+def overhead_ground(cam, u, v, z):
+    """The point (team frame) at height z seen at pixel (u, v) of an overhead camera (game spec camera.overhead)."""
+    pos, look, up = (np.array(cam[k], float) for k in ("pos", "lookat", "up"))
+    fwd = (look - pos) / np.linalg.norm(look - pos)
+    right = np.cross(fwd, up)
+    right /= np.linalg.norm(right)
+    upv = np.cross(right, fwd)
+    f = float(cam["focal_px"])
+    ray = fwd + right * (u - cam["width"] / 2) / f - upv * (v - cam["height"] / 2) / f
+    t = (z - pos[2]) / ray[2]
+    return (pos + t * ray)[:2]
+
+
+def find_blobs(tile, colour, min_px=40, radius=30.0):
+    """(u, v, n) of the blobs of a team colour seen from above (greedy clustering of the matching pixels)."""
+    r = tile[..., 0].astype(np.int32)
+    g = tile[..., 1].astype(np.int32)
+    b = tile[..., 2].astype(np.int32)
+    if colour == "red":
+        m = (r > 80) & (g * 100 < 21 * r) & (b * 100 < 25 * r)
+    else:
+        m = (b > 80) & (r * 100 < 40 * b) & (g * 100 < 55 * b)
+    ys, xs = np.nonzero(m[::2, ::2])
+    cl = []                                              # [sum_x, sum_y, n]
+    for x, y in zip(xs * 2.0, ys * 2.0):
+        for c in cl:
+            if abs(c[0] / c[2] - x) < radius and abs(c[1] / c[2] - y) < radius:
+                c[0] += x
+                c[1] += y
+                c[2] += 1
+                break
+        else:
+            cl.append([x, y, 1])
+    return [(c[0] / c[2] + 1.0, c[1] / c[2] + 1.0, 4 * c[2]) for c in cl if 4 * c[2] >= min_px]
+
+
 def search(me):
     return dict(type="walk", v=[0.0, 0.0, 0.6])
 
@@ -305,8 +342,9 @@ def image_of(obs):
 class Reference:
     def __init__(self, spec, seat, seed=0):
         cam = spec["camera"]
-        self.K = cam["intrinsics"]
-        self.C = np.array(cam["cam_to_trunk"], float)
+        self.K = cam.get("intrinsics")                  # head camera (the onboard formats)
+        self.C = np.array(cam["cam_to_trunk"], float) if "cam_to_trunk" in cam else None
+        self.overhead = cam.get("overhead")             # the overhead formats: fixed cameras, the team's frame
         self.robots = [str(r) for r in spec["your_robots"]]
         self.team_fmt = len(self.robots) == 1           # one robot per seat: the team formats (team, team_match)
         self.all_strike = False                         # Chase: every robot a striker
@@ -326,8 +364,41 @@ class Reference:
         self.opps = []                                  # [(xy, t_sim)] opponent trunk estimates
         self.unit = None
         self.rr = 0
+        if self.overhead:                               # overhead reference: every robot chases, the in-walk kick
+            self.all_strike = True                      # (the truth reference's play, soccer.Coach("reference"))
+            self.kick = step_striker
+
+    def perceive_overhead(self, obs, now):
+        tiles = {t["camera"]: t for t in obs.get("tiles") or []}
+        if not obs.get("image_png_b64") or not tiles:
+            return False
+        img = image_of(obs)
+        est, opp = [], []
+        for cam in self.overhead:
+            t = tiles.get(cam["name"])
+            if t is None:
+                continue
+            tile = np.ascontiguousarray(img[t["y"]:t["y"] + t["height"], t["x"]:t["x"] + t["width"]])
+            det = find_ball(tile)
+            if det:
+                b = overhead_ground(cam, det[0], det[1], BALL_R)
+                if abs(b[0]) <= HALF_L + 0.5 and abs(b[1]) <= HALF_W + 0.5:
+                    est.append(b)
+            for (u, v, n) in find_blobs(tile, self.opp_colour):
+                opp.append(overhead_ground(cam, u, v, TRUNK_TOP_Z))
+        t_frame = now["t_sim"]
+        if est:
+            self.ball = self.own = (np.mean(est, axis=0), t_frame)
+        merged = []
+        for o in opp:
+            if all(np.hypot(*(o - q)) > 0.5 for q in merged):
+                merged.append(o)
+        self.opps = [(o, t_frame) for o in merged]
+        return bool(est)
 
     def perceive(self, obs, now):
+        if self.overhead:
+            return self.perceive_overhead(obs, now)
         tiles = {t["camera"]: t for t in obs.get("tiles") or []}
         if not obs.get("image_png_b64") or not tiles:
             return False
@@ -531,6 +602,22 @@ class StepChase(StepReference):
     def __init__(self, spec, seat, seed=0):
         super().__init__(spec, seat, seed)
         self.all_strike = True
+
+
+class OverheadReference(Reference):
+    """The reference player of the overhead formats (match_overhead, duel_overhead): the same class; with the game
+    spec's camera.overhead it finds the ball and the opponents in the two overhead tiles (colour thresholds, the
+    pixel's ray onto the plane of the ball's centre / the opponents' shoulders), every robot goes for the ball and
+    kicks with the in-walk kick (the truth reference's play, soccer.Coach("reference"))."""
+
+
+class OverheadChase(Reference):
+    """The simple baseline of the overhead formats: every robot goes for the ball with the swing kick."""
+
+    def __init__(self, spec, seat, seed=0):
+        super().__init__(spec, seat, seed)
+        self.all_strike = True
+        self.kick = striker
 
 
 class Stand:

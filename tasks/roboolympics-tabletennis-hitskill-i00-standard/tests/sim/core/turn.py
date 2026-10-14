@@ -21,6 +21,7 @@ import threading
 import time
 import traceback
 
+from .diaglog import jsonable, view_steps
 from .service import Service
 from .realtime import query_of
 from .sport import FINISHED, Refused, parse_action
@@ -194,8 +195,8 @@ class TurnService(Service):
         return 200, {"state": self.state(seat, since=self.team_since(body))}
 
     def gate(self, seat):
-        if self.phase == "over":
-            return 200, {"state": self.state(seat)}
+        if self.phase == "over":                   # core 0.2.26: 409 and the final state, nothing drawn
+            return 409, {"error": "the match is over", "state": self.state(seat)}
         if self.phase == "prepare":
             return 409, {"error": "the match has not started (both players must send start)", "state": self.state(seat)}
         return None
@@ -229,6 +230,10 @@ class TurnService(Service):
         self.seats[seat].count("n_observe")
         (job, meta), now = self.query_guard(seat, query, lambda: (self.camera_job(seat, query),
                                                                    self.state(seat, query, since)))
+        obs_id = self.seats[seat].stats["n_observe"]           # diagnostics (core 0.2.25): never replayed
+        self.diag("observe", seat=seat, obs_id=obs_id, k=self.m.k, view_steps=view_steps(meta, job, self.m.k),
+                  query=query)
+        self.acts.observed(seat, obs_id)
         return 200, {"state": now, "observation": dict(meta)}, job     # drawn off the lock
 
     def act(self, seat, body):
@@ -254,9 +259,15 @@ class TurnService(Service):
             self.lose(seat, "clock")
             return 200, {"clock_forfeit": "your clock ran out: you lose the match", "state": self.state(seat)}
         low, info = self.layer.lower(seat, cmd, None, self.m)
+        act_id = self.acts.new(seat)                           # diagnostics (core 0.2.25): act -> observation -> effect
+        self.diag("act_received", seat=seat, k=self.m.k, act_id=act_id, obs_id_last=self.acts.last_obs.get(seat),
+                  decision=cmd)
         self.ep.write("cmd", k=self.m.k, seat=seat, cmd=low, model_call=st.meter.last_call(),
                       clock_used_s=round(st.clock_used(), 1))
+        k_cmd = self.m.k
         applied = self.m.apply(seat, low) or {}
+        self.diag("effect", seat=seat, act_id=act_id, k=k_cmd, info=jsonable(applied),
+                  **({"rejected": True} if "rejected" in applied else {}))
         job = self.reply_job(seat, low, applied)              # the result's images: snapshot now, drawn off the lock
         info = {**applied, **info}
         self.bc.frame(force=True)

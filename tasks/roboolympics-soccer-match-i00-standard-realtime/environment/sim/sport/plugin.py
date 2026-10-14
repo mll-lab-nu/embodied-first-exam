@@ -32,6 +32,7 @@ from __future__ import annotations
 import os
 import threading
 import tomllib
+from collections import deque
 
 import numpy as np
 
@@ -40,6 +41,9 @@ DECL = tomllib.loads(open(os.path.join(HERE, "sport.toml"), "rb").read().decode(
 REVISION = DECL["sport"]["revision"]
 FORMAT_SEATS = {name: tuple(f["seats"]) for name, f in DECL["formats"].items()}
 FORMAT_SIDES = {name: f.get("sides") for name, f in DECL["formats"].items()}
+# perception (sport.toml [formats.<f>] perception): "onboard" = each robot's head camera (match, duel, team);
+# "overhead" = the fixed overhead cameras of overhead.py, no head cameras (match_overhead, duel_overhead)
+FORMAT_PERCEPTION = {name: f.get("perception", "onboard") for name, f in DECL["formats"].items()}
 
 
 def _service_defaults():
@@ -64,6 +68,7 @@ os.environ.setdefault("LP_NUM_THREADS", "2")
 
 import soccer as S  # noqa: E402  (the legacy simulator; reads its own defaults from the environment at import)
 import soccer_scene as SC  # noqa: E402
+import overhead as OH  # noqa: E402
 from core.sport import FINISHED, PLAYING, UNIT_OVER, MatchBase, Phase, Refused, SchemaLayer  # noqa: E402
 
 OPP = "opponent"                        # the scripted team's side in the `match` format
@@ -136,6 +141,9 @@ class SoccerMatch(MatchBase):
         self.dt = S.CONTROL_DT
         self.forfeited = None                 # (seat, why): a core decision (the world itself never changes on it)
         self.refused = {s: 0 for s in cfg.seats}     # acts refused at the request (robot penalized or fallen)
+        self.overhead = FORMAT_PERCEPTION.get(getattr(cfg, "format", None) or "", "onboard") == "overhead"
+        self._lag = max(0, int(round(OH.VISION_LATENCY_S / S.CONTROL_DT)))   # overhead images: steps behind
+        self._qhist = deque(maxlen=self._lag + 1)    # the last qpos per control step (the overhead images' frame)
         self._kin, self._kin_lock = None, threading.Lock()
 
     @property
@@ -156,6 +164,8 @@ class SoccerMatch(MatchBase):
     def step(self):
         n = len(self.w.events)
         self.w.advance()
+        if self.overhead:
+            self._qhist.append(self.w.d.qpos.copy())
         return self.w.events[n:]
 
     def state_digest(self):
@@ -300,9 +310,13 @@ class SoccerMatch(MatchBase):
         w = self.w
         if (w.stopped or w.done) and w.review_hist:
             return w.review_hist[-1]["qpos"]
+        if self.overhead and self._qhist:              # the overhead vision: the world VISION_LATENCY_S ago
+            return self._qhist[0]
         return w.d.qpos
 
     def cameras(self, seat, query=None):
+        if self.overhead:                                  # fixed cameras: no robot pose in them
+            return OH.camera_defs(seat[0])
         import mujoco
         with self._kin_lock:                               # /spec reads the cameras without the core's world lock
             if self._kin is None:
@@ -383,6 +397,26 @@ class Soccer:
         return Scene(xml=xml, assets=assets)
 
     def spec(self, cfg, seat, m):
+        out = self._spec(cfg, seat, m)
+        if m.overhead:
+            out["camera"] = {
+                "overhead": OH.calibration(seat[0]),
+                "tiles": "two overhead cameras, one per half, in this order: overhead0 over your own half (your "
+                         "x < 0), overhead1 over the opponents' half; no head cameras in this format",
+                "frame": "every tile is a map of its half in YOUR team's frame: image right = your +x (you attack "
+                         "x = +5), image up = your +y; the cameras look straight down from height %g m (pos, lookat, "
+                         "up, fovy_deg in your frame; pinhole: u = cx + f * x_right / depth, v = cy - f * y_up / "
+                         "depth, depth = height above the point's plane)" % OH.CAMERA_HEIGHT,
+                "latency_s": OH.VISION_LATENCY_S,
+                "latency": "the images show the world latency_s ago (as RoboCup SSL's shared vision); your robots' "
+                           "own state is exact and current",
+                "heights_m": {"ball_centre": S.BALL_R, "trunk_top_about": 0.85, "head_top_about": OH.ROBOT_TOP},
+                "note": "ideal images (no noise, no lens distortion); the ball is orange, team A wears blue, team B "
+                        "red; a robot seen from above shows its head and shoulders, displaced outwards from the "
+                        "point under it by height / camera height x its distance from the camera's axis"}
+        return out
+
+    def _spec(self, cfg, seat, m):
         team = seat[0]
         robots = robots_of(seat)
         ents = [int(r[1]) for r in robots]
@@ -466,7 +500,8 @@ class Soccer:
     def players(self):
         import builtin_players as bp
         return {"reference": bp.Reference, "chase": bp.Chase, "stand": bp.Stand, "random": bp.Random,
-                "reference_step": bp.StepReference, "chase_step": bp.StepChase}
+                "reference_step": bp.StepReference, "chase_step": bp.StepChase,
+                "reference_overhead": bp.OverheadReference, "chase_overhead": bp.OverheadChase}
 
 
 SPORT = Soccer()

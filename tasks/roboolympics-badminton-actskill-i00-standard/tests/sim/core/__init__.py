@@ -4,7 +4,14 @@ Flow (clock, slowdown, freeze and review, seats and turns), rules (formats, mode
 metering) and judgement (outcome, validity). It names no sport and no harness (ci_checks/check-core-purity.sh), computes
 no physics, and changes only in its own commits with a version bump (VERSION) and every sport's golden replay passing.
 """
-VERSION = "0.2.24"   # 0.2.24: player mode "unmetered" (PLAYER_MODE_<seat>: the runner meters the model; no proxy, no meter)
+VERSION = "0.2.27"   # 0.2.27: player mode "unmetered" (PLAYER_MODE_<seat>: the runner meters the model; no proxy, no meter)
+# 0.2.26: after the end, observe / act answer 409 with the final state and draw nothing (realtime and
+# turn); after finalization a late draw returns no images and a late failure is only logged, never an error
+# 0.2.25: diagnostic records (information only, never replayed, in no hash; core/diaglog.py):
+# observe rows carry k and view_steps (both protocols), act_received k / act_id / obs_id_last / seen, new rows effect,
+# act_dropped, event (what Match.step() returns) and team_delivered; core/local.py writes the same; the post-match
+# diagnosis python -m core.diagnose PLUGIN RUN_DIR (core/diagnose.py: load() -> rep with a replayed world(), the
+# sport's diagnose.py). 0.2.24 is skipped
 # 0.2.23: the reaction report (report only): final.json `reaction` per seat, acts within the
 # declared reaction delay D (count, share) and the actual delay (median, p90, max); act rows log `seen`, the replay
 # recomputes it (core/episode.reaction_report)

@@ -1548,7 +1548,7 @@ def test_check_body_and_check_action_limits():
             raise AssertionError(f"accepted {body}")
         except Refused:
             pass
-# ------------------------------------------------------------------ unmetered seats (core 0.2.24)
+# ------------------------------------------------------------------ unmetered seats (core 0.2.27)
 def test_unmetered_seat_needs_no_meter_and_no_proxy():
     from core.launch import seat_mode
     from core.seats import Seat, validity_fields
@@ -1917,6 +1917,48 @@ def test_team_channel_turn_protocol_and_http_since():
     finally:
         srv.shutdown()
         srv.server_close()
+
+
+def test_requests_after_the_end_never_void_a_finished_match():
+    """core 0.2.26: once a match is over, observe / act answer 409 with the final state and draw nothing (realtime and
+    turn); after finalization the render workers are closed, so a late draw returns no images and a late request's
+    failure is only logged: a player that keeps observing after the end (713 broken pipes in a four-seat match)
+    never voids the finished, replayed match."""
+    svc, post = service(["A", "B"], fmt="duel")
+    fin = run_all(svc, post, ["A", "B"])
+    assert fin["valid_trial"] and svc.finalized, fin["errors"]
+
+    class Closed:                                  # a render worker after finalize(): every call is a broken pipe
+        lock = threading.Lock()
+
+        def call(self, job, wait=True):
+            raise BrokenPipeError(32, "Broken pipe")
+
+        def close(self):
+            pass
+    svc.workers["render", "A"] = Closed()
+    code, out = post["observe"]("A", {})
+    assert code == 409 and out["error"] == "the match is over" and out["now"]["done"], (code, out)
+    assert "observation" not in out
+    code, out = post["act"]("A", {"type": "move", "v": 0.5})
+    assert code == 409 and out["now"]["done"], (code, out)
+    assert svc.draw("A", {"state": {}, "cams": []}) is None                  # finalized: nothing drawn
+    svc.failure("observe", BrokenPipeError(32, "Broken pipe"))               # what core/http.py reports
+    with svc.cond:
+        svc.write_final()
+    fin2 = json.loads((svc.data / "final.json").read_text())
+    assert fin2["valid_trial"] and not fin2["technical_failure"] and fin2["errors"] == fin["errors"], fin2
+    assert fin2["winner"] == fin["winner"] and svc.phase == "over"
+
+    tsvc, tpost = turn_service(["A", "B"])
+    th = [threading.Thread(target=play_turn, args=(tsvc, tpost, s), daemon=True) for s in ("A", "B")]
+    for t in th:
+        t.start()
+    tfin = finish(tsvc)
+    assert tfin["valid_trial"], tfin["errors"]
+    for ep in ("observe", "act"):
+        code, out = tpost[ep]("A", {"v": 0.5} if ep == "act" else {})[:2]
+        assert code == 409 and out["error"] == "the match is over" and out["state"]["done"], (ep, code, out)
 
 if __name__ == "__main__":
     sys.exit(main())

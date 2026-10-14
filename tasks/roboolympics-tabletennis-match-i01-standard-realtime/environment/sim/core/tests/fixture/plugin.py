@@ -34,6 +34,7 @@ class World(MatchBase):
         self.k += 1
         if self.k % UNIT == 0:
             self.frozen = True
+            return [{"kind": "unit_end", "unit": self.u}]     # an event (core 0.2.25 logs it as an `event` row)
         return []
 
     def retired_seats(self):

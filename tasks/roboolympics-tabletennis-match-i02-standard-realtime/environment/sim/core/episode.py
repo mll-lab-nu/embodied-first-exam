@@ -11,6 +11,8 @@ episode.jsonl is append-only, one JSON object per line. Rows the replay reads (e
   {"ev": "forfeit", "k": K, "seat": S, "why": W}               a core decision that ends the match
   {"ev": "retire", "k": K, "seat": S, "side": D, "why": W}     a side leaves, the match goes on (N sides)
   {"ev": "end", "k": K, "reason": R}
+Diagnostic rows (core 0.2.25; core/diaglog.py lists them: observe, act_received, effect, act_dropped, event,
+team_delivered) are information only, like every row not listed above: the replay never reads them.
 Replay (python -m core.episode PLUGIN DIR) rebuilds the match from the header, re-applies the rows at their steps and
 writes DIR/replay_check.json: state_sha, scores, winner, ranking, k, commands_sha, source_sha, the continuous
 score by side (sport.toml [score], core 0.2.14; null without one) and the reaction report (core 0.2.23,

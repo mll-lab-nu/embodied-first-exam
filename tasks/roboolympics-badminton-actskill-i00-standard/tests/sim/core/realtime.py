@@ -34,6 +34,7 @@ import time
 import numpy as np
 
 from . import spec as spec_mod
+from .diaglog import jsonable, view_steps
 from .episode import reaction_report
 from .service import Service
 from .sport import FINISHED, UNIT_OVER, Refused, parse_action
@@ -161,7 +162,8 @@ class RealtimeService(Service):
             with self.cond:
                 st.count("attempts")
                 if self.phase != "running":
-                    return 409, {"error": "world is not running", "now": self.state(seat)}
+                    return 409, {"error": "the match is over" if self.phase == "over" else "world is not running",
+                                 "now": self.state(seat)}
                 if st.retired:
                     return 409, {"error": "your side has retired"}
                 unit = self.m.unit()
@@ -176,7 +178,10 @@ class RealtimeService(Service):
                 if self.phase != "running" or self.m.unit() != unit:
                     return 409, {"error": "unit ended during response confirmation"}
                 job = self.layer.snapshot(seat, cmd, self.m, st.stats["attempts"])
-                self.ep.write("act_received", seat=seat, unit=unit, decision=cmd, model_call=receipt)
+                act_id = self.acts.new(seat)            # diagnostics (core 0.2.25): act -> observation -> effect
+                self.ep.write("act_received", seat=seat, unit=unit, decision=cmd, model_call=receipt, k=self.m.k,
+                              act_id=act_id, obs_id_last=self.acts.last_obs.get(seat), seen=seen,
+                              entity=entity or None)
             prepared = None
             if job is not None:
                 prepared = (self.workers["plan", seat].call(job) if self.layer.worker else self.layer.prepare(job))
@@ -185,8 +190,10 @@ class RealtimeService(Service):
                     st.sample("plan_s", prepared["worker_s"])
                 if self.phase != "running" or self.m.unit() != unit:
                     st.count("dropped")
+                    self.dropped({"act_id": act_id}, seat, "unit_over_planning" if self.phase != "over" else "match_over")
                     return 409, {"error": "unit ended during planning", "now": self.state(seat)}
-                item = {"unit": unit, "cmd": cmd, "prepared": prepared, "arrived": arrived, "result": None}
+                item = {"unit": unit, "cmd": cmd, "prepared": prepared, "arrived": arrived, "result": None,
+                        "act_id": act_id, "entity": entity}
                 if seen is not None:
                     item["seen"] = seen                 # the reaction report (core 0.2.23), any D
                     if self.react:
@@ -211,7 +218,16 @@ class RealtimeService(Service):
         """Log and apply one low-level command. An act's row (act = its pending item) also carries `seen`, the step of
         the world state the act answered (None if the seat had been sent none): the reaction report (core 0.2.23)."""
         self.ep.write("cmd", k=self.m.k, seat=seat, cmd=low, **({"seen": act.get("seen")} if act is not None else {}))
-        return self.m.apply(seat, low) or {}
+        info = self.m.apply(seat, low) or {}
+        if act is not None and act.get("act_id") is not None:       # diagnostics (core 0.2.25): not in the cmd row
+            self.diag("effect", seat=seat, act_id=act["act_id"], k=self.m.k, entity=act.get("entity") or None,
+                      **({"rejected": True} if "rejected" in info else {}))
+        return info
+
+    def dropped(self, item, seat, why):
+        """An accepted act that will never take effect (diagnostics, core 0.2.25)."""
+        if item.get("act_id") is not None:
+            self.diag("act_dropped", seat=seat, act_id=item["act_id"], k=self.m.k, why=why)
 
     def apply_pending(self):
         tick = getattr(self.layer, "tick", None)       # a layer's per-step command (the skill in the loop's step(),
@@ -233,13 +249,16 @@ class RealtimeService(Service):
             st = self.seats[seat]
             if item["unit"] != self.m.unit():
                 st.count("dropped")
+                self.dropped(item, seat, "unit_changed")
                 continue
             if item.get("earliest", 0) > self.m.k:     # held until its reaction delay has passed (core 0.2.18)
                 self.pending[seat, _entity] = item
                 continue
             low, info = self.layer.lower(seat, item["cmd"], item["prepared"], self.m)
             if self.delay:
-                self.scheduled.append([self.m.k + self.delay, seat, low, {"seen": item.get("seen")}])
+                self.scheduled.append([self.m.k + self.delay, seat, low, {"seen": item.get("seen"),
+                                                                           "act_id": item["act_id"],
+                                                                           "entity": item["entity"]}])
                 info = {"effect_step": self.m.k + self.delay, **info}
             else:
                 applied = self.apply_now(seat, low, item)
@@ -263,16 +282,21 @@ class RealtimeService(Service):
             return 429, {"error": "one observation per seat may be in flight"}
         try:
             with self.cond:
+                if self.phase == "over":           # core 0.2.26: no images after the end, the final state only
+                    return 409, {"error": "the match is over", "now": self.state(seat, since=since)}
                 now, (job, meta) = self.query_guard(seat, query, lambda: (self.state(seat, query, since),
                                                                           self.camera_job(seat, query)))
                 st.count("observations")
                 obs_id = st.stats["observations"]
+                k_obs = self.m.k
             meta = dict(meta)
+            steps = view_steps(meta, job, k_obs)
             out = self.draw(seat, job) or {}
             age = max(0.0, time.monotonic() - meta.pop("wall_mono", time.monotonic()))
             with self.cond:
                 st.sample("obs_age_s", age)
-                self.ep.write("observe", seat=seat, obs_id=obs_id, age_s=age, query=query)
+                self.ep.write("observe", seat=seat, obs_id=obs_id, age_s=age, query=query, k=k_obs, view_steps=steps)
+                self.acts.observed(seat, obs_id)        # what the seat's next act answers (act_received)
             obs = {"obs_id": obs_id, **meta, "obs_age_wall_s": age, "render_wall_s": out.get("worker_s", 0.0)}
             if out.get("png"):
                 obs["image_png_b64"] = base64.b64encode(out["png"]).decode()
@@ -301,6 +325,14 @@ class RealtimeService(Service):
         if self.segment_start is not None:
             self.run_wall += time.monotonic() - self.segment_start
             self.segment_start = None
+        self.drop_all("match_over")
+
+    def drop_all(self, why):
+        """The acts waiting for their effect step will never take effect: act_dropped rows, queues cleared."""
+        for (s, _e), item in self.pending.items():
+            self.dropped(item, s, why)
+        for _k, s, _low, act in self.scheduled:
+            self.dropped(act, s, why)
         self.pending.clear()
         self.scheduled.clear()
 
@@ -364,7 +396,9 @@ class RealtimeService(Service):
                     if self.phase != "running":
                         continue
                     self.apply_pending()
-                    self.m.step()
+                    events = self.m.step()
+                    if events:                          # diagnostics (core 0.2.25): what the step returned
+                        self.diag("event", k=self.m.k, events=jsonable(events))
                     self.bc.frame(force=self.m.phase().state != "playing")
                     self.run_steps += 1
                     self.lates.append(max(0.0, time.monotonic() - due))
@@ -372,8 +406,7 @@ class RealtimeService(Service):
                     if ph.state != "playing":
                         for s, _e in self.pending:
                             self.seats[s].count("dropped")
-                        self.pending.clear()
-                        self.scheduled.clear()
+                        self.drop_all("unit_over")
                         self.ep.write("unit_over", k=self.m.k, unit=self.m.unit(), reason=ph.reason)
                         self.bc.event("unit_over", unit=self.m.unit(), reason=ph.reason, scores=self.m.scores())
                         if ph.state == FINISHED:

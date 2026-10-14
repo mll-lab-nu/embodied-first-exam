@@ -17,6 +17,7 @@ from . import score as score_mod
 from . import seeds as seeds_mod
 from . import spec as spec_mod
 from .channel import TeamChannel
+from .diaglog import Acts, safe
 from .episode import Episode, source_sha
 from .observe import CameraWorker, filter_fields, players_scene, reply_job
 from .outcome import decide
@@ -89,6 +90,8 @@ class Service:
         self.hidden = ({"seed": int(cfg.seed), "salt": salt,
                         "commitment": seeds_mod.commitment(sport.name, cfg.seed, salt)} if salt else None)
         self.ep = Episode(self.data / "episode.jsonl")
+        self.diag = safe(self.ep.write)          # diagnostic rows (core/diaglog.py, core 0.2.25): never replayed
+        self.acts = Acts(cfg.seats)
         self.ep.write("header", cfg=self.cfg_json(), sport=sport.name, revision=sport.revision, protocol=self.protocol,
                       source_sha=self.source_sha, versions=self.versions,
                       player_modes={s: st.mode for s, st in self.seats.items()},
@@ -139,10 +142,15 @@ class Service:
     def draw(self, seat, job):
         """Off the lock: render a camera job, an observation or reply images (in the seat's render worker if the
         sport has one, where a second job of the seat queues; in-process jobs are drawn one at a time)."""
-        if job is None:
+        if job is None or self.finalized:      # core 0.2.26: after finalization the render workers are closed
             return None
         if ("render", seat) in self.workers:
-            return self.workers["render", seat].call(job, wait=True)
+            try:
+                return self.workers["render", seat].call(job, wait=True)
+            except (BrokenPipeError, EOFError, ConnectionError, OSError):
+                if self.finalized:                 # closed while this request ran: no images, never an error
+                    return None
+                raise
         with self.render_lock:
             if self.cameras:
                 if self.camera is None:
@@ -186,7 +194,13 @@ class Service:
             self.errors.append({"where": "observation", "error": f"fields outside the whitelist: {bad}"})
         if self.channel.enabled:
             obs["team_messages"], obs["team_seq"] = self.channel.messages(seat, self.m.k, self.m.dt or 1.0, since)
+            self.delivered(seat, obs["team_messages"])
         return obs
+
+    def delivered(self, seat, rows):
+        """With the lock held: log the teammates' messages `seat` gets for the first time (team_delivered)."""
+        for d in self.channel.deliver(seat, rows, self.m.k):
+            self.diag("team_delivered", **d)
 
     def team_since(self, body):
         """The client's team-channel read mark in a request body (`team_since`), None when absent (400 if invalid)."""
@@ -195,7 +209,10 @@ class Service:
     def team(self, seat, body):
         """POST /<seat>/team {"since": n}: the teammates' messages after seq n (read-only; never consumes)."""
         with self.cond:
-            return self.channel.page(seat, self.m.k, (body or {}).get("since"))
+            code, out = self.channel.page(seat, self.m.k, (body or {}).get("since"))
+            if code == 200:
+                self.delivered(seat, out["messages"])
+            return code, out
 
     def say(self, seat, body):
         with self.cond:
@@ -232,6 +249,12 @@ class Service:
             raise err from exc
 
     def failure(self, where, exc):
+        """A request's technical failure: an error of the trial (not valid) and the end of the match. After the match
+        is finalized (core 0.2.26) the trial is decided: a late request's failure is only logged, never an error (a
+        player that observes after the end once voided a finished, replayed match)."""
+        if self.finalized:
+            print(f"after finalization, {where}: {type(exc).__name__}: {str(exc)[:200]}", file=sys.stderr, flush=True)
+            return
         with self.cond:
             self.errors.append({"where": where, "error": str(exc)[:300]})
             self.ep.write("error", where=where, error=str(exc)[:300])

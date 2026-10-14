@@ -17,6 +17,7 @@ from . import score as score_mod
 from . import seeds as seeds_mod
 from . import spec as spec_mod
 from .channel import TeamChannel
+from .diaglog import Acts, safe
 from .episode import Episode, source_sha
 from .observe import CameraWorker, filter_fields, players_scene, reply_job
 from .outcome import decide
@@ -89,10 +90,13 @@ class Service:
         self.hidden = ({"seed": int(cfg.seed), "salt": salt,
                         "commitment": seeds_mod.commitment(sport.name, cfg.seed, salt)} if salt else None)
         self.ep = Episode(self.data / "episode.jsonl")
+        self.diag = safe(self.ep.write)          # diagnostic rows (core/diaglog.py, core 0.2.25): never replayed
+        self.acts = Acts(cfg.seats)
         self.ep.write("header", cfg=self.cfg_json(), sport=sport.name, revision=sport.revision, protocol=self.protocol,
                       source_sha=self.source_sha, versions=self.versions,
                       player_modes={s: st.mode for s, st in self.seats.items()},
-                      **({"seed_hidden": {"commitment": self.hidden["commitment"]}} if self.hidden else {}))
+                      **({"seed_hidden": {"commitment": self.hidden["commitment"]}} if self.hidden else {}),
+                      **self.header_extra())
         self.workers = {}
         self.cameras = own_hook(self.m, "cameras") and not own_hook(self.m, "camera_job")
         self.renderer_name = cfg.renderer
@@ -138,10 +142,15 @@ class Service:
     def draw(self, seat, job):
         """Off the lock: render a camera job, an observation or reply images (in the seat's render worker if the
         sport has one, where a second job of the seat queues; in-process jobs are drawn one at a time)."""
-        if job is None:
+        if job is None or self.finalized:      # core 0.2.26: after finalization the render workers are closed
             return None
         if ("render", seat) in self.workers:
-            return self.workers["render", seat].call(job, wait=True)
+            try:
+                return self.workers["render", seat].call(job, wait=True)
+            except (BrokenPipeError, EOFError, ConnectionError, OSError):
+                if self.finalized:                 # closed while this request ran: no images, never an error
+                    return None
+                raise
         with self.render_lock:
             if self.cameras:
                 if self.camera is None:
@@ -177,15 +186,33 @@ class Service:
                           png_bytes=len(out.get("png") or b""), render_wall_s=obs["render_wall_s"])
         return obs
 
-    def observation(self, seat, query=None) -> dict:
-        """With the lock held: the sport's whitelisted observation (+ the team channel's new messages)."""
+    def observation(self, seat, query=None, since=None) -> dict:
+        """With the lock held: the sport's whitelisted observation (+ the team channel: the teammates' messages after
+        the client's read mark `since`, else the recent ones, and the side's newest seq; reading never consumes)."""
         obs, bad = filter_fields(self.m.observe(seat, query), self.allowed)
         if bad:
             self.errors.append({"where": "observation", "error": f"fields outside the whitelist: {bad}"})
-        msgs = self.channel.inbox(seat, self.m.k)
         if self.channel.enabled:
-            obs["team_messages"] = msgs
+            obs["team_messages"], obs["team_seq"] = self.channel.messages(seat, self.m.k, self.m.dt or 1.0, since)
+            self.delivered(seat, obs["team_messages"])
         return obs
+
+    def delivered(self, seat, rows):
+        """With the lock held: log the teammates' messages `seat` gets for the first time (team_delivered)."""
+        for d in self.channel.deliver(seat, rows, self.m.k):
+            self.diag("team_delivered", **d)
+
+    def team_since(self, body):
+        """The client's team-channel read mark in a request body (`team_since`), None when absent (400 if invalid)."""
+        return self.channel.since_arg((body or {}).get("team_since"))
+
+    def team(self, seat, body):
+        """POST /<seat>/team {"since": n}: the teammates' messages after seq n (read-only; never consumes)."""
+        with self.cond:
+            code, out = self.channel.page(seat, self.m.k, (body or {}).get("since"))
+            if code == 200:
+                self.delivered(seat, out["messages"])
+            return code, out
 
     def say(self, seat, body):
         with self.cond:
@@ -193,7 +220,7 @@ class Service:
                 return 409, {"error": "the match is over"}
             code, out = self.channel.say(seat, body.get("text"), self.m.k, self.m.dt or 1.0)
             if code == 200:
-                self.ep.write("team", seat=seat, k=self.m.k, text=body.get("text"))
+                self.ep.write("team", seat=seat, k=self.m.k, seq=out["sent"]["seq"], text=body.get("text"))
             return code, out
 
     def refused_invalid(self, seat, exc):
@@ -222,6 +249,12 @@ class Service:
             raise err from exc
 
     def failure(self, where, exc):
+        """A request's technical failure: an error of the trial (not valid) and the end of the match. After the match
+        is finalized (core 0.2.26) the trial is decided: a late request's failure is only logged, never an error (a
+        player that observes after the end once voided a finished, replayed match)."""
+        if self.finalized:
+            print(f"after finalization, {where}: {type(exc).__name__}: {str(exc)[:200]}", file=sys.stderr, flush=True)
+            return
         with self.cond:
             self.errors.append({"where": where, "error": str(exc)[:300]})
             self.ep.write("error", where=where, error=str(exc)[:300])
@@ -470,6 +503,10 @@ class Service:
     def extra_final(self) -> dict:
         return {}
 
+    def header_extra(self) -> dict:
+        """Protocol-specific fields of the episode header (realtime: its timing, core 0.2.23)."""
+        return {}
+
     def spec(self, seat, body=None):
         out = {"seat": seat, "side": self.cfg.side_of(seat), "protocol": self.protocol_id,
                "revision": self.sport.revision, "versions": self.versions, "action_level": self.cfg.action_level,
@@ -478,5 +515,13 @@ class Service:
         if self.channel.enabled:
             out["team_channel"] = {"say": "POST /<seat>/say {'text': ...}", "max_bytes": self.channel.max_bytes,
                                    "min_interval_s": self.channel.min_interval_s,
+                                   "max_messages": self.channel.max_messages,
+                                   "read": ("observe / status show `team_messages` (from, seq, k, text) and `team_seq` "
+                                            "(the newest seq); reading never consumes: send team_since = the "
+                                            "largest seq you have (observe / wait body, status ?team_since=N) to get "
+                                            "only newer ones, else you get the recent ones (the last "
+                                            f"{self.channel.recent_s:g} game seconds, at most "
+                                            f"{self.channel.recent_max}); POST /<seat>/team {{'since': n}} pages "
+                                            "through the log"),
                                    "teammates": [s for s in self.cfg.seats_of(self.cfg.side_of(seat)) if s != seat]}
         return 200, out

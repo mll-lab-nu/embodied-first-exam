@@ -34,6 +34,8 @@ import time
 import numpy as np
 
 from . import spec as spec_mod
+from .diaglog import jsonable, view_steps
+from .episode import reaction_report
 from .service import Service
 from .sport import FINISHED, UNIT_OVER, Refused, parse_action
 
@@ -73,8 +75,8 @@ class RealtimeService(Service):
     def routes(self, post):
         if post:
             return {"start": self.ready, "ready": self.ready, "act": self.act, "wait": self.wait,
-                    "observe": self.observe, "say": self.say}
-        return {"spec": self.spec, "status": self.status, "observe": self.observe}
+                    "observe": self.observe, "say": self.say, "team": self.team}
+        return {"spec": self.spec, "status": self.status, "observe": self.observe, "team": self.team}
 
     def spec_core(self):
         return {"timing": {"slowdown": self.slowdown, "control_dt": self.m.dt, "period_s": self.period,
@@ -89,20 +91,20 @@ class RealtimeService(Service):
         return float(os.environ.get("START_TIMEOUT_S") or os.environ.get("READY_TIMEOUT_S", "60"))
 
     # ------------------------------------------------------------------ replies
-    def state(self, seat, query=None):
+    def state(self, seat, query=None, since=None):
         core = {"phase": self.phase, "done": self.phase == "over", "reason": self.reason,
                 "ready": {s: st.ready for s, st in self.seats.items()},
                 "world": "running" if self.phase == "running" else "frozen", "step": self.m.k,
                 "t_sim": self.m.k * self.m.dt}
-        if self.react:                          # every reply's `now` is a world state the seat has seen
-            self.seen[seat] = self.m.k
+        self.seen[seat] = self.m.k              # every reply's `now` is a world state the seat has seen
         if self.retired:
             core["retired"] = list(self.retired)
-        return {**core, **self.observation(seat, query)}
+        return {**core, **self.observation(seat, query, since)}
 
     def status(self, seat, body=None):
+        since = self.team_since(body)
         with self.cond:
-            return 200, self.state(seat)
+            return 200, self.state(seat, since=since)
 
     def ready(self, seat, body):
         st = self.seats[seat]
@@ -160,7 +162,8 @@ class RealtimeService(Service):
             with self.cond:
                 st.count("attempts")
                 if self.phase != "running":
-                    return 409, {"error": "world is not running", "now": self.state(seat)}
+                    return 409, {"error": "the match is over" if self.phase == "over" else "world is not running",
+                                 "now": self.state(seat)}
                 if st.retired:
                     return 409, {"error": "your side has retired"}
                 unit = self.m.unit()
@@ -175,7 +178,10 @@ class RealtimeService(Service):
                 if self.phase != "running" or self.m.unit() != unit:
                     return 409, {"error": "unit ended during response confirmation"}
                 job = self.layer.snapshot(seat, cmd, self.m, st.stats["attempts"])
-                self.ep.write("act_received", seat=seat, unit=unit, decision=cmd, model_call=receipt)
+                act_id = self.acts.new(seat)            # diagnostics (core 0.2.25): act -> observation -> effect
+                self.ep.write("act_received", seat=seat, unit=unit, decision=cmd, model_call=receipt, k=self.m.k,
+                              act_id=act_id, obs_id_last=self.acts.last_obs.get(seat), seen=seen,
+                              entity=entity or None)
             prepared = None
             if job is not None:
                 prepared = (self.workers["plan", seat].call(job) if self.layer.worker else self.layer.prepare(job))
@@ -184,10 +190,14 @@ class RealtimeService(Service):
                     st.sample("plan_s", prepared["worker_s"])
                 if self.phase != "running" or self.m.unit() != unit:
                     st.count("dropped")
+                    self.dropped({"act_id": act_id}, seat, "unit_over_planning" if self.phase != "over" else "match_over")
                     return 409, {"error": "unit ended during planning", "now": self.state(seat)}
-                item = {"unit": unit, "cmd": cmd, "prepared": prepared, "arrived": arrived, "result": None}
-                if self.react and seen is not None:
-                    item["seen"], item["earliest"] = seen, seen + self.react
+                item = {"unit": unit, "cmd": cmd, "prepared": prepared, "arrived": arrived, "result": None,
+                        "act_id": act_id, "entity": entity}
+                if seen is not None:
+                    item["seen"] = seen                 # the reaction report (core 0.2.23), any D
+                    if self.react:
+                        item["earliest"] = seen + self.react
                 self.pending[seat, entity] = item
                 while item["result"] is None and self.phase == "running" and self.m.unit() == unit:
                     self.cond.wait(.5)
@@ -204,9 +214,20 @@ class RealtimeService(Service):
         finally:
             lock.release()
 
-    def apply_now(self, seat, low):
-        self.ep.write("cmd", k=self.m.k, seat=seat, cmd=low)
-        return self.m.apply(seat, low) or {}
+    def apply_now(self, seat, low, act=None):
+        """Log and apply one low-level command. An act's row (act = its pending item) also carries `seen`, the step of
+        the world state the act answered (None if the seat had been sent none): the reaction report (core 0.2.23)."""
+        self.ep.write("cmd", k=self.m.k, seat=seat, cmd=low, **({"seen": act.get("seen")} if act is not None else {}))
+        info = self.m.apply(seat, low) or {}
+        if act is not None and act.get("act_id") is not None:       # diagnostics (core 0.2.25): not in the cmd row
+            self.diag("effect", seat=seat, act_id=act["act_id"], k=self.m.k, entity=act.get("entity") or None,
+                      **({"rejected": True} if "rejected" in info else {}))
+        return info
+
+    def dropped(self, item, seat, why):
+        """An accepted act that will never take effect (diagnostics, core 0.2.25)."""
+        if item.get("act_id") is not None:
+            self.diag("act_dropped", seat=seat, act_id=item["act_id"], k=self.m.k, why=why)
 
     def apply_pending(self):
         tick = getattr(self.layer, "tick", None)       # a layer's per-step command (the skill in the loop's step(),
@@ -219,8 +240,8 @@ class RealtimeService(Service):
                     self.seats[seat].count("rejected")
         due = [x for x in self.scheduled if x[0] <= self.m.k]
         self.scheduled = [x for x in self.scheduled if x[0] > self.m.k]
-        for _, seat, low in due:
-            info = self.apply_now(seat, low)
+        for _, seat, low, act in due:
+            info = self.apply_now(seat, low, act)
             if "rejected" in info:
                 self.seats[seat].count("rejected")
         batch, self.pending = self.pending, {}
@@ -228,24 +249,27 @@ class RealtimeService(Service):
             st = self.seats[seat]
             if item["unit"] != self.m.unit():
                 st.count("dropped")
+                self.dropped(item, seat, "unit_changed")
                 continue
             if item.get("earliest", 0) > self.m.k:     # held until its reaction delay has passed (core 0.2.18)
                 self.pending[seat, _entity] = item
                 continue
             low, info = self.layer.lower(seat, item["cmd"], item["prepared"], self.m)
             if self.delay:
-                self.scheduled.append([self.m.k + self.delay, seat, low])
+                self.scheduled.append([self.m.k + self.delay, seat, low, {"seen": item.get("seen"),
+                                                                           "act_id": item["act_id"],
+                                                                           "entity": item["entity"]}])
                 info = {"effect_step": self.m.k + self.delay, **info}
             else:
-                applied = self.apply_now(seat, low)
+                applied = self.apply_now(seat, low, item)
                 item["images"] = self.reply_job(seat, low, applied)
                 info = {**applied, **info}
             if "rejected" in info:
                 st.count("rejected")
             elapsed = time.monotonic() - item["arrived"]
             item["result"] = {"step": self.m.k, "t_sim": self.m.k * self.m.dt, "wall_s_after_request": elapsed,
-                              **({"seen_step": item["seen"], "reaction_delay_steps": self.react} if "seen" in item
-                                 else {}),
+                              **({"seen_step": item["seen"], "reaction_delay_steps": self.react}
+                                 if self.react and "seen" in item else {}),
                               **self.layer.reply(seat, item["cmd"], info, self.m)}
             st.count("applied")
             st.sample("act_s", elapsed)
@@ -253,20 +277,26 @@ class RealtimeService(Service):
     def observe(self, seat, body=None):
         st = self.seats[seat]
         query = query_of(body)
+        since = self.team_since(body)
         if not st.view_lock.acquire(False):
             return 429, {"error": "one observation per seat may be in flight"}
         try:
             with self.cond:
-                now, (job, meta) = self.query_guard(seat, query, lambda: (self.state(seat, query),
+                if self.phase == "over":           # core 0.2.26: no images after the end, the final state only
+                    return 409, {"error": "the match is over", "now": self.state(seat, since=since)}
+                now, (job, meta) = self.query_guard(seat, query, lambda: (self.state(seat, query, since),
                                                                           self.camera_job(seat, query)))
                 st.count("observations")
                 obs_id = st.stats["observations"]
+                k_obs = self.m.k
             meta = dict(meta)
+            steps = view_steps(meta, job, k_obs)
             out = self.draw(seat, job) or {}
             age = max(0.0, time.monotonic() - meta.pop("wall_mono", time.monotonic()))
             with self.cond:
                 st.sample("obs_age_s", age)
-                self.ep.write("observe", seat=seat, obs_id=obs_id, age_s=age, query=query)
+                self.ep.write("observe", seat=seat, obs_id=obs_id, age_s=age, query=query, k=k_obs, view_steps=steps)
+                self.acts.observed(seat, obs_id)        # what the seat's next act answers (act_received)
             obs = {"obs_id": obs_id, **meta, "obs_age_wall_s": age, "render_wall_s": out.get("worker_s", 0.0)}
             if out.get("png"):
                 obs["image_png_b64"] = base64.b64encode(out["png"]).decode()
@@ -283,17 +313,26 @@ class RealtimeService(Service):
             d = math.nan
         if not np.isfinite(d) or not 0 < d <= 1:
             return 400, {"error": "dt must be 0..1 game seconds"}
+        since = self.team_since(body)
         with self.cond:
             target, unit = self.m.k + int(np.ceil(d / self.m.dt)), self.m.unit()
             while self.phase == "running" and self.m.unit() == unit and self.m.k < target:
                 self.cond.wait(.5)
-            return 200, {"now": self.state(seat)}
+            return 200, {"now": self.state(seat, since=since)}
 
     # ------------------------------------------------------------------ the world loop
     def on_end(self):
         if self.segment_start is not None:
             self.run_wall += time.monotonic() - self.segment_start
             self.segment_start = None
+        self.drop_all("match_over")
+
+    def drop_all(self, why):
+        """The acts waiting for their effect step will never take effect: act_dropped rows, queues cleared."""
+        for (s, _e), item in self.pending.items():
+            self.dropped(item, s, why)
+        for _k, s, _low, act in self.scheduled:
+            self.dropped(act, s, why)
         self.pending.clear()
         self.scheduled.clear()
 
@@ -357,7 +396,9 @@ class RealtimeService(Service):
                     if self.phase != "running":
                         continue
                     self.apply_pending()
-                    self.m.step()
+                    events = self.m.step()
+                    if events:                          # diagnostics (core 0.2.25): what the step returned
+                        self.diag("event", k=self.m.k, events=jsonable(events))
                     self.bc.frame(force=self.m.phase().state != "playing")
                     self.run_steps += 1
                     self.lates.append(max(0.0, time.monotonic() - due))
@@ -365,8 +406,7 @@ class RealtimeService(Service):
                     if ph.state != "playing":
                         for s, _e in self.pending:
                             self.seats[s].count("dropped")
-                        self.pending.clear()
-                        self.scheduled.clear()
+                        self.drop_all("unit_over")
                         self.ep.write("unit_over", k=self.m.k, unit=self.m.unit(), reason=ph.reason)
                         self.bc.event("unit_over", unit=self.m.unit(), reason=ph.reason, scores=self.m.scores())
                         if ph.state == FINISHED:
@@ -384,9 +424,25 @@ class RealtimeService(Service):
         except Exception as exc:  # noqa: BLE001
             self.failure("world", exc)
 
+    def header_extra(self) -> dict:
+        """The episode header's timing (core 0.2.23): what the reaction report of a replay needs."""
+        return {"timing": {"reaction_delay_steps": spec_mod.reaction_delay(self.decl),
+                           "effect_delay_steps": int(getattr(self.layer, "delay_steps", 0) or 0)}}
+
+    def reaction_final(self) -> dict:
+        """final.json `reaction` (core 0.2.23, report only: no effect on validity or grading): per seat, how many acts
+        took effect within the declared reaction delay D, and the distribution of the actual delay, from the episode's
+        command rows (core/episode.reaction_report); `replayed`: the fresh-process replay's report is the same."""
+        with self.ep.lock:
+            rows = list(self.ep.commands)
+        out = reaction_report(rows, self.cfg.seats, self.react, self.delay)
+        rr = (self.replay or {}).get("reaction")
+        out["replayed"] = None if not self.replay else bool(rr and rr.get("by_seat") == out["by_seat"])
+        return out
+
     def extra_final(self):
         L = self.lates
-        return {"slowdown": self.slowdown, "timing_policy": "report_only", "timing_invalid": False,
+        return {"reaction": self.reaction_final(), "slowdown": self.slowdown, "timing_policy": "report_only", "timing_invalid": False,
                 "sim_lag": {"late_max_s": max(L, default=0), "late_p99_s": float(np.percentile(L, 99)) if L else 0,
                             "run_steps": self.run_steps, "run_sim_s": self.run_steps * self.m.dt,
                             "run_wall_s": self.run_wall, "period_s": self.period}}

@@ -2,7 +2,7 @@
 metering, copied by the generator to metering/think_proxy.py next to core/; seat i on port 18090 + i; model
 credentials stay in this container) and the match service (core.serve).
 
-A seat in player mode "unmetered" (PLAYER_MODE_<seat>, core 0.2.24) gets no proxy: its runner meters the model.
+A seat in player mode "unmetered" (PLAYER_MODE_<seat>, core 0.2.27) gets no proxy: its runner meters the model.
 
 Per-seat settings of a seat's proxy (the runner sets them; the compose file passes them through):
   RO_SEAT_SELECT_<seat> = "VAR=SOURCE,..."   VAR takes SOURCE's value (e.g. a second account's credential)
@@ -74,7 +74,7 @@ def main():
     try:
         metered = [s for s in SEATS if seat_mode(s) != "unmetered"]
         if PROXY.exists():
-            for s in metered:                   # an unmetered seat (core 0.2.24) gets no proxy
+            for s in metered:                   # an unmetered seat (core 0.2.27) gets no proxy
                 procs.append(subprocess.Popen([sys.executable, __file__, s]))
         elif metered:
             print(f"no metering proxy at {PROXY}: model seats cannot play", file=sys.stderr, flush=True)

@@ -45,6 +45,18 @@ class TeamChannel:
         self.log: list[dict] = []
         self.last_k: dict[str, int] = {}
         self.seq: dict[str, int] = {}             # side -> the newest seq
+        self.delivered: dict[str, set] = {}       # seat -> seqs already returned to it (core 0.2.25, diagnostics)
+
+    def deliver(self, seat: str, rows: list[dict], k: int) -> list[dict]:
+        """The messages of `rows` (as messages() / page() return them) returned to `seat` for the first time, as
+        team_delivered rows (core 0.2.25, diagnostics only: when each recipient first got each message)."""
+        got = self.delivered.setdefault(seat, set())
+        out = []
+        for r in rows:
+            if r["seq"] not in got:
+                got.add(r["seq"])
+                out.append({"seat": seat, "from": r["from"], "seq": r["seq"], "sent_k": r["k"], "k": int(k)})
+        return out
 
     def say(self, seat: str, text, k: int, dt: float) -> tuple[int, dict]:
         if not self.enabled:

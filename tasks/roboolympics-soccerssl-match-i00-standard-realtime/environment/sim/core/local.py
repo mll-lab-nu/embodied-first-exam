@@ -14,6 +14,8 @@ from pathlib import Path
 from . import PROTOCOLS, VERSION
 from . import score as score_mod
 from . import spec as spec_mod
+from .channel import TeamChannel
+from .diaglog import Acts, jsonable, safe, view_steps
 from .episode import Episode
 from .observe import CameraWorker, filter_fields, players_scene
 from .outcome import decide
@@ -28,33 +30,47 @@ DEFAULT_CLOCK_S = 3600.0
 class Views:
     """The view a player gets: {"state": core fields + the whitelisted observation, "observation": images}."""
 
-    def __init__(self, sport, cfg, m, decl, render: bool, plugin: str | None = None):
+    def __init__(self, sport, cfg, m, decl, render: bool, plugin: str | None = None, channel=None):
         self.sport, self.cfg, self.m, self.render, self.plugin = sport, cfg, m, render, plugin
+        self.channel = channel                  # the team channel (core/channel.py), as the live service runs it
         self.allowed = spec_mod.whitelist(decl)
         self.columns = int((decl.get("observation") or {}).get("columns", 2))
         self.cam = None
         self.leaks: list[str] = []
         self.own_images = own_hook(m, "camera_job") or not own_hook(m, "cameras")
+        self.log = None                         # diagnostic rows (core 0.2.25): set by play() with an episode
+        self.acts = Acts(cfg.seats)
 
     def view(self, seat, extra: dict, query=None) -> dict:
         obs, bad = filter_fields(self.m.observe(seat, query), self.allowed)
         self.leaks += bad
+        if self.channel is not None and self.channel.enabled:       # as Service.observation (core 0.2.21)
+            msgs, top = self.channel.messages(seat, self.m.k, self.m.dt or 1.0)   # the recent ones, never consumed
+            obs["team_messages"], obs["team_seq"] = msgs, top
+            if self.log is not None:
+                for d in self.channel.deliver(seat, msgs, self.m.k):
+                    self.log("team_delivered", **d)
         out = {"state": {"seat": seat, **extra, **obs}, "observation": {}}
-        if not self.render:
-            return out
-        if self.own_images:
+        job, meta = None, {}
+        if self.render and self.own_images:
             job, meta = self.m.camera_job(seat)
             if job is not None:
                 img = self.sport.worker_call(None, "render", job)
                 out["observation"] = {"image_png_b64": base64.b64encode(img["png"]).decode(), **meta}
-            return out
-        cams = self.m.cameras(seat, query)
-        if cams:
-            if self.cam is None:
-                scene = players_scene(self.sport, self.plugin, self.cfg) if self.plugin else self.sport.scene(self.cfg)
-                self.cam = CameraWorker(scene, self.cfg.renderer)
-            img = self.cam.draw(self.m.render_state(), cams, self.columns)
-            out["observation"] = {"image_png_b64": base64.b64encode(img["png"]).decode(), "tiles": img["tiles"]}
+        elif self.render:
+            cams = self.m.cameras(seat, query)
+            if cams:
+                if self.cam is None:
+                    scene = (players_scene(self.sport, self.plugin, self.cfg) if self.plugin else
+                             self.sport.scene(self.cfg))
+                    self.cam = CameraWorker(scene, self.cfg.renderer)
+                job = cams
+                img = self.cam.draw(self.m.render_state(), cams, self.columns)
+                out["observation"] = {"image_png_b64": base64.b64encode(img["png"]).decode(), "tiles": img["tiles"]}
+        if self.log is not None:                # as the service's observe row
+            obs_id = self.acts.new_obs(seat)
+            self.log("observe", seat=seat, obs_id=obs_id, k=self.m.k, view_steps=view_steps(meta, job, self.m.k),
+                     query=query)
         return out
 
 
@@ -96,10 +112,15 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
         (Path(data) / "episode.jsonl").unlink(missing_ok=True)
         ep = Episode(Path(data) / "episode.jsonl")
     _header(ep, sport, cfg)
-    views = Views(sport, cfg, m, decl, render, plugin)
+    channel = TeamChannel(cfg, decl.get("team_channel"))
+    views = Views(sport, cfg, m, decl, render, plugin, channel)
     clocks = {s: DEFAULT_CLOCK_S for s in cfg.seats}
     refused = {s: 0 for s in cfg.seats}
     log = (lambda ev, **row: ep.write(ev, **row)) if ep is not None else (lambda ev, **row: None)
+    dlog = safe(log)                                    # diagnostic rows (core/diaglog.py, core 0.2.25)
+    if ep is not None:
+        views.log = dlog
+    acts = views.acts
     refused: dict = {}
     if sport.protocol == "turn":
         n = 0
@@ -116,8 +137,13 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
                     raise RuntimeError(f"seat {seat}: more than {MAX_REFUSED} refused actions in local play")
                 continue
             low, _info = layer.lower(seat, cmd, None, m)
+            act_id = acts.new(seat)
+            dlog("act_received", seat=seat, k=m.k, act_id=act_id, obs_id_last=acts.last_obs.get(seat), decision=cmd)
             log("cmd", k=m.k, seat=seat, cmd=low)
-            m.apply(seat, low)
+            k_cmd = m.k
+            applied = m.apply(seat, low) or {}
+            dlog("effect", seat=seat, act_id=act_id, k=k_cmd, info=jsonable(applied),
+                **({"rejected": True} if "rejected" in applied else {}))
             n += 1
     else:
         plan = {s: sport.worker_init("plan", s, cfg) for s in cfg.seats} if getattr(layer, "worker", None) else {}
@@ -126,21 +152,39 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
         scheduled: list = []
         held: dict = {}                                 # seat -> (effect step, cmd): the declared reaction delay
 
-        def effect(seat, cmd):
+        def effect(seat, cmd, act_id=None):
             job = layer.snapshot(seat, cmd, m, m.k)
             prepared = None
             if job is not None:
                 prepared = (sport.worker_call(plan[seat], "plan", job) if plan else layer.prepare(job))
             low, info = layer.lower(seat, cmd, prepared, m)
             if delay:
-                scheduled.append((m.k + delay, seat, low))
+                scheduled.append((m.k + delay, seat, low, act_id))
             else:
-                log("cmd", k=m.k, seat=seat, cmd=low)
-                if "rejected" in (m.apply(seat, low) or {}):
-                    refused[seat] = refused.get(seat, 0) + 1
+                apply(seat, low, act_id)
+
+        def apply(seat, low, act_id, count=True):
+            log("cmd", k=m.k, seat=seat, cmd=low)
+            rej = "rejected" in (m.apply(seat, low) or {})
+            if rej and count:
+                refused[seat] = refused.get(seat, 0) + 1
+            if act_id is not None:
+                dlog("effect", seat=seat, act_id=act_id, k=m.k, **({"rejected": True} if rej else {}))
+
+        def say(seat, v):
+            """a built-in player's team-channel message (optional message(view) -> text | None; core 0.2.21), sent
+            under the channel's limits as POST /<seat>/say would be (a refused message is dropped)"""
+            f = getattr(players[seat], "message", None)
+            text = f(v) if f is not None and channel.enabled else None
+            if text and channel.say(seat, text, m.k, m.dt or 1.0)[0] == 200:
+                log("team", seat=seat, k=m.k, seq=channel.seq.get(cfg.side_of(seat)), text=text)
 
         while m.phase().state != FINISHED and m.k < max_steps:
             if m.phase().state == UNIT_OVER:
+                for x in scheduled:
+                    dlog("act_dropped", seat=x[1], act_id=x[3], k=m.k, why="unit_over")
+                for seat, x in held.items():
+                    dlog("act_dropped", seat=seat, act_id=x[2], k=m.k, why="unit_over")
                 scheduled.clear()
                 held.clear()
                 log("resume", k=m.k)
@@ -155,10 +199,10 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
                             refused[seat] = refused.get(seat, 0) + 1
             for item in [x for x in scheduled if x[0] <= m.k]:
                 scheduled.remove(item)
-                log("cmd", k=m.k, seat=item[1], cmd=item[2])
-                m.apply(item[1], item[2])
+                apply(item[1], item[2], item[3], count=False)
             for seat in [s for s in cfg.seats if s in held and held[s][0] <= m.k]:
-                effect(seat, held.pop(seat)[1])
+                _k, cmd, act_id = held.pop(seat)
+                effect(seat, cmd, act_id)
             if m.k % every == 0:
                 for seat in cfg.seats:
                     if seat in held:                    # one act in flight
@@ -166,6 +210,7 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
                     v = views.view(seat, {"phase": "running", "world": "running", "step": m.k,
                                           "t_sim": m.k * m.dt, "done": False})
                     body = players[seat].act(v)
+                    say(seat, v)
                     if body is None:
                         continue
                     try:
@@ -173,11 +218,20 @@ def play(sport, cfg, players: dict, data: Path | str | None = None, render: bool
                     except Refused:             # refused as in a real match (HTTP 400): the world goes on
                         refused[seat] = refused.get(seat, 0) + 1
                         continue
+                    act_id = acts.new(seat)
+                    dlog("act_received", seat=seat, k=m.k, act_id=act_id, obs_id_last=acts.last_obs.get(seat),
+                        seen=m.k, entity=(cmd.get("entity") if isinstance(cmd, dict) else None), decision=cmd)
                     if react:
-                        held[seat] = (m.k + react, cmd)
+                        held[seat] = (m.k + react, cmd, act_id)
                     else:
-                        effect(seat, cmd)
-            m.step()
+                        effect(seat, cmd, act_id)
+            events = m.step()
+            if events:
+                dlog("event", k=m.k, events=jsonable(events))
+        for x in scheduled:                             # never took effect: the match ended first
+            dlog("act_dropped", seat=x[1], act_id=x[3], k=m.k, why="match_over")
+        for seat, x in held.items():
+            dlog("act_dropped", seat=seat, act_id=x[2], k=m.k, why="match_over")
     finished = m.phase().state == FINISHED
     log("end", k=m.k, reason="match_over" if finished else "unfinished")
     out = decide(m, None, None, cfg.side_list(), cfg.side_of)
