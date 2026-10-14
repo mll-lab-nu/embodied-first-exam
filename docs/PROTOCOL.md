@@ -58,7 +58,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
+| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08; its tasks' cutoff is 7200 s since 2026-10-12). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. The usage gateway (`scripts/usage_gateway/`) is allowed: it forwards model-API requests unchanged, records token usage, and refuses what a trial may not have: a request past the token budget (§5) and, since 2026-10-10, every request that is not a model-API call (§2.11). No tool that runs outside the trial's container is offered to the model (§2.11): official runs turn the harness's web search off (Codex `web_search = "disabled"`, Claude Code `WebSearch` and `WebFetch` disallowed; `scripts/run_agent_batch.sh` `WEB_SEARCH=disabled`, the default) and start the harness without account connectors, apps, plugins, image generation and cloud agents (Codex: with the same switch the runner sets those features to false in the run's `config.toml`, `scripts/codex_tools_off.py`). These run at the model provider, so no egress allowlist stops them (2026-10-02: Codex with a ChatGPT login searched GitHub by default; 2026-10-10: the same login handed the model 238 account connector tools, and 21 trials called them) |
@@ -147,7 +147,8 @@ decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in
 number within the cap, §2.12). A standard sidecar's wall
 clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it, in every benchmark (§2.12) [CI]. That benchmark's results state the budget and are
 compared only with results under the same budget (D8). The token budget (D10) is unchanged.
-- **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task. The topological puzzles are much
+- **RoboTangle** (owner, 2026-10-08; issue #87): a cap of 21600 s (6 h); its tasks' cutoff, 21600 s at first, is
+  7200 s since 2026-10-12 (the table, `docs/CUTOFFS.md`). The topological puzzles are much
   harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
   owner sets the budget to probe the capability ceiling. Simulator speed-ups add interaction within it; they never
   shorten it (`docs/benchmarks/robotangle.md`, added with the tasks in #81).
@@ -343,7 +344,8 @@ An out-of-memory kill by the kernel in a container in scope, at that container's
 **A CPU cap above the host's CPU count means the host's count.** Docker refuses to create a container whose `cpus`
 exceeds the machine's ("range of CPUs is from 0.01 to N"), so a task whose cap is 12 or 16 does not start on an
 8-CPU host although its `min_cpus` is 6 or 8. A runner MUST therefore clamp every CPU cap (`[environment].cpus` and
-each compose service's `cpus`) to the host's CPU count in the copy of the task it runs; the task's files keep their
+each compose service's `cpus`) to the host's CPU count in the copy of the task it runs (`scripts/clamp_cpus.py`, which
+`scripts/run_agent_batch.sh` applies to a job's own copy); the task's files keep their
 values (a cap is not lowered for small hosts, and clamping does not change the task: a container can never use more
 CPUs than the host has). A host that has `min_cpus` (§2.9) still gives the trial its minimum after clamping, because
 `min_cpus` never exceeds the CPU caps of all services together [CI]. Memory and pids caps are never clamped.

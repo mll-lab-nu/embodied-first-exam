@@ -1,0 +1,37 @@
+{
+ "task": "D01-ReciprocalCupRelay",
+ "env_id": "PandaMultiStage/D01-ReciprocalCupRelay-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.06,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.35,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.08,
+  "tool_friction": 0.3,
+  "tool_height": 0.028
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "left",
+  "panda-1": "right"
+ },
+ "action_dim": 16,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "left_initial_catch",
+  "left_to_right_flight",
+  "right_catch",
+  "second_region",
+  "right_to_left_flight",
+  "left_catch_and_deliver"
+ ],
+ "initial_sha": "ec90d1eba7de8aa0ec1cf43a36265bb50f0ee205b069cf4384ee0b9460fd566a"
+}
