@@ -26,6 +26,7 @@ robot = "unitree-g1"
 family = "standing_long_jump"
 category = "track-and-jumps"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50

@@ -27,6 +27,7 @@ simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "imitate_sorting_sequence"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142"

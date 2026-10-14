@@ -28,6 +28,7 @@ simulator = "mujoco"
 robot = "google-barkour-vb"
 family = "mujoco_playground/BarkourJoystick"
 mode = "standard"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 instance_seed = 2

@@ -15,6 +15,7 @@ simulator = "autobio"             # AutoBio @ 0850421 on MuJoCo 3.3.0 (CPU)
 robot = "ur5e-robotiq-2f85"
 family = "thermal_cycler_close"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "easy"              # AutoBio's own level for the task
 success_rule = "first"

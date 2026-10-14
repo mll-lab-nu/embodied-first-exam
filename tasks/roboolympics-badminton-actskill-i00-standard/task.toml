@@ -15,6 +15,7 @@ simulator = "mujoco"
 robot = "franka-panda"
 family = "badminton_act_skill"
 mode = "standard"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "skilleval-api-test/1"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 action_level = "low"

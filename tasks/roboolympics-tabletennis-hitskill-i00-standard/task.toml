@@ -15,6 +15,7 @@ simulator = "mujoco"
 robot = "franka-panda"
 family = "tabletennis_hit_skill"
 mode = "standard"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "skilleval-api-test/1"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 action_level = "low"

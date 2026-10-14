@@ -31,6 +31,7 @@ simulator = "maniskill"
 robot = "franka-panda"
 family = "robopaint_caoshu_zhongtiangechuifen"
 mode = "standard"                  # camera RGB + proprioception only; no sheet readout, no score, no reset, no brush model
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
 oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; a new family, generated on 2026-10-09 with the current tooling): the same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 525 and mark_width_mm 1.91, against the colouring-in limits 1580 mm and 0.57 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Caoshu)."

@@ -23,6 +23,7 @@ simulator = "mujoco"
 robot = "booster-t1"
 family = "soccer_match"
 mode = "standard-realtime"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 7
 opponent_level = 2

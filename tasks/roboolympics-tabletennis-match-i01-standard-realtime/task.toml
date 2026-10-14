@@ -23,6 +23,7 @@ simulator = "mujoco"
 robot = "franka-panda"
 family = "tabletennis_match"
 mode = "standard-realtime"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 22
 opponent_level = 2
