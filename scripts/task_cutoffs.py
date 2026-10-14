@@ -9,15 +9,13 @@
 `apply` passes every task (or the named benchmark's: a label of the table, e.g. "RoboLab") through
 scripts/task_conventions.py `normalize`, which writes the task's number (its own exception, else its family's, else its
 benchmark's for the mode) into `[agent] timeout_sec`, the closing `## Time limit` section of instruction.md, the README's
-"Agent time budget" row and the standard modes' `RCB_WALL_CLOCK_S`; then it renders docs/CUTOFFS.md and refreshes the
-changed digests in tasks/dataset.toml. No generator has to run: nothing a generator writes depends on the number
+"Agent time budget" row and the standard modes' `RCB_WALL_CLOCK_S`, and, last, the task's `DIGEST`; then it renders
+docs/CUTOFFS.md. No generator has to run: nothing a generator writes depends on the number
 (ci_checks/check-cutoffs.py keeps instructions free of a second statement of it).
 Standard library only; run it from a checkout made with `umask 022`.
 """
 from __future__ import annotations
 
-import fnmatch
-import hashlib
 import os
 import re
 import subprocess
@@ -32,7 +30,6 @@ import task_conventions as tc  # noqa: E402
 
 DOC = ROOT / "docs/CUTOFFS.md"
 BASELINE = ROOT / "scripts/task_cutoffs.baseline.toml"   # the table on the day it was created: never edited
-MANIFEST = ROOT / "tasks/dataset.toml"
 SHORT = {m: d["short"] for m, d in tc.MODE_REGISTRY.items()}   # the mode registry (PROTOCOL §2.16)
 
 
@@ -262,7 +259,7 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         "Never edit the number in a task, a template or a generator. `apply` writes, in every task concerned: "
         "`[agent] timeout_sec`, the number in the closing section of `instruction.md`, the README's `Agent time budget` "
-        "row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's digest in `tasks/dataset.toml`, and this page.",
+        "row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's `DIGEST`, and this page.",
         "",
         "A change of a cutoff changes the task in place: the scene, the frozen instance, the success rule and the "
         "verifier are the same, so the task keeps its name (PROTOCOL §2.8, §2.12). The record of the change is its "
@@ -301,47 +298,6 @@ def render_doc(tasks: list[Path]) -> str:
     return "\n".join(out) + "\n"
 
 
-# The digest Harbor publishes a task under (harbor.publisher.packager.Packager.compute_content_hash, Harbor 0.23.0); the
-# same computation as ci_checks/check-dataset-manifest.sh, which checks what this writes.
-IGNORE_NAMES = ("*.pyc", ".DS_Store", "*.swp", "*.swo", "*~")
-
-
-def digest(task: Path) -> str:
-    files = [task / n for n in ("task.toml", "instruction.md", "README.md", "trajectory.json") if (task / n).exists()]
-    for sub in ("environment", "tests", "solution", "steps"):
-        if (task / sub).exists():
-            files += [p for p in (task / sub).rglob("*") if p.is_file()]
-    rels = sorted({p.relative_to(task).as_posix() for p in files})
-    rels = [r for r in rels if "__pycache__" not in Path(r).parts[:-1]
-            and not any(fnmatch.fnmatchcase(Path(r).name, pat) for pat in IGNORE_NAMES)]
-    outer = hashlib.sha256()
-    for rel in rels:
-        h = hashlib.sha256()
-        with (task / rel).open("rb") as f:
-            for chunk in iter(lambda: f.read(1 << 20), b""):
-                h.update(chunk)
-        outer.update(f"{rel}\0{h.hexdigest()}\n".encode())
-    return "sha256:" + outer.hexdigest()
-
-
-def refresh_manifest(tasks: list[Path]) -> int:
-    """tasks/dataset.toml: the digest of each given task as its files are now. Returns how many changed."""
-    s = MANIFEST.read_text(encoding="utf-8")
-    changed = 0
-    for t in tasks:
-        d = digest(t)
-        pat = re.compile(rf'(name = "robot-coding-bench/{re.escape(t.name)}"\ndigest = ")(sha256:[0-9a-f]+)(")')
-        m = pat.search(s)
-        if m is None:
-            raise SystemExit(f"tasks/dataset.toml does not list {t.name} (cd tasks && harbor add --scan .)")
-        if m.group(2) != d:
-            s = s[:m.start(2)] + d + s[m.end(2):]
-            changed += 1
-    if changed:
-        MANIFEST.write_text(s, encoding="utf-8")
-    return changed
-
-
 def apply(only: str | None) -> int:
     table = tc.cutoff_table()
     if only is not None and only not in table:
@@ -360,8 +316,7 @@ def apply(only: str | None) -> int:
         if k % 200 == 0:
             print(f"  {k} / {len(tasks)} tasks", flush=True)
     DOC.write_text(render_doc(every), encoding="utf-8")
-    n = refresh_manifest(tasks)
-    print(f"applied {tc.CUTOFFS_FILE.name} to {len(tasks)} tasks; {n} digest(s) changed in tasks/dataset.toml; "
+    print(f"applied {tc.CUTOFFS_FILE.name} to {len(tasks)} tasks (normalize also rewrote each task's DIGEST); "
           f"docs/CUTOFFS.md rendered.\nNext: git status, then commit. CI: python3 ci_checks/check-cutoffs.py")
     return 0
 

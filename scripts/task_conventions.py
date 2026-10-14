@@ -29,9 +29,14 @@ What it does:
   limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
+- last, `DIGEST`: the task's content digest (PROTOCOL §2.8; the digest Harbor publishes it under, `digest()`), one line
+  `sha256:<hex>`. Each task carries its own, so pull requests that change different tasks never touch a shared file;
+  the release manifest `tasks/dataset.toml` is generated from them (`scripts/dataset_manifest.py`, not committed).
 """
 from __future__ import annotations
 
+import fnmatch
+import hashlib
 import os
 import re
 import shutil
@@ -1129,6 +1134,34 @@ def normalize(task: Path) -> None:
     write_if_changed(task / "README.md", render_readme(task))
     rcb_monitor_inject.apply(task)   # PROTOCOL §2.10 (v1.2): the resource monitor sidecar, caps, verifier step
     assert_converted(task)
+    write_if_changed(task / DIGEST_FILE, digest(task) + "\n")   # last: the digest of everything above (PROTOCOL §2.8)
+
+
+# The digest Harbor publishes a task under (harbor.publisher.packager.Packager.compute_content_hash, Harbor 0.23.0):
+# sha256 over "<relative path>\0<sha256 of the file>\n" of task.toml, instruction.md, README.md, trajectory.json and every
+# file under environment/, tests/, solution/ and steps/, sorted by path, with Harbor's default ignores. DIGEST itself is
+# not one of these files. ci_checks/check-dataset-manifest.sh recomputes it on its own and compares with DIGEST.
+DIGEST_FILE = "DIGEST"
+DIGEST_IGNORE_NAMES = ("*.pyc", ".DS_Store", "*.swp", "*.swo", "*~")
+
+
+def digest(task: Path) -> str:
+    task = Path(task)
+    files = [task / n for n in ("task.toml", "instruction.md", "README.md", "trajectory.json") if (task / n).exists()]
+    for sub in ("environment", "tests", "solution", "steps"):
+        if (task / sub).exists():
+            files += [p for p in (task / sub).rglob("*") if p.is_file()]
+    rels = sorted({p.relative_to(task).as_posix() for p in files})
+    rels = [r for r in rels if "__pycache__" not in Path(r).parts[:-1]
+            and not any(fnmatch.fnmatchcase(Path(r).name, pat) for pat in DIGEST_IGNORE_NAMES)]
+    outer = hashlib.sha256()
+    for rel in rels:
+        h = hashlib.sha256()
+        with (task / rel).open("rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+        outer.update(f"{rel}\0{h.hexdigest()}\n".encode())
+    return "sha256:" + outer.hexdigest()
 
 
 def snapshot(task: Path) -> dict[str, bytes]:
