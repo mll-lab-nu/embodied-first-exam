@@ -74,13 +74,17 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   step budget (50-200 steps) is lifted, so the wall clock is the only budget. Why the holds: a first version counted 0.25 s,
   and agents passed it by sweeping through the goal (or, in baoding, by parking the balls where the moving targets sweep
   past); a 1 s hold of a fixed goal, and one whole orbit in baoding, require really reaching and keeping it.
+  Baoding's targets are a precomputed trajectory of 1000 points (`baoding_v1.create_goal_trajectory`), so since
+  2026-10-14 its episode ends as a failure after 1000 control steps (25 s) if it has not succeeded (before, the step after
+  it raised an IndexError: a 500 in standard mode, board 0086).
 - **Success, MyoChallenge (`event`)**: the challenge's own `solved` is the success event and ends the episode (goal scored,
   opponent tagged, ball returned onto the opponent's half, object placed, track finished); its own failure conditions
   and time limits apply (soccer 10 s, chase_tag 20 s, bimanual 10 s, table_tennis 3 s; osl_run has none, so the gym step
   limit being lifted leaves it unlimited). Deviations from the official evaluation: bimanual's evaluation counts a path
   when `solved` holds for more than 5 steps and its contact check passes, but the env ends the episode one step after the
   first `solved`; we count the first `solved` with the contact check. osl_run's official score is the distance reached
-  within its 1000-step horizon (5 s); we require finishing the 29 m track, without a time limit.
+  within its 1000-step horizon (5 s); we require finishing the 29 m track, without a time limit. The prosthesis is the
+  right leg (`osl_knee_angle_r`, `osl_ankle_angle_r`; the texts said left until 2026-10-14).
 - **Success, MyoDex (`track`)**: MyoDex defines a dense reward only (`solved` is always 0). We count a success when the
   whole reference motion is reproduced: the object's displacement since the start within 3 cm of the reference's
   displacement since its start (and, for the four families where orientation is the point of the skill, its rotation

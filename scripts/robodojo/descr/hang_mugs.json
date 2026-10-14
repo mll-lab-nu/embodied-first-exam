@@ -8,8 +8,8 @@
   "For each mug m in {mug0, mug1, mug2} (all three, simultaneously):",
   "  - lifted: m's current origin z is more than 0.045 m above its origin z at episode start (is_lift, z_threshold=0.045; current height, not 'ever lifted').",
   "  - m's 'handle' active functional point has world z > 0.9 m (any handle point; is_A_functional_point_higher_than_z, z=0.9).",
-  "  - m's 'handle' active functional-point frame z-axis is within 60 deg of the z-axis of the cup_holder's 'handle_support_point' passive functional-point frame.",
-  "  - m's handle frame x-axis is within 60 deg of the cup_holder handle_support_point frame's +x OR -x axis (either sign accepted).",
+  "  - m's 'handle' active functional-point frame z-axis is within 60 deg of the z-axis of the cup_holder's 'handle_support_point' passive functional-point frame. Both frames are the FIRST functional point of that tag (RoboDojo's is_axis_aligned takes element [0] of each list): the mug's first 'handle' point and the rack's first 'handle_support_point', whichever hook the mug actually hangs on.",
+  "  - m's handle frame x-axis is within 60 deg of the cup_holder handle_support_point frame's +x OR -x axis (either sign accepted; again the first handle point and the rack's first support point).",
   "  - m's 'handle' active functional point is within 0.045 m (3-D Euclidean) of a cup_holder 'handle_support_point' passive functional point (is_A_functional_point_close_to_B_functional_point, threshold=0.045, no orientation-alignment option).",
   "all_robot_back_to_origin(): every agent-controlled (target) arm's end-effector must be within 0.15 m on EACH of x, y, z (per-axis) and within 20 degrees of its pose at the start of the episode, at the same action boundary as all other conditions. Grippers are NOT required to be open by the success test (only by partial-credit scoring)."
  ],

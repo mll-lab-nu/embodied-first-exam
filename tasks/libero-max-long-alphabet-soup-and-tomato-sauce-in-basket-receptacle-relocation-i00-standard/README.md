@@ -13,7 +13,7 @@
 
 ## Task
 LIBERO-MAX case `pro-initial-pose-position-angle-10-t00-i02-receptacle_relocation-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put both the alphabet soup and the tomato sauce in the basket."**, on
-the same frozen instance as `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-receptacle-relocation-i00-privileged`, with the same online event (receptacle relocation: the receptacle `basket_1` is moved 0.06 m, direction (1, 0), the
+the same frozen instance as `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-receptacle-relocation-i00-privileged`, with the same online event (receptacle relocation: the receptacle `basket_1` is moved 0.06 m, direction (1, 0); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart, the
 first time the gripper comes within 0.18 m of `alphabet_soup_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB
 256×256, depth on request, calibrated), the robot's own state, and OSC control steps in chunks. One
@@ -86,3 +86,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   /reset` ends the episode as `error` (`sim_error = 1`), not `reset` (reachable only when a run grants resets; the
   default is none). The scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps
   its name.
+- 2026-10-14 (board 0113, from board 0086): the instruction says that a moved object or receptacle jumps alone: what rests in or on it stays where it was (LIBERO-MAX moves one entity; board 0086 saw a basket jump through a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check and the verifier are unchanged, so the task keeps its name.

@@ -1,12 +1,13 @@
 # LIBERO-MAX · libero_10 · visual-theme switch — instance i01 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. **Task: Place white mug on left plate and yellow-white mug on right plate.**
+simulator runs in a service you cannot open, and you reach it only through a client. **Task: Place white mug on left plate and yellow-white mug on right plate.** Left and right are LIBERO's, as seen from the front of the table, facing the robot: the left plate (`plate_1`, the goal's) is the one on the robot's right, the right plate (`plate_2`) the one on the robot's left (LIBERO-PRO's scene file puts them in `plate_left_region` / `plate_right_region`, 0.3 m to either side).
 
 The scene can change while you work: once during the episode, when your gripper first gets close to one of the task's
 objects, the scene changes (as in LIBERO-MAX): an object or a receptacle may be moved, an obstacle or a few other
 objects may appear, a camera may shift, or the lighting, the colours or the image noise may change. Nothing tells you
-when; the task and its success check stay the same, so keep checking what the cameras show.
+when; the task and its success check stay the same, so keep checking what the cameras show. A moved object or
+receptacle jumps there alone: what already rests in or on it stays where it was.
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

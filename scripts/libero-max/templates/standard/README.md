@@ -62,3 +62,4 @@ and the video can neither change nor cost it (`docs/benchmarks/libero-max.md`, "
   /reset` ends the episode as `error` (`sim_error = 1`), not `reset` (reachable only when a run grants resets; the
   default is none). The scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps
   its name.
+{{change_log_extra}}
