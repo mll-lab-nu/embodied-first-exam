@@ -9,6 +9,7 @@
 | Family / instance | `room` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 44% of the bar (paper 128, FastTD3 177, bar 400); human review in PR #83 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 50 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` |
 
 ## Task
