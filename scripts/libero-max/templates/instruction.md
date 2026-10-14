@@ -1,6 +1,6 @@
 # LIBERO-MAX · {{suite}} · {{event_words}} — instance {{inst}}
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: {{instruction}}**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: {{instruction}}**{{case_note}}
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a {{suite}} task ({{pro_category}}), with one online
 event: the first time the gripper comes within {{trigger_m}} m of `{{trigger_object}}`, LIBERO-MAX changes the scene
 once ({{event_detail}}). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).
