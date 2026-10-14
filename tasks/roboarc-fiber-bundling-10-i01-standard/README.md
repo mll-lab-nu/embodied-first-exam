@@ -28,7 +28,7 @@ Same scene, instance and success rule as `roboarc-fiber-bundling-10-i01-privileg
 ## Verification
 See `tests/grade.py`.
 
-`nop`: no record yet on this base (`harbor run -p tasks/roboarc-fiber-bundling-10-i01-standard -a nop`).
+`nop` scored 0 on this base in both modes (the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py); 2026-10-14).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.

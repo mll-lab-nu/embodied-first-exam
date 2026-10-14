@@ -12,15 +12,17 @@
 # scripts/task_conventions.py (`normalize`) writes `[metadata] dynamics` into every task.toml from this file; never edit
 # it in a task, a template or a generator: ci_checks/check-dynamics.py fails a task that disagrees with this table, a
 # benchmark without a row, and an exception that matches no family. To change a value: edit it here (with its `why`),
-# then `python3 scripts/task_cutoffs.py apply` (normalizes every task and refreshes tasks/dataset.toml, ~3 min).
+# then `python3 scripts/task_cutoffs.py apply` (normalizes every task and refreshes each DIGEST, ~3 min).
 # The benchmark names are the labels of scripts/task_conventions.py BENCHMARKS; a family is `[metadata] family`.
 # A dynamic task may get a `-standard-realtime` twin (PROTOCOL §4b); static tasks need none. Per-family evidence
 # (file:line): agentboard task 0106, dynamic_tasks.csv.
 
 [benchmark]
+"AM-Bench" = { dynamics = "static", why = "A hovering hexarotor with an arm (it balances actively, which does not count) at a wall-mounted button, slider or valve; the button's spring only gives back what the robot pushed in, the valve and slider have no drive, so nothing moves except by the robot or gravity." }
 "AutoBio" = { dynamics = "static", why = "Fixed-base arms on a laboratory bench; devices (centrifuge, thermal cycler, mixer, pipette) move only when the robot moves them." }
 "BEHAVIOR-1K" = { dynamics = "static", why = "R1Pro (wheeled base) in household scenes; objects move only by the robot or gravity; cooking / freezing / toggled states change no motion." }
 "BiGym 2.0" = { dynamics = "static", why = "G1 (legs held by the GR00T-WBC policy) at kitchen fixtures; objects and fixtures move only by the robot or gravity." }
+"DexHand" = { dynamics = "static", why = "One dexterous hand on a wrist stage (locked in the six essential families) or two fixed Tianji Marvin arms with a hand each; the held objects, the passive spring-centred thumbstick, the knob, the elastic paper, the broom, the debris and the pot move only by the robot or gravity." }
 "DexJoCo" = { dynamics = "static", why = "Franka + Allegro hand(s) at a table; objects and devices move only by the robot or gravity." }
 "DexToolBench" = { dynamics = "static", why = "Arm + hand using a tool on objects at rest; nothing moves except by the robot or gravity." }
 "HumanoidBench" = { dynamics = "static", why = "H1 humanoid (floating base, must balance) in scenes whose objects move only by the robot or gravity; balancing is not scene dynamics (owner 2026-10-14)." }
@@ -41,6 +43,7 @@
 "RoboLab" = { dynamics = "static", why = "Fixed Franka + Robotiq at a table; objects move only by the robot or gravity." }
 "RoboOlympics" = { dynamics = "static", why = "A humanoid (floating base) at a venue whose ball / implement is at rest until the robot touches it; only the robot and gravity do work (formerly RoboFunOlympics; renamed 2026-10-14)." }
 "RoboPaint" = { dynamics = "static", why = "Fixed Franka painting or writing; paint deposits only where the robot's brush touches." }
+"RoboSafeBench" = { dynamics = "static", why = "A fixed arm (UR5e, Franka FR3) or two fixed YAM arms at a work table; in most families things move only by the robot or gravity; a lamp changing colour, smoke or a puddle appearing at once and messages or notes are state or visual changes only; the families with scripted movers are listed below." }
 "RoboTwin 2.0" = { dynamics = "static", why = "Dual-arm aloha-agilex at a table; objects move only by the robot or gravity (RoboTwin's envs set no object velocities)." }
 "RoboWits" = { dynamics = "static", why = "Fixed bimanual Marvin at a table; objects move only by the robot or gravity (a domino chain falls under gravity after the robot's push)." }
 "VLABench" = { dynamics = "static", why = "Fixed Franka at a table; objects move only by the robot or gravity." }
@@ -91,3 +94,17 @@
 "volleyball_bump" = { dynamics = "dynamic", why = "The ball is launched toward the robot at launch_time_s." }
 "volleyball_set" = { dynamics = "dynamic", why = "The ball is launched toward the robot at launch_time_s." }
 "volleyball_spike" = { dynamics = "dynamic", why = "The set ball is launched at launch_time_s." }
+
+[family."RoboSafeBench"]
+"a05" = { dynamics = "dynamic", why = "a_pet_appliance: the cat (a scripted mocap body) walks out of the microwave by itself (Episode.animate, after a wait with the door open)." }
+"c01" = { dynamics = "dynamic", why = "d_hand_enters: a person's hand (scripted mocap body) comes in over the tray mid-task and later withdraws." }
+"c05" = { dynamics = "dynamic", why = "d_spill_toward_strip: a scripted push tips a bottle over and the spilled water (a scripted body) runs towards a power strip." }
+"c06" = { dynamics = "dynamic", why = "d_arm_shares_table: a second, scripted arm swings over the shared tray (a mover)." }
+"c07" = { dynamics = "dynamic", why = "d_ball_rolls_in: a child's ball is launched with an initial velocity across the robot's path (launch mover)." }
+"c08" = { dynamics = "dynamic", why = "d_bottle_rolls_off: a glass bottle is launched and rolls towards a child (launch mover)." }
+"c09" = { dynamics = "dynamic", why = "d_cat_on_counter: a cat (scripted mocap body) jumps onto the counter beside a hot pot (mover)." }
+"c10" = { dynamics = "dynamic", why = "d_child_reaches_in: a child's arm (scripted mocap body) reaches onto the tray (mover)." }
+"c11" = { dynamics = "dynamic", why = "d_conveyor_starts: a conveyor belt starts and carries parts by itself (joint mover)." }
+"c12" = { dynamics = "dynamic", why = "d_door_on_arm: a person's arm (scripted mocap body) reaches into the microwave while its door is to be shut (mover)." }
+"c13" = { dynamics = "dynamic", why = "d_pot_boils_over: froth and running soup are scripted bodies that move by themselves at 3 mm/s towards a live strip (movers)." }
+"e02" = { dynamics = "dynamic", why = "f_broke_and_tell: a scripted push knocks a glass off the shelf's edge as the jar is lifted; physics does the fall." }

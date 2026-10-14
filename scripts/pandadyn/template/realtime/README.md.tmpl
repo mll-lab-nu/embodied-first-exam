@@ -1,0 +1,54 @@
+# @@RT@@
+
+| | |
+|---|---|
+| Benchmark | Panda Dynamic Scenes |
+| Mode | standard-realtime (`eai-standard/2.3`) |
+| Twin | `@@PRIV@@` |
+| Simulator / robot | `maniskill` / `@@ROBOT@@` |
+| Family / instance | `@@FAMILY@@` / @@INST@@ (nominal parameters, seed @@SEED@@) |
+| Oracle | `full` |
+| Agent time budget | @@AGENT_TIMEOUT_S@@ s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `@@IMAGE@@` |
+
+## Task
+Standard-realtime twin of `@@PRIV@@` (same frozen instance and success check as it and as `@@STD@@`): the agent gets only
+the realtime client (`eai-standard/2.3`, docs/STANDARD_MODE.md Part 3); the simulator runs in the `sim` sidecar on a clock
+that does not stop, at slowdown **S = @@SLOWDOWN@@** (one 10 ms control step every @@WALL_MS@@ ms of wall-clock time), with
+@@RT_RESETS@@ resets (only the last episode is graded). @@README_GOAL@@
+
+## Difficulty
+That of `@@STD@@`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
+the robot's servos run whatever the agent does, so the agent has to plan or stream the targets from a program of its own
+(the task's horizon is @@HORIZON@@ s of robot time, about @@HORIZON_WALL_S@@ s of wall-clock time at S = @@SLOWDOWN@@), and
+learn the scene from @@RT_RESETS_PLUS1@@ real attempts.
+
+## Reference solution
+`solution/oracle_plan.py` plans the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step,
+`hold`) into the episode from control step 0 through the realtime client, one chunk of at most 10 s at a time, each at
+its own step (`at`), so every row runs at the control step it was recorded for; it uses no privileged information at run
+time. Checked at S = @@SLOWDOWN@@ (board 0112): live success, fresh-process replay success, the same final state.
+
+## Verification
+The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
+`environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
+every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
+signals the service, which replays the graded episode in a fresh process (`rcb_pandadyn.py replay`) and writes
+`final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, the replay succeeds
+and ends in the same state. The clock's record (`stalls`, `max_lag_s`, `late_steps`, ...) is copied into `reward.json`
+and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
+
+## Details
+| | |
+|---|---|
+| Real time | slowdown S = @@SLOWDOWN@@ (`RCB_SLOWDOWN`'s default): the service's measured real-time factor is @@RTF@@ (docs/benchmarks/pandadyn.md, "Standard-realtime"); S = 1 when it is at least 3, else ceil(1.5 / RTF) (PROTOCOL §4b) |
+| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, @@HORIZON@@ s of robot time, is a failure), when the agent's time is up, or on a simulator error; @@RT_RESETS@@ resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
+| Action space | `submit` chunks of `joint_position` (@@DIM@@: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
+| Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
+| Images | the `sim` sidecar runs eai-pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
+| Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |
+| Generator | `scripts/pandadyn/mk_tasks.py` (`REALTIME`, `template/realtime/`, `scripts/humanoidbench/shared/{realtime,standard}/`); docs/benchmarks/pandadyn.md |
+
+### Change Log
+- 2026-10-14 (owner, board 0112): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime
+  twin with S = @@SLOWDOWN@@ and @@RT_RESETS@@ resets.

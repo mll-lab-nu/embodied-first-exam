@@ -29,9 +29,14 @@ What it does:
   limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
+- last, `DIGEST`: the task's content digest (PROTOCOL §2.8; the digest Harbor publishes it under, `digest()`), one line
+  `sha256:<hex>`. Each task carries its own, so pull requests that change different tasks never touch a shared file;
+  the release manifest `tasks/dataset.toml` is generated from them (`scripts/dataset_manifest.py`, not committed).
 """
 from __future__ import annotations
 
+import fnmatch
+import hashlib
 import os
 import re
 import shutil
@@ -62,7 +67,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("metaworldplus-", "MetaWorld+"),
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
     ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
-    ("molmospaces-", "MolmoSpaces"), ("myosuite-", "MyoSuite"), ("dexjoco-", "DexJoCo"),
+    ("molmospaces-", "MolmoSpaces"), ("myosuite-", "MyoSuite"), ("dexjoco-", "DexJoCo"), ("dexhand-", "DexHand"),
     ("labutopia-", "LabUtopia"),
     ("autobio-", "AutoBio"),
     ("vlabench-", "VLABench"),
@@ -74,7 +79,9 @@ BENCHMARKS = [  # (directory prefix, label)
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
     ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
+    ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
     ("pandadyn-", "Panda Dynamic Scenes"),
+    ("ambench-", "AM-Bench"),
 ]
 # Modes (PROTOCOL §2.15, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
 # standard-realtime task without a privileged twin is expected when its benchmark has no privileged mode (no privileged
@@ -230,8 +237,7 @@ CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then Ro
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
-CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3; the same exceptions: ci_checks/check-task-fields.sh
-CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600}    # owner, 2026-10-08 (issue #87)
+CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -566,22 +572,21 @@ def render_external(task: "Path | str" = "") -> str:
 _CUTOFFS: tuple[dict, dict, dict] | None = None
 
 
-def _cutoff_value(where: str, bench: str, sec) -> int:
-    cap = CUTOFF_CAP_EXCEPTIONS.get(bench, CUTOFF_CAP)
+def _cutoff_value(where: str, sec) -> int:
     if isinstance(sec, bool) or not isinstance(sec, int) or sec <= 0:
         raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec!r} is not a whole positive number of seconds")
-    if sec > cap:
-        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec} s is above the {cap} s cap (PROTOCOL D8, §2.3)")
+    if sec > CUTOFF_CAP:
+        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec} s is above the {CUTOFF_CAP} s cap (PROTOCOL D8, §2.3)")
     return sec
 
 
-def _cutoff_row(where: str, bench: str, row) -> dict[str, int]:
+def _cutoff_row(where: str, row) -> dict[str, int]:
     if not isinstance(row, dict) or not row:
         raise ValueError(f"{CUTOFFS_FILE.name}: {where}: expected {{ <mode> = <seconds>, ... }}")
     for mode, sec in row.items():
         if mode not in MODES:
             raise ValueError(f"{CUTOFFS_FILE.name}: {where}: unknown mode {mode!r} (one of {', '.join(MODES)})")
-        _cutoff_value(f"{where} {mode}", bench, sec)
+        _cutoff_value(f"{where} {mode}", sec)
     return row
 
 
@@ -605,20 +610,20 @@ def _cutoffs() -> tuple[dict, dict, dict]:
         table = raw.get("cutoff_sec", {})
         for bench, row in table.items():
             known(bench, "[cutoff_sec]")
-            _cutoff_row(bench, bench, row)
+            _cutoff_row(bench, row)
         families = raw.get("family_cutoff_sec", {})
         for bench, rows in families.items():
             known(bench, "[family_cutoff_sec]")
             if not isinstance(rows, dict):
                 raise ValueError(f"{CUTOFFS_FILE.name}: [family_cutoff_sec.\"{bench}\"]: expected \"<family>\" = {{ <mode> = <seconds> }}")
             for family, row in rows.items():
-                _cutoff_row(f"{bench}, family {family!r}", bench, row)
+                _cutoff_row(f"{bench}, family {family!r}", row)
         tasks = raw.get("task_cutoff_sec", {})
         for name, sec in tasks.items():
             bench = next((label for prefix, label in BENCHMARKS if name.startswith(prefix)), "")
             if not bench or not name.endswith(tuple("-" + m for m in MODES)):
                 raise ValueError(f"{CUTOFFS_FILE.name}: [task_cutoff_sec]: {name!r} is not a task directory name")
-            _cutoff_value(f"task {name}", bench, sec)
+            _cutoff_value(f"task {name}", sec)
         _CUTOFFS = (table, families, tasks)
     return _CUTOFFS
 
@@ -1159,6 +1164,34 @@ def normalize(task: Path) -> None:
     write_if_changed(task / "README.md", render_readme(task))
     rcb_monitor_inject.apply(task)   # PROTOCOL §2.10 (v1.2): the resource monitor sidecar, caps, verifier step
     assert_converted(task)
+    write_if_changed(task / DIGEST_FILE, digest(task) + "\n")   # last: the digest of everything above (PROTOCOL §2.8)
+
+
+# The digest Harbor publishes a task under (harbor.publisher.packager.Packager.compute_content_hash, Harbor 0.23.0):
+# sha256 over "<relative path>\0<sha256 of the file>\n" of task.toml, instruction.md, README.md, trajectory.json and every
+# file under environment/, tests/, solution/ and steps/, sorted by path, with Harbor's default ignores. DIGEST itself is
+# not one of these files. ci_checks/check-dataset-manifest.sh recomputes it on its own and compares with DIGEST.
+DIGEST_FILE = "DIGEST"
+DIGEST_IGNORE_NAMES = ("*.pyc", ".DS_Store", "*.swp", "*.swo", "*~")
+
+
+def digest(task: Path) -> str:
+    task = Path(task)
+    files = [task / n for n in ("task.toml", "instruction.md", "README.md", "trajectory.json") if (task / n).exists()]
+    for sub in ("environment", "tests", "solution", "steps"):
+        if (task / sub).exists():
+            files += [p for p in (task / sub).rglob("*") if p.is_file()]
+    rels = sorted({p.relative_to(task).as_posix() for p in files})
+    rels = [r for r in rels if "__pycache__" not in Path(r).parts[:-1]
+            and not any(fnmatch.fnmatchcase(Path(r).name, pat) for pat in DIGEST_IGNORE_NAMES)]
+    outer = hashlib.sha256()
+    for rel in rels:
+        h = hashlib.sha256()
+        with (task / rel).open("rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+        outer.update(f"{rel}\0{h.hexdigest()}\n".encode())
+    return "sha256:" + outer.hexdigest()
 
 
 def snapshot(task: Path) -> dict[str, bytes]:

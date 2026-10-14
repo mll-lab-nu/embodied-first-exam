@@ -51,14 +51,14 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. The one other kind: tasks a benchmark exports with its own service and grader inside, on its own named protocol (§4c; owner, 2026-10-14: RoboOlympics). |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. The one other kind: tasks a benchmark exports with its own service, grader inside, on its own named protocol (§4c; owner, 2026-10-14: RoboOlympics), 2026-10-13); DexHand standard to N = 20 (owner, 2026-10-14); MuJoCo Playground's quadruped standard tasks to N = 10 (owner, 2026-10-14). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), always the same in a task's privileged and standard versions (§2.15), and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08; its tasks' cutoff is 7200 s since 2026-10-12). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
+| D8 | Agent time budget (the cutoff) | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark unless the cutoff table gives a family or a task an exception (§2.12), always the same in a task's privileged and standard versions (§2.15), and results are grouped by budget. No benchmark has an exception to the cap (§2.3). The numbers live in one table, `scripts/task_cutoffs.toml`, per benchmark and mode with optional exceptions per family and per task, and every instruction states its own in one format, in its last section (§2.12; owner, 2026-10-11 and 2026-10-12). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. The usage gateway (`scripts/usage_gateway/`) is allowed: it forwards model-API requests unchanged, records token usage, and refuses what a trial may not have: a request past the token budget (§5) and, since 2026-10-10, every request that is not a model-API call (§2.11). No tool that runs outside the trial's container is offered to the model (§2.11): official runs turn the harness's web search off (Codex `web_search = "disabled"`, Claude Code `WebSearch` and `WebFetch` disallowed; `scripts/run_agent_batch.sh` `WEB_SEARCH=disabled`, the default) and start the harness without account connectors, apps, plugins, image generation and cloud agents (Codex: with the same switch the runner sets those features to false in the run's `config.toml`, `scripts/codex_tools_off.py`). These run at the model provider, so no egress allowlist stops them (2026-10-02: Codex with a ChatGPT login searched GitHub by default; 2026-10-10: the same login handed the model 238 account connector tools, and 21 trials called them) |
@@ -72,7 +72,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
 5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
 6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
-7. Listed in `tasks/dataset.toml`. [CI]
+7. Carries its content digest in `DIGEST` (§2.8). [CI]
 8. The verifier writes `reward.txt` (1/0) and a numeric-only `reward.json` with at least `success` (and `deterministic` for trajectory tasks). [current]
 9. Same verdict in a fresh process; the verifier does not need the network (standard-mode verifiers run with `no-network`). [current]
 10. Reference solutions only under `solution/`; nothing the agent can reach contains or points to one. [current]
@@ -141,18 +141,14 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[metadata.resources.limits]` and `[metadata.resources.caps]`: the agent phase's resource limits and the docker caps (§2.10) | MUST | [CI] (v1.1.5) |
 | `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
 
-**Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
-decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in the exception table of
-`ci_checks/check-task-fields.sh` (the cutoff table refuses a number above the cap, `scripts/task_conventions.py`
-`CUTOFF_CAP_EXCEPTIONS`). The budget is uniform within the benchmark, in both modes (the cutoff table may give a family or a task another
-number within the cap, §2.12). A standard sidecar's wall
-clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it, in every benchmark (§2.12) [CI]. That benchmark's results state the budget and are
-compared only with results under the same budget (D8). The token budget (D10) is unchanged.
-- **RoboTangle** (owner, 2026-10-08; issue #87): a cap of 21600 s (6 h); its tasks' cutoff, 21600 s at first, is
-  7200 s since 2026-10-12 (the table, `docs/CUTOFFS.md`). The topological puzzles are much
-  harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
-  owner sets the budget to probe the capability ceiling. Simulator speed-ups add interaction within it; they never
-  shorten it (`docs/benchmarks/robotangle.md`, added with the tasks in #81).
+**Agent budget cap.** `[agent].timeout_sec` is at most 14400 s in every task; no benchmark is excepted
+(`ci_checks/check-task-fields.sh`; the cutoff table refuses a number above the cap, `scripts/task_conventions.py`
+`CUTOFF_CAP`). An exception would be an owner decision, recorded here, in `docs/benchmarks/<bench>.md` and in both
+checks; its budget would be uniform within the benchmark, in both modes (the cutoff table may give a family or a task
+another number within the cap, §2.12), and its results compared only with results under the same budget (D8). A
+standard sidecar's wall clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals the task's cutoff, in every
+benchmark (§2.12) [CI]. The token budget (D10) is unchanged. (RoboTangle's 21600 s exception, 2026-10-08, issue #87,
+ended with its tasks on 2026-10-13: RoboARC replaced them at 10800 s, `docs/CUTOFFS.md`.)
 
 ### 2.4 Images, registry, GPU
 
@@ -226,7 +222,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Item | Level | Basis |
 |---|---|---|
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
-| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container). A pointer is anything that locates the solution of this task: a URL, a dataset or file name, a demonstration or episode id, the name of the upstream expert that produced the reference. Provenance is kept in `scripts/<bench>/` and the README, never in a file under `environment/` the agent reads | MUST NOT | [CI] for the task's own files (`ci_checks/check-agent-pointers.py`: hosts of code, data and video, `*_url` keys, dataset and demonstration file names, keys that name a demonstration or episode (`"demo": ...`, `episode_id`); text files and the string members of `.npz` archives, since 2026-10-14 (board 0105: DexJoCo's `instance.npz` named its demonstration)); [current] for images, reviewed when they are built. Upstream documentation inside a simulator image that names the benchmark's public datasets or checkpoints is not removed file by file: the allowlist of §2.11 makes them unreachable. Open (2026-10-10): RoboTangle's image (docs/benchmarks/robotangle.md) |
+| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container). A pointer is anything that locates the solution of this task: a URL, a dataset or file name, a demonstration or episode id, the name of the upstream expert that produced the reference. Provenance is kept in `scripts/<bench>/` and the README, never in a file under `environment/` the agent reads | MUST NOT | [CI] for the task's own files (`ci_checks/check-agent-pointers.py`: hosts of code, data and video, `*_url` keys, dataset and demonstration file names, keys that name a demonstration or episode (`"demo": ...`, `episode_id`); text files and the string members of `.npz` archives, since 2026-10-14 (board 0105: DexJoCo's `instance.npz` named its demonstration)); [current] for images, reviewed when they are built. Upstream documentation inside a simulator image that names the benchmark's public datasets or checkpoints is not removed file by file: the allowlist of §2.11 makes them unreachable. Open (2026-10-10): RoboTangle's image; its tasks were removed on 2026-10-13, and RoboARC's image is built FROM it (docs/benchmarks/roboarc.md) |
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
 | Agent egress allowlisted in `task.toml` (the model APIs and, since 2026-10-11, the package registries), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were open) |
 | `nop` scores 0 | MUST | [current] |
@@ -249,7 +245,7 @@ example → nop result → predicate summary*. The reviewer checks:
 ### 2.8 Identity and immutability
 | Item | Level | Basis |
 |---|---|---|
-| Listed in `tasks/dataset.toml` with the digest of its current files (re-run `cd tasks && harbor add --scan .` after any change; `ci_checks/check-dataset-manifest.sh` recomputes every digest) | MUST | [CI] |
+| Carries the digest of its current files in `tasks/<task>/DIGEST` (one line `sha256:<hex>`, the digest Harbor publishes it under; written last by `scripts/task_conventions.py` `normalize`, so every generator and `scripts/task_cutoffs.py apply` refresh it; after a hand edit run `python3 scripts/task_conventions.py tasks/<task>`; `ci_checks/check-dataset-manifest.sh` recomputes it). The release manifest `tasks/dataset.toml` is generated from the DIGEST files (`scripts/dataset_manifest.py write`) and not committed, so pull requests that change different tasks share no file (2026-10-14, board 0117) | MUST | [CI] |
 | A published task's `environment/` and `tests/` inputs are immutable; a change is a new task. One line is not such an input: `RCB_WALL_CLOCK_S` of the `sim` service in `environment/docker-compose.yaml`, which mirrors the cutoff table (§2.12) and is rewritten with it by `scripts/task_cutoffs.py apply`, like `[agent] timeout_sec`; it changes what the service reports, not the scene, the instance or the success rule. Nothing else under `environment/` or `tests/` follows the table | MUST | [current]; the one line: [CI] (`ci_checks/check-cutoffs.py`) |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
 | A change of a task's cutoff, or of the text `scripts/task_conventions.py` owns in every instruction (`## External material`, `## Resource limits`, `## Time limit`), changes the task in place: same name and instance, new digest. A cutoff change is recorded in the cutoff table's `[[history]]` (§2.12; required: CI refuses a number that differs from its last recorded value), which stands for the per-task Change Log entry; a change of the shared text in §7. Results under another cutoff are reported separately (D8) | MUST (the record) | [new] (2026-10-11; precedents: #155 RoboDojo 5400 → 3600 s, #150 / #151) |
@@ -496,6 +492,9 @@ under an unrelated name would be missed.
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
 ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, BiGym, YAMLab, Panda Dynamic Scenes
 (not published at all: its environment package is this repository's `images/pandadyn/`); Isaac Sim does not install from pypi.org.
+ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics, RoboFunOlympics, BiGym, YAMLab, Panda Dynamic Scenes
+(not published at all: its environment package is this repository's `images/pandadyn/`), DexHand (not published at all: its scenes and tooling are this repository's
+`scripts/dexhand/` and `images/dexhand/`), AM-Bench; Isaac Sim does not install from pypi.org.
 
 **Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
 decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists that implement it (the same directory
@@ -595,11 +594,11 @@ is graded then.
 **The table's exceptions.**
 
 ```toml
-[family_cutoff_sec."RoboTangle"]              # benchmark; then one line per family, a number per mode
-"cast_coil" = { privileged = 14400, standard = 14400 }
+[family_cutoff_sec."RoboARC"]                 # benchmark; then one line per family, a number per mode
+"interlocked_claws" = { privileged = 14400, standard = 14400 }
 
 [task_cutoff_sec]                              # one line per task directory
-"robotangle-cast-coil-hard-i00-standard" = 10800
+"roboarc-interlocked-claws-01-i01-standard" = 7200
 ```
 
 A mode a family's entry leaves out keeps the benchmark's number. A generator reads the benchmark's number
@@ -736,10 +735,10 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 ### 4.0 Versions
 | Version | Date | Content |
 |---|---|---|
-| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboOlympics |
-| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes and MuJoCo Playground's quadruped tasks |
-| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, BiGym 2.0, MyoSuite); standard tasks stay on 2.1 / 2.2. Issue #86 |
-| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
+| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0, RoboOlympics, RoboFunOlympics, RoboSafeBench |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard, Panda Dynamic Scenes, DexHand and MuJoCo Playground's quadruped tasks |
+| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, BiGym 2.0, MyoSuite, RoboOlympics, RoboSafeBench, Panda Dynamic Scenes, RoboCasa365, MuJoCo Playground); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (Robo, RoboARC; first RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
 Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
 accept every 2.x version and the former `rcb-limited/2.x` spelling as well. No task declares a version before 2.1
@@ -863,6 +862,13 @@ results must state the reset budget and are compared only with results under the
   does (its instruction calls `POST /reset` through `Robot._post`). The ALOHA and Panda standard tasks keep 0.
   `RCB_RESET_BUDGET=0` still runs one episode; quadruped standard results recorded before this change ran with 0 and
   are reported separately ([`benchmarks/mujoco-playground.md`](benchmarks/mujoco-playground.md)).
+- **DexHand** (owner, 2026-10-14, board 0109; standard tasks, from their first release): `budget.reset = 20`,
+  DexToolBench's value. Every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound
+  exceeded), the essential families start with the object already in the hand, and the agent has no simulator to
+  practise in, so with one episode the first slip decided the trial. A reset calls the family's `Session.reset()` (the
+  same state hash as a fresh process). The DexHand 2.2 adapter (`scripts/dexhand/shared/standard/server.py`) implements
+  the capability as MyoSuite's does. `RCB_RESET_BUDGET=0` still runs one episode
+  ([`benchmarks/dexhand.md`](benchmarks/dexhand.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
@@ -919,13 +925,15 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | What a request can cost the clock is bounded by the service: the body is read, decoded and checked off the simulator's thread, so a refused or malformed request never reaches it (a body with more than 1 MiB of JSON text is parsed by a separate process; the 64 MB limit of §4 stands); behind the clock, control steps run before waiting requests, which are served once it has caught up (they queue behind each other: an `/observe` may take longer to answer, the robot's time does not slow down), and a rendering request that is a stall by itself (more than 0.5 s) holds the next one back four times as long, so requests take at most a fifth of the clock's time; and the cameras are rendered at most once per control step however many requests and watches ask | SHOULD | [new] (v1.2-rc: review R2 M1) |
 | Slowdown S: `RCB_SLOWDOWN`, its default set per task and **stated in the task**: `[metadata] slowdown` in `task.toml` (written by `scripts/task_conventions.py` from the sim service's `RCB_SLOWDOWN` default), the README's "Real time" row and the instruction (`S = <S>`). A twin made for a `dynamic` family (§2.14) takes S from the real-time factor RTF of its own service, measured on the reference workstation (robot seconds per wall second with the clock running flat out, `RCB_SLOWDOWN` ≪ 1, CPU-capped as in its compose file): **S = 1 when RTF ≥ 3**, else S ≈ 1.5 / RTF rounded up, so that the clock needs at most two thirds of what the simulator can do (owner, 2026-10-14, board 0112); the benchmark's doc records the measurement. S = 1 is real time; a §4c task states its own S (`[metadata] slowdown`, its service's own setting: RoboOlympics `RO_SLOWDOWN`). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use the task's S | MUST | [CI] (`ci_checks/check-realtime.py`, 2026-10-14) |
 | Reset budget: every standard-realtime task allows resets, **10 by default** (`budget.reset = 10`; owner, 2026-10-14: "all realtime tasks allow resets"): an episode on a clock that does not stop is one attempt, often over in seconds, and the agent has no simulator to practise in. Per-benchmark exceptions only as in §4.5: HumanoidBench 50; BiGym 2.0 0 (its twins stay as they were, owner 2026-10-14). A task a benchmark exports with its own service (§4c) has none: a match is one episode. The reset capability is §4.5's; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget | MUST | [CI] (`ci_checks/check-realtime.py`, 2026-10-14; before: no reset by default, v1.1.2, #102) |
+| Slowdown S: `RCB_SLOWDOWN`, its default set per task and **stated in the task**: `[metadata] slowdown` in `task.toml` (written by `scripts/task_conventions.py` from the sim service's `RCB_SLOWDOWN` default), the README's "Real time" row and the instruction (`S = <S>`). A twin made for a `dynamic` family (§2.14) takes S from the real-time factor RTF of its own service, measured on the reference workstation (robot seconds per wall second with the clock running flat out, `RCB_SLOWDOWN` ≪ 1, CPU-capped as in its compose file): **S = 1 when RTF ≥ 3**, else S ≈ 1.5 / RTF rounded up, so that the clock needs at most two thirds of what the simulator can do (owner, 2026-10-14, board 0112); the benchmark's doc records the measurement. S = 1 is real time; RoboOlympics' 10 is its own (below). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use the task's S | MUST | [CI] (`ci_checks/check-realtime.py`, 2026-10-14) |
+| Reset budget: every standard-realtime task allows resets, **10 by default** (`budget.reset = 10`; owner, 2026-10-14: "all realtime tasks allow resets"): an episode on a clock that does not stop is one attempt, often over in seconds, and the agent has no simulator to practise in. Per-benchmark exceptions only as in §4.5: HumanoidBench 50; BiGym 2.0 0 (its twins stay as they were, owner 2026-10-14); RoboOlympics 0 (a match is one episode); RoboSafeBench 0 (a safety episode is one attempt: a harm done cannot be reset away, and its standard tasks have no reset either; board 0114, pending the owner's confirmation). The reset capability is §4.5's; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget | MUST | [CI] (`ci_checks/check-realtime.py`, 2026-10-14; before: no reset by default, v1.1.2, #102) |
 | A simulator crash is an infrastructure failure, never the agent's: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed` (no call spans a crash: `/submit` answers at once), a failed resume `resume_failed`, and a simulator error that ends the graded episode (`reason = "error"`) — all with `infra_error = 1` | MUST | [new] (owner, 2026-10-08) |
 | The agent's controller runs in the agent's own container and streams targets through the client; no agent code runs next to the simulator | MUST | [new] |
 | A standard-realtime task shares its privileged twin's frozen instance and success rule where it has one (its verifier grades the sidecar's record, as in standard mode; a task without a twin, §2.15, carries its own frozen instance and success rule); its instruction says that time does not stop | MUST | [new] |
 
 **Per-benchmark exceptions.** A benchmark's standard-realtime tasks may differ from a default or a MUST of this section
 only by owner decision, recorded here and in `docs/benchmarks/<bench>.md` (and, where CI checks the rule, in its
-exception list), in the same way as HumanoidBench's reset budget (§4.5) and RoboTangle's agent budget (§2.3). The
+exception list), in the same way as HumanoidBench's reset budget (§4.5). The
 interface, the encoding, crash recovery and the evidence are never excepted: every standard-realtime task serves
 `eai-standard/2.3`, except the tasks a benchmark exports with its own service (§4c). That benchmark's results state what differs and are compared only with results under the same
 settings.
@@ -954,6 +962,29 @@ RoboOlympics").
 | Untrusted code in the verifier never outlives its evaluation: every process it started is ended before anything is graded (its session, then every process of the sandbox user below the evaluator, which is their subreaper; again container-wide before the grade), it has a process limit (`RLIMIT_NPROC`), it cannot write the log directory or the report the grade is read from (a root-only directory), and the reward files are written fresh; the evaluator's isolation probe (`skilleval.evaluate --probe`) checks each of these | MUST | [new] (board 0111: a detached child of the skill could rewrite the report, #180 review) |
 | Results are reported separately from the benchmark's other tasks and state the protocol, S and the opponent level; the tasks run on development seeds (the benchmark's official hidden seeds are its own) | MUST | [new] |
 | An exported task is refreshed by re-exporting, not by hand; a fix made here to an exported file is recorded in the manifest (`patched`) and sent upstream, so that the next export carries it | SHOULD | [new] |
+- **RoboOlympics** (owner, 2026-10-08; `roboolympics-<sport>-<format>-i<NN>-standard-realtime`, real-time sports
+  against a scripted opponent, [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)):
+  - slowdown: `RCB_SLOWDOWN` defaults to **10**, RoboOlympics' official slowdown of these sports (a rally is over in a
+    few seconds, faster than a model's turn); it stays an override, and the results state S and are reported
+    separately (as every S ≠ 1).
+  - no privileged twin (not an exception since 2026-10-14: a benchmark ships any subset of the modes, §2.15): the
+    sports measure play from camera images against an opponent; there is no trajectory deliverable.
+  The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
+  stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
+- **RoboSafeBench** (requested by the authors 2026-10-14, accepted on review, board 0114; `cell-<slug>-i<NN>-standard-realtime`,
+  [`benchmarks/robosafe.md`](benchmarks/robosafe.md), "Standard-realtime tasks"):
+  - no privileged twin (not an exception since 2026-10-14: a benchmark ships any subset of the modes, §2.15; here a
+    privileged agent holding the simulator would read the hazard state, so RoboSafeBench ships standard and
+    standard-realtime only): each realtime task carries its standard task's instance under RoboSafeBench's realtime
+    clock (its own start hash) in the sim sidecar.
+  - pictures while the clock runs: the scene is rendered on the CPU (about 0.2 s a picture) by the simulator's thread.
+    Each picture a response carries is charged a fixed 0.24 s of robot time (the render's own wall time forgiven), so
+    the world moves on by the same amount whatever the host; a request returns pictures of at most 2 cameras and a watch
+    at most 2 pictures per second and no depth (`/spec.timing`; the rates above stalled under sweep load, the benchmark's
+    doc). Before the clock starts pictures cost nothing and every request may ask for every camera.
+  Everything else is this section's: S = 1 (RTF 3.4 measured on the reference workstation, the 6-CPU cap, `RCB_SLOWDOWN`
+  = 0.01, `cell-c01-i00` reference; the benchmark's doc), no reset (the exception in the reset row above), the
+  service's evidence and stalls counted, never deciding.
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |
@@ -1037,9 +1068,9 @@ Open:
    owner's decision of that day (RoboTangle as a whole). 2026-10-11 (owner): the rule becomes an honour rule and the package registries (PyPI, the Debian /
    Ubuntu apt archives) are reachable from every task, so that an agent can `pip install` and `apt-get install` as it
    could on the open tasks before (§2.11; an in-place change of every `task.toml` and `instruction.md` again; trials
-   run between the two changes, under the model-APIs-only list, could install nothing). Open: RoboTangle's image still names upstream demonstrations and solution sheets in files a
-   privileged agent can read (unreachable under the allowlist; docs/benchmarks/robotangle.md, Network policy: a
-   requirement for its next release).
+   run between the two changes, under the model-APIs-only list, could install nothing). Open: RoboTangle's image still named upstream demonstrations and solution sheets in files a
+   privileged agent can read (unreachable under the allowlist). Its tasks were removed on 2026-10-13; RoboARC's image is
+   built FROM that image (docs/benchmarks/roboarc.md).
 6. Resource limits (§2.10, v1.1.5): every task declares limits and caps and its `instruction.md` states the limits (an
    in-place change of every task's `task.toml`, `instruction.md` and README, 2026-10-10); BEHAVIOR-1K's compose files
    default `RCB_TEXTURE_BUDGET` to 0.1 (what every official run already used), so that Isaac's GPU memory does not grow
@@ -1067,9 +1098,9 @@ Open:
    table. No cutoff changed; scenes, instances, tooling, services and success rules are unchanged, earlier results
    stand, and trials started before the change read the earlier wording. The generators' own copies of the number
    are gone. Stricter values are set in the table afterwards, by owner decision, each with its `[[history]]` entry.
-   Open: RoboTangle's standard service ends the episode on its own wall clock, started with the service, a little before
-   the agent's session; it becomes report-only, like every other service's, at RoboTangle's next task update
-   (docs/benchmarks/robotangle.md, "To do").
+   RoboTangle's standard service ended the episode on its own wall clock, started with the service, a little before
+   the agent's session; its tasks were removed on 2026-10-13. RoboARC's service, which replaced them, counts from the
+   first request (item 8) and becomes report-only at RoboARC's next task update (docs/benchmarks/roboarc.md).
 8. The agent's clock in the standard modes (§2.12; owner, 2026-10-12, boards 0085 and 0087; landed 2026-10-13): every
    service's `meta.time_s` / `meta.time_left_s` count from the agent's first request to the service, and a resumed
    service keeps that moment (STANDARD_MODE.md, "The agent's clock"). The services that counted from their own start
@@ -1082,7 +1113,7 @@ Open:
    Every standard instruction's closing `## Time limit` paragraph changed in place (what `time_left_s` counts from, and
    that the agent can plan by it), and the sentence "approximate: the harness's own deadline is authoritative" is gone
    from the instructions and `/spec` texts that had it (RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground). No
-   service ended an episode on this clock (RoboTangle's apart, unchanged and still open as in 7), so no verdict
+   service ended an episode on this clock (RoboTangle's apart, as in 7), so no verdict
    depended on it: scenes, instances, success rules and graders are unchanged and earlier results stand. What
    changes for an agent is that `time_left_s` no longer reaches 0 while it still has the harness's set-up time left (the
    service was up a median of 79 s before the agent's phase over 2,322 recorded standard trials, board 0085).

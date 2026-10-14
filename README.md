@@ -28,7 +28,7 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 
 A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §4b), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
-drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, BiGym 2.0; RoboOlympics' exported matches serve its own `eai-standard-realtime/1.0`, PROTOCOL §4c), as
+drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, BiGym 2.0; RoboOlympics' exported matches serve its own `eai-standard-realtime/1.0`, PROTOCOL §4c, RoboOlympics, BiGym 2.0, RoboSafeBench), as
 `<base>-standard-realtime` next to `<base>-privileged` and `<base>-standard`; its results are reported separately.
 
 > **Names.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard* and `rcb-limited/2.1` to
@@ -57,6 +57,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboCasa365 (`robocasa365-<task>-i00`) | robosuite · Franka Panda on an Omron mobile base | 50 | full (upstream demonstrations) |
 | RoboCasa-GR1 (`robocasa-gr1-<task>-i00`) | robosuite · Fourier GR1 humanoid | 24 | full (upstream demonstrations) |
 | DexJoCo (`dexjoco-<family>-i00`) | MuJoCo 3.4 · Franka Panda + Allegro hand, one or two arms | 11 | full (upstream human demonstrations) |
+| DexHand (`dexhand-<family>-i00`) | MuJoCo 3.4.0 (CPU) · Sharpa Wave 22-DoF hand on a six-DoF wrist stage (eight families; the six essential families lock the wrist), or two fixed Tianji Marvin 7-DoF arms with a Sharpa Wave hand on each (sweeping debris into a held dustpan, carrying a pot into a shelf); every family also runs with the Wuji Hand 2.2 (20 DoF) in place of each Sharpa Wave; immediate failure when an object drops or leaves its support | 10 | full (recorded physical Sharpa episodes) |
 | AutoBio (`autobio-<family>-i00`) | AutoBio on MuJoCo 3.3 (CPU) · UR5e with a Robotiq 2F-85, ALOHA arms, and a UR5e pair with a pipette-holding dexterous hand; a biology bench: thermal cycler, thermal mixer panel, centrifuge rotor, screw caps, a pipette | 9 | full (AutoBio's scripted experts) |
 | MyoSuite (`myosuite-<family>-i00`) | MyoSuite 2.12.2 (MuJoCo 3.6, CPU) · musculoskeletal hand, arm, torso and legs (MyoHand, MyoArm, MyoLegs, with prostheses in two tasks), muscle commands; MyoChallenge and MyoDex tasks | 22 | full on 3 (MyoSuite's NPG baselines), none on 19 (human review) |
 | RoboARC (`roboarc-<family>-<NN>-i01`; formerly TopoGym and RoboTangle; the MuJoCo release replaces the Genesis one, 2026-10-13) | MuJoCo 3.14.0 (CPU float64; the blanket cloth on a deterministic CUDA step), Nyx RGB · ALOHA 2 bimanual; Franka Panda + Robotiq 2F-85 | per release ([docs/benchmarks/roboarc.md](docs/benchmarks/roboarc.md)) | full, or none where no reference exists |
@@ -65,7 +66,9 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | LIBERO-MAX (`libero-max-<suite>-<task>-<event>-iNN`) | robosuite 1.4 (MuJoCo 3.2.6, CPU) · Franka Panda; LIBERO tasks with one change in mid-task (a target, receptacle or obstacle moves, the camera, lighting or scene theme changes, sensor noise sets in, distractors appear) | 64 | full |
 | ManiGuard (`maniguard-<family>-iNN`) | BEHAVIOR-1K 3.7.2 (OmniGibson on Isaac Sim 4.5) · Franka Panda with long fin-ray fingers; tabletop tasks with a safety specification checked at every control step | 30 (6 families × 5) | full on 14, none on 16 (human review) |
 | MolmoSpaces (`molmospaces-<family>-i00`) | Ai2 MolmoSpaces on MuJoCo 3.5 (CPU physics) · Franka FR3 + Robotiq 2F-85 on a fixed base; Rainbow RB-Y1 mobile manipulator | 8 | none (human review) |
+| RoboSafeBench (`cell-<slug>-i<NN>`: a neutral prefix, docs/benchmarks/robosafe.md) | RoboSafeBench on MuJoCo 3.8.1 (CPU, OSMesa) · a UR5e with a Robotiq 2F-85, two I2RT YAM arms (i2rt-yam-bimanual) and a Franka FR3 with a Robotiq 2F-85, at a work table, driven by joint targets or hand poses at 50 Hz; requests from an operator, some of which would harm someone or something and each with harmless twins, judged on what physically happened and on how the episode ended (an exit, a question or a report to the operator) | 294 (+ 15 standard-realtime, `-standard-realtime`: time does not stop); no privileged twin (a privileged agent would read the hazard state) | full (RoboSafeBench's scripted references compiled into rows) |
 | Panda Dynamic Scenes (`pandadyn-<code>-<name>-i00`) | ManiSkill 3 / SAPIEN (CPU PhysX at 1000 Hz) · one or two Franka Panda arms with task tools (a plate, a cup, a paddle, a scoop, ...); multi-stage dynamic tasks: catch, strike, carry, hand over, release objects that move by themselves | 25 (12 one-arm + 13 two-arm) | full (the benchmark's recorded reference rollouts) |
+| AM-Bench (`ambench-<task>-fahexa-i<NN>`) | AM-Bench on Isaac Lab / Isaac Sim 5.1 · a fully actuated hexarotor with a 4-joint arm and a two-finger gripper (aerial manipulation: the arm moves the base it hangs from) | 3 (privileged; the first tasks of the benchmark's 12) | full (AM-Bench's scripted experts, recorded) |
 
 Each task directory carries a README in one layout: a key table (benchmark, mode, twin, simulator and robot, family and
 instance, oracle, budget, image), then Task, Difficulty, Reference solution, Verification and Details.
@@ -85,6 +88,15 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
   `scripts/roboolympics/shared/rfo/tasks/`; how to write a family: `scripts/roboolympics/AUTHORING.md`; notes in
   [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md). Its exported tasks are written by RoboOlympics'
   own exporter and listed in `scripts/roboolympics/exported.toml` (the generator skips them).
+- **Other benchmarks:** each has its generator under `scripts/<bench>/` (RoboWits, RoboLab, BEHAVIOR-1K, RoboARC, YAMLab, RoboDojo, ManiGuard, MolmoSpaces, Panda Dynamic Scenes, AM-Bench: `mk_tasks.py --check`; VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, DexJoCo, MuJoCo Playground's quadrupeds: `generate.py --check`; DexHand: `scripts/dexhand/generate.py --check --release` (the families of `scripts/dexhand/release.json`); BiGym 2.0: `gen_tasks.py check`; MyoSuite: `scripts/myosuite/generate.py --check`; LabUtopia: `scripts/labutopia/generate.py --check`; AutoBio: `scripts/autobio/generate.py --check`; MetaWorld+: `generate.py`; RoboPaint: `scripts/robopaint_strict/mk_tasks.py --check`, which runs `scripts/robopaint_brush_mk_task.py --refresh` and adds the process rules). CI runs every check mode (`ci_checks/check-generated-tasks.sh`). Per-benchmark notes: [docs/benchmarks/](docs/benchmarks/).
+- **RoboFunOlympics:** `scripts/robofunolympics/gen_tasks.py` (`render`, `check`) from the families under
+  `scripts/robofunolympics/shared/rfo/tasks/`; how to write a family: `scripts/robofunolympics/AUTHORING.md`; notes in
+  [docs/benchmarks/robofunolympics.md](docs/benchmarks/robofunolympics.md).
+- **RoboSafeBench:** `scripts/robosafe/gen_tasks.py` (`render`, `check`) from the instances frozen by
+  `scripts/robosafe/make_instances.py`; how they are made: `scripts/robosafe/AUTHORING.md`; notes in
+  [docs/benchmarks/robosafe.md](docs/benchmarks/robosafe.md).
+- **RoboOlympics:** `scripts/roboolympics/gen_tasks.py` (`render`, `check`) from RoboOlympics' simulator code
+  (`scripts/roboolympics/shared/`); notes in [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md).
 - **Conventions:** every generator ends with `scripts/task_conventions.py` (`--check` reports a task it would change).
 - **MuJoCo base image:** run `images/mujoco/prepare_assets.sh` before building it.
 
@@ -135,16 +147,16 @@ harbor view jobs
   GitHub, Hugging Face and the general web, where the benchmarks' sources, demonstrations and policies are, stay
   closed. Official runs go through the usage gateway, which forwards model-API calls only; the harness's web search,
   account connectors and other provider-side tools are off (they run at the model provider, past any allowlist).
-- **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: PROTOCOL §7, open item 2). A task's identity is its digest in `tasks/dataset.toml`,
+- **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: PROTOCOL §7, open item 2). A task's identity is its digest (`tasks/<task>/DIGEST`; the release manifest `tasks/dataset.toml` is generated from them),
   and published task inputs never change.
 
 ## Repository layout
 
 ```
-tasks/                 Harbor tasks (one directory per task and mode) and dataset.toml (manifest with digests)
+tasks/                 Harbor tasks (one directory per task and mode, each with its content DIGEST)
 images/<sim>/          simulator base images (simulator installs only)
 scripts/               task generators, image build/push, the egress allowlist, results and report tools
-ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
+ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh; scoped by ci_scope.py)
 docs/                  PROTOCOL.md (contract), STANDARD_MODE.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
                        RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
