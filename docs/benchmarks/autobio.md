@@ -190,7 +190,7 @@ they still succeed (the success step moves by at most 22 control steps).
 
 ## Verification (2026-10-07, eai-autobio:0.1.0 built locally, Harbor 0.23.0)
 Host: Intel Xeon Platinum 8559C (8 vCPUs), 62 GB, Docker 29.8; no GPU in use. Every run below used the task directories
-as committed (their digests in `tasks/dataset.toml`).
+as committed (their digests as then listed in `tasks/dataset.toml`, now each task's `DIGEST`).
 
 | family | oracle, privileged | oracle, standard | final state (both modes, every replay) | reference (`instances/`) | nop (priv / std) |
 |---|---|---|---|---|---|
