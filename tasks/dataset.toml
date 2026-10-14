@@ -6507,11 +6507,11 @@ digest = "sha256:225643a4589a427fe01be30c942386ba90c3c201fe273abbdd5abc6356b0982
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-06-i01-privileged"
-digest = "sha256:183a373da93ecdf9bab660d4a6ef07d8a4d02e8e97434b140215eb37fbd4280d"
+digest = "sha256:9b4530172f383e267a9253b8c6744848a5c401a522368ad2d88df9e0bc880475"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-06-i01-standard"
-digest = "sha256:aefbeb67bab238cd2ed9e5ff3caa73ef37050c63d76531e54a016f9fee6d21eb"
+digest = "sha256:24134acb3c6510a11cd3c83c5fcd90f66284716e74755ebf2e0cc701ecb1ae1e"
 
 [[tasks]]
 name = "robot-coding-bench/roboarc-cast-coil-07-i01-privileged"

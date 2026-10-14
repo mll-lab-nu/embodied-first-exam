@@ -941,7 +941,7 @@
    },
    "template": "cast-coil-very-easy-i00",
    "variation": "cast_coil_v2_very_easy",
-   "design": "the official two-axis Cast Coil",
+   "design": "after the official Cast Coil puzzle",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his contact_weld_v1 grasp regions on coil_gold, coil_silver)",

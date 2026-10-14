@@ -81,4 +81,4 @@ Assemble the gold and silver Cast Coil pieces into their matching interlocking c
 - Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
 
 ### Change Log
-- 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of cast_coil: the official two-axis Cast Coil. Its task files start from the Genesis 1.2.1 task `cast-coil-very-easy-i00` (privileged mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.
+- 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of cast_coil: after the official Cast Coil puzzle. Its task files start from the Genesis 1.2.1 task `cast-coil-very-easy-i00` (privileged mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.
