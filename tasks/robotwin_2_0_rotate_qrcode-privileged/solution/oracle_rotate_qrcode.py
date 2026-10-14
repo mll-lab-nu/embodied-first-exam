@@ -35,6 +35,50 @@ def play_once(self):
         }
         return self.info
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (target_pose; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        qrcode_pose = rand_pose(
+            xlim=[-0.25, 0.25],
+            ylim=[-0.2, 0.0],
+            qpos=[0, 0, 0.707, 0.707],
+            rotate_rand=True,
+            rotate_lim=[0, 0.7, 0],
+        )
+        while abs(qrcode_pose.p[0]) < 0.05:
+            qrcode_pose = rand_pose(
+                xlim=[-0.25, 0.25],
+                ylim=[-0.2, 0.0],
+                qpos=[0, 0, 0.707, 0.707],
+                rotate_rand=True,
+                rotate_lim=[0, 0.7, 0],
+            )
+
+        self.model_id = np.random.choice([0, 1, 2, 3], 1)[0]
+        self.qrcode = create_actor(
+            self,
+            pose=qrcode_pose,
+            modelname="070_paymentsign",
+            convex=True,
+            model_id=self.model_id,
+        )
+
+        self.add_prohibit_area(self.qrcode, padding=0.12)
+        # Define target placement position based on arm tag (left or right side of table)
+        target_x = -0.2 if self.qrcode.get_pose().p[0] < 0 else 0.2
+        self.target_pose = [target_x, -0.15, 0.74 + self.table_z_bias, 1, 0, 0, 0]
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (play_once,):
     setattr(env, _f.__name__, types.MethodType(_f, env))

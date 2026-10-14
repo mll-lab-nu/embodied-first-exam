@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left.
 
-The scene objects are attributes of the task env (`env.left_shoe`, `env.right_shoe`, `env.right_shoe_middle_pose`, `env.shoe_box`, `env.shoe_id`; see `load_actors` in
+The scene objects are attributes of the task env (`env.left_shoe`, `env.right_shoe`, `env.shoe_box`, `env.shoe_id`; see `load_actors` in
 `/opt/RoboTwin/envs/place_dual_shoes.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

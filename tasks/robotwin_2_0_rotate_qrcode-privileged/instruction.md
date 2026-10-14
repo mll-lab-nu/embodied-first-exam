@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Use arm to catch the qrcode board on the table, pick it up and rotate to let the qrcode face towards the robot.
 
-The scene objects are attributes of the task env (`env.model_id`, `env.qrcode`, `env.target_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.model_id`, `env.qrcode`; see `load_actors` in
 `/opt/RoboTwin/envs/rotate_qrcode.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

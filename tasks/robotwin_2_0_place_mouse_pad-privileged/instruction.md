@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Grab the mouse and place it on a colored mat.
 
-The scene objects are attributes of the task env (`env.color_value`, `env.mouse`, `env.mouse_id`, `env.target`, `env.target_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.color_value`, `env.mouse`, `env.mouse_id`, `env.target`; see `load_actors` in
 `/opt/RoboTwin/envs/place_mouse_pad.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):
