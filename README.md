@@ -28,7 +28,7 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 
 A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §4b), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
-drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, RoboOlympics, BiGym 2.0), as
+drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, RoboOlympics, BiGym 2.0, RoboSafeBench), as
 `<base>-standard-realtime` next to `<base>-privileged` and `<base>-standard`; its results are reported separately.
 
 > **Names.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard* and `rcb-limited/2.1` to
@@ -67,6 +67,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | LIBERO-MAX (`libero-max-<suite>-<task>-<event>-iNN`) | robosuite 1.4 (MuJoCo 3.2.6, CPU) · Franka Panda; LIBERO tasks with one change in mid-task (a target, receptacle or obstacle moves, the camera, lighting or scene theme changes, sensor noise sets in, distractors appear) | 64 | full |
 | ManiGuard (`maniguard-<family>-iNN`) | BEHAVIOR-1K 3.7.2 (OmniGibson on Isaac Sim 4.5) · Franka Panda with long fin-ray fingers; tabletop tasks with a safety specification checked at every control step | 30 (6 families × 5) | full on 14, none on 16 (human review) |
 | MolmoSpaces (`molmospaces-<family>-i00`) | Ai2 MolmoSpaces on MuJoCo 3.5 (CPU physics) · Franka FR3 + Robotiq 2F-85 on a fixed base; Rainbow RB-Y1 mobile manipulator | 8 | none (human review) |
+| RoboSafeBench (`cell-<slug>-i<NN>`: a neutral prefix, docs/benchmarks/robosafe.md) | RoboSafeBench on MuJoCo 3.8.1 (CPU, OSMesa) · a UR5e with a Robotiq 2F-85, two I2RT YAM arms (i2rt-yam-bimanual) and a Franka FR3 with a Robotiq 2F-85, at a work table, driven by joint targets or hand poses at 50 Hz; requests from an operator, some of which would harm someone or something and each with harmless twins, judged on what physically happened and on how the episode ended (an exit, a question or a report to the operator) | 294 (+ 15 standard-realtime, `-standard-realtime`: time does not stop); no privileged twin (a privileged agent would read the hazard state) | full (RoboSafeBench's scripted references compiled into rows) |
 | Panda Dynamic Scenes (`pandadyn-<code>-<name>-i00`) | ManiSkill 3 / SAPIEN (CPU PhysX at 1000 Hz) · one or two Franka Panda arms with task tools (a plate, a cup, a paddle, a scoop, ...); multi-stage dynamic tasks: catch, strike, carry, hand over, release objects that move by themselves | 25 (12 one-arm + 13 two-arm) | full (the benchmark's recorded reference rollouts) |
 | AM-Bench (`ambench-<task>-fahexa-i<NN>`) | AM-Bench on Isaac Lab / Isaac Sim 5.1 · a fully actuated hexarotor with a 4-joint arm and a two-finger gripper (aerial manipulation: the arm moves the base it hangs from) | 3 (privileged; the first tasks of the benchmark's 12) | full (AM-Bench's scripted experts, recorded) |
 
@@ -87,6 +88,9 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
 - **RoboFunOlympics:** `scripts/robofunolympics/gen_tasks.py` (`render`, `check`) from the families under
   `scripts/robofunolympics/shared/rfo/tasks/`; how to write a family: `scripts/robofunolympics/AUTHORING.md`; notes in
   [docs/benchmarks/robofunolympics.md](docs/benchmarks/robofunolympics.md).
+- **RoboSafeBench:** `scripts/robosafe/gen_tasks.py` (`render`, `check`) from the instances frozen by
+  `scripts/robosafe/make_instances.py`; how they are made: `scripts/robosafe/AUTHORING.md`; notes in
+  [docs/benchmarks/robosafe.md](docs/benchmarks/robosafe.md).
 - **RoboOlympics:** `scripts/roboolympics/gen_tasks.py` (`render`, `check`) from RoboOlympics' simulator code
   (`scripts/roboolympics/shared/`); notes in [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md).
 - **Conventions:** every generator ends with `scripts/task_conventions.py` (`--check` reports a task it would change).

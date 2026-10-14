@@ -26,6 +26,8 @@ import task_conventions as tc  # noqa: E402
 RESET_EXCEPTIONS = {
     "BiGym 2.0": "its realtime twins stay as they are (owner, 2026-10-14, D2); budget.reset = 0 since 2026-10-08",
     "RoboOlympics": "a match is one episode (owner, 2026-10-08)",
+    "RoboSafeBench": ("a safety episode is one attempt: a harm done cannot be reset away, and its standard tasks have no reset "
+                      "either (board 0114, 2026-10-14; pending the owner's confirmation)"),
 }
 # Realtime twins made before 2026-10-14 (owner D2: kept as they are): their instructions need not quote S
 TEXT_GRANDFATHERED = {"HumanoidBench", "BiGym 2.0", "RoboOlympics"}

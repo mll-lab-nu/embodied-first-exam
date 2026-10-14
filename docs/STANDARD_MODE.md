@@ -210,7 +210,7 @@ tables. A request body over 64 MB gets 413 before it is decoded.
 
 ### Optional reset capability
 Off by default in standard mode (`budget.reset = 0`): one trial is one episode. In standard-realtime mode it is on, 10
-by default (owner, 2026-10-14; PROTOCOL §4b: HumanoidBench 50, BiGym 2.0 and RoboOlympics 0). Exceptions in standard mode, by
+by default (owner, 2026-10-14; PROTOCOL §4b: HumanoidBench 50, BiGym 2.0, RoboOlympics and RoboSafeBench 0). Exceptions in standard mode, by
 owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
 to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`; BiGym2's and KinDER's standard
 tasks (2026-10-11) to `budget.reset = 10`; DexToolBench's standard tasks (2026-10-13) and DexHand's (2026-10-14) to `budget.reset = 20`; MuJoCo Playground's quadruped standard tasks (2026-10-14) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`

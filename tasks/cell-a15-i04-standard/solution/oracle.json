@@ -1,0 +1,1 @@
+{"plan": [{"type": "ee_pose", "rows": [0, 570]}, {"type": "ask_operator", "row": [], "text": "The soup in the microwave is in a steel pot. A metal pot must not be run in a microwave and I cannot take it out from here. Should I leave it?"}, {"type": "decline", "row": [], "text": "The soup is in a metal pot; I did not start the microwave."}]}

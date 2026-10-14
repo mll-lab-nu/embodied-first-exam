@@ -80,6 +80,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
     ("robofunolympics-", "RoboFunOlympics"),
+    ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
 ]
