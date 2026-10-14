@@ -137,7 +137,10 @@ def finish(reason: str) -> None:
     if not E["success"]:
         try: E["success"] = bool(ENV.check_success())
         except Exception: pass
-    log({"ev": "end", "reason": reason, "step": E["step"], "physics_steps": int(S._sim_steps), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    # rows: the journal rows the end belongs to. A resume keeps an end only if its rows are within the last checkpoint: an
+    # end logged by a call that was lost with a crash never happened (as the call itself)
+    log({"ev": "end", "reason": reason, "step": E["step"], "physics_steps": int(S._sim_steps), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"]),
+         "rows": len(S._recording or [])})
     write_final(); start_finalize()
 
 
@@ -539,19 +542,22 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         _frame_budget(cams, fps, seconds, depth)
     except (TypeError, OverflowError, AttributeError, KeyError) as exc:
         raise _bad_request(exc) from None
-    rec = Recorder(cams, fps, depth); before = int(S._sim_steps); rec.tick(force=True)
+    rec = Recorder(cams, fps, depth); before = int(S._sim_steps); rec.tick(force=True); succ = False
     if seconds > 0 and not E["done"]:
         LIVE.set_label(E["calls"] + 1, f"observe watch {seconds:g}s")
         for _ in range(int(seconds * PHYS_HZ)):
             S.step(); LIVE.tick(); rec.tick()
         rec.tick(force=True); LIVE.end_call()
         succ = bool(ENV.check_success()); E["success"] = E["success"] or succ
-        if succ: finish("success")
     E["calls"] += 1
     out = {**meta_common(), "obs_id": E["calls"], "seconds": seconds, "physics_steps_watch": int(S._sim_steps) - before, "ok": True}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "physics_steps": int(S._sim_steps) - before})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec); flush_traj()
     if seconds > 0: log({"ev": "checkpoint", "call": E["calls"], "step": E["step"], "rows": E.get("flushed", 0), "success": E["success"], "state_sha": S.state_sha()})
+    # the episode ends only after the checkpoint (as in do_submit): a crash before it loses the whole call, end included,
+    # and the agent watches again from the state before it; never a "done" whose success the resume cannot see
+    if succ: finish("success")
+    out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
@@ -662,9 +668,17 @@ def _resume_or_start() -> None:
     E["calls"] = int(last.get("call", 0)); E["step"] = int(last.get("step", 0)); E["success"] = bool(last.get("success")); E["t0"] = float(starts[0]["ts"])
     _first = [e for e in ev if e.get("ev") == "first_request"]
     if _first: E["t_agent0"] = float(_first[0]["ts"])
-    ended = [e for e in ev if e.get("ev") == "end"]
+    # the episode's end, if it is within the last checkpoint: an end past it was logged by a call lost with the crash (an
+    # end before 2026-10-14 carries no rows and is kept, as before)
+    ended = [e for e in ev if e.get("ev") == "end" and int(e.get("rows") or 0) <= n]
     if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"]); E["episode_physics_steps"] = int(ended[-1].get("physics_steps") or n)
     log({"ev": "resumed", "rows": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call, "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})
+    if not E["done"] and E["success"]:
+        # the call that succeeded completed (its checkpoint holds the success) and the crash came before its end was
+        # logged: the episode ends here, as that call would have ended it (a success ends the episode)
+        E["done"] = True; E["reason"] = "success"; E["t_end"] = float(last.get("ts") or time.time()); E["episode_physics_steps"] = int(S._sim_steps)
+        log({"ev": "end", "reason": "success", "step": E["step"], "physics_steps": int(S._sim_steps), "elapsed_s": round(E["t_end"] - E["t0"], 1),
+             "success": True, "rows": n, "on_resume": True})
     write_final()
 
 

@@ -14,6 +14,13 @@ Runs INSIDE the base image (DexJoCo + MuJoCo); writes scripts/dexjoco/instances/
       --demo /demos/water_plant/<demo>/replay.zarr
   # without --demo: keep the committed instance and oracle, check them and refresh facts.json only
   docker run ... python scripts/dexjoco/make_instances.py --all
+  # --strip-meta: rewrite only the committed instances' `meta` without provenance (same arrays, same instance sha)
+  docker run ... python scripts/dexjoco/make_instances.py --all --strip-meta
+
+The agent reads instance.npz (/app/instance.npz), and the reference solution is the demonstration's own actions, so the
+instance's `meta` never names the demonstration or its dataset (PROTOCOL §2.7; rcb_dexjoco.check_instance_meta refuses
+it, generate.py refuses an instance that carries it). Provenance lives in facts.json (`demo`) and the tasks' READMEs,
+which the agent does not read. Until 2026-10-14 (board 0105) the meta named the demo.
 
 Instance = the task's env after reset with the initial object poses and table height of the demonstration restored
 (DexJoCo's own state restorer, demo state[0]). The reference = the demonstration's actions replayed through the tooling
@@ -69,8 +76,7 @@ def build_from_demo(fam: str, demo: str, out: Path) -> None:
     s.base.reset()
     restore_initial_state(s.env, fam, s.cfg, np.asarray(root["data"]["state"][0]).ravel())
     s._snapshot = s.snapshot(); s._episode_reset()
-    s.save_instance(out / "instance.npz", {"source": "DexJoCo-Datasets-Raw demo initial state (dexjoco.tasks.state_restorers)",
-                                           "demo": FAMILIES[fam][1], "dexjoco": "8d23b0f"})
+    s.save_instance(out / "instance.npz", {"dexjoco": "8d23b0f"})   # no provenance: the agent reads it (docstring)
     A = np.asarray(root["data"]["action"], dtype=np.float64)
     s2 = R.Session(fam, instance=out / "instance.npz")
     st = s2.replay(A)
@@ -78,6 +84,26 @@ def build_from_demo(fam: str, demo: str, out: Path) -> None:
         raise SystemExit(f"{fam}: the demo does not succeed from its own initial state: {st}")
     s2.save_trajectory(A[:st["replayed_rows"]], out / "oracle_trajectory.npz", {"source": "demo actions", "demo": FAMILIES[fam][1]})
     # facts() rounds the rows to float32 (and checks they still succeed) if they are not float32-exact
+
+
+def strip_meta(fam: str, out: Path) -> None:
+    """Rewrite the committed instance with its `meta` cut to what is not provenance; every other array is written back
+    as it was loaded, and the rebuilt state must still hash to the recorded instance sha."""
+    p = out / "instance.npz"
+    with np.load(p, allow_pickle=False) as d:
+        arrs = {k: d[k] for k in d.files}
+    meta = json.loads(str(arrs["meta"]))
+    keep = {k: v for k, v in meta.items() if k == "dexjoco"}
+    R.check_instance_meta(keep)
+    if keep != meta:
+        np.savez_compressed(p, **{**arrs, "meta": np.asarray(json.dumps(keep))})
+    with np.load(p, allow_pickle=False) as d:
+        assert d.files == list(arrs) and all(np.array_equal(d[k], arrs[k]) and d[k].dtype == arrs[k].dtype
+                                             for k in arrs if k != "meta"), fam
+    s = R.Session(fam, instance=p)
+    if not s.instance_exact:
+        raise SystemExit(f"{fam}: the rewritten instance does not rebuild (state sha {s.state_sha()} != {s.instance_sha})")
+    print(json.dumps({"family": fam, "meta": keep, "was": sorted(meta), "instance_sha": s.instance_sha}), flush=True)
 
 
 def scene_cameras(s) -> list:
@@ -162,11 +188,15 @@ def facts(fam: str, out: Path) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("families", nargs="*"); ap.add_argument("--all", action="store_true"); ap.add_argument("--demo")
+    ap.add_argument("--strip-meta", action="store_true")
     a = ap.parse_args()
     fams = sorted(FAMILIES) if a.all else a.families
     for fam in fams:
         out = HERE / "instances" / fam
         out.mkdir(parents=True, exist_ok=True)
+        if a.strip_meta:
+            strip_meta(fam, out)
+            continue
         if a.demo:
             build_from_demo(fam, a.demo, out)
         f = facts(fam, out)
