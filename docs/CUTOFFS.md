@@ -24,6 +24,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | MolmoSpaces | 3600 s (60 min) | 3600 s (60 min) | — | 8 / 8 / — |
 | MuJoCo Playground | 1800 s (30 min) | 1800 s (30 min) | — | 13 / 13 / — |
 | MyoSuite | 3600 s (60 min) | 3600 s (60 min) | — | 22 / 22 / — |
+| Panda Dynamic Scenes | 3600 s (60 min) | 3600 s (60 min) | — | 25 / 25 / — |
 | RoboCasa | 3600 s (60 min) | 3600 s (60 min) | — | 29 / 29 / — |
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
@@ -38,7 +39,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1676 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1726 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -112,3 +113,4 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-12 | LIBERO-MAX, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | MuJoCo Playground, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |
+| 2026-10-13 | Panda Dynamic Scenes, privileged, standard | (none) -> 3600 s | proposal #177 (D8 default) | the benchmark's first tasks: the protocol's default; a scene builds in seconds and simulates at 60-150 control steps per second, so the hour is the agent's own work |
