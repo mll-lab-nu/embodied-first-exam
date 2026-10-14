@@ -22,6 +22,30 @@ def features(v, q, wind):
     return np.r_[1, x, x * x, x[:3] * x[-1]]
 
 
+def wind_vector(t, stratum, params):
+    """World-frame air velocity (m/s), pointing toward airflow travel direction.
+
+    Synthetic isotropic extension; not a directional fit to flight experiments.
+    Existing wind_phase supplies deterministic plant heading without new RNG draws.
+    """
+    speed = [0.0, 4.2, 8.5, 12.1, 8.5][stratum]
+    if stratum == 4:
+        speed += 2.4 * np.sin(t + params["wind_phase"])
+    yaw = params["wind_phase"]
+    return speed * np.array([np.cos(yaw), np.sin(yaw), 0.0])
+
+
+def wind_drag_increment(velocity, wind, coefficient=0.045):
+    """Quadratic air-relative drag minus calm-air drag already in the surrogate.
+
+    coefficient is an assumed 0.045 kg/m, not identified from paper data.
+    Adding this to the zero-wind fitted residual avoids double-counting calm drag.
+    """
+    velocity, wind = np.asarray(velocity), np.asarray(wind)
+    relative = wind - velocity
+    return coefficient * (np.linalg.norm(relative) * relative + np.linalg.norm(velocity) * velocity)
+
+
 def parameters(seed):
     if type(seed) is not int or not 0 <= seed < 2**63:
         raise ValueError("Plant seed")
@@ -78,8 +102,11 @@ def rollout(policy, case, out, asset=None, render=False):
     revision = case.get("trajectory_revision", "fixed-eight/1")
     if revision not in ("fixed-eight/1", "general-eight/1"):
         raise ValueError("Trajectory revision")
+    dynamics_revision = case.get("dynamics_revision", "scalar-wind/1")
+    if dynamics_revision not in ("scalar-wind/1", "vector-wind/1"):
+        raise ValueError("Dynamics revision")
     fields = {"plant_seed", "episode_seed", "stratum"}
-    if set(case) not in (fields, fields | {"trajectory_revision"}):
+    if not fields <= set(case) or set(case) - fields - {"trajectory_revision", "dynamics_revision"}:
         raise ValueError("Case fields")
     if type(case["stratum"]) is not int or not 0 <= case["stratum"] < 5:
         raise ValueError("Wind stratum")
@@ -112,7 +139,12 @@ def rollout(policy, case, out, asset=None, render=False):
         wind = [0.0, 4.2, 8.5, 12.1, 8.5][wind_id]
         if wind_id == 4:
             wind += 2.4 * np.sin(state.time + params["wind_phase"])
-        raw = features(state.qvel[:3], state.qpos[3:7], wind) @ weights
+        if dynamics_revision == "vector-wind/1":
+            air = wind_vector(state.time, wind_id, params)
+            raw = features(state.qvel[:3], state.qpos[3:7], 0.0) @ weights
+            raw += wind_drag_increment(state.qvel[:3], air)
+        else:
+            raw = features(state.qvel[:3], state.qpos[3:7], wind) @ weights
         force_calls += 1
         clipped_forces += int(np.any(np.abs(raw) > 12))
         return np.clip(raw, -12, 12)
@@ -186,5 +218,15 @@ def rollout(policy, case, out, asset=None, render=False):
         "calibration": "flight-data-surrogate",
         "asset_sha256": ASSET_SHA256,
     }
+    if dynamics_revision == "vector-wind/1":
+        record["revision"] = "neuralfly-cpu/4"
+        record["calibration"] = "zero-wind-flight-surrogate-plus-synthetic-vector-drag"
+        record["dynamics"].update(dynamics_revision=dynamics_revision, drag_coefficient_kg_per_m=0.045)
+        # Operator evidence only: adapter continues to receive feedback.telemetry.
+        np.savez_compressed(
+            out / "wind.npz",
+            time=states[:, 0],
+            velocity_world=np.array([wind_vector(t, wind_id, params) for t in states[:, 0]]),
+        )
     (out / "record.json").write_text(json.dumps(record, sort_keys=True, allow_nan=False) + "\n")
     return record

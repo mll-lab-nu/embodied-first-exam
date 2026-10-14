@@ -147,9 +147,47 @@ contains the world air velocity at saved trajectory timestamps for operator visu
 It must remain private, alongside trajectory truth: do not add it to public exports,
 feedback allowlists or agent videos. Public feedback channels remain unchanged. Operator
 demos may show direction and magnitude, explicitly separate from agent-facing feedback.
-Shared registration is pending; no native acceptance or model score is claimed.
+The shared registry generates i00/i01 with `oracle=none`; no native acceptance or model score is claimed. Agent videos keep the primitive appearance and contain no wind arrows.
 
 Local validation: 25 tests pass; stdlib spec checks pass. The prior i00 gusting record
 replays exactly, and two new gusting rollouts match each other exactly. The unchanged
 scripted controller completed 43.52 s with RMSE 0.07599 m, score 83.1984 and zero force
 clipping in this one case. This is not a full-bank validation or an adaptation campaign.
+
+
+The operator-only replay command renders the recorded `wind.npz` vectors at exactly
+matching `trajectory.npz` timestamps, without rerunning dynamics or inferring wind
+from motion. Orange arrows originate at the drone; cyan arrows show the same spatially
+uniform airflow. Arrows point **toward** flow travel, not meteorological wind origin.
+The HUD gives world x/y/z velocity and magnitude in m/s. Skydio geometry is appearance
+only. Every frame is labeled operator-only and synthetic. Input/output SHA-256 hashes,
+sampled times and vectors are retained in the adjacent private receipt.
+
+```bash
+MUJOCO_GL=osmesa CUDA_VISIBLE_DEVICES= python -m scripts.control_transfer.neuralfly_wind_demo \
+  --episode /private/episode --output /private/operator-wind.mp4 \
+  --assets /opt/control-assets/skydio_x2
+```
+
+Pillow and ffmpeg are operator rendering dependencies. This module is excluded from
+both task runtime layouts, alongside its output and the private wind trace. It cannot
+replace `video.mp4` in an episode directory; the benchmark's feedback video must stay
+unchanged. A synthetic vector trace must never be described as measured hardware wind.
+
+Integration validation on 2026-10-14 used the generated i00/i01 packages with the
+previously frozen scripted policy (no new tuning or adaptation rounds): 10/10 held-out
+successes per plant, mean scores 90.0123 and 88.4098, combined 89.2110. All 20
+fresh-process replay pairs match whole records, true states and private wind arrays;
+none of these cases clipped the residual force. This new synthetic dynamics revision
+has different difficulty and must not be compared directly with scalar-wind scores.
+Four feedback videos decode and 159 delivered JPEG hashes plus 1,576 noisy rows match
+the recorded observations. Both no-submission instances score zero. A prior scalar-wind
+record remains byte-identical; 83 earlier videos are unchanged. Two isolated public
+nominal-package rollouts pass, without trusted imports. MuJoCo 3.5.0 rendering was
+verified as llvmpipe. All 58 focused tests pass.
+
+The 436-frame operator demo reads the private wind trace at exact pose timestamps;
+its source episode is byte-identical to the new generated i00 gusting case. The demo
+is outside the task packages. These checks establish local frozen-controller replay
+and packaging only, not native container isolation, new multi-round adaptation or an
+LLM result. Keep `oracle=none` until the remaining acceptance and review are complete.

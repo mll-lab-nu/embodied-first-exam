@@ -43,7 +43,9 @@ class HttpTests(unittest.TestCase):
                         self.fail((td / "server.log").read_text())
                     state = lambda: json.loads((td / "data/state.json").read_text())
                     self.assertIsNone(state()["deadline"])
-                    for path in ["/instance.json", "/data/final.json", "/weights", "/../instance.json"]:
+                    # A real private artifact must remain unreachable, not merely an absent path.
+                    (td / "data/wind.npz").write_bytes(b"private wind canary")
+                    for path in ["/instance.json", "/data/final.json", "/weights", "/wind.npz", "/data/wind.npz", "/../instance.json"]:
                         with self.assertRaises(urllib.error.HTTPError) as err:
                             urllib.request.urlopen(f"http://127.0.0.1:{port}" + path)
                         self.assertEqual(err.exception.code, 404)

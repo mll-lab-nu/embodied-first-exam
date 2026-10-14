@@ -11,7 +11,7 @@ The shared `eai-policy/1.1` service supports repeated nominal-training → deplo
 | [Unitree G1 terrain](roboengineer-g1.md) | Blind-terrain PPO in mjlab/MuJoCo Warp; fixed numeric MLP export | 29 noisy joint angles, three public velocity commands and images | 4 / 12 |
 | [Unitree Go2](roboengineer-go2.md) | Nominal MuJoCo tuning; bounded numeric controller | 37 noisy proprioceptive/public-command channels and images | 3 / 10 per objective |
 
-The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 26 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, and the explicit Skydio appearance revision of general-eight Neural Fly. Neural Landing has its own generator and validated service; this service does not replace it.
+The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 28 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, the explicit Skydio appearance revision of general-eight Neural Fly, and the separate experimental vector-wind revision. Neural Landing has its own generator and validated service; this service does not replace it.
 
 Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. They are not generated members of the original eight-objective collection. Their old twelve-instance release must not be confused with the current task bank.
 

@@ -240,6 +240,8 @@ def render(task, name, index):
         reference_note = "Development-only circuit-lap/2. Local full-lap positives exist on Silverstone, Monaco and Suzuka, with one full-video replay and a zero no-op control. All-layout multi-round native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
     elif compact:
         reference_note = "Development-only circuit-compact-lap/3. A fixed nominal controller completes one local adaptation-only case on each of 160 compact layouts. These are heavily smoothed F1-inspired approximations, not exact scaled outlines. Multi-round held-out native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
+    elif name == "neural-fly-vector-wind-v1":
+        reference_note = "Development-only general-eight-wind/1 with synthetic isotropic vector drag, not directionally flight-calibrated dynamics. Existing scalar-wind reference results do not establish acceptance of this revision. Native Harbor and LLM acceptance remain unperformed. No full oracle; human review required."
     elif name in ("neural-fly-general-v1", "neural-fly-general-skydio-v1"):
         reference_note = "Development-only general-eight/1 revision. The frozen earlier scripted controller passes 18 of 20 local held-out cases (one RMSE failure and one crash); no new adaptation, native Harbor acceptance or LLM evaluation is established. No full oracle; human review required."
     elif instance.get("task_variant") == "circuit-sector/1":

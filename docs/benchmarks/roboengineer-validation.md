@@ -338,3 +338,31 @@ tests pass. Repository CI passes all 26 Control Transfer task contracts and 117
 mutation checks. All 26 generated instance banks and nonvisual specifications
 match the preceding revision. The optional global NumPy/requests tier remains
 unavailable in system Python; affected numerical tests ran in pinned MuJoCo 3.5.
+
+## Experimental vector wind (2026-10-14)
+
+The new `neural-fly-vector-wind-v1` i00/i01 tasks declare `general-eight-wind/1` and
+`vector-wind/1`, preserving earlier scalar-wind dispatch. The extension uses synthetic
+isotropic air-relative drag; its heading and coefficient are not calibrated to
+measured directional aerodynamics. Agent feedback remains the existing camera
+frames and noisy trajectories. `wind.npz` and the wind-arrow renderer are private
+operator artifacts; public-package, field-injection and HTTP-route tests enforce
+that distinction at the tested interfaces.
+
+Generated-package local checks: the frozen earlier scripted controller passes all
+20 held-out cases, mean score 89.2110 (plants 90.0123 / 88.4098), with 20 exact
+fresh-process record/state/wind replays. Four videos decode; 159 delivered JPEG
+hashes and 1,576 noisy rows match. Both no-submission checks score zero without
+infrastructure errors. A legacy scalar-wind whole record is unchanged, as are 83
+previous recordings. Both isolated public nominal packages execute without trusted
+imports. The operator demo uses 436 timestamp-matched samples from the saved private
+wind trace; its arrows are not part of coding-agent feedback. Renderer: MuJoCo 3.5.0
+and llvmpipe. Focused physics, packaging and privacy tests: 58 passed.
+
+The bank driver's shell returned signal exit 143 after writing its completed receipt;
+a separate artifact audit subsequently exited zero and verified every case pair,
+source hash, private wind schedule, feedback artifact and prior recording. Do not
+report the original shell as a clean exit. Local evidence is retained outside the
+repository under `evidence/neuralfly/integration-vector-wind-v1/` in the orchestration
+workspace. Native Harbor, multi-round adaptation and model evaluations of this
+revision remain unperformed; both tasks retain `oracle=none` and require human review.

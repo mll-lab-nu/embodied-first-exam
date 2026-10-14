@@ -49,7 +49,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 5 | full on 1, none on 4 (human review) |
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 10 (+ 10 standard-realtime, `-standard-realtime`: time does not stop) | full on 1, none on 9 (human review), in each mode |
 | [roboEngineer — Neural Landing](docs/benchmarks/roboengineer.md) (`quadrotor-landing-random-pad-i{00,01}`) | MuJoCo CPU · partially calibrated Intel Aero quadrotor | 2 standard policy tasks, three adaptation rounds each | full; native Harbor oracle/nop validated on both instances |
-| [roboEngineer — Control Transfer](docs/benchmarks/control-transfer.md) (`control-transfer-<family>-i{00,01}`) | MuJoCo 3.5 CPU deployment · drone, AnyCar, G1 and Go2; G1 uses GPU training | 26 standard policy tasks | full on 6; none on 20 (development-only / human review) |
+| [roboEngineer — Control Transfer](docs/benchmarks/control-transfer.md) (`control-transfer-<family>-i{00,01}`) | MuJoCo 3.5 CPU deployment · drone, AnyCar, G1 and Go2; G1 uses GPU training | 28 standard policy tasks | full on 6; none on 22 (development-only / human review) |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |

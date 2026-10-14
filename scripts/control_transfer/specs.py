@@ -12,6 +12,7 @@ FAMILIES = [
     "neural-fly",
     "neural-fly-general-v1",
     "neural-fly-general-skydio-v1",
+    "neural-fly-vector-wind-v1",
     "g1",
     "anycar",
     "anycar-circuit-lap-v2-silverstone-8",
@@ -46,14 +47,24 @@ def spec(name, index):
         value = make_spec(index, name)
         value["family"] = "go2"
         return value
-    if name in ("neural-fly", "neural-fly-general-v1", "neural-fly-general-skydio-v1"):
+    if name in ("neural-fly", "neural-fly-general-v1", "neural-fly-general-skydio-v1", "neural-fly-vector-wind-v1"):
         from .neuralfly_spec import make_spec
 
-        value = make_spec(index, revision="fixed-eight/1" if name == "neural-fly" else "general-eight/1")
+        revision = (
+            "fixed-eight/1"
+            if name == "neural-fly"
+            else "general-eight-wind/1"
+            if name == "neural-fly-vector-wind-v1"
+            else "general-eight/1"
+        )
+        value = make_spec(index, revision=revision)
         value["name"] = name
         value["public"]["name"] = name
         if "task_revision" in value:
             value["public"]["task_revision"] = value["task_revision"]
+        if name == "neural-fly-vector-wind-v1":
+            value["dynamics_revision"] = "vector-wind/1"
+            value["public"]["dynamics_revision"] = "vector-wind/1"
         if name == "neural-fly-general-skydio-v1":
             value["observation_revision"] = "neuralfly-skydio/1"
             value["visual_profile"] = "skydio-x2/1"
