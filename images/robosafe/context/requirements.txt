@@ -1,0 +1,8 @@
+# eai-robosafe: the Python stack of the RoboSafeBench simulator (RoboSafeBench's own pins, MuJoCo 3.8.1 since the RCB
+# port of 2026-10-13) and what the standard-mode service needs on top (imageio + its ffmpeg for the call videos).
+mujoco==3.8.1
+numpy==2.2.6
+PyOpenGL==3.1.9
+pillow==11.3.0
+imageio==2.37.0
+imageio-ffmpeg==0.6.0

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "camera": {
+    "position": [
+      -0.24,
+      -0.26,
+      0.55
+    ],
+    "target": [
+      0.005,
+      0.0,
+      0.32
+    ],
+    "lens": 48
+  },
+  "display_title": "Multi-axis in-hand reorientation",
+  "exposure": -0.7,
+  "visual_bevel_m": 0.00025,
+  "style": "reference_studio",
+  "reference": "jianglongye/dexterous-astra",
+  "note": "Authoring-only presentation settings. geom_display_scale enlarges the three non-colliding direction markers in the film only (drawing, not physics). No policy or trajectory is packaged into tasks.",
+  "geom_display_scale": {
+    "object_marker_0": 2.6,
+    "object_marker_1": 2.6,
+    "object_marker_2": 2.6
+  }
+}

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robosafe-bench"
+dynamic = ["version"]
+description = "RoboSafeBench: an embodied safety benchmark for agentic robots, graded on what physically happens"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = ["numpy>=1.26,<3"]
+
+[project.optional-dependencies]
+sim = ["mujoco==3.8.1", "numpy==2.2.6"]   # as in the image (eai-robosafe:0.5.1: numpy 2.2.6, MuJoCo 3.8.1)
+dev = ["pytest>=8", "pillow>=10"]
+
+[tool.setuptools.dynamic]
+version = { attr = "robosafe.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["robosafe*"]
+
+[tool.setuptools.package-data]
+robosafe = ["docs/*.md", "hazard/*.json", "families/*.json", "assets/data/*", "assets/data/*/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

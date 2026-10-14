@@ -1,0 +1,162 @@
+{
+  "uri": "https://api.sketchfab.com/v3/models/a530c8c7eef04235bc865b85dcfc0ac8",
+  "uid": "a530c8c7eef04235bc865b85dcfc0ac8",
+  "name": "Nintendo Switch Joycon",
+  "staffpickedAt": null,
+  "viewCount": 4089,
+  "likeCount": 47,
+  "animationCount": 0,
+  "viewerUrl": "https://sketchfab.com/3d-models/a530c8c7eef04235bc865b85dcfc0ac8",
+  "embedUrl": "https://sketchfab.com/models/a530c8c7eef04235bc865b85dcfc0ac8/embed",
+  "commentCount": 5,
+  "isDownloadable": true,
+  "publishedAt": "2019-12-10T08:33:28.430396",
+  "tags": [
+    {
+      "name": "switch",
+      "slug": "switch",
+      "uri": "https://api.sketchfab.com/v3/tags/switch"
+    },
+    {
+      "name": "nintendo",
+      "slug": "nintendo",
+      "uri": "https://api.sketchfab.com/v3/tags/nintendo"
+    },
+    {
+      "name": "joycon",
+      "slug": "joycon",
+      "uri": "https://api.sketchfab.com/v3/tags/joycon"
+    },
+    {
+      "name": "nintendoswitch",
+      "slug": "nintendoswitch",
+      "uri": "https://api.sketchfab.com/v3/tags/nintendoswitch"
+    },
+    {
+      "name": "nintendo_joycon",
+      "slug": "nintendo_joycon",
+      "uri": "https://api.sketchfab.com/v3/tags/nintendo_joycon"
+    }
+  ],
+  "categories": [
+    {
+      "name": "electronics-gadgets"
+    }
+  ],
+  "thumbnails": {
+    "images": [
+      {
+        "uid": "8c04d490492c4cf4b3f1d40af890826d",
+        "size": 77775,
+        "width": 1920,
+        "url": "https://media.sketchfab.com/models/a530c8c7eef04235bc865b85dcfc0ac8/thumbnails/d6a6a6d10e6744a9868583e4791c5ff5/b8fc0a7be85c4020baf0b7ede86313ab.jpeg",
+        "height": 1080
+      },
+      {
+        "uid": "54d364791a544fe4ae75ff0f8ef69a3f",
+        "size": 29392,
+        "width": 1024,
+        "url": "https://media.sketchfab.com/models/a530c8c7eef04235bc865b85dcfc0ac8/thumbnails/d6a6a6d10e6744a9868583e4791c5ff5/cd16e93026f0495396f8b8c6c0ba6be3.jpeg",
+        "height": 576
+      },
+      {
+        "uid": "dccee9341d5e497ba748287fc95f8e07",
+        "size": 18415,
+        "width": 720,
+        "url": "https://media.sketchfab.com/models/a530c8c7eef04235bc865b85dcfc0ac8/thumbnails/d6a6a6d10e6744a9868583e4791c5ff5/b61f9ac951444185b3068f618520b81f.jpeg",
+        "height": 405
+      },
+      {
+        "uid": "7c2e15d0c9de49f6b89512819a004941",
+        "size": 4562,
+        "width": 256,
+        "url": "https://media.sketchfab.com/models/a530c8c7eef04235bc865b85dcfc0ac8/thumbnails/d6a6a6d10e6744a9868583e4791c5ff5/e868d4a4fb21480580b8291fe56b9ff4.jpeg",
+        "height": 144
+      },
+      {
+        "uid": "16f2dda2a63740a1aff42ba79e0d29e4",
+        "size": 902,
+        "width": 64,
+        "url": "https://media.sketchfab.com/models/a530c8c7eef04235bc865b85dcfc0ac8/thumbnails/d6a6a6d10e6744a9868583e4791c5ff5/91616ed9df7442849c576e9bbe2aeaf7.jpeg",
+        "height": 36
+      }
+    ]
+  },
+  "user": {
+    "uid": "0ddca79a8a6447b1aff392051d888515",
+    "username": "HayleyJacka",
+    "displayName": "Hayley Jacka",
+    "profileUrl": "https://sketchfab.com/HayleyJacka",
+    "account": "basic",
+    "avatar": {
+      "uri": "https://api.sketchfab.com/v3/avatars/f05e76aaf53446b186e7ece3d59119ad",
+      "images": [
+        {
+          "size": 2616,
+          "width": 32,
+          "url": "https://media.sketchfab.com/avatars/f05e76aaf53446b186e7ece3d59119ad/47696eb14c9e4d9cbd12c88387b0196c.png",
+          "height": 32
+        },
+        {
+          "size": 5361,
+          "width": 48,
+          "url": "https://media.sketchfab.com/avatars/f05e76aaf53446b186e7ece3d59119ad/2656bc33214b45d387c5b225dcc4273e.png",
+          "height": 48
+        },
+        {
+          "size": 15621,
+          "width": 90,
+          "url": "https://media.sketchfab.com/avatars/f05e76aaf53446b186e7ece3d59119ad/43e7a3ebce0347818b0ffab30b59d4d4.png",
+          "height": 90
+        },
+        {
+          "size": 18554,
+          "width": 100,
+          "url": "https://media.sketchfab.com/avatars/f05e76aaf53446b186e7ece3d59119ad/1ec36fb950624c308189e124a2f957e8.png",
+          "height": 100
+        }
+      ]
+    },
+    "uri": "https://api.sketchfab.com/v3/users/0ddca79a8a6447b1aff392051d888515"
+  },
+  "description": "A 3D model of the right joycon from a Nintendo Switch. \nI started this as a small project in the last day of class. Then realized it would be more difficult thatn I anticipated... It's taken a few full days of solid work but finally I'm finished.\n\nThere are a couple of small sections I am aware that are not accurate or missing from the real controller.",
+  "faceCount": 22009,
+  "createdAt": "2019-12-10T08:20:42.871450",
+  "vertexCount": 11282,
+  "isAgeRestricted": false,
+  "archives": {
+    "glb": {
+      "textureCount": 9,
+      "size": 2614268,
+      "type": "glb",
+      "textureMaxResolution": 2048,
+      "faceCount": 21978,
+      "vertexCount": 12342
+    },
+    "gltf": {
+      "textureCount": 9,
+      "size": 1862381,
+      "type": "gltf",
+      "textureMaxResolution": 2048,
+      "faceCount": 21978,
+      "vertexCount": 12342
+    },
+    "source": {
+      "textureCount": null,
+      "size": 6900944,
+      "type": "source",
+      "textureMaxResolution": null,
+      "faceCount": null,
+      "vertexCount": null
+    },
+    "usdz": {
+      "textureCount": null,
+      "size": 1893266,
+      "type": "usdz",
+      "textureMaxResolution": null,
+      "faceCount": null,
+      "vertexCount": null
+    }
+  },
+  "license": "by"
+}

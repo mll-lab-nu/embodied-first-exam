@@ -1,0 +1,58 @@
+# RoboOlympics tasks exported by RoboOlympics' own exporter (CHIGUI0/roboolympics tools/export_fexam.py; private, MIT):
+# its simulator service runs unchanged inside each task (PROTOCOL §4c; docs/benchmarks/roboolympics.md, "Tasks exported
+# by RoboOlympics"). They are not rendered by gen_tasks.py, which skips the directories listed here (and fails one that
+# is missing); written by `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in RoboOlympics,
+# then `python3 scripts/task_conventions.py` on them (seeds, resources, cutoff, README) and `scripts/task_cutoffs.py apply`.
+# `patched`: files this repository changed after the export (PROTOCOL §4c: sent upstream; a re-export must keep them).
+
+[[tasks]]
+name = "roboolympics-badminton-actskill-i00-standard"
+source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["0d7f680cc049"]
+patched = ["tests/sim/skilleval/sandbox.py", "tests/sim/skilleval/evaluate.py", "tests/sim/skilleval/probe/probe.py",
+           "tests/engineer_grade.py", "tests/test.sh"]   # 2026-10-14, board 0111: the skill's processes end before the grade
+
+[[tasks]]
+name = "roboolympics-badminton-match-i01-standard-realtime"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-badminton-match-i02-standard-realtime"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-soccer-match-i00-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-standard"
+revision = "soccer-2v2-10+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-soccerssl-match-i00-standard-realtime"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+revision = "soccer_ssl-1"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-tabletennis-hitskill-i00-standard"
+source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+patched = ["tests/sim/skilleval/sandbox.py", "tests/sim/skilleval/evaluate.py", "tests/sim/skilleval/probe/probe.py",
+           "tests/engineer_grade.py", "tests/test.sh"]   # 2026-10-14, board 0111: the skill's processes end before the grade
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i01-standard-realtime"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i02-standard-realtime"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
