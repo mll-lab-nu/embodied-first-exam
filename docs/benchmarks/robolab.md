@@ -231,3 +231,4 @@ sees it and still ends the episode with a 500.
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA
 proprietary software (no redistribution), hence BUILD_ONLY.
+
