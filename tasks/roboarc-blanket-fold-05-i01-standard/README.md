@@ -23,12 +23,12 @@ the privileged task to measure the cost of losing resets, privileged state and t
 Same scene, instance and success rule as `roboarc-blanket-fold-05-i01-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.
 
 ## Reference solution
-`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`, one `joint_position` row per control step, `hold`; the same rows as the privileged reference) through the client (`solution/oracle_replay.py`). No Harbor oracle trial of it has been run yet on this standard service, so no score is claimed here.
+`solution/solve.sh` streams the recorded rows of the reference (`solution/oracle_qpos.npy`, one `joint_position` row per control step, `hold`; the same rows as the privileged reference) through the client (`solution/oracle_replay.py`). Its Harbor oracle trial did not score 1, and the cause is not established on this standard service, so no score is claimed here. Standard oracle not finished; the reference has 1 rows above the service's joint-speed rule (0.04 rad per control step) and may be stretched by the service.
 
 ## Verification
 See `tests/grade.py`.
 
-`nop`: no record yet on this base (`harbor run -p tasks/roboarc-blanket-fold-05-i01-standard -a nop`).
+`nop` scored 0 on this base in both modes (the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py); 2026-10-14).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
