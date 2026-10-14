@@ -36,13 +36,25 @@ profiles (quadrotor, omnidirectional, the fully actuated hexa with a delta arm) 
   replay rebuilds the start and checks it (`instance_matches`).
 
 ## Success (AM-Bench's own)
-Each task's `_get_success` (its `terminated` signal), unchanged, evaluated after every control step; the episode ends at
+Each task's `_get_success` (its `terminated` signal), unchanged except RotateValve's angle (below), evaluated after every control step; the episode ends at
 the first step where it holds, or with AM-Bench's time-out (`episode_length_buf >= max_episode_length - 1`: control step
 2399 / 3119 / 2399). No hold time is required. The privileged instructions give every threshold and the full scene:
 PressButton `PlungerSlideJoint >= 0.004 m`; PushSlider `SliderJoint >= 0.45 m` (from -0.5 m); RotateValve
-`base_to_shaft >= 17π/18` rad. (TossBall's check, for when it joins: the ball ≥ 0.12 m from the tool tip, its centre inside
+`base_to_shaft >= 17π/18` rad, on the joint's unwrapped angle. (TossBall's check, for when it joins: the ball ≥ 0.12 m from the tool tip, its centre inside
 the bin's nominal 0.40 × 0.30 × 0.17 m box, and the airframe at x ≤ bin x − 0.7 m, at the same step; the third condition
 already holds at the start, so it does not force a throw.)
+
+**RotateValve: the unwrapped angle (2026-10-14, board 0110, before the first release).** `base_to_shaft` has no limits,
+and omni.physx (107.3, Isaac Sim 5.1) creates an articulation's revolute joint without limits as a wrapped joint, whose
+position PhysX reports in [-π, π] (omni.physx's own tests: "the joint without limits will be created as regular WRAPPED
+joint"). AM-Bench's check `joint_pos >= 17π/18` on that value also passes a counter-clockwise turn of 190° (reported as
++170°), while the task (and its instruction) is a clockwise turn of 170°. The tooling, the same file in the agent's
+environment and in the grader, replaces RotateValve's `_get_success` with the same comparison on the unwrapped angle: the
+sum of the joint's per-step changes since the reset, each wrapped into [-π, π) (the joint's velocity limit, 5 rad/s, moves it
+at most 0.042 rad per 1/120 s step, so the sum is exact). Physics, states, `initial_sha` and the end-state hashes are
+unchanged; for a clockwise turn below π the two readings agree, so the recorded oracle ends at the same step. The angle is
+`s.valve_angle()` in the tooling. This is a correction of a wrap-around, not a stricter rule: the upstream threshold,
+direction and timing stay as they are.
 
 ## Oracle (PROTOCOL §2.7)
 `oracle = "full"`, 3/3. The reference solution of an instance is AM-Bench's scripted expert for the task

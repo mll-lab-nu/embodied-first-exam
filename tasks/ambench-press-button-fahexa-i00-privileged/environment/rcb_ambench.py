@@ -22,6 +22,13 @@ success    : AM-Bench's own `_get_success` of the task (its `terminated` signal)
              where it holds, or at the task's episode length (a time-out, not a success). Rows after the end never run.
              Isaac Lab resets the scene inside the step that ends an episode; the tooling keeps the end state's hash
              (taken just before that reset) as the episode's `state_sha`.
+             RotateValve: the valve's `base_to_shaft` joint has no limits, and PhysX reports an articulation's unlimited
+             revolute joint wrapped into [-pi, pi] (omni.physx 107.3, Isaac Sim 5.1), so AM-Bench's check `joint_pos >=
+             17/18 pi` would also pass a counter-clockwise turn of 190 degrees. The tooling gives that task's
+             `_get_success` the unwrapped angle instead: the sum of the joint's per-step changes since the reset (one
+             physics step moves it at most 5 rad/s / 120 Hz, far less than pi), so only the clockwise turn the
+             instruction asks for counts. Physics, states and hashes are unchanged; the episode just does not end on a
+             wrapped reading.
 
 CLI
 ---
@@ -124,6 +131,9 @@ class Session:
                 self.end_sha = self.state_sha()
             return _reset_idx(env_ids)
         self.env._reset_idx = _keep_end_state
+        self._valve = None
+        if self.env_id.startswith("RotateValve-"):
+            self._unwrap_valve_angle()
         self.n_resets = 0; self.n_steps_total = 0; self.n_clipped = 0
         self._video = None
         self.reset()
@@ -141,11 +151,39 @@ class Session:
         with self.torch.inference_mode():         # as step(): after a step Isaac Lab's buffers are inference tensors
             self.obs, _ = self.env.reset(seed=self.seed)
         self.end_sha = None
+        if self._valve is not None:
+            self._valve.update(prev=None, angle=None)    # the joint is back at 0 rad: count from here
         self.rows: list[np.ndarray] = []
         self.done = False; self.succeeded = False; self.timed_out = False
         self.n_resets += 1
         if self.n_resets > 1:
             _slog("reset", env_id=self.env_id)
+
+    def _unwrap_valve_angle(self) -> None:
+        """RotateValve's success on the valve's unwrapped angle (see the module docstring): AM-Bench's `_get_success`, with
+        the joint position PhysX reports in [-pi, pi] replaced by the sum of its per-step changes since the reset."""
+        env, torch, v = self.env, self.torch, {"prev": None, "angle": None}
+        self._valve = v
+        two_pi = 2.0 * float(np.pi)
+
+        def _get_success():
+            q = env.valve_object.data.joint_pos[:, env.valve_joint_idx].clone()
+            if v["prev"] is None:                     # the first step after a reset, from 0 rad (|q| < 0.05 rad here)
+                angle = q
+            else:
+                angle = v["angle"] + torch.remainder(q - v["prev"] + np.pi, two_pi) - np.pi
+            v.update(prev=q, angle=angle)
+            target = env.cfg.valve_target_angle
+            rotated = angle >= target
+            return rotated, {"valve_engaged": angle >= env.cfg.valve_engagement_ratio * target, "valve_rotated": rotated}
+        env._get_success = _get_success
+
+    def valve_angle(self) -> float | None:
+        """RotateValve: the valve's unwrapped angle in rad since the reset (positive = clockwise from the robot's side),
+        what the success check reads; None in other tasks or before the first step."""
+        if self._valve is None or self._valve["angle"] is None:
+            return None
+        return float(_np(self._valve["angle"]).reshape(-1)[0])
 
     @property
     def n_steps(self) -> int:
