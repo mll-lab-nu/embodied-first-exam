@@ -1,0 +1,75 @@
+{
+ "format": "match",
+ "formats": {
+  "duel": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A",
+    "B"
+   ]
+  },
+  "match": {
+   "levels": [
+    1,
+    2,
+    3
+   ],
+   "opponent": true,
+   "seats": [
+    "A"
+   ]
+  },
+  "team": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A1",
+    "A2",
+    "B1",
+    "B2"
+   ],
+   "sides": {
+    "A1": "A",
+    "A2": "A",
+    "B1": "B",
+    "B2": "B"
+   }
+  }
+ },
+ "official": {
+  "first_any": true,
+  "levels": [
+   2,
+   3
+  ],
+  "seeds": [
+   1,
+   2,
+   3,
+   202,
+   212,
+   222,
+   303,
+   313,
+   323
+  ]
+ },
+ "protocol": "realtime",
+ "score": {
+  "forfeit": -10.0,
+  "from": "margin",
+  "name": "goal_difference",
+  "range": [
+   -10,
+   10
+  ],
+  "text": "the side's goals minus the other side's goals in regulation time (the shoot-out not counted)"
+ },
+ "sport": "soccer",
+ "task": "soccer-match-wallclock-program-standard"
+}

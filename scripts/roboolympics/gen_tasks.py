@@ -226,6 +226,15 @@ def _diff(c: filecmp.dircmp, prefix: str) -> list[str]:
     return out
 
 
+def exported_names() -> set[str]:
+    """The task directories RoboOlympics exports itself (scripts/roboolympics/exported.toml, written by its
+    tools/export_fexam.py): its simulator service unchanged inside the task, so there is nothing to render here."""
+    p = Path(__file__).resolve().parent / "exported.toml"
+    if not p.is_file():
+        return set()
+    return {t["name"] for t in tomllib.loads(p.read_text()).get("tasks", [])}
+
+
 def cmd_check() -> int:
     """tasks/ must be what render writes from today's sources, with no stale roboolympics-* directory."""
     defaults, tasks, sports = load()
@@ -242,8 +251,12 @@ def cmd_check() -> int:
                 g = TASKS_DIR / name / f.relative_to(Path(tmp) / name)
                 if f.is_file() and g.is_file() and (f.stat().st_mode & 0o111) != (g.stat().st_mode & 0o111):
                     failed.append(f"tasks/{name}/{f.relative_to(Path(tmp) / name)}: executable bit differs")
+    exported = exported_names()                         # exported by RoboOlympics itself (exported.toml): not ours
     failed += [f"tasks/{p.name}: no longer rendered" for p in sorted(TASKS_DIR.glob("roboolympics-*"))
-               if p.name not in rendered]
+               if p.name not in rendered and p.name not in exported]
+    failed += [f"scripts/roboolympics/exported.toml: tasks/{n} missing" for n in sorted(exported)
+               if not (TASKS_DIR / n).is_dir()]
+    failed += [f"tasks/{n}: both rendered here and listed in exported.toml" for n in sorted(exported & rendered)]
     print("\n".join(f"FAIL {x}" for x in failed) or f"check: {len(rendered)} task dirs are what render writes")
     return 1 if failed else 0
 

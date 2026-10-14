@@ -9,7 +9,7 @@ mode only, on `eai-standard/2.3` (PROTOCOL §4b), with the per-benchmark excepti
 |---|---|
 | upstream | RoboOlympics, branch `upstream-export` at `596d551a` (core 0.2.13; the repository is private): the sports' simulators, referees, scripted opponents, action layers and reference players, copied unchanged into `scripts/roboolympics/shared/` (one change: `renderers/presentation/assets.py` reads the players' meshes from `RO_LOD_DIR`) |
 | simulator | MuJoCo 3.3.7 on CPU, OSMesa rendering; bit-exact replay |
-| tasks | 3: `tasks/roboolympics-<sport>-<format>-i00-standard-realtime` (no privileged or standard twin) |
+| tasks | 3 rendered here: `tasks/roboolympics-<sport>-<format>-i00-standard-realtime` (no privileged or standard twin); and the tasks RoboOlympics exports itself (below, `scripts/roboolympics/exported.toml`) |
 | protocol | `eai-standard/2.3`: HumanoidBench's 2.3 layer (`rcb_realtime.py`, `rcb_service.py`, `rcb1.py`, `rcb_client.py`) unchanged, plus the RoboOlympics adapter `scripts/roboolympics/shared/sim/rcb_olympics.py` |
 | image | `ghcr.io/mll-lab-nu/eai-olympiad:0.2.0` (`images/olympiad/`; public): the simulator stack and the players' visual meshes |
 | generator | `scripts/roboolympics/gen_tasks.py render` / `check` (CI: `ci_checks/check-generated-tasks.sh`) from `tasks.toml`, `sports.toml`, `templates/`, `shared/`, `oracle/` |
@@ -99,6 +99,43 @@ Harbor 0.23.0, S = 10, CPU only, on a shared 32-core host (load 30-70), image 0.
 
 Every replay was deterministic. Badminton's reference player is the weakest of the three: its matches are close
 (this loop also won 6:4 locally; an earlier version of the loop, which re-planned its stroke at every step, lost 3:5).
+
+## Tasks exported by RoboOlympics (its own service inside the task)
+
+Besides the three tasks above (this repository's 2.3 adapter), RoboOlympics exports tasks itself with
+`tools/export_fexam.py` (CHIGUI0/roboolympics, private): its own generated task, with the simulator service, referee,
+scripted opponents, observation, the frozen review between points, the fresh-process replay and the grader unchanged,
+turned into a plain Harbor 0.23.0 task. They are listed in `scripts/roboolympics/exported.toml` (with the RoboOlympics
+commit and the sport's frozen revision of each); `gen_tasks.py check` skips them, and they are refreshed by re-running
+the exporter (`python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks`), which also applies
+`scripts/task_conventions.py`.
+
+| task | what | instance | oracle (vanilla Harbor 0.23.0, 2026-10-13) |
+|---|---|---|---|
+| `roboolympics-tabletennis-match-i01-standard-realtime` | table tennis vs the scripted opponent, RoboOlympics revision `wallclock-15` (players serve, rail base, real-robot limits) | level 2, seed 22, S = 20 | partial: the camera-only reference player won 6:4 (it wins level 2 in 16 of 40 seeds); nop 0 |
+| `roboolympics-tabletennis-match-i02-standard-realtime` | as above | level 3, seed 12, S = 20 | partial: the reference lost 3:5 (it wins level 3 in 7 of 40); nop 0 |
+| `roboolympics-badminton-match-i01-standard-realtime` | singles badminton on a 0.4-scale court (BWF Laws, one game to 11; revision `badminton-wallclock-12`, PR #81): Franka Panda with a racket on a Festo gantry base; the players serve | level 1, seed 7, S = 10 (at 20 a game to 11 takes the reference alone over 50 min) | partial: the camera-only reference lost 4:11 (it wins level 1 in 17 of 20 seeds at S = 20); nop 0 |
+| `roboolympics-badminton-match-i02-standard-realtime` | as above | level 2, seed 8, S = 10 | partial: the camera-only reference does not win level 2 (a model did: Opus 11:7); same task as i01 but the level |
+| `roboolympics-soccer-match-i00-standard-realtime` | humanoid soccer 2 v 2 (RoboCup Humanoid League rules, revision `soccer-2v2-9`): one agent commands both Booster T1 robots of its team (walk velocity, stand, kick) from their head cameras against a scripted team; 2 x 5 min of game time | level 2, seed 7, S = 5 (2 x 5 min = 3000 s of wall time plus the reviews, inside 7200 s) | partial: the camera-only reference lost 0:2 (it cannot kick while walking; a model has won level 2, Astra 12:2); nop 0. Image `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (private to the mll-lab-nu organization for now) |
+| `roboolympics-tabletennis-hitskill-i00-standard` | implement the robot's `hit` skill (the blade's state at contact) from the robot's model, its real-limit joint interface and a disclosed toolkit; graded offline by the sport's API test | 90 public development requests (24 development matches); success: rate >= 0.7 | full: RoboOlympics' reference skill 69/90 (the platform's own `hit` 90/90, an IK-only baseline 0/90); nop 0 |
+| `roboolympics-badminton-actskill-i00-standard` | implement the badminton robot's `act` skill (the racket's state at contact, optional base position) from its model, its real-limit joint interface and the toolkit; graded offline by the sport's API test (RoboOlympics revision `badminton-wallclock-12`, PR #98) | 246 public development requests (12 development matches, levels 1-2); success: rate >= 0.8 | full: RoboOlympics' reference skill 244/246; nop 0 |
+
+What differs from this repository's other standard-realtime tasks (exceptions requested with these tasks; PROTOCOL
+§4b):
+
+| | PROTOCOL | exported RoboOlympics tasks | why |
+|---|---|---|---|
+| protocol | `eai-standard/2.3` | `eai-standard-realtime/1.0` (RoboOlympics' own: `game` CLI / HTTP at `localhost:8000`) | the frozen review after every point (at most 300 s; the world stands still) is part of RoboOlympics' rules, and its results are only comparable under them; the 2.3 adapter replaces it with a 12 s break |
+| crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the service replays the whole match from its record to grade it; a resumed match would not be the recorded one |
+| slowdown | the benchmark's 10 | per task, one of the sport's official slowdowns: table tennis 20 (RoboOlympics' default), badminton 10, humanoid soccer 5 | inside the 7200 s budget with the reviews; results state S |
+| metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim) | |
+| skill task | — | mode `standard`, `task_type = "policy"`, protocol `skilleval-api-test/1`, no sim service (the verifier runs the simulator) | the deliverable is code (`/app/output/skill/hit.py`), evaluated in an isolated verifier: the skill as `nobody` in its own process, no network |
+
+CI: `ci_checks/check-protocol.py` accepts these two protocol values for the directories in `exported.toml` only;
+`ci_checks/check-cutoffs.py` asks for `RCB_WALL_CLOCK_S` only where there is a `sim` service. Seeds are development
+seeds (below 100000; RoboOlympics' official seeds are hidden and six-digit), so these are previews: RoboOlympics'
+official results are produced by RoboOlympics on its hidden seeds. Images: `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0`
+(public; the image RoboOlympics' frozen revisions were screened on).
 
 ## Changes in place
 - **2026-10-10 (board 0067, review finding C1).** Until this date the realtime layer took whatever row the plan held

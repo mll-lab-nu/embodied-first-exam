@@ -39,7 +39,7 @@
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
 "RoboFunOlympics"   = { privileged =  7200, standard =  7200 }
 "RoboLab"           = { privileged =  3600, standard =  3600 }
-"RoboOlympics"      = { standard-realtime = 7200 }
+"RoboOlympics"      = { standard = 7200, standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
 "RoboTangle"        = { privileged =  7200, standard =  7200 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
@@ -230,3 +230,12 @@ from_sec = 21600
 to_sec = 7200
 decided_by = "owner"
 note = "stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used"
+
+[[history]]
+date = "2026-10-13"
+benchmark = "RoboOlympics"
+modes = ["standard"]
+from_sec = 0
+to_sec = 7200
+decided_by = "pending (this pull request)"
+note = "the benchmark's first standard-mode tasks, exported by RoboOlympics itself: the skill-engineering tasks (implement the robot's skill from its model and toolkit; graded offline by the sport's API test), the same budget as the real-time matches"

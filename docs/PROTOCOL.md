@@ -816,6 +816,12 @@ settings.
     these tasks.
   The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
   stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
+  - tasks RoboOlympics exports itself (proposed with their pull request, 2026-10-13; listed in
+    `scripts/roboolympics/exported.toml`, [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)): its own service
+    inside the task, so they serve `eai-standard-realtime/1.0` (its frozen review between points is a rule of the
+    game) and have no crash resume (a sim crash is `infra_error`); RoboOlympics' skill-engineering tasks are `standard`
+    tasks with `task_type = "policy"` graded offline by the sport's API test (`skilleval-api-test/1`). Their results
+    are reported separately from the 2.3 tasks.
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |
