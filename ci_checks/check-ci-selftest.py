@@ -27,6 +27,7 @@ IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
 SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 DYNAMICS = [sys.executable, str(ROOT / "ci_checks/check-dynamics.py")]
+REALTIME = [sys.executable, str(ROOT / "ci_checks/check-realtime.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -301,6 +302,10 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r'^dynamics = "static"', 'dynamics = "dynamic"'), DYNAMICS, "the table says"),
     ("a task.toml without dynamics",
      TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), DYNAMICS, "[metadata] dynamics is missing"),
+    # PROTOCOL §4b: a standard-realtime task states its slowdown S
+    ("a standard-realtime task.toml whose slowdown is not its service's",
+     "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r"^slowdown = [0-9.]+", "slowdown = 2"), REALTIME,
+     "but its service's RCB_SLOWDOWN default is 1"),
 ]
 
 

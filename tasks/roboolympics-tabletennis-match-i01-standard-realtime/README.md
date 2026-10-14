@@ -9,6 +9,7 @@
 | Family / instance | `tabletennis_match` / seed 22 |
 | Oracle | `partial` — re-screen 2026-10-12 (revision 15, D = 5, S = 20): our camera-only reference player beat level 2 in 16 of 40 seeds, this seed 5:1; S = 10 since 2026-10-14 (PR #138); the live oracle run is in the export report |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
 
 ## Task

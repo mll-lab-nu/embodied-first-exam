@@ -16,7 +16,7 @@ CPU is bit-exact) and applies the environment's own success check for `ThawInSin
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
-The check for `ThawInSink` requires that the orange is inside the sink and the water is on (faucet handle joint between 0.40 rad and π rad).
+The check for `ThawInSink` requires that the orange is inside the sink and the water is on (the faucet handle's on / off hinge between 0.40 rad and π rad). The handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.5 rad (so the water is on only over the last fifth of its travel), turns about the sink's front-to-back axis, so the handle swings sideways; the temperature hinge (about ±0.79 rad) tilts the handle toward or away from you and never turns the water on or off.
 
 How RoboCasa365's checks compute these terms (`robocasa/utils/object_utils.py`):
 - *the gripper ends more than d m from X*: the distance from the robot's end-effector grip site to X's origin exceeds

@@ -4,6 +4,8 @@ You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel gripp
 the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Transfer the ball from
 the blue container into the red bottle.
 
+The red bottle's base is thin in the simulator (its collision shape is about 3.5 mm thick, and the bottle is fixed to the table): a ball that falls fast down the bottle can pass through the base onto the table, which fails the task. In one measured case about half of the pours did (16 replays of one pouring trajectory with tiny noise, 9 balls through the base): let the ball in slowly.
+
 ## Success criterion (as graded)
 This is exactly what the grader checks (RoboWits' success predicate, stated in words). Where the task text says
 something else, this section is what counts. The service evaluates it after every `submit` and after every `get_obs`

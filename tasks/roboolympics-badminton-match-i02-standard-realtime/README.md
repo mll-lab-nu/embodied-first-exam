@@ -9,6 +9,7 @@
 | Family / instance | `badminton_match` / seed 8 |
 | Oracle | `partial` — screening round 16 (2026-10-13, revision 12): the truth-state reference beat level 2 in 10 of 20 seeds, the camera-only version did not win level 2; a model did (Opus 11:8, 11:6); this development seed was not screened |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
 
 ## Task

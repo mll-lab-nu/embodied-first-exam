@@ -9,6 +9,7 @@
 | Family / instance | `badminton_match` / seed 7 |
 | Oracle | `partial` — screening round 16 (2026-10-13, revision 12, S = 20): our camera-only reference player beat level 1 in 17 of 20 seeds; on this instance at S = 20 it lost 10:12 (vanilla Harbor 0.23.0, 2026-10-13: a valid, replayed match, 78 min) |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
 
 ## Task

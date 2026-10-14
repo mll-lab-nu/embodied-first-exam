@@ -129,6 +129,14 @@ EXCLUDED = {
 # What each environment's `_check_success` (robocasa @ 4f8a298) requires, in words, for the instructions: conditions
 # the task's sentence leaves out (letting go and moving the gripper away, thresholds, timers). The terms "on / in",
 # "touches", "inside" and "the gripper ends more than d m from" are defined once in generate.py (SUCCESS_TERMS).
+# The sink's faucet handle has two hinges at one pivot (RoboCasa's sink model, read from the frozen scenes of
+# turn-on-sink-faucet, thaw-in-sink and drain-veggies): `<sink>_handle_joint`, the water on / off, range 0-0.5 rad about
+# the sink's front-to-back axis, and `<sink>_handle_temp_joint`, the temperature, +-0.785 rad about its left-right axis
+# (board 0086: every standard run moved the temperature hinge and never got water).
+_HANDLE = ("The handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.5 rad (so the water "
+           "is on only over the last fifth of its travel), turns about the sink's front-to-back axis, so the handle "
+           "swings sideways; the temperature hinge (about ±0.79 rad) tilts the handle toward or away from you and never "
+           "turns the water on or off.")
 SUCCESS = {
     "PickPlaceSinkToCounter": "the egg is on the plate, the plate touches the counter next to the sink, and the "
     "gripper ends more than 0.25 m from the egg.",
@@ -147,12 +155,14 @@ SUCCESS = {
     "ends more than 0.15 m from the stop button.",
     "PackDessert": "the hot dog and the marshmallow are both in the tupperware, and the gripper ends more than 0.25 m "
     "from the marshmallow.",
-    "TurnOnSinkFaucet": "the faucet handle is in its water-on range (handle joint between 0.40 rad and π rad).",
+    "TurnOnSinkFaucet": "the faucet handle is in its water-on range (its on / off hinge between 0.40 rad and π rad). "
+    + _HANDLE,
     "CloseStandMixerHead": "the mixer head is closed: less than 1% open (normalised: 0 closed, 1 fully open).",
     "RetrieveMeat": "the fish is on the cutting board, and the gripper ends more than 0.25 m from the fish.",
     "DrainVeggies": "the lettuce has been washed: inside the sink with the water on for more than 10 consecutive "
     "checks (the check runs twice per control step: at least 6 control steps; once washed it stays washed); at the "
-    "end the lettuce is in the pot and the water is off.",
+    "end the lettuce is in the pot and the water is off (the water is on while the faucet handle's on / off hinge is "
+    "between 0.40 rad and π rad). " + _HANDLE,
     "SanitizePrepCuttingBoard": "the spray bottle and the dish brush each touch a counter with their centres at most "
     "0.35 m (horizontally) from the cutting board's, the board touches a counter, and the gripper ends more than "
     "0.25 m from the spray bottle and from the brush.",
@@ -212,7 +222,8 @@ SUCCESS = {
     "that burner's knob is on (angle from off, in absolute value, between 0.35 rad and 2π − 0.35 rad), the drumstick "
     "is in the pan (touching it, centres within 0.07 m horizontally; on the stove beside the pan does not count), and "
     "the gripper ends more than 0.25 m from the drumstick.",
-    "ThawInSink": "the orange is inside the sink and the water is on (faucet handle joint between 0.40 rad and π rad).",
+    "ThawInSink": "the orange is inside the sink and the water is on (the faucet handle's on / off hinge between 0.40 "
+    "rad and π rad). " + _HANDLE,
     "ScrubBowl": "the sponge has scrubbed the bowl for at least 15 control steps in all (steps on which it is on the "
     "bowl and moved more than 1 mm), and the gripper ends more than 0.25 m from the bowl.",
     "PlateSteakMeal": "the steak and the asparagus are on the plate, the chili pepper is still on the tray, and the "
