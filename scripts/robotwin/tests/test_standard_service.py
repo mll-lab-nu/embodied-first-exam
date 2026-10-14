@@ -7,7 +7,9 @@ Covers: malformed requests are 400s that leave the episode alive (a zero-row chu
 wrong type or not finite; a negative Content-Length, which would be read without a bound); a camera named many times
 is rendered once, before the frame budget is counted; a port held by another process is waited for; the calibration in every response is the current one (the wrist camera moves); the agent's
 clock starts at its first request; the verdict is written before the videos, survives a restart, and is graded without
-`finalized`; a failed verification replay and an instance that does not rebuild are infra_error, not the agent's 0.
+`finalized`; a failed verification replay and an instance that does not rebuild are infra_error, not the agent's 0; a
+crash around a successful call never turns the success into the agent's 0 (the call is lost whole, or its success ends
+the resumed episode; an end logged past the last checkpoint is dropped by the resume).
 """
 from __future__ import annotations
 
@@ -340,6 +342,71 @@ class Verdicts(ServiceCase):
         self.assertEqual(s.grade()["success"], 1)
         os.kill(s.proc.pid, signal.SIGUSR1); time.sleep(0.3)      # the collect hook's signal changes nothing
         self.assertEqual(s.final(), d)
+
+    def crash(self, s: Service, call) -> None:
+        """`call` makes the service die (RCB_STUB_CRASH_ON_SUCCESS_SHA); compose restarts it."""
+        try:
+            call()
+        except OSError:                                   # the connection dropped with the process
+            pass
+        self.assertEqual(s.proc.wait(timeout=30), 1)
+        self.assertTrue((s.data / "stub_crashed").exists())
+
+    def events(self, s: Service) -> list:
+        return [json.loads(l) for l in (s.data / "episode.jsonl").read_text().splitlines() if l.strip()]
+
+    def test_a_success_while_watching_survives_a_crash_before_its_checkpoint(self):
+        """Board 0105 F-M1: the agent lets go and watches; the objects settle into the goal during /observe and the
+        service dies before that call's checkpoint (e.g. out of memory while saving its evidence). The resume must not
+        come back "done" with the success lost (it did: the end was logged before the checkpoint, so every /submit was
+        a 409 and the replay up to the checkpoint graded 0): the call is lost whole and the agent watches again."""
+        s = self.service(RCB_STUB_SUCCESS_AFTER=100, RCB_STUB_CRASH_ON_SUCCESS_SHA=1)
+        code, m, _ = s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.6, 1.0)])
+        self.assertEqual((code, m["done"]), (200, False))                  # not settled yet (5 physics steps)
+        self.crash(s, lambda: s.post("/observe", {"seconds": 1.0, "video": "none"}))
+        self.assertNotIn("end", [e["ev"] for e in self.events(s)])
+        s.start(); st = s.wait_up()
+        self.assertEqual((st["done"], st["reason"]), (False, None))         # the episode goes on from before the lost call
+        code, m, _ = s.post("/observe", {"seconds": 1.0, "video": "none"})
+        self.assertEqual((code, m["done"], m["reason"]), (200, True, "success"))
+        d = s.wait_final()
+        self.assertEqual((d["success"], d["replay_success"], d["deterministic"]), (True, True, True))
+        out = s.grade()
+        self.assertEqual((out["success"], out["infra_error"]), (1, 0))
+
+    def test_a_success_whose_end_was_not_logged_ends_on_resume(self):
+        """The crash between a successful call's checkpoint and its end: the checkpoint holds the success, so the resumed
+        episode ends with it (an agent going on from there could undo a success it was told nothing about)."""
+        s = self.service(RCB_STUB_CRASH_ON_SUCCESS_SHA=2)                   # 1: the checkpoint's hash; 2: finalize's
+        self.crash(s, lambda: self.succeed(s))
+        lines = (s.data / "episode.jsonl").read_text().splitlines(keepends=True)
+        self.assertEqual(sum('"ev": "end"' in l for l in lines), 1)
+        (s.data / "episode.jsonl").write_text("".join(l for l in lines if '"ev": "end"' not in l))   # as if it died before the end
+        s.start(); st = s.wait_up()
+        self.assertEqual((st["done"], st["reason"]), (True, "success"))
+        self.assertEqual(s.post("/submit", {"type": "joint_position"}, [row()])[0], 409)
+        self.assertEqual([e.get("on_resume") for e in self.events(s) if e["ev"] == "end"], [True])
+        os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook
+        d = s.wait_final()
+        self.assertEqual((d["success"], d["replay_success"], d["deterministic"], d["reason"]), (True, True, True, "success"))
+        self.assertEqual(s.grade()["success"], 1)
+
+    def test_an_end_past_the_last_checkpoint_is_dropped_on_resume(self):
+        """What a crash in the window used to leave (the reviewer's synthetic case): the lost call's call_begin and an
+        end(success) past the last checkpoint. The resume drops that end with the call."""
+        s = self.service()
+        s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)])
+        n = [e for e in self.events(s) if e["ev"] == "checkpoint"][-1]["rows"]
+        s.stop()
+        with open(s.data / "episode.jsonl", "a") as f:
+            for e in ({"ev": "call_begin", "path": "/observe", "call": 2},
+                      {"ev": "end", "reason": "success", "step": 1, "physics_steps": n + 250, "elapsed_s": 1.0, "success": True, "rows": n + 250}):
+                f.write(json.dumps({"ts": time.time(), **e}) + "\n")
+        s.start(); st = s.wait_up()
+        self.assertEqual((st["done"], st["reason"]), (False, None))
+        self.assertEqual(s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.6, 1.0)])[0], 200)
+        self.assertTrue(s.wait_final()["success"])
+        self.assertEqual(s.grade()["success"], 1)
 
     def test_a_failed_verification_replay_is_infra_error(self):
         s = self.service(RCB_STUB_REPLAY_FAIL=1)

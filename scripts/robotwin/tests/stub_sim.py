@@ -5,7 +5,10 @@ rcb_live.py), so the service under test is the shipped file, unchanged.
 The "scene": 16 driven joints whose positions follow their drive targets at once. The left wrist camera's pose follows
 the left arm's first joint. The task succeeds when fl_joint1's target is above 0.5 and RoboTwin's left-gripper-open
 clause holds. Failure injection (environment variables): RCB_STUB_HASH_MISMATCH (the instance never rebuilds),
-RCB_STUB_REPLAY_FAIL (the verification replay raises), RCB_STUB_VIDEO_S (render_video sleeps that long)."""
+RCB_STUB_REPLAY_FAIL (the verification replay raises), RCB_STUB_VIDEO_S (render_video sleeps that long),
+RCB_STUB_SUCCESS_AFTER (the task succeeds only from that many physics steps on: objects that settle while the agent
+watches), RCB_STUB_CRASH_ON_SUCCESS_SHA=k (the process dies at the k-th state hash taken while the task succeeds, once
+per data directory: a crash between a successful call's physics and its checkpoint, k=1, or later)."""
 from __future__ import annotations
 
 import hashlib
@@ -94,12 +97,14 @@ class Cameras:
 
 class Env:
     def __init__(self):
-        self.robot = Robot(); self.cameras = Cameras(self.robot)
+        self.robot = Robot(); self.cameras = Cameras(self.robot); self.sim_steps = 0
 
     def _update_render(self): pass
     def get_arm_pose(self, side): return [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0]
 
     def check_success(self):
+        if self.sim_steps < int(os.environ.get("RCB_STUB_SUCCESS_AFTER", "0")):
+            return False
         return bool(self.robot.left_arm_joints[0].drive_target > 0.5 and self.robot.is_left_gripper_open())
 
 
@@ -115,7 +120,7 @@ class Session:
             with open(os.path.join(data, "stub_session.jsonl"), "a") as f:
                 f.write(json.dumps({"task": task, "gripper_state": gripper_state, "enable_render": enable_render}) + "\n")
         self.task, self.seed = task, int(json.load(open(instance))["seed"]) if instance else seed
-        self._recording = None
+        self._recording = None; self._success_shas = 0
         # rcb_traj.Session's hand-in cap (MAX_T rows; save_trajectory and replay refuse more), small here: RCB_STUB_MAX_T
         self.max_rows = int(os.environ["RCB_STUB_MAX_T"]) if os.environ.get("RCB_STUB_MAX_T") else None
         self._build()
@@ -137,9 +142,15 @@ class Session:
             r.left_gripper_val, r.right_gripper_val = float(row[32]), float(row[33])
         if self._recording is not None:
             self._recording.append(self._row())
-        self._sim_steps += 1
+        self._sim_steps += 1; self.env.sim_steps = self._sim_steps
 
     def state_sha(self):
+        k = os.environ.get("RCB_STUB_CRASH_ON_SUCCESS_SHA")
+        if k and self.env.check_success():
+            self._success_shas += 1
+            marker = os.path.join(os.environ.get("RCB_DATA", "."), "stub_crashed")
+            if self._success_shas == int(k) and not os.path.exists(marker):
+                open(marker, "w").close(); os._exit(1)
         return hashlib.sha1(np.ascontiguousarray(self._row()).tobytes()).hexdigest()[:12]
 
     def record_start(self): self._recording = []
