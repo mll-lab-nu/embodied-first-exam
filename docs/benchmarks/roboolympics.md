@@ -67,7 +67,7 @@ what it heard, the serve); never the ball's or the opponent's state, nor the see
 | | PROTOCOL §4b | RoboOlympics | why |
 |---|---|---|---|
 | slowdown S | `RCB_SLOWDOWN` default 1 | default **10**, overridable | RoboOlympics' official slowdown of all three sports: a model call takes seconds and a rally is over in a few, so at S = 1 play would be reflexes, not reasoning. Results state S; S ≠ 1 is reported separately anyway (§4b, §5) |
-| privileged twin | `<base>-privileged` shares the instance | none | the sports measure play from camera images against an opponent; there is no trajectory deliverable to hand in. CI exempts `roboolympics-*` explicitly (`ci_checks/check-instance-copies.sh`, `scripts/task_conventions.py` `NO_TWIN`) |
+| privileged twin | `<base>-privileged` shares the instance | none | the sports measure play from camera images against an opponent; there is no trajectory deliverable to hand in. Since 2026-10-14 a benchmark may ship any subset of the modes (PROTOCOL §2.15): RoboOlympics has no privileged number in `scripts/task_cutoffs.toml`, so `ci_checks/check-instance-copies.sh` expects no twin |
 
 The reset budget is §4b's default, 0: one match is one episode. Everything else is `eai-standard/2.3` as specified.
 

@@ -32,7 +32,7 @@
 "MetaWorld+"        = { privileged =  1800, standard =  1800 }
 "MolmoSpaces"       = { privileged =  3600, standard =  3600 }
 "MuJoCo Playground" = { privileged =  1800, standard =  1800 }
-"MyoSuite"          = { privileged =  3600, standard =  3600 }
+"MyoSuite"          = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
 "Panda Dynamic Scenes" = { privileged =  3600, standard =  3600 }
 "RoboCasa"          = { privileged =  3600, standard =  3600 }
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
@@ -275,5 +275,14 @@ benchmark = "RoboSafeBench"
 modes = ["standard-realtime"]
 from_sec = 0
 to_sec = 3600
-decided_by = "authors (with the standard-realtime tasks, pending owner decision)"
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
 note = "the benchmark's first standard-realtime tasks: the standard tasks' number (D8 default); the episode's robot-time budget under the realtime clock (1800 s for the realtime set, RoboSafeBench 0.5.1) runs in real time from the first submit, so 3600 s leaves 1800 s for looking and planning before the clock starts (the harness's set-up and the service's start are outside or before it); the collect hook's finalize is outside the agent's time"
+
+[[history]]
+date = "2026-10-14"
+benchmark = "MyoSuite"
+modes = ["standard-realtime"]
+from_sec = 0
+to_sec = 3600
+decided_by = "owner (board 0112: a realtime twin's cutoff equals its standard twin's)"
+note = "the first standard-realtime task (table_tennis): the standard twin's number"

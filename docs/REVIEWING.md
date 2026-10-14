@@ -9,9 +9,9 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 2. **Static checks.** `bash ci_checks/run_all.sh` must pass.
 3. **Generator.** For generated tasks, read the generator and the shared sources, not 500 copies. Re-run it and check
    that `git diff tasks/` is empty.
-4. **Sample tasks.** Read at least two tasks per mode in this order: `instruction.md` → `tests/` → `solution/` →
+4. **Sample tasks.** Read at least two tasks per mode the benchmark ships in this order: `instruction.md` → `tests/` → `solution/` →
    `environment/` → `task.toml`.
-5. **Runs.** Oracle and `nop` on a sample (≥ 2 per mode); for a new simulator or family, a determinism check (two
+5. **Runs.** Oracle and `nop` on a sample (≥ 2 per mode shipped); for a new simulator or family, a determinism check (two
    fresh replays, same hash) on the hardware used for evaluation.
 6. **Adversarial trial.** For new benchmarks, one agent trial instructed to make the verifier pass without solving the
    task. Any success blocks the merge until the verifier is fixed.
@@ -32,6 +32,19 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
+- Modes (PROTOCOL §2.15): a benchmark may ship any subset of privileged, standard and standard-realtime; a missing
+  mode is not a reason to block, but the benchmark's doc says which modes it ships and why the others are left out.
+  Where a family has twins, do they share the frozen instance, success rule and seeds, and is the cutoff of privileged
+  and standard one number? A standard or standard-realtime task without a twin: does it carry its own frozen instance,
+  and, in a benchmark that has a privileged mode, is it listed in `scripts/task_conventions.py` `NO_TWIN` with the
+  reason (a deleted or misnamed twin must not pass silently)?
+- A new mode (PROTOCOL §2.16): does the pull request have everything §2.16 lists: the name / suffix and `mode` value,
+  its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are
+  infrastructure and which the agent's), the `MODE_REGISTRY` entry and `CUTOFF_NOTE`, CI support keyed on the registry
+  (no new hard-coded list of mode names anywhere) with a self-test case, at least one benchmark using it, the TAXONOMY
+  entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (batch_eval_live, the results
+  site) told the new suffix? A new mode is an owner-visible protocol change: one pull request of its own, shared files
+  only, merged before the benchmark that uses it.
 - Time cutoff (PROTOCOL §2.12): is the benchmark's number in `scripts/task_cutoffs.toml`, under the benchmark's label of
   `scripts/task_conventions.py` `BENCHMARKS` (a new benchmark: the label first, in its shared-files pull request; the
   row with its tasks) (3600 s unless the pull
