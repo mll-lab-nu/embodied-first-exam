@@ -31,6 +31,7 @@ simulator = "roboarc"
 robot = "franka-robotiq-2f85"
 family = "buzz_wire_3d"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.4"
 oracle = "full"
 difficulty = "very_easy"

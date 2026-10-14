@@ -26,6 +26,7 @@ simulator = "robolab"
 robot = "franka-robotiq-2f85"
 family = "rubiks_cube_left_of_bowl"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"
 oracle_evidence = "solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-rubiks-cube-left-of-bowl__YZj6yTp (ws3, job eq-ws3-oracle-rubiks-cube-left-of-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7)."

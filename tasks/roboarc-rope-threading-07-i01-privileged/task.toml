@@ -15,6 +15,7 @@ simulator = "roboarc"             # RoboARC on MuJoCo 3.14.0 (CPU physics, Nyx R
 robot = "aloha-2"
 family = "rope_threading"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 difficulty = "medium"               # the variation's tier (docs/rcb/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 grasp regions on rope)"

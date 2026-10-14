@@ -24,6 +24,7 @@ family = "dextoolbench/brush/red_brush/sweep_right"
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "partial"
 oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 19/38 goals (solution/; README of dextoolbench_brush_red_brush_sweep_right-privileged)"

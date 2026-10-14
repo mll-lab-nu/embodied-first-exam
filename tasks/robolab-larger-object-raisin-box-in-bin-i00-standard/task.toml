@@ -26,6 +26,7 @@ simulator = "robolab"
 robot = "franka-robotiq-2f85"
 family = "larger_object_raisin_box_in_bin"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-larger-object-raisin-box__eJa8kky (robolab-larger-object-raisin-box-in-bin-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/larger_object_raisin_box_in_bin/unlimited/). Human review per family (PROTOCOL §2.7)."
