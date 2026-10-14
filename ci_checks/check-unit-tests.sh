@@ -13,7 +13,8 @@
 # Usage: check-unit-tests.sh [--all] [--only <path prefix>...]   (repo-level; run_all.sh calls it once)
 #   --only: just the tests whose path (scripts/...) starts with one of the prefixes (a pull request's scope,
 #   ci_checks/ci_scope.py RCB_SCOPE_PATHS); the shared layers' tests (scripts/tests/, eai_standard/, usage_gateway/) run
-#   in the full suite. The tests run concurrently (ci_checks/parallel.py, -j from RCB_CI_JOBS or the CPUs).
+#   in the full suite. The tests run concurrently (ci_checks/parallel.py, -j from RCB_CI_JOBS or the CPUs; the service
+#   tests on ports one at a time, see lane() below).
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
 if [ "${1:-}" = "--one" ]; then   # --one <timeout s> <test path under scripts/> [arguments of the test]
@@ -30,8 +31,12 @@ want() {   # want <path under scripts/>...: one of them is in the --only scope (
   [ ${#only[@]} -eq 0 ] && return 0
   local p a; for a in "$@"; do for p in "${only[@]}"; do [[ "scripts/$a" == "$p"* ]] && return 0; done; done; return 1
 }
+# Tests that start a service on a port they pick (or may: sockets, subprocesses, servers) run one at a time, in the lane
+# `port` of parallel.py: two of them at once can pick the same free port and one test then talks to the other's service
+# (seen on the 4-CPU runners: eai_standard/selftest.py's client reached v2_4/selftest.py's service). The rest run concurrently.
+lane() { grep -qE 'socket|free_port|_PORT|Popen|serve|import test_' "$root/scripts/$1" 2>/dev/null && printf '@lane:port '; }
 run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: queue it when in scope
-  want "$2" && cmds+="bash $self --one $*"$'\n'
+  want "$2" && cmds+="$(lane "$2")bash $self --one $*"$'\n'
 }
 for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
@@ -68,7 +73,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
   # service test that apply to it, run against that copy
   want humanoidbench/tests/test_standard_service.py libero-max/shared/standard &&
-    cmds+="RCB_SERVICE_DIR=$(printf %q "$root/scripts/libero-max/shared/standard") bash $self --one 900 humanoidbench/tests/test_standard_service.py Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot"$'\n'
+    cmds+="@lane:port RCB_SERVICE_DIR=$(printf %q "$root/scripts/libero-max/shared/standard") bash $self --one 900 humanoidbench/tests/test_standard_service.py Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot"$'\n'
   # the realtime clock under request load: the classes that do not depend on the runner's speed (TestClockUnderLoad
   # measures step counts under floods of requests; run the whole file by hand on a quiet host)
   run 900 humanoidbench/tests/test_realtime_load.py TestRequests TestStallEvidence TestGraders

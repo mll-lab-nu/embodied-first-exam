@@ -4,6 +4,11 @@
     parallel.py [-j N] < commands      # one command per line (run with bash -c), from the repo root
     parallel.py --nproc                # the default N
 
+A line `@lane:<name> <command>` puts the command in a lane: the commands of one lane run one after another (in their
+order, started before the commands outside lanes), each lane taking one of the N slots. For tests that cannot share
+the host with each other, e.g. the service tests that pick a free port and start a server on it (two of them running
+at once can pick the same port and talk to each other's server).
+
 -j: at most N at a time (default: $RCB_CI_JOBS, else the CPUs this process may use: its CPU affinity, capped by the
 cgroup's CPU quota -- a runner container started with `--cpus 4` sees all of the host's CPUs but gets four). Each command's stdout + stderr is captured and
 printed when it ends, under a `== <command> (<s> s, exit <rc>)` header, so concurrent output never interleaves (a
@@ -15,7 +20,8 @@ import os
 import subprocess
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 
 def run(cmd: str) -> tuple[str, int, str, float]:
@@ -54,20 +60,39 @@ def main(argv: list[str]) -> int:
             jobs, i = int(argv[i + 1]), i + 2
         else:
             raise SystemExit(f"usage: parallel.py [-j N] < commands; got {argv[i]!r}")
-    cmds = [c for c in (line.strip() for line in sys.stdin) if c and not c.startswith("#")]
+    lines = [c for c in (line.strip() for line in sys.stdin) if c and not c.startswith("#")]
+    lanes: dict[str, list[str]] = {}
+    units: list[list[str]] = []
+    for c in lines:
+        if c.startswith("@lane:"):
+            name, _, cmd = c[len("@lane:"):].partition(" ")
+            lanes.setdefault(name, []).append(cmd.strip())
+        else:
+            units.append([c])
+    units = list(lanes.values()) + units
+    cmds = [c for u in units for c in u]
     failed: list[str] = []
-    with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
-        for fut in as_completed([pool.submit(run, c) for c in cmds]):
-            cmd, rc, out, dt = fut.result()
+    lock = threading.Lock()
+
+    def report(cmd: str, rc: int, out: str, dt: float) -> None:
+        with lock:
             if rc != 0:
                 failed.append(cmd)
             if rc == 0 and not out.strip():   # silent success (e.g. task_conventions.py --check): no header
-                continue
+                return
             short = cmd if len(cmd) <= 160 else cmd[:157] + "..."
             sys.stdout.write(f"== {short} ({dt:.0f} s, exit {rc})\n{out}")
             if out and not out.endswith("\n"):
                 sys.stdout.write("\n")
             sys.stdout.flush()
+
+    def run_unit(unit: list[str]) -> None:
+        for c in unit:
+            report(*run(c))
+
+    with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for fut in [pool.submit(run_unit, u) for u in units]:
+            fut.result()
     if failed:
         print(f"FAIL {len(failed)} of {len(cmds)} command(s):")
         for c in failed:
