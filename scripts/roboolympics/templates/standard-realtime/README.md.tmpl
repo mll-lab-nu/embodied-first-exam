@@ -1,0 +1,30 @@
+# @@RT@@
+
+@@SENTENCE@@ (RoboOlympics `@@FAMILY@@`; the robot as a service on a clock that does not stop, slowdown S = @@SLOWDOWN@@: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+
+## Difficulty
+@@DIFFICULTY@@ The scene is dynamic (`scripts/task_dynamics.toml`: @@DYNAMIC_WHY@@), and in standard-realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and @@RT_RESET_BUDGET@@ resets (only the last attempt is graded).
+
+## Reference solution
+@@REFERENCE@@
+
+## Verification
+The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
+`server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
+recorded, and after the agent's time the service replays the last attempt in a fresh simulator; `tests/grade.py` reads
+`/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The clock's record
+(`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the attempt never starts (its
+clock starts at the first submit), reward 0. The
+rules: @@RULES@@ @@REVIEW@@
+
+## Details
+| | |
+|---|---|
+| Category | @@CATEGORY@@ |
+| Rule book | @@RULEBOOK_ROW@@ |
+| Stages | @@STAGES@@ |
+| Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
+| Slowdown | S = @@SLOWDOWN@@ (`RCB_SLOWDOWN`'s default): @@RTF_TEXT@@ |
+| Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
+| Episode | @@HORIZON_STEPS@@ control steps (@@HORIZON_S@@ s at 100 Hz); @@RT_RESET_BUDGET@@ resets, the last attempt graded |
+| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md) |

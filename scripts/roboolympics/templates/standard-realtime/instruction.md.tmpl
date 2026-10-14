@@ -1,0 +1,119 @@
+# roboolympics @@FAMILY@@ — instance i00 — STANDARD-REALTIME MODE (robot as a service; time does not stop)
+
+You control a simulated @@ROBOT_LINE@@
+**as if it were real hardware**: the simulator runs in a service you cannot open, you reach it only through a
+client, and like a real venue it does not wait for you: once an attempt is running, the robot, the ball and the venue
+move while you think. **Task:** @@SENTENCE@@
+
+**Slowdown: S = @@SLOWDOWN@@.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
+S x 10 ms of wall-clock time@@REAL_TIME_NOTE@@. `spec()["timing"]["slowdown"]` states it.
+
+## The venue
+@@VENUE@@
+
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+@@START_NOTE@@
+
+## The rules
+@@RULEBOOK@@@@RULES@@
+
+A referee in the service decides this from the simulator's state. The events that must happen, in order, are
+**@@STAGES@@**. An attempt (an episode) ends at the success, at the first rule violation, or after @@HORIZON_S@@ s
+(@@HORIZON_STEPS@@ control steps) of robot time.
+
+## Real-robot rules
+- **Time does not stop.** An attempt starts paused, on the frozen start, the robot holding its starting command. Its
+  clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the simulator runs at 100 Hz of robot
+  time (S = @@SLOWDOWN@@), whether or not you send anything, until the attempt ends: the venue's timed events (the
+  launch, the serve, the release) happen on that clock. Between your commands the robot executes what you planned,
+  then holds the last command in force; nothing pauses for you, not your thinking, not your tool calls.
+- **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds;
+  the decisive moment of an attempt takes a fraction of one. Drive the robot with a program: a controller of your own
+  (Python in your container, with numpy and the client) that plans or streams the rows, started in the background
+  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the attempt.
+  Use your turns to start attempts, read what happened, and improve the program.
+- **Attempts.** `r.reset()` abandons the running attempt (or follows one that has ended) and starts a new one from the
+  same start, paused until your next `submit`; `spec()["budget"]["reset"]` says how many resets you have
+  (@@RT_RESET_BUDGET@@ here; authoritative: if it says 0, the one attempt is the run). Once an attempt has ended,
+  `submit` raises `EpisodeOver` until you reset. **Only your last attempt is graded**, and a success ends the trial at
+  once. The wall clock is the run's and never restarts.
+- **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
+  `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
+  motor torques and two IMUs (below), and the venue's fixed cameras (@@VENUE_CAMERAS@@; `spec()["cameras"]` says
+  where each is mounted). Not where you or any object is, not the
+  referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
+  (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
+- There is nothing to hand in: the service records every control step it ran, replays your last attempt in a fresh
+  simulator and grades the replay. Keep the program that drives the robot at `/app/output/gen.py` and a `NOTES.md` of
+  at most 20 lines (your approach, what failed, what you downloaded or installed) for the record: save them early and
+  keep them current.
+- Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same
+  way (and stops your background programs), so do not stop early: while you have attempts left, the run can still pass.
+
+## Time and streaming
+- `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from
+  control step `at` (an attempt step number; by default the next step), replacing whatever was planned from `at` on
+  and keeping what is planned before it. When the plan runs out, the command in force is held.
+  `res.meta["control_steps"]` is the number of steps run so far in this attempt (so the next step has that number),
+  `res.meta["proprio"]["now"]` the proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+- Open loop: plan a whole movement at once (a chunk covers at most 10 s), with `at = 0` for the attempt's start:
+  `r.submit(type, A, dt=0.01, interpolate="hold", at=0, cameras=[])` starts the clock and runs exactly those rows from
+  the first step; `at` may be up to `spec()["timing"]["max_ahead_steps"]` steps ahead.
+- Closed loop: send one row per control step, `r.submit(type, a[None], cameras=[])`, computed from the proprioception
+  the previous call returned. `cameras=[]` skips the images (the fastest call).
+- Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
+  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
+  them); the rest of its chunk applies from the next step.
+- `get_obs()` reads the robot now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and returns
+  what the cameras saw meanwhile. `r.status()` shows `running` and `lag_s`.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
+Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
+help(rcb_client)"`; it explains the protocol with another benchmark's example names: for this task `spec()` is
+authoritative).
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the service is ready |
+| `r.spec()` | `GET /spec` | the facts: `action_types` (each type's layout, lower, upper, meaning), `control_dt` (0.01 s), `max_control_steps` (@@HORIZON_STEPS@@), `cameras` (field of view, pose at the start), `proprio_layout`, `robot_facts` (joints, limits, default gains, the stance), `rules`, `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `resets_left`, `running`, `planned_steps`, `lag_s` |
+| `r.get_obs(cameras=None, seconds=0, video="frames", include_depth=False)` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` (at most 30) of robot time |
+| `r.submit(type, A, dt=0.01, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the attempt's clock |
+| `r.reset(cameras=None)` | `POST /reset` | a new attempt from the same start, paused (see above) |
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
+`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
+`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. `cameras=None` means every
+camera: a controller's call should ask for none (`cameras=[]`) and read `res.meta["proprio"]["now"]`; the cameras are
+rendered on the service's GPU. With `interpolate="linear"` (the default) each control step's command is a straight line from the
+command in force to the row; `"hold"` applies the row as it is.
+```python
+from rcb_client import Robot
+r = Robot()
+res = r.submit("walk", A, dt=0.02, at=0, cameras=[])   # A: (T, @@WALK_DIM@@) rows of the `walk` type, from step 0
+while not r.status()["done"]:
+    ...                                              # or stream one row per control step from the proprioception
+```
+
+## Actions
+One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` spreads it. Every row ends with `grip_left`,
+`grip_right`.
+
+@@ACTION_TABLE@@
+
+Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains
+(also in `spec()["robot_facts"]`):
+
+@@JOINT_TABLE@@
+
+@@CONTROL_NOTES@@
+
+## Proprioception
+Each row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: the @@NJ@@ joint positions
+(`*_pos`, rad), their velocities (`*_vel`, rad/s), the motor torques applied (`*_torque`, N m), the joint targets in
+force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation quaternion `qw, qx, qy, qz`, world from
+sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
+`holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
+4 joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
+real @@ROBOT_SHORT@@ has no sensor for its position in the venue, and neither do you: that is what the cameras are for.

@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_bump` / seed 0 |
 | Oracle | `full` — Reference: a walk to where the serve comes down, then a forearm platform on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 11.4 m/s in, 7.3 m/s out, up to 3.08 m, down 0.13 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: the passive rebound, below net height, the body, a second touch, held, under the net, a net touch, over the centre line The privileged twin's reference rows (581 control steps, success after 5.81 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Receive the serve: pass the volleyball that is served over the net to you with your forearms, in one contact, above net height and into the setter's target at the net. (RoboOlympics `volleyball-bump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

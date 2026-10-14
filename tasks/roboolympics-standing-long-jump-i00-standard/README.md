@@ -9,7 +9,7 @@
 | Family / instance | `standing_long_jump` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_standing_long_jump.py: positive by injection (3.5 m/s forward and 2.5 m/s up from the stance, a perfect landing: a mark of 1.54 m, the stand is the robot's own); negatives: too short, a fall, a dive, a foot over the line, a step or shuffle before the take-off, a leg tuck. The published best for this robot is 0.90 m; a real open-loop push-off of ours takes off legally and lands on its head; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Do a standing long jump: from a standstill behind the take-off line, take off from both feet without a step, land on your feet at least your own height beyond the line, and stand. (RoboOlympics `standing-long-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

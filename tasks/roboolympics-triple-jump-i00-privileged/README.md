@@ -9,7 +9,7 @@
 | Family / instance | `triple_jump` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_triple_jump.py: positive by injection (three take-offs with the legs swapped in the air by the robot's own motors: hop 2.64 m, step 5.87 m, mark 8.65 m); negatives: a foot over the line, a two-foot hop, the hop or the step on the wrong foot, another part on the ground, the landing foot down again half a metre on (travelling between two phases), not into the sand. No single-leg take-off exists for this robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Do a triple jump: run up, hop from behind the take-off line and land on the same foot, step onto the other foot, and jump from it into the sand pit. (RoboOlympics `triple-jump`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

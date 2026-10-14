@@ -9,7 +9,7 @@
 | Family / instance | `free_throw` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_free_throw.py: positive by injection (a real underhand swing and release at 7.4 m/s, the ball's velocity set to 8.1 m/s at 58 degrees: a real flight and ring); negatives: not released in 5 s, the floor, touched again, the line, the semi-circle, from below, a fall. The shot needs 8.06 m/s at 58 degrees; the arm reaches 11 m/s with the elbow fired late, and about 400 search evaluations came within 0.37 m of the ring's centre; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Shoot a free throw: from behind the free-throw line, throw the basketball in your right hand so that it enters the basket from above. (RoboOlympics `free-throw`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

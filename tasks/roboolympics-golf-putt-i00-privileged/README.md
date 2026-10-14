@@ -9,7 +9,7 @@
 | Family / instance | `golf_putt` / seed 0 |
 | Oracle | `full` — Reference: a pendulum stroke from the shoulder that holes the 3 m putt; 16 of 16 perturbed runs when it was written. The hole takes a centred ball up to 1.48 m/s. Measured (make_oracles.py): success after 17.18 s of the 30 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Hole the 3.0 m putt: with one stroke of the putter in your right hand, roll the golf ball that lies on the green into the hole. (RoboOlympics `golf-putt`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

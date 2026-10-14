@@ -9,7 +9,7 @@
 | Family / instance | `volleyball_spike` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_volleyball_spike.py: positive by injection (a real arm, the real set onto the fist at 2.69 m, a 3.2 m/s ghost jump, the ball's velocity set, a softened landing); negatives: a leg tuck or a lift without a jump, a still fist in a jump, from the floor, before the apex, upward, into the net, long, the antenna, a second touch, a net touch, the centre line. No jump or landing controller exists for the H1-2; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Spike the set: jump and strike the volleyball that comes down near the net with a hand, above the height of the net, down into the opponent's court, and land on your feet without touching the net. (RoboOlympics `volleyball-spike`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
