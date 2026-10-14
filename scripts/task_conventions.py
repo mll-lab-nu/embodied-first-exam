@@ -76,8 +76,19 @@ BENCHMARKS = [  # (directory prefix, label)
 ]
 # Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
 # STANDARD_ONLY). RoboDojo's six tasks whose physics does not replay bit for bit (PROTOCOL §4.8 exception, owner
-# 2026-10-11): standard only, graded by the live episode.
-NO_TWIN = {"robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+# 2026-10-11): standard only, graded by the live episode. RoboOlympics' exported tasks (PROTOCOL §4c, owner 2026-10-14;
+# scripts/roboolympics/exported.toml): its own service and grader, matches and skill tasks with no trajectory deliverable.
+_RO_EXPORTED = "— (none: a task RoboOlympics exports with its own service, PROTOCOL §4c)"
+NO_TWIN = {**{n: _RO_EXPORTED for n in (
+               "roboolympics-badminton-actskill-i00-standard",
+               "roboolympics-badminton-match-i01-standard-realtime",
+               "roboolympics-badminton-match-i02-standard-realtime",
+               "roboolympics-soccer-match-i00-standard-realtime",
+               "roboolympics-soccerssl-match-i00-standard-realtime",
+               "roboolympics-tabletennis-hitskill-i00-standard",
+               "roboolympics-tabletennis-match-i01-standard-realtime",
+               "roboolympics-tabletennis-match-i02-standard-realtime")},
+           "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
@@ -116,7 +127,9 @@ EXTERNAL_TEXT = (
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
 # Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
-# the agent's egress is open and finding existing tools and controllers is part of the task. RoboOlympics (owner,
+# the agent's egress is open and finding existing tools and controllers is part of the task. It covers the benchmark's
+# tasks that set no [agent] network policy; one of its tasks that declares the allowlist (RoboOlympics' exported tasks,
+# scripts/roboolympics/exported.toml) is an allowlist task like any other and gets EXTERNAL_TEXT. RoboOlympics (owner,
 # 2026-10-11, as RoboFunOlympics): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
 EXTERNAL_OPEN = {
     "roboolympics-": (
@@ -441,10 +454,10 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     amounts = (f"at most {gpu}**{_num(lim['max_memory_gb'])} GiB of memory**, **{int(lim['max_processes'])} processes** "
                f"and **{_num(lim['max_disk_gb'])} GiB** of new files under {_paths(lim['disk_paths'])}")
     if lim["scope"] == "agent":
-        text = ("Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
-                f"benchmark's and does not count): {amounts}; your container has no GPU." if gpu_gb == 0 else
-                "Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
-                f"benchmark's and does not count): {amounts}.")
+        sim = (" (the simulator in the `sim` service is the benchmark's and does not count)" if sidecars else "")   # a
+        # standard task without a sim service (a policy task, PROTOCOL §4c) has no simulator to leave out
+        text = (f"Limits for your agent environment, your own container only{sim}: {amounts}; your container has no GPU."
+                if gpu_gb == 0 else f"Limits for your agent environment, your own container only{sim}: {amounts}.")
     else:
         owned = [s for s in sidecars if rcb_monitor_inject.kind_of(mode, s) == "observe"]   # the benchmark's own
         sidecars = [s for s in sidecars if s not in owned]
@@ -471,10 +484,22 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
-def render_external(task_name: str = "") -> str:
+def declares_allowlist(task: Path) -> bool:
+    """The task's [agent] puts the agent on the allowlist (`network_mode = "allowlist"`; PROTOCOL §2.11)."""
+    try:
+        return tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("network_mode") == "allowlist"
+    except (OSError, ValueError):
+        return False
+
+
+def render_external(task: "Path | str" = "") -> str:
     """instruction.md's `## External material` (PROTOCOL §2.11): the same words in every task, except the benchmarks of
-    EXTERNAL_OPEN, whose agents may download tools and controllers."""
-    text = next((v for p, v in EXTERNAL_OPEN.items() if task_name.startswith(p)), EXTERNAL_TEXT)
+    EXTERNAL_OPEN, whose agents may download tools and controllers (only their tasks without an allowlist: given a
+    task directory, one that declares the allowlist gets the common words)."""
+    name = task.name if isinstance(task, Path) else task
+    if isinstance(task, Path) and declares_allowlist(task):
+        name = ""
+    text = next((v for p, v in EXTERNAL_OPEN.items() if name and name.startswith(p)), EXTERNAL_TEXT)
     return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
@@ -675,7 +700,7 @@ def normalize_instruction(task: Path) -> None:
         s = strip_cutoff(s)
     for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = s.rstrip() + "\n\n" + render_external(task.name)
+    s = s.rstrip() + "\n\n" + render_external(task)
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))

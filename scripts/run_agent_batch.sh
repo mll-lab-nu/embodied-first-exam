@@ -316,7 +316,8 @@ gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task wit
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
-      if [ -n "$OPEN_EGRESS_RE" ] && [[ "$1" =~ ^($OPEN_EGRESS_RE) ]]; then    # open egress by a documented exception (PROTOCOL §2.11): the copy keeps it
+      if [ -n "$OPEN_EGRESS_RE" ] && [[ "$1" =~ ^($OPEN_EGRESS_RE) ]] \
+         && ! grep -q '^network_mode = "allowlist"' "$R/tasks/$1/task.toml"; then    # open egress by a documented exception (PROTOCOL §2.11; not a task of it that declares the allowlist): the copy keeps it
         cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; continue
       fi
       cp -a "$R/tasks/$1" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1

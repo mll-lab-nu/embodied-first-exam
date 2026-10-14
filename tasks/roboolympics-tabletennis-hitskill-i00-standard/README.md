@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboOlympics |
 | Mode | standard (`skilleval-api-test/1`) |
-| Twin | — (none: RoboOlympics is standard-realtime only, PROTOCOL §4b) |
+| Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_hit_skill` |
 | Oracle | `full` — solution/: our reference skill (lowlevel/reference, the toolkit only); see the export report for its rate on the development set |
@@ -36,8 +36,8 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: RoboOlympics (mll-4090-1/2, 2026-10): the sim takes up to its CPU cap (players' images, the world, the planners), the agent 2; CPU only
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 4 GiB memory. Limits measured: design defaults of the hub's RoboOlympics tasks.
+- Measured: RoboOlympics' exported skill tasks (scripts/roboolympics/exported.toml; mll-4090-1/2, 2026-10): no sim service, the agent 2 CPUs; the verifier runs the simulator and the skill; CPU only
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 4 GiB memory. Limits measured: design defaults of RoboOlympics' exported tasks (no sim service).
 
 ## Details
 

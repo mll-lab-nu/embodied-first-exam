@@ -7,7 +7,7 @@ cap above the host's CPU count is clamped by the runner); enforcement is off by 
 the calibration batch has confirmed the limits. Also on 2026-10-10 and 2026-10-11 (owner decisions, board 0072): every task's
 agent egress is the model APIs and the package registries, every instruction states the same honour rule about looking
 solutions up (§2.11), and the usage gateway forwards model-API calls only (D11, §5). On 2026-10-11 (owner): §4.8's exception for
-physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Also on 2026-10-11 (owner, board 0080): the agent's time cutoffs live in one table, and every instruction ends with its cutoff and the request not to cheat in one format (§2.12; 2026-10-12: at the end of the instruction, and the table takes exceptions per family and per task). On 2026-10-12 (owner): §3's and §4.8's exception for grading by one replay instead of two (RoboDojo). Earlier versions, whose rules are all part of this text: v1.0
+physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Also on 2026-10-11 (owner, board 0080): the agent's time cutoffs live in one table, and every instruction ends with its cutoff and the request not to cheat in one format (§2.12; 2026-10-12: at the end of the instruction, and the table takes exceptions per family and per task). On 2026-10-12 (owner): §3's and §4.8's exception for grading by one replay instead of two (RoboDojo). On 2026-10-14 (owner, board 0107 E7): §4c, tasks a benchmark exports with its own service and grader (RoboOlympics' matches and skill tasks). Earlier versions, whose rules are all part of this text: v1.0
 (2026-09-30: the two modes and their names), v1.1 (2026-10-08: the standard-realtime mode, §4b), v1.1.4 (compute
 resources, §2.9), v1.1.5 (resource limits, §2.10).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard and
@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exceptions (§4.5): HumanoidBench standard defaults to N = 50 (owner, 2026-10-07), MyoSuite standard to N = 10 (owner, 2026-10-09); BiGym2 and KinDER standard to N = 10 (owner, 2026-10-11); DexToolBench standard to N = 20 (owner, 2026-10-13). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. The one other kind: tasks a benchmark exports with its own service and grader inside, on its own named protocol (§4c; owner, 2026-10-14: RoboOlympics). |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -501,8 +501,11 @@ decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists 
 prefix in each): `ci_checks/check-verifier-isolation.sh` `OPEN_EGRESS` (the task sets no `[agent]` network policy:
 Harbor's default, open), `scripts/task_conventions.py` `EXTERNAL_OPEN` (the benchmark's own `## External material`
 paragraph) and `scripts/set_agent_egress.py` `OPEN_EGRESS` (`allowlist` leaves these tasks alone). Its results are
-compared only with results under the same network setting.
-- **RoboOlympics** (owner, 2026-10-11, as RoboFunOlympics, renamed 2026-10-14; `roboolympics-<family>-i<NN>`, single-humanoid sports,
+compared only with results under the same network setting. The exception covers the benchmark's tasks that set no
+`[agent]` network policy; a task of it that declares the allowlist (RoboOlympics' exported tasks, §4c) is an allowlist
+task in every respect: the CI check holds it to the one host list, its instruction has the common `## External
+material` paragraph, `allowlist` maintains it and the runner narrows its copy to the gateway.
+- **RoboOlympics** (owner, 2026-10-11, as RoboFunOlympics, renamed 2026-10-14; `roboolympics-<family>-i<NN>`, its single-humanoid sports families, not its exported tasks (§4c),
   [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)): the agent may search for, download and use public
   tools, robot models and pretrained controllers (a published Unitree G1 walking, jumping or whole-body policy), and
   is encouraged to: finding existing work and adapting it to the robot is part of what these tasks measure. The honour
@@ -648,7 +651,7 @@ migration changed `task.toml` only (the instances, the instructions and the READ
 | Unlimited resets, privileged state, planning primitives, self-replay | MAY | [current] |
 | Tool API shape | task-defined | [current] (recommended: `Session` with `reset` / `replay` / `status` / `save_trajectory`) |
 | Self-reported cost (resets, simulation steps) in `agent_*` fields | SHOULD | [current] |
-| `task_type = "policy"` | MAY | rules defined with the first such task |
+| `task_type = "policy"` | MAY | the first such tasks are standard-mode tasks of §4c (a skill as code, graded offline in the verifier) |
 
 ## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
 
@@ -842,10 +845,33 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 only by owner decision, recorded here and in `docs/benchmarks/<bench>.md` (and, where CI checks the rule, in its
 exception list), in the same way as HumanoidBench's reset budget (§4.5) and RoboTangle's agent budget (§2.3). The
 interface, the encoding, crash recovery and the evidence are never excepted: every standard-realtime task serves
-`eai-standard/2.3`. That benchmark's results state what differs and are compared only with results under the same
+`eai-standard/2.3`, except the tasks a benchmark exports with its own service (§4c). That benchmark's results state what differs and are compared only with results under the same
 settings.
 - **RoboOlympics** (owner, 2026-10-08): its three tasks on this repository's 2.3 adapter (table tennis, badminton, air
   hockey; S = 10, no privileged twin) were removed on 2026-10-14 (owner, board 0107 E7), and with them this exception.
+
+## 4c. Tasks a benchmark exports with its own service (`metadata.protocol` = the benchmark's own)
+
+Owner, 2026-10-14 (board 0107, E7): a benchmark that has its own task runtime (simulator service, referee, opponents,
+grader) may ship tasks its own exporter writes, with that runtime unchanged inside the task, instead of this repository's
+`eai-standard/2.x` layer. The task is a plain Harbor task in every other respect: §1, §2 (verifier isolation, honour
+rule, egress, cutoffs, resources and limits, seeds, README) hold. First and so far only: RoboOlympics, 8 tasks
+(`scripts/roboolympics/exported.toml`; [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md), "Tasks exported by
+RoboOlympics").
+
+| Item | Level | Basis |
+|---|---|---|
+| A manifest lists the exported directories with their source (`scripts/<bench>/exported.toml`: `name`, `source_task`, `revision`, `source_commits`); the benchmark's generator renders none of them and its check fails a listed directory that is missing; CI accepts the benchmark's own protocol values for listed directories only (`ci_checks/check-protocol.py` `OWN_PROTOCOLS`) | MUST | [CI] |
+| `metadata.protocol` names the benchmark's protocol and its version, per mode: RoboOlympics `eai-standard-realtime/1.0` (matches, `standard-realtime`) and `skilleval-api-test/1` (skill tasks, `standard`, `task_type = "policy"`); its wire format is documented in the benchmark's doc and in the instruction, not in [`STANDARD_MODE.md`](STANDARD_MODE.md) | MUST | [CI] (protocol) |
+| No privileged twin: such a task has no trajectory deliverable (`scripts/task_conventions.py` and `ci_checks/check-instance-copies.sh` `NO_TWIN` list them) | MUST | [CI] |
+| The verdict comes from the trusted side only: the sim service's own record of the episode, replayed in a fresh process (matches), or an offline evaluation in the separate verifier (skill tasks); nothing the agent's container writes decides; the verifier has no network | MUST | [CI] (isolation) |
+| Real-time matches: the world runs at 1/S of real speed, S per task (the sport's official slowdown: RoboOlympics table tennis 10, badminton 20, humanoid soccer 5, wheeled soccer 10; `metadata.slowdown`); a command takes effect at the next control step and all agent latency counts; after every point the world may freeze for a bounded review (at most 300 s; a rule of the sport, the agent's `ready` ends it early) while the agent's time budget runs on | MUST | [new] |
+| Opponents are scripted, at a fixed level per task (`metadata.opponent_level`); success = the match is valid (the fresh replay repeats the live state, scores and winner) and the agent's side won | MUST | [new] |
+| No crash resume: a simulator crash ends the trial with `infra_error = 1`, never the agent's 0 (a resumed match would not be the recorded one) | MUST | [new] |
+| Skill tasks (`task_type = "policy"`): the deliverable is code at a fixed path; the verifier runs it on development requests the agent never sees (disjoint from its public practice set), as an unprivileged user in its own process, without network, unable to read the simulator, the evaluator and the requests; success = a valid deliverable ∧ every request evaluated ∧ the success rate ≥ the task's line ∧ deterministic answers; a missing or unloadable deliverable is a valid 0 | MUST | [new] |
+| Untrusted code in the verifier never outlives its evaluation: every process it started is ended before anything is graded (its session, then every process of the sandbox user below the evaluator, which is their subreaper; again container-wide before the grade), it has a process limit (`RLIMIT_NPROC`), it cannot write the log directory or the report the grade is read from (a root-only directory), and the reward files are written fresh; the evaluator's isolation probe (`skilleval.evaluate --probe`) checks each of these | MUST | [new] (board 0111: a detached child of the skill could rewrite the report, #180 review) |
+| Results are reported separately from the benchmark's other tasks and state the protocol, S and the opponent level; the tasks run on development seeds (the benchmark's official hidden seeds are its own) | MUST | [new] |
+| An exported task is refreshed by re-exporting, not by hand; a fix made here to an exported file is recorded in the manifest (`patched`) and sent upstream, so that the next export carries it | SHOULD | [new] |
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |

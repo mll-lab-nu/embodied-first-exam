@@ -408,6 +408,18 @@ def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
     return diffs
 
 
+def exported_names() -> set[str]:
+    """The task directories RoboOlympics exports itself (exported.toml, written by its tools/export_fexam.py): its own
+    service unchanged inside the task (docs/benchmarks/roboolympics.md, "Tasks exported by RoboOlympics"); not rendered
+    here. Their names never take a family name of this generator (the sport's id and a format: tabletennis-match,
+    badminton-actskill; the families here are dashed event names: table-tennis-return)."""
+    p = HERE / "exported.toml"
+    if not p.is_file():
+        return set()
+    import tomllib
+    return {t["name"] for t in tomllib.loads(p.read_text()).get("tasks", [])}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=("render", "check"))
@@ -433,9 +445,14 @@ def main() -> int:
             made.add(name)
             diffs += sync(out / name, files, check)
     if not only:
+        exported = exported_names()      # written by RoboOlympics' own exporter (exported.toml), not by this generator
         for t in sorted(out.glob(f"{PREFIX}-*")):
-            if t.is_dir() and t.name not in made:
+            if t.is_dir() and t.name not in made and t.name not in exported:
                 diffs.append(f"stale  {t.name} (no family for it: remove it)")
+        diffs += [f"clash  {n}: rendered here and listed in exported.toml" for n in sorted(made & exported)]
+        if out.resolve() == (ROOT / "tasks").resolve():
+            diffs += [f"missing {n}: listed in exported.toml, no task directory" for n in sorted(exported)
+                      if not (out / n / "task.toml").is_file()]
     for d in diffs:
         print(d)
     print(f"{'checked' if check else 'generated'} {len(made)} RoboOlympics task dirs ({len(made) // 2} families): {len(diffs)} difference(s)")

@@ -39,9 +39,11 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "RoboOlympics (mll-4090-1/2, 2026-10): the sim takes up to its CPU cap (players' images, the world, the planners), the agent 2; CPU only"
+measured = "RoboOlympics' exported skill tasks (scripts/roboolympics/exported.toml; mll-4090-1/2, 2026-10): no sim service, the agent 2 CPUs; the verifier runs the simulator and the skill; CPU only"
 
 [metadata.resources.limits]
+# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 4.0
@@ -53,10 +55,18 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 4.0
-measured = "design defaults of the hub's RoboOlympics tasks"
+measured = "design defaults of RoboOlympics' exported tasks (no sim service)"
 
 [metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
 
 [verifier]
 timeout_sec = 2400.0

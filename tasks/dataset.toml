@@ -7239,33 +7239,33 @@ digest = "sha256:9dbfc400db9bb6763abb0bd78d9be8b5082d4e061d033fbed470942cff41f15
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-tabletennis-hitskill-i00-standard"
-digest = "sha256:e9a32515a26fe7dc2c25ac53096eb2d154042f8912f96ca899d2f7e4dfdf6f51"
+digest = "sha256:c8ccefae35319291556be68dc85290a9bf23b5b953585f1239063c3cf6e0234e"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-tabletennis-match-i01-standard-realtime"
-digest = "sha256:2666cb62be3ce8a4ade89d32d99ddf63cf6e951b66c5a8dda7a2eaa30cacb21a"
+digest = "sha256:30e779a2d20ddc49742562645ae97b5d8020f3a361fcb019ec73fe6f771b724a"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-tabletennis-match-i02-standard-realtime"
-digest = "sha256:f70c76341d3b0245fe0f337083dcff52ca11521671e6c062e3e950cbeddfa04d"
+digest = "sha256:fa07154be1b1c4edfbdf51008a1ebcb9573c0cc34578730cec9b8d6081f21971"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-soccer-match-i00-standard-realtime"
-digest = "sha256:39c79171821b763127e4f9f06379ad3a4ae53c9c2fcb5b9e7dcfda5fa3b447e8"
+digest = "sha256:28f9478a2e38bd85c07cf42fb395176aac7616d5a8d6c28b3ed5e11a2572e0ea"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-badminton-actskill-i00-standard"
-digest = "sha256:b5e1a849e5e345c944c3ecf57d8a82e9825722c31dde2dff944ea3255fce2e06"
+digest = "sha256:5a6ade25c5924483ca5fce61e3194790d5cb9c767ff1061028a92f080de55e12"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-badminton-match-i01-standard-realtime"
-digest = "sha256:e75c4904a7fc54f2d3604b5d4d739eec0e1b2aafa25854228f79c9f0a1e13726"
+digest = "sha256:f6316af41a7b5e9094f8691e85d2672d2b89a36584dd8080b142f2f19441a8cf"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-badminton-match-i02-standard-realtime"
-digest = "sha256:724783a36f9e061856b5fef9e0c7dbc38b545169f4973d15fc60ff059683dbee"
+digest = "sha256:0c3f0e1332d26174cd2b739c444a769b29897b2312a37790ecb9a54765f11869"
 
 [[tasks]]
 name = "robot-coding-bench/roboolympics-soccerssl-match-i00-standard-realtime"
-digest = "sha256:556c58bb601f3f3bafff6caee3fa9262e5635bb9f4b779874b68dc2ccae80773"
+digest = "sha256:33a1b5726fa890853a3fbcac4e76e7eaf8272f4546ea92f4725f9a94f6f4e819"
 

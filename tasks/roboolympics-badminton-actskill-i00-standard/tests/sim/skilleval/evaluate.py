@@ -221,6 +221,15 @@ class Harness:
         return out
 
 
+def _alive(pid: int) -> bool:
+    """The process exists and is not a zombie."""
+    try:
+        with open(f"/proc/{pid}/stat") as f:
+            return f.read().rsplit(")", 1)[1].split()[0] != "Z"
+    except (OSError, IndexError):
+        return False
+
+
 def probe(skill_dir: Path, targets: dict) -> dict:
     """The isolation probe: skilleval/probe/probe.py tries each target; nothing may succeed."""
     s = SkillProcess(skill_dir, "probe", timeouts={"probe": 20})
@@ -230,6 +239,8 @@ def probe(skill_dir: Path, targets: dict) -> dict:
         got = {"error": str(e)}
     finally:
         s.close()
+    if isinstance(got, dict) and got.get("survivor_pid"):      # its detached process must be gone with the skill
+        got["survives_close"] = _alive(int(got["survivor_pid"]))
     leaks = sorted(k for k, v in got.items() if v is True) if isinstance(got, dict) else ["?"]
     return {
         "ok": isinstance(got, dict) and "error" not in got and "load" not in got and not leaks,
@@ -270,6 +281,8 @@ def main(argv=None):
             "read_evaluator": str(sport_dir / lo["evaluator"]),
             "list_simulator": str(sport_dir.parent),
             "write_skill_dir": str(Path(a.skill) / "probe_write.txt"),
+            "write_verifier_logs": "/logs/verifier/probe_write.txt",   # the agent-visible log directory (Harbor: 777)
+            "write_report_dir": str(Path(a.out).parent / "probe_write.txt") if a.out else "/var/lib/skilleval/probe_write.txt",
         }
         report.update(probe=probe(Path(a.skill), targets))
         report["valid"] = report["probe"]["ok"]

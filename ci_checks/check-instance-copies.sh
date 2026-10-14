@@ -12,7 +12,7 @@
 # Usage: check-instance-copies.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
-NO_TWIN=()   # none in use (RoboOlympics' three standard-realtime-only tasks were removed on 2026-10-14)
+NO_TWIN=(roboolympics-badminton-actskill-i00-standard roboolympics-badminton-match-i01-standard-realtime roboolympics-badminton-match-i02-standard-realtime roboolympics-soccer-match-i00-standard-realtime roboolympics-soccerssl-match-i00-standard-realtime roboolympics-tabletennis-hitskill-i00-standard roboolympics-tabletennis-match-i01-standard-realtime roboolympics-tabletennis-match-i02-standard-realtime)   # PROTOCOL §4c: RoboOlympics' exported tasks (scripts/roboolympics/exported.toml; owner, 2026-10-14)
 STANDARD_ONLY=(robodojo-fold-clothes-i00-standard robodojo-fold-clothes-random-i00-standard robodojo-make-toast-random-i00-standard robodojo-pour-by-language-i00-standard robodojo-pour-liquid-into-cup-i00-standard robodojo-pour-liquid-into-cup-random-i00-standard)   # PROTOCOL §4.8 exception (owner, 2026-10-11)
 case "$n" in
   *-standard-realtime) base="${n%-standard-realtime}"; ref="$base-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too

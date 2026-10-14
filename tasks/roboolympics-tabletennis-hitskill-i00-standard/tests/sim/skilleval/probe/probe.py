@@ -1,9 +1,12 @@
 """The isolation probe (tools/skill_eval.py SPORT probe): a "skill" that tries what a deliverable must not be able to
 do in the evaluation container and reports each attempt (True = it worked = a leak). skilleval/evaluate.py --probe fails
-on any True."""
+on any True. It also leaves a detached process behind (`survivor_pid`): the evaluator checks that closing the skill ended
+it (`survives_close`), and that RLIMIT_NPROC is set (`nproc_unlimited`)."""
 
 import os
+import resource
 import socket
+import time
 
 
 def _read(path):
@@ -61,5 +64,35 @@ def probe(targets):
         out["import_core"] = True
     except ImportError:
         out["import_core"] = False
+    soft = resource.getrlimit(resource.RLIMIT_NPROC)[0]
+    out["nproc_unlimited"] = soft == resource.RLIM_INFINITY
+    out["survivor_pid"] = _survivor()
     out["uid"] = os.getuid()
     return out
+
+
+def _survivor():
+    """A grandchild in a session of its own (double fork + setsid), re-parented away from the skill: it sleeps for a
+    minute. Returns its pid (None when it could not be started)."""
+    r, w = os.pipe()
+    try:
+        pid = os.fork()
+    except OSError:
+        return None
+    if pid == 0:                                   # the child: detach, start the sleeper, report its pid, exit
+        try:
+            os.setsid()
+            g = os.fork()
+            if g == 0:
+                os.close(r)
+                os.close(w)
+                time.sleep(60)
+                os._exit(0)
+            os.write(w, str(g).encode())
+        finally:
+            os._exit(0)
+    os.close(w)
+    os.waitpid(pid, 0)
+    data = os.read(r, 32)
+    os.close(r)
+    return int(data) if data else None

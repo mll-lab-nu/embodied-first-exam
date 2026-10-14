@@ -49,7 +49,8 @@ elif ag.get("network_mode") == "allowlist":
 # PROTOCOL §2.11: every task's agent reaches the model APIs and the package registries, nothing else. With open egress (the default of six
 # benchmarks until 2026-10-10) agents downloaded upstream sources, a reference solution, a recorded demonstration and
 # robot models from their own shell. An exception is a directory prefix here with its reason, changed together with the
-# protocol's text; a task that drops its allowlist otherwise fails.
+# protocol's text; a task that drops its allowlist otherwise fails. A task of an open benchmark may still declare the
+# allowlist (RoboOlympics' exported tasks): then it is held to the allowlist like any other task (checked above).
 OPEN_EGRESS: dict[str, str] = {
     # owner, 2026-10-11: single-humanoid sports; the agent may search for and download public tools, robot models and
     # pretrained controllers (PROTOCOL §2.11 exception; scripts/task_conventions.py EXTERNAL_OPEN has the same prefix)
@@ -61,9 +62,9 @@ for st in d.get("steps") or []:
     for role in ("agent", "verifier", "environment"):
         if isinstance(st, dict) and {"network_mode", "allowed_hosts"} & set((st.get(role) or {})):
             fail(f"[[steps]] {st.get('name', '?')}: a step sets its own network policy ([steps.{role}]); the task's [agent] / [verifier] policy must be the only one")
-if t.name.startswith(tuple(OPEN_EGRESS)):
+if t.name.startswith(tuple(OPEN_EGRESS)) and ag.get("network_mode") != "allowlist":
     if "network_mode" in ag or "allowed_hosts" in ag:
-        fail("[agent] sets a network policy, but this benchmark's egress is open by its documented exception (PROTOCOL §2.11): leave both keys out")
+        fail("[agent] sets a network policy other than the allowlist, but this benchmark's egress is open by its documented exception (PROTOCOL §2.11): leave both keys out, or declare the allowlist")
 elif ag.get("network_mode") != "allowlist":
     fail('[agent].network_mode must be "allowlist" (PROTOCOL §2.11: the model APIs and the package registries, in every task; the generator writes it, scripts/set_agent_egress.py allowlist)')
 df = t / "tests/Dockerfile"

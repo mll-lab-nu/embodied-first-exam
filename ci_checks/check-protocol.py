@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
 PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"}   # standard mode (2.4: the operations capability, issue #89)
 REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # standard-realtime mode (PROTOCOL §4b): 2.3 = the realtime capability
-# Tasks a benchmark exports with its own service inside (PROTOCOL §4b, RoboOlympics exception 3): the protocol it
-# serves, per mode; only for directories its manifest lists (scripts/roboolympics/exported.toml)
+# Tasks a benchmark exports with its own service inside (PROTOCOL §4c; owner, 2026-10-14): the protocol it serves, per
+# mode; only for directories its manifest lists (scripts/roboolympics/exported.toml)
 OWN_PROTOCOLS = {"roboolympics-": {"standard-realtime": "eai-standard-realtime/1.0", "standard": "skilleval-api-test/1"}}
 OWN_MANIFESTS = {"roboolympics-": ROOT / "scripts" / "roboolympics" / "exported.toml"}
 

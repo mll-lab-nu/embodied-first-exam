@@ -32,8 +32,8 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | RoboARC | `difficulty` | `very_easy` · `easier` · `easy` · `medium` · `hard` (the owner's rating of the task within its family; task names carry no difficulty) |
 | RoboARC | `grasp` | `assisted (<model> grasp regions on <parts>)` · `physical (no assisted grasping)` |
 | RoboARC | `success_rule`, `tooling_version` | the task-native success rule and its terminal revision; the tooling generation (text) |
-| RoboOlympics | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's default slowdown S (the world runs at 1/S of real speed; PROTOCOL §4b exception: 10) |
-| RoboOlympics | `revision`, `play`, `action_level`, `source_task` | the sport's revision; `program`; `high` · `low`; the RoboOlympics task it was exported from |
+| RoboOlympics (exported, PROTOCOL §4c) | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's slowdown S (the world runs at 1/S of real speed; the sport's official one: 5, 10 or 20) |
+| RoboOlympics (exported, PROTOCOL §4c) | `revision`, `play`, `player_mode`, `action_level`, `source_task`, `source_commits`, `exporter`, `official`; skill tasks also `skill_deliverable`, `dev_requests`, `success_line` | the sport's revision; `program`; `high` · `low`; the RoboOlympics task it was exported from, its commits and exporter; `false` (development seeds); the deliverable's path, the number of graded requests, the success rate needed |
 | RoboOlympics | `category` | `track-and-jumps` · `football-and-volleyball` · `basketball-and-rackets` · `throwing-catching-striking` · `parkour-apparatus-balance` |
 | RoboOlympics | `reset_budget` | integer: the standard task's default reset budget (PROTOCOL §4.5 exception) |
 | LabUtopia | `level` | `1` (an atomic action) · `2` (a short-horizon task): LabUtopia's own level of the task |
@@ -54,7 +54,10 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
   `difficulty` the owner's rating (`scripts/roboarc/roboarc_names.json`).
 - RoboOlympics (formerly RoboFunOlympics, `robofunolympics-…`; renamed 2026-10-14): `<base>` is
   `roboolympics-<family-with-dashes>-i<NN>` (`[metadata].family` = the family with underscores, e.g. `penalty_kick`);
-  every family in privileged and standard mode.
+  every family in privileged and standard mode. Its exported tasks (PROTOCOL §4c, `scripts/roboolympics/exported.toml`): `<base>` is
+  `roboolympics-<sport>-<format>-i<NN>` with the sport's RoboOlympics id (`tabletennis`, `badminton`, `soccer`,
+  `soccerssl`) and `match`, or a skill format (`hitskill`, `actskill`); matches in standard-realtime mode only, skill
+  tasks in standard mode only; never a family name of the generated families.
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
 - ManiGuard: `<base>` is `maniguard-<family-with-dashes>-i<NN>`, NN = the ManiGuard-Bench task index (base level, e.g.

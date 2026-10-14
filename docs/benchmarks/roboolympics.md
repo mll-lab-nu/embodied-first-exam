@@ -16,6 +16,17 @@ oracles are the same; the image keeps its name (`eai-robofunolympics`), as do th
 `roboolympics-{tabletennis,badminton,airhockey}-match-i00-standard-realtime`, `scripts/roboolympics/` at the time,
 image `eai-olympiad:0.2.0`) were removed on the same day.
 
+**Two parts.** (1) The 50 single-robot sports families above and below, generated here (`scripts/roboolympics/`,
+privileged and standard). (2) Eight tasks RoboOlympics exports itself with its own service inside (PROTOCOL §4c):
+matches against a scripted opponent in standard-realtime mode and two skill-engineering tasks in standard mode, listed in
+`scripts/roboolympics/exported.toml` and described in "Tasks exported by RoboOlympics" at the end of this page. The two
+parts never share a family name: the families here are dashed English event names (`table-tennis-return`,
+`penalty-kick`), the exported tasks are the sport's RoboOlympics id and a format (`tabletennis-match`,
+`soccerssl-match`, `tabletennis-hitskill`, `badminton-actskill`); a new family here may not take a `<sport>-match` or
+`<sport>-<x>skill` name, and `gen_tasks.py check` fails a name that is both rendered and exported. The
+standard-realtime twins of part (1)'s dynamic families (board 0112) are `roboolympics-<family>-i00-standard-realtime`
+and cannot meet part (2)'s names either.
+
 | | |
 |---|---|
 | origin | built here on the simulator of [RoboOlympics](https://github.com/CHIGUI0/roboolympics) (MIT; private): its robot library `bodies/` (the Unitree G1 at revision g1-4 and the Unitree H1-2 at h1-4, the one limit and servo path, the joint-group arbiter, and, since image 0.2.0, the G1's optional FALCON and AGILE walking policies) and its athletics running policy, commit `7df999b`, unchanged, in the image. Parts of single families come from RoboOlympics' sports (the athletics start procedure and hurdle, the bowling lane and oil zones, the tennis ball's fitted lift, DeepMind's system-identified table-tennis ball and table and the serve library). The list of sports follows the owner's survey of humanoid sports tasks (2026-10-11) |
@@ -23,7 +34,7 @@ image `eai-olympiad:0.2.0`) were removed on the same day.
 | robots | `unitree-g1` (1.32 m, 33 kg, 29 joints; three walking policies and a running policy) and `unitree-h1-2` (1.78 m, 67 kg, 27 joints; a walking policy) where the official venue needs an adult-size body; real joint, speed and torque limits, motor torque-speed curves (the H1-2's are estimates), self-collision; fist pads with a switchable grip |
 | actions | views of one sim row per control step: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd: q, dq, tau, kp, kd per joint), and on the G1 `run`, `run_arms`; every row ends with `grip_left`, `grip_right` |
 | score | the referee's verdict: every stage latched in order, no rule broken, within the time limit; binary. `progress` (stages reached) and the family's metrics (a distance, a speed, a count) are reported beside it |
-| tasks | 50 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 100 task directories. No standard-realtime mode yet (owner, 2026-10-11) |
+| tasks | 50 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 100 task directories. No standard-realtime mode yet (owner, 2026-10-11). Plus the 8 tasks RoboOlympics exports itself (below) |
 | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` (`images/robofunolympics/`, about 600 MB) |
 | generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `instances/`, `shared/`, `templates/`, `oracles/`; a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
@@ -353,6 +364,65 @@ scripts/roboolympics/tests/run_all.sh                                   # every 
 Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`). Regenerate after a change to a family:
 `RFO_RW=1 scripts/roboolympics/dev.sh /rfo/make_instances.py`, `RFO_RW=1 scripts/roboolympics/dev.sh
 /rfo/make_oracles.py`, `python3 scripts/roboolympics/gen_tasks.py render`, `cd tasks && harbor add --scan .`.
+
+## Tasks exported by RoboOlympics (its own service inside the task; PROTOCOL §4c)
+
+RoboOlympics exports these tasks itself with `tools/export_fexam.py` (CHIGUI0/roboolympics, private): its own
+generated task, with the simulator service, referee, scripted opponents, observation, the frozen review between points,
+the fresh-process replay and the grader unchanged, turned into a plain Harbor 0.23.0 task (contributed in #180, by
+CHIGUI0; merged with the maintainers' fixes below). They are listed in `scripts/roboolympics/exported.toml` (with the
+RoboOlympics commit and the sport's frozen revision of each, and the files changed here since the export);
+`gen_tasks.py` renders none of them, and they are refreshed by re-running the exporter (`python3 tools/export_fexam.py
+--hub <this checkout> <this checkout>/tasks`), then `scripts/task_conventions.py` on them and `scripts/task_cutoffs.py
+apply`.
+
+| task | what | instance | oracle (vanilla Harbor 0.23.0, 2026-10-13) |
+|---|---|---|---|
+| `roboolympics-tabletennis-match-i01-standard-realtime` | table tennis vs the scripted opponent, RoboOlympics revision `wallclock-15` (players serve, rail base, real-robot limits; S = 10 since RoboOlympics PR #138) | level 2, seed 22, S = 10 | partial: the camera-only reference player lost 3:5 at S = 10 (it won 6:4 at S = 20; it wins level 2 in 16 of 40 seeds in the screening); nop 0 |
+| `roboolympics-tabletennis-match-i02-standard-realtime` | as above | level 3, seed 12, S = 10 | partial: the reference lost 3:5 (it wins level 3 in 7 of 40); nop 0 |
+| `roboolympics-badminton-match-i01-standard-realtime` | singles badminton on a 0.4-scale court (BWF Laws, one game to 11; revision `badminton-wallclock-12`, PR #81): Franka Panda with a racket on a Festo gantry base; the players serve | level 1, seed 7, S = 20; agent budget **14400 s** (a per-task exception: a game to 11 at S = 20 took the reference alone 78 min; at S = 10 the camera-only reference loses level 1, 0 of 20) | partial: the camera-only reference won 12:10 (93 min; an earlier run on the same instance lost 10:12; it wins level 1 in 17 of 20 seeds in the screening); nop 0 |
+| `roboolympics-badminton-match-i02-standard-realtime` | as above | level 2, seed 8, S = 20, 14400 s | partial: the camera-only reference does not win level 2 (a model did: Opus 11:7); same task as i01 but the level |
+| `roboolympics-soccer-match-i00-standard-realtime` | humanoid soccer 2 v 2 (RoboCup Humanoid League rules, revision `soccer-2v2-10`: the T1's real motors): one agent commands both Booster T1 robots of its team (walk velocity, stand, kick) from their head cameras against a scripted team; 2 x 5 min of game time | level 2, seed 7, S = 5 (2 x 5 min = 3000 s of wall time plus the reviews, inside 7200 s) | partial: the camera-only reference lost 1:8 on soccer-2v2-10 (0:2 on soccer-2v2-9; it cannot kick while walking; a model has won level 2, Astra 12:2); nop 0. Image `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (private to the mll-lab-nu organization for now) |
+| `roboolympics-soccerssl-match-i00-standard-realtime` | wheeled soccer 5 v 5 (RoboCup Small Size League rules, revision `soccer_ssl-1`): one agent commands its five omnidirectional robots (move, kick, dribble) from four overhead cameras against a scripted team; two halves and, if level, a shoot-out (about 1035 s of game time) | level 2, seed 7, S = 10; agent budget **14400 s** (a per-task exception in `scripts/task_cutoffs.toml`: the match alone is 2.9 h of wall time at S = 10, and at S = 5 the four cameras cannot be rendered in time) | partial: the camera-only reference lost 2:5 in a full match (valid, replay identical; 2 h 35 min of agent time, over 7200 s); nop 0 |
+| `roboolympics-tabletennis-hitskill-i00-standard` | implement the robot's `hit` skill (the blade's state at contact) from the robot's model, its real-limit joint interface and a disclosed toolkit; graded offline by the sport's API test | 90 public development requests (24 development matches); success: rate >= 0.7 | full: RoboOlympics' reference skill 69/90 (the platform's own `hit` 90/90, an IK-only baseline 0/90); nop 0 |
+| `roboolympics-badminton-actskill-i00-standard` | implement the badminton robot's `act` skill (the racket's state at contact, optional base position) from its model, its real-limit joint interface and the toolkit; graded offline by the sport's API test (RoboOlympics revision `badminton-wallclock-12`, PR #98) | 246 public development requests (12 development matches, levels 1-2); success: rate >= 0.8 | full: RoboOlympics' reference skill 244/246; nop 0 |
+
+What differs from the 2.x tasks (PROTOCOL §4c, owner 2026-10-14):
+
+| | the 2.x tasks | exported RoboOlympics tasks | why |
+|---|---|---|---|
+| protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (matches; RoboOlympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `skilleval-api-test/1` (skill tasks) | the frozen review after every point (at most 300 s; the world stands still, the agent's time runs on) is part of RoboOlympics' rules, and its results are only comparable under them |
+| crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the service replays the whole match from its record to grade it; a resumed match would not be the recorded one |
+| slowdown | — | per task, the sport's official slowdown: table tennis 10 (RoboOlympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10 (`metadata.slowdown`) | results state S |
+| agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02 and wheeled soccer 14400 s (per-task exceptions in `scripts/task_cutoffs.toml`, owner 2026-10-14) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10 |
+| network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL §2.11 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
+| twin | privileged + standard | none (`NO_TWIN`) | no trajectory deliverable |
+| skill task | — | mode `standard`, `task_type = "policy"`, no sim service; the verifier runs the simulator and the skill | the deliverable is code (`/app/output/skill/hit.py`, `act.py`) |
+| seeds | the instance's | matches: `[metadata.seeds]` default = allowed = the instance's development seed; skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; RoboOlympics' official results are produced by RoboOlympics on its hidden six-digit seeds |
+| metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the D11 proxy's file `metering/think_proxy.py` is in the image's copy but never started) | |
+
+**Skill tasks' verifier (fixed here, 2026-10-14, board 0111; the #180 review's finding).** The verifier runs the
+delivered skill as `nobody` in its own process, in the container that grades it. A skill could leave a detached process
+behind (double fork, `setsid`) that rewrote `/logs/verifier/report.json` or the reward files after the evaluation
+(Harbor makes `/logs/verifier` 777, without the sticky bit), so a skill that hits nothing could be graded a success. Now:
+the evaluator is the subreaper of the skill's tree, and closing a skill kills its session and every process of
+`nobody` below the evaluator until none is left (`skilleval/sandbox.py` `end_sandbox_processes`; it raises, and the
+grade is a `grader_error`, if one survives); the skill runs with `RLIMIT_NPROC` 128; `tests/test.sh` makes
+`/logs/verifier` 755 and writes the report to `/var/lib/skilleval/` (root, 700); `tests/engineer_grade.py` kills any
+process of `nobody` left in the container, removes every entry of `/logs/verifier` root did not write, reads the
+report only from a root-owned directory nobody else can write, and writes the reward files fresh (`O_EXCL`,
+`O_NOFOLLOW`), then copies the report there. The isolation probe (`python3 -m skilleval.evaluate --sport-dir sport
+--probe --skill <dir with probe.py>`) adds three targets: writing `/logs/verifier`, writing the report's directory,
+and a detached process that must be gone after the skill is closed (`survives_close`), plus `nproc_unlimited`. Measured
+in the verifier image (Harbor's layout: root, no network, `/logs/verifier` 777): a skill that plants a success and
+leaves a process to keep it there got reward 1 from the exported grader and gets 0 now; the reference skill still
+passes; the probe finds no leak. Still possible and harmless: a skill with `memory = "per_case"` can keep files in `/tmp`
+between requests (it gets no outcome back, so it learns nothing it was not given).
+
+Images: `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` (public; the image RoboOlympics' frozen revisions were screened on;
+built from RoboOlympics' own tree, not from this repository), for every task but humanoid soccer, which runs on
+`ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (private to the organization until the owner makes it public: hosts
+without a login cannot pull it). The agent's container of the skill tasks is `python:3.12.14-slim`. CPU only.
 
 ## Licences
 

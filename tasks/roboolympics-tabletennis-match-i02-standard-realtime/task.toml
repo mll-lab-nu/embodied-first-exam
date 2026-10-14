@@ -49,7 +49,7 @@ gpu_class = "none"
 verifier_min_cpus = 7.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "author (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs (air hockey 4), the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only, real time needs the cores"
+measured = "RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only, real time needs the cores"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -71,6 +71,13 @@ measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guar
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 12
+allowed = [12]
+oracle = [12]
 
 [verifier]
 timeout_sec = 1260.0
