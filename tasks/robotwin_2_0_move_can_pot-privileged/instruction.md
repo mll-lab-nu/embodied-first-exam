@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** There is a can and a pot on the table, use one arm to pick up the can and move it to beside the pot.
 
-The scene objects are attributes of the task env (`env.arm_tag`, `env.can`, `env.can_id`, `env.orig_z`, `env.pot`, `env.pot_id`, `env.target_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.arm_tag`, `env.can`, `env.can_id`, `env.orig_z`, `env.pot`, `env.pot_id`; see `load_actors` in
 `/opt/RoboTwin/envs/move_can_pot.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

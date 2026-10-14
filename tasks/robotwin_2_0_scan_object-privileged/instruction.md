@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Pick up the scanner with one arm and the tea box with the other, hold the tea box up in front of the robot, and point the scanner's head at the box from 0 to 7 cm away so it can be scanned. Keep both grippers closed at the end (nothing is put down).
 
-The scene objects are attributes of the task env (`env.left_object_target_pose`, `env.object`, `env.object_id`, `env.right_object_target_pose`, `env.scanner`, `env.scanner_id`; see `load_actors` in
+The scene objects are attributes of the task env (`env.object`, `env.object_id`, `env.scanner`, `env.scanner_id`; see `load_actors` in
 `/opt/RoboTwin/envs/scan_object.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

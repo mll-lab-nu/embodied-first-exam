@@ -9,7 +9,7 @@
 | Family / instance | `place_phone_stand` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.2` |
 
 ## Task
 Standard-mode twin of `robotwin_2_0_place_phone_stand-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
@@ -52,3 +52,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-10 (owner decision, review R2 M1): the instruction now states the success condition the verifier checks (the placement tolerance and the open grippers). The scene, the instance and the pass rule are unchanged, so the task keeps its name; the agent is told more than before, so standard-mode results from before this date are not strictly comparable.
 - 2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this date were obtained with open egress.
 - 2026-10-13 (board 0086): the service's copy of the tooling only (`environment/sim/rcb_traj.py`, one line of `environment/sim/server.py`). The tooling now refuses to save or replay a trajectory of more than 200,000 rows, the privileged verifier's cap; a standard episode has no row cap, so the service lifts it for its own session (`S.max_rows = None`). Nothing an agent sees and nothing the service grades changes.
+- 2026-10-13 (board 0100): base image `eai-robotwin` 0.1.2, whose scrub of RoboTwin's expert also removes the reference poses that `load_actors` computed only for the expert. The standard-mode agent never reaches the env, so nothing it observes changes; the scene, the instance and the judge are unchanged.

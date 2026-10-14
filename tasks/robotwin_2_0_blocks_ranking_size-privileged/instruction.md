@@ -3,7 +3,7 @@
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** There are three blocks on the table, the color of the blocks is random, move the blocks to the center of the table, and arrange them from largest to smallest, from left to right.
 
-The scene objects are attributes of the task env (`env.block1`, `env.block1_target_pose`, `env.block2`, `env.block2_target_pose`, `env.block3`, `env.block3_target_pose`; see `load_actors` in
+The scene objects are attributes of the task env (`env.block1`, `env.block2`, `env.block3`; see `load_actors` in
 `/opt/RoboTwin/envs/blocks_ranking_size.py`). RoboTwin's success predicate is `check_success` in that file:
 ```python
 def check_success(self):

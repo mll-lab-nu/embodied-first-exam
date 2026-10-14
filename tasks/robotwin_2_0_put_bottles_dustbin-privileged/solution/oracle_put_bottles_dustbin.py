@@ -80,6 +80,80 @@ def stage_reward(self):
                 reward += reward_step
         return reward
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (right_middle_pose; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        pose_lst = []
+
+        def create_bottle(model_id):
+            bottle_pose = rand_pose(
+                xlim=[-0.25, 0.3],
+                ylim=[0.03, 0.23],
+                rotate_rand=False,
+                rotate_lim=[0, 1, 0],
+                qpos=[0.707, 0.707, 0, 0],
+            )
+            tag = True
+            gen_lim = 100
+            i = 1
+            while tag and i < gen_lim:
+                tag = False
+                if np.abs(bottle_pose.p[0]) < 0.05:
+                    tag = True
+                for pose in pose_lst:
+                    if (np.sum(np.power(np.array(pose[:2]) - np.array(bottle_pose.p[:2]), 2)) < 0.0169):
+                        tag = True
+                        break
+                if tag:
+                    i += 1
+                    bottle_pose = rand_pose(
+                        xlim=[-0.25, 0.3],
+                        ylim=[0.03, 0.23],
+                        rotate_rand=False,
+                        rotate_lim=[0, 1, 0],
+                        qpos=[0.707, 0.707, 0, 0],
+                    )
+            pose_lst.append(bottle_pose.p[:2])
+            bottle = create_actor(
+                self,
+                bottle_pose,
+                modelname="114_bottle",
+                convex=True,
+                model_id=model_id,
+            )
+
+            return bottle
+
+        self.bottles = []
+        self.bottles_data = []
+        self.bottle_id = [1, 2, 3]
+        self.bottle_num = 3
+        for i in range(self.bottle_num):
+            bottle = create_bottle(self.bottle_id[i])
+            self.bottles.append(bottle)
+            self.add_prohibit_area(bottle, padding=0.1)
+
+        self.dustbin = create_actor(
+            self.scene,
+            pose=sapien.Pose([-0.45, 0, 0], [0.5, 0.5, 0.5, 0.5]),
+            modelname="011_dustbin",
+            convex=True,
+            is_static=True,
+        )
+        self.delay(2)
+        self.right_middle_pose = [0, 0.0, 0.88, 0, 1, 0, 0]
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (play_once, stage_reward,):
     setattr(env, _f.__name__, types.MethodType(_f, env))
