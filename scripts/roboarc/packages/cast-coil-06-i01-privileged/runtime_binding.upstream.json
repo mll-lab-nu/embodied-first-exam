@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "35fc4ffc6bd2ea6a34e98886fa7b2564a7ee9599d650180aa81bd1b2c4d725c6",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/cyl0_prism32_ee4c68fff78c8461.obj": "ee4c68fff78c84613e16887d4f27d0ca24c9ff30c494d8c1f07a7ea741fbe46b",
+    "instance_assets/mujoco/meshes/cyl1_prism32_f21d78cb06eebcab.obj": "f21d78cb06eebcab117b26301a5540010372fa6d627231624299ea07f1ab3f56",
+    "instance_assets/mujoco/scene.json": "dafab65a98d804b46b181f7518d67f2e5e6598f8f92e6ca11e7853824b061962",
+    "instance_assets/mujoco/scene.xml": "d1897fb7d2171b2dc5906446ac93d5d40591749feea80f48e590b9efb4df5d10"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d1eb6f13b637abfdee0d4bb3aaa675b3ff352d6f02a76f856eb9e42b0e8c2d1b",
+    "files": 437
+  },
+  "runtime": {
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  }
+}

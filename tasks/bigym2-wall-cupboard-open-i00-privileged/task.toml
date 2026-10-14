@@ -14,6 +14,7 @@ simulator = "bigym2"               # BiGym 2.0 (bigym 1.0.0 at 93ad4b3): MuJoCo 
 robot = "unitree-g1-dex1"
 family = "wall-cupboard-open"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 # scene = environment/instance.json (upstream's task reset with this seed + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 2.0

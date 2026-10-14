@@ -1,0 +1,46 @@
+{
+ "code": "S01",
+ "task": "S01-CupRouteDelivery",
+ "title": "Cup catch, route pour, rebound recatch and cart delivery",
+ "arms": 1,
+ "summary": "An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds, pour it into the designated one of two raised gravity channels, let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it, catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving.",
+ "robot_setup": "One Panda, base at (-0.55, 0, 0), yaw 0 (facing +x). Its hand carries a blue square cup closed on all four sides: inner 0.14 m x 0.14 m (2 x `tool_half`, `tool_half` = 0.07 m), walls 0.028 m high (`tool_height`) and 5 mm thick, floor 5 mm thick. The tool frame is the centre of the cup's inner floor (top surface of the bottom plate), z up out of the opening, x and y along the walls. A rigid dark-grey adapter on the cup's -x side joins it to the hand: a horizontal bar 0.035 m above the floor (tool-frame x from -0.152 to -0.058) and a short vertical post at the middle of the -x wall (rising 7 mm above the rim and protruding 6 mm into the cup); both are part of the tool. The Panda TCP is at (-0.12, 0, 0.04) in the tool frame, so with the cup level the gripper points straight down just behind the cup's -x wall. At the start the cup is level (tool axes aligned with the world axes), its frame origin at (-0.16, -0.32, 0.23).",
+ "scene": "A small orange ball (radius 18 mm) is thrown upward at t = 0 and falls back down within the first second. Two identical, parallel gravity channels are raised on posts above the table: open-topped grey troughs 0.35 m long with a 0.12 m wide floor between 55 mm high side walls, both running in the -y direction and very nearly level. Route 0 is the channel nearer the robot base, route 1 the farther one. Each channel's upstream (+y) end is closed by an orange end stop; beyond its downstream (-y) end, a little lower, sits an orange rebound plate (0.11 m x 0.13 m, 16 mm thick), tilted so that a ball dropping onto it bounces onward in -y into open space; the plates are very bouncy. A blue open box (the cart, 0.15 m x 0.15 m inside, 0.06 m deep) rides on a straight rail along the world x axis and moves slowly back and forth along it for the whole episode, slowing to a stop at each end of its stroke. The table top is the world's z = 0 plane.",
+ "scene_privileged": "Ball: radius `radius` = 0.018 m, mass `object_mass` = 0.035 kg, restitution `restitution` = 0.1, friction 0.2. At t = 0 it is at (-0.10 + `incoming_speed` x `preview`, y0, 0.38) = (0.1275, y0, 0.38) with velocity (-`incoming_speed`, 0, (0.23 + `tool_height` + `radius` - 0.38 + 4.905 x `preview`^2) / `preview`) = (-0.35, 0, 3.028) m/s, so its ballistic flight passes (-0.10, y0, 0.276), one radius above the start-height cup's rim plane, at t = `preview` = 0.65 s (apex about z = 0.847 m at t = 0.31 s). Random draws at reset, in this order: `route_index` = rng.integers(2) (the designated route), y0 ~ U(-0.34, -0.30) m, cart start offset q0 ~ U(-0.05, 0) m. Route i (i = 0, 1) lies at x = -0.12 (route 0) and x = 0.08 (route 1): static gravity channel whose floor top surface runs from (x, 0.23, `track_height`) to (x, -0.12, `track_height` - `track_drop`) = from z 0.34 to 0.339 m, floor half-width 0.06 m, walls 8 mm thick and 0.055 m tall, friction 0.12; the channel actor includes its support posts. End stop i: static box 0.128 x 0.012 x 0.07 m centred at (x, 0.244, `track_height` + 0.035), restitution 0.05. Rebound plate i: static box 0.11 x 0.13 x 0.016 m centred at (x, -0.165, `rebound_height` = 0.26), rotated +0.35 rad about world x (surface normal (0, -sin 0.35, cos 0.35)), restitution 0.90, friction 0.3. Announced at reset: `goal_goal` = (x of the designated route, 0.23, `track_height`) and `goal_target` = (-0.10, y0, 0.23); `route_index` itself is a flag that is not in the observation. Cart: prismatic fixture, rail centre (-0.25, -0.33, 0.08), axis +x, limits +-0.5 m, moving link mass 0.3 kg, container inner half-size 0.075 m, depth 0.06 m, floor top at the link origin. Drive law (oscillating): target q(t) = q0 + 0.20 sin((`fixture_speed`/0.20) t) = q0 + 0.20 sin(0.2 t) m, velocity target `fixture_speed` cos(0.2 t) (peak `fixture_speed` = 0.04 m/s), PD stiffness 80 N/m, damping 8 N s/m, force limit 8 N; at reset q = q0 and velocity = `fixture_speed`. Period 31.4 s; the commanded speed exceeds 0.02 m/s only for t < 5.24 s and 10.47 s < t < 20.94 s within the 25 s `horizon`. Cup: `tool_mass` = 0.2 kg, `tool_friction` = 0.3, restitution 0.05. Table friction `table_friction` = 0.08.",
+ "phases": [
+  {
+   "name": "incoming_catch",
+   "text": "the ball, after at least 25 ms of free flight (touching nothing), passes downward through the plane 0.046 m above the cup floor (`tool_height` + radius, one radius above the rim) while its centre is within 0.052 m (`tool_half` - radius) of the cup centre in both tool-frame x and y; after that entry it must stay retained in the cup for 0.18 s without interruption. Retained means: in the cup's frame the ball's centre is within 0.0619 m of the centre in x and y (`tool_half` - 0.45 x radius) and between 0.014 m and 0.0258 m above the floor (radius - 4 mm to `tool_height` - 0.12 x radius), the ball touched the cup within the last 25 ms, and it moves at less than 0.09 m/s relative to the cup."
+  },
+  {
+   "name": "selected_route_entry",
+   "text": "the ball touches the designated channel (route 0, the channel nearer the robot's base, or route 1, the farther one, drawn per instance and given under Goal geometry; the channel trough and its supports count, the separate end stop does not) while its centre is at world y > 0.10 m and it is not touching the cup. Touching the other channel at any time during this phase fails the task (wrong_route)."
+  },
+  {
+   "name": "track_and_rebound",
+   "text": "without the ball touching the cup or the table (either fails the task), it touches the rebound plate of the designated route while its centre is at world y < -0.12 m and z > `rebound_height` - 0.005 = 0.255 m."
+  },
+  {
+   "name": "downstream_catch",
+   "text": "the ball is caught in the cup again with the same test as the first catch: at least 25 ms of free flight (counted within this phase), a downward pass through the plane 0.046 m above the cup floor while within 0.052 m of the cup centre in tool-frame x and y, then retained in the cup (same retention conditions) for 0.18 s without interruption."
+  },
+  {
+   "name": "moving_cart_delivery",
+   "text": "the ball rests in the cart: in the cart's frame its centre is within 0.0669 m of the cart centre in x and y (0.075 - 0.45 x radius) and between 0.014 m and 0.0578 m above the cart floor (radius - 4 mm to 0.06 - 0.12 x radius), it touched the cart within the last 25 ms, and it moves at less than 0.09 m/s relative to the cart; it does not touch the cup; and the cart moves along its rail at more than 0.02 m/s (half of `fixture_speed`); all for 0.7 s without interruption. This completes the task."
+  }
+ ],
+ "task_failures": [
+  "wrong_route: during selected_route_entry, the ball touches the channel that was not designated.",
+  "missed_gravity_route: during track_and_rebound, the ball touches the table.",
+  "caught_before_required_rebound: during track_and_rebound, the ball touches the cup."
+ ],
+ "contact_rules": "Only the cup (including its adapter) may touch anything, and it may touch only the ball: touching the channels, end stops, rebound plates, the cart or its rail, or the table is forbidden. No other part of the robot, the fingers included, may touch anything, the ball included.",
+ "world_goals_fixed": "Route-entry line: ball centre at world y > 0.10 m (selected_route_entry). Rebound check: ball centre at world y < -0.12 m and z > 0.255 m (track_and_rebound).",
+ "world_goals_seeded": "`goal_goal` (the upstream end point of the designated channel, on its centreline at track height; it reveals which route was drawn) and `goal_target` (the catch point at the cup's start height, at the ball's seeded lateral coordinate y0) are announced at reset: privileged mode only. The route choice itself (`route_index`) is drawn at reset.",
+ "difficulty_note": "The first catch has to be ready within the first second, the second catch follows an uncontrolled roll and bounce whose timing depends on how the ball was poured, and the cart's oscillation leaves only limited time windows in which it moves fast enough for the final hold.",
+ "standard_notes": "The ball is already flying upward at t = 0 and lands in under a second, so watch the first frames in short steps. The cart keeps moving back and forth for the whole episode and slows to a stop at the ends of its stroke. The two channels look the same and nothing marks the designated one: it is given under Goal geometry.",
+ "instance_goal": {
+  "seed": 0,
+  "text": "At this instance the designated route is route 1: of the two parallel channels, the one farther from the robot's base (the +x one). Touching the other channel during selected_route_entry fails the task (`wrong_route`)."
+ }
+}

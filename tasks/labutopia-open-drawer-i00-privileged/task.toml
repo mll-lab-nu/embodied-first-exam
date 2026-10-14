@@ -15,6 +15,7 @@ simulator = "labutopia"           # LabUtopia @ 8df7278 on NVIDIA Isaac Sim 6.1.
 robot = "franka-panda"
 family = "open_drawer"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 level = 1                         # LabUtopia's own level for the task (config level1_open_drawer)
 instance_seed = 2                 # numpy's and Python's random generators before LabUtopia's reset

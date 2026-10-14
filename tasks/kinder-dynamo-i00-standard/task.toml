@@ -26,6 +26,7 @@ simulator = "kinder"
 robot = "tidybot-plus-plus"
 family = "dynamo"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 4.0

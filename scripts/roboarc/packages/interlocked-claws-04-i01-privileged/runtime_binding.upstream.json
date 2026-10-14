@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "56830b38d9a6aef7800764677ec45b2a59157bf8b220d6416b6115eff4eccd02",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/cyl0_prism32_a56e7fbf3e495659.obj": "a56e7fbf3e495659c28cceafa5df4ffb729c677b54fc86ca7771b4846f713421",
+    "instance_assets/mujoco/meshes/cyl10_prism32_226f851333a32d3b.obj": "226f851333a32d3bf12a4a758bbc10025009d19246ab8125c16cb06f15984bd6",
+    "instance_assets/mujoco/meshes/cyl11_prism32_7e575c26180d6e39.obj": "7e575c26180d6e395a0e3472f9d68a04be3f16070ad585b0da3349be45a890e4",
+    "instance_assets/mujoco/meshes/cyl1_prism32_fb6d1b62df84c7d4.obj": "fb6d1b62df84c7d4749aae463209ba1ead6bee62c705954e7e24aab18cb74710",
+    "instance_assets/mujoco/meshes/cyl4_prism32_5cec7a6fe2b5614a.obj": "5cec7a6fe2b5614addd18b96b668eff1d4ffc4798b76947c342d12641e033267",
+    "instance_assets/mujoco/meshes/cyl6_prism32_c2db35241f3367bd.obj": "c2db35241f3367bde41680f52a3250df90e1f4c9522fb7ee1633b3501ae239dd",
+    "instance_assets/mujoco/meshes/cyl7_prism32_72379f42a9573bb5.obj": "72379f42a9573bb595e5a00c9f9ebbcf9a6ce987b23a23b7474791186fc8be69",
+    "instance_assets/mujoco/meshes/cyl8_prism32_4e6a4e83dd0fb848.obj": "4e6a4e83dd0fb848a903e880aade7c644bbee69fdc3c1c60433b3ea7fa18a773",
+    "instance_assets/mujoco/meshes/cyl9_prism32_0087e74e24aea237.obj": "0087e74e24aea237d32ec7054babefba1d3250f24707d5817b5e9988b4d9c7f8",
+    "instance_assets/mujoco/meshes/goal_region_b64bed3302647867.obj": "b64bed330264786784bd6dbcb8630f92148f72f04412355ca3aae7d221cf3e75",
+    "instance_assets/mujoco/scene.json": "140cf21dff8c674d368423274665fe521614e8a6c86c88e8d547b024db99981a",
+    "instance_assets/mujoco/scene.xml": "1d8efc14ec652fb297c1149a7cab8dd7f3a2e79deca0a6e3fa5dd559ab675863"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d601866b4c91c858aa4e249b5bf5145b8fe3263b2885048a86016e34c314c208",
+    "files": 444
+  },
+  "runtime": {
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  }
+}

@@ -16,6 +16,7 @@ simulator = "robosuite"
 robot = "franka-panda"
 family = "libero-max/libero_10/obstacle_insertion"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 195             # LIBERO-MAX's policy seed for the case (the scene is the frozen LIBERO-PRO initial state)
 expert_time_estimate_hours = 1.0
