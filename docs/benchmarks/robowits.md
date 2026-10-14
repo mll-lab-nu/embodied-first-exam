@@ -232,6 +232,9 @@ licensed to whoever downloads them, never in the image or the repository (`image
   runs, and `ee_pose` rows that take longer than counted (up to 400 control steps each) stop adding frames there
   (`meta["frames_skipped"]`; `scripts/robowits/tests/test_server_frames.py`). Until 2026-10-10 there was no limit: a
   long chunk or watch with per-frame video or depth of three cameras could exhaust the sidecar's memory.
+- `ball_into_bottle`: the red bottle's base collides as a thin shell (about 3.5 mm), so a ball that falls fast down the
+  bottle can pass through it onto the table (board 0086: 9 of 16 slightly perturbed replays of one pour). The
+  instruction says so since 2026-10-14; a thicker collision base would change the frozen scene and has not been made.
 - During the standard service's in-process grading replay, a late `/status` reports the replay's counter.
 - The predicates are RoboWits' own and some are looser than their task text (the criterion sections say where); the
   review checks each family's predicate (PROTOCOL §2.7).

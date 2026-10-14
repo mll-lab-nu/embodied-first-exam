@@ -1,7 +1,7 @@
 # RoboLab · recycle_cartons_vertical_crate — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the cartons that can be recycled in the vertical crate. Success: The milk carton and the orange juice carton must end inside the vertical crate in the centre of the table and the gripper must touch neither. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the cartons that can be recycled in the vertical crate. Success: The milk carton and the orange juice carton must end inside the vertical crate in the centre of the table and, at that moment, the gripper must touch neither (let go of both at the end). "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the

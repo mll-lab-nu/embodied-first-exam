@@ -157,8 +157,15 @@ _MICRO_DOOR = (
     "the microwave only registers a button while its door is closed (at most 0.5% open), and opening the door "
     "switches it off"
 )
+# The sink's faucet handle has two hinges at one pivot (RoboCasa's sink models, read from the frozen scenes): the water
+# on / off hinge `<sink>_handle_joint` (range 0-0.52 rad) and the temperature hinge `<sink>_handle_temp_joint`
+# (about +-0.79 rad); their axes differ between sink models (board 0086: runs moved the wrong hinge, or pressed down).
+_HANDLE = ("the handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.52 rad (so 0.40 rad "
+           "is near the end of its travel), and a temperature hinge (about ±0.79 rad) that moves the handle in another "
+           "direction and never turns the water on or off; which way each hinge turns depends on the sink model")
 _WATER_ON = (
-    "the water is on: the faucet handle's angle (mod 360°) is between 0.40 rad (about 23°) and π from its off position"
+    "the water is on: the faucet handle's angle on its on / off hinge (mod 360°) is between 0.40 rad (about 23°) and π "
+    "from its off position (" + _HANDLE + ")"
 )
 _KNOB = "0.35 rad (about 20°)"
 
@@ -235,8 +242,9 @@ SUCCESS = {
         "the gripper's grip site is more than 15 cm from the stop button: move the hand away after pressing",
     ],
     "TurnOffSinkFaucet": [
-        "the water is off: the faucet handle's angle (mod 360°) is outside 0.40 rad (about 23°) to π from its off "
-        "position, i.e. lowered back to below 0.40 rad"
+        "the water is off: the faucet handle's angle on its on / off hinge (mod 360°) is outside 0.40 rad (about 23°) "
+        "to π from its off position, i.e. turned back toward 0 to below 0.40 rad (it starts at about 0.47 rad; "
+        + _HANDLE + "; what counts is that hinge's angle, not how high the handle is)"
     ],
     "TurnOffStove": ["the front right burner's knob is within " + _KNOB + " of its off position"],
     "TurnOnMicrowave": [

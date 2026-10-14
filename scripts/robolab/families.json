@@ -1,5 +1,5 @@
 {
- "_doc": "RoboLab families for scripts/robolab/mk_tasks.py (one entry per RoboLab benchmark task that has tasks here; tasks = true: generated into tasks/ in both modes). Frozen instances: instances/<family>.json; oracle inputs: oracles/<family>/.",
+ "_doc": "RoboLab families for scripts/robolab/mk_tasks.py (one entry per RoboLab benchmark task that has tasks here; tasks = true: generated into tasks/ in both modes). Frozen instances: instances/<family>.json; oracle inputs: oracles/<family>/. change_log (optional): README Change Log entries of the family's standard task alone, after those of every task.",
  "families": {
   "apple_and_yogurt_in_bowl": {
    "tasks": true,
@@ -28,7 +28,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"apple_01\", \"yogurt_cup\"],\n            \"container\": \"wooden_bowl\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: affordance); its success term (`object_in_container`) asks for 2 objects into wooden_bowl. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the apple and yogurt in the bowl. Success: The red apple and the small yogurt cup must end inside the wooden bowl and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the apple and yogurt in the bowl. Success: The red apple and the small yogurt cup must end inside the wooden bowl and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a ceramic mug, a pair of eyeglasses, a keyboard, a whiteboard marker, a remote control, a smartphone, a wooden bowl, a metal spoon, a computer mouse, a yogurt cup, a pitcher, a plastic pail (trash bin) and a red apple. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -46,6 +46,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/apple_and_yogurt_in_bowl/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/apple_and_yogurt_in_bowl/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "banana_in_bowl": {
@@ -110,7 +113,7 @@
    "terms": "class Terminations:\n    \"\"\"Termination configuration for banana task.\"\"\"\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n\n    success = DoneTerm(\n        func=objects_placed_in_container_in_order,\n        params={\n            \"objects\": [\"banana\", \"rubiks_cube\"],\n            \"container\": \"bowl\",\n            \"tolerance\": 0.0,\n            \"require_contact_with\": True,\n            \"require_gripper_detached\": True,\n        },\n    )",
    "note": "`objects_placed_in_container_in_order` is stateful: it latches the first control step at which each object is placed, and a later removal does not erase it, so the order of the first placements decides.",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: conjunction); its success term (`objects_placed_in_container_in_order`) asks for 2 objects into bowl in a given order. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the banana then the cube in the bowl. Success: The yellow banana and then the Rubik's cube must end inside the bowl, both touching it, and the gripper must touch neither. Order counts: the service remembers the first moment each object is placed and a later removal does not erase it, so if the Rubik's cube is placed first the episode can no longer succeed. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the banana then the cube in the bowl. Success: The yellow banana and then the Rubik's cube must end inside the bowl, both touching it, and, at that moment, the gripper must touch neither (let go of both at the end). Order counts: the service remembers the first moment each object is placed and a later removal does not erase it, so if the Rubik's cube is placed first the episode can no longer succeed. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a bowl, a Rubik's cube and a banana. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "objects_placed_in_container_in_order",
@@ -140,6 +143,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/banana_then_rubiks_cube/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/banana_then_rubiks_cube/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "bananas_in_bin_one_more": {
@@ -162,7 +168,7 @@
    "terms": "class ChooseOneBananaInBin:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\"object\": [\"banana\", \"banana_01\", \"banana_03\"], \"container\": \"grey_bin\", \"logical\": \"choose\", \"K\": 1, \"require_gripper_detached\": True, 'require_contact_with': False})",
    "note": "`logical=\"choose\"` with `K=1` means exactly 1 of the listed objects (`evaluate_logicals` in `/opt/robolab/robolab/core/task/predicate_logic.py`): more than 1 fails as well.",
    "difficulty": "RoboLab labels this task \"moderate\" (1 subtasks; attributes: semantics, counting); its success term (`object_in_container`) asks for exactly one of the three bananas outside the grey bin moved into it (no more). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put one (1) more bananas in the grey bin. Success: Exactly 1 of the three bananas that start outside the grey bin (no more, no fewer) must end inside the grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put one (1) more bananas in the grey bin. Success: Exactly 1 of the three bananas that start outside the grey bin (no more, no fewer) must end inside the grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: five bananas and a grey bin. Two of the five bananas already lie in the grey bin, which stands on the robot's right (-y); they do not count, whatever happens to them. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -180,6 +186,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/bananas_in_bin_one_more/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/bananas_in_bin_one_more/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "bananas_in_bin_three_total": {
@@ -202,7 +211,7 @@
    "terms": "class BananasInBinTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\"object\": [\"banana\", \"banana_01\", \"banana_03\"], \"container\": \"grey_bin\", \"logical\": \"choose\", \"K\": 1, \"require_gripper_detached\": True, 'require_contact_with': False})",
    "note": "`logical=\"choose\"` with `K=1` means exactly 1 of the listed objects (`evaluate_logicals` in `/opt/robolab/robolab/core/task/predicate_logic.py`): more than 1 fails as well.",
    "difficulty": "RoboLab labels this task \"moderate\" (1 subtasks; attributes: semantics, counting); its success term (`object_in_container`) asks for exactly one of the three bananas outside the grey bin moved into it (no more). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Make sure there are 3 (three) bananas in the grey bin. Success: Exactly 1 of the three bananas that start outside the grey bin (no more, no fewer) must end inside the grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Make sure there are 3 (three) bananas in the grey bin. Success: Exactly 1 of the three bananas that start outside the grey bin (no more, no fewer) must end inside the grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: five bananas and a grey bin. Two of the five bananas already lie in the grey bin, which stands on the robot's right (-y); they do not count, whatever happens to them. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -220,6 +229,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/bananas_in_bin_three_total/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/bananas_in_bin_three_total/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "bananas_out_of_bin": {
@@ -242,7 +254,7 @@
    "terms": "class BananasOutOfBinTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_outside_of,\n        params={\"object\": [\"banana_02\", \"banana_04\"], \"container\": \"grey_bin\", \"logical\": \"all\", \"tolerance\": 0.00, \"require_gripper_detached\": True}\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: semantics, spatial); its success term (`object_outside_of`) asks for 2 objects out of grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Take the bananas out. Success: Both bananas that start inside the grey bin must end outside the grey bin, and the gripper must touch neither. \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis.",
+   "standard_goal": "Take the bananas out. Success: Both bananas that start inside the grey bin must end outside the grey bin, and, at that moment, the gripper must touch neither (let go of both at the end). \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis.",
    "standard_objects": "Objects here: five bananas and a grey bin. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_outside_of",
@@ -272,6 +284,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/bananas_out_of_bin/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/bananas_out_of_bin/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "bbq_sauce_in_bin": {
@@ -300,7 +315,7 @@
    "terms": "class BBQSauceInBinTerminations:\n    \"\"\"Termination configuration for BBQ sauce in bin task.\"\"\"\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"bbq_sauce_bottle\", \"bbq_sauce_bottle_01\"],\n            \"container\": \"grey_bin\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: color, semantics); its success term (`object_in_container`) asks for 2 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the red BBQ sauce bottles in the grey bin. Success: Both red BBQ sauce bottles must end inside the grey bin and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the red BBQ sauce bottles in the grey bin. Success: Both red BBQ sauce bottles must end inside the grey bin and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a grey bin, a mug, a mustard bottle, a bowl, a ranch dressing bottle, two red BBQ sauce bottles, a box of oatmeal raisin cookies, a tuna can, a Soft Scrub bottle, a wooden block and a coffee pot. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -318,6 +333,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/bbq_sauce_in_bin/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/bbq_sauce_in_bin/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "block_stacking_order_agnostic": {
@@ -445,7 +463,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"yellow_block\", \"red_block\", \"green_block\", \"blue_block\"],\n            \"container\": \"grey_bin\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"complex\" (4 subtasks; attributes: sorting); its success term (`object_in_container`) asks for 4 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Sort all colored blocks into the bin. Success: The four coloured blocks (yellow, red, green, blue) must end inside the grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Sort all colored blocks into the bin. Success: The four coloured blocks (yellow, red, green, blue) must end inside the grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: three Rubik's cubes, a grey bin, two green lizard figurines, a birdhouse, a yellow block, a red block, a green block and a blue block. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -475,6 +493,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "butter_above_raisin": {
@@ -544,7 +565,7 @@
    "terms": "class ClutterPlasticTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [ \"whitepackerbottle_a01\", \"milkjug_a01\",\"utilityjug_a03\"], \"container\": \"right_bin\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (3 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 3 objects into right_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put all plastic bottles away in the bin. Success: The three plastic bottles (the small white plastic bottle, the milk jug and the utility jug) must end inside the blue bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put all plastic bottles away in the bin. Success: The three plastic bottles (the small white plastic bottle, the milk jug and the utility jug) must end inside the blue bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: two lemons, two limes, two oranges, a pomegranate, a large pumpkin, a small pumpkin, a small white plastic bottle, an avocado, a crab-shaped pen holder, a milk jug, a serving bowl, a utility jug, a blue bin and a red onion. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -562,6 +583,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/clutter_plastic/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/clutter_plastic/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "clutter_pumpkin": {
@@ -595,7 +619,7 @@
    "terms": "class ClutterPumpkinTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [\"pumpkinlarge\", \"pumpkinsmall\"], \"container\": \"right_bin\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 2 objects into right_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put all the pumpkins away in the bin. Success: The large and the small pumpkin must end inside the blue bin and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put all the pumpkins away in the bin. Success: The large and the small pumpkin must end inside the blue bin and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: two lemons, two limes, two oranges, a pomegranate, a large pumpkin, a small pumpkin, a small white plastic bottle, an avocado, a crab-shaped pen holder, a milk jug, a serving bowl, a utility jug, a blue bin and a red onion. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -613,6 +637,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/clutter_pumpkin/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/clutter_pumpkin/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "condiments_in_bin": {
@@ -641,7 +668,7 @@
    "terms": "class CondimentsInBinTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"mustard\", \"ranch_dressing\", \"bbq_sauce_bottle\", \"bbq_sauce_bottle_01\"],\n            \"container\": \"grey_bin\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"complex\" (4 subtasks; attributes: semantics, sorting); its success term (`object_in_container`) asks for 4 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Sort the sauce condiments into the grey bin. Success: The four sauce bottles (the mustard, the ranch dressing and both red BBQ sauce bottles) must end inside the grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Sort the sauce condiments into the grey bin. Success: The four sauce bottles (the mustard, the ranch dressing and both red BBQ sauce bottles) must end inside the grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a grey bin, a mug, a mustard bottle, a bowl, a ranch dressing bottle, two red BBQ sauce bottles, a box of oatmeal raisin cookies, a tuna can, a Soft Scrub bottle, a wooden block and a coffee pot. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -659,6 +686,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/condiments_in_bin/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/condiments_in_bin/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "cooking_clear_plate": {
@@ -690,7 +720,7 @@
    "terms": "class CookingClearPlateTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_outside_of,\n        params={\"object\": [\"spoon_1\", \"measuring_cups_1\"], \"container\": \"clay_plates\", \"logical\": \"all\", \"tolerance\": 0.0, \"require_gripper_detached\": True}\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: color, sorting); its success term (`object_outside_of`) asks for 2 objects out of clay_plates. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the two measuring cups outside of the plate. Success: The orange measuring cup and the small blue measuring scoop, which start on the clay plate, must end outside the clay plate, and the gripper must touch neither. \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis.",
+   "standard_goal": "Put the two measuring cups outside of the plate. Success: The orange measuring cup and the small blue measuring scoop, which start on the clay plate, must end outside the clay plate, and, at that moment, the gripper must touch neither (let go of both at the end). \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis.",
    "standard_objects": "Objects here: a red onion, a serving bowl, a flat clay plate, a wooden spatula, a spatula, two utensil holders, a tomato sauce can, an orange measuring cup, a pink spaghetti spoon, a small blue measuring scoop, a green serving spoon, a ladle, a wooden bowl and a potato masher. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_outside_of",
@@ -720,6 +750,9 @@
      "site_log": null,
      "hf_replay": null
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "cubes_and_blocks_in_bin": {
@@ -747,7 +780,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\n                \"rubiks_cube\", \"rubiks_cube_1\", \"rubiks_cube_2\",\n                \"yellow_block\", \"red_block\", \"green_block\", \"blue_block\"\n            ],\n            \"container\": \"grey_bin\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"complex\" (7 subtasks; attributes: sorting, conjunction); its success term (`object_in_container`) asks for 7 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put all the cubes and blocks in the bin. Success: The seven cubes (the three Rubik's cubes and the four coloured blocks (yellow, red, green, blue)) must end inside the grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put all the cubes and blocks in the bin. Success: The seven cubes (the three Rubik's cubes and the four coloured blocks (yellow, red, green, blue)) must end inside the grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: three Rubik's cubes, a grey bin, two green lizard figurines, a birdhouse, a yellow block, a red block, a green block and a blue block. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -777,6 +810,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/cubes_and_blocks_in_bin/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/cubes_and_blocks_in_bin/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "food_packing2_cans": {
@@ -799,7 +835,7 @@
    "terms": "class FoodPacking2CansTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [ \"tomato_soup_can\", \"tuna_can\"], \"container\": \"bin_a06\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 2 objects into bin_a06. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Pack canned foods into the bin. Success: Both cans (the tomato soup can and the tuna can) must end inside the dark grey bin and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Pack canned foods into the bin. Success: Both cans (the tomato soup can and the tuna can) must end inside the dark grey bin and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a dark grey bin, a Cheez-It box, a mustard bottle, a sugar box, a tomato soup can and a tuna can. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -817,6 +853,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/food_packing2_cans/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/food_packing2_cans/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "food_packing3_cans": {
@@ -841,7 +880,7 @@
    "terms": "class FoodPacking3CansTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [ \"spam_can\", \"tomato_soup_can\", \"tuna_can\"], \"container\": \"bin_a06\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (3 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 3 objects into bin_a06. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Pack canned foods into the bin. Success: The three cans (the Spam can, the tomato soup can and the tuna can) must end inside the dark grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Pack canned foods into the bin. Success: The three cans (the Spam can, the tomato soup can and the tuna can) must end inside the dark grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a dark grey bin, a Cheez-It box, a chocolate pudding box, a mustard bottle, a Spam can, a sugar box, a tomato soup can and a tuna can. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -859,6 +898,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/food_packing3_cans/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/food_packing3_cans/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "fruits_green_limes_on_plate": {
@@ -890,7 +932,7 @@
    "terms": "class FruitsGreenLimesOnPlateTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_on_top,\n        params={\"object\": [\"lime01\", \"lime01_01\"], \"reference_object\": \"clay_plates\", \"logical\": \"all\", \"require_gripper_detached\": True}\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: color); its success term (`object_on_top`) asks for 2 objects onto clay_plates. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put all the green fruit on the plate. Success: Both green limes must end on the flat beige plate, and the gripper must touch neither. \"On\" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.",
+   "standard_goal": "Put all the green fruit on the plate. Success: Both green limes must end on the flat beige plate, and, at that moment, the gripper must touch neither (let go of both at the end). \"On\" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.",
    "standard_objects": "Objects here: two lemons, two limes, two oranges, a pomegranate, a large pumpkin, a small pumpkin, a red onion, a serving bowl, a flat clay plate, a wooden spatula, a spatula and a utensil holder. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_on_top",
@@ -908,6 +950,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/fruits_green_limes_on_plate/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/fruits_green_limes_on_plate/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "fruits_on_plate3": {
@@ -939,7 +984,7 @@
    "terms": "class FruitsOnPlate3Terminations:\n    \"\"\"Termination configuration for banana task.\"\"\"\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_on_top,\n        params={\"object\": [\"lemon_01\", \"lemon_02\", \"lime01\", \"lime01_01\", \"orange_01\", \"orange_02\", \"pomegranate01\"], \"reference_object\": \"clay_plates\", \"logical\": \"choose\", \"K\": 3, \"require_gripper_detached\": True}\n    )",
    "note": "`logical=\"choose\"` with `K=3` means exactly 3 of the listed objects (`evaluate_logicals` in `/opt/robolab/robolab/core/task/predicate_logic.py`): more than 3 fails as well.",
    "difficulty": "RoboLab labels this task \"complex\" (3 subtasks; attributes: semantics, vague, counting); its success term (`object_on_top`) asks for exactly 3 of 7 objects onto clay_plates. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put three (3) fruits on the plate. Success: Exactly 3 of the seven fruits (both lemons, both limes, both oranges, the pomegranate) (no more, no fewer) must end on the flat beige plate, and the gripper must touch none of them. \"On\" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.",
+   "standard_goal": "Put three (3) fruits on the plate. Success: Exactly 3 of the seven fruits (both lemons, both limes, both oranges, the pomegranate) (no more, no fewer) must end on the flat beige plate, and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"On\" means the surface supports the object (the contact force it exerts on the object points upwards, within 45 deg of vertical) and the object's centre lies over the surface's bounding-box footprint, +/- 1 cm.",
    "standard_objects": "Objects here: two lemons, two limes, two oranges, a pomegranate, a large pumpkin, a small pumpkin, a red onion, a serving bowl, a flat clay plate, a wooden spatula, a spatula and a utensil holder. One orange already lies on the plate. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_on_top",
@@ -969,6 +1014,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/fruits_on_plate3/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/fruits_on_plate3/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "keyboard_out_of_bin": {
@@ -1416,7 +1464,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"whitepackerbottle_a01\", \"whitepackerbottle_a02\", \"whitepackerbottle_a03\"],\n            \"container\": \"squarepail_a01\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"complex\" (3 subtasks; attributes: semantics, sorting, size); its success term (`object_in_container`) asks for 3 objects into squarepail_a01. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put all the small plastic bottles in the square pail. Success: The three small white plastic bottles must end inside the square pail and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put all the small plastic bottles in the square pail. Success: The three small white plastic bottles must end inside the square pail and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: three small white plastic bottles, two utility jugs, a square pail and a plastic pail (trash bin). The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -1434,6 +1482,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/plastic_bottles_in_square_pail/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/plastic_bottles_in_square_pail/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "put_two_mugs_on_shelf": {
@@ -1458,7 +1509,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [\"ceramic_mug\", \"mug\", \"mug_01\"], \"container\": \"wireshelving_a01\", \"require_contact_with\": True, \"require_gripper_detached\": True, \"logical\": \"choose\", \"K\": 2})",
    "note": "`logical=\"choose\"` with `K=2` means exactly 2 of the listed objects (`evaluate_logicals` in `/opt/robolab/robolab/core/task/predicate_logic.py`): more than 2 fails as well.",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: affordance, spatial, counting); its success term (`object_in_container`) asks for exactly 2 of 3 objects into wireshelving_a01. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put two (2) mugs on the wire shelf. Success: Exactly 2 of the three mugs (no more, no fewer) must end on the wire shelf, touching it, and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally). (RoboLab checks \"on\" the wire shelf this way.)",
+   "standard_goal": "Put two (2) mugs on the wire shelf. Success: Exactly 2 of the three mugs (no more, no fewer) must end on the wire shelf, touching it, and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally). (RoboLab checks \"on\" the wire shelf this way.)",
    "standard_objects": "Objects here: a wire shelf, a spatula, a small plate, a large fork, a small fork, a ceramic mug and two mugs. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -1476,6 +1527,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/put_two_mugs_on_shelf/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/put_two_mugs_on_shelf/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "recycle_carton": {
@@ -1500,7 +1554,7 @@
    "terms": "class RecycleCartonTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [\"milk_carton\", \"orange_juice_carton\"], \"container\": \"container_a01\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: semantics, vague); its success term (`object_in_container`) asks for 2 objects into container_a01. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the recyclable cartons in the grey bin. Success: The milk carton and the orange juice carton must end inside the grey bin in the centre of the table and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the recyclable cartons in the grey bin. Success: The milk carton and the orange juice carton must end inside the grey bin in the centre of the table and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: an alphabet soup can, a milk carton, an orange juice carton, a smartphone, a mug, a container, a mayonnaise bottle and a ketchup bottle. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -1518,6 +1572,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/recycle_carton/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/recycle_carton/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "recycle_cartons_vertical_crate": {
@@ -1542,7 +1599,7 @@
    "terms": "class RecycleCartonsVerticalCrateTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_inside, params={\"object\": [\"milk_carton\", \"orange_juice_carton\"], \"container\": \"container_a01\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: semantics, spatial); its success term (`object_inside`) asks for 2 objects into container_a01. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the cartons that can be recycled in the vertical crate. Success: The milk carton and the orange juice carton must end inside the vertical crate in the centre of the table and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the cartons that can be recycled in the vertical crate. Success: The milk carton and the orange juice carton must end inside the vertical crate in the centre of the table and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: an alphabet soup can, a milk carton, an orange juice carton, a smartphone, a mug, a container, a mayonnaise bottle and a ketchup bottle. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_inside",
@@ -1560,6 +1617,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/recycle_cartons_vertical_crate/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/recycle_cartons_vertical_crate/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "red_dishes_in_bin": {
@@ -1581,7 +1641,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_in_container, params={\"object\": [\"mug\", \"bowl\"], \"container\": \"grey_bin\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: color, semantics); its success term (`object_in_container`) asks for 2 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the red dishware in the grey bin. Success: The red mug and the red bowl must end inside the grey bin and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the red dishware in the grey bin. Success: The red mug and the red bowl must end inside the grey bin and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a bowl, a Rubik's cube, a banana, a grey bin and a mug. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -1599,6 +1659,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/red_dishes_in_bin/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/red_dishes_in_bin/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "reorient_red_mug": {
@@ -1671,7 +1734,7 @@
    "terms": "class RubiksCubeAndBananaTerminations:\n    \"\"\"Termination configuration for banana task.\"\"\"\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\"object\": [\"rubiks_cube\", \"banana\"], \"container\": \"bowl\", \"logical\": \"all\", \"tolerance\": 0.0, \"require_contact_with\": True, \"require_gripper_detached\": True}\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: conjunction); its success term (`object_in_container`) asks for 2 objects into bowl. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the cube and the banana in the bowl. Success: The Rubik's cube and the yellow banana must end inside the bowl, touching it, and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the cube and the banana in the bowl. Success: The Rubik's cube and the yellow banana must end inside the bowl, touching it, and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a bowl, a Rubik's cube and a banana. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -1689,6 +1752,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/rubiks_cube_and_banana/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/rubiks_cube_and_banana/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "rubiks_cube_behind_bowl": {
@@ -1914,7 +1980,7 @@
    "terms": "class Terminations:\n    \"\"\"Termination configuration for banana task.\"\"\"\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n\n    success = DoneTerm(\n        func=objects_placed_in_container_in_order,\n        params={\n            \"objects\": [\"rubiks_cube\", \"banana\"],\n            \"container\": \"bowl\",\n            \"tolerance\": 0.0,\n            \"require_contact_with\": True,\n            \"require_gripper_detached\": True,\n        },\n    )",
    "note": "`objects_placed_in_container_in_order` is stateful: it latches the first control step at which each object is placed, and a later removal does not erase it, so the order of the first placements decides.",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: conjunction); its success term (`objects_placed_in_container_in_order`) asks for 2 objects into bowl in a given order. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the cube then the banana in the bowl. Success: The Rubik's cube and then the yellow banana must end inside the bowl, both touching it, and the gripper must touch neither. Order counts: the service remembers the first moment each object is placed and a later removal does not erase it, so if the yellow banana is placed first the episode can no longer succeed. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the cube then the banana in the bowl. Success: The Rubik's cube and then the yellow banana must end inside the bowl, both touching it, and, at that moment, the gripper must touch neither (let go of both at the end). Order counts: the service remembers the first moment each object is placed and a later removal does not erase it, so if the yellow banana is placed first the episode can no longer succeed. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a bowl, a Rubik's cube and a banana. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "objects_placed_in_container_in_order",
@@ -1932,6 +1998,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/rubiks_cube_then_banana/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/rubiks_cube_then_banana/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "rubiks_cubes_in_bin": {
@@ -1959,7 +2028,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"rubiks_cube\", \"rubiks_cube_1\", \"rubiks_cube_2\"],\n            \"container\": \"grey_bin\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"complex\" (3 subtasks; attributes: sorting); its success term (`object_in_container`) asks for 3 objects into grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Sort all rubiks cubes into the bin. Success: The three Rubik's cubes must end inside the grey bin and the gripper must touch none of them. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Sort all rubiks cubes into the bin. Success: The three Rubik's cubes must end inside the grey bin and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: three Rubik's cubes, a grey bin, two green lizard figurines, a birdhouse, a yellow block, a red block, a green block and a blue block. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -1989,6 +2058,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/rubiks_cubes_in_bin/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/rubiks_cubes_in_bin/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "spoon_in_mug": {
@@ -2216,7 +2288,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_outside_of_and_on_surface, params={\"object\": [\"ceramic_mug\", \"mug\"], \"container\": \"rack_l04\", \"surface\": \"table\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: semantics, affordance); its success term (`object_outside_of_and_on_surface`) asks for 2 objects out of rack_l04. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Take the mugs off the shelf. Success: Both mugs on the shelf must end outside the shelf and standing on the table, and the gripper must touch neither. \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. \"On the table\" means the table supports it (its contact force points upwards, within 45 deg of vertical).",
+   "standard_goal": "Take the mugs off the shelf. Success: Both mugs on the shelf must end outside the shelf and standing on the table, and, at that moment, the gripper must touch neither (let go of both at the end). \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. \"On the table\" means the table supports it (its contact force points upwards, within 45 deg of vertical).",
    "standard_objects": "Objects here: a ceramic mug, a mug, a shelf, a serving bowl and a utility jug. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_outside_of_and_on_surface",
@@ -2234,6 +2306,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_mugs_off_of_shelf/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/take_mugs_off_of_shelf/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "take_spatula_off_shelf": {
@@ -2317,7 +2392,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"apple_01\", \"yogurt_cup\"],\n            \"container\": \"plasticpail_a02\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (2 subtasks; attributes: semantics); its success term (`object_in_container`) asks for 2 objects into plasticpail_a02. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put away the snacks in the bin. Success: The red apple and the yogurt cup must end inside the plastic pail (the trash bin) and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put away the snacks in the bin. Success: The red apple and the yogurt cup must end inside the plastic pail (the trash bin) and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a ceramic mug, a pair of eyeglasses, a keyboard, a whiteboard marker, a remote control, a smartphone, a wooden bowl, a metal spoon, a computer mouse, a yogurt cup, a pitcher, a plastic pail (trash bin) and a red apple. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -2347,6 +2422,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/throw_away_snacks/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/throw_away_snacks/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "tools_picking_drill": {
@@ -2374,7 +2452,7 @@
    "terms": "class ToolsPickingDrillTerminations:\n    \"\"\"Termination configuration for drill picking task.\"\"\"\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_outside_of_and_on_surface,\n        params={\"object\": [\"cordless_drill\"], \"container\": \"left_bin\", \"surface\": \"table\", \"logical\": \"all\", \"tolerance\": 0.0, \"require_gripper_detached\": True}\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"simple\" (1 subtasks; attributes: spatial, semantics); its success term (`object_outside_of_and_on_surface`) asks for the cordless drill, which starts in the right bin, set on the table (the success term: outside the left bin and on the table). The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Select the cordless drill and put it on the table. Success: The cordless drill must end outside the left bin and resting on the table, and the gripper must no longer touch it. \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. \"On the table\" means the table supports it (its contact force points upwards, within 45 deg of vertical).",
+   "standard_goal": "Select the cordless drill and put it on the table. Success: The cordless drill must end outside the left bin and resting on the table, and the gripper must no longer touch it. (RoboLab's term names the left bin although the drill starts in the right bin: the drill has to come out of its bin and rest on the table itself.) \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. \"On the table\" means the table supports it (its contact force points upwards, within 45 deg of vertical).",
    "standard_objects": "Objects here: two clamps, a cordless drill, a spring clamp, three bins, a black hammer, a wooden hammer, a red hammer and a blue hammer. Three dark grey bins stand side by side at the far edge of the table: the left one (on the robot's left, +y) holds the four hammers, the middle one the clamps, the right one (on the robot's right, -y) the cordless drill. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_outside_of_and_on_surface",
@@ -2392,6 +2470,9 @@
      "site_log": null,
      "hf_replay": null
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text explains that RoboLab's term names the left bin although the drill starts in the right bin, and that the drill has to rest on the table itself. Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "unstack_rubiks_cube": {
@@ -2416,7 +2497,7 @@
    "terms": "class UnstackRubiksCubeTerminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(func=object_outside_of_and_on_surface, params={\"object\": [\"rubiks_cube_middle\", \"rubiks_cube_top\", \"rubiks_cube_bottom\"], \"container\": \"grey_bin\", \"surface\": \"table\", \"logical\": \"all\", \"require_gripper_detached\": True})",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: stacking); its success term (`object_outside_of_and_on_surface`) asks for 3 objects out of grey_bin. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Unstack the rubiks cube tower. Success: The three Rubik's cubes of the tower must end outside the grey bin and standing on the table, and the gripper must touch none of them. \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. \"On the table\" means the table supports it (its contact force points upwards, within 45 deg of vertical).",
+   "standard_goal": "Unstack the rubiks cube tower. Success: The three Rubik's cubes of the tower must end outside the grey bin and standing on the table, and, at that moment, the gripper must touch none of them (moving them with the gripper is how the task is done; let go of them at the end). \"Outside\" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. \"On the table\" means the table supports it (its contact force points upwards, within 45 deg of vertical).",
    "standard_objects": "Objects here: a bowl, a ketchup bottle, a grey bin, a mug, three Rubik's cubes and a banana. The three Rubik's cubes start as one tower standing on the table. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_outside_of_and_on_surface",
@@ -2446,6 +2527,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/unstack_rubiks_cube/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/unstack_rubiks_cube/limited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "utensils_in_mug": {
@@ -2481,7 +2565,7 @@
    "terms": "class Terminations:\n    time_out = DoneTerm(func=mdp.time_out, time_out=True)\n    success = DoneTerm(\n        func=object_in_container,\n        params={\n            \"object\": [\"fork_big\", \"spoon_big\"],\n            \"container\": \"ceramic_mug\",\n            \"logical\": \"all\",\n            \"require_gripper_detached\": True\n        },\n    )",
    "note": "",
    "difficulty": "RoboLab labels this task \"moderate\" (2 subtasks; attributes: semantics, affordance); its success term (`object_in_container`) asks for 2 objects into ceramic_mug. The tooling gives only thin primitives (move_ee on Isaac Lab's differential IK, joint moves, gripper, hold), so every grasp, transport and placement is the agent's to build. RoboLab ships no expert solution.",
-   "standard_goal": "Put the fork and spoon in the ceramicmug. Success: The fork on the bagel plate and the spoon in the red bowl must end inside the ceramic mug and the gripper must touch neither. \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
+   "standard_goal": "Put the fork and spoon in the ceramicmug. Success: The fork on the bagel plate and the spoon in the red bowl must end inside the ceramic mug and, at that moment, the gripper must touch neither (let go of both at the end). \"Inside\" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).",
    "standard_objects": "Objects here: a bowl, two bananas, three bagels, a coffee can, a yogurt cup, a coffee pot, a ceramic mug, a pitcher, a large fork, a metal spoon, a red apple, an orange, a milk carton, an orange juice carton, a small plate and a large plate. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.\n",
    "oracle": "none",
    "criterion_group": "object_in_container",
@@ -2499,6 +2583,9 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/utensils_in_mug/unlimited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/utensils_in_mug/unlimited/replay.mp4"
     }
+   ],
+   "change_log": [
+    "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
    ]
   },
   "white_mug_in_center_of_table": {
