@@ -76,3 +76,5 @@ use the ordinary 14400-second agent cutoff, with all 301 noisy samples and 31 im
 0–30 s per deployment. Existing sector and long-lap variants retain their geometry and budgets.
 
 Drift to Park is a ninth core objective, registered as `control-transfer-anycar-drift-i{00,01}-standard`. It has a 16 s horizon, three adaptation rounds, public course commands and a bounded three-action controller with a physical rear-wheel handbrake. The nominal example succeeds, but the frozen controller fails all 26 randomized development/held-out cases; it stays `oracle=none`. This control gap is distinct from package, replay and isolation validation.
+
+Native Harbor 0.23.0 validation on CPU Docker completed the reference driver and no-op trial for each Drift instance. Both reference trials evaluated ten held-out episodes with deterministic replay; all four trials reported zero infrastructure errors, enforced resource limits and no observed violations. The reference scores remain zero. This checks the packaged lifecycle and independent verifier, not controller solvability or coding-agent performance.
