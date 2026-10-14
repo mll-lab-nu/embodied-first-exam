@@ -229,7 +229,14 @@ OWN_NETWORK = ("network_mode", "networks")
 # Files of the task or the host handed to a container by another road than `volumes:`; `build` replaces Harbor's own
 # build of main (context: environment/) or a sidecar's pinned image.
 HANDS_FILES = ("secrets", "configs", "env_file", "build")
-mode = next((m for m in ("standard-realtime", "privileged", "standard") if t.name.endswith("-" + m)), "")
+# the mode registry (PROTOCOL §2.16): RCB_MODES_TABLE from run_all.sh, "<mode> <sidecar 0|1> <twin>" longest first
+import os
+_table = os.environ.get("RCB_MODES_TABLE", "")
+if not _table:
+    sys.path.insert(0, str(root / "scripts")); import task_conventions as _tc; _table = _tc.modes_table()
+_modes = [l.split() for l in _table.splitlines() if l.strip()]
+mode = next((m for m, _s, _t in _modes if t.name.endswith("-" + m)), "")
+sidecar_mode = any(m == mode and s == "1" for m, s, _t in _modes)
 if env_c.is_file():
     services, bad = compose_services(env_c)
     for b in bad: fail(f"environment/docker-compose.yaml: {b} (ci_checks/check-verifier-isolation.sh reads no YAML: keep to the block form)")
@@ -254,7 +261,7 @@ if env_c.is_file():
                 continue
             if svc == "main" and src.endswith("_trusted"): fail(f"the agent container mounts trusted volume {src}")
             if svc != "main" and not src.endswith("_trusted"): fail(f"sidecar {svc} mounts {src}, which is not a *_trusted volume")
-    if mode in ("standard", "standard-realtime"):
+    if sidecar_mode:
         # the verifier's evidence comes from a sidecar (a channel the agent cannot write), never from the agent's container
         sidecars = [s for s in services if s not in ("main", "rcb_monitor")]
         for a in d.get("artifacts") or []:

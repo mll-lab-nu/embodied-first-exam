@@ -6,7 +6,8 @@ simulator runs in a service you cannot open, and you reach it only through a cli
 The scene can change while you work: once during the episode, when your gripper first gets close to one of the task's
 objects, the scene changes (as in LIBERO-MAX): an object or a receptacle may be moved, an obstacle or a few other
 objects may appear, a camera may shift, or the lighting, the colours or the image noise may change. Nothing tells you
-when; the task and its success check stay the same, so keep checking what the cameras show.
+when; the task and its success check stay the same, so keep checking what the cameras show. A moved object or
+receptacle jumps there alone: what already rests in or on it stays where it was.
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

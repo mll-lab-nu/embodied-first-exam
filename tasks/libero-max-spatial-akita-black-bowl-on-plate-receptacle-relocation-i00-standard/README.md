@@ -13,7 +13,7 @@
 
 ## Task
 LIBERO-MAX case `pro-camera-view-angle-spatial-t09-i06-receptacle_relocation-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the akita black bowl on the wooden cabinet and place it on the plate."**, on
-the same frozen instance as `libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00-privileged`, with the same online event (receptacle relocation: the receptacle `plate_1` is moved 0.12 m, direction (0, -1), the
+the same frozen instance as `libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00-privileged`, with the same online event (receptacle relocation: the receptacle `plate_1` is moved 0.12 m, direction (0, -1); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart, the
 first time the gripper comes within 0.18 m of `akita_black_bowl_1`). The simulator runs in the `sim` sidecar
 (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: two cameras (RGB
 256×256, depth on request, calibrated), the robot's own state, and OSC control steps in chunks. One
@@ -86,3 +86,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   /reset` ends the episode as `error` (`sim_error = 1`), not `reset` (reachable only when a run grants resets; the
   default is none). The scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps
   its name.
+- 2026-10-14 (board 0113, from board 0086): the instruction says that a moved object or receptacle jumps alone: what rests in or on it stays where it was (LIBERO-MAX moves one entity; board 0086 saw a basket jump through a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check and the verifier are unchanged, so the task keeps its name.

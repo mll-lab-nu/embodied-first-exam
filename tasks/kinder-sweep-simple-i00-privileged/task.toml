@@ -16,6 +16,7 @@ robot = "tidybot-plus-plus"
 # KinDER env kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0
 family = "sweep-simple"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 # scene = environment/instance.json (KinDER's seed + a digest of the scene it builds); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 3.0

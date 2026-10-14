@@ -14,6 +14,7 @@ simulator = "robotwin"            # RoboTwin 2.0 = SAPIEN 3 / PhysX + CuRobo
 robot = "aloha-agilex"
 family = "press_stapler"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 60417             # scene = environment/instance.json (RoboTwin seed + expected initial-state hash); identity = dataset.toml digest
 expert_time_estimate_hours = 0.5

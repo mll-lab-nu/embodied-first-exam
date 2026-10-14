@@ -26,6 +26,7 @@ simulator = "maniguard"
 robot = "franka-panda-longfinger"
 family = "jar_transport"
 mode = "standard"                  # robot as a service: RGB-D + proprioception, no object poses, no success or safety predicate, no reset
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 instance_seed = 13

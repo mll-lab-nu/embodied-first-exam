@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/myosuite-osl-run-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite osl_run (MyoLeg + OSL, 54 muscles) on the same frozen instance as myosuite-osl-run-i00-privileged: Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the left leg is the prosthesis, driven by its own controller, so you command only the 54 muscles. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite osl_run (MyoLeg + OSL, 54 muscles) on the same frozen instance as myosuite-osl-run-i00-privileged: Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoleg-osl", "code-as-policy", "trajectory", "osl_run", "standard-mode"]
 
@@ -27,6 +27,7 @@ simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)
 robot = "myoleg-osl"
 family = "osl_run"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv`) fails once its rows are rounded to the client's float32 (the runner falls after 629 control steps); the family's solvability rests on the privileged twin; human review in PR #65"

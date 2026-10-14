@@ -27,6 +27,7 @@ simulator = "dexjoco"
 robot = "franka-allegro"
 family = "pinch_tongs"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 expert_time_estimate_hours = 2.0

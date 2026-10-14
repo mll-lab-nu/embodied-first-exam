@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generate the MyoSuite tasks: tasks/myosuite-<family>-i00-privileged and ...-standard (10 families x 2 modes).
+"""Generate the MyoSuite tasks: tasks/myosuite-<family>-i00-privileged and ...-standard (every family), and
+...-standard-realtime for the families whose scene is dynamic (REALTIME; PROTOCOL §4b, §2.14).
 
     python3 scripts/myosuite/generate.py            # every family in instances/
     python3 scripts/myosuite/generate.py --check    # exit 1 if tasks/ differs from what this would write
@@ -36,7 +37,7 @@ AUTHOR = "Chi Gui"
 # The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why not the default:
 # docs/benchmarks/myosuite.md). No copy of the number here: normalize writes it into task.toml, the instruction's first
 # paragraphs, the README row and the sim service's wall clock.
-CUTOFF = {m: cutoff_sec("MyoSuite", m) for m in ("privileged", "standard")}
+CUTOFF = {m: cutoff_sec("MyoSuite", m) for m in ("privileged", "standard", "standard-realtime")}
 # The standard service's bound on the images of one call, quoted from the source: the texts state the enforced value.
 MAX_FRAMES = int(re.search(r"^MAX_FRAMES = (\d+)", (SHARED / "standard" / "server.py").read_text(), re.M).group(1))
 RESET_BUDGET = 10  # standard mode's default reset budget (owner, 2026-10-09; PROTOCOL §4.5, docs/benchmarks/myosuite.md)
@@ -54,7 +55,7 @@ BODY = {
                  "a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb)"),
     "legs": ("MyoLegs", "myolegs", "a free-standing musculoskeletal model of a human torso and both legs"),
     "osl": ("MyoLeg + OSL", "myoleg-osl",
-            "a free-standing musculoskeletal model of a human whose left leg is an Open-Source Leg knee-ankle prosthesis"),
+            "a free-standing musculoskeletal model of a human whose right leg is an Open-Source Leg knee-ankle prosthesis"),
 }
 DEFAULT_CAMERA = {"table_tennis": "default", "bimanual": "front_view", "soccer": "agent_view", "chase_tag": "topview",
                   "osl_run": "side_view", **{f"dex_{k}": "center_cam" for k in ("apple_lift", "cylinder_pass", "bunny_inspect",
@@ -211,6 +212,344 @@ services:
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RESET_BUDGET}}}"   # MyoSuite standard: {RESET_BUDGET} resets (PROTOCOL §4.5); 0: one episode
+"""
+
+
+# ------------------------------------------------------------------------------------------- standard-realtime twins
+# The dynamic families (scripts/task_dynamics.toml; PROTOCOL §2.14) get a `-standard-realtime` twin (owner, 2026-10-14,
+# board 0112): the same frozen instance and success rule, served by shared/realtime/server.py (the rcb_service.Sim
+# adapter on rcb_myosuite.Session) behind the shared eai-standard/2.3 layer (rcb_realtime.py + rcb_service.py, copied
+# unchanged from scripts/humanoidbench/shared/; check-tooling-identity.sh). Per family: the slowdown S its service runs
+# at, from the real-time factor RTF measured on the reference workstation (PROTOCOL §4b: S = 1 when RTF >= 3, else
+# ~1.5 / RTF rounded up), and how it was measured (docs/benchmarks/myosuite.md, "Standard-realtime").
+REALTIME = {
+    "table_tennis": {
+        "slowdown": 1,
+        "rtf": "2.1-2.7",
+        "measured": "2026-10-14, board 0112, ws-1 (32 cores, load 30-60), the service capped at 4 CPUs: 2.08 with "
+                    "the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 11 episodes, 13.3 s of robot time), 2.6-2.7 "
+                    "for the bare physics; S = ceil(1.5 / 2.08) = 1. At S = 1 a controller at the control rate with a "
+                    "camera image every 0.25 s ran 11 episodes with no stall (largest lag 0.23 s), and an EGL frame takes "
+                    "5 ms (an OSMesa one 1.3 s)",
+        "evidence": "a successful episode of the privileged twin (GPT-6 Luna xhigh, trial "
+                    "`myosuite-table-tennis-i00-privil__SMNgbHk`, 82 rows) planned from step 0 in one "
+                    "`submit(..., at=0)` at S = 1 succeeds live and in the fresh replay, with no stall (board 0112, "
+                    "2026-10-14); the standard twin's evidence holds for the same instance and rule",
+        "rally": "the serve reaches you and the rally is decided within about 1.2 s of robot time after the clock starts "
+                 "(an episode that does nothing ends after 121 control steps)",
+    },
+}
+RT_REVIEW_PR = "201"  # the pull request that adds the standard-realtime twins (human review, PROTOCOL §2.7)
+RT_RESET_BUDGET = 10   # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
+RT = SHARED / "realtime"
+RT_ENV_DOCKERFILE = f"""# Standard-realtime mode: the agent container has NO simulator and no MyoSuite code, only Python and the realtime client
+# (eai-standard/2.3), on the shared pinned client base with the shared pins (scripts/eai_standard/client.env).
+FROM {CLIENT_IMAGE}
+COPY client-requirements.txt /tmp/client-requirements.txt
+RUN pip install --no-cache-dir -r /tmp/client-requirements.txt
+COPY rcb_client.py rcb1.py /opt/tools/
+ENV PYTHONPATH=/opt/tools
+RUN mkdir -p /app/output
+WORKDIR /app
+"""
+
+
+def rt_compose(fam: str) -> str:
+    S = REALTIME[fam]["slowdown"]
+    return f"""# Standard-realtime mode (PROTOCOL §4b): the simulator runs in the `sim` sidecar (the agent cannot open it), on its own clock
+# once an episode starts (sim/rcb_realtime.py, the shared eai-standard/2.3 layer, with sim/server.py, MyoSuite's adapter);
+# the agent only reaches port 8000. No `expose`/`ports` on sim: under Harbor's egress control it shares main's network
+# namespace (localhost:8000).
+# GPU on sim: the physics is MuJoCo on the CPU, but every image the agent asks for is rendered here, and on a clock that
+# does not stop a render is time the simulator cannot step: EGL on the GPU takes ~5 ms a frame, OSMesa ~1.3 s
+# (table_tennis, 640x480). `graphics` is the capability that mounts the EGL driver (server.py writes its ICD manifest).
+# Crash recovery: compose restarts the service, which resumes the same episode, paused, never a reset.
+# Knobs: ${{NAME:-default}} takes NAME from the shell that runs harbor. The defaults are the task's configuration;
+# results under other settings are reported separately.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: {IMAGE}
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: python /srv/rcb_realtime.py
+    restart: on-failure:6          # N >= 3 (PROTOCOL §4.1); a resume continues the episode, paused
+    environment:
+      RCB_INSTANCE: /srv/instance.npz
+      RCB_TASK_INFO: /srv/task.json
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "{CUTOFF["standard-realtime"]}"
+      RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+      RCB_SLOWDOWN: "${{RCB_SLOWDOWN:-{S}}}"                # S = {S}: the world runs at 1/S of real speed (this family's measured RTF; PROTOCOL §4b)
+      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RT_RESET_BUDGET}}}"        # {RT_RESET_BUDGET} resets (PROTOCOL §4b default); 0: one episode
+      RCB_GL: "${{RCB_GL:-auto}}"                     # auto: EGL on the GPU when it works, else OSMesa
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+"""
+
+
+def rt_instruction(fam: str, f: dict) -> str:
+    b, rt = BODY[f["body"]], REALTIME[fam]
+    S = rt["slowdown"]
+    hz = round(1 / f["dt"])
+    ms = round(f["dt"] * 1000, 1)
+    ms = int(ms) if ms == int(ms) else ms
+    atype = "muscle" if not f["actuators"] else "actuators"
+    root = (", the pose and velocity of your free-standing root (the pelvis: `root_*`)" if f["free_root"] else "")
+    return f"""# MyoSuite · {fam} — STANDARD-REALTIME MODE (robot as a service; time does not stop)
+
+You control the **{b[0]}**, {b[2]}, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
+you cannot open, you reach it only through a client, and like the real world it does not wait for you: once an episode
+is running, the body and the ball move while you think. You act only through its actuators ({f["n_muscles"]} muscles{
+f" and {len(f['actuators'])} other actuators" if f["actuators"] else ""}).
+**Task:** {f["goal"]}
+
+{f["scene"]} Here the rally is fast: {rt["rally"]}.
+
+**Slowdown: S = {S}.** The world runs at 1/S of real speed: one control step ({ms} ms of robot time) every S x {ms} ms of
+wall-clock time{" (real time)" if S == 1 else ""}. `spec()["timing"]["slowdown"]` states it.
+
+## Rules (real-world rules)
+- **Time does not stop.** An episode starts paused, on the frozen starting state, with every command at -1 (muscles
+  relaxed). Its clock starts at your first `submit` (or `get_obs(seconds=s)`) and from then on the simulator runs at
+  {hz} Hz of robot time (S = {S}), one control step every {ms * S:g} ms of wall-clock time, whether or not you send anything, until
+  the episode ends. Between your commands it executes what you planned, then holds the last commands you sent; nothing
+  pauses for you, not your thinking, not your tool calls.
+- **You are far too slow to steer it turn by turn.** One turn of yours (a model response, a tool call) takes seconds;
+  the whole rally takes about a second. Drive the body with a program: a controller of your own (Python in your
+  container, with numpy and the client) that plans or streams the commands, started in the background
+  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the episode. Use
+  your turns to start episodes, read what happened, and improve the program.
+- **Episodes and resets.** An episode ends at the task's own success event, at its failure conditions (see the task),
+  when your time is up, or on a simulator error. You have **{RT_RESET_BUDGET} resets** (`spec()["budget"]["reset"]`,
+  which is authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the body,
+  the ball and the scene back on the same frozen starting state and starts a new episode, paused until your next
+  `submit`, either abandoning the running episode or after one has ended. Once an episode has ended, `submit` raises
+  `EpisodeOver` (its message gives `resets_left`) until you reset. **Only the last episode is graded**: an episode you
+  reset away is never graded, a success ends the run at once (no reset after it), and when your time is up the episode
+  then running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+  `meta["resets_left"]` count the episodes.
+- **No privileged state, no score.** You see what the cameras see (RGB, and depth on request) and the body's own
+  proprioception: joint positions and velocities, muscle activations and lengths, the actuators' generalized force on
+  each joint{root}. No ball, paddle, table or goal poses, no success check: the service judges the episode and only
+  tells you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"error"` after a simulator error,
+  else `"failed"`). `spec()` gives the body's own facts: the actuators, the joints and their limits, each camera's
+  intrinsics and mounting.
+- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
+  simulator and grades the replay. Keep the controller that drives the body at `/app/output/gen.py` for the record:
+  save it early and keep it current.
+- Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+
+## Time and streaming
+- `submit` answers at once, with the body as it is now: the rows you sent have not run yet. They become the plan from
+  control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on and
+  keeping what is planned before it. When the plan runs out, the last commands are held. `res.meta["control_steps"]`
+  is the number of steps run so far in this episode (so the next step has that number), `res.meta["proprio"]["now"]`
+  the proprioception now, `res.meta["plan_end_step"]` where the plan now ends.
+- Open loop: plan a whole movement at once (`dt` a multiple of {f["dt"]:g} s; a chunk covers at most 10 s), from step
+  `at = 0` for the episode's start: `r.submit("{atype}", rows, dt={f["dt"]:g}, interpolate="hold", at=0, cameras=[])`
+  starts the clock and runs exactly those rows from the first step; `at` may be up to
+  `spec()["timing"]["max_ahead_steps"]` steps ahead.
+- Closed loop: send one row per control step, `r.submit("{atype}", a[None], cameras=[])`, computed from the
+  proprioception the previous call returned. `cameras=[]` skips the images (the fastest call).
+- Latency: a reading is a few milliseconds old when it reaches you, and a row takes effect at the next control step at
+  the earliest. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]` counts
+  them); the rest of its chunk applies from the next step.
+- `get_obs()` reads the body now; `get_obs(seconds=s)` (at most 30) waits while s seconds of robot time run and returns
+  what the cameras saw meanwhile (the body keeps executing its plan). `spec()["timing"]` states all this; `r.status()`
+  shows `running` and `lag_s`.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
+Your whole interface to the body. Its docstring is the full reference (`python -c "import rcb_client;
+help(rcb_client)"`); the calls and the endpoints they use:
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
+| `r.spec()` | `GET /spec` | the body's facts: the actuators' order (`action_types["{atype}"]["layout"]`), `control_dt` ({f["dt"]:g} s), `timing`, the cameras, `proprio_layout`, `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
+| `r.submit("{atype}", A, dt={f["dt"]:g}, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of {f["nu"]} commands `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the episode's clock |
+| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the body now, or what the cameras saw over the next `seconds` |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state, paused (at most {RT_RESET_BUDGET} in all); returns the start's frames |
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`),
+`res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during a watch), `res.proprio`
+(proprioception rows). A malformed request raises `ValueError` and changes nothing.
+```python
+from rcb_client import Robot
+import numpy as np
+r = Robot()
+rows = -np.ones((80, {f["nu"]}))                  # 0.8 s of commands, one row per control step
+res = r.submit("{atype}", rows, dt={f["dt"]:g}, interpolate="hold", at=0, cameras=[])   # starts the clock
+while not r.status()["done"]:
+    ...                                          # or stream: r.submit("{atype}", a[None], cameras=[]) each step
+```
+Cameras: {", ".join(f"`{c}`" for c in f["cameras"])} (640x480, default `{default_camera(fam, f)}`), rendered on the
+service's GPU in a few milliseconds each; `cameras=None` means every camera, so name the ones you need.
+
+Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: `q_<joint>`,
+`qd_<joint>`, `act_<muscle>`, `len_<muscle>` (m), `effort_<joint>` (the actuators' generalized force on the joint){
+", `root_*`" if f["free_root"] else ""}.
+
+### Action type `{atype}` ({f["nu"]})
+{actuation(f)} Columns in `spec()["action_types"]["{atype}"]["layout"]` order; rows `dt` apart, `interpolate="linear"`
+(default: a straight line from the commands in force) or `"hold"`; the client sends them as float32. The control rate
+is {hz} Hz ({f["frame_skip"]} physics substeps).
+"""
+
+
+def rt_task_toml(fam: str, f: dict) -> str:
+    b, rt = BODY[f["body"]], REALTIME[fam]
+    oracle, ev = "none", rt["evidence"] + f"; human review in PR #{RT_REVIEW_PR}"
+    first = f["goal"].split(". ")[0]
+    keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", b[1], "trajectory", fam, "standard-realtime-mode"]
+    desc = (f"STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = "
+            f"{rt['slowdown']}): MyoSuite {fam} ({b[0]}, {f['n_muscles']} muscles) on the same frozen instance as "
+            f"myosuite-{dash(fam)}-i00-privileged: {first}. Once an episode starts the body and the ball move whatever the "
+            "agent does, so the agent plans or streams actuator commands from a program of its own through the client "
+            f"(cameras, the body's joints and muscles); {RT_RESET_BUDGET} resets, only the last episode graded; no object "
+            "state; the sim service records every executed control step, replays the last episode in a fresh simulator and grades it.")
+    oracle_lines = f'oracle = "{oracle}"\n' + (f"oracle_evidence = {toml_str(ev)}\n" if ev else "")
+    return f"""# Generated by scripts/myosuite/generate.py -- edit the generator, the shared sources or the instance facts, not this.
+schema_version = "1.3"
+artifacts = [
+  {{ source = "/data/final.json", service = "sim" }},
+  {{ source = "/data/episode.jsonl", service = "sim" }},
+  {{ source = "/data/trajectory.npz", service = "sim" }},
+  {{ source = "/data/trajectory_live.f64", service = "sim" }},
+  {{ source = "/data/replay.mp4", service = "sim" }},
+  {{ source = "/data/replay.last.png", service = "sim" }},
+  {{ source = "/data/ticks.f64", service = "sim" }},
+  {{ source = "/data/calls.jsonl", service = "sim" }},
+  {{ source = "/data/submitted.f64", service = "sim" }},
+  {{ source = "/data/startups.jsonl", service = "sim" }},
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/myosuite-{dash(fam)}-i00-standard-realtime"
+description = {toml_str(desc)}
+authors = [{{ name = "{AUTHOR}" }}]
+keywords = [{", ".join(toml_str(k) for k in keywords)}]
+
+[metadata]
+author_name = "{AUTHOR}"
+task_type = "trajectory"
+simulator = "myosuite"            # MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU physics; EGL rendering on the GPU)
+robot = "{b[1]}"
+family = "{fam}"
+mode = "standard-realtime"
+protocol = "eai-standard/2.3"
+{oracle_lines}instance_seed = 0                 # {f['env_id']}: seed(0), then reset(seed=0)
+expert_time_estimate_hours = {f['hours'] + 2.0}
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the body past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it in a
+# fresh simulator. The verdict ("finalized": true, set before any video is rendered) may take until 840 s; then the
+# hook waits for the replay video ("video_pending") until 870 s -- a video that is not ready by then is lost, the
+# verdict is not.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\\"finalized\\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\\"video_pending\\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+[agent]
+timeout_sec = {CUTOFF["standard-realtime"]}.0
+# The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS), as in
+# every MyoSuite task (PROTOCOL §2.11).
+network_mode = "allowlist"
+allowed_hosts = [{", ".join(toml_str(h) for h in HOSTS)}]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 8192
+"""
+
+
+def rt_readme(fam: str, f: dict) -> str:
+    b, rt = BODY[f["body"]], REALTIME[fam]
+    name = f"myosuite-{dash(fam)}-i00-standard-realtime"
+    S = rt["slowdown"]
+    task = (f"MyoSuite `{f['env_id']}` ({b[0]}, {f['n_muscles']} muscles) on the same frozen instance as "
+            f"`myosuite-{dash(fam)}-i00-privileged`: {f['goal']}\n{f['scene']} Standard-realtime mode (eai-standard/2.3, "
+            f"slowdown S = {S}): once an episode's clock starts the body and the ball move whatever the agent does; it "
+            f"drives the body through the realtime client from a program of its own, with only its own proprioception "
+            f"and the scene's cameras, and {RT_RESET_BUDGET} resets (only the last episode is graded).")
+    diff = (f"Same instance and success rule as the standard twin (first-pass rating: {f['difficulty']}, harder here). "
+            f"The scene is dynamic (scripts/task_dynamics.toml: the ball is served with an initial velocity): "
+            f"{rt['rally']}, so nothing can be steered call by call; the agent has to plan or stream the muscle "
+            f"commands from a program, and learn the body and the serve from {RT_RESET_BUDGET + 1} real attempts.")
+    ref = ("None in the repository. Solvability evidence: a successful episode of the privileged twin (82 rows, GPT-6 Luna "
+           "xhigh) planned from step 0 through this service at S = 1 succeeded live and in the fresh replay, with no "
+           "stall (board 0112, 2026-10-14)." if fam == "table_tennis" else f"None. Solvability evidence: {rt['evidence']}.")
+    ver = ("The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with "
+           "`environment/sim/server.py`, MyoSuite's adapter) judges the episode live and records every control step it "
+           "ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and signals "
+           "the service, which replays the graded episode in a fresh MyoSuite session and writes `final.json`; "
+           "`tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, the replay succeeds "
+           "and ends in the same state. The clock's record (`stalls`, `max_lag_s`, ...) is copied into `reward.json` "
+           "and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.")
+    details = [
+        ("Upstream", "MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel"),
+        ("Slowdown", f"S = {S} (`RCB_SLOWDOWN`'s default): measured RTF {rt['rtf']} ({rt['measured']})"),
+        ("Service", "the realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics (`rcb_realtime.py`, `rcb_service.py`, "
+                    "unchanged) with `server.py`, which implements `rcb_service.Sim` on `rcb_myosuite.Session` (the "
+                    "standard twin's scene, action, success rule and replay); cameras " + ", ".join(f"`{c}`" for c in f["cameras"])
+                    + " (640 x 480, EGL on the GPU)"),
+        ("Resources", "4 CPUs and a GPU for rendering (the physics is on the CPU)"),
+        ("Reset budget", f"{RT_RESET_BUDGET} (`RCB_RESET_BUDGET`, compose default; PROTOCOL §4b): `POST /reset` starts a new "
+                         "episode from the frozen instance, paused; only the last episode is graded, a success ends the "
+                         "trial; results under another budget or slowdown are reported separately"),
+    ]
+    rows = "\n".join(f"| {k} | {v} |" for k, v in details)
+    return f"""# {name}
+
+## Task
+{task}
+
+## Difficulty
+{diff}
+
+## Reference solution
+{ref}
+
+## Verification
+{ver}
+
+## Details
+| | |
+|---|---|
+{rows}
+
+### Provenance
+Generated by `scripts/myosuite/generate.py` from `scripts/myosuite/instances/{fam}.npz` and `{fam}.json`
+(`make_facts.py`) and `scripts/myosuite/shared/realtime/`; see `docs/benchmarks/myosuite.md`, "Standard-realtime".
+
+### Change Log
+- 2026-10-14 (owner, board 0112): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime
+  twin with S = {S} and {RT_RESET_BUDGET} resets.
 """
 
 
@@ -559,6 +898,21 @@ R3_PRIV = """\
 """
 
 
+OSL_SIDE_TEXT = (
+    "- 2026-10-14 (board 0113, from board 0086): the texts said that the prosthesis is the left leg; MyoSuite's model\n"
+    "  puts the Open-Source Leg on the right (its joints are `osl_knee_angle_r` and `osl_ankle_angle_r`, under `femur_r`),\n"
+    "  and the texts now say so. Text only: the instance, the tooling and the pass rule are the same.\n"
+)
+BAODING_END_TEXT = (
+    "- 2026-10-14 (board 0113, from board 0086): an episode that has not succeeded after 1000 control steps (25 s) ends\n"
+    "  there as a failure, and the task text says so. MyoSuite's baoding targets are a precomputed trajectory of 1000\n"
+    "  points; with MyoSuite's step budget lifted, the step after it raised an IndexError (the service answered 500 and\n"
+    "  the episode ended as a simulator error; a privileged replay that long stopped with an error). Nothing before that\n"
+    "  step changes: the instance, the tooling's physics and the pass rule are the same, and every verdict reached before\n"
+    "  is the same now.\n"
+)
+
+
 def change_log(fam: str, f: dict, std: bool) -> str:
     """The README's Change Log: the standard service's history, plus what changed for this family alone."""
     out = CHANGE_LOG if std else ""
@@ -582,6 +936,7 @@ def change_log(fam: str, f: dict, std: bool) -> str:
     if fam == "chase_tag":
         out += CHASE_TAG_TEXT
     out += R3_STD if std else R3_PRIV
+    out += {"osl_run": OSL_SIDE_TEXT, "baoding": BAODING_END_TEXT}.get(fam, "")
     if out and not std:
         out = CHANGE_LOG_HEAD + out
     return out
@@ -725,7 +1080,7 @@ Generated by `scripts/myosuite/generate.py` from `scripts/myosuite/instances/{fa
 {change_log(fam, f, std)}"""
 
 
-def make(fam: str, out: Path) -> tuple[Path, Path]:
+def make(fam: str, out: Path) -> tuple[Path, ...]:
     f = json.loads((HERE / "instances" / f"{fam}.json").read_text())
     inst = HERE / "instances" / f"{fam}.npz"
     oracle = HERE / "oracles" / f"{fam}.npy"
@@ -780,7 +1135,34 @@ def make(fam: str, out: Path) -> tuple[Path, Path]:
         put(s / "solution/oracle.npy", src=oracle)
     normalize(p)
     normalize(s)
-    return p, s
+    if fam not in REALTIME:
+        return p, s
+
+    r = out / f"myosuite-{dash(fam)}-i00-standard-realtime"
+    reset_dir(r)
+    put(r / "task.toml", rt_task_toml(fam, f))
+    put(r / "instruction.md", rt_instruction(fam, f))
+    put(r / "README.md", rt_readme(fam, f))
+    put(r / "environment/Dockerfile", RT_ENV_DOCKERFILE)
+    put(r / "environment/docker-compose.yaml", rt_compose(fam))
+    put(
+        r / "environment/client-requirements.txt",
+        src=LAYER / _ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip(),
+    )
+    put(r / "environment/rcb_client.py", src=RT / "rcb_client.py")
+    put(r / "environment/rcb1.py", src=LAYER / "rcb1.py")
+    for name in ("rcb_realtime.py", "rcb_service.py", "server.py"):
+        put(r / "environment/sim" / name, src=RT / name)
+    put(r / "environment/sim/rcb1.py", src=LAYER / "rcb1.py")
+    put(r / "environment/sim/rcb_myosuite.py", src=SHARED / "rcb_myosuite.py")
+    put(r / "environment/sim/instance.npz", src=inst)
+    put(r / "environment/sim/task.json", json.dumps({"task_text": f["goal"], "default_cameras": [default_camera(fam, f)],
+                                                       "reference": f.get("reference")}, indent=1) + "\n")
+    put(r / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
+    put(r / "tests/test.sh", src=SHARED / "standard/test.sh", mode=0o755)
+    put(r / "tests/grade.py", src=RT / "grade.py")
+    normalize(r)
+    return p, s, r
 
 
 def render_all(out: Path) -> list[str]:

@@ -24,6 +24,7 @@ family = "mujoco_playground/AlohaHandOver"
 instance_seed = 60417             # Playground's reset randomization (box xy offset, target position) with this seed
 expert_time_estimate_hours = 2.0
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "full"
 

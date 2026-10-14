@@ -16,6 +16,7 @@ simulator = "mujoco"
 robot = "google-barkour-vb"
 family = "mujoco_playground/BarkourJoystick"
 mode = "privileged"
+dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 2             # the PRNGKey of Playground's reset (and, for the joystick tasks, its command process)
 expert_time_estimate_hours = 3.0

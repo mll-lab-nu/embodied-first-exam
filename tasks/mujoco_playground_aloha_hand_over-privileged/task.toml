@@ -14,6 +14,7 @@ simulator = "mujoco"
 robot = "aloha-2"
 family = "mujoco_playground/AlohaHandOver"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 60417             # Playground's reset randomization (box xy offset, target position) with this seed
 expert_time_estimate_hours = 2.0

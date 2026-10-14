@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/mujoco_playground_go1_handstand-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground Go1Handstand (Unitree Go1) on the same frozen instance as mujoco_playground_go1_handstand-privileged: Make the Unitree Go1 do a handstand: balance on its front legs, nose down, hind legs in the air, for 2 s. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; one episode, no reset, no world state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground Go1Handstand (Unitree Go1) on the same frozen instance as mujoco_playground_go1_handstand-privileged: Make the Unitree Go1 do a handstand: balance on its front legs, nose down, hind legs in the air, for 2 s. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; 10 resets (only the last episode is graded), no world state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "unitree-go1", "quadruped", "locomotion", "stand_on_two", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -28,6 +28,7 @@ simulator = "mujoco"
 robot = "unitree-go1"
 family = "mujoco_playground/Go1Handstand"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 instance_seed = 0

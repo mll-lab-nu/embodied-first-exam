@@ -6,6 +6,9 @@ set -uo pipefail
 # the umask the repository is written with; the checkout itself must be made with umask 022 too.
 umask 022
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
+# the mode registry (PROTOCOL §2.16, scripts/task_conventions.py MODE_REGISTRY), read once for the per-task shell checks
+RCB_MODES_TABLE="$(python3 "$root/scripts/task_conventions.py" modes)" || { echo "FAIL scripts/task_conventions.py modes"; exit 1; }
+export RCB_MODES_TABLE
 tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=("$root"/tasks/*/)
 for t in "${tasks[@]}"; do
   t="${t%/}"; [ -f "$t/task.toml" ] || continue
@@ -31,6 +34,10 @@ if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-resources.py" || rc=1; else
 # instruction.md, the README row and the standard modes' sim service all say its number, and nothing else states the limit
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-cutoffs.py" || rc=1; else python3 "$root/ci_checks/check-cutoffs.py" "$@" || rc=1; fi
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-seeds.py" || rc=1; else python3 "$root/ci_checks/check-seeds.py" "$@" || rc=1; fi
+# PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` from the one table (scripts/task_dynamics.toml)
+if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-dynamics.py" || rc=1; else python3 "$root/ci_checks/check-dynamics.py" "$@" || rc=1; fi
+# PROTOCOL §4b: a standard-realtime task states its slowdown S ([metadata] slowdown, the instruction) and allows resets
+if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-realtime.py" || rc=1; else python3 "$root/ci_checks/check-realtime.py" "$@" || rc=1; fi
 # The task protocol (docs/PROTOCOL.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol.py" || rc=1; else python3 "$root/ci_checks/check-protocol.py" "$@" || rc=1; fi
 # PROTOCOL §2.10 (v1.2): the resource monitor sidecar and the verifier step, wired by scripts/rcb_monitor/inject.py

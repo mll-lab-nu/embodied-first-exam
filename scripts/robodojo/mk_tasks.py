@@ -243,7 +243,8 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
         common["CUTOFF"] = fill(CUTOFF[mode], {"STARTUP": conv["STARTUP"]})
         common["AGENT_TIMEOUT_S"] = str(agent_timeout(mode))
         every = [ONE_REPLAY_LIVE if (live and x is ONE_REPLAY["standard"]) else x for x in CHANGE_LOG_ALL[mode]]
-        common["CHANGE_LOG"] = "\n### Change Log\n" + "".join(f"- {x}\n" for x in log + every)
+        # oldest first: a per-task entry dated after the entries of every task (e.g. 2026-10-14) goes after them
+        common["CHANGE_LOG"] = "\n### Change Log\n" + "".join(f"- {x}\n" for x in sorted(log + every, key=lambda x: x[:10]))
         files: dict[str, tuple[bytes, int]] = {}
         tdir = HERE / "template" / mode
         for p in sorted(tdir.rglob("*")):

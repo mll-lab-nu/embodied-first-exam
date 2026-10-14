@@ -209,12 +209,13 @@ camera poses are in the robot's starting frame); see [docs/benchmarks/](benchmar
 tables. A request body over 64 MB gets 413 before it is decoded.
 
 ### Optional reset capability
-Off by default (`budget.reset = 0`): one trial is one episode, in standard and standard-realtime mode alike. Exception, by
+Off by default in standard mode (`budget.reset = 0`): one trial is one episode. In standard-realtime mode it is on, 10
+by default (owner, 2026-10-14; PROTOCOL §4b: HumanoidBench 50, BiGym 2.0 and RoboOlympics 0). Exceptions in standard mode, by
 owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
 to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`; BiGym2's and KinDER's standard
-tasks (2026-10-11) to `budget.reset = 10`; DexToolBench's standard tasks (2026-10-13) to `budget.reset = 20`. A run may set `RCB_RESET_BUDGET=N`
-on the service (implemented by the KinDER, HumanoidBench, BiGym2, MyoSuite and MuJoCo (`server_mj.py`: DexToolBench, Playground ALOHA / Panda) services; MyoSuite's 2.2 client has no `reset()`,
-so its instruction calls `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
+tasks (2026-10-11) to `budget.reset = 10`; DexToolBench's standard tasks (2026-10-13) to `budget.reset = 20`; MuJoCo Playground's quadruped standard tasks (2026-10-14) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
+on the service (implemented by the KinDER, HumanoidBench, BiGym2, MyoSuite and MuJoCo (`server_mj.py`: DexToolBench, Playground ALOHA / Panda) services and the Playground quadrupeds' 2.2 service; the 2.2 client has no `reset()`,
+so MyoSuite's and the quadrupeds' instructions call `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
 same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a
 success or once the agent's time is up, `/reset` returns 409, as it does when the budget is spent. Only the last
@@ -550,13 +551,14 @@ for `include_depth` and ignore the new parts and keys).
 
 Time does not stop. The wire protocol of the standard-realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
 standard-realtime tasks only (`<base>-standard-realtime`, `mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
-`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics' tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics', BiGym 2.0's and MyoSuite's tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
 addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
 recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
 time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
-Defaults of the mode: `budget.reset = 0`, as in standard mode (the optional reset capability of Part 1; `RCB_RESET_BUDGET` overrides it;
-HumanoidBench's per-benchmark exception is 50, PROTOCOL §4.5), and S = 1 (RoboOlympics' per-benchmark exception is 10,
-PROTOCOL §4b).
+Defaults of the mode: `budget.reset = 10` (since 2026-10-14; before, 0 as in standard mode: the optional reset capability of
+Part 1; `RCB_RESET_BUDGET` overrides it; HumanoidBench's per-benchmark exception is 50, BiGym 2.0's and RoboOlympics' 0,
+PROTOCOL §4b), and S stated per task (`[metadata] slowdown`, RCB_SLOWDOWN's default: 1 unless the service's measured
+real-time factor is below 3, PROTOCOL §4b; RoboOlympics' is 10).
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.

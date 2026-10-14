@@ -24,6 +24,7 @@ simulator = "robosuite"
 robot = "franka-panda-omron"
 family = "robocasa/CoffeePressButton"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "full"
 expert_time_estimate_hours = 4.0

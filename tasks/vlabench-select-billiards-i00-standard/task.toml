@@ -26,6 +26,7 @@ simulator = "vlabench"
 robot = "franka-panda"
 family = "vlabench/select_billiards"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "full"
 instance_seed = 0

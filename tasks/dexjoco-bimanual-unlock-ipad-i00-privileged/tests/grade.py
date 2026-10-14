@@ -6,8 +6,10 @@ write Harbor rewards.
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only; Harbor rejects strings), a replay video
 /logs/verifier/replay.mp4 (front camera + wrist camera) and replay.last.png. Replays `--repeat` times in this fresh
 process; success requires every replay to end its episode in success (DexJoCo's own rule: the episode ends at the first
-success or task failure) AND all final-state hashes to agree (MuJoCo on the CPU is bit-deterministic), and the frozen
-instance rebuilt here from tests/instance.npz must match its recorded hash.
+success or task failure) AND all final-state hashes to agree (MuJoCo on the CPU is bit-deterministic). The frozen
+instance rebuilt here from tests/instance.npz must match its recorded hash; one that does not (the image no longer
+rebuilds the scene) is no verdict on the agent: `instance_mismatch`, `grader_error` and `infra_error` = 1, nothing
+replayed.
 
 A file the agent got wrong is the agent's 0, `bad_trajectory` (not `grader_error`): not an npz, pickled or object
 arrays, no `task` or `actions` entry, a wrong shape, NaN/inf, or more than rcb_dexjoco.MAX_TRAJECTORY_ROWS rows (the
@@ -119,6 +121,10 @@ def main() -> int:
             print("too few CPUs: " + rcb_dexjoco.threads_message(threads), file=sys.stderr)
             write(False, {"grader_error": 1, "infra_error": 1, "too_few_cpus": 1, "n_actions": n_rows, **threads, **cost}); return 0
         s = Session(a.family, instance=a.instance)
+        if not s.instance_exact:  # the image no longer rebuilds the frozen scene: not the agent's 0 (infra, no verdict)
+            print(f"instance mismatch: rebuilt state sha {s.state_sha()} != recorded {s.instance_sha}", file=sys.stderr)
+            write(False, {"grader_error": 1, "infra_error": 1, "instance_mismatch": 1, "instance_ok": 0,
+                          "n_actions": n_rows, **threads, **cost}); return 0
         if acts.shape[1] != s.action_dim:
             write(False, {"bad_trajectory": 1, "n_actions": n_rows, **cost}); return 0
         t0 = time.time()
@@ -130,10 +136,9 @@ def main() -> int:
                 write(False, {"bad_trajectory": 1, "n_actions": n_rows, **cost}); return 0
         all_success = all(o["success"] for o in outs)
         deterministic = len({o["state_sha"] for o in outs}) == 1
-        instance_ok = bool(s.instance_exact)
-        ok = all_success and deterministic and instance_ok
+        ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
-               "instance_ok": int(instance_ok), "n_actions": int(len(acts)), "sim_steps": int(outs[0]["steps"]),
+               "instance_ok": 1, "n_actions": int(len(acts)), "sim_steps": int(outs[0]["steps"]),
                "task_failure": int(bool(outs[0]["reason"]) and not outs[0]["success"]),
                "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **threads, **cost}
         write(ok, out)  # the verdict is on disk before the video; the video only adds video_rendered

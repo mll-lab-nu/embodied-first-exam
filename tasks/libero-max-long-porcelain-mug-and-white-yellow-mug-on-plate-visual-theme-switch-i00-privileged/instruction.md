@@ -1,6 +1,6 @@
 # LIBERO-MAX · libero_10 · visual-theme switch — instance i00
 
-A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Put the white mug on the left plate and put the yellow and white mug on the right plate.**
+A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Put the white mug on the left plate and put the yellow and white mug on the right plate.** Left and right are LIBERO's, as seen from the front of the table, facing the robot: the left plate (`plate_1`, the goal's) is the one on the robot's right, the right plate (`plate_2`) the one on the robot's left (LIBERO-PRO's scene file puts them in `plate_left_region` / `plate_right_region`, 0.3 m to either side).
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_10 task (position), with one online
 event: the first time the gripper comes within 0.18 m of `porcelain_mug_1`, LIBERO-MAX changes the scene
 once (the image colours change (channels permuted (1, 2, 0), scaled (1.25, 0.7, 1.1))). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).

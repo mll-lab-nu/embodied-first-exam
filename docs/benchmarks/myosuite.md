@@ -1,7 +1,9 @@
 # MyoSuite
 
 Twenty-two [MyoSuite](https://github.com/MyoHub/myosuite) tasks (2.12.2, Apache-2.0) on MuJoCo 3.6.0, CPU only, in both
-modes: 44 task directories, `tasks/myosuite-<family>-i00-{privileged,standard}`. The robot is a musculoskeletal model of a
+modes: 44 task directories, `tasks/myosuite-<family>-i00-{privileged,standard}`, and one standard-realtime twin
+(`tasks/myosuite-table-tennis-i00-standard-realtime`, since 2026-10-14: table_tennis is the benchmark's one dynamic
+family). The robot is a musculoskeletal model of a
 human body: the MyoHand (forearm and hand, 39 muscles), the MyoArm (34 or 63 muscles), MyoSuite's torso-and-arm table
 tennis player, the MyoArm next to a prosthetic MPL arm, and the MyoLegs (with or without a prosthetic leg). The main
 command is **one excitation per muscle** (a few families add non-muscle actuators: a positioned wrist, a sliding pelvis,
@@ -74,13 +76,17 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   step budget (50-200 steps) is lifted, so the wall clock is the only budget. Why the holds: a first version counted 0.25 s,
   and agents passed it by sweeping through the goal (or, in baoding, by parking the balls where the moving targets sweep
   past); a 1 s hold of a fixed goal, and one whole orbit in baoding, require really reaching and keeping it.
+  Baoding's targets are a precomputed trajectory of 1000 points (`baoding_v1.create_goal_trajectory`), so since
+  2026-10-14 its episode ends as a failure after 1000 control steps (25 s) if it has not succeeded (before, the step after
+  it raised an IndexError: a 500 in standard mode, board 0086).
 - **Success, MyoChallenge (`event`)**: the challenge's own `solved` is the success event and ends the episode (goal scored,
   opponent tagged, ball returned onto the opponent's half, object placed, track finished); its own failure conditions
   and time limits apply (soccer 10 s, chase_tag 20 s, bimanual 10 s, table_tennis 3 s; osl_run has none, so the gym step
   limit being lifted leaves it unlimited). Deviations from the official evaluation: bimanual's evaluation counts a path
   when `solved` holds for more than 5 steps and its contact check passes, but the env ends the episode one step after the
   first `solved`; we count the first `solved` with the contact check. osl_run's official score is the distance reached
-  within its 1000-step horizon (5 s); we require finishing the 29 m track, without a time limit.
+  within its 1000-step horizon (5 s); we require finishing the 29 m track, without a time limit. The prosthesis is the
+  right leg (`osl_knee_angle_r`, `osl_ankle_angle_r`; the texts said left until 2026-10-14).
 - **Success, MyoDex (`track`)**: MyoDex defines a dense reward only (`solved` is always 0). We count a success when the
   whole reference motion is reproduced: the object's displacement since the start within 3 cm of the reference's
   displacement since its start (and, for the four families where orientation is the point of the skill, its rotation
@@ -267,6 +273,37 @@ that score 0; apple_lift's first (exploit) trajectory scores 0 under the final r
 - Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final
   state for random action sequences in every family.
 
+## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`)
+get a `-standard-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
+every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged
+  (`shared/realtime/rcb_realtime.py`, `rcb_service.py`, `rcb_client.py`, `grade.py`: byte-identical copies of
+  `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with `shared/realtime/server.py`, which
+  implements `rcb_service.Sim` on `rcb_myosuite.Session`: the standard twin's frozen instance, action (`actuators`: 273
+  muscles and the two pelvis slides, nothing clipped), success rule (the challenge's own event), proprioception
+  (`q_`, `qd_`, `act_`, `len_`, `effort_`) and cameras (images and depth; no pose of a camera that rides on a body of
+  the scene). Not served: the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. The
+  grade is the live episode, a replay in a fresh `Session` in the same process (MuJoCo on the CPU repeats bit for bit)
+  and their final states equal; the clock's record is evidence only.
+- **Rendering on the GPU.** On a clock that does not stop, a render is time the simulator thread cannot step, and an
+  OSMesa frame of this scene takes 1.3 s (1373 visual geoms, 207k mesh vertices; 640 x 480 or 320 x 240 alike) against
+  5 ms with EGL on an RTX 4090. The twin therefore reserves a GPU for its `sim` service (`graphics` capability); the image
+  (`eai-myosuite:0.1.1`, unchanged) has no NVIDIA EGL ICD manifest and sets `MUJOCO_GL=osmesa`, so `server.py` writes the
+  manifest to `/tmp`, probes EGL in a throwaway process and falls back to OSMesa where it fails (`RCB_GL` forces one;
+  `/spec` `gl_backend` says which).
+- **Slowdown S = 1, resets 10.** Real-time factor of the service (ws-1, 32 cores at load 30-60, the service capped
+  at 4 CPUs; board 0112, 2026-10-14): 2.08 with the realtime clock flat out (`RCB_SLOWDOWN=0.01`, 11 episodes, 13.3 s
+  of robot time) and 2.6-2.7 for the bare physics; below 3, so PROTOCOL §4b's S = ceil(1.5 / 2.08) = 1. At S = 1 a
+  controller at the control rate (`cameras=[]`) with a camera image every 0.25 s ran 11 episodes (10 resets) with no
+  stall and a largest lag of 0.23 s. An episode that does nothing ends after 121 control steps (1.21 s): the serve
+  passes. The reset budget is the mode's default, 10; a reset takes about 1 s (MyoSuite's env reset).
+- **Checked at S = 1** (board 0112): a successful privileged episode (GPT-6 Luna xhigh, 82 rows) planned from step 0
+  in one `submit(..., at=0)` succeeds live and in the fresh replay (deterministic, no stall); streamed one row per call
+  from the agent's side it succeeded too; nop (no request) ends `timeout`, not graded a success; the 11 failed
+  episodes above replay to the live state. The cutoff is the standard twin's (3600 s).
+
 ## Files
-`scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there);
+`scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there; `shared/realtime/`
+the standard-realtime twin's service);
 `images/myosuite/` (Dockerfile, VERSION).

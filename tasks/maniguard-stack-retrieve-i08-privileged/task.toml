@@ -14,6 +14,7 @@ simulator = "maniguard"           # ManiGuard on BEHAVIOR-1K v3.7.2 (OmniGibson 
 robot = "franka-panda-longfinger"
 family = "stack_retrieve"
 mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/PROTOCOL.md §3)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "full"
 instance_seed = 8                 # = the ManiGuard-Bench task index (stack_retrieve/task_0008/base); scene = environment/instance/; identity = dataset.toml digest
 expert_time_estimate_hours = 2.0

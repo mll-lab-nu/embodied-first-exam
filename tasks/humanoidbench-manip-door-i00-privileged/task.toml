@@ -17,6 +17,7 @@ robot = "unitree-h1"
 # HumanoidBench env h1-door-v0; paper category manipulation; C4 · navigation and passage
 family = "door"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 # scene = environment/instance.npz (frozen MuJoCo state); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 3.0

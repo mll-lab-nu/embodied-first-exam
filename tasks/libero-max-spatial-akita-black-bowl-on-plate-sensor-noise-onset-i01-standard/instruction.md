@@ -1,12 +1,13 @@
 # LIBERO-MAX · libero_spatial · sensor-noise onset — instance i01 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
-simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick the akita black bowl on the cookies box and place it on the plate.**
+simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick the akita black bowl on the cookies box and place it on the plate.** LIBERO-PRO's initial-pose variant moved the target bowl (`akita_black_bowl_1`, the goal's) 0.17 m away from the robot and 0.06 m to the robot's right of where the sentence puts it, and turned it 45 degrees: it starts on the table, not on the cookies box (no bowl is on the box). The bowl to move is still that one; the other black bowl stands on top of the wooden cabinet.
 
 The scene can change while you work: once during the episode, when your gripper first gets close to one of the task's
 objects, the scene changes (as in LIBERO-MAX): an object or a receptacle may be moved, an obstacle or a few other
 objects may appear, a camera may shift, or the lighting, the colours or the image noise may change. Nothing tells you
-when; the task and its success check stay the same, so keep checking what the cameras show.
+when; the task and its success check stay the same, so keep checking what the cameras show. A moved object or
+receptacle jumps there alone: what already rests in or on it stays where it was.
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
