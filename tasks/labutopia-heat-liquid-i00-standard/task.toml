@@ -27,6 +27,7 @@ simulator = "labutopia"           # LabUtopia @ 8df7278 on NVIDIA Isaac Sim 6.1.
 robot = "franka-panda"
 family = "heat_liquid"
 mode = "standard"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 level = 2                         # LabUtopia's own level for the task (config level2_HeatLiquid)

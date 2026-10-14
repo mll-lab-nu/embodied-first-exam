@@ -14,6 +14,7 @@ simulator = "behavior"            # BEHAVIOR-1K v3.9.2 = OmniGibson 3.9.2 on Isa
 robot = "r1pro"
 family = "installing_a_scanner"
 mode = "privileged"               # privileged state, unlimited resets, thin primitives (docs/PROTOCOL.md §3)
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-installing-a-scanner-i0__pytvepD (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/installing_a_scanner/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/installing_a_scanner/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7)."
 instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest
