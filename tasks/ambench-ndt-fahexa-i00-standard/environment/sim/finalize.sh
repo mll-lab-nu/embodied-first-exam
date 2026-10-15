@@ -203,6 +203,10 @@ except Exception as exc:
 if out["live_gpu_faults"] and a and b and bool(out.get("success")) != out["replay_success"]:
     # the live physics ran without some of its GPU kernels and ended otherwise than the trajectory's faithful replays
     errors.append(f"the live episode logged {out['live_gpu_faults']} GPU fault(s) and its outcome differs from the replays'")
+elif out["live_gpu_faults"] and not out.get("success"):
+    # the agent acted in closed loop on faulted physics: a failed live episode is not a verdict on the agent, even when
+    # its replays fail too (the agent's later rows answered states the faithful physics never reaches)
+    errors.append(f"the live episode logged {out['live_gpu_faults']} GPU fault(s) and did not succeed")
 mp4 = os.path.join(d, "replay.mp4")
 out["video"] = os.path.exists(mp4) and os.path.getsize(mp4) > 0
 film = (last_json("film.json").get("film") or {})
