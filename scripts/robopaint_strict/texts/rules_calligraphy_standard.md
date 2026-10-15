@@ -15,5 +15,18 @@ fails the task. Our reference solution writes this exemplar with `path_mm` {{REF
 (rounded down). A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
 under the path limit: both are fine.
 
-**Success iff the picture rule above holds and the run is not colouring in.** The continuous score is the one above, × min(1,
-{{MAX_PATH_MM}} / `path_mm`) when it is colouring in.
+**The stroke cap counts strokes as they are written, not contacts** (this refines "one continuous contact is one stroke"
+above). A contact is cut into two strokes wherever the brush moves more than {{STROKE_GAP_MM}} mm along the main sheet without
+marking it (its mark narrower than {{MARK_MIN_WIDTH_MM}} mm: a press too light to ink), and a stroke longer than
+{{MAX_STROKE_PATH_MM}} mm of path counts as one stroke per started {{MAX_STROKE_PATH_MM}} mm ({{STROKE_PATH_FACTOR}} times our
+reference solution's longest stroke, {{REF_LONGEST_STROKE_MM}} mm, rounded up). Pieces joined by a touch too light to ink are
+therefore separate strokes, and one contact held down to write and re-write for a long time counts as several; a stroke
+written with the brush down and lifted at its end is one. **Strokes are sweeps:** at most {{SCRIBBLE_SHARE_PCT}} % of
+`path_mm` may lie in strokes whose path is longer than {{MAX_SCRIBBLE}} times the diagonal of their bounding box (taken as at
+least {{SCRIBBLE_MIN_MM}} mm): back-and-forth, zigzag, spiral or looping fills inside one stroke fail (our reference solution's
+strokes stay under 5 times).
+
+**Success iff the picture rule above holds, the run is not colouring in, the counted strokes are within the cap and the strokes
+are sweeps.** The continuous score is the one above, × min(1,
+{{MAX_PATH_MM}} / `path_mm`) when it is colouring in, × (1 − that share) when the strokes are not sweeps, and with the cap's
+scaling taken on the counted strokes.

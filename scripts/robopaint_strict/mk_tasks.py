@@ -13,7 +13,9 @@ Two stages, the second on the output of the first:
   2. the process rules (this script), added to that pair:
   - every copy of the frozen instance gets the rules in target.success: max_path_mm everywhere; calligraphy and lettering
     min_mark_width_mm (colouring in = a longer path of thin marks); paintings max_scribble, max_scribble_share,
-    scribble_min_mm (sweeps). rules.json holds the family parameters and, per pair, the reference solution's path and mark width
+    scribble_min_mm (sweeps); calligraphy (2026-10-14) also the counted strokes (stroke_gap_mm, mark_min_width_mm,
+    max_stroke_path_mm = stroke_path_factor x the reference's longest stroke, reference_longest_stroke_mm) and the sweep rule
+    on those strokes. rules.json holds the family parameters and, per pair, the reference solution's path and mark width
     on the main sheet (reference_path_mm, reference_mark_width_mm, measured by measure_reference.py in the base image);
     max_path_mm = path_factor x that path rounded up to round_mm, min_mark_width_mm = mark_factor x that width rounded down to
     0.01 mm. The scene and its hash (instance_sha) do not change;
@@ -50,7 +52,9 @@ GROUP = {
 }
 SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-([a-z0-9]+(?:-[a-z0-9]+)*)-i\d\d$")
 # the instance keys of the rules (= rcb_brush_strict.RULE_KEYS)
-RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
+RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm",
+             "stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")
+SPLIT_KEYS = ("stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")   # = rcb_brush_strict.SPLIT_KEYS
 PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
 # README "Change Log" entries of every pair, by mode, written after rules.json's change_log_all: the second review of board 0067
 # (kept here, next to the code they describe; rules.json holds the earlier ones).
@@ -61,6 +65,9 @@ CODE_CHANGES = {
         "ran on another scene and say nothing about the trajectory), and every `grader_error = 1` (a replay process without a "
         "result or past its time limit) now has `infra_error = 1` next to it; every `reward.json` carries `infra_error`. The "
         "reward is 0 in these cases, as before; the pass rule, the frozen instance and the tooling are unchanged.",
+        "2026-10-14 (failure analysis of 2026-10-14): the graders' `rcb_brush_strict.py`, the same file in every RoboPaint "
+        "task, gained the calligraphy families' counted strokes (their own entry, where it applies); a task without those rule "
+        "keys in `target.success` (lettering and the paintings) is graded exactly as before.",
     ],
     "standard": [
         "2026-10-10 (review round 2, board 0067): the service's request checks and the client. `environment/sim/server.py` "
@@ -96,6 +103,25 @@ CODE_CHANGES = {
         "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
         "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
         "are unchanged, so the task keeps its name and earlier results stand.",
+        "2026-10-14 (failure analysis of 2026-10-14): the graders' `rcb_brush_strict.py`, the same file in every RoboPaint "
+        "task, gained the calligraphy families' counted strokes (their own entry, where it applies); a task without those rule "
+        "keys in `target.success` (lettering and the paintings) is graded exactly as before.",
+    ],
+}
+# README "Change Log" entries of the pairs of one group (GROUP), both modes, after CODE_CHANGES.
+GROUP_CHANGES = {
+    "calligraphy": [
+        "2026-10-14 (failure analysis of 2026-10-14, item 9): the process rules count strokes as they are written "
+        "(`rcb_brush_strict.py`; the rule numbers in every copy of the instance's `target.success`: `stroke_gap_mm`, "
+        "`mark_min_width_mm`, `max_stroke_path_mm`, `max_scribble`, `max_scribble_share`, `scribble_min_mm`). A contact is "
+        "cut into two strokes where the brush moves more than 5 mm along the main sheet without marking it (a mark narrower "
+        "than 0.1 mm), a stroke longer than `max_stroke_path_mm` (5 x the reference solution's longest stroke) counts as "
+        "several, and the paintings' sweep rule (at most 10 % of the path in strokes longer than 12 x their bounding box's "
+        "diagonal) applies to these strokes. Before, the cap counted contacts: pieces written separately and joined by a "
+        "press too light to ink counted as one stroke, and so did a contact held down to write over and over. The scene "
+        "(`instance_sha`), the picture rule and the reference solution are unchanged, and the reference passes with each of "
+        "its strokes counted once. Results graded before this change are re-graded from their recorded trajectories, "
+        "nothing is re-run (scripts/robopaint_strict/regrade.py). The instruction states the rule.",
     ],
 }
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
@@ -144,6 +170,16 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
             "EVIDENCE": f"path_mm {ev_path:.0f} and mark_width_mm {ev_w:.2f}, against the colouring-in limits {fmt(budget)} mm and "
             f"{min_w:.2f} mm",
         }
+    v_count = {}
+    if "stroke_gap_mm" in F:  # calligraphy (2026-10-14): the cap counts strokes (marked pieces), not contacts
+        longest = float(cfg["reference_longest_stroke_mm"][base])
+        sstep = float(F["stroke_round_mm"])
+        lim = math.ceil(F["stroke_path_factor"] * longest / sstep - 1e-9) * sstep
+        rule.update({"stroke_gap_mm": float(F["stroke_gap_mm"]), "mark_min_width_mm": float(F["mark_min_width_mm"]),
+                     "max_stroke_path_mm": float(lim)})
+        v_count = {"STROKE_GAP_MM": fmt(F["stroke_gap_mm"]), "MARK_MIN_WIDTH_MM": fmt(F["mark_min_width_mm"]),
+                   "MAX_STROKE_PATH_MM": fmt(lim), "REF_LONGEST_STROKE_MM": f"{longest:.0f}",
+                   "STROKE_PATH_FACTOR": fmt(F["stroke_path_factor"])}
     if "max_scribble" in F:
         rule.update(
             {
@@ -162,6 +198,7 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
         "SCRIBBLE_MIN_MM": fmt(F.get("scribble_min_mm", 0)),
         "EVIDENCE": f"path_mm {ev_path:.0f} of the {fmt(budget)} mm budget; its strokes are sweeps",
         **v_mark,
+        **v_count,
     }
     return rule, v
 
@@ -228,7 +265,11 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
         }
         for rel in list(files):
             if rel.endswith("instance.json"):
-                files[rel][0] = add_rule(files[rel][0], rule)
+                # the agent's own copy (privileged environment/instance.json) needs no counted-stroke numbers: its
+                # s.score() asks the scoring service, and the instruction states them (check-robopaint-leak.sh admits the
+                # earlier rule keys there only)
+                agent = mode == "privileged" and rel == "environment/instance.json"
+                files[rel][0] = add_rule(files[rel][0], {k: x for k, x in rule.items() if not (agent and k in SPLIT_KEYS)})
         for place in PLACES[mode]:
             files[place + MODULE] = [module, 0o644]
         for rel, needle in WIRING[mode]:
@@ -284,7 +325,7 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
         )
         # the pair's own entries (change_log), then the entries of every pair of this mode (change_log_all)
         log = (list(cfg.get("change_log", {}).get(base) or []) + list(cfg.get("change_log_all", {}).get(mode) or [])
-               + CODE_CHANGES[mode])
+               + CODE_CHANGES[mode] + GROUP_CHANGES.get(GROUP[fam], []))
         if log:  # normalize() files it under Details as "### Change Log"
             entries = "\n".join(f"- {e}" for e in log) + "\n"
             if "\n### Change Log\n" in rd:  # the family's template has the section (oil): its entries first
