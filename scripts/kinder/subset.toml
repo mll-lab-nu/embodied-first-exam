@@ -19,7 +19,7 @@
 #   difficulty        what makes it hard, and how models did
 #   oracle_evidence   the positive example a reviewer checks (the family's, both modes)
 #   oracle_privileged, oracle_standard   instead, where oracles/<family>/<mode>/ holds an oracle: what it does
-# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs only), read by gen_tasks.py:
+# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs and the package registries), read by gen_tasks.py:
 # KinDER and its baselines are public, so anything more lets a standard-mode agent install the simulator it is not
 # given, and either mode fetch upstream's planners.
 
@@ -27,7 +27,6 @@
 instance_tag = "i00"
 seed = 0                  # KinDER draws the scene from this seed; the instance pins it (instance.json)
 max_steps = 1000          # upstream's episode length for these tasks (TidyBot3DConfig.horizon): 100 s at 10 Hz
-agent_timeout_sec = 3600
 verifier_timeout_sec = 900
 review_pr = 8             # the pull request whose human review covers the tasks without an oracle (0: not opened yet)
 
@@ -54,7 +53,7 @@ expert_hours = 4.0
 difficulty = """Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it
 with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling
 MPC on the true simulator."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic)"""
 task_statement = """get the five small dark-red cubes on top of the kitchen island into the middle drawer of the
 island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all
 five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls."""
@@ -65,7 +64,7 @@ env_id = "kinder/ScoopPour3D-o30-v0"
 expert_hours = 4.0
 difficulty = """Nonprehensile, tool use, dynamics: move 30 small cubes from one bin to another with a scoop, each ending well
 inside the target bin."""
-oracle_evidence = """none known: GPT-6 Luna failed both modes, and no rollout of this instance is published"""
+oracle_evidence = """the privileged-mode trajectories of runs `codex-gpt6_astra-high` (845 steps) and `codex-gpt6_sol-high` (770 steps) of 2026-10-04, each scored 1 by the privileged verifier (two replays, the same final state; verifier and instance unchanged since); no standard-mode example is known yet (docs/benchmarks/kinder.md, Open)"""
 task_statement = """move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the
 scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner
 walls and at least 0.5 cm below its rim."""

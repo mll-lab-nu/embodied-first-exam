@@ -20,6 +20,12 @@ import rcb_client  # noqa: E402
 import rcb_limited as L  # noqa: E402
 
 ROOT = tempfile.mkdtemp(prefix="eai_standard_selftest_")
+# A directory whose `python` is this interpreter (a wrapper, not a link: a virtual environment's interpreter finds its
+# packages by where it is started from). Without it the selftest fails wherever the first `python` on PATH has no numpy.
+PYBIN = os.path.join(ROOT, "bin"); os.makedirs(PYBIN)
+with open(os.path.join(PYBIN, "python"), "w") as _f:
+    _f.write(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+os.chmod(os.path.join(PYBIN, "python"), 0o755)
 
 
 def free_port() -> int:
@@ -33,8 +39,10 @@ class Compose:
     def __init__(self, name: str, restarts: int = 6, **env):
         self.data = os.path.join(ROOT, name); os.makedirs(self.data)
         self.port = free_port(); self.max = restarts; self.restarts = 0; self.stopped = False; self.rc = None
+        # run.sh starts `python`: the interpreter that runs this selftest (which has numpy), whatever PATH says first
         self.env = {**os.environ, "RCB_DATA": self.data, "RCB_SERVER": os.path.join(HERE, "toy_server.py"), "RCB_TOY_PORT": str(self.port),
-                    **{k: str(v) for k, v in env.items()}}
+                    "RCB_PORT": str(self.port),   # where a service that gave up answers (rcb_limited.refuse_forever)
+                    "PATH": PYBIN + os.pathsep + os.environ.get("PATH", ""), **{k: str(v) for k, v in env.items()}}
         self.out = open(os.path.join(self.data, "container.log"), "ab")
         self.p = None; self._t = threading.Thread(target=self._loop, daemon=True); self._t.start()
         self.url = f"http://127.0.0.1:{self.port}"
@@ -258,6 +266,50 @@ def give_up_reports_earlier_resumes():
 
 
 @case
+def a_give_up_is_answered_at_once():
+    """A service that gave up answers 409 to every request and the client raises EpisodeOver at once. Before, nothing
+    listened: Robot() and wait_ready() waited out their timeout (an hour by default) for a simulator that was gone."""
+    c = Compose("refused_at_start", RCB_TOY_REFUSE="too_few_cpus")
+    try:
+        t = time.time()
+        e = _try(lambda: c.robot(timeout=120))
+        expect(isinstance(e, rcb_client.EpisodeOver) and "too_few_cpus" in str(e) and "infrastructure" in str(e), f"Robot() raises the refusal: {e!r}")
+        expect(time.time() - t < 30, f"at once, not after its timeout ({time.time() - t:.0f} s)")
+        fin = c.final()
+        expect(fin["reason"] == "too_few_cpus" and fin["infra_error"] == 1 and fin["gave_up"] and fin["success"] is False, f"final {fin}")
+        expect(c.restarts == 0 and c.p.poll() is None, "the container stays up for the collect hook, never restarted")
+        expect(c.end(timeout=30) == 2, "the collect hook keeps the give-up verdict")
+        expect(c.final() == fin, "and nothing a client sends changes it")
+    finally:
+        c.down()
+    c = Compose("gave_up_after_crashes")
+    try:
+        r = c.robot()
+        for _ in range(3):                               # the third crash ends the episode: sim_crashed
+            r.submit("joint_position", chunk(2, 0.3), dt=0.05, video="none")
+            c.kill_service()
+            if isinstance(_try(lambda: r.wait_ready(60)), Exception):
+                break
+        t = time.time()
+        for what, fn in (("wait_ready()", lambda: r.wait_ready(120)), ("status()", r.status), ("Robot()", lambda: c.robot(timeout=120)),
+                         ("submit()", lambda: r.submit("joint_position", chunk(2, 0.3), dt=0.05, video="none")),
+                         ("get_obs()", r.get_obs)):
+            e = _try(fn)
+            expect(isinstance(e, rcb_client.EpisodeOver) and "sim_crashed" in str(e), f"{what} raises EpisodeOver with the reason: {e!r}")
+        expect(time.time() - t < 30, f"all at once ({time.time() - t:.0f} s)")
+        e = _try(lambda: r.fk([0.0, 0.0, 0.0]))
+        expect(isinstance(e, ValueError) and "409" in str(e), f"kinematics: an error, no hang: {e!r}")
+        with socket.create_connection(("127.0.0.1", c.port), timeout=10) as k:   # a malformed request cannot stop the answer
+            k.sendall(b"POST /submit HTTP/1.1\r\nHost: x\r\nContent-Length: -1\r\n\r\n")
+            k.settimeout(10)
+            expect(b" 409 " in k.recv(4096), "409 whatever the request")
+        fin = c.final()
+        expect(fin["reason"] == "sim_crashed" and fin["infra_error"] == 1 and fin["gave_up"], f"final {fin}")
+    finally:
+        c.down()
+
+
+@case
 def startup_watchdog_and_backoff():
     c = Compose("watchdog", RCB_TOY_HANG_S=30, RCB_STARTUP_TIMEOUT_S=2)
     try:
@@ -357,9 +409,176 @@ def simulator_error_ends_the_episode():
 
 
 @case
+def malformed_requests_are_400_and_change_nothing():
+    """PROTOCOL §4.6: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
+    Raw JSON bodies, as an agent without the shipped client may send them."""
+    c = Compose("malformed")
+    try:
+        r = c.robot()
+        r.submit("joint_position", chunk(3, 0.1), note="before")
+        st0 = r.status()
+        big = "[[" + "9" * 400 + ", 0, 0]]"                                   # an integer too large for a float
+        bad = [
+            ("/submit", {"type": "joint_position", "actions": {"a": 1}}),      # TypeError in numpy, not ValueError
+            ("/submit", {"type": "joint_position", "actions": None}),
+            ("/submit", {"type": "joint_position", "actions": "abc"}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, {"x": 1}]]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0], [0, 0, 0]]}),
+            ("/submit", '{"type": "joint_position", "actions": ' + big + "}"),
+            ("/submit", '{"type": "joint_position", "actions": [[NaN, 0, 0]]}'),
+            ("/submit", '{"type": "joint_position", "actions": [[1e999, 0, 0]]}'),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "dt": [0.05]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "dt": "soon"}),
+            ("/submit", '{"type": "joint_position", "actions": [[0, 0, 0]], "dt": Infinity}'),
+            ("/submit", {"type": ["joint_position"], "actions": [[0, 0, 0]]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "cameras": 5}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "video_fps": {"fps": 10}}),
+            ("/submit", [1, 2, 3]),
+            ("/observe", {"seconds": [1]}),
+            ("/observe", {"seconds": {"s": 1}}),
+            ("/observe", '{"seconds": NaN}'),
+            ("/observe", {"cameras": "top", "seconds": 0, "video": 3}),
+        ]
+        for path, body in bad:
+            data = body if isinstance(body, str) else json.dumps(body)
+            x = requests.post(c.url + path, data=data, headers={"Content-Type": "application/json"}, timeout=10)
+            expect(x.status_code == 400, f"400 for {path} {data[:60]} (got {x.status_code}: {x.text[:120]})")
+            st = r.status()
+            expect(not st["done"] and st["step"] == st0["step"] and st["control_steps"] == st0["control_steps"],
+                   f"nothing ran and the episode goes on after {data[:60]}: {st}")
+        expect(r.status()["calls"] == st0["calls"], "a refused request is not a call of the episode")
+        res = r.submit("joint_position", chunk(2, 0.2), note="after")
+        expect(res.meta["executed_rows"] == 2 and r.status()["step"] == st0["step"] + 2, "a good request still runs")
+        expect(not [e for e in c.events() if e.get("ev") == "error"], "no simulator error was logged")
+    finally:
+        c.down()
+
+
+@case
+def busy_port_is_waited_for_not_a_crash():
+    """Under Harbor's egress control the agent's container shares the sidecar's network namespace: a process of the
+    agent may listen on the service's port while the scene is built. The service waits for the port; it does not exit
+    (an exit is a crash, and three of them end the episode)."""
+    with socket.socket() as held:
+        held.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        held.bind(("0.0.0.0", 0)); held.listen(1)
+        port = held.getsockname()[1]
+        c = Compose("busy_port", RCB_TOY_PORT=port)
+        c.port, c.url = port, f"http://127.0.0.1:{port}"
+        try:
+            c.pid()                                              # the episode began (the PID file is the service's)
+            time.sleep(3.0)
+            expect(c.restarts == 0 and c.p.poll() is None, f"the service is still up while the port is taken (restarts {c.restarts})")
+            expect("waiting for it to be free" in open(os.path.join(c.data, "server.log")).read(), "and says what it waits for")
+            held.close()
+            r = c.robot()
+            res = r.submit("joint_position", chunk(2, 0.1))
+            expect(res.meta["executed_rows"] == 2 and c.restarts == 0, "once the port is free the service serves, never restarted")
+            expect(not [e for e in c.events() if e.get("ev") == "resuming"], "no crash, no resume")
+        finally:
+            c.down()
+
+
+@case
+def negative_content_length_is_refused_at_once():
+    """A negative Content-Length must not make the service read until the client hangs up (an unbounded read)."""
+    c = Compose("neg_content_length")
+    try:
+        r = c.robot()
+        st0 = r.status()
+        with socket.create_connection(("127.0.0.1", c.port), timeout=10) as k:
+            k.sendall(b"POST /submit HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: -1\r\n\r\n")
+            k.sendall(b"x" * 65536)                               # and keep the connection open: no EOF for the service
+            k.settimeout(5)
+            reply = k.recv(4096)
+        expect(reply.startswith(b"HTTP/1.0 400") or reply.startswith(b"HTTP/1.1 400"), f"400 within 5 s, got {reply[:60]!r}")
+        st = r.status()
+        expect(not st["done"] and st["calls"] == st0["calls"], f"the episode goes on: {st}")
+    finally:
+        c.down()
+
+
+@case
+def a_repeated_camera_is_one_camera():
+    """N copies of one camera name were rendered into one list N times and returned N times (N * N images), while the
+    adapters' budgets counted N: a request of a few hundred bytes could exhaust the service's memory."""
+    meta = {"cameras": ["top", "side", "top", "top"]}
+    L.parse_request("/observe", meta, {})
+    expect(meta["cameras"] == ["top", "side"], f"the adapter gets each name once, in the order asked for: {meta}")
+    grabs = []
+
+    def grab(cams, want):
+        grabs.append(list(cams)); return {c: np.zeros((2, 2, 3), np.uint8) for c in cams}, {}
+    rec = L.Recorder(["top"] * 40, 1, grab, lambda: np.zeros(1), lambda cams: {}, lambda: 0)
+    rec.tick(force=True); rec.tick(force=True)
+    shapes = [p[3]["shape"] for p in rec.parts("frames", 10) if p[0] == "frames/top"]
+    expect(grabs == [["top"]] * 2 and shapes == [[2, 2, 2, 3]], f"the recorder too: grabs {grabs[:1]}, frames/top {shapes}")
+
+
+@case
 def client_accepts_both_names():
     for p, ok in (("eai-standard/2.2", True), ("eai-standard/2.1", True), ("rcb-limited/2.1", True), ("rcb-limited/1.0", False), ("x/2.2", False)):
         expect(p.startswith(rcb_client.ACCEPTED) == ok, p)
+
+
+@case
+def agent_clock_starts_at_the_first_request_and_survives_a_resume():
+    """meta time_s / time_left_s (rcb_limited.agent_time): not started by the service's start or by a probe that only
+    connects to the port, started by the agent's first request (any endpoint), and not set back by a resume."""
+    c = Compose("agent_clock")
+    try:
+        c.pid()                                   # the service is ready (the PID file is written just before it serves)
+        idle = 3.0; t_ready = time.time()
+        while time.time() - t_ready < idle:       # what a healthcheck may do: connect to the port, send nothing
+            with contextlib.suppress(OSError), socket.create_connection(("127.0.0.1", c.port), timeout=2):
+                pass
+            time.sleep(0.5)
+        expect(not any(e["ev"] == "first_request" for e in c.events()), "a connect without a request started the clock")
+        t_req = time.time()
+        r = c.robot()                             # GET /spec: the agent's first request
+        expect("first request" in r.spec()["budget"].get("clock", ""), f"spec.budget.clock {r.spec()['budget']}")
+        m0 = r.get_obs(cameras=[]).meta; lag = time.time() - t_req
+        expect(0.0 <= m0["time_s"] <= lag + 0.1, f"time_s {m0['time_s']} counts from the first request ({lag:.2f} s ago), "
+                                                 f"not from the service's start ({time.time() - t_ready:.1f} s ago)")
+        expect(m0["time_left_s"] >= 3600.0 - lag - 0.2, f"time_left_s {m0['time_left_s']} is short by the idle time")
+        first = [e for e in c.events() if e["ev"] == "first_request"]
+        expect(len(first) == 1 and abs(first[0]["t_first"] - t_req) <= lag + 0.1, f"first_request logged once: {first}")
+        time.sleep(2.0)
+        c.kill_service()
+        st = r.wait_ready(60)
+        expect(st["resumes"] == 1, f"resumed {st}")
+        m1 = r.get_obs(cameras=[]).meta; since = time.time() - t_req
+        expect(since - lag - 0.3 <= m1["time_s"] <= since + 0.1 and m1["time_s"] >= m0["time_s"] + 2.0,
+               f"time_s after the resume {m1['time_s']} (first request {since:.2f} s ago): the clock was set back")
+        expect(m1["time_left_s"] <= m0["time_left_s"] - 2.0, f"time_left_s went back up: {m0['time_left_s']} -> {m1['time_left_s']}")
+        expect(len([e for e in c.events() if e["ev"] == "first_request"]) == 1, "a resume logged a second first_request")
+    finally:
+        c.down()
+
+
+@case
+def every_adapter_reports_the_agents_clock():
+    """Each eai-standard/2.2 adapter (tasks/*/environment/sim/server.py next to a copy of this layer) computes meta
+    time_s and time_left_s from the agent's first request: from rcb_limited.agent_time (or the first-request time the
+    layer keeps in E["t_first"]), never from the service's start or the episode's own t0."""
+    import glob, hashlib, re
+    tasks = os.path.join(os.path.dirname(os.path.dirname(HERE)), "tasks")
+    layer = hashlib.sha256(open(os.path.join(HERE, "rcb_limited.py"), "rb").read()).hexdigest()
+    seen, bad = {}, []
+    for f in sorted(glob.glob(os.path.join(tasks, "*", "environment", "sim", "server.py"))):
+        lay = os.path.join(os.path.dirname(f), "rcb_limited.py")
+        if not os.path.isfile(lay) or hashlib.sha256(open(lay, "rb").read()).hexdigest() != layer:
+            continue                               # another protocol's service, or a task not yet on this layer
+        src = open(f, encoding="utf-8").read(); h = hashlib.sha256(src.encode()).hexdigest()
+        if h in seen:
+            continue
+        seen[h] = f
+        for key in ("time_s", "time_left_s"):
+            lines = [x for x in src.splitlines() if re.search(rf'"{key}":', x)]
+            if not lines or not all(re.search(r"agent_time\(", x) for x in lines) or any('E["t0"]' in x or "T_FIRST" in x or "T_BOOT" in x for x in lines):
+                bad.append(f"{os.path.relpath(f, tasks)}: {key} {[x.strip()[:120] for x in lines]}")
+    expect(os.path.isdir(tasks) and len(seen) >= 10, f"found only {len(seen)} eai-standard/2.2 adapters under {tasks}")
+    expect(not bad, "adapters whose clock does not start at the agent's first request:\n  " + "\n  ".join(bad))
 
 
 def main() -> int:

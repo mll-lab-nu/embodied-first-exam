@@ -18,7 +18,7 @@ achieved. `s.check()` returns the check's latest result.
 
 What `PreSoakPan`'s check requires (RoboCasa @ 756598a), all on that final state:
 - The pan and the sponge are each entirely inside the sink basin (all eight corners of its bounding box within the interior, with a 5 cm tolerance).
-- The water is on: the faucet handle's angle (mod 360°) is between 0.40 rad (about 23°) and π from its off position.
+- The water is on: the faucet handle's angle on its on / off hinge (mod 360°) is between 0.40 rad (about 23°) and π from its off position (the handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.52 rad (so 0.40 rad is near the end of its travel), and a temperature hinge (about ±0.79 rad) that moves the handle in another direction and never turns the water on or off; which way each hinge turns depends on the sink model).
 - The gripper's grip site (between the fingertips) is more than 25 cm from the pan's centre: let go and move the hand away.
 A "centre" is a body's origin; "touches" means a MuJoCo contact.
 
@@ -45,4 +45,15 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 ## Rules
 - Write your own controller. Do not use the benchmark's demonstrations, trained policies or any published solution.
 - Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

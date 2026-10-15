@@ -16,7 +16,7 @@ CPU is bit-exact) and applies the environment's own success check for `DrainVegg
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
-The check for `DrainVeggies` requires that the lettuce has been washed: inside the sink with the water on for more than 10 consecutive checks (the check runs twice per control step: at least 6 control steps; once washed it stays washed); at the end the lettuce is in the pot and the water is off.
+The check for `DrainVeggies` requires that the lettuce has been washed: inside the sink with the water on for more than 10 consecutive checks (the check runs twice per control step: at least 6 control steps; once washed it stays washed); at the end the lettuce is in the pot and the water is off (the water is on while the faucet handle's on / off hinge is between 0.40 rad and π rad). The handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.5 rad (so the water is on only over the last fifth of its travel), turns about the sink's front-to-back axis, so the handle swings sideways; the temperature hinge (about ±0.79 rad) tilts the handle toward or away from you and never turns the water on or off.
 
 How RoboCasa365's checks compute these terms (`robocasa/utils/object_utils.py`):
 - *the gripper ends more than d m from X*: the distance from the robot's end-effector grip site to X's origin exceeds
@@ -50,4 +50,15 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 ## Rules
 - Write your own controller. Do not use the benchmark's demonstrations, trained policies or any published solution.
 - Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

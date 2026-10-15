@@ -1,0 +1,25 @@
+{
+  "task": "push_T",
+  "goal": "Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and orientation, then return the arms to their start pose.",
+  "instruction_templates": [
+    "Push the T-shaped block to align it precisely with the gray T-shaped pad."
+  ],
+  "success": [
+    "Orientation: the angular distance between the full 3D orientations of block t and pad target_t is < 7 deg.",
+    "Position: the XY distance between the root position of t and the root position of target_t is < 0.007 m (7 mm, strict).",
+    "Both target arms are back at origin: all target arms (left_arm and right_arm; the support arm is not counted) have their end-effector pose within 0.15 m on EACH axis (|dx|,|dy|,|dz| all <= 0.15 m) and within 20 degrees (quaternion angle) of the pose they had at the start of the episode (recorded after the scene settled).",
+    "The above three hold simultaneously after one action.",
+    "Lift constraint (query, must stay 0 for the whole episode): the block t must never be higher than 0.01 m above its initial z (root z at the start of the episode, measured every action); a single action at which z(t) - z0 > 0.01 m fails the episode immediately."
+  ],
+  "evaluation": "Single stage, checked after every action; the three alignment/arm conditions must hold at the same time. The reward manager is evaluated only once per action (after the sim sub-steps of that action are finished), never between sub-steps. In each evaluation the FIRST pending stage of the check list is tested (every condition in it, all at that same moment; a condition that is a nested list is an OR); when it passes it is removed permanently (never re-verified later) and the next stage becomes pending; at most one stage is removed per action. Reward is 1.0 only when the check list is empty (and no query/trigger counter is violated); the episode is declared a success as soon as reward >= 0.999 after an action, and ends as a failure if the action counter reaches step_lim without that, or earlier if the environment is flagged failed (query counter exceeded, see below). No final_check list is registered by this task, so the final-check logic at step_lim adds nothing. The lift query is evaluated after every action; as soon as the counter exceeds the aim of 0 the environment is flagged failed and the episode ends as a failure.",
+  "step_lim": 600,
+  "objects": [
+    "t: the T-shaped block (Rigid, 1; 't' category model 0), table-frame x in [-0.45,0.45], y in [-0.25,-0.1], random yaw over the full 360 deg",
+    "target_t: the gray T-shaped pad ('t_cushion', Geometry, static, 1), same x/y ranges as the block, random yaw over the full 360 deg"
+  ],
+  "scene_dynamics": "none",
+  "needs_memory_or_language": "none",
+  "end_requirements": "Both arms within 0.15 m per axis and 20 deg of their start pose at the same action as the block alignment (position < 7 mm, orientation < 7 deg).",
+  "physics_kind": "rigid (planar pushing)",
+  "notes": "Very strict tolerance: 7 mm and 7 deg. The orientation test is the full-quaternion angle (so a tilted block would also fail), and the block's root point (not an edge) is compared with the pad's root. The block may not be lifted more than 1 cm at any time, so grasping and carrying it is effectively prohibited (small tilts or hops above 1 cm during pushing also fail). The pad is a static geometry on the table and is not an obstacle (the block can be pushed over it)."
+}

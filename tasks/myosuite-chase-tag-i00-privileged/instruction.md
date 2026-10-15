@@ -4,7 +4,7 @@ You control the **MyoLegs**, a free-standing musculoskeletal model of a human to
 muscles: there is no joint-level controller.
 **Task:** Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).
 
-A musculoskeletal body with two legs stands in a square arena; an opponent moves in it. `s.state()` gives the task's observation dict (privileged): `internal_qpos`, `internal_qvel`, `grf`, `torso_angle`, `muscle_length`, `muscle_velocity`, `muscle_force`, `act`, `opponent_pose`, `opponent_vel`, `model_root_pos`, `model_root_vel`, `task`.
+A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move). `s.state()` gives the task's observation dict (privileged): `internal_qpos`, `internal_qvel`, `grf`, `torso_angle`, `muscle_length`, `muscle_velocity`, `muscle_force`, `act`, `opponent_pose`, `opponent_vel`, `model_root_pos`, `model_root_vel`, `task`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/chasetag_v0.py`; `solved` is the goal test,
 `done` the failure test):
 ```python
@@ -76,8 +76,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is 5400 s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -108,3 +107,14 @@ CLI equivalent of the grader:
 - Control step 10 ms (10 physics substeps). There is no step budget: your wall-clock time is the limit
   (~1200 control steps/s here). An episode ends at success or failure; `s.step` then refuses further
   actions until `s.reset()`.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **10 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

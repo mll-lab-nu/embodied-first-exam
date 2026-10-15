@@ -83,7 +83,8 @@ FAMILIES: dict[str, dict] = {
             "Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target "
             "(the targets circle the palm once every {period} s). Success: both balls within {proximity_th} m of their "
             "targets for {hold} consecutive control steps ({hold_s} s: one full orbit of the targets). Failure (the episode ends): a ball's height (world z) "
-            "drops below {drop_th} m, i.e. it falls out of the palm."
+            "drops below {drop_th} m, i.e. it falls out of the palm. MyoSuite's target trajectory has 1000 points: an episode "
+            "that has not succeeded after 1000 control steps (25 s) ends there, as a failure."
         ),
         scene="Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now.",
         difficulty="hard",
@@ -149,9 +150,10 @@ FAMILIES: dict[str, dict] = {
                      difficulty="hard", hours=4.0),
     "soccer": dict(goal="", scene="A musculoskeletal body with two legs stands on a soccer pitch; a ball lies in front of it and a goalkeeper guards the goal.",
                    difficulty="hard", hours=5.0),
-    "chase_tag": dict(goal="", scene="A musculoskeletal body with two legs stands in a square arena; an opponent moves in it.",
+    # the frozen instance drew the opponent policy `stationary` (MyoChallenge draws it once per environment): it stands still
+    "chase_tag": dict(goal="", scene="A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move).",
                       difficulty="hard", hours=5.0),
-    "osl_run": dict(goal="", scene="A musculoskeletal body whose left leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track.",
+    "osl_run": dict(goal="", scene="A musculoskeletal body whose right leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track.",
                     difficulty="hard", hours=5.0),
     "dex_apple_lift": dict(goal="", scene="An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at its pre-grasp pose next to it.", difficulty="hard", hours=3.0,
                            skill="lift", obj="apple"),
@@ -226,7 +228,7 @@ def goal_text_set3(fam: str, s) -> str:
     if fam == "osl_run":
         return (f"Run the track: move forward {b.start_pos - b.end_pos:g} m along it to the finish (MyoChallenge 2024 OSL "
                 f"Run, its own win condition), staying within {b.real_width:g} m of the track's centre line and on your feet; "
-                "the left leg is the prosthesis, driven by its own controller, so you command only the 54 muscles. Failure "
+                "the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. Failure "
                 "(the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.")
     if fam.startswith("dex_"):
         f = FAMILIES[fam]
@@ -252,6 +254,32 @@ def reference_rel(s) -> list:
         r = s.base.ref.get_reference(k * s.dt + s.base.motion_start_time)
         o = np.asarray(r.object, dtype=np.float64).reshape(-1)
         out.append([round(k * s.dt, 4), *[round(float(x), 5) for x in (o[:3] - p0)], *[round(float(x), 5) for x in o[3:7]]])
+    return out
+
+
+def scene_cameras(s) -> list:
+    """Cameras that are mounted on, track or are aimed at a body of the scene that is not the agent's own (a mocap body
+    such as the opponent or the goalkeeper, or a body behind a joint that is not the body's): their pose is that body's
+    position plus a constant, so the standard service gives their images only. The rule of shared/standard/server.py
+    (`scene_camera`), repeated here for the task texts."""
+    m = s.model
+    own = {int(m.joint(j["name"]).id) for j in s.joints() if j["name"] != "keyjoint" and not j["name"].startswith("OBJ")}
+    own |= {j for j in range(m.njnt) if int(m.jnt_type[j]) == 0 and m.joint(j).name == "root"}
+
+    def own_body(b: int) -> bool:
+        while b > 0:
+            first = int(m.body_jntadr[b])
+            if int(m.body_mocapid[b]) >= 0 or any(j not in own for j in range(first, first + int(m.body_jntnum[b]))):
+                return False
+            b = int(m.body_parentid[b])
+        return True
+
+    out = []
+    for c in s.cameras():
+        i = m.camera(c).id
+        bodies = [int(m.cam_bodyid[i])] + ([int(m.cam_targetbodyid[i])] if int(m.cam_mode[i]) in (3, 4) else [])
+        if not all(own_body(b) for b in bodies if b >= 0):
+            out.append(c)
     return out
 
 
@@ -295,6 +323,7 @@ def facts(fam: str) -> dict:
         "reward_src": textwrap.dedent(inspect.getsource(cls.get_reward_dict)).rstrip(),
         "obs_keys": [k for k in s.base.obs_dict if k != "time"],
         "cameras": s.cameras(),
+        "scene_cameras": scene_cameras(s),
         "steps_per_s": int(round(rate, -2)),
         "rest_reason": st["reason"],
     }

@@ -1,5 +1,5 @@
 """eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
-2.2 sim service shares (docs/STANDARD_MODE_2_2.md; the 2.1 base is docs/LIMITED_MODE_PROTOCOL.md).
+2.2 sim service shares (docs/STANDARD_MODE.md, Part 2; the 2.1 base is its Part 1).
 
 The source is scripts/eai_standard/rcb_limited.py; the generators copy it unchanged into every standard task's
 environment/sim/ (ci_checks/check-tooling-identity.sh). A service keeps its simulator to itself (scene, action
@@ -33,9 +33,12 @@ carries a field the protocol forbids (segmentation, object identities or sizes, 
 Crash recovery (class Episode; PROTOCOL §4.7): every executed control step is journaled, every completed call
 checkpointed (rows, state hash, the robot's proprio row); after a crash compose restarts the container and the service
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
-first half of a collect hook."""
+first half of a collect hook.
+The agent's clock (meta time_s / time_left_s = agent_time(E)) starts at its first request to the service, any endpoint
+(the HTTP layer notes it in E["t_first"] and logs `first_request`, which a resume reads back): the sidecar is up before
+the agent's session begins (the harness installs the agent first), so the service's own start is not that moment."""
 from __future__ import annotations
-import faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
+import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Callable
 
@@ -48,6 +51,19 @@ COMPAT = ["rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 DEPTH_MODES = ("none", "last", "frames")
+MAX_FRAMES_PER_CALL = 3000   # images one response may carry (cameras x frames, per-frame depth counted again): the 2.1 services' bound
+
+
+def check_frames(n_cameras: int, n_frames: int, depth_frames: bool = False, limit: int = MAX_FRAMES_PER_CALL) -> int:
+    """The images one call would return (cameras x frames; per-frame depth counted again), refused above `limit`
+    (ValueError -> 400, for the adapter to raise before it executes or renders anything): every frame is held in memory
+    until the response is sent, so a call without a bound can exhaust the service's memory. The adapter passes the frames
+    its Recorder will capture and the limit its /spec states as `max_frames_per_call`."""
+    n = int(n_cameras) * int(n_frames) * (2 if depth_frames else 1)
+    if n > limit:
+        raise ValueError(f"this call would return {n} images (cameras x frames, per-frame depth counted again); the limit is "
+                         f"max_frames_per_call = {limit}: ask for fewer cameras, a lower video_fps or a shorter call")
+    return n
 DEPTH_MAX_M = 65.535                                        # uint16 millimetres; a farther surface reads 0 (no reading)
 DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense (as rcb-limited/2.1)
 _RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
@@ -125,7 +141,7 @@ class Recorder:
                  depth: str = "none", clock_hz: float = 1.0):
         if depth not in DEPTH_MODES + ("legacy",):
             raise ValueError(f"bad depth mode {depth!r}")
-        self.cams = list(cameras); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
+        self.cams = list(dict.fromkeys(cameras)); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
         self._grab, self._prop, self._ext, self._clock = grab, proprio_row, extrinsics, clock
         self.frames: dict = {c: [] for c in self.cams}; self.depth: dict = {c: [] for c in self.cams}
         self.ext: dict = {c: [] for c in self.cams}; self.last_depth: dict = {}
@@ -382,7 +398,7 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE_2_2.md)
+# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE.md)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout
@@ -394,6 +410,22 @@ ON_SERVICE_ERROR = ("a connection error means the service crashed: it restarts a
                     "before you continue. A 500 means the simulator failed: the episode is over (reason \"error\"). A call "
                     "that runs longer than max_call_wall_s seconds stops at the next control step and returns what it "
                     "executed (meta.stopped, executed_rows).")
+
+
+CLOCK_NOTE = ("meta time_s / time_left_s count from your first request to the service (any endpoint), not from the "
+              "service's start, and keep running through a restart of the service; time_left_s = budget.wall_clock_s - "
+              "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
+              "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
+              "first request. Plan by time_left_s.")
+
+
+def agent_time(state: dict) -> float:
+    """Seconds since the agent's first request to the service (0.0 before it): the clock of meta time_s / time_left_s.
+    Harbor counts the agent's cutoff around the agent's run only, and the sidecar starts with the environment, a
+    minute or more before that (the harness is installed in between): a clock started with the service, or when the
+    scene is ready, ran ahead of the agent's and time_left_s reached 0 while the agent still had that time."""
+    t = state.get("t_first")
+    return 0.0 if t is None else max(0.0, time.time() - float(t))
 
 
 def _jsonable(v: Any) -> Any:
@@ -457,7 +489,8 @@ class Episode:
     - begin(): a fresh episode, or after a crash (run.sh exits non-zero, compose restarts the container, `restart:
       on-failure:N`) the SAME episode resumed: the journal is replayed up to the last checkpoint, the journal truncated
       there (the call that was in flight is lost as a whole: its caller got an error, not a result), the state hash
-      compared, the service's counters restored; the wall clock keeps running from the first start.
+      compared, the service's counters restored; the agent's clock keeps running from its first request (the logged
+      `first_request`: a resume never sets it back to full), the episode's own (state["t0"]) from the first start.
     - Resume check, by the simulator's determinism class: `exact` (bit-exact in a fresh process): the hash must match,
       else the episode ends `resume_failed` (infra_error). `approx` (a simulator declared nondeterministic): a
       mismatch is recorded (resume_state_mismatch, and the robot's deviation from its checkpointed proprio: joint_pos and
@@ -677,6 +710,9 @@ class Episode:
         for key, v in (last.get("persist") or {}).items():
             state[key] = v
         state["t0"] = float(starts[0]["ts"])
+        first = [e for e in ev if e.get("ev") == "first_request"]
+        if first:                                    # the agent's clock keeps running through a crash, never back to full
+            state["t_first"] = float(first[0].get("t_first") or first[0]["ts"])
         ended = [e for e in ev if e.get("ev") == "end" and int(e.get("control_steps") or 0) <= n]   # not the lost call's
         if ended:
             state["done"] = True; state["reason"] = ended[-1].get("reason"); state["t_end"] = float(ended[-1]["ts"])
@@ -720,7 +756,8 @@ class Episode:
 
     def give_up(self, reason: str, infra: bool) -> None:
         """End the trial's episode without a new one (never a reset): log it, write the verdict unless one is on disk,
-        leave the PID file for the collect hook, and idle until the container is removed."""
+        leave the PID file for the collect hook, and answer every request with the refusal until the container is
+        removed (refuse_forever)."""
         faulthandler.cancel_dump_traceback_later()
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
@@ -732,11 +769,89 @@ class Episode:
             f.write(str(os.getpid()))
         signal.signal(signal.SIGUSR1, lambda *_: None)
         print(f"[{PROTOCOL}] restart refused: {reason}", flush=True)
-        while True:
-            time.sleep(3600)
+        refuse_forever(reason, infra)
+
+
+def refuse_forever(reason: str, infra: bool, port: int | None = None) -> None:
+    """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container
+    is removed. Before, nothing listened once the service had given up -- whether it refused the episode at its start
+    (DexJoCo with fewer than 4 CPUs, a frozen instance that does not rebuild) or after its crashes -- and the client's
+    Robot() and wait_ready() waited out their whole timeout, an hour, for a simulator that would never answer. The
+    client raises EpisodeOver on this answer at once. The verdict is on disk already: nothing here reads or changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True, "infra_error": int(bool(infra))}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30                         # a client that stops sending must not hold the only thread
+
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= MAX_BODY:        # take the request first: a client still sending would see a reset, not the answer
+                    self.rfile.read(n)
+                self.send_response(409); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            except (OSError, ValueError):
+                pass
+            self.close_connection = True
+
+        do_GET = do_POST = _refuse
+
+        def log_message(self, *a):
+            pass
+
+    def answer():
+        try:
+            bind(int(os.environ.get("RCB_PORT", "8000")) if port is None else port, Refusal).serve_forever()
+        except Exception:  # noqa: BLE001 -- the refusal is a courtesy to the client; the give-up stands without it
+            traceback.print_exc()
+
+    threading.Thread(target=answer, daemon=True).start()
+    while True:
+        time.sleep(3600)
 
 
 # ---------------------------------------------------------------- the HTTP layer
+def _finite(v) -> bool:
+    try:
+        return math.isfinite(float(v))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
+def parse_request(path: str, meta, parts: dict):
+    """What every adapter needs checked before it touches the simulator (ValueError -> 400; PROTOCOL §4.6: a malformed
+    request steps no physics and never ends the episode, whatever is wrong with it: a JSON object where rows are
+    expected, a number too large for a float, NaN, a field of the wrong JSON type). Returns the action rows of a
+    /submit as a float64 array (shape and limits are the adapter's to check), None for /observe."""
+    if not isinstance(meta, dict):
+        raise ValueError("the request's meta must be a JSON object")
+    for k in ("dt", "seconds", "video_fps"):
+        if meta.get(k) is not None and not _finite(meta[k]):
+            raise ValueError(f"{k} must be a finite number (got {meta[k]!r:.60})")
+    for k in ("type", "interpolate", "video"):
+        if meta.get(k) is not None and not isinstance(meta[k], str):
+            raise ValueError(f"{k} must be a string (got {meta[k]!r:.60})")
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, (list, tuple)) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    if cams is not None:   # each camera once, in the order asked for: N copies of a name were rendered and returned N * N times
+        meta["cameras"] = list(dict.fromkeys(cams))
+    if path != "/submit":
+        return None
+    try:
+        src = parts["actions"]["data"] if "actions" in parts else meta.get("actions", [])
+        if src is None or isinstance(src, (dict, str, bytes)):
+            raise TypeError(f"got {type(src).__name__}")
+        A = np.asarray(src, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError, AttributeError, KeyError) as exc:
+        raise ValueError("actions must be an RCB1 array part `actions` or a JSON list of rows of numbers "
+                         f"({type(exc).__name__}: {str(exc)[:120]})") from None
+    if not np.all(np.isfinite(A)):
+        raise ValueError("actions contain NaN/inf")
+    return A
+
+
 class Service:
     """What a sim service hands to serve(): spec (dict), lock, state (the service's E dict: done, reason, exiting, error),
     submit(meta, actions) and observe(meta) -> (meta_out, rcb1 parts), kinematics(req) -> dict, status() -> dict,
@@ -751,8 +866,18 @@ class Service:
         self.episode, self.state_sha, self.proprio = episode, state_sha, proprio
         self.kin_calls = 0
 
+    def touch(self) -> None:
+        """Every HTTP request passes here: the first one starts the agent's clock (agent_time) and is logged, so that
+        a resume keeps it. A probe that must not start it connects to the port without sending a request."""
+        if self.state.get("t_first") is None:
+            self.state["t_first"] = t = time.time()
+            (self.episode.log if self.episode is not None else self.log)({"ev": "first_request", "t_first": t})
+
 
 def make_handler(svc: Service):
+    if isinstance(svc.spec.get("budget"), dict):
+        svc.spec["budget"].setdefault("clock", CLOCK_NOTE)   # what time_s / time_left_s count from, in every 2.2 /spec
+
     class H(BaseHTTPRequestHandler):
         def _send(self, code: int, ctype: str, body: bytes) -> None:
             try:
@@ -770,10 +895,18 @@ def make_handler(svc: Service):
         def log_message(self, *a):
             pass
 
+        def parse_request(self):             # every request, of any method and path (a subclass's endpoints too)
+            ok = super().parse_request()
+            if ok:
+                svc.touch()
+            return ok
+
         def _body(self):
             try:
                 n = int(self.headers.get("Content-Length", 0))
             except ValueError:
+                raise ValueError("bad Content-Length")
+            if n < 0:                        # read(-1) would read until the client hangs up, without any bound
                 raise ValueError("bad Content-Length")
             if n > MAX_BODY:
                 raise ValueError("request too large")
@@ -821,8 +954,8 @@ def make_handler(svc: Service):
                 rows0 = ep.rows if ep else 0
                 out = blobs = err = None; stopped = None
                 try:
+                    A = parse_request(self.path, meta, parts)   # ValueError -> 400, before the adapter runs
                     if self.path == "/submit":
-                        A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
                         out, blobs = svc.submit(meta, A)
                     else:
                         out, blobs = svc.observe(meta)
@@ -856,7 +989,25 @@ def serve(svc: Service, port: int = 8000) -> None:
     if svc.episode is not None:
         svc.spec.setdefault("max_call_wall_s", svc.episode.max_call_wall_s)
     check_spec(svc.spec)
-    HTTPServer(("0.0.0.0", port), make_handler(svc)).serve_forever()
+    bind(port, make_handler(svc)).serve_forever()
+
+
+def bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent (`python -m http.server` listens on 8000 by default) may hold the port while the scene was
+    built. Wait for the port instead of failing: an exception here would count as a crash of the service, and three of
+    them end the episode. The time spent waiting is the agent's own (the collect hook's signal is still served)."""
+    said = False
+    while True:
+        try:
+            return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as e:
+            if e.errno != errno.EADDRINUSE:
+                raise
+        if not said:
+            said = True
+            print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
 
 
 # ---------------------------------------------------------------- the collect hook's first half

@@ -9,6 +9,13 @@ process is bit-exact (an in-process reset leaves PhysX solver / contact state be
 determinism check. Success requires every replay to complete the task AND all final-state hashes to agree, so a lucky
 non-deterministic run cannot pass. The frozen scene rebuilt here from tests/instance.json must also match
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
+
+Whose failure a 0 is (2026-10-10): a file the agent wrote that cannot be graded (not an npz, pickled / object arrays, no
+`task` or `actions` entry, wrong shape, non-finite, more than MAX_ROWS rows) is `bad_trajectory` (the agent's 0,
+grader_error 0); a replay process that dies, prints no result (`replay_failed`) or runs out of time
+(`replay_timed_out`), a frozen scene that does not rebuild to the recorded one here (`instance_ok` 0: dataset /
+simulator / hardware drift, decided before the first action) and any other error in this script are `grader_error` +
+`infra_error`: no verdict on the agent. Every reward.json carries `deterministic`, `grader_error` and `infra_error`.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, time, traceback
@@ -18,9 +25,18 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # Wall-clock limit of ONE replay process, scaled with the trajectory (2026-10-08; time limit only, the verdict rules are
 # unchanged). Measured on an idle 8-vCPU L40S host (job #3137): Isaac start + scene load 626 s, and a 10,475-step replay
 # had not finished when the old flat 3600 s ran out (< 3.5 control steps/s). Allowance: REPLAY_STARTUP_S for the start plus
-# a worst case of REPLAY_MIN_RATE control steps/s, never below the old 3600 s, at most REPLAY_CAP_S (4 h);
+# a worst case of REPLAY_MIN_RATE control steps/s, never below the old 3600 s, at most REPLAY_CAP_S;
 # task.toml's [verifier] timeout_sec fits two capped replays plus overhead.
-REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE, REPLAY_CAP_S = 3600.0, 1200.0, 2.0, 14400.0
+# 2026-10-14 (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at most
+# MAX_ROWS rows (was the tooling's runaway guard, 200,000, which no replay limit covered), and REPLAY_CAP_S is the time of
+# MAX_ROWS rows at the worst rate. The basis, from the pool's privileged trials (2026-10-09..14, 484 graded): the longest
+# successful trajectory had 25,404 rows (median of 113 successes 4,675), the frozen instances' challenge timeouts reach
+# 39,090 steps; the slowest replay measured was the filmed one of a 7,747-row trajectory, 4,851 s with a 725 s start
+# (1.88 control steps/s; the start took up to 1,115 s). MAX_ROWS 40,000 is above every challenge timeout and 1.6 times the
+# longest success; REPLAY_MIN_RATE 1.5 is 20 % under the slowest measured rate.
+MAX_ROWS = 40_000
+REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 3600.0, 1200.0, 1.5
+REPLAY_CAP_S = 28000.0                               # >= REPLAY_STARTUP_S + MAX_ROWS / REPLAY_MIN_RATE = 27,867 s
 
 
 def replay_timeout(n_steps: int) -> float:
@@ -61,17 +77,22 @@ def main() -> int:
         pass
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost}); return 0
+        write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 1, "grader_error": 0, "infra_error": 0, **cost}); return 0
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # the verifier's own copy of the tooling
         from rcb_behavior import MAX_STEPS
         ACTION_DIM = int(json.load(open(a.instance)).get("action_dim", 25))   # the R1Pro's with the task's robot config
-        d = np.load(a.traj, allow_pickle=False)
-        if str(d["task"]) != a.family:
-            write(False, {"success": 0, "wrong_family": 1, "grader_error": 0, **cost}); return 0
-        acts = np.asarray(d["actions"], dtype=np.float32)
-        if acts.ndim != 2 or acts.shape[1] != ACTION_DIM or acts.shape[0] > MAX_STEPS or not np.all(np.isfinite(acts)):
-            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost}); return 0
+        try:      # the agent's file: whatever is wrong with it is the agent's 0 (bad_trajectory), not a grader error
+            with np.load(a.traj, allow_pickle=False) as d:
+                task = d["task"]; task = str(task.item() if getattr(task, "shape", None) == () else task)
+                acts = np.asarray(d["actions"], dtype=np.float32)
+        except Exception as exc:  # noqa: BLE001 -- not an npz, pickled / object arrays, a missing entry, not numbers
+            print(f"[grade] unreadable trajectory: {exc!r}", file=sys.stderr, flush=True)
+            write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1, "n_actions": 0, "grader_error": 0, "infra_error": 0, **cost}); return 0
+        if task != a.family:
+            write(False, {"success": 0, "deterministic": 0, "wrong_family": 1, "grader_error": 0, "infra_error": 0, **cost}); return 0
+        if acts.ndim != 2 or acts.shape[1] != ACTION_DIM or acts.shape[0] > min(MAX_ROWS, MAX_STEPS) or not np.all(np.isfinite(acts)):
+            write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, "infra_error": 0, **cost}); return 0
         tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_behavior.py")
         t0 = time.time(); runs = []; limit = replay_timeout(int(acts.shape[0]))
         for i in range(a.repeat):
@@ -81,29 +102,34 @@ def main() -> int:
                 p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=limit, env={**os.environ, "RCB_SESSION_LOG": ""})
             except subprocess.TimeoutExpired:
                 print(f"[grade] replay {i + 1} exceeded its {limit:.0f} s limit ({len(acts)} steps)", file=sys.stderr, flush=True)
-                write(False, {"success": 0, "grader_error": 1, "replay_timed_out": 1, "replay_timeout_s": round(limit, 1),
+                write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, "replay_timed_out": 1, "replay_timeout_s": round(limit, 1),
                               "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
             lines = [l for l in p.stdout.splitlines() if l.startswith("{")]
             runs.append(json.loads(lines[-1]) if lines else {"error": f"replay process rc={p.returncode}"})
         outs = [(r.get("replays") or [{}])[0] for r in runs]
         if any("error" in r or not o for r, o in zip(runs, outs)):
-            write(False, {"success": 0, "grader_error": 1, **cost}); return 0
+            print(f"[grade] a replay did not run to its result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, "replay_failed": 1, "n_actions": int(len(acts)), **cost}); return 0
         all_success = all(o.get("success") for o in outs)
         deterministic = len({o.get("state_sha") for o in outs}) == 1
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
         ok = all_success and deterministic and instance_ok
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
-               "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
+               # instance_ok 0: the frozen scene did not rebuild to the recorded one in the verifier (dataset / simulator /
+               # hardware drift, decided before the first action): an infrastructure failure, not the agent's 0
+               "instance_ok": int(instance_ok), "infra_error": int(not instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0].get("sim_steps") or 0),
+               # the robot fell over in a replay (the tooling's fall rule ended it there; the goal did not hold)
+               "fallen": int(any(bool(o.get("fallen")) for o in outs)),
                # progress: the 2026 challenge's q_score of the last replay (before 2026-09-27 this read a key "progress"
                # that the replay does not report, so final_reward was always 0)
                "final_reward": float(outs[-1].get("q_score") or 0.0), "q_score": float(outs[-1].get("q_score") or 0.0),
-               "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1), "grader_error": 0,
+               "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1), "grader_error": int(not instance_ok),
                "video_rendered": int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4"))), **cost}
         write(ok, out)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "grader_error": 1, **cost})
+        write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, **cost})
     return 0
 
 

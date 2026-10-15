@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the RoboPaint tasks: tasks/robopaint-<family>-<target>-i00-{privileged,standard} (docs/benchmarks/robopaint.md).
+"""Generate the RoboPaint tasks: tasks/robopaint-<family>-<target>-i<NN>-{privileged,standard} (docs/benchmarks/robopaint.md).
 
     python3 scripts/robopaint_strict/mk_tasks.py                          # (re)write every pair; `git diff tasks/` stays empty
     python3 scripts/robopaint_strict/mk_tasks.py --check                  # write nothing; exit 1 if a task dir differs
-    python3 scripts/robopaint_strict/mk_tasks.py robopaint-kaishu-yong-i00 # these pairs only
+    python3 scripts/robopaint_strict/mk_tasks.py robopaint-kaishu-yongzibafa-i00 # these pairs only
 Needs only Python 3 (no simulator, no numpy). Then `cd tasks && harbor add --scan .` when a digest changed.
 
 Two stages, the second on the output of the first:
@@ -21,7 +21,12 @@ Two stages, the second on the output of the first:
     verifier replays with it (tests/grade.py, tests/Dockerfile), the privileged scoring service imports it (RCB_TOOL_MODULE) and the
     standard collect hook replays with it (RCB_TOOL). The tasks' wiring comes with the template pair's code; this script checks it;
   - the texts: the rules from texts/rules_<group>_<mode>.md in instruction.md (after "Target and score"), texts/readme_<mode>.md
-    in README.md, a sentence in the task.toml description, the oracle evidence (rules.json).
+    in README.md, a sentence in the task.toml description, the oracle evidence (rules.json: oracle_evidence, or the family's own
+    entry in oracle_evidence_family, or the pair's own entry in oracle_evidence_pairs), and the pair's change log (rules.json
+    change_log: README "Change Log", followed by change_log_all's entries for the mode: changes to the code every pair shares);
+    texts/readme_verification_end_<mode>.md ends the README's Verification section.
+The limits stay those of the reference solution they were set on (reference_path_mm, reference_mark_width_mm); a pair whose
+reference solution was re-made since has its current one's path and mark width in rules.json current_reference (the evidence).
 Every task ends with scripts/task_conventions.py's normalize(); a task dir holds exactly what the generator writes.
 
 "Strict" survives only in internal names: this directory, rcb_brush_strict.py, RCB_TOOL_MODULE=rcb_brush_strict and the reward.json
@@ -38,14 +43,61 @@ MODULE = "rcb_brush_strict.py"
 GROUP = {
     "kaishu": "calligraphy",
     "xingshu": "calligraphy",
+    "caoshu": "calligraphy",
     "lettering": "lettering",
     "acrylic": "painting",
     "oil": "painting",
 }
-SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|lettering|acrylic|oil)-([a-z0-9]+(?:-[a-z0-9]+)*)-i00$")
+SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-([a-z0-9]+(?:-[a-z0-9]+)*)-i\d\d$")
 # the instance keys of the rules (= rcb_brush_strict.RULE_KEYS)
 RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
 PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
+# README "Change Log" entries of every pair, by mode, written after rules.json's change_log_all: the second review of board 0067
+# (kept here, next to the code they describe; rules.json holds the earlier ones).
+CODE_CHANGES = {
+    "privileged": [
+        "2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A frozen instance that the verifier's host does not "
+        "rebuild (`instance_ok = 0`) is `grader_error = 1` and `infra_error = 1` (it was a plain 0 without a flag: the replays "
+        "ran on another scene and say nothing about the trajectory), and every `grader_error = 1` (a replay process without a "
+        "result or past its time limit) now has `infra_error = 1` next to it; every `reward.json` carries `infra_error`. The "
+        "reward is 0 in these cases, as before; the pass rule, the frozen instance and the tooling are unchanged.",
+    ],
+    "standard": [
+        "2026-10-10 (review round 2, board 0067): the service's request checks and the client. `environment/sim/server.py` "
+        "checks every field of `/submit` and `/observe` before anything is executed and answers 400: a `note` that is not a "
+        "string (for example a number) ended the episode with a 500 after the chunk had run, a null `dt`, `seconds` or "
+        "`video_fps` ended it before anything ran, and a negative or absurd `video_fps` ended it when the video was encoded; "
+        "null now means the default, `video_fps` must be in [0, 1000], and a numeric field sent as a string or a boolean is a "
+        "400 too. `environment/rcb_client.py`: `Robot()` waits up to 3600 s for the service (was 600 s; no effect here, the "
+        "scene builds in under a minute) and `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
+        "collect hook, the grader, the scene and the pass rule are unchanged; a trial that ended with reason `error` "
+        "(`sim_error = 1`) right after such a request before this date was not a simulator fault.",
+        "2026-10-10 (review round 3, board 0067): the shared service layer, the client and two request checks of the "
+        "service (`environment/sim/rcb_limited.py`, `environment/rcb_client.py`, `environment/sim/server.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        "their timeout (up to an hour). One call returns at most 640 images (`/spec` `max_frames_per_call`: cameras x "
+        "frames, a frame with per-frame depth counts 4): a request that would exceed it is a 400 before anything runs; the "
+        "control steps of an `ee_pose` chunk that is slowed down to 0.25 m/s are counted before it starts. Before, a call "
+        "had no such bound: one long observation at the full frame rate, or one `ee_pose` row far outside the workspace "
+        "(for example millimetres sent as metres), could hold more frames than the sidecar's memory and get the service "
+        "killed, so a trial that ended `sim_crashed*` or with `resource_service_oom` right after such a request before this "
+        "date was that. An `ee_pose` position too large for a finite distance is a 400 as well (it ended the episode with a "
+        "500 in the middle of the chunk). The collect hook, the grader, the scene and the pass rule are unchanged.",
+        "2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, "
+        "`environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and "
+        "`meta[\"time_left_s\"]` count from the agent's first request to the service (any endpoint), and a restarted "
+        "service keeps that moment; before, they counted from the service's own start of the episode (when its scene "
+        "was ready). Where the service is ready before the agent's phase begins (the harness is installed in "
+        "between: 79 s in the typical recorded standard trial), that clock ran ahead of the agent's and "
+        "`time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from "
+        "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
+        "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
+        "are unchanged, so the task keeps its name and earlier results stand.",
+    ],
+}
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
     "privileged": (
         ("tests/grade.py", MODULE),
@@ -74,19 +126,22 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
     fam = SRC_RE.match(base).group(1)
     F = cfg["families"][fam]
     ref = float(cfg["reference_path_mm"][base])
+    cur = cfg.get("current_reference", {}).get(base, {})  # a reference solution re-made after the limits were set
+    ev_path = float(cur.get("path_mm", ref))
     step = float(F["round_mm"])
     budget = math.ceil(F["path_factor"] * ref / step - 1e-9) * step
     rule = {"max_path_mm": float(budget)}
     v_mark = {}
     if "mark_factor" in F:  # calligraphy, lettering: colouring in = a long path AND thin marks
         ref_w = float(cfg["reference_mark_width_mm"][base])
+        ev_w = float(cur.get("mark_width_mm", ref_w))
         min_w = math.floor(F["mark_factor"] * ref_w / 0.01 + 1e-9) * 0.01
         rule["min_mark_width_mm"] = round(min_w, 2)
         v_mark = {
             "MIN_MARK_WIDTH_MM": f"{min_w:.2f}",
             "REF_MARK_WIDTH_MM": f"{ref_w:.2f}",
             "MARK_FACTOR": fmt(F["mark_factor"]),
-            "EVIDENCE": f"path_mm {ref:.0f} and mark_width_mm {ref_w:.2f}, against the colouring-in limits {fmt(budget)} mm and "
+            "EVIDENCE": f"path_mm {ev_path:.0f} and mark_width_mm {ev_w:.2f}, against the colouring-in limits {fmt(budget)} mm and "
             f"{min_w:.2f} mm",
         }
     if "max_scribble" in F:
@@ -105,7 +160,7 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
         "MAX_SCRIBBLE_SHARE": fmt(F.get("max_scribble_share", 0)),
         "SCRIBBLE_SHARE_PCT": fmt(100 * F.get("max_scribble_share", 0)),
         "SCRIBBLE_MIN_MM": fmt(F.get("scribble_min_mm", 0)),
-        "EVIDENCE": f"path_mm {ref:.0f} of the {fmt(budget)} mm budget; its strokes are sweeps",
+        "EVIDENCE": f"path_mm {ev_path:.0f} of the {fmt(budget)} mm budget; its strokes are sweeps",
         **v_mark,
     }
     return rule, v
@@ -210,6 +265,13 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             "\n## Verification\n" + texts[f"readme_verification_{mode}.md"].strip() + "\n",
             "README.md",
         )
+        # the verifier's own conditions (no verdict, a file that is not a trajectory, its time), at the end of the section
+        rd = sub_re1(
+            rd,
+            r"(?s)(\n## Verification\n.*?)(?=\n## )",
+            lambda mm: mm.group(1).rstrip("\n") + "\n" + texts[f"readme_verification_end_{mode}.md"].strip() + "\n",
+            "README.md",
+        )
         rd = sub1(
             rd,
             "\n## Task\n",
@@ -220,11 +282,30 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             + "\n\n",
             "README.md",
         )
+        # the pair's own entries (change_log), then the entries of every pair of this mode (change_log_all)
+        log = (list(cfg.get("change_log", {}).get(base) or []) + list(cfg.get("change_log_all", {}).get(mode) or [])
+               + CODE_CHANGES[mode])
+        if log:  # normalize() files it under Details as "### Change Log"
+            entries = "\n".join(f"- {e}" for e in log) + "\n"
+            if "\n### Change Log\n" in rd:  # the family's template has the section (oil): its entries first
+                rd = sub_re1(
+                    rd,
+                    r"(?s)(\n### Change Log\n.*?)(?=\n#{2,3} |\Z)",
+                    lambda mm: mm.group(1).rstrip("\n") + "\n" + entries,
+                    "README.md",
+                )
+            else:
+                rd = rd.rstrip("\n") + "\n\n## Change Log\n" + entries
         files["README.md"][0] = rd.encode()
         tt = files["task.toml"][0].decode()
         sentence = render(texts[f"toml_{GROUP[fam]}.md"], v).strip().replace('"', '\\"')
         tt = sub_re1(tt, r'^(description = ".*)"$', lambda mm: mm.group(1) + " " + sentence + '"', "task.toml")
-        ev = render(cfg["oracle_evidence"][mode], v).replace('"', '\\"')
+        evs = (
+            cfg.get("oracle_evidence_pairs", {}).get(base)
+            or cfg.get("oracle_evidence_family", {}).get(fam)
+            or cfg["oracle_evidence"]
+        )
+        ev = render(evs[mode], v).replace('"', '\\"')
         tt = sub_re1(tt, r'^oracle_evidence = ".*"$', lambda mm: f'oracle_evidence = "{ev}"', "task.toml")
         files["task.toml"][0] = tt.encode()
         out[name] = {k: (b, m_) for k, (b, m_) in files.items()}
@@ -294,7 +375,7 @@ def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("pairs", nargs="*", help="pairs robopaint-<family>-<target>-i00 (default: every pair of rules.json)")
+    ap.add_argument("pairs", nargs="*", help="pairs robopaint-<family>-<target>-i<NN> (default: every pair of rules.json)")
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
     cfg = json.loads((HERE / "rules.json").read_text(encoding="utf-8"))

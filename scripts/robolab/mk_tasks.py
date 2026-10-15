@@ -28,7 +28,7 @@ Both twins of a family are written to a scratch directory, passed through script
 the generator writes, other files are removed. Results are not kept in task dirs (PROTOCOL D3): the cited positives are
 named by trial id with their results-site and Hugging Face links."""
 from __future__ import annotations
-import argparse, json, os, pathlib, shutil, sys, tempfile
+import argparse, json, os, pathlib, re, shutil, sys, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robolab"
@@ -37,6 +37,13 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 RUN_ID = "codex-gpt6_luna-xhigh"            # the run whose trials are the cited positives (results site, Hugging Face)
 REVIEW_PR = "#3"                           # the pull request with the per-family review (PROTOCOL §2.7): dev/qineng = PR #3
+# The agent's egress is the model APIs and the package registries (owner decisions 2026-10-10 / 10-11, board 0072; docs/benchmarks/robolab.md, Network): the
+# templates' `[agent]` blocks hold the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
+# list for every task, ci_checks/check-verifier-isolation.sh).
+_HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text())
+ALLOWED_HOSTS = ", ".join(f'"{h}"' for h in re.findall(r'"([^"]+)"', _HOSTS.group(1) if _HOSTS else ""))
+if not ALLOWED_HOSTS:
+    raise RuntimeError("scripts/set_agent_egress.py has no HOSTS")
 
 
 def toml_str(s: str) -> str:
@@ -57,6 +64,13 @@ def normalizer():
     sys.path.insert(0, str(ROOT / "scripts"))
     from task_conventions import normalize
     return normalize
+
+
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = 3600   # the same in both modes (PROTOCOL §2.15)
 
 
 def fill(text: str, values: dict) -> str:
@@ -146,13 +160,14 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
         cited positives when there is none."""
         return reference_none(fam, F) if oracle_level(F, mode) == "none" else text
 
-    common = {"FAMILY": fam, "SLUG": slug(fam), "PRIV": task_dir(fam, "privileged"), "STD": task_dir(fam, "standard"),
-              "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version,
+    common = {"AGENT_TIMEOUT_S": str(CUTOFF_SEC), "FAMILY": fam, "SLUG": slug(fam), "PRIV": task_dir(fam, "privileged"), "STD": task_dir(fam, "standard"),
+              "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version, "ALLOWED_HOSTS": ALLOWED_HOSTS,
               "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip()}
     priv = {"GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),
             "DIFFICULTY": F["difficulty"], "OBJECTS_BLOCK": objects_block(F), **per_mode("privileged"),
             "REFERENCE_SOLUTION": reference("privileged", F.get("reference_solution", ""))}
-    std = {"INSTANCE_TEXT": toml_str(I["text"]), "STANDARD_GOAL": F["standard_goal"], "STANDARD_OBJECTS": F["standard_objects"].rstrip() + "\n",
+    std = {"INSTANCE_TEXT": toml_str(I["text"]), "STANDARD_GOAL": F["standard_goal"],
+           "CHANGE_LOG_EXTRA": "".join(f"- {x}\n" for x in F.get("change_log", [])), "STANDARD_OBJECTS": F["standard_objects"].rstrip() + "\n",
            **per_mode("standard"),
            "REFERENCE_SOLUTION": reference("standard", "`solution/oracle_replay.py` streams the privileged oracle's joint targets "
                                            "(`oracle_qpos.npy`, one row per control step, `hold`) as one-second `joint_position` chunks "

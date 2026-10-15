@@ -11,7 +11,7 @@ Open glasses lie on the table; the open case is next to them. Each temple is a h
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
   the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your wall-clock budget (90 minutes) is the limit (`meta["time_left_s"]`). Actions and
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record (save it early, update it as you go).
@@ -40,7 +40,9 @@ r.status()                                    # calls, control steps, done, reas
 Cameras: `front`, `back`, `left`, `right`, `top0` (static), `handcam_rgb` (on the hand mount; they move,
 so use the calibration that comes with each response; `spec["cameras"][cam]["mount"]` gives the static pose or the mount
 link). Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
-fastest. If a call fails with a connection error the service may have crashed: it resumes the same episode;
+fastest. One call returns at most 1000 images (cameras x frames at `video_fps`, default 10, at most 50; depth for
+every frame counts again; `spec["max_frames_per_call"]`): a larger request is refused with a 400 before anything runs, so
+ask for fewer cameras, a lower `video_fps` or a shorter call. If a call fails with a connection error the service may have crashed: it resumes the same episode;
 `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
 
 ### Action type `ee_pose` (23) — DexJoCo's own action
@@ -66,3 +68,14 @@ Out-of-limit values are clipped and reported.
   order: index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger = spread, 1-3 = flexion
   from the knuckle out; thumb 12 = opposition).
 - Control runs at 50 Hz (10 physics substeps of 2 ms). There is no step budget: your wall-clock time is the limit.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

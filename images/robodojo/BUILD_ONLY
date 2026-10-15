@@ -1,0 +1,57 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robodojo:<images/robodojo/VERSION> is never pushed to a public registry (docs/PROTOCOL.md
+§2.4, D5). Every evaluation host builds it locally; the RoboDojo tasks reference that tag and Harbor finds it in the local
+Docker image store.
+
+Why
+  The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the pip wheels of the Isaac stack (from pypi.nvidia.com).
+  NVIDIA licenses them for use, not for redistribution, so the built image may not be published. Everything else in it may
+  be: RoboDojo (github.com/RoboDojo-Benchmark/RoboDojo @ cb2a37d, MIT), its Isaac Lab fork (github.com/yuechen0614/IsaacLab
+  @ afca7b0, BSD-3-Clause), its cuRobo fork (github.com/yuechen0614/curobo @ d17b54c, NVIDIA's cuRobo licence), XPolicyLab
+  (@ 53c5da5, Apache-2.0; only its client code is imported, and RoboDojo's evaluator is used without a policy server), and
+  RoboDojo's assets (Hugging Face dataset RoboDojo-Benchmark/RoboDojo @ 35efbc7, Assets/, Apache-2.0).
+
+What the builder accepts
+  - the NVIDIA Isaac Sim / Omniverse license agreement (the image sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and every
+    container that runs it accepts it again at launch);
+  - NVIDIA's terms for the isaacsim wheels on pypi.nvidia.com and for cuRobo;
+  - the licences above (MIT, BSD-3-Clause, Apache-2.0).
+  No account, key or token is needed: everything is downloaded anonymously.
+
+Data
+  RoboDojo's assets (Robots, Object, Material, Room, Background, Sensor, Traj, Eval_Layout: 15365 files, ~41 GB) are baked in
+  under /opt/RoboDojo/Assets, and the robots' cuRobo configs are generated from their templates as RoboDojo's install does.
+  Three MDL materials that two asset USDs load from NVIDIA's asset bucket (images/robodojo/web_assets.txt, each checked
+  against its sha256) are baked in under /opt/isaac-assets and the USDs point at the copies (localize_assets.py), and the
+  Isaac Lab extension version RoboDojo's fork pins (isaacsim.asset.importer.urdf 2.4.31) is fetched at build time: a task
+  container has no general network access (the agent reaches only the model APIs, the verifiers none), and Isaac Sim starts
+  and renders offline. RoboDojo's training demonstrations (data/) and policy checkpoints (ckpt/) are NOT in the image. The
+  frozen task instances (RoboDojo's own evaluation layouts) live in the task directories.
+
+Host
+  Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports (Isaac
+  renders with RTX even headless, and RoboDojo runs PhysX with GPU dynamics). Checked on an RTX 4090 (24 GB; AMD Ryzen 9
+  7950X, driver 580.159). Build: ~120 GB of free disk during the build (the image is ~74 GB), network access to github.com,
+  astral.sh, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co, NVIDIA's extension registry
+  (ovextensionsprod.blob.core.windows.net, dw290v42wisod.cloudfront.net) and omniverse-content-production.s3*.amazonaws.com,
+  about 60 min. Run: ~5-10 GB of GPU memory and up to ~16 GB of memory per Isaac simulator (a task scene with liquids or
+  many objects at the top of the range; scripts/task_resources.toml). Isaac does not exit when the GPU runs out of memory (it waits on a crash dialog): on a shared GPU start fewer at
+  once; an agent's own sessions, the standard sidecar and the verifier's replays each need one.
+
+Build (from the repository root)
+  docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/eai-robodojo:$(cat images/robodojo/VERSION) .
+  The assets stage downloads Assets/ at the pinned dataset revision; with a copy already on disk (same revision), pass it
+  instead: --build-context robodojo-assets=<directory that contains Assets/>. The build follows RoboDojo's install.sh
+  (torch 2.7.0+cu128, Isaac Sim 5.1.0, RoboDojo's Isaac Lab and cuRobo forks), then sets every Python package to
+  images/robodojo/requirements.lock (the reference build's `uv pip freeze`) without resolving and fails unless the
+  environment is exactly the lock.
+
+Check a build
+  Every frozen instance must rebuild to its recorded state hash. With a task directory at hand:
+    t=tasks/robodojo-stack-bowls-i00-privileged
+    docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/eai-robodojo:$(cat images/robodojo/VERSION) bash -c \
+      "cd /tmp && cp /t/environment/rcb_robodojo.py . && python -c \"import numpy as np; np.savez('/tmp/t.npz', \
+         actions=np.zeros((0, 14), np.float32), task='stack_bowls')\" && \
+       python rcb_robodojo.py replay --task stack_bowls --instance /t/environment/instance.json --traj /tmp/t.npz"
+  expects "instance_exact": true (the state hash recorded in instance.json; not for the four tasks graded by verdict, whose
+  resets are not bit-identical: instance.json says "determinism": "verdict"). A model's successful trajectory, where the task
+  README names one, must replay to success.

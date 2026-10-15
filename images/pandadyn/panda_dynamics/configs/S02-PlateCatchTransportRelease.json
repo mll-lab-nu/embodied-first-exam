@@ -1,0 +1,93 @@
+{
+  "task": "S02-PlateCatchTransportRelease",
+  "common": {
+    "horizon": 25.0,
+    "object_mass": 0.035,
+    "tool_mass": 0.2,
+    "tool_half": 0.11,
+    "radius": 0.018,
+    "preview": 0.65,
+    "incoming_speed": 0.08,
+    "fixture_speed": 0.04,
+    "restitution": 0.1,
+    "table_friction": 0.08,
+    "tool_friction": 0.3,
+    "incoming_vertical_speed": 1.8
+  },
+  "difficulty": {
+    "debug": {
+      "incoming_speed": 0.05,
+      "fixture_speed": 0.025
+    },
+    "nominal": {},
+    "hard": {
+      "incoming_speed": 0.1,
+      "tool_half": 0.105,
+      "fixture_speed": 0.05
+    }
+  },
+  "ranges": {
+    "horizon": [
+      1,
+      45
+    ],
+    "object_mass": [
+      0.01,
+      0.15
+    ],
+    "tool_mass": [
+      0.1,
+      0.4
+    ],
+    "tool_half": [
+      0.001,
+      2
+    ],
+    "radius": [
+      0.001,
+      2
+    ],
+    "preview": [
+      0.001,
+      2
+    ],
+    "incoming_speed": [
+      0.001,
+      2
+    ],
+    "fixture_speed": [
+      0.001,
+      2
+    ],
+    "restitution": [
+      0,
+      1
+    ],
+    "table_friction": [
+      0,
+      1
+    ],
+    "tool_friction": [
+      0,
+      1
+    ],
+    "incoming_vertical_speed": [
+      0.0,
+      3.0
+    ]
+  },
+  "units": {
+    "horizon": "s",
+    "object_mass": "kg",
+    "tool_mass": "kg",
+    "tool_half": "m",
+    "radius": "m",
+    "preview": "s",
+    "incoming_speed": "m/s",
+    "fixture_speed": "m/s",
+    "restitution": "dimensionless",
+    "table_friction": "dimensionless",
+    "tool_friction": "dimensionless",
+    "incoming_vertical_speed": "m/s"
+  }
+}

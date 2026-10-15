@@ -1,0 +1,36 @@
+# Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx: the GPU goes to the sidecar.
+# Nyx renders through Vulkan, so the container needs the NVIDIA graphics libraries as well as compute: `runtime: nvidia`
+# with NVIDIA_DRIVER_CAPABILITIES=all (`capabilities: [gpu]` alone injects compute only).
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# container (same container, same /data) and the service replays its journal into the same episode, never a reset.
+# Grading (environment/sim/finalize.sh): one fresh-process replay on this GPU after the service has exited.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: labv18b/rcb-topogym:0.2.16-dev-cu128
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6          # N >= 3 (PROTOCOL §4.1); a resume continues the episode
+    environment:
+      RCB_TASK: cast_keyhole
+      RCB_INSTANCE: /srv/instance.json
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "21600"
+      RCB_STARTUP_TIMEOUT_S: "1800"  # >= 2 x the slowest measured scene build (docs/benchmarks/robotangle.md)
+      PYTHONPATH: /srv:/opt/topogym
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+      NVIDIA_DRIVER_CAPABILITIES: all
+    runtime: nvidia
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

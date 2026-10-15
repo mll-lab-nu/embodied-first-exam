@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "a5e4149e9273b2d664ba1c7de0a0454de0157fb2f4d57282914c1d324dc62830",
+  "asset_files": {
+    "instance_assets/frozen_assets/rope_volume.npz": "351940b9e46e784e9f492ddc7010a31ed8e8a33e98ef0d33f03bdaea68aa7b98",
+    "instance_assets/mujoco/rope_rope.npz": "91dfbb9c6841a16ce7369b1a7a7eeda74b1c3109e66bef936af3f434aa10019a",
+    "instance_assets/mujoco/scene.json": "32b8d930dabb128646f39867f3d1a69ab6cf579353173240dcfef8a2c33e9bda",
+    "instance_assets/mujoco/scene.xml": "d6fa0b7dd4c8726e25282f7a6bd8948821225653c856440722fecda26fb68ee9",
+    "instance_assets/mujoco_birth/manifest.json": "c6080ea740fe4afc7447211a2b10d82b133f98a758155ebfb0b2f73d9134f9d3",
+    "instance_assets/render_host/instance.json": "14b1b7b0d6b754ea4b2e29a6e13ea25696fa70634fee8d0f184a1c2a34c7a719",
+    "instance_assets/render_host/instance_assets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instance_assets/render_host/instance_assets/frozen_assets/rope_volume.npz": "351940b9e46e784e9f492ddc7010a31ed8e8a33e98ef0d33f03bdaea68aa7b98",
+    "instance_assets/render_host/instance_assets/ipc_state/arrays.npz": "35680413b09fbdf3198c98c68fa871ae89e292b62a3c5de45ceefb36c403d717",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/common/sim_engine.cpp/state.300.json": "bddd725c3d5199b44cbe81fb38752800652057fd53fb293184ba64862a0c4288",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/affine_body_dynamics.cu/q.300": "89e5c589729d05a7cc395d6d9970414a982fed98ca2fe07e351d8f8193ee22da",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/affine_body_dynamics.cu/q_prev.300": "809715381875ce3efa384ba6029340109dde8d861fd699828928dd4802c5cda0",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/affine_body_dynamics.cu/q_v.300": "e03a19ac2b1f556af04f11326ce03a2d919654faae77562d9bec8cbb6a1d2c2a",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/bdf/abd_bdf2_state.cu/q_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/bdf/abd_bdf2_state.cu/qv_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/constitutions/affine_body_prismatic_joint.cu/pj_current_distances.300": "357ab139083b66a611f87a61b7f7d5946e2e179fb5c23be8222e384027227fce",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/constitutions/affine_body_revolute_joint.cu/rj_current_angle.300": "d4c43c778c5e959db0bc4ab399f5b3fe1be4da64627c38454c018daf64d8a081",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/affine_body/constraints/external_articulation_constraint.cu/delta_theta.300": "5f98d5f1d73d6a6d0a15223df254af958cd04780ca90f894922d9bd2657aedbc",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/EEs.300": "0560bd006a9ae3d7a2987318d9697224ba0b2a16158a8e4b7f4744a25c39a4a9",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/PEs.300": "3a93619f581585ebb163068dc6fe6d219c6452c570668ca6b4866e89e453f95e",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/PPs.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/PTs.300": "f7fed7875d9a71e114af713cede68b9cc5a5aab9362e1645097dcd52c12bc88f",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/collision_detection/vertex_half_plane_trajectory_filter.cu/PHs.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/finite_element/bdf/fem_bdf2_state.cu/q_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/finite_element/bdf/fem_bdf2_state.cu/qv_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q.300": "c80861348ceb1759be53ad25659fe779cb6acf304ad939b57ed88ac718c2cc88",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q_prev.300": "b0787578181e99a2e118157380e448ca2c0546a43bdfe5927de37e8630f82f97",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q_v.300": "3a7bda0a923f0af7e9388ddc29b1eb0beae178c0abe7086b1da51bdd16d54144",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/positions.300": "67f33b6da29ea8a3f4f48a65fcc62f1708715b3c1d7d822d1f394fa13ab76c36",
+    "instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/prev_positions.300": "85955d924bb95fed01c6ad7c2da3ade509e1d8a67296393ea6dfb8fb6029f498",
+    "instance_assets/render_host/instance_assets/ipc_state/manifest.json": "c6080ea740fe4afc7447211a2b10d82b133f98a758155ebfb0b2f73d9134f9d3",
+    "instance_assets/render_host/runtime_binding.json": "ef1547cf9f9f4d39b949187697e33c256fc46019637c932d3484962a780e77f3"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d601866b4c91c858aa4e249b5bf5145b8fe3263b2885048a86016e34c314c208",
+    "files": 444
+  },
+  "runtime": {
+    "source": {
+      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "files": 443
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.1.0-noinst",
+    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "repo_digests": []
+  }
+}

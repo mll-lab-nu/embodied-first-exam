@@ -3,7 +3,7 @@
 A **Franka Panda** arm (LIBERO on robosuite / MuJoCo) at a table. **Task: Pick the butter and place it in the basket.**
 The scene is one frozen LIBERO-MAX case: a LIBERO-PRO variant of a libero_object task (initial_pose_position_angle), with one online
 event: the first time the gripper comes within 0.18 m of `butter_1`, LIBERO-MAX changes the scene
-once (the receptacle `basket_1` is moved 0.06 m, direction (-0.707, 0.707)). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).
+once (the receptacle `basket_1` is moved 0.06 m, direction (-0.707, 0.707); it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object the physics pushes the two apart). You have the full simulator state, so you can see the change happen (`s.state()["event_fired"]`).
 
 ## What you hand in
 `/app/output/trajectory.npz` with key `actions`: LIBERO's native control steps, shape `(T, 7)`, 1 ≤ T ≤ 280
@@ -44,4 +44,15 @@ img = s.render("agentview", 256)   # RGB, upright; cameras "agentview" and "wris
 ## Rules
 - Write your own controller. Do not use LIBERO's demonstrations, LIBERO-MAX's policies or any published solution.
 - Only the actions count: editing the simulator state while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

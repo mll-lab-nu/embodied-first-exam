@@ -1,0 +1,11 @@
+# SAPIEN needs a Vulkan device (the NVIDIA GPU) to build a scene and to render; physics runs on the CPU. Harbor's local
+# docker sandbox rejects [environment].gpus, but merging this onto the main service passes the device through.
+services:
+  main:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

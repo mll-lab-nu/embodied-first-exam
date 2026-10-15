@@ -1,0 +1,6 @@
+# Host-side asset preparation (prepare_assets.py): the Tianji conversion pins of tianji/source-manifest.json.
+# Not installed in the image (requirements.txt is the image's).
+trimesh==4.11.2
+mujoco==3.4.0
+numpy==2.3.5
+scipy==1.16.3

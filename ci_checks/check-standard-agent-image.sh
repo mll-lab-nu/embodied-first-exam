@@ -6,7 +6,11 @@
 # Usage: check-standard-agent-image.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"
-case "$(basename "$t")" in *-standard|*-standard-realtime) ;; *) exit 0 ;; esac
+# the sidecar modes of the mode registry (PROTOCOL §2.16; run_all.sh reads it once): standard, standard-realtime
+modes="${RCB_MODES_TABLE:-$(python3 "$(dirname "$0")/../scripts/task_conventions.py" modes)}"
+n="$(basename "$t")"; side=0
+while read -r m sidecar _tw; do [ -n "$m" ] && [[ "$n" == *"-$m" ]] && { side="$sidecar"; break; }; done <<< "$modes"
+[ "$side" = 1 ] || exit 0
 python3 - "$t" <<'PY'
 import json, pathlib, posixpath, re, sys
 t = pathlib.Path(sys.argv[1]); rc = 0

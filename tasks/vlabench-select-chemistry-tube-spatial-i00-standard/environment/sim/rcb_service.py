@@ -1,5 +1,5 @@
 """eai-standard/2.1 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/PROTOCOL.md §4,
-docs/LIMITED_MODE_PROTOCOL.md).
+docs/STANDARD_MODE.md).
 
 The robot as a service: the agent reaches a simulator it cannot open over HTTP. GET /spec, GET /status, POST /observe
 and POST /submit; POST /reset exists only when the run grants resets (budget.reset > 0); everything else is 404.
@@ -23,7 +23,8 @@ Evidence under DATA, never visible to the agent:
   trajectory_live.f64  the journal: every executed control step in the simulator's own action space, float64
   calls/NNNNNN/        each call's response meta and the actions as sent
   startups.jsonl       one line per process start
-  final.json           kept current (written atomically); "finalized": true once the verdict is in
+  final.json           kept current (written atomically); "finalized": true once the verdict is in -- before the
+                       video is rendered ("video_pending": true while it is), so the video never decides anything
   trajectory.npz, replay.mp4, replay.last.png   the graded episode and its fresh replay
 
 Crash recovery: compose restarts a crashed service (restart: on-failure). It replays the journal up to the last
@@ -31,8 +32,8 @@ checkpoint, checks the state hash, and continues the SAME episode -- never a res
 whole (its caller got an error, not a result, so nothing was learned). More than RCB_MAX_RESUMES restarts since the
 episode began (every process start counts, also one that died building the scene or replaying the journal) end the
 trial: sim_crashed_on_call if every crash happened while serving a call (the agent's failure), else sim_crashed
-(infrastructure, infra_error = 1). A verdict already on disk is never overwritten; a crash while rendering the video
-loses only the video.
+(infrastructure, infra_error = 1). A verdict already on disk is never overwritten; a crash, a hang or a slow render
+of the video loses only the video.
 """
 from __future__ import annotations
 
@@ -43,6 +44,7 @@ import json
 import os
 import signal
 import tempfile
+import threading
 import time
 import traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -343,9 +345,10 @@ class Service:
         except (OSError, ValueError):
             fin = {}
         if fin.get("finalized") or "deterministic" in fin:
-            # Graded already. A verdict that is not finalized: the process died rendering the video, all it lost.
-            if not fin.get("finalized"):
-                write_json_atomic(path, {**fin, "finalized": True, "video": False})
+            # Graded already. The process died rendering the video (video_pending; before 2026-10, a verdict not yet
+            # finalized): all it lost is the video.
+            if not fin.get("finalized") or fin.get("video_pending"):
+                write_json_atomic(path, {**fin, "finalized": True, "video": False, "video_pending": False})
             self._give_up("restarted after finalize", infra=False)
         restarts = self.starts - int(next(e for e in ev if e["ev"] == "start")["startup"])
         last = max(i for i, e in enumerate(ev) if e["ev"] in ("start", "resuming"))
@@ -372,6 +375,11 @@ class Service:
         self.ep_start, self.journal_rows = int(cp["ep_start"]), n
         self.episode = [r.copy() for r in rows[self.ep_start:]]
         self.done, self.reason, self.success = bool(cp["done"]), cp["reason"], bool(cp["success"])
+        if cp["ev"] == "end" and cp["reason"] == "reset":
+            # The process died inside a reset, after the abandoned episode's end and before the new episode began: a
+            # reset lost with its call never happened (as in server_mj.py), so that episode runs on and the reset is
+            # not charged; the agent may reset again (board 0121; before, every call was a 409 until it did).
+            self.done, self.reason, self.success = False, None, False
         self.t0 = next((e["t0"] for e in ev if e["ev"] == "first_request"), None)
         if self.done:
             self.t_end = next((e["ts"] for e in reversed(ev) if e["ev"] == "end"), cp["ts"])
@@ -462,6 +470,9 @@ class Service:
         if not isinstance(cams, list) or (unknown := sorted(set(map(str, cams)) - set(self.sim.cameras))):
             raise ValueError(f"unknown camera(s) {unknown if isinstance(cams, list) else cams}; "
                              f"the cameras are {list(self.sim.cameras)}")
+        # Each camera once, in the order asked for. A name repeated N times would be rendered into one list N times and
+        # returned N times (N * N images), which the frame budget counted as N: a small request could exhaust the memory.
+        cams = list(dict.fromkeys(map(str, cams)))
         try:
             fps = int(meta.get("video_fps", 10))
         except (TypeError, ValueError, OverflowError):
@@ -603,17 +614,32 @@ class Service:
         self._save_call(out, None)
         return out, rec.parts()
 
-    def _reset(self, meta: dict, parts: dict) -> tuple[dict, list]:
+    def _reset_view(self, meta: dict) -> tuple[list[str], int, str, bool]:
+        """A reset's checks, all of them, before anything changes: Refused (409, 400) or the view it returns."""
         if self.success or self.stopping:
             raise Refused(409, {"error": "trial finished: " + ("an episode succeeded" if self.success else "your time is up"),
                                 "reason": self.reason})
         if self.resets >= self.reset_budget:
             raise Refused(409, {"error": "reset budget exhausted", "budget": self.reset_budget})
         with bad_request():
-            cams, fps, video, depth = self._view(meta, "frames")
+            return self._view(meta, "frames")
+
+    def _reset(self, meta: dict, parts: dict) -> tuple[dict, list]:
+        cams, fps, video, depth = self._reset_view(meta)
         if not self.done:
             self._end("reset")                       # the running episode is abandoned
-        self.sim.reset()
+        try:
+            self.sim.reset()
+        except Exception:
+            # The simulator failed to start the new episode: the trial ends on a simulator error, not on the episode
+            # the agent had every right to abandon (handle() answers 500; its _end("error") finds the episode ended).
+            self.done, self.reason, self.success = True, "error", False
+            try:
+                self._checkpoint("end", reset_failed=True)
+            except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash
+                self.log("end", reason="error", reset_failed=True, checkpoint_error=repr(exc)[:300])
+                self._write_final()
+            raise
         self.resets += 1
         self.ep_start, self.episode = self.journal_rows, []
         self.done, self.reason, self.success, self.t_end = False, None, False, None
@@ -640,8 +666,11 @@ class Service:
             self._finalize()
 
     def _finalize(self) -> None:
-        """The graded episode (every control step since the last reset) as a trajectory, its replay in a fresh
-        simulator (success, and bit-exact agreement with the live run), and a video for humans."""
+        """The graded episode (every control step since the last reset) as a trajectory and its replay in a fresh
+        simulator (success, and bit-exact agreement with the live run): the verdict, final from the moment it is
+        written ("finalized": true). Then a video for humans, which can no longer change or void it: while it renders
+        final.json says "video_pending": true (the collect hook waits for it as long as its time allows)."""
+        rows = None
         try:
             rows = np.asarray(self.episode, dtype=np.float64).reshape(-1, self.sim.raw_dim)
             live_sha = self.sim.state_sha()
@@ -652,18 +681,27 @@ class Service:
             self.verdict = {"n_actions": int(len(rows)), "replay_success": bool(rep["success"]),
                             "deterministic": rep["state_sha"] == live_sha, "state_sha": live_sha, "video": False}
             self.log("replay", **self.verdict)
-            self._write_final()                      # the verdict is on disk before any video is rendered
-            try:
-                self.sim.render_video(rows, os.path.join(self.data, "replay.mp4"))
-                self.verdict["video"] = True
-            except Exception:  # noqa: BLE001 -- the video is for humans; it never decides the verdict
-                traceback.print_exc()
         except Exception as exc:  # noqa: BLE001
             traceback.print_exc()
             self.log("finalize_error", error=repr(exc)[:500])
             self.verdict = {"finalize_error": repr(exc)[:300]}
+        graded = "finalize_error" not in self.verdict
+        self.verdict["video_pending"] = graded
         self.finalized = True
-        self._write_final()
+        self._write_final()                          # the verdict, finalized, on disk before any video is rendered
+        if not graded:
+            return
+        try:
+            self.sim.render_video(rows, os.path.join(self.data, "replay.mp4"))
+            self.verdict["video"] = True
+        except Exception as exc:  # noqa: BLE001 -- the video is for humans; it never decides the verdict
+            traceback.print_exc()
+            self.log("video_error", error=repr(exc)[:500])
+        self.verdict["video_pending"] = False
+        try:
+            self._write_final()
+        except Exception:  # noqa: BLE001 -- the finalized verdict is on disk already; only the video's flag is lost
+            traceback.print_exc()
 
     # ------------------------------------------------------------------ HTTP
     def http_server(self, address: tuple[str, int]) -> HTTPServer:
@@ -689,6 +727,9 @@ class Service:
                 try:
                     n = int(self.headers.get("Content-Length") or 0)
                 except ValueError:
+                    n = -1
+                if n < 0:                            # (read(-1) would read to the end of the stream, without a limit)
+                    self.close_connection = True
                     return self._send(*svc._reply_json(400, {"error": "bad Content-Length"}))
                 if n > MAX_BODY:                     # refused unread: drop the connection with it
                     self.close_connection = True
@@ -725,6 +766,47 @@ class Service:
         srv.serve_forever()
 
 
+def refuse_forever(reason: str, port: int = 8000) -> None:
+    """After a give-up: answer every request 409 with the reason until the container is removed. Before, nothing
+    listened once the service had given up, and a client waited out its whole connection timeout for a simulator that
+    would never answer. The verdict is on disk already: nothing here reads or changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30                                 # a client that stops sending must not hold the only thread
+
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= MAX_BODY:                # take the request first: a client still sending would see a reset
+                    self.rfile.read(n)
+                self.send_response(409)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except (OSError, ValueError):
+                pass
+            self.close_connection = True
+
+        do_GET = do_POST = _refuse
+
+        def log_message(self, *args):
+            pass
+
+    def answer():
+        while True:
+            try:
+                HTTPServer(("0.0.0.0", port), Refusal).serve_forever()
+            except Exception:  # noqa: BLE001 -- a busy port, or anything else: the give-up stands without the answer
+                time.sleep(5.0)
+
+    threading.Thread(target=answer, daemon=True).start()
+    while True:
+        time.sleep(3600)
+
+
 def main(build: Callable[[], Sim], port: int = 8000) -> None:
     """A sidecar's life: count the start, back off after a failed one, build the scene under a startup watchdog, resume
     or start the episode, serve. Settings: RCB_DATA (/data), RCB_RESET_BUDGET (0), RCB_WALL_CLOCK_S (3600),
@@ -752,8 +834,7 @@ def main(build: Callable[[], Sim], port: int = 8000) -> None:
     except GiveUp as exc:
         print(f"restart refused: {exc}", flush=True)
         signal.signal(signal.SIGUSR1, lambda *_: None)
-        while True:
-            time.sleep(3600)
+        refuse_forever(str(exc), port)
     if pending:
         svc.on_sigusr1()
     svc.serve(port)

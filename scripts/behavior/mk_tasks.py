@@ -103,33 +103,116 @@ VERIFY_PRIVILEGED = (
     "Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal\n"
     "holds after every replay, the final-state hashes agree and the rebuilt frozen instance matches the recorded one\n"
     "(`tests/grade.py`), plus `/logs/verifier/replay.mp4`. A fresh process reproduces the live run bit for bit (the replay\n"
-    "starts from the loaded state, no reset); an in-process reset is only approximate, hence two fresh processes.")
+    "starts from the loaded state, no reset); an in-process reset is only approximate, hence two fresh processes. A file the\n"
+    "grader cannot read or with the wrong shape is `bad_trajectory`; a replay that dies or runs out of time, and a frozen\n"
+    "instance that does not rebuild in the verifier (`instance_ok` 0), are `grader_error` + `infra_error` (no verdict on the agent).")
 VERIFY_STANDARD = (
     "`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar;\n"
     "`live_matches_replay` is reported separately, and so are the crash-recovery fields (`sim_startups`, `resumes`,\n"
-    "`resume_state_mismatch`, `infra_error`); `/logs/verifier/replay.mp4`.")
+    "`resume_state_mismatch`, `infra_error`); `/logs/verifier/replay.mp4`. `infra_error` = 1 (no verdict on the agent) also\n"
+    "when `final.json` is missing, unreadable or not finalized, or a replay did not run to its result (`replay_error`).")
 SIDECAR = (
-    "The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar\n"
+    "The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar\n"
     "(`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own\n"
     "record in `/out`), which owns the scene and records the episode as a (T, 25) trajectory. The collect hook\n"
     "(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes\n"
     "(Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes\n"
     "`final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.")
 # The README Change Log (PROTOCOL §2.8: published tasks fixed in place), per mode, oldest first.
-REPLAY_LIMIT = "min(4 h, max(3600 s, 1200 s + steps / 2))"      # tests/grade.py replay_timeout(), per fresh-process replay
+FALL = ("OmniGibson's own Falling rule (the base tilted more than 41.4° from upright, or more than 3 cm below the floor) "
+        "has held for 10 s of simulated time")                 # the tooling's FALL_* (docs/benchmarks/behavior.md, Falls)
+REPLAY_LIMIT = "min(28000 s, max(3600 s, 1200 s + steps / 1.5))"   # tests/grade.py replay_timeout(), per fresh-process replay
+REPLAY_LIMIT_0 = "min(4 h, max(3600 s, 1200 s + steps / 2))"     # the same until 2026-10-14 (the Change Log's older entries)
 MEASURED = ("measured on an 8-vCPU L40S host (job #3137): the Isaac start took 626 s and a 10,475-step replay ran slower than "
             "3.5 control steps/s")
 CHANGES = {
     "privileged": [
-        f"2026-10-08: verifier time limits only. `tests/grade.py` gives each of the two fresh-process replays {REPLAY_LIMIT} "
+        f"2026-10-08: verifier time limits only. `tests/grade.py` gives each of the two fresh-process replays {REPLAY_LIMIT_0} "
         f"instead of a flat 3600 s, and `[verifier] timeout_sec` is 30600 s (was 5400 s), {MEASURED}, so long trajectories "
         "hit the old limit as a grader error. The scene, frozen instance and pass rule are unchanged, so the task keeps its "
-        "name; a trial graded before this date with `grader_error` = 1 can be regraded."],
+        "name; a trial graded before this date with `grader_error` = 1 can be regraded.",
+        f"2026-10-09: a fall ends the episode as a failure (owner decision): once {FALL}, the tooling Session's episode ends "
+        "(`status()['fallen']`; `s.reset()` starts again), and the verifier's replays end at the same control step (`reward.json` "
+        "`fallen`). The scene, frozen instance and BDDL goal are unchanged, so the task keeps its name; a trajectory in which "
+        "the robot falls over and stays down for 10 s scores 0, and results recorded before this change are reported "
+        "separately.",
+        "2026-10-10: whose failure a 0 is (review of board 0067; the pass rule is unchanged). `tests/grade.py`: a file the "
+        "agent wrote that cannot be graded (not an npz, object arrays, no `task` or `actions` entry) is `bad_trajectory` "
+        "(was `grader_error`); a frozen scene that does not rebuild to the recorded one in the verifier (`instance_ok` 0) "
+        "sets `infra_error` and `grader_error` (was a plain 0), and a replay that died or ran out of time sets `infra_error` "
+        "next to `grader_error`; every `reward.json` carries `deterministic` and `infra_error`. The tooling's "
+        "`replay` CLI skips an extra npz entry it cannot read and never lets its video recorder's start or stop decide a "
+        "replay. The instruction states the runaway guard (200,000 control steps), the trajectory format and the grader's "
+        "replay time limit. A trajectory that passed before still passes, so the task keeps its name.",
+        "2026-10-10 (2): the GPU-memory limit of the agent phase is 24 GiB (was 16 GiB). This is a change of the limit "
+        "(`[metadata.resources.limits]`, the `## Resource limits` paragraph of `instruction.md`), not of the minimum the task "
+        "declares: the reference solution alone holds 15.1 GiB for most of the episode on a 48 GB card with "
+        "`RCB_TEXTURE_BUDGET=0.1` (three oracle runs, two tasks, two L40S hosts, the task's own monitor), which left 5 % under "
+        "the old limit; the new one is max(1.5 x peak, peak + 4) rounded up, as for the other Isaac Sim benchmarks. Limits are "
+        "still only recorded (enforcement is off), so no result changes; the scene, the pass rule and the verifier are "
+        "unchanged, and the task keeps its name.",
+        "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), "
+        "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
+        "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
+        "this date were obtained with open egress.",
+        f"2026-10-14 (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at most "
+        f"40,000 rows (was 200,000, the tooling's runaway guard, which the 4 h replay limit could not cover on a slow host), "
+        f"each replay gets {REPLAY_LIMIT} (was {REPLAY_LIMIT_0}) and `[verifier] timeout_sec` is 57800 s (was 30600 s). "
+        "Basis: the longest successful privileged trajectory of the pool's trials had 25,404 rows, the frozen instances' "
+        "challenge timeouts reach 39,090 steps, and the slowest replay measured ran 1.88 control steps/s with a start of up "
+        "to 1,115 s (docs/benchmarks/behavior.md, Verifier time). The instruction states the cap. Every successful trajectory "
+        "recorded so far is under it, so the scene, the instance and the pass rule are unchanged and the task keeps its name."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
-        f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "
+        f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT_0}) "
         f"plus 30 min; {MEASURED}. The replays still have no limit of their own. The scene, frozen instance and pass rule are "
-        "unchanged, so the task keeps its name."],
+        "unchanged, so the task keeps its name.",
+        f"2026-10-09: a fall ends the episode as a failure (owner decision): once {FALL}, the service ends the episode with "
+        "reason \"failure: the robot fell over\"; `/spec` `episode` states the end conditions and `reward.json` adds "
+        "`task_failure`. The scene, frozen instance and BDDL goal are unchanged, so the task keeps its name; results recorded "
+        "before this change are reported separately.",
+        "2026-10-10: infrastructure failures are no longer booked as the agent's 0, and malformed requests no longer end the "
+        "episode (review of board 0067; the pass rule is unchanged). `tests/grade.py`: a missing, unreadable or unfinalized "
+        "`final.json` and a fresh-process replay that died, printed no result or ran out of time give `infra_error` = 1 "
+        "(`replay_error`), and a reward is always written. `environment/sim/finalize.sh`: each replay's exit code is "
+        "recorded and each replay may run until the hook's own deadline (it was killed with the hook before). "
+        "`environment/sim/server.py`: every field of `/submit` and `/observe` is checked before anything is executed (a null "
+        "or wrong-type `dt`, `seconds`, `video_fps`, `cameras` or `note`, `video_fps` outside 1-30, a zero quaternion: 400, "
+        "they ended the episode as a simulator error before); a `dt` that is not a whole number of control periods is a 400 "
+        "(it was rounded: 0.25 s ran as 0.267 s); a resume whose replayed episode ends before the logged one no longer "
+        "crashes every restart; `/spec` states the runaway guard (`max_control_steps` 200,000, in the instruction too). A "
+        "trial that passed before still passes, so the task keeps its name; a trial scored 0 before this date whose "
+        "`final.json` was unfinalized or missing was an infrastructure failure.",
+        "2026-10-10 (review round 2, board 0067): the client only. `Robot()` waits up to 3600 s for the service (was 600 s) "
+        "and prints its progress once a minute: Isaac Sim took 620-715 s to start on the 8-vCPU evaluation hosts (more than "
+        "600 s in 38 of 60 archived trials), so the first `Robot()` raised \"sim service unavailable\" and a script that did "
+        "not retry ended with 0 control steps. `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
+        "service, the collect hook, the grader, the scene and the pass rule are unchanged; a trial scored 0 with 0 control "
+        "steps before this date may have been this wait.",
+        "2026-10-10 (review round 3, board 0067): the shared service layer and the client only "
+        "(`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        "their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are "
+        "unchanged.",
+        "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), "
+        "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
+        "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
+        "this date were obtained with open egress.",
+        "2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, "
+        "`environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and "
+        "`meta[\"time_left_s\"]` count from the agent's first request to the service (any endpoint), and a restarted "
+        "service keeps that moment; before, they counted from the service's own start of the episode (when its scene "
+        "was ready). Where the service is ready before the agent's phase begins (the harness is installed in "
+        "between: a median of 79 s over the recorded standard trials), that clock ran ahead of the agent's and "
+        "`time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from "
+        "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
+        "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
+        "are unchanged, so the task keeps its name and earlier results stand."],
 }
 
 
@@ -194,6 +277,23 @@ def oracle_lines(fam: str, e: dict, mode: str) -> str:
     text = e["oracle_evidence"][mode] if level == "partial" else evidence(fam, e, mode)
     text = text.replace("\\", "\\\\").replace('"', '\\"')
     return f'oracle = "{level}"\noracle_evidence = "{text}"\n'
+
+
+def agent_egress(tt: Path) -> None:
+    """task.toml's `[agent]` block restricts the agent's egress to the model APIs (owner decision 2026-10-10, board 0072;
+    docs/benchmarks/behavior.md, Network): the two lines `scripts/set_agent_egress.py allowlist` writes, with its HOSTS
+    (one list for every task, ci_checks/check-verifier-isolation.sh). Idempotent."""
+    m = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text())
+    hosts = re.findall(r'"([^"]+)"', m.group(1)) if m else []
+    assert hosts, "scripts/set_agent_egress.py has no HOSTS"
+    head, sep, rest = tt.read_text().partition("[agent]\n")
+    assert sep, (str(tt), "no [agent] section")
+    block, sep2, tail = rest.partition("\n[")
+    lines = [ln for ln in block.splitlines() if ln.strip() and not re.match(r"\s*(network_mode|allowed_hosts)\s*=", ln)
+             and "set_agent_egress" not in ln]
+    lines.append('network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11')
+    lines.append("allowed_hosts = [" + ", ".join(f'"{h}"' for h in hosts) + "]")
+    tt.write_text(head + "[agent]\n" + "\n".join(lines) + "\n" + (("\n[" + tail) if sep2 else ""))
 
 
 def client_image() -> str:
@@ -263,9 +363,11 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("Image", f"`{IMAGE}` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`)"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in"),
             ("GPU", "an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`)"),
-            ("Budget", "14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s "
+            ("Budget", "the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every "
+                       "Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)"),
-            ("Verifier time", f"each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 30600 s (two capped replays + 30 min)")]
+            ("Verifier time", f"at most 40,000 rows accepted; each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 57800 s "
+                              "(two capped replays + 30 min)")]
     return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e),
                   details(rows) + change_log("privileged"), review_pr(e))
 
@@ -292,10 +394,10 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                              "entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` "
                              "frames or a watch window; binary RCB1 responses"),
             ("Crash recovery", "`restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same "
-                               "episode after a crash (resume class `approx`, docs/STANDARD_MODE_2_2.md §13.1); startup watchdog "
+                               "episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
-            ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)"),
+            ("Budget", "the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; docs/benchmarks/behavior.md)"),
             ("Collect hook time", "37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))
@@ -427,6 +529,7 @@ def generate(families: list[str], F: dict, src: Path, out: Path) -> list[Path]:
         dirs += [out / priv(fam), out / std(fam)]
         print("generated", priv(fam), "and", std(fam), f"(oracle {F[fam]['oracle']})")
     for d in dirs:                                   # the protocol's conventions, last (PROTOCOL §2.1)
+        agent_egress(d / "task.toml")
         normalize(d)
     return dirs
 

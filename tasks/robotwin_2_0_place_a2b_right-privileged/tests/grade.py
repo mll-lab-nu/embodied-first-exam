@@ -6,12 +6,24 @@ Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Har
 human-viewable replay video /logs/verifier/replay.mp4 (3x2 grid: world, observer, head / front, left wrist, right wrist) plus replay.last.png.
 Replays `--repeat` times in this fresh process; success requires every replay to complete the task AND
 all final-state hashes to agree (bit-exact determinism), so a lucky non-deterministic run cannot pass.
+
+reward.json always carries success, deterministic and grader_error. A deliverable the agent got wrong (not an npz, a
+missing key, a wrong shape, NaN, too long) is bad_trajectory = 1, the agent's failure. A host that cannot rebuild the
+frozen instance (the initial-state hash differs, PROTOCOL §3: seen for four tasks on L40S cards) is
+instance_mismatch = 1 with infra_error = 1, whether or not a trajectory was handed in: on such a host every Session
+the agent opened failed too, so a missing trajectory there says nothing about the agent.
 """
 from __future__ import annotations
-import argparse, json, os, sys, traceback
+import argparse, json, os, signal, subprocess, sys, time, traceback
 import numpy as np
 
+T_START = time.time()
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
+# Videos come after the verdict and never change it, but Harbor drops the whole verifier result when test.sh runs past
+# [verifier] timeout_sec (1800 s). Everything after the verdict stops at this many seconds after the process started.
+VIDEO_DEADLINE_S = float(os.environ.get("RCB_VERIFIER_VIDEO_DEADLINE_S", "1500"))
+PROBE_TIMEOUT_S = float(os.environ.get("RCB_INSTANCE_PROBE_TIMEOUT_S", "900"))
+HASH_ERROR = "instance state hash"      # rcb_traj.Session.reset: "instance state hash <sha> != expected <sha>: ..."
 TRACE_DIR = "/app/output/rcb_trace"
 os.environ["RCB_AGENT_TRACE_DIR"] = ""  # the verifier's own sessions must not be traced
 
@@ -61,10 +73,58 @@ def render_agent_traces(family: str, instance: str, max_videos: int = 6, budget_
 
 
 def write(ok: bool, out: dict) -> None:
+    """Both files are replaced atomically: the later rewrites (video_rendered, agent traces) can be cut off by the
+    deadline without ever leaving a half-written verdict."""
     os.makedirs(LOG_DIR, exist_ok=True)
-    open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
-    json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
+    for name, text in (("reward.txt", "1\n" if ok else "0\n"), ("reward.json", json.dumps(out))):
+        tmp = os.path.join(LOG_DIR, f".{name}.tmp")
+        with open(tmp, "w") as f: f.write(text)
+        os.replace(tmp, os.path.join(LOG_DIR, name))
     print(json.dumps(out))
+
+
+def probe_instance(family: str, instance: str) -> dict:
+    """No trajectory was handed in. Before that counts as the agent's failure, rebuild the frozen instance once in a
+    child process (its own time limit; a hang cannot cost the verdict): if this host cannot rebuild it, the agent's
+    Sessions could not either."""
+    code = ("import sys; sys.path.insert(0, sys.argv[1]); from rcb_traj import Session; "
+            "Session(sys.argv[2], instance=sys.argv[3]); print('RCB_PROBE_OK', flush=True)")
+    env = {**os.environ, "RCB_SESSION_LOG": "", "RCB_AGENT_TRACE_DIR": ""}
+    try:
+        r = subprocess.run([sys.executable, "-c", code, os.path.dirname(os.path.abspath(__file__)), family, instance],
+                           capture_output=True, text=True, timeout=PROBE_TIMEOUT_S, env=env)
+    except subprocess.TimeoutExpired:
+        sys.stderr.write(f"instance probe: no scene after {PROBE_TIMEOUT_S:.0f} s\n")
+        return {"instance_probe_error": 1, "infra_error": 1}
+    if "RCB_PROBE_OK" in r.stdout:     # the marker, not the exit code: the simulator may crash while the process exits
+        return {"infra_error": 0}
+    sys.stderr.write("instance probe failed:\n" + r.stderr[-4000:] + "\n")
+    if HASH_ERROR in r.stderr:
+        return {"instance_mismatch": 1, "infra_error": 1}
+    return {"instance_probe_error": 1, "infra_error": 1}
+
+
+def load_deliverable(path: str, family: str, action_dim: int, max_t: int) -> tuple[np.ndarray | None, dict]:
+    """(actions, {}) for a well-formed deliverable, else (None, the reason): everything here is the agent's file."""
+    try:
+        d = np.load(path, allow_pickle=False)
+        task = str(d["task"]); acts = np.asarray(d["actions"], dtype=np.float64)
+    except Exception as exc:  # noqa: BLE001 — not an npz, pickled objects, a missing key, non-numeric actions
+        sys.stderr.write(f"bad trajectory file: {exc!r}\n")
+        return None, {"bad_trajectory": 1}
+    if task != family:
+        return None, {"wrong_family": 1}
+    if acts.ndim != 2 or acts.shape[1] != action_dim or acts.shape[0] > max_t or not np.all(np.isfinite(acts)):
+        return None, {"bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0}
+    return acts, {}
+
+
+class _Deadline(BaseException):   # not an Exception: the video code's own `except Exception` must not swallow it
+    pass
+
+
+def _on_alarm(*_):
+    raise _Deadline()
 
 
 def main() -> int:
@@ -93,17 +153,17 @@ def main() -> int:
     except Exception:  # noqa: BLE001
         pass
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
+    fail = {"success": 0, "deterministic": 0, "grader_error": 0}
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost}); return 0
+        write(False, {**fail, "missing_trajectory": 1, **probe_instance(a.family, a.instance), **cost}); return 0
     try:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from rcb_traj import Session
-        d = np.load(a.traj, allow_pickle=False)
-        if str(d["task"]) != a.family:
-            write(False, {"success": 0, "wrong_family": 1, "grader_error": 0}); return 0
-        acts = np.asarray(d["actions"], dtype=np.float64)
+        try: action_dim = 2 * int(json.load(open(a.instance)).get("n_active_joints") or 16) + 2
+        except Exception: action_dim = 34  # noqa: BLE001 — aloha-agilex: 16 driven joints
         MAX_T = 200_000  # ~13 min of physics at 250 Hz; anything longer is not a plausible solution and would only exhaust the verifier budget
-        if acts.ndim != 2 or acts.shape[0] > MAX_T or not np.all(np.isfinite(acts)):
-            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost}); return 0
+        acts, why = load_deliverable(a.traj, a.family, action_dim, MAX_T)
+        if acts is None:
+            write(False, {**fail, **why, **cost}); return 0
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from rcb_traj import Session
         s = Session(a.family, instance=a.instance)
         outs = [s.replay(acts) for _ in range(a.repeat)]
         all_success = all(o["success"] for o in outs)
@@ -112,25 +172,36 @@ def main() -> int:
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0, **cost}
         write(ok, out)   # the verdict is on disk before any video: a render that hangs past the verifier timeout cannot cost the score
-        # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png, at most ~1500 frames
-        render_sv = None
-        if not a.no_video:
-            try:
-                s.close()
-                sv = Session(a.family, instance=a.instance, enable_render=True); render_sv = sv
-                every = max(a.video_every, -(-len(acts) // 1500))
-                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=every, fps=a.video_fps)  # 6-view grid
-                out["video_rendered"] = 1; write(ok, out)
-            except Exception:  # noqa: BLE001
-                traceback.print_exc(file=sys.stderr)
-        if not a.no_video:  # after the verdict is on disk: reconstruct the agent's own rollouts (self-reported, may be slow)
-            try:
-                out.update(render_agent_traces(a.family, a.instance, sv=render_sv)); write(ok, out)
-            except Exception:  # noqa: BLE001
-                traceback.print_exc(file=sys.stderr)
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "grader_error": 1})
+        mismatch = HASH_ERROR in repr(exc)   # this host does not rebuild the frozen instance: not a verdict on the agent
+        write(False, {**fail, "grader_error": 1, **({"instance_mismatch": 1, "infra_error": 1} if mismatch else {})})
+        return 0
+    # Everything below runs after the verdict and never changes it; it stops at VIDEO_DEADLINE_S so that test.sh ends
+    # inside the verifier timeout (a verdict written by a verifier that timed out is not recorded).
+    left = VIDEO_DEADLINE_S - (time.time() - T_START)
+    if a.no_video or left <= 1:
+        return 0
+    signal.signal(signal.SIGALRM, _on_alarm); signal.alarm(int(left))
+    try:
+        # Human-viewable replay video: /logs/verifier/replay.mp4 + replay.last.png, at most ~1500 frames
+        render_sv = None
+        try:
+            s.close()
+            sv = Session(a.family, instance=a.instance, enable_render=True); render_sv = sv
+            every = max(a.video_every, -(-len(acts) // 1500))
+            sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=every, fps=a.video_fps)  # 6-view grid
+            out["video_rendered"] = 1; write(ok, out)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc(file=sys.stderr)
+        try:  # reconstruct the agent's own rollouts (self-reported, may be slow)
+            out.update(render_agent_traces(a.family, a.instance, sv=render_sv)); write(ok, out)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc(file=sys.stderr)
+    except _Deadline:
+        sys.stderr.write(f"videos stopped at the {VIDEO_DEADLINE_S:.0f} s deadline (the verdict is unaffected)\n")
+    finally:
+        signal.alarm(0)
     return 0
 
 

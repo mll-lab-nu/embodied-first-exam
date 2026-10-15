@@ -12,9 +12,9 @@ client and one episode. **Task (臨帖):** copy {{TASK_MD}}, shown in the pictur
   efforts and its brush-tip pose. There is no sheet readout, no brush state and **no score**: the grader computes it afterwards from
   the service's own record of your episode.
 - A **practice sheet** lies beside the main sheet: test the brush there as much as you like; it is never scored or counted.
-- Steps are unlimited; your wall-clock budget of **2 h (7200 s)** is the limit (`meta["time_left_s"]`). Actions and simulated time
-  are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of simulated time; watching with
-  `seconds > 0` also advances it).
+- Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
+  it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
+  simulated time; watching with `seconds > 0` also advances it).
 - There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
@@ -106,6 +106,10 @@ view along the sheets that shows the brush height).
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate` =
   `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
+- One call returns at most 640 images (`spec["max_frames_per_call"]`: cameras x frames; a frame with `depth="frames"`
+  counts 4). A request that would exceed it is answered 400 before anything moves: ask for fewer cameras, a lower
+  `video_fps` or a shorter call (an `ee_pose` row that is slowed down to 0.25 m/s takes the control steps its distance
+  needs).
 
 The exemplar picture is derived from a public-domain historical work of running-script calligraphy (Wikimedia Commons, PD-Art);
 rendered by robot-coding-bench (RoboPaint): `/app/NOTICE-exemplar.md`.

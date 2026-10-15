@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/{{task_dir}}"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER {{env_name}} on the same frozen instance as {{twin_dir}}. The agent only gets a client: /observe and /submit (the robot's {{sensors_plus}}; delta actions in chunks). One episode, no reset, no privileged state, no goal check; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER {{env_name}} on the same frozen instance as {{twin_dir}}. The agent only gets a client: /observe and /submit (the robot's {{sensors_plus}}; delta actions in chunks). {{reset_budget}} resets (the last episode graded), no privileged state, no goal check; the sim service records every episode, replays the last one in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "kinder", {{keywords}}, "physical-reasoning", "standard-mode", "trajectory", "{{family}}"]
 
@@ -44,14 +44,17 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
+# The loops run on the clock, inside timeout_sec: the verdict ("finalized": true, set before any video is rendered) may
+# take until 840 s; then the hook waits for the replay video ("video_pending") until 870 s -- a video that is not ready
+# by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
 timeout_sec = 900
 
 [agent]
 timeout_sec = {{agent_timeout}}
-# The agent container holds no simulator, but KinDER is public: the agent reaches the model APIs and nothing else
+# The agent container holds no simulator, but KinDER is public: the agent reaches the model APIs and the package registries, nothing else
 # (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = [{{allowed_hosts}}]

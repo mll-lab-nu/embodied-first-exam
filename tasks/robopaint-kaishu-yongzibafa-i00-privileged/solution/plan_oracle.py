@@ -6,6 +6,6 @@ import json, os, sys
 sol = os.environ.get("RCB_SOLUTION_DIR", "/solution"); sys.path.insert(0, sol)
 from ref_calli import paint  # noqa: E402
 
-plans = json.load(open(os.path.join(sol, "plans.json")))["plans"]
-info = paint(s, p, plans)  # noqa: F821
+pl = json.load(open(os.path.join(sol, "plans.json")))
+info = paint(s, p, pl["plans"], ilc_passes=int(pl.get("ilc_passes", 3)), entry=pl.get("entry", "vertical"), exit=pl.get("exit"))  # noqa: F821
 print("oracle plan:", info, {k: v for k, v in s.status().items() if k in ("iou", "boundary_f", "min_stroke_coverage", "stray_frac", "n_strokes", "success")})  # noqa: F821

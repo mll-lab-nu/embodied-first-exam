@@ -19,12 +19,15 @@ oracle = "@@ORACLE@@"
 expert_time_estimate_hours = 1.0
 
 [verifier]
-timeout_sec = 2400.0
+timeout_sec = 29100.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
+                                  # (replay_timeout(100,000 rows) = 900 s + rows / 7.5 = 14,234 s each) + 600 s; a usual
+                                  # trajectory (up to 6,750 rows) keeps the old 1800 s per replay
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
-timeout_sec = 5400.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md): every Python process pays ~2 min of Isaac Sim launch + scene build
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+timeout_sec = @@AGENT_TIMEOUT_S@@.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md): every Python process pays ~2 min of Isaac Sim launch + scene build
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
+allowed_hosts = [@@ALLOWED_HOSTS@@]
 
 [environment]
 build_timeout_sec = 3600.0

@@ -8,8 +8,8 @@
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `banana_in_bowl` / seed 0 |
 | Oracle | `full` — The oracle scored 1 (deterministic, instance_exact) in Harbor runs robolab-banana-in-bowl-i00__SQLoScr (laptop, job tpl11-0927-1823-oracle-robolab-banana-in-bowl-i00, at eaf2aff0), robolab-banana-in-bowl-i00__CLgmEWt (ws3, job tpl19-0927-0430-oracle-robolab-banana-in-bowl-i00, at fe045825), and robolab-banana-in-bowl-i00__xi9pT2B, robolab-banana-in-bowl-i00__WxusWvq (laptop, 2026-09-28, the 2.2 tooling, uncommitted trees), on a byte-identical tests/grade.py, frozen instance and oracle code (tests/test.sh differs only in the command that empties /logs/verifier before grading: rm -rf, the protocol v1.0 convention); the tooling (rcb_robolab.py) changed since only off the oracle and replay path: eaf2aff0 adds other families' registry entries; b3c7ca89 adds fail-safe 2.2 helpers and was re-checked through the same tooling path (the banana_in_bowl oracle trajectory ends in the same final state sha 61afa384566be3a5 with the old and the new CLI); cde31660 flips the depth default, which run-oracle and replay pass explicitly (depth=False); one docstring line now says standard mode. |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.2` |
 
 ## Task
 Pick up the banana and place it in the bowl: RoboLab's `object_in_container` (inside the bowl's volume, in contact with
@@ -40,11 +40,36 @@ physics is pinned to the CPU); later replays inside one process can differ in th
 RoboLab's success term is instantaneous: it is checked after every control step and the first step where it holds ends
 the episode (RoboLab's own termination; the replay stops there), so a goal state that holds at one control step counts.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 4 | 4 |
+| Memory | 13 GB | 13 GB |
+| GPU memory | 6.5 GB | 6.5 GB |
+
+- GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- Measured: GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10); vram_profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 24 GiB GPU memory, 24 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 24 GiB GPU memory, 24 GiB memory. Limits measured: GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); includes agents' extra simulators) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.4 GiB over 4 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured.
+
 ## Details
 | | |
 |---|---|
 | Simulator | NVIDIA RoboLab v0.3.1 (Isaac Lab 2.3.2 / Isaac Sim 5.1, PhysX on the CPU, RTX rendering), Franka Panda + Robotiq 2F-85 (DROID setup) |
 | RoboLab task | `BananaInBowlTask`; the frozen instance (the full scene state after RoboLab's canonical seed-0 reset, with its hash) is `environment/instance.json` |
 | Image | built locally on every host (`images/robolab/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
-| Budget | 5400 s in both modes: every Python process pays ~2 min of Isaac Sim launch + scene build (docs/benchmarks/robolab.md) |
+| Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); out of it, every Python process pays ~2 min of Isaac Sim launch + scene build (docs/benchmarks/robolab.md) |
 | Generator | `scripts/robolab/mk_tasks.py` (`scripts/robolab/families.json`, `template/privileged/`, `shared/`); docs/benchmarks/robolab.md |
+
+### Change Log
+- 2026-10-10: grading robustness and time limits; the scene, the frozen instance and the pass rule are
+  unchanged, so the task keeps its name. `tests/grade.py`: each fresh-process replay has
+  max(1800 s, 900 s + rows / 7.5) instead of a flat 1800 s and `[verifier] timeout_sec` is 29100 s (was 2400 s, less than two
+  replays at their limit), so a long trajectory is graded instead of the verifier being killed; a replay that still runs
+  out of time is `replay_timed_out` with `grader_error` = `infra_error` = 1; a file that is not a readable trajectory is
+  `bad_trajectory` (was `grader_error`); `instance_ok` = 0 (the rebuilt scene differs on this host) sets `grader_error` and
+  `infra_error`; every reward has `deterministic` and `infra_error`. Tooling: a failed replay video never voids the
+  replay, and the video of a trajectory longer than 9,000 rows is a time lapse (at most 9,000 frames).
+- 2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), and agents could download upstream sources, reference solutions and robot models from their own shell. The simulator image is `eai-robolab:0.1.2` (was 0.1.1): it holds the MDL materials and textures that RoboLab's asset library fetched from NVIDIA's Omniverse content bucket whenever a scene was built, so that the cameras show under the allowlist what they showed with open egress (on 0.1.1 without that download the table renders red). The scene, the frozen instance, the physics, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this date were obtained with open egress.
+- 2026-10-10 (board 0072): the agent's image no longer holds RoboLab's recorded example episode (`/opt/robolab/examples/recorded_data`: the actions of a successful `RubiksCubeAndBananaTask` run, a solution of `robolab-rubiks-cube-and-banana-i00-privileged` within the agent's reach, PROTOCOL §2.7); `environment/Dockerfile` removes it. Nothing at run time reads it (only RoboLab's `examples/run_recorded.py` does), so the scene, the frozen instance, the tooling and the pass rule are unchanged; a privileged trial from before this date could read that file.

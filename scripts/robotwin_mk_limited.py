@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate tasks/robotwin_2_0_<task>-standard/ from an existing privileged task + the stack_blocks_two-standard template.
 usage: scripts/robotwin_mk_limited.py <task> <oracle_traj.npz> [K=25] [--vel]   (needs numpy: run inside the rcb-robotwin image, e.g.
-       docker run --rm -v $PWD:/repo -v <traj dir>:/out ghcr.io/mll-lab-nu/eai-robotwin:0.1.1 python /repo/scripts/robotwin_mk_limited.py <task> /out/oracle_<task>.npz)
+       docker run --rm -v $PWD:/repo -v <traj dir>:/out ghcr.io/mll-lab-nu/eai-robotwin:0.1.2 python /repo/scripts/robotwin_mk_limited.py <task> /out/oracle_<task>.npz)
 The standard-mode oracle replays the privileged oracle's joint targets (every K physics steps, default 25) as `qpos` actions.
 The rcb-robotwin image has Python 3.10 (no tomllib): there the v1.0 conventions are skipped with a note; run
 `python3 scripts/task_conventions.py tasks/robotwin_2_0_<task>-standard tasks/robotwin_2_0_<task>-privileged` on the host."""
@@ -32,12 +32,15 @@ tt = (dst / "task.toml").read_text()
 tt = tt.replace('name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-standard"', f'name = "robot-coding-bench/robotwin_2_0_{task}-standard"')
 tt = re.sub(r'description = ".*"', f'description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 {task} on the same frozen instance as the privileged task (seed {seed}). {goal} The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."', tt)
 tt = tt.replace('"stack_blocks_two"]', f'"{task}"]').replace('family = "stack_blocks_two"', f'family = "{task}"').replace("instance_seed = 60417", f"instance_seed = {seed}")
+assert '\nnetwork_mode = "allowlist"' in tt, "template task.toml: [agent] is not on the egress allowlist"   # the template's: the one allowlist (model APIs and package registries; scripts/set_agent_egress.py)
 (dst / "task.toml").write_text(tt)
 # instruction: swap the task-specific paragraph
 ins = (dst / "instruction.md").read_text()
 ins, n_title = re.subn(r"^# RoboTwin 2\.0 · stack_blocks_two — (LIMITED|STANDARD) MODE", f"# RoboTwin 2.0 · {task} — STANDARD MODE", ins, count=1, flags=re.M)
 assert n_title == 1, "template title drifted: update the title substitution"
-ins = re.sub(r"\*\*Task:\*\* .*?\n\n", f"**Task:** {goal}\n\n", ins, count=1, flags=re.S)
+# the goal text, then the facts of the judge for this task (scripts/robotwin/standard_facts.json; robotwin_sync_shared.py checks it)
+facts = json.load(open(root / "scripts/robotwin/standard_facts.json")).get(task, {}).get("facts", "")
+ins = re.sub(r"\*\*Task:\*\* .*?\n\n", lambda m: f"**Task:** {goal}{' ' + facts if facts else ''}\n\n", ins, count=1, flags=re.S)
 ins = ins.replace("Objects here: two 5 cm cubes (red, green). Table top at z ≈ 0.74 m.", "Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.")
 (dst / "instruction.md").write_text(ins)
 rd = (dst / "README.md").read_text().replace("robotwin_2_0_stack_blocks_two-standard", f"robotwin_2_0_{task}-standard").replace("`robotwin_2_0_stack_blocks_two-privileged`", f"`robotwin_2_0_{task}-privileged`").replace("RoboTwin seed 60417", f"RoboTwin seed {seed}")

@@ -6,8 +6,8 @@
     python3 scripts/<bench>/generate.py --check    # render into a temporary directory and compare with tasks/
 
 Inputs: envs.py, frozen/<slug>/{instance,oracle}.npz and frozen/report.json (import_references.sh), the shared sources
-in shared/ and the standard-mode service images/<bench>/standard/server_casa.py. Every task directory is rewritten;
-shared files are copied byte for byte. Re-running reproduces the tasks exactly.
+in shared/ (with the collect hook finalize.sh) and the standard-mode service images/<bench>/standard/server_casa.py.
+Every task directory is rewritten; shared files are copied byte for byte. Re-running reproduces the tasks exactly.
 """
 
 import json
@@ -22,6 +22,12 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(1, str(ROOT / "scripts"))
 from envs import SOURCES, SUCCESS, slug  # noqa: E402
 from task_conventions import normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
+
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
 
 # -- benchmark configuration -----------------------------------------------------------------------------------
 BENCH = HERE.name
@@ -60,15 +66,80 @@ ORG = "MLL Lab"
 MAX_STEPS = 3000
 ALLOWED_HOSTS = (
     '["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", '
-    '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'
+    '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 )
-AGENT = f"""[agent]
-timeout_sec = 3600.0
-# The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to the model APIs.
-network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §2.7
+# `[agent] timeout_sec` is the benchmark's number for the mode (CUTOFF_SEC, PROTOCOL §2.12);
+# normalize writes the same number again, with the instruction's closing `## Time limit` section and the sim service's wall clock.
+def agent_block(mode: str) -> str:
+    return f"""[agent]
+timeout_sec = {CUTOFF_SEC[mode]}.0
+# The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = {ALLOWED_HOSTS}
 """
+
+
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
+# Standard mode, the sim service's collect hook (shared/finalize.sh): its timeout, and how long it waits for the verdict
+# (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree). A number of its own, not the agent's
+# cutoff: it was sized for the replay of an episode as long as a 3600 s agent time limit. Lowering the cutoff
+# (CUTOFF_SEC) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
+COLLECT_TIMEOUT_S = 3600
+COLLECT_WAIT_S = 3450
+# README Change Log entries of single tasks (by environment), after those of every task; both modes.
+_FAUCET_CHANGE = (
+    '2026-10-14 (board 0113, from board 0086): the success text now says that the faucet handle has two hinges at one'
+    ' pivot: the water on / off hinge (range 0 to 0.52 rad) and a temperature hinge (about ±0.79 rad) that never '
+    'turns the water on or off, and that "off" means turned back toward 0 on that hinge, not lowered (board 0086: '
+    'runs moved the temperature hinge or pressed the handle down). Text only: the scene, the frozen instance, the '
+    "reference solution, the environment's success check and the verifier are unchanged, so the task keeps its name."
+)
+CHANGES_TASK = {env: [_FAUCET_CHANGE] for env in ['TurnOnSinkFaucet', 'TurnOffSinkFaucet', 'PreSoakPan']}
+# README Change Log of the standard tasks (PROTOCOL §2.8: published tasks are fixed in place), oldest first.
+CHANGES_STANDARD = [
+    "2026-10-10: the sim service writes its verdict together with `finalized` in one atomic step and renders the "
+    "replay video only afterwards (the video is optional and can no longer turn a verdict into `infra_error`; a "
+    "restart never rewrites a written verdict); the collect hook (`environment/sim/finalize.sh`) waits for that "
+    f"verdict for up to {COLLECT_WAIT_S} s of a {COLLECT_TIMEOUT_S} s timeout (before: 980 s of 1500 s, video "
+    "included, which lost episodes longer than about 10,000 control steps); a malformed request field (`dt`, "
+    "`seconds` or `video_fps` that is not a finite number, `cameras` or `note` of the wrong type, `dt` = 0, ...) is "
+    "answered with 400 before any physics instead of 500 and the end of the episode; `time_left_s` counts from the "
+    "start of the service's container, not from when its scene was built; the client's docstring describes this "
+    "service. The scene, the instance, the success check and the pass rule are unchanged, so the task keeps its name.",
+    "2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A `final.json` that cannot be read as a JSON object "
+    "(truncated, not JSON, not an object) is graded `infra_error = 1` and `grader_error = 1`; before, the grader raised "
+    "and the trial had no reward file. Nothing else changes: a readable `final.json` is graded as before.",
+    "2026-10-10 (review round 3, board 0067): the sim service's request handling "
+    "(`environment/sim/server_casa.py`) and `tests/grade.py`. A negative or non-numeric `Content-Length` is "
+    "answered 400 without reading the body (the service read until the client hung up, without a bound, which "
+    "could exhaust its memory); a camera named more than once in `cameras` is rendered and returned once (N copies "
+    "of one name made it build N x N images within the frame budget); a port that is still held when the service "
+    "restarts is waited for, not counted as a crash; a JSON `true` or `false` where `dt` or `seconds` takes a "
+    "number is a 400 (`true` ran as 1 second). The grader: a `final.json` whose evidence fields (`control_steps`, "
+    "`calls`, `elapsed_s`, `final_reward`) are not numbers no longer stops it before it writes a reward (they are "
+    "reported as 0 and decide nothing). An episode's physics and the pass rule are unchanged.",
+    "2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/server_casa.py`, the "
+    "docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and `meta[\"time_left_s\"]` count from the agent's "
+    "first request to the service (any endpoint), and a restarted service keeps that moment; before, they counted "
+    "from the first start of the service's container (`time_left_s`) and from when its scene was ready (`time_s`). "
+    "Where the service is ready before the agent's phase begins (the harness is installed in between: a median of 79 "
+    "s over the recorded standard trials), that clock ran ahead of the agent's and `time_left_s` reached 0 while the "
+    "agent still had that time. `/spec` says what the clock counts from (`budget.clock`), and the instruction's `## "
+    "Time limit` tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the "
+    "scene, the frozen instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier "
+    "results stand.",
+    "2026-10-13 (board 0093; found in board 0086): the camera calibration (`environment/sim/server_casa.py`). "
+    "`cam2world_gl` held the pose of MuJoCo's left-eye camera (`scene.camera[0]`), 3.4 cm (half the model's 0.068 m "
+    "interpupillary distance) to the camera's left of the viewpoint the mono RGB and depth images are rendered from; it "
+    "now is that viewpoint (`data.cam_xpos` / `data.cam_xmat`). Checked against MuJoCo's own renders of marker spheres "
+    "at known world points, every served camera, before and after the robot moved: the reprojection error was 10.5-10.7 px "
+    "median (up to 28 px for near points, always to the same side), now 0.15 px median and at most 0.4 px. The "
+    "intrinsics were right (every camera here is given by its `fovy`, none by a sensor size) and are unchanged, as are "
+    "the images, the scene, the frozen instance, the pass rule and the grader, so the task keeps its name. **Standard-"
+    "mode results from before this date used the offset calibration**: a point located from the images and the "
+    "reported calibration came out about 3.4 cm to the side (agents missed a microwave button by 3.5 cm), so they are "
+    "not strictly comparable with later ones.",
+]
 
 
 def action_text(dim: int) -> str:
@@ -170,7 +241,7 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
 ## Rules
 - Write your own controller. Do not use the benchmark's demonstrations, trained policies or any published solution.
 - Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
 """
 
 
@@ -190,8 +261,9 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth, with each camera's
   calibration) and the robot's own state. No object poses, no scene layout, no success signal.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
-  episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). There is nothing
+  to hand in: the service records the episode as the trajectory and grades it. Leave your script at
+  `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
@@ -242,7 +314,7 @@ def readme_head(rec: dict, mode: str) -> list[str]:
         ("Simulator / robot", f"`robosuite` / `{ROBOT}`"),
         ("Family / instance", f"`{BENCH}/{rec['env']}`"),
         ("Oracle", "`full`"),
-        ("Agent time budget", "3600 s; tokens: protocol default (PROTOCOL §5)"),
+        ("Agent time budget", f"{CUTOFF_SEC[mode]} s; tokens: protocol default (PROTOCOL §5)"),
         ("Base image", f"`{image}`"),
     ]
     return [f"# {name}", "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows]
@@ -287,9 +359,11 @@ def privileged_readme(rec: dict) -> str:
         ("Deliverable", f"`(T, {rec['action_dim']})` native controller commands, 1 ≤ T ≤ {MAX_STEPS}, 20 Hz"),
         ("Success", "the environment's own check (`_check_success`) on the state after the last action"),
     ]
-    return readme(
+    text = readme(
         readme_head(rec, "privileged"), task, DIFFICULTY_PRIVILEGED.replace("\n", " "), reference, verification, details
     )
+    log = CHANGES_TASK.get(rec["env"], [])
+    return text + ("\n### Change Log\n" + "".join(f"- {c}\n" for c in log) if log else "")
 
 
 def standard_readme(rec: dict) -> str:
@@ -306,16 +380,18 @@ def standard_readme(rec: dict) -> str:
         "control step." + hold_note(rec).replace("\n", " ").rstrip()
     )
     verification = (
-        "The sim service replays the recorded episode in a fresh simulator; `tests/grade.py` (separate sandbox, no "
-        "network) reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`."
+        "The sim service replays the recorded episode in a fresh simulator and writes the verdict, final at once; "
+        "`tests/grade.py` (separate sandbox, no network) reads its `final.json`: `success = replay_success ∧ "
+        "deterministic ∧ live_success`. The replay video is rendered after the verdict and never decides it."
     )
     details = [
         ("Action type", f"`{ACTION_TYPE[rec['action_dim']]}` ({rec['action_dim']} channels, `control_dt` 0.05 s)"),
         ("Cameras", ", ".join(f"`{c}`" for c in rec["cameras"]) + " (robot-mounted; calibration in every response)"),
     ]
-    return readme(
+    text = readme(
         readme_head(rec, "standard"), task, DIFFICULTY_STANDARD.replace("\n", " "), reference, verification, details
     )
+    return text + "\n### Change Log\n" + "".join(f"- {c}\n" for c in CHANGES_STANDARD + CHANGES_TASK.get(rec["env"], []))
 
 
 def privileged_toml(rec: dict) -> str:
@@ -344,7 +420,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-{AGENT}
+{agent_block("privileged")}
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4
@@ -358,11 +434,6 @@ memory_mb = 16384
 
 
 def standard_toml(rec: dict) -> str:
-    collect = (
-        "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q "
-        "'\\\"finalized\\\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat "
-        "/data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
-    )
     return f"""schema_version = "1.3"
 artifacts = [
   {{ source = "/data/final.json", service = "sim" }},
@@ -404,13 +475,18 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
+# Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
+# restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
+# waits for that verdict (up to {COLLECT_WAIT_S} s), then, bounded, for the optional replay video, which decides nothing.
+# timeout_sec was sized for an episode as long as a 3600 s agent time limit: the replay runs the episode's own physics
+# once more, without its cameras, so it cannot take longer than the episode did (about 0.035 s per control step + one
+# scene build; finalize.sh has the sums). Look at it when the agent's cutoff is raised.
 [[verifier.collect]]
 service = "sim"
-command = "{collect}"
-timeout_sec = 1500
+command = "sh /srv/finalize.sh"
+timeout_sec = {COLLECT_TIMEOUT_S}
 
-{AGENT}
+{agent_block("standard")}
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4
@@ -516,6 +592,7 @@ def make(rec: dict, out: Path = ROOT / "tasks") -> None:
     put(s / "environment/rcb_client.py", src=SHARED / "rcb_client.py")
     put(s / "environment/rcb1.py", src=SHARED / "rcb1.py")
     put(s / "environment/sim/server_casa.py", src=SERVER)
+    put(s / "environment/sim/finalize.sh", src=SHARED / "finalize.sh")
     put(s / "environment/sim/casa_tool.py", src=SHARED / "casa_tool.py")
     put(s / "environment/sim/rcb1.py", src=SHARED / "rcb1.py")
     put(s / "environment/sim/instance.npz", src=fz / "instance.npz")
@@ -540,6 +617,9 @@ def files(d: Path) -> dict[str, tuple[bytes, int]]:
 
 def main(envs: list[str], check: bool = False) -> None:
     report = json.loads((FROZEN / "report.json").read_text())
+    hook = (SHARED / "finalize.sh").read_text()
+    if f'WAIT_S="${{RCB_COLLECT_WAIT_S:-{COLLECT_WAIT_S}}}"' not in hook or COLLECT_WAIT_S >= COLLECT_TIMEOUT_S:
+        raise SystemExit("shared/finalize.sh: RCB_COLLECT_WAIT_S's default must be COLLECT_WAIT_S, below COLLECT_TIMEOUT_S")
     out = Path(tempfile.mkdtemp(prefix=f"{BENCH}-check-")) if check else ROOT / "tasks"
     n = 0
     for env in envs:

@@ -17,7 +17,7 @@ a service you cannot open, and you reach it only through a client. **Task: {{ins
   why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"` at the step cap, `"error"` after a simulator error).
 - There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script that
   drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: 60 minutes. It ends without warning, and ending your session earlier ends the run the same way, so
+- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so
   do not stop early.
 - Do not use VLABench's expert solutions or any published solution for this benchmark; write your own controller.
 

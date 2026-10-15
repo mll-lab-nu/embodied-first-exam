@@ -16,9 +16,9 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
   `rm -rf /logs/verifier/*` first in `test.sh`, no `results/`) and then synced into `tasks/`. Re-running it leaves
   `git diff tasks/` empty; `--check` only compares.
 - A family is RoboLab's benchmark task of that name, its success predicate RoboLab's own `success` termination term.
-  `families.json` holds 88 frozen families; 53 have tasks (`tasks: true`): the 2 with a reference solution and the 51 with
-  a graded positive example. The other 35 have no positive yet (PROTOCOL §2.7 needs one before review) and stay out
-  until they do; their entries and instances are kept.
+  `families.json` holds the 53 families that have tasks: the 2 with a reference solution and the 51 with
+  a graded positive example. 35 further RoboLab tasks were frozen but have no positive yet (PROTOCOL §2.7 needs one
+  before review); their entries and instances are not kept here (repository history, 9621e47d1).
 - The frozen instance is the full scene state after RoboLab's canonical seeded reset (`env.reset()` twice, as RoboLab's
   evaluation loop does), with its state hash, made in the image by `rcb_robolab.py make-instance --task <f> --seed 0`;
   the tasks carry it in `environment/` and `tests/` (privileged) and `environment/sim/` (standard). Each instance was
@@ -54,8 +54,9 @@ region; the instructions state the rule in both modes.
 
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
-  in), tagged `ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>` (0.1.1, the same build as
-  the former `rcb-robolab:0.1.1`). It contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
+  in), tagged `ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>` (0.1.2 = 0.1.1, the same build as
+  the former `rcb-robolab:0.1.1`, plus one layer with the remote files of the asset library: Network, below). It
+  contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
   `images/robolab/BUILD_ONLY` has the licences, the build command
   (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it. A host that has the old tag only needs `docker tag`.
@@ -66,8 +67,57 @@ region; the instructions state the rule in both modes.
 - Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount their own `*_trusted` cache
   volumes, never the agent's; every cache volume is scoped to the trial's compose project (no fixed name).
 
+## Network
+The agent reaches the model APIs and, since 2026-10-11, the package registries (PyPI, apt archives), nothing else: `[agent] network_mode = "allowlist"` with the hosts of
+`scripts/set_agent_egress.py`, in both templates' `task.toml.tmpl` (`mk_tasks.py` fills the host list from that script;
+owner decision 2026-10-10, board 0072). Until then the tasks had Harbor's default, public egress, the repository-wide
+default of 2026-09-24 (kept on 2026-10-02) with which the templates were written; no reason specific to RoboLab was
+recorded. One existed, found when the allowlist was first run on a real simulator (2026-10-11), and image 0.1.2 removes
+it: the second point.
+
+| Service | Before | Since 2026-10-10 |
+|---|---|---|
+| privileged `main` (agent and its Isaac processes) | public | public from container start until the agent starts (the harness is installed then), the allowlist (the model APIs and the package registries) while the agent runs |
+| standard `main` (agent, client only) | public | the same |
+| standard `sim` (the simulator service) | public | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (it begins at container start and takes 5 to 9 minutes) and a restart after a crash run with the allowlist only; public again while the collect hook replays the episode |
+| `rcb_monitor` | none | none |
+| privileged verifier | public (Harbor's default) | unchanged |
+| standard verifier | none (`no-network`) | unchanged |
+
+- **Isaac itself needs no network**: the image holds Isaac Sim, Isaac Lab, RoboLab and every Python package, and the EULA
+  is accepted by environment variables. With only the model APIs reachable the oracle of `banana-in-bowl` scores 1 in
+  both modes with the same initial and final state hashes as with open egress (`deterministic` 1, `instance_ok` 1, live =
+  replay; L40S hosts, 2026-10-11), and a probe from inside the agent's container finds GitHub, PyPI, Hugging Face and
+  NVIDIA's Omniverse content bucket unreachable while the OpenAI, Anthropic and OpenRouter APIs answer.
+- **RoboLab's asset library did, until image 0.1.2.** 15 of its USD layers reference NVIDIA's public Omniverse content
+  bucket (`omniverse-content-production.s3…amazonaws.com`) by URL: the MDL materials of the four tables, of the grey bin
+  and of the robot, their textures, and a few props of scenes that are not tasks here; the scenes of 43 of the 53
+  families load some of them. Kit fetched them whenever a scene was built. On 0.1.1 under the allowlist the fetches
+  fail (`could not find module … in module path`, `Unable to find SdrShaderNode`): the table renders as a glossy red
+  surface instead of wood (64 % of the pixels of the front camera's first frame differ from the open-egress frame, 77 %
+  of the wrist camera's, 16 % of the shoulder camera's) and the scene is ready later (501 to 640 s against 333 to
+  428 s), while physics is unchanged (none of the 53 families references remote geometry). Image 0.1.2 holds the files:
+  `images/robolab/mirror_remote_assets.py`, the last step of the build, copies all 419 (635 MB) to
+  `/opt/robolab/assets/_remote`, checks each against `images/robolab/remote_assets.sha256` and points the layers at the
+  copies; no layer of the library names a remote file any more. Checked from the published 0.1.2 under the
+  allowlist (2026-10-11, L40S hosts, the oracle of `banana-in-bowl`): reward 1 in both modes with the state hashes of
+  the open-egress runs, no material error in Kit's log, the scene ready after 321 to 341 s, and first frames that
+  differ from the open-egress ones in 0.02 to 0.7 % of the pixels (render noise), in the standard service's cameras and
+  in the privileged tooling's.
+- **The privileged verifier** keeps Harbor's default network (Grading and determinism); since 0.1.2 it does not need it
+  for the materials either.
+- **The recorded example episode is not in the agent's image.** RoboLab's repository ships one recorded successful
+  episode (`examples/recorded_data/RubiksCubeAndBananaTask`: actions, video and environment configuration, replayed by
+  `examples/run_recorded.py`), a solution of `rubiks_cube_and_banana` inside the base image. The privileged
+  `environment/Dockerfile` removes the directory (since 2026-10-10); nothing at run time reads it. The standard agent
+  container has no simulator image, and the verifier's image is not the agent's.
+
 ## Time budget (D8)
-5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+
+The number is each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2.12; history in [`../CUTOFFS.md`](../CUTOFFS.md)), and
+every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
+2026-10-11: 5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
 launch and scene build, so an agent's iterations cost more than in the other simulators; with 3600 s most failures in
 our first sweep were agents running out of time mid-attempt (raised 2026-09-26, uniform since).
 
@@ -82,12 +132,37 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
   replays it in two fresh processes; success = live ∧ replay ∧ deterministic, `live_matches_replay` reported separately.
   The standard verifier only reads `final.json` and runs with `network_mode = "no-network"`.
 - The privileged verifier keeps Harbor's default network (PROTOCOL §2.6 recommends no-network): it starts Isaac Sim, and
-  an offline Kit start (extension registry, asset resolvers) has not been tested on our hosts. Grading downloads nothing:
-  RoboLab's assets and every package are in the image.
+  a Kit start in a container without any network interface has not been tested on our hosts (with only the model APIs
+  reachable it starts and builds the scene: Network). Grading downloads nothing: RoboLab's assets, since image 0.1.2 the
+  remote files they reference too, and every package are in the image.
+- Whose failure a 0 is (2026-10-10). Standard: `tests/grade.py` writes a reward whatever it finds; a missing, unreadable
+  or unfinalized `final.json` (the service never came up, the collect hook was killed), a lost GPU, or a replay process
+  that ended without a result (`replay_error`: Isaac died, its time limit) is `infra_error = 1`, never the agent's 0.
+  `finalize.sh` replaces `final.json` atomically, retries a replay that died once, and counts a replay as done when its
+  result line was printed (Isaac crashing at shutdown afterwards does not matter). Privileged: a deliverable that is not a
+  readable trajectory (not an npz, no `task` / `actions`, object arrays, wrong shape, NaN, more than 100,000 rows) is
+  `bad_trajectory` (the agent's 0); a replay process without a result, a replay time-out (`replay_timed_out`) and
+  `instance_ok = 0` (the rebuilt scene differs on this host) set `grader_error = infra_error = 1`.
+- Time limits (2026-10-10; rates from this file: Isaac start + scene ~2 min, replays 15-20 control steps/s). Privileged:
+  each replay has max(1800 s, 900 s + rows / 7.5) (half the nominal rate), and `[verifier] timeout_sec = 29100` fits two
+  replays of the longest accepted trajectory (100,000 rows: 14,234 s each) plus 600 s; before, the 2400 s verifier limit
+  was shorter than two 1800 s replays. Standard: `[[verifier.collect]] timeout_sec = 15000` = the episode end (up to
+  2700 s through a resume) + two replays of up to 5700 s (an Isaac start + an episode stepped for the whole 5400 s budget)
+  + 900 s; `finalize.sh` (`HOOK_BUDGET_S`, the same number) gives each replay what is left before that deadline minus
+  300 s, shared between the replays still to run, so a slow replay is recorded (`replay_error`, `infra_error`) instead of
+  Harbor killing the hook. None of this was measured on a GPU host for this change (static + synthetic tests only).
+- Tests without a simulator (numpy only): `scripts/robolab/tests/test_*.py`, each run as a script (RoboLab and YAMLab
+  together): both graders on synthetic records, the whole `finalize.sh` with stand-in replays (dies, hangs, crashes after
+  its result, retry), the tooling's replay CLI with a failing video, and the real `server.py` on the real shared layer with
+  a stub simulator over HTTP (malformed requests, the step cap).
+- The replay video never decides a replay: the tooling catches a writer that cannot open, a frame that cannot be rendered
+  or written and an encoder that fails at close (`video_ok` false in the replay's result; `stop_video()` returns None),
+  and the frames go straight to the encoder. A trajectory longer than 9,000 control steps is filmed as a time lapse (at
+  most 9,000 frames, `MAX_VIDEO_FRAMES`).
 - `scripts/robolab/regrade.sh <task> <trial> <out>` re-grades a finished trial with the current task version in two fresh
   processes (the review's determinism check), on the host the trial ran on.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13)
+## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 - Resume class `exact`: the resumed service is a fresh process, and replaying the journal is that process's first replay,
   so the state hash at the last checkpoint must match exactly (else the episode ends `resume_failed`, `infra_error`).
 - The journal holds the float32 row handed to `Session.step` for every control step; a checkpoint (state hash = sha1 of
@@ -112,14 +187,14 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
 
 The tooling records (T, 8) actions (7 joint targets + the binary gripper command) at 15 Hz. Every copy of the tooling and
 of the standard sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`); the tooling's TASKS
-registry lists all 88 frozen families, so adding a family later does not change existing tasks.
+registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 without a positive), so adding a family later does not change existing tasks.
 
 ## Declarations
 - **Tooling: thin wrappers only.** Differential-IK moves, joint moves, gripper, hold, plus the frozen instance, state,
   recording, replay and rendering. Task-level skills (grasp, place, navigate) are never added to the agent's tooling;
   reference solutions keep theirs under `solution/`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `scripts/robolab/ci/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
 ## Standard mode (eai-standard/2.2)
@@ -127,14 +202,63 @@ registry lists all 88 frozen families, so adding a family later does not change 
 is a 400) and `ee_pose` (8, closed-loop differential IK, at most 0.25 m/s, fingertip-centre frame); cameras
 `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static) and `wrist_cam` (on the Robotiq base link); Isaac
 `distance_to_image_plane` depth; `/kinematics` from a numpy model of the USD joints (7); 32 proprio columns.
-STANDARD_MODE_2_2.md §16.
+STANDARD_MODE.md §16.
+
+Requests are checked completely before the first control step (PROTOCOL §4.6): a field of the wrong type (`dt`, `seconds`,
+`video_fps`, `note`, `cameras`, `interpolate`, `video`, `type`, `depth`), a value out of range, an `ee_pose` position more
+than 2 m from the robot's base on any axis or a zero quaternion is a 400 that executes nothing; an absent or null field
+takes its default. Before 2026-10-10 some of these raised a TypeError / OverflowError, which the layer answers 500 and
+which ends the episode (`reason = "error"`), and a non-string `note` failed after the chunk had run. One case is left in
+the shared layer (`scripts/eai_standard/rcb_limited.py`): `actions` sent as a JSON object is converted before the adapter
+sees it and still ends the episode with a 500.
 
 ## Known issues
-- The tooling stops a runaway trajectory at 100,000 control steps (`step_guard`); the live service runs 3-15 steps/s, so
-  the 5400 s budget ends an episode long before (it is not in `/spec`).
+- The tooling stops a runaway trajectory at 100,000 control steps (`step_guard`, 1.9 h of simulated time); the live
+  service runs 3-15 steps/s, so the 5400 s budget ends an episode long before. Stated since 2026-10-10 in `/spec`
+  (`max_control_steps`, `episode`) and in both instructions (PROTOCOL §4.5: a technical cap, not a step budget); a
+  privileged trajectory may hold at most that many rows.
 - An `ee_pose` submit has no frame cap: a long one at a high `video_fps` keeps many frames in memory (the client's
   defaults, 5 fps and mp4, stay small).
+- RoboLab's success terms are upstream's and stay as they are (owner, 2026-10-14: "the original simulator decides"),
+  including two that are looser than their words (board 0086): `require_gripper_detached` can read an object that is
+  still pinched or wedged in the gripper as detached, and "inside" extends without limit along the container's up axis
+  (the instructions state the latter). `tools_picking_drill`'s term names the left bin while the drill starts in the
+  right bin; the instruction says so (2026-10-14).
+- Contact can make the physics diverge (joint readings of 1e6 and more, objects thrown off the table) after a grasp
+  that looks ordinary; in standard mode that episode is lost (board 0086 saw it once in about 350 trials). A
+  privileged `s.reset()` does not restore the start bit for bit; the verifier replays in a fresh process.
 
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA
 proprietary software (no redistribution), hence BUILD_ONLY.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `exact` (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact).
+
+Its service states no `max_frames_per_call` yet.
+
+A resume replays at ~20 steps/s. Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+
+Known issue: per-call state hashing on Isaac is new with crash recovery; its PRs re-check `live_matches_replay`.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | Isaac Lab 2.3 |
+| rows streamed at | 15 Hz control (8 substeps) |
+| `joint_position` | 8: 7 joints + binary gripper (switched) |
+| `ee_pose` | 8, closed-loop differential IK, fingertip-centre frame |
+| cameras | `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static), `wrist_cam` |
+| depth | Isaac `distance_to_image_plane` |
+| `/kinematics` | numpy model of the USD joints (7) |
+| proprio columns (2.0 → 2.2) | 16 → 32 |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `exact` |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| RoboLab | 13 families (20 trials) | 98–217 s | default enough |

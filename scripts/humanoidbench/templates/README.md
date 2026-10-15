@@ -8,7 +8,6 @@
 | Task type / mode | trajectory / privileged (its standard-mode twin: `{{task_dir}}-standard`) |
 | Base image | `{{image}}` |
 | Physics vs upstream | {{physics_note}} |
-| Agent budget | {{agent_timeout}} s, {{cpus}} CPUs; GPU optional (see below) |
 
 ## Difficulty
 The pass mark is a **threshold on the whole episode's return** (`>= {{success_bar}}` over {{max_steps}}
@@ -54,4 +53,5 @@ reproducible with `gen_tasks.py render {{family}}`; the instance with `gen_tasks
 (seed {{seed}}, sha `{{instance_sha}}`).
 
 ## Change Log
-- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6{{physics_log}} (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.{{change_log}}
+- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6{{physics_log}} (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-10: `reward.json` carries `deterministic` in every branch (0 where no replay ran; PROTOCOL §2.6). The verdict is unchanged.{{change_log}}

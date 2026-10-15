@@ -24,8 +24,8 @@ predicate on the final state.
   respected exactly.
 - **Running, not walking.** The speed term is scaled to 5 m/s, so a comfortable walking gait leaves most
   of the per-step reward on the table even when nothing is hit.
-- **The hurdles are scenery.** Upstream draws them without collision geometry and its reward never
-  looks at them, so nothing has to be jumped: the task is a sprint down the walled track.
+- **Sprinting over solid hurdles.** The reward never looks at the hurdles, but each one is a solid box
+  37.5 cm high across the track: the robot has to clear it at speed or it trips.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **18.05 / 700**. Holding the starting pose instead — the floor a competent agent
@@ -55,6 +55,19 @@ writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.js
 leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
 `/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 13.4 GiB over 27 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
+
 ## Details
 | | |
 |---|---|
@@ -77,4 +90,6 @@ Everything in this directory except the instance (`environment/instance.npz` and
 
 ### Change Log
 - 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6 (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-10: `reward.json` carries `deterministic` in every branch (0 where no replay ran; PROTOCOL §2.6). The verdict is unchanged.
 - 2026-10-08: the task text no longer says the hurdles are solid and have to be cleared: upstream's model draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and are reported separately.
+- 2026-10-11: the task text says the hurdles are solid again, and what is solid: upstream's model (assets/locomotion/generated_xml_hurdles.xml) puts at every hurdle a collision box 37.5 cm high and 6 cm thick across the track, under drawn bars that have no collision geometry; the 2026-10-08 entry looked only at the drawn bars. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded from 2026-10-08 until this change were told the hurdles have no collision geometry and are reported separately.

@@ -27,6 +27,12 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 1800, "standard": 1800}
+
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
 TEMPLATES = HERE / "templates"
@@ -44,11 +50,18 @@ CLIENT_PIP = " ".join(
 AUTHOR, ORG = "Changhe Chen", "MLL Lab"
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
+    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
 SUITE_MAX_STEPS = {"libero_spatial": 220, "libero_object": 280, "libero_goal": 300, "libero_10": 520}
 SUITE_SHORT = {"libero_spatial": "spatial", "libero_object": "object", "libero_goal": "goal", "libero_10": "long"}
-STD_CAP = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's timeout)
+STD_CAP = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's wait)
+# The collect hook's wait for the grading replay's verdict (finalize.sh RCB_COLLECT_WAIT_S; "Collect budget" in
+# docs/benchmarks/libero-max.md): STD_CAP steps x 0.5 s on a busy host + 180 s to build the scene + 240 s of video
+# (lmx_tool.VIDEO_BUDGET_S) = 4920 s, 480 s to spare. The hook's timeout adds 180 s (the PID file) and 120 s.
+COLLECT_WAIT_S = 5400
+COLLECT_TIMEOUT_S = 180 + COLLECT_WAIT_S + 120
+if f"RCB_COLLECT_WAIT_S:-{COLLECT_WAIT_S}}}" not in (SHARED / "standard/finalize.sh").read_text():
+    raise SystemExit("shared/standard/finalize.sh: RCB_COLLECT_WAIT_S's default differs from COLLECT_WAIT_S")
 IMAGE_HW = 256
 MS_STEP, MS_FRAME = 20, 70  # measured in eai-libero-max on the reference machine (docs/benchmarks/libero-max.md)
 
@@ -102,7 +115,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: {json.dumps(task_text)}
       RCB_EPISODE: {json.dumps(episode)}
-      RCB_WALL_CLOCK_S: "3600.0"
+      RCB_WALL_CLOCK_S: "{float(CUTOFF_SEC["standard"])}"
       RCB_MAX_CONTROL_STEPS: "{STD_CAP}"
       RCB_IMAGE_HW: "{IMAGE_HW}"
       # The default is the standard configuration (one episode, no reset); this service offers no resets.
@@ -131,6 +144,48 @@ def nums(v, fmt="{:g}") -> str:
     return "(" + ", ".join(fmt.format(round(float(x), 3)) for x in v) + ")"
 
 
+# A LIBERO-MAX move is a jump of one entity (libero_backend._move_object sets that object's position, nothing else).
+TELEPORT = ("it jumps there alone: what already rests in or on it stays where it was, and where it lands on another object "
+            "the physics pushes the two apart")
+# Where a case's sentence and its scene need a word more (board 0086 / 0113): the note follows the task sentence in both
+# instructions, and its Change Log entry ends both READMEs. LIBERO-PRO's own files (bddl, the caddy's asset) are the source.
+_PLATES = ("Left and right are LIBERO's, as seen from the front of the table, facing the robot: the left plate (`plate_1`, "
+           "the goal's) is the one on the robot's right, the right plate (`plate_2`) the one on the robot's left "
+           "(LIBERO-PRO's scene file puts them in `plate_left_region` / `plate_right_region`, 0.3 m to either side).")
+_CADDY = ("The caddy has a large cell at each end and, between them, two narrow cells: the front one and the back one, which "
+          "runs along the caddy's tall wall. The back compartment is that narrow back cell (`desk_caddy_1_back_contain_region`, "
+          "about 5.5 cm across): the mug (about 9 cm wide) does not fit down into it. LIBERO's In tests only the mug's origin "
+          "against the region's box (its top is about 15 cm above the table) and its contact with the caddy, so a mug resting "
+          "on top of the back cell's opening, its origin just inside the top of that box, counts; a mug in any other cell "
+          "does not.")
+_BOWL_MOVED = ("LIBERO-PRO's initial-pose variant moved the target bowl (`akita_black_bowl_1`, the goal's) 0.17 m away from the "
+               "robot and 0.06 m to the robot's right of where the sentence puts it, and turned it 45 degrees")
+CASE_NOTES = {
+    "pro-camera-view-angle-10-t04-i08-camera_shift-d1-p195": _PLATES,
+    "pro-camera-view-angle-10-t04-i09-illumination_switch-d0-p195": _PLATES,
+    "pro-position-10-t04-i00-visual_theme_switch-d1-p195": _PLATES,
+    "pro-semantic-10-t04-i09-visual_theme_switch-d1-p195": _PLATES,
+    "pro-task-10-t05-i00-illumination_switch-d1-p195": _CADDY,
+    "pro-task-10-t05-i04-camera_shift-d1-p195": _CADDY,
+    "pro-initial-pose-position-angle-spatial-t03-i00-sensor_noise_onset-d1-p195": (
+        _BOWL_MOVED + ": it starts on the table, not on the cookies box (no bowl is on the box). The bowl to move is still that "
+        "one; the other black bowl stands on top of the wooden cabinet."),
+    "pro-initial-pose-position-angle-spatial-t06-i01-target_relocation-d0-p195": (
+        _BOWL_MOVED + ": it no longer stands right next to the cookies box. The bowl to move is still that one; the other "
+        "black bowl stands on the stove."),
+}
+CHANGE_NOTE = ("- 2026-10-14 (board 0113, from board 0086): the instruction adds a note after the task sentence, where the "
+               "sentence alone misleads in this LIBERO-PRO variant: {what}. Text only: the instance, the event, the reference "
+               "solution, LIBERO's success check and the verifier are unchanged, so the task keeps its name.\n")
+CHANGE_WHAT = {_PLATES: "which plate is the left one (LIBERO's left is as seen facing the robot, the robot's right)",
+               _CADDY: "which cell is the caddy's back compartment, that the mug does not fit into it, and what LIBERO's In accepts",
+               }
+CHANGE_TELEPORT = ("- 2026-10-14 (board 0113, from board 0086): the instruction says that a moved {what} jumps alone: what "
+                   "rests in or on it stays where it was (LIBERO-MAX moves one entity; board 0086 saw a basket jump through "
+                   "a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check "
+                   "and the verifier are unchanged, so the task keeps its name.\n")
+
+
 def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     """(short words, what happens) for a LIBERO-MAX change."""
     obj = f"`{ch.get('object')}`"
@@ -142,7 +197,7 @@ def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     if change_type == "receptacle_relocation":
         return (
             "receptacle relocation",
-            f"the receptacle {obj} is moved {ch['distance_m']:g} m, direction {nums(ch['direction_xy'])}",
+            f"the receptacle {obj} is moved {ch['distance_m']:g} m, direction {nums(ch['direction_xy'])}; {TELEPORT}",
         )
     if change_type == "obstacle_insertion":
         return (
@@ -293,6 +348,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         '("timeout"), or on a simulator error ("error").'
     )
     values = {
+        "agent_timeout": float(CUTOFF_SEC["privileged"]),   # both modes (PROTOCOL §2.15)
         "name": name,
         "inst": name.rsplit("-", 1)[1],
         "case_id": case["case_id"],
@@ -313,6 +369,8 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         "rot_scale": f"{ctl['output_max'][3]:g}",
         "max_steps": SUITE_MAX_STEPS[case["task_suite_name"]],
         "std_cap": STD_CAP,
+        "collect_wait": COLLECT_WAIT_S,
+        "collect_timeout": COLLECT_TIMEOUT_S,
         "robot_seconds": round(STD_CAP / ctl["control_freq"]),
         "seed": case["policy_seed"],
         "image": IMAGE,
@@ -325,13 +383,21 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         "n_actions": rep["live"]["control_steps"],
         "event_step": rep["live"]["event_step"],
         "live_sha": rep["live"]["state_sha"][:12],
+        "case_note": (" " + CASE_NOTES[case["case_id"]]) if case["case_id"] in CASE_NOTES else "",
     }
+    note = CASE_NOTES.get(case["case_id"])
+    what = CHANGE_WHAT.get(note, "the target bowl is not where the sentence puts it, and which bowl is meant") if note else None
+    priv_log = CHANGE_NOTE.format(what=what) if note else ""
+    std_log = priv_log
+    if case["scenario"]["change_type"] == "receptacle_relocation":
+        priv_log += CHANGE_TELEPORT.format(what="receptacle")
+    std_log += CHANGE_TELEPORT.format(what="object or receptacle")   # the standard text is the same for every case
 
     p = out / f"{name}-privileged"
     reset_dir(p)
     put(p / "task.toml", render("task.toml", values))
     put(p / "instruction.md", render("instruction.md", values))
-    put(p / "README.md", render("README.md", values))
+    put(p / "README.md", render("README.md", {**values, "change_log_extra": priv_log}))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/lmx_tool.py", src=SHARED / "lmx_tool.py")
     put(p / "environment/instance.json", src=fz / "instance.json")
@@ -348,7 +414,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     reset_dir(s)
     put(s / "task.toml", render("standard/task.toml", values))
     put(s / "instruction.md", render("standard/instruction.md", values))
-    put(s / "README.md", render("standard/README.md", values))
+    put(s / "README.md", render("standard/README.md", {**values, "change_log_extra": std_log}))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)
     put(s / "environment/docker-compose.yaml", compose(instruction, episode))
     put(s / "environment/rcb_client.py", src=SHARED / "standard/rcb_client.py")

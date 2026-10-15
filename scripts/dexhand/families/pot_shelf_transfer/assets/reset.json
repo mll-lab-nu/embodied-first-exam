@@ -1,0 +1,248 @@
+{
+ "ctrl_by_actuator": {
+  "ELBOW_PITCH_L_J3_target": -0.025548982254793674,
+  "ELBOW_PITCH_R_J3_target": 0.036215103092068796,
+  "ELBOW_YAW_L_J4_target": -1.4838304287560367,
+  "ELBOW_YAW_R_J4_target": -1.3102473117065954,
+  "SHOULDER_PITCH_L_J1_target": 0.5260626395412721,
+  "SHOULDER_PITCH_R_J1_target": -0.5355516826276523,
+  "SHOULDER_ROLL_L_J2_target": -0.5727251745158186,
+  "SHOULDER_ROLL_R_J2_target": -0.46312968215331957,
+  "WRIST_PITCH_L_J5_target": 0.2808722540009476,
+  "WRIST_PITCH_R_J5_target": -0.28750457648504624,
+  "WRIST_ROLL_L_J7_target": 0.5449325037910194,
+  "WRIST_ROLL_R_J7_target": -0.6185084689672656,
+  "WRIST_YAW_L_J6_target": 0.08061053322832504,
+  "WRIST_YAW_R_J6_target": -0.18640871952178592,
+  "l_hand_index_DIP": 0.0,
+  "l_hand_index_MCP_AA": 0.0,
+  "l_hand_index_MCP_FE": 0.0,
+  "l_hand_index_PIP": 0.0,
+  "l_hand_middle_DIP": 0.0,
+  "l_hand_middle_MCP_AA": 0.0,
+  "l_hand_middle_MCP_FE": 0.0,
+  "l_hand_middle_PIP": 0.0,
+  "l_hand_pinky_CMC": 0.0,
+  "l_hand_pinky_DIP": 0.0,
+  "l_hand_pinky_MCP_AA": 0.0,
+  "l_hand_pinky_MCP_FE": 0.0,
+  "l_hand_pinky_PIP": 0.0,
+  "l_hand_ring_DIP": 0.0,
+  "l_hand_ring_MCP_AA": 0.0,
+  "l_hand_ring_MCP_FE": 0.0,
+  "l_hand_ring_PIP": 0.0,
+  "l_hand_thumb_CMC_AA": 0.0,
+  "l_hand_thumb_CMC_FE": 0.0,
+  "l_hand_thumb_IP": 0.0,
+  "l_hand_thumb_MCP_AA": 0.0,
+  "l_hand_thumb_MCP_FE": 0.0,
+  "r_hand_index_DIP": 0.0,
+  "r_hand_index_MCP_AA": 0.0,
+  "r_hand_index_MCP_FE": 0.0,
+  "r_hand_index_PIP": 0.0,
+  "r_hand_middle_DIP": 0.0,
+  "r_hand_middle_MCP_AA": 0.0,
+  "r_hand_middle_MCP_FE": 0.0,
+  "r_hand_middle_PIP": 0.0,
+  "r_hand_pinky_CMC": 0.0,
+  "r_hand_pinky_DIP": 0.0,
+  "r_hand_pinky_MCP_AA": 0.0,
+  "r_hand_pinky_MCP_FE": 0.0,
+  "r_hand_pinky_PIP": 0.0,
+  "r_hand_ring_DIP": 0.0,
+  "r_hand_ring_MCP_AA": 0.0,
+  "r_hand_ring_MCP_FE": 0.0,
+  "r_hand_ring_PIP": 0.0,
+  "r_hand_thumb_CMC_AA": 0.0,
+  "r_hand_thumb_CMC_FE": 0.0,
+  "r_hand_thumb_IP": 0.0,
+  "r_hand_thumb_MCP_AA": 0.0,
+  "r_hand_thumb_MCP_FE": 0.0
+ },
+ "keyframe": "start",
+ "qpos_by_joint": {
+  "ELBOW_PITCH_L_J3": [
+   -0.004897557489748693
+  ],
+  "ELBOW_PITCH_R_J3": [
+   0.016337492302784782
+  ],
+  "ELBOW_YAW_L_J4": [
+   -1.478887379083643
+  ],
+  "ELBOW_YAW_R_J4": [
+   -1.3078501217991247
+  ],
+  "SHOULDER_PITCH_L_J1": [
+   0.561089769409881
+  ],
+  "SHOULDER_PITCH_R_J1": [
+   -0.5688562090125772
+  ],
+  "SHOULDER_ROLL_L_J2": [
+   -0.5824721466259651
+  ],
+  "SHOULDER_ROLL_R_J2": [
+   -0.4767535178249307
+  ],
+  "WRIST_PITCH_L_J5": [
+   0.2807262582052644
+  ],
+  "WRIST_PITCH_R_J5": [
+   -0.2882812591646527
+  ],
+  "WRIST_ROLL_L_J7": [
+   0.5416989318071381
+  ],
+  "WRIST_ROLL_R_J7": [
+   -0.6152749998205818
+  ],
+  "WRIST_YAW_L_J6": [
+   0.08054890352598829
+  ],
+  "WRIST_YAW_R_J6": [
+   -0.1864056969854603
+  ],
+  "l_hand_index_DIP": [
+   0.0
+  ],
+  "l_hand_index_MCP_AA": [
+   0.0
+  ],
+  "l_hand_index_MCP_FE": [
+   0.0
+  ],
+  "l_hand_index_PIP": [
+   0.0
+  ],
+  "l_hand_middle_DIP": [
+   0.0
+  ],
+  "l_hand_middle_MCP_AA": [
+   0.0
+  ],
+  "l_hand_middle_MCP_FE": [
+   0.0
+  ],
+  "l_hand_middle_PIP": [
+   0.0
+  ],
+  "l_hand_pinky_CMC": [
+   0.0
+  ],
+  "l_hand_pinky_DIP": [
+   0.0
+  ],
+  "l_hand_pinky_MCP_AA": [
+   0.0
+  ],
+  "l_hand_pinky_MCP_FE": [
+   0.0
+  ],
+  "l_hand_pinky_PIP": [
+   0.0
+  ],
+  "l_hand_ring_DIP": [
+   0.0
+  ],
+  "l_hand_ring_MCP_AA": [
+   0.0
+  ],
+  "l_hand_ring_MCP_FE": [
+   0.0
+  ],
+  "l_hand_ring_PIP": [
+   0.0
+  ],
+  "l_hand_thumb_CMC_AA": [
+   0.0
+  ],
+  "l_hand_thumb_CMC_FE": [
+   0.0
+  ],
+  "l_hand_thumb_IP": [
+   0.0
+  ],
+  "l_hand_thumb_MCP_AA": [
+   0.0
+  ],
+  "l_hand_thumb_MCP_FE": [
+   0.0
+  ],
+  "pot_free": [
+   0.52,
+   -0.05,
+   0.75,
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "r_hand_index_DIP": [
+   0.0
+  ],
+  "r_hand_index_MCP_AA": [
+   0.0
+  ],
+  "r_hand_index_MCP_FE": [
+   0.0
+  ],
+  "r_hand_index_PIP": [
+   0.0
+  ],
+  "r_hand_middle_DIP": [
+   0.0
+  ],
+  "r_hand_middle_MCP_AA": [
+   0.0
+  ],
+  "r_hand_middle_MCP_FE": [
+   0.0
+  ],
+  "r_hand_middle_PIP": [
+   0.0
+  ],
+  "r_hand_pinky_CMC": [
+   0.0
+  ],
+  "r_hand_pinky_DIP": [
+   0.0
+  ],
+  "r_hand_pinky_MCP_AA": [
+   0.0
+  ],
+  "r_hand_pinky_MCP_FE": [
+   0.0
+  ],
+  "r_hand_pinky_PIP": [
+   0.0
+  ],
+  "r_hand_ring_DIP": [
+   0.0
+  ],
+  "r_hand_ring_MCP_AA": [
+   0.0
+  ],
+  "r_hand_ring_MCP_FE": [
+   0.0
+  ],
+  "r_hand_ring_PIP": [
+   0.0
+  ],
+  "r_hand_thumb_CMC_AA": [
+   0.0
+  ],
+  "r_hand_thumb_CMC_FE": [
+   0.0
+  ],
+  "r_hand_thumb_IP": [
+   0.0
+  ],
+  "r_hand_thumb_MCP_AA": [
+   0.0
+  ],
+  "r_hand_thumb_MCP_FE": [
+   0.0
+  ]
+ }
+}

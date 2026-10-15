@@ -23,6 +23,19 @@ The demonstration's own actions (original: 129 actions), executed from the froze
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of the instance; `success = deterministic ∧ success on the final state ∧ not solved at the start`. Reference: two fresh-process replays end in the live run's state (hash `84f6591621a8…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at the start.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 3 | 2 |
+| Memory | 14 GB | 5 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 16.0 GiB over 3 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
+
 ## Details
 | | |
 |---|---|
@@ -30,3 +43,6 @@ The demonstration's own actions (original: 129 actions), executed from the froze
 | Instance | the initial state of official demonstration episode 0 (`demo_1`, v0.1/single_stage/kitchen_sink/TurnOnSinkFaucet/2024-04-25); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `36053cc46ba6…`, checked on load) |
 | Deliverable | `(T, 12)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
 | Success | the environment's own check (`_check_success`) on the state after the last action |
+
+### Change Log
+- 2026-10-14 (board 0113, from board 0086): the success text now says that the faucet handle has two hinges at one pivot: the water on / off hinge (range 0 to 0.52 rad) and a temperature hinge (about ±0.79 rad) that never turns the water on or off, and that "off" means turned back toward 0 on that hinge, not lowered (board 0086: runs moved the temperature hinge or pressed the handle down). Text only: the scene, the frozen instance, the reference solution, the environment's success check and the verifier are unchanged, so the task keeps its name.

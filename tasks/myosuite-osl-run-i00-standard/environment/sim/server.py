@@ -1,18 +1,24 @@
-"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
-GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to /data/episode.jsonl.
+GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
+the optional reset capability of docs/STANDARD_MODE.md; MyoSuite's standard tasks default to 10 in their compose
+file, PROTOCOL §4.5). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is MyoSuite's own:
 one command per muscle (excitation u = 1 / (1 + exp(-5 (a - 0.5)))), one row per control step. The episode ends the
 moment the task's goal has held for its hold time (success), at the task's failure (object dropped, fingers off the key,
-...), or when the agent's time is over (the collect hook). Nothing about objects or goals leaves this process: the
-proprioception is the limb's own joints and muscles.
+...), or when the agent's time is over (the collect hook). With a reset budget, POST /reset abandons the running (or
+ended) episode and starts a new one from the frozen instance; only the last episode is graded, and a success ends the
+trial. Nothing about objects or goals leaves this process: the proprioception is the limb's own joints and muscles,
+and a camera that rides on a body of the scene (ChaseTag's `opponent_view`, soccer's `goalkeeper_view`) gives images only:
+its pose would be that body's position (SCENE_CAMS).
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
-every executed row is journaled; after a crash the service rebuilds the episode and replays the journal. When the
-episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
+every executed row is journaled; after a crash the service rebuilds the episode and replays the journal, resetting where
+the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and replays the trajectory in two fresh processes."""
 
+import contextlib
 import json
 import math
 import os
@@ -31,7 +37,13 @@ INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.a
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (PROTOCOL §4.5)
 W, H = 640, 480
+# Images one call may return (cameras x frames, per-frame depth counted again), checked before anything runs: every
+# frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per 1000 RGB
+# frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.4 GB, under the
+# sidecar's 8 GiB cap (docs/benchmarks/myosuite.md). The 2.1 services' 3000 would need more than the cap.
+MAX_FRAMES = 1000
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
 E = {
@@ -43,6 +55,8 @@ E = {
     "success": False,
     "t0": time.time(),
     "error": None,
+    "resets": 0,  # resets done (the episode is resets + 1)
+    "reset_at": [],  # the journal row at which each reset happened: a resume resets there again
 }
 
 os.environ["RCB_SESSION_LOG"] = ""
@@ -53,7 +67,7 @@ M.SESSION_LOG = ""  # the sidecar's Session is not the agent's interaction log
 _INST = np.load(INSTANCE, allow_pickle=False)
 TASK = str(_INST["task"])
 NU = int(_INST["model__actuator_ctrlrange"].shape[0])  # the journal's row width, known before the scene is built
-EP = L.Episode(DATA, dim=NU, resume="exact")
+EP = L.Episode(DATA, dim=NU, resume="exact", persist=("resets", "reset_at"))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Session(TASK, instance=INSTANCE)
 assert S.nu == NU, (S.nu, NU)
@@ -93,6 +107,36 @@ J_SLIDE = [int(MD.jnt_type[j]) == 2 for j in J_ID]
 ROOT = MD.joint("root").id if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_JOINT, "root") >= 0 else None
 if ROOT is not None and int(MD.jnt_type[ROOT]) != 0:
     ROOT = None
+OWN_JOINTS = set(J_ID) | ({ROOT} if ROOT is not None else set())  # what moves the body itself: all of it is proprioception
+
+
+def own_body(b: int) -> bool:
+    """Whether the MuJoCo body `b` is fixed in the world or moved by the body's own joints alone. A mocap body (the
+    opponent, the goalkeeper, goal markers) or a body behind any other joint (objects, balls, the key) is scene state:
+    where it is must never leave this process (PROTOCOL §4.5)."""
+    while b > 0:
+        if int(MD.body_mocapid[b]) >= 0:
+            return False
+        first = int(MD.body_jntadr[b])
+        if any(j not in OWN_JOINTS for j in range(first, first + int(MD.body_jntnum[b]))):
+            return False
+        b = int(MD.body_parentid[b])
+    return True
+
+
+def scene_camera(cam: str) -> bool:
+    """A camera that is mounted on, tracks or is aimed at a body of the scene that is not the agent's own: its pose
+    is that body's position plus a constant, so the service gives its images (and depth) and never its pose."""
+    i = MD.camera(cam).id
+    bodies = [int(MD.cam_bodyid[i])]
+    if int(MD.cam_mode[i]) in (3, 4):  # targetbody, targetbodycom: the orientation follows the target
+        bodies.append(int(MD.cam_targetbodyid[i]))
+    return not all(own_body(b) for b in bodies if b >= 0)
+
+
+SCENE_CAMS = [c for c in CAMS if scene_camera(c)]
+NO_POSE = ("not published: this camera rides on a body of the scene that is not yours, so its pose would be that body's "
+           "position; it gives images and depth (camera frame) only")
 GROUPS = [
     ("joint_pos", [f"q_{n}" for n in J_NAMES], "joint positions of the body (rad; m for sliding joints)"),
     ("joint_vel", [f"qd_{n}" for n in J_NAMES], "joint velocities (rad/s; m/s)"),
@@ -139,7 +183,10 @@ GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
 
 
 def camera_info(cam: str) -> dict:
-    """World -> camera (OpenCV axes) and camera -> world (OpenGL axes) at the current state."""
+    """World -> camera (OpenCV axes) and camera -> world (OpenGL axes) at the current state; none of a scene camera."""
+    if cam in SCENE_CAMS:
+        return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": None, "cam2world_gl": None, "image_size": [W, H],
+                "pose": NO_POSE}
     c2w = _cam_T_gl(S.data, cam)
     ext = np.linalg.inv(c2w @ GL2CV)[:3, :]
     return {
@@ -157,6 +204,10 @@ def _mount(cam: str) -> dict:
     i = MD.camera(cam).id
     body = MD.body(int(MD.cam_bodyid[i])).name
     mode = int(MD.cam_mode[i])
+    if cam in SCENE_CAMS:   # neither the body it rides on nor an offset: either would place that body
+        return {"type": "link", "parent_link": None, "pose": NO_POSE,
+                "note": "it moves with a body of the scene; extrinsic_cv and cam2world_gl are null in meta[\"cameras\"] "
+                "and the per-frame extrinsic_cv rows are NaN"}
     if mode != 0:       # MuJoCo tracking cameras follow a body (or the model's centre of mass) at a fixed offset
         return {"type": "link", "parent_link": body, "tracking": CAM_MODES.get(mode, str(mode)),
                 "note": "a MuJoCo tracking camera: it follows its body's position (or the centre of mass of its "
@@ -174,6 +225,8 @@ def _mount(cam: str) -> dict:
 
 def _mounted(cam: str) -> str:
     m = _mount(cam)
+    if cam in SCENE_CAMS:
+        return "on a body of the scene that is not yours (it moves with it): images and depth only, no pose"
     if m["type"] == "static":
         return "static"
     if "tracking" in m:
@@ -193,7 +246,7 @@ KIN_FRAME = "base" if ROOT is not None else "world"
 TIPS = [
     n for n in ("THtip", "IFtip", "MFtip", "RFtip", "LFtip") if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_SITE, n) >= 0
 ]
-MOUNT_LINKS = sorted({MD.body(int(MD.cam_bodyid[MD.camera(c).id])).name for c in CAMS} - {"world"})
+MOUNT_LINKS = sorted({MD.body(int(MD.cam_bodyid[MD.camera(c).id])).name for c in CAMS if c not in SCENE_CAMS} - {"world"})
 LINKS = TIPS + MOUNT_LINKS
 _rb = int(MD.jnt_bodyid[J_ID[0]])
 while int(MD.body_parentid[_rb]) != 0:
@@ -268,12 +321,14 @@ def do_kinematics(req: dict) -> dict:
 
 # ------------------------------------------------------------------------------------------------- spec
 TASK_TEXT = TASK_INFO["task_text"]
+ONE = "one episode, no reset" if not RESET_BUDGET else (
+    f"an episode (with up to {RESET_BUDGET} resets: POST /reset starts a new one; only the last is graded)")
 EPISODE = {
-    "hold": f"one episode, no reset: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
+    "hold": f"{ONE}: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
     f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over",
-    "event": "one episode, no reset: it ends at the challenge's success event (success), at its failure conditions or "
+    "event": f"{ONE}: it ends at the challenge's success event (success), at its failure conditions or "
     "its own time limit (see task_text), or when your time is over",
-    "track": f"one episode, no reset: it lasts {S.track_steps} control steps (the reference motion; then it is judged), "
+    "track": f"{ONE}: it lasts {S.track_steps} control steps (the reference motion; then it is judged), "
     "ends early at MyoDex's termination (failure), or when your time is over",
 }[S.rule]
 MUSCLE_TEXT = (
@@ -302,6 +357,7 @@ SPEC = {
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_watch_s": MAX_WATCH_S,
+    "max_frames_per_call": MAX_FRAMES,
     "cameras": {
         c: {
             "rgb": True,
@@ -326,9 +382,10 @@ SPEC = {
         "up": "+z",
         "units": {"length": "m", "angle": "rad", "time": "s"},
         "quaternion_order": "wxyz",
-        "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes",
+        "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"
+        + (f"; no pose of {', '.join(SCENE_CAMS)} ({NO_POSE})" if SCENE_CAMS else ""),
     },
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
+    "budget": {"reset": RESET_BUDGET, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "episode": EPISODE,
     "robot_spec": {
         "name": ROBOT[0],
@@ -397,6 +454,15 @@ if TASK_INFO.get("reference"):  # MyoDex: the reference motion is the goal (rela
         "meaning": "the reference pose of the manipulated item per control step: its centre of mass relative to where "
         "it starts (world axes) and its orientation (world frame, wxyz)",
     }
+if RESET_BUDGET:
+    SPEC["reset"] = (
+        f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
+        f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
+        "returns the new episode's first frames and proprioception. Only the last episode is graded: an episode you "
+        "reset away is never graded, a success ends the trial (409 after it), and when your time is up the episode then "
+        "running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
+        "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
+    )
 L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
 EP.scene_built()
 
@@ -407,7 +473,11 @@ def ctrl_steps() -> int:
 
 def proprio_row() -> np.ndarray:
     d = S.data
-    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], d.qfrc_actuator[J_V]]
+    # joint_effort from the physics, not the mirror: MyoSuite steps its robot wrapper's own MjData and refreshes
+    # S.data (base.mj_data) from qpos / qvel / act only, then mj_forward with ctrl = 0. The mirror's qfrc_actuator was
+    # the force of a zero command: the wrist / pelvis / MPL position servos read kp * (0 - q) whatever was commanded.
+    phys = S.base.robot.mj_data
+    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], phys.qfrc_actuator[J_V]]
     if ROOT is not None:
         parts += [d.qpos[MD.jnt_qposadr[ROOT]:MD.jnt_qposadr[ROOT] + 7], d.qvel[MD.jnt_dofadr[ROOT]:MD.jnt_dofadr[ROOT] + 6]]
     return np.concatenate(parts).astype(
@@ -429,7 +499,8 @@ def grab(cams, want_depth: bool):
 
 
 def extrinsics(cams) -> dict:
-    return {c: np.asarray(camera_info(c)["extrinsic_cv"], dtype=np.float64) for c in cams}
+    """Per frame; a scene camera has none (the recorder writes NaN rows for a camera that is not in the dict)."""
+    return {c: np.asarray(camera_info(c)["extrinsic_cv"], dtype=np.float64) for c in cams if c not in SCENE_CAMS}
 
 
 def write_final() -> None:
@@ -452,6 +523,10 @@ def summary() -> dict:
         "task": TASK,
         "protocol": L.PROTOCOL,
         "n_actions": len(ROWS),
+        "episodes": E["resets"] + 1,
+        "resets": E["resets"],
+        "reset_budget": RESET_BUDGET,
+        "control_steps_total": EP.rows,
         **EP.final_fields(),
     }
 
@@ -466,7 +541,8 @@ def finish(reason: str) -> None:
     E["episode_control_steps"] = ctrl_steps()
     E["success"] = bool(S.success)
     EP.log(
-        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])}
+        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
+         "episode": E["resets"] + 1, "journal_rows": EP.rows}
     )
     dump()
 
@@ -496,8 +572,51 @@ def ctrl_step(a, rec) -> bool:
     return E["done"] or stop
 
 
-def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
-    every = max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
+@contextlib.contextmanager
+def checking():
+    """Checking a request, before anything runs: a field of the wrong type is the request's fault -- a ValueError, which
+    the shared handler answers with 400 and nothing changed -- never a simulator error that ends the episode (PROTOCOL
+    §4.6: malformed -> 400, no physics)."""
+    try:
+        yield
+    except ValueError:
+        raise
+    except (TypeError, AttributeError, KeyError, IndexError, OverflowError) as exc:
+        raise ValueError(f"malformed request: {exc!r}"[:300]) from None
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A numeric field in seconds; absent or null is the default. Not a finite number: ValueError (400)."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    try:
+        if isinstance(v, bool):
+            raise TypeError
+        x = float(v)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"{key} must be a number of seconds, got {v!r}"[:200]) from None
+    if not math.isfinite(x):
+        raise ValueError(f"{key} must be finite")
+    return x
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log, read before anything runs (a note of another type is logged as text)."""
+    note = meta.get("note")
+    return "" if note is None else str(note)[:500]
+
+
+def frame_every(fps: int, video: str) -> int:
+    return max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
+
+
+def recorder(cams, fps: int, meta: dict, video: str, steps: int = 0) -> L.Recorder:
+    """The call's recorder, after its frame budget: the images a call of `steps` control steps would hold and return
+    (the first and the last frame plus one every frame_every control steps, for each camera; per-frame depth counted
+    again) are refused above MAX_FRAMES (ValueError: 400, before anything runs)."""
+    every = frame_every(fps, video)
+    L.check_frames(len(cams), 2 + steps // every, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
     return L.Recorder(
         cams, every, grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ
     )
@@ -514,10 +633,12 @@ def video_fps(meta: dict) -> int:
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or DEFAULT_CAMS
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
-    return list(cams)
+    return list(dict.fromkeys(cams))  # each camera once (POST /reset does not pass the layer's parse_request)
 
 
 def meta_common(cams) -> dict:
@@ -528,12 +649,13 @@ def meta_common(cams) -> dict:
         "control_steps": n,
         "physics_steps": n * SUBSTEPS,
         "sim_time_s": round(n * DT, 4),
-        "time_s": round(time.time() - E["t0"], 2),
-        "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
+        "time_s": round(L.agent_time(E), 2),
+        "time_left_s": max(0.0, round(WALL_CLOCK_S - L.agent_time(E), 1)),
         "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()},
         "done": E["done"],
         "reason": E["reason"],
         "cameras": {c: camera_info(c) for c in cams},
+        **reset_counters(),
     }
 
 
@@ -542,27 +664,28 @@ def last_command() -> np.ndarray:
 
 
 def do_submit(meta: dict, A: np.ndarray):
-    typ = meta.get("type")
-    if typ != ATYPE:
-        raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
-    interp = meta.get("interpolate", "linear")
-    video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
-    k = dt / DT
-    if A.ndim != 2 or A.shape[1] != NU:
-        raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
-    if not np.all(np.isfinite(A)):
-        raise ValueError("actions contain NaN/inf")
-    if not (math.isfinite(dt) and dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
-        raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
-    if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
-        raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
-        raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
-    rec = recorder(cams, fps, meta, video)
+    with checking():  # every field, before a single control step runs
+        typ = meta.get("type")
+        if typ != ATYPE:
+            raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
+        dt = number(meta, "dt", DT)
+        interp = meta.get("interpolate", "linear")
+        video = meta.get("video", "mp4")
+        cams, fps, note = cameras_of(meta), video_fps(meta), note_of(meta)
+        k = dt / DT
+        if A.ndim != 2 or A.shape[1] != NU:
+            raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
+        if not np.all(np.isfinite(A)):
+            raise ValueError("actions contain NaN/inf")
+        if not (dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
+            raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
+        if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
+            raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
+        if not isinstance(interp, str) or interp not in ("hold", "linear"):
+            raise ValueError("interpolate must be hold|linear")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+            raise ValueError("video must be mp4|frames|both|none")
+        rec = recorder(cams, fps, meta, video, steps=A.shape[0] * int(round(k)))
     E["calls"] += 1
     step0, before = E["step"], ctrl_steps()
     rec.tick(force=True)
@@ -602,7 +725,7 @@ def do_submit(meta: dict, A: np.ndarray):
             "interpolate": interp,
             "cameras": cams,
             "control_steps": ctrl_steps() - before,
-            "note": (meta.get("note") or "")[:500],
+            "note": note,
             **({"stopped": EP.stop_reason} if EP.stopping else {}),
         }
     )
@@ -610,14 +733,15 @@ def do_submit(meta: dict, A: np.ndarray):
 
 
 def do_observe(meta: dict):
-    cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
-    video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
-    rec, before = recorder(cams, fps, meta, video), ctrl_steps()
+    with checking():  # every field, before a single control step runs
+        cams, fps = cameras_of(meta), video_fps(meta)
+        seconds = number(meta, "seconds", 0.0)
+        video = meta.get("video", "frames")
+        if seconds < 0 or seconds > MAX_WATCH_S:
+            raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+            raise ValueError("video must be mp4|frames|both|none")
+        rec, before = recorder(cams, fps, meta, video, steps=int(round(seconds / DT))), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
         hold = last_command()
@@ -647,6 +771,13 @@ def do_observe(meta: dict):
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
+def reset_counters() -> dict:
+    if not RESET_BUDGET:
+        return {}
+    left = 0 if (E["success"] or E.get("exiting")) else RESET_BUDGET - E["resets"]
+    return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
+
+
 def status() -> dict:
     return {
         "step": E["step"],
@@ -655,7 +786,43 @@ def status() -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "elapsed_s": round(time.time() - E["t0"], 1),
+        **reset_counters(),
     }
+
+
+class Refused(Exception):
+    """A /reset the service turns down (409): nothing changes."""
+
+    def __init__(self, body: dict):
+        super().__init__(body.get("error"))
+        self.body = body
+
+
+def do_reset(meta: dict):
+    """POST /reset: a new episode from the frozen instance (the running one, if any, is abandoned, never graded)."""
+    with checking():
+        cams, fps = cameras_of(meta), video_fps(meta)
+        # a bad depth value is a 400 before anything changes (as the frame budget would be: one frame per camera here)
+        L.check_frames(len(cams), 2, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
+    if E["success"]:
+        raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
+    if E["resets"] >= RESET_BUDGET:
+        raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
+                       "resets_left": 0})
+    abandoned = {"episode": E["resets"] + 1, "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"]}
+    S.reset()
+    ROWS.clear()
+    E["resets"] += 1
+    E["reset_at"] = list(E["reset_at"]) + [EP.rows]
+    E.update(done=False, reason=None, success=False, t_end=None, episode_control_steps=None, dumped=False)
+    EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
+    E["calls"] += 1
+    EP.log({"ev": "reset", "call": E["calls"], "episode": E["resets"] + 1, "journal_rows": EP.rows,
+            "abandoned": abandoned, "state_sha": S.state_sha()})
+    rec = recorder(cams, fps, meta, "frames")
+    rec.tick(force=True, last=True)
+    out = {**meta_common(cams), "reset_id": E["resets"], "ok": True}
+    return out, rec.parts("frames", fps)
 
 
 def end_from_signal() -> None:
@@ -672,21 +839,49 @@ def end_from_signal() -> None:
     os._exit(0)
 
 
+# A resume replays the journal from the frozen instance and resets where the committed resets did: their journal rows
+# are in the last checkpoint (`persist`), the one Episode.begin resumes from.
+_CPS = [e for e in EP.events() if e.get("ev") == "checkpoint"]
+RESUME = {"at": list((_CPS[-1].get("persist") or {}).get("reset_at") or []) if _CPS else [], "i": 0}
+
+
+def _resume_resets() -> None:
+    while RESUME["at"] and int(RESUME["at"][0]) <= RESUME["i"]:
+        RESUME["at"].pop(0)
+        S.reset()
+        ROWS.clear()
+
+
 def replay_row(row) -> None:
     """A journaled row during a resume."""
+    _resume_resets()
     S.step(row)
     ROWS.append(np.asarray(row, dtype=np.float64))
+    RESUME["i"] += 1
 
 
-EP.begin(
+def resume_sha() -> str:
+    _resume_resets()  # a reset after the last replayed row (or before the first)
+    return S.state_sha()
+
+
+RESUMED = EP.begin(
     state=E,
     step=replay_row,
-    state_sha=S.state_sha,
+    state_sha=resume_sha,
     proprio=proprio_row,
     spec=SPEC,
     on_end=end_from_signal,
     start_event={"task": TASK, "env": S.env_id, "cameras": CAMS},
 )
+if RESUMED and E["resets"]:  # Episode.begin looks for an "end" of any episode: only the current one's counts
+    _ends = [e for e in EP.events() if e.get("ev") == "end" and int(e.get("episode") or 1) == E["resets"] + 1
+             and int(e.get("journal_rows") or 0) <= EP.rows]
+    if _ends:
+        E.update(done=True, reason=_ends[-1].get("reason"), t_end=float(_ends[-1]["ts"]),
+                 episode_control_steps=int(_ends[-1].get("control_steps") or ctrl_steps()))
+    else:
+        E.update(done=False, reason=None, t_end=None, episode_control_steps=None)
 if E["done"]:
     dump()  # resumed after the episode had ended: the record is rewritten from the replay
 E["ready"] = True
@@ -695,8 +890,66 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(
     f"{L.PROTOCOL} MyoSuite sim ready ({TASK}: {S.env_id}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True
 )
+
+
+def make_handler(svc: L.Service):
+    """The shared 2.2 handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
+    base = L.make_handler(svc)
+
+    class H(base):
+        def do_POST(self):
+            if self.path != "/reset" or not RESET_BUDGET:
+                return super().do_POST()
+            try:
+                meta, _ = self._body()
+            except Exception as exc:  # noqa: BLE001
+                return self._json(413 if "too large" in str(exc) else 400, {"error": str(exc)[:200]})
+            with LOCK:
+                if E.get("exiting"):
+                    return self._json(409, {"error": "trial finished: your time is up", "reason": E.get("reason"),
+                                            "resets_left": 0})
+                cid = EP.call_begin(self.path, self.connection)
+                out = blobs = err = None
+                try:
+                    out, blobs = do_reset(meta)
+                except Refused as exc:
+                    err = (409, exc.body)
+                except ValueError as exc:
+                    err = (400, {"error": str(exc)})
+                except Exception as exc:  # noqa: BLE001
+                    traceback.print_exc()
+                    E["error"] = repr(exc)
+                    EP.log({"ev": "error", "path": self.path, "error": repr(exc)})
+                    try:
+                        finish("error")
+                    except Exception:  # noqa: BLE001
+                        traceback.print_exc()
+                    err = (500, {"error": "simulator error", "detail": repr(exc)[:200]})
+                finally:
+                    if out is not None or (err and err[0] == 500):
+                        try:
+                            EP.checkpoint(E, S.state_sha, proprio_row)
+                        except Exception:  # noqa: BLE001
+                            traceback.print_exc()
+                    EP.call_end(cid, self.path)
+            if err is not None:
+                return self._json(*err)
+            return self._rcb1({**out, "stopped": None}, blobs)
+
+    return H
+
+
+def serve(svc: L.Service, port: int) -> None:
+    """L.serve with this service's handler (the same spec defaults and check, and L.bind: a port still held when the
+    service restarts is waited for, not a crash)."""
+    svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
+    svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
+    L.check_spec(svc.spec)
+    L.bind(port, make_handler(svc)).serve_forever()
+
+
 try:
-    L.serve(
+    serve(
         L.Service(
             spec=SPEC,
             lock=LOCK,

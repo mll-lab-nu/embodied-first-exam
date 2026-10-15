@@ -47,6 +47,11 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent                       # repo root
 TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600, "standard-realtime": 3600}
 SUBSET = HERE / "subset.toml"
 FACTS = HERE / "facts.json"
 REWARDS = HERE / "rewards.json"   # the scoring formulas, kept out of the image (see shared/rcb_rewards.py)
@@ -274,11 +279,9 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         "task_dir": task_dir_name(t, tag),
         "instance_tag": tag,
         "seed": defaults["seed"],
-        "agent_timeout": t.get("agent_timeout", defaults["agent_timeout"]),
-        # instruction.md states the wall-clock budget, because the first real agent run spent its whole
-        # hour searching and timed out with nothing under /app/output/ -- a zero that measures our task
-        # description, not the task.
-        "agent_timeout_hours": f"{float(t.get('agent_timeout', defaults['agent_timeout'])) / 3600:g}",
+        # The agent's time limit is CUTOFF_SEC's (per mode; PROTOCOL §2.12), written into task.toml; normalize writes the sim
+        # service's RCB_WALL_CLOCK_S and the closing `## Time limit` section of instruction.md from it. The templates never state it as a number: they say "the time limit (`## Time limit`)".
+        "agent_timeout": float(CUTOFF_SEC["privileged"]),
         "cpus": defaults["cpus"],
         "allowed_hosts": ", ".join(f'"{h}"' for h in agent_hosts()),
         "verifier_timeout": t.get("verifier_timeout", defaults["verifier_timeout"]),
@@ -433,6 +436,7 @@ def standard_context(t: dict, defaults: dict, facts: dict) -> dict:
         "standard_expert_hours": 2 * t["expert_hours"],   # the privileged estimate, doubled: no search, no state
         "standard_actuator_layout": standard_actuator_layout(facts["actuator_names"], sf["joints"]),
         "reset_budget": int(defaults["standard_reset_budget"]),   # the compose default: spec()["budget"]["reset"]
+        "agent_timeout": float(CUTOFF_SEC["standard"]),
         "room_camera_pose_line": compose_line("RCB_ROOM_CAMERA_POSE", S.get("room_camera_pose", ""),
                                               S.get("room_camera_comment", "")),
         "image_hw_line": compose_line("RCB_IMAGE_HW", str(S.get("image_hw", "")), S.get("image_hw_comment", "")),
@@ -496,6 +500,7 @@ def realtime_context(t: dict, defaults: dict, facts: dict) -> dict:
         "base_dir": base_dir_name(t, defaults["instance_tag"]),
         "control_ms": f"{1000 / facts['standard']['control_hz']:g}",
         "reset_budget": int(defaults["realtime_reset_budget"]),   # the compose default: spec()["budget"]["reset"]
+        "agent_timeout": float(CUTOFF_SEC["standard-realtime"]),
         "reference_solution": t.get("realtime_reference_solution", NO_ORACLE),
         **oracle,
     }

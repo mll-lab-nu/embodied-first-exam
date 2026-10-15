@@ -42,6 +42,7 @@
   "hand_side_exter",
   "plam_lookat"
  ],
+ "scene_cameras": [],
  "steps_per_s": 1700,
  "rest_reason": "failure: die dropped"
 }

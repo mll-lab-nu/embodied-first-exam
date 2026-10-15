@@ -34,7 +34,7 @@ LAYER = ROOT / "scripts/eai_standard"
 REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 REVIEW_PR = ""                              # the pull request with the per-task review (PROTOCOL §2.7), once there is one
-# agent egress: model APIs only, by default in both modes (user decision 2026-10-03); the host list of set_agent_egress.py
+# agent egress: the one allowlist (model APIs; since 2026-10-11 also the package registries), in both modes (user decision 2026-10-03); the host list of set_agent_egress.py
 HOSTS = ast.literal_eval(re.search(r"^HOSTS = (\[.*?\])", (ROOT / "scripts/set_agent_egress.py").read_text(), re.S | re.M).group(1))
 
 
@@ -59,6 +59,17 @@ def normalizer():
     sys.path.insert(0, str(ROOT / "scripts"))
     from task_conventions import normalize
     return normalize
+
+
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
+
+
+def agent_timeout(mode: str) -> int:
+    return CUTOFF_SEC[mode]
 
 
 def fill(text: str, values: dict) -> str:
@@ -271,7 +282,7 @@ def oracle_evidence(T: dict, mode: str) -> str:
 
 
 # ---------------------------------------------------------------- planning one task's twins
-def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[str, dict[str, tuple[bytes, int]]]:
+def plan_task(key: str, T: dict, fams: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     d, diag, scene, meta = load_instance(key)
     fam = key.split("/")[0]; F = fams[fam]
     if meta.get("gpu_dynamics"):
@@ -294,7 +305,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
     if note:
         std_safety += f"\n{note}\n"
     common = {"PRIV": task_dir(key, "privileged"), "STD": task_dir(key, "standard"), "MG_TASK": key, "FAMILY": fam, "INDEX": idx,
-              "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(), "BUDGET": str(budget), "BUDGET_MIN": str(budget // 60),
+              "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
               "PROMPT": prompt, "PROMPT_TOML": toml_str(prompt), "CONSTRAINT_CLASS": F["constraint_class"], "SKILL": F["skill"],
               "GRASPING": F["grasping"], "HORIZON": str(F["upstream_max_steps"]), "DIFFICULTY": T["difficulty"].strip(),
               "README_SAFETY": readme_safety(diag) + (f"\n\n{note}" if note else ""), "ALLOWED_HOSTS": "[" + ", ".join(f'"{h}"' for h in HOSTS) + "]"}
@@ -302,7 +313,8 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
     def per_mode(mode: str) -> dict:
         lvl = T["oracle"][mode]
         ev = None if lvl == "full" and not T.get("oracle_evidence") else oracle_evidence(T, mode)
-        return {"ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
+        # BUDGET: the agent's cutoff (CUTOFF_SEC; the task.toml number normalize renders the closing section from)
+        return {"BUDGET": str(agent_timeout(mode)), "ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
                 "REFERENCE_SOLUTION": reference_none(mode, T["oracle"].get("privileged") == "full") if lvl == "none"
                 else reference_text(key, T, mode)}
     priv = {**per_mode("privileged"), "GOAL_BLOCK": goal_block_privileged(diag, scene, fam), "SAFETY_BLOCK": safety_block_privileged(diag) + (f"\n{note}\n" if note else ""),
@@ -415,7 +427,7 @@ def main() -> int:
     normalize = normalizer()
     diffs = []
     for key in todo:
-        for name, files in normalized(plan_task(key, tasks[key], fams, version, int(cfg["budget_s"])), normalize).items():
+        for name, files in normalized(plan_task(key, tasks[key], fams, version), normalize).items():
             diffs += sync(ROOT / "tasks" / name, files, a.check)
     if not a.tasks:                                   # task dirs of tasks that are no longer generated
         made = {task_dir(k, m) for k, T in tasks.items() if T["include"] for m in T["modes"]}

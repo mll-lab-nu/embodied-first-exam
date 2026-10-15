@@ -1,5 +1,5 @@
-"""eai-standard/2.4: the 2.2 layer (the HTTP layer, the protocol helpers and the crash recovery; docs/STANDARD_MODE_2_2.md,
-the 2.1 base is docs/LIMITED_MODE_PROTOCOL.md) plus the operations capability of docs/STANDARD_MODE_2_4.md: operation ids
+"""eai-standard/2.4: the 2.2 layer (the HTTP layer, the protocol helpers and the crash recovery; docs/STANDARD_MODE.md Part 2,
+the 2.1 base is its Part 1) plus the operations capability of its Part 4: operation ids
 and request deadlines (408 / 409), GET /operations/<id>, the service-owned call watchdog, the physics-tick ledger
 (journal.ticks.i64) and fsynced journals. First served by RoboTangle (whose release called it 2.3).
 
@@ -37,7 +37,7 @@ checkpointed (rows, state hash, the robot's proprio row); after a crash compose 
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
 first half of a collect hook."""
 from __future__ import annotations
-import faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
+import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Callable
 
@@ -50,6 +50,19 @@ COMPAT = ["eai-standard/2.2", "rcb-limited/2.0", "rcb-limited/2.1", "eai-standar
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 DEPTH_MODES = ("none", "last", "frames")
+MAX_FRAMES_PER_CALL = 3000   # images one response may carry (cameras x frames, per-frame depth counted again): the 2.1 services' bound
+
+
+def check_frames(n_cameras: int, n_frames: int, depth_frames: bool = False, limit: int = MAX_FRAMES_PER_CALL) -> int:
+    """The images one call would return (cameras x frames; per-frame depth counted again), refused above `limit`
+    (ValueError -> 400, for the adapter to raise before it executes or renders anything): every frame is held in memory
+    until the response is sent, so a call without a bound can exhaust the service's memory. The adapter passes the frames
+    its Recorder will capture and the limit its /spec states as `max_frames_per_call`."""
+    n = int(n_cameras) * int(n_frames) * (2 if depth_frames else 1)
+    if n > limit:
+        raise ValueError(f"this call would return {n} images (cameras x frames, per-frame depth counted again); the limit is "
+                         f"max_frames_per_call = {limit}: ask for fewer cameras, a lower video_fps or a shorter call")
+    return n
 DEPTH_MAX_M = 65.535                                        # uint16 millimetres; a farther surface reads 0 (no reading)
 DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense (as rcb-limited/2.1)
 _RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
@@ -138,7 +151,7 @@ class Recorder:
                  depth: str = "none", clock_hz: float = 1.0, time_clock=None, fps=None):
         if depth not in DEPTH_MODES + ("legacy",):
             raise ValueError(f"bad depth mode {depth!r}")
-        self.cams = list(cameras); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
+        self.cams = list(dict.fromkeys(cameras)); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
         self._grab, self._prop, self._ext, self._clock = grab, proprio_row, extrinsics, clock
         self._time_clock = time_clock or (lambda: self._clock() / self.hz)
         self.fps = float(self.hz / self.every if fps is None else fps)
@@ -407,10 +420,11 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE_2_2.md)
+# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE.md)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout
+CALL_WATCHDOG_GRACE_S = float(os.environ.get("RCB_CALL_WATCHDOG_GRACE_S", "60"))   # the hard watchdog: this long past a call's budget
 RESUME_MAX_DEV_M = float(os.environ.get("RCB_RESUME_MAX_DEV_M", "0.05"))      # approx resumes: the gross-divergence guard
 ON_SERVICE_ERROR = ("a connection error means the service crashed: it restarts and resumes the SAME episode (never a reset) "
                     "in the state after the last call it completed, which you may not have received. Wait until GET /status "
@@ -500,7 +514,12 @@ class Episode:
       overwritten; the service then idles with its PID file for the collect hook.
     - Per call, two bounds keep one call from holding the single-threaded service: a call that runs longer than
       max_call_wall_s, or whose client has hung up, stops at the next control step and returns what it executed
-      (journal() returns True; meta.stopped says why). Neither bounds the episode: the wall clock is its only budget."""
+      (journal() returns True; meta.stopped says why). Neither bounds the episode: the wall clock is its only budget.
+    - The call watchdog (faulthandler, a C thread) ends the process when a call is still running
+      RCB_CALL_WATCHDOG_GRACE_S (60) seconds past its budget: a native step hung. It prints into call-watchdog.trace, and
+      only that banner makes the next start end the episode as `call_watchdog` (infra_error = 1). Any other crash during a
+      call is an ordinary crash, resumed like every other, however late the container comes back; a resume removes
+      call-watchdog.json and the trace."""
 
     def __init__(self, data: str, dim: int, resume: str = "exact", persist: tuple = ()):
         if resume not in ("exact", "approx"):
@@ -512,6 +531,8 @@ class Episode:
             p("episode.jsonl"), p("journal.f64"), p("final.json"), p("server.pid"), p("startups.jsonl"))
         self.f_ticks = p("journal.ticks.i64")
         self.f_call_watchdog = p("call-watchdog.json")
+        self.f_call_trace = p("call-watchdog.trace")   # what the call watchdog printed when it fired: the evidence begin() needs
+        self._wd_fd = None
         self._tf = None
         self.rows = 0                       # control steps executed in this episode (journaled)
         self.max_call_wall_s = MAX_CALL_WALL_S
@@ -606,8 +627,16 @@ class Episode:
         if path != "/kinematics":
             budget = self.max_call_wall_s if deadline is None else min(self.max_call_wall_s, max(0, deadline - time.time()))
             self._call = {"id": self._ids, "t0": time.monotonic() - (self.max_call_wall_s - budget), "sock": sock, "polled": 0.0, "stopped": None}
-            _write_json(self.f_call_watchdog, {"call": self._ids, "pid": os.getpid(), "deadline": time.time() + max(1, budget + 60)})
-            faulthandler.dump_traceback_later(max(1, budget + 60), exit=True)
+            grace = max(1, budget + CALL_WATCHDOG_GRACE_S)
+            # The watchdog writes to its own file, emptied for every call: faulthandler's "Timeout (h:mm:ss)!" banner and the
+            # tracebacks are there if, and only if, the watchdog ended this process. A crash of any other kind during a
+            # call (a segfault, a CUDA error, an OOM kill) leaves call-watchdog.json behind too, so that file alone, or its
+            # deadline having passed by the time the container is back, proves nothing (begin()).
+            if self._wd_fd is None:
+                self._wd_fd = os.open(self.f_call_trace, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+            os.ftruncate(self._wd_fd, 0)
+            _write_json(self.f_call_watchdog, {"call": self._ids, "pid": os.getpid(), "deadline": time.time() + grace})
+            faulthandler.dump_traceback_later(grace, exit=True, file=self._wd_fd)
         self.log({"ev": "call_begin", "id": self._ids, "path": path})
         return self._ids
 
@@ -670,10 +699,9 @@ class Episode:
             pass
         ev = self.events()
         starts = [e for e in ev if e.get("ev") == "start"]
-        watchdog = _read_json(self.f_call_watchdog)
-        if starts and watchdog and time.time() >= float(watchdog["deadline"]):
-            self.give_up("call_watchdog: unfinished native call exceeded its deadline", infra=True)
+        fired, trace = self._watchdog_fired()
         if not starts:
+            self._clear_watchdog()
             for path in (self.f_journal, self.f_ticks):
                 try:
                     os.remove(path)
@@ -694,6 +722,12 @@ class Episode:
         self.max_joint_dev = max([float(e.get("joint_dev") or 0) for e in resumed] + [0.0])
         if final_verdict(self.data):
             self.give_up("restarted after finalize", infra=False)
+        if fired:
+            # The call watchdog ended the last process (its own output says so): a native step hung past the call's budget.
+            # An ordinary crash during a call is not this case, however long the restart took: it is resumed below.
+            print("[call watchdog] the last process was ended by the call watchdog:\n" + trace, file=sys.stderr, flush=True)
+            self.give_up("call_watchdog: unfinished native call exceeded its deadline", infra=True)
+        self._clear_watchdog()               # a marker left by a crash during a call must not outlive this resume
         k = max(i for i, e in enumerate(ev) if e.get("ev") in ("start", "resuming", "resumed"))
         tail = ev[k + 1:]
         in_call = bool({e.get("id") for e in tail if e.get("ev") == "call_begin"} - {e.get("id") for e in tail if e.get("ev") == "call_end"})
@@ -723,9 +757,9 @@ class Episode:
         R = R[: n * self.dim].reshape(n, self.dim)
         t = time.time()
         ticks = None
-        if step_ticks is not None and n:
+        if step_ticks is not None:           # also for n == 0: the ledger is cut to the checkpoint with the journal (below)
             try:
-                ticks = np.fromfile(self.f_ticks, dtype=np.int64)[:n]
+                ticks = np.fromfile(self.f_ticks, dtype=np.int64)[:n] if n else np.zeros(0, dtype=np.int64)
                 if len(ticks) != n or np.any(ticks <= 0):
                     raise ValueError("incomplete tick journal")
             except (ValueError, OSError):
@@ -769,6 +803,23 @@ class Episode:
         self._arm(on_end)
         return True
 
+    def _watchdog_fired(self) -> tuple[bool, str]:
+        """Whether the call watchdog ended the previous process: faulthandler printed its banner into call-watchdog.trace
+        (call_begin empties that file for every call, and a resume removes it)."""
+        try:
+            with open(self.f_call_trace, "rb") as f:
+                trace = f.read(1 << 20).decode("utf-8", "replace")
+        except OSError:
+            return False, ""
+        return "Timeout (" in trace, trace
+
+    def _clear_watchdog(self) -> None:
+        for path in (self.f_call_watchdog, self.f_call_trace):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
     @staticmethod
     def _deviation(ref, proprio: Callable, spec: dict) -> dict:
         """The replayed robot against its checkpointed proprio row: max |joint_pos| difference (rad or m) and the largest
@@ -800,7 +851,8 @@ class Episode:
 
     def give_up(self, reason: str, infra: bool) -> None:
         """End the trial's episode without a new one (never a reset): log it, write the verdict unless one is on disk,
-        leave the PID file for the collect hook, and idle until the container is removed."""
+        leave the PID file for the collect hook, and answer every request with the refusal until the container is
+        removed (refuse_forever)."""
         faulthandler.cancel_dump_traceback_later()
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
@@ -812,8 +864,46 @@ class Episode:
             f.write(str(os.getpid()))
         signal.signal(signal.SIGUSR1, lambda *_: None)
         print(f"[{PROTOCOL}] restart refused: {reason}", flush=True)
-        while True:
-            time.sleep(3600)
+        refuse_forever(reason, infra)
+
+
+def refuse_forever(reason: str, infra: bool, port: int | None = None) -> None:
+    """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container
+    is removed. Before, nothing listened once the service had given up -- whether it refused the episode at its start
+    (DexJoCo with fewer than 4 CPUs, a frozen instance that does not rebuild) or after its crashes -- and the client's
+    Robot() and wait_ready() waited out their whole timeout, an hour, for a simulator that would never answer. The
+    client raises EpisodeOver on this answer at once. The verdict is on disk already: nothing here reads or changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True, "infra_error": int(bool(infra))}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30                         # a client that stops sending must not hold the only thread
+
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= MAX_BODY:        # take the request first: a client still sending would see a reset, not the answer
+                    self.rfile.read(n)
+                self.send_response(409); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            except (OSError, ValueError):
+                pass
+            self.close_connection = True
+
+        do_GET = do_POST = _refuse
+
+        def log_message(self, *a):
+            pass
+
+    def answer():
+        try:
+            bind(int(os.environ.get("RCB_PORT", "8000")) if port is None else port, Refusal).serve_forever()
+        except Exception:  # noqa: BLE001 -- the refusal is a courtesy to the client; the give-up stands without it
+            traceback.print_exc()
+
+    threading.Thread(target=answer, daemon=True).start()
+    while True:
+        time.sleep(3600)
 
 
 # ---------------------------------------------------------------- the HTTP layer
@@ -855,11 +945,16 @@ def make_handler(svc: Service):
                 n = int(self.headers.get("Content-Length", 0))
             except ValueError:
                 raise ValueError("bad Content-Length")
+            if n < 0:
+                raise ValueError("bad Content-Length")
             if n > MAX_BODY:
                 raise ValueError("request too large")
             raw = self.rfile.read(n) if n else b""
             if raw[:4] == rcb1.MAGIC:
-                return rcb1.decode(raw)
+                meta, parts = rcb1.decode(raw)
+                if not isinstance(meta, dict):
+                    raise ValueError("the RCB1 frame's meta must be a JSON object")
+                return meta, parts
             body = json.loads(raw or b"{}")
             if not isinstance(body, dict):
                 raise ValueError("body must be a JSON object or an RCB1 frame")
@@ -890,7 +985,10 @@ def make_handler(svc: Service):
             if self.path == "/kinematics":          # stateless: never steps physics, never waits for the episode lock
                 cid = ep.call_begin(self.path) if ep else 0
                 try:
-                    req = parse_kinematics(meta, svc.spec["kinematics"])
+                    try:
+                        req = parse_kinematics(meta, svc.spec["kinematics"])
+                    except (TypeError, OverflowError) as exc:   # wrong-typed fields (a string for q, a list for max_iters)
+                        raise ValueError(f"malformed kinematics request: {exc}") from None
                     out = svc.kinematics(req); svc.kin_calls += 1
                 except ValueError as exc:
                     return self._json(400, {"error": str(exc)[:300]})
@@ -904,7 +1002,11 @@ def make_handler(svc: Service):
             deadline = meta.get("request_deadline_unix_s")
             if operation is not None and (not isinstance(operation, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", operation)):
                 return self._json(400, {"error": "invalid operation ID"})
-            if deadline is not None and (not isinstance(deadline, (int, float)) or not math.isfinite(deadline)):
+            try:                             # (math.isfinite raises on a JSON integer beyond the float range)
+                bad_deadline = deadline is not None and (not isinstance(deadline, (int, float)) or not math.isfinite(deadline))
+            except OverflowError:
+                bad_deadline = True
+            if bad_deadline:
                 return self._json(400, {"error": "invalid request deadline"})
             with svc.lock:
                 if deadline is not None and time.time() >= deadline:
@@ -926,7 +1028,12 @@ def make_handler(svc: Service):
                 out = blobs = err = None; stopped = None
                 try:
                     if self.path == "/submit":
-                        A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
+                        try:
+                            A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
+                        except (TypeError, ValueError, OverflowError):   # a JSON object, null or an integer too large
+                            # for a float among the rows: the caller's error, a 400 before anything executes (PROTOCOL
+                            # §4.6), never a 500 that ends the episode
+                            raise ValueError("actions must be a numeric array") from None
                         out, blobs = svc.submit(meta, A)
                     else:
                         out, blobs = svc.observe(meta)
@@ -969,7 +1076,25 @@ def serve(svc: Service, port: int = 8000) -> None:
     if svc.episode is not None:
         svc.spec.setdefault("max_call_wall_s", svc.episode.max_call_wall_s)
     check_spec(svc.spec)
-    HTTPServer(("0.0.0.0", port), make_handler(svc)).serve_forever()
+    bind(port, make_handler(svc)).serve_forever()
+
+
+def bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent (`python -m http.server` listens on 8000 by default) may hold the port while the scene was
+    built. Wait for the port instead of failing: an exception here would count as a crash of the service, and three of
+    them end the episode. The time spent waiting is the agent's own (the collect hook's signal is still served)."""
+    said = False
+    while True:
+        try:
+            return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as e:
+            if e.errno != errno.EADDRINUSE:
+                raise
+        if not said:
+            said = True
+            print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
 
 
 # ---------------------------------------------------------------- the collect hook's first half

@@ -17,9 +17,9 @@ every task goes through the human review in PR #3.
   raise_platform, retrieve_cube, stack_bowls, stand_bulb, stand_pages. The positives are from earlier versions too (same
   frozen instance and predicate).
 
-**Pending: 11 families**, kept in the generator's table (`scripts/robowits/families.py`, status `pending`) so that a later PR
-can render them once each has a valid positive and a written success criterion. Their frozen instances are in dev/qineng
-9eb18edf (`mk_tasks.py --instance`).
+**Not in the repository: 11 families** without a valid positive. A later PR can add one (an entry in
+`scripts/robowits/families.py`, its predicate with `mk_tasks.py --extract-predicate`, a written success criterion) once it
+has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py --instance`).
 - No graded positive: balance_board, ball_into_jar, differentiate_cubes, pinch_card, place_book, retrieve_roll,
   round_dough_sheet, seal_colander, water_into_mug. place_book can pass only with the thin book stood on its edge: the book
   (22 x 19 cm) is larger than the mat (12 x 20 cm), so a flat book has at most about 57 % of its footprint over the mat,
@@ -87,31 +87,93 @@ can render them once each has a valid positive and a written success criterion. 
 ## Hosts: one CPU vendor
 Genesis' CPU backend is bit-exact only within one CPU vendor. The instances were frozen on Intel (the laptop). On AMD
 hosts (ws, ws3, lab) the rebuilt instance's state hash differs; the grader's tolerance check (every object and joint
-pose within tolerance) still accepts it, except for stand_bulb (and the pending differentiate_cubes and ball_into_jar),
+pose within tolerance) still accepts it, except for stand_bulb (and differentiate_cubes and ball_into_jar, which are not in the repository),
 which therefore run on Intel hosts only. A trajectory recorded on one vendor can fail on the other, so a positive is
 re-graded on the vendor it was graded on: the Intel laptop for every positive in the review table except stack_bowls,
 which was graded on ws (AMD, with `instance_exact = 1`).
+- **Machine-readable:** both stand_bulb tasks carry `host_cpu_vendor = "GenuineIntel"` in `[metadata]` of `task.toml`
+  (a RoboWits field, docs/TAXONOMY.md; `families.py` `host_cpu_vendor`), and
+  their READMEs a `Host CPU` row. A scheduler runs such a task only on a host whose `/proc/cpuinfo` `vendor_id` equals
+  the value; a task without the key runs on either vendor. The key is not in `[metadata.resources]`, whose fields are
+  fixed by PROTOCOL §2.9.
+- **A host that cannot rebuild the instance is an infrastructure error, never a result** (2026-10-10). Privileged: the
+  verifier writes `success = 0`, `instance_ok = 0`, `infra_error = 1` (and `instance_build_failed = 1` with
+  `grader_error = 1` when the scene does not build at all). Standard: the service checks the rebuilt instance once, at
+  its first start, and gives up at once with a record (`final.json`: `finalized`, `gave_up`, `reason =
+  "instance_mismatch: ..."`, `infra_error = 1`) instead of raising into six restarts; the agent's client then never
+  gets a service, and `reward.json` has `infra_error = 1`, `instance_mismatch = 1`.
 
 ## Time budget (D8)
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+
 5400 s for every task of both modes, longer than the 3600 s default: the families are bimanual physical puzzles that
 take several attempts (a failed push or a dropped object is reset in privileged mode and must be recovered in standard
 mode), every Python process pays about a minute of scene build before its first step, and a standard-mode crash resume
-replays the episode on the agent's clock. Results are reported with this budget.
+replays the episode on the agent's clock. Results are reported with this budget. The number lives in
+each task's own `[agent] timeout_sec`, written by the generator (history in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Grading and determinism
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier
   replays the trajectory twice in a fresh process and compares the final-state hashes and the rebuilt frozen scene; it
   writes the verdict before it renders the video. The standard service grades in-process (its replay of the recorded
   episode must end in the live final state); the separate verifier reads `final.json`.
+- Whose failure (2026-10-10; `reward.json` always has `infra_error` and `grader_error`). The agent's: no trajectory
+  (`missing_trajectory`), a file that is not the tooling's `.npz` or has no finite (T, 16) `actions` of at most
+  200000 rows (`bad_trajectory`), another family's file (`wrong_family`), a trajectory that does not complete the
+  task; in standard mode also an episode that ended with a simulator error (`sim_error = 1`). The infrastructure's
+  (`infra_error = 1`, not a result): an instance the host cannot rebuild (Hosts, above), a service that gave up after
+  crashes it caused or never finished grading, and a grading replay that raised after an episode that ended normally
+  (`final.json` `grade_error`, `grader_error = 1`: the record is still a complete verdict, `deterministic` false, so
+  the collect hook does not wait its timeout for one). A video that fails, or a service that dies while it renders
+  the video, never changes a written verdict: the restarted service sets `video_done` and idles.
+- Both verifiers run without network (`network_mode = "no-network"`): every asset is in the image or the mounted
+  BlenderKit folder, RoboWits resolves assets from local paths only, and Genesis' convex-decomposition and particle
+  caches are seeded from `instance.json`.
+- The technical cap: 200000 control steps per episode or trajectory (`rcb_robowits.MAX_STEPS`, about 1.85 h of
+  simulated time at 30 Hz), stated in both instructions and, in standard mode, in `/spec` as `max_control_steps`
+  (PROTOCOL §4.5; `budget.steps` stays null: the wall clock is the budget). A standard episode ends there (reason
+  `step_guard`) and is graded as it stands; the privileged grader scores a longer trajectory 0 (`bad_trajectory`).
 - The GPU backend (`RCB_ROBOWITS_BACKEND=gpu`, the particle families stabilize_bottle and the dropped
   separate_marbles_and_sand: their CPU-backend builds take 39-86 min) is not bit-exact: their graders report determinism
   without requiring it. None of them is in the repository.
 
+## Network policy
+The agent's egress is the model APIs and, since 2026-10-11, the package registries, in both modes (`[agent] network_mode = "allowlist"`, the hosts of
+`scripts/set_agent_egress.py`; owner decision 2026-10-10, board 0072). The tasks used Harbor's default (public) until
+then, because RoboWits ships no expert or planner; nothing in a trial needs the network. With open egress an agent could
+fetch RoboWits' source and robot models from its own shell, and RoboWits does publish human demonstrations of its seed
+tasks (the LeRobot dataset its README names; the image's `/opt/robowits/README.md` and `.git/config` carry the
+addresses, which the allowlist makes unreachable).
+- Privileged `main` (the simulator image): RoboWits resolves assets from local paths only (the image's asset bundle and
+  the BlenderKit folder mounted read-only from the host; `scripts/robowits/fetch_blenderkit*.sh` run on the host, never
+  in a container), Genesis' convex-decomposition and particle caches are seeded from `instance.json`, and
+  `QD_OFFLINE_CACHE=0` only turns off Quadrants' on-disk kernel cache. The image's Python has no `pip`; `uv pip install`,
+  `git` and `curl` fail for any host outside the allowlist (`uv pip install` from PyPI works).
+- Standard `main` (the pinned client image): Python, the client and its pins; nothing to download.
+- Standard `sim`: Harbor's egress control puts it in the same network namespace as `main` (that is how the client reaches
+  `localhost:8000`), so it is public while the environment starts and on the allowlist during the agent phase, a restart
+  after a crash included. It needs neither: the same image and assets as the privileged simulator.
+- Both verifiers: `no-network` (Grading and determinism), unchanged.
+
+Verified on a pool host (2026-10-11 UTC, dominos, both modes, Harbor's oracle agent): reward 1 and `deterministic` 1 as
+before, the privileged oracle running the simulator inside the allowlisted agent container; from inside the agent's
+container github.com, huggingface.co, blenderkit.com and (then: the list had no registries yet) pypi.org failed at the
+TLS handshake while the model API hosts answered.
+
 ## Standard mode (eai-standard/2.2)
 `joint_position` (16) and `ee_pose` (16, right arm first, IK per row on RoboWits' pink/pinocchio IK, gripper-tip frame);
 cameras `ego` (static) and `wrist_right` / `wrist_left` (link-mounted); Genesis rasterizer depth; `/kinematics` on
-pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). STANDARD_MODE_2_2.md §16.
-- Crash recovery (STANDARD_MODE_2_2.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
+pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). STANDARD_MODE.md §16.
+- Requests (PROTOCOL §4.6; 2026-10-10): the adapter checks the type and range of every field of a `/submit` header
+  and an `/observe` body before it executes or counts anything, and answers 400: `type`, `dt` (a finite number in
+  [1/30, 0.5] s and, for `joint_position`, a whole number of 1/30 s periods within 1e-6 of a period: never rounded),
+  `interpolate`, `video`, `video_fps` (a whole number in 1..30), `seconds` (a finite number in [0, 30]), `cameras`
+  (null or a list of names; names that are not cameras are ignored), `note` (null or a string), `depth`, the actions
+  (finite, (T, 16), at most 10 s or 50 `ee_pose` rows). `ee_pose` gripper widths outside 0 .. 0.1 are clipped and
+  listed in `meta.clipped`, like out-of-limit joint targets; an IK result that is not finite counts as an IK failure
+  (the arm holds). Before this date a null or mistyped field, a huge `video_fps` or a non-string `note` ended the
+  episode with a 500 (some after the chunk had run), and a `dt` between two periods was rounded.
+- Crash recovery (STANDARD_MODE.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
   resume class `exact` on the CPU backend and `approx` on the GPU backend. A smoke test of the sidecar outside Harbor
   (laptop, 2026-10-01, stack_cubes): the service killed between calls came back in 28 s, replayed its 90-row journal with
   the state hash matching, continued the same episode and was graded in-process (`deterministic` 1, `resumes` 1,
@@ -142,8 +204,8 @@ The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at
   replay, rendering (`render_frame` / `render_grid` / `render_video`) and thin wrappers of the low-level action (joint
   moves, IK moves without collision checking, gripper, hold). Task-level skills (grasp, place, navigate) are never added
   to it; reference solutions keep theirs under `solution/`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`): no object poses or positions, no world coordinates of workspace items. Their success
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `scripts/robowits/ci/advisory-world-frame.sh`): no object poses or positions, no world coordinates of workspace items. Their success
   criterion is stated in words and distances relative to the objects and the table top; the corners of the predicate's
   table-bounds rectangle and the goal line's coordinate are withheld. Given: object names, sizes and colours, the robot
   (its base pose included), the cameras' calibration, the world frame's convention. Privileged tasks give the privileged
@@ -162,6 +224,49 @@ RoboWits: MIT (declared in its pyproject.toml); Genesis: Apache-2.0; RoboWits' a
 licensed to whoever downloads them, never in the image or the repository (`images/robowits/NOTICE`).
 
 ## Known issues
+- A JSON `/submit` body (not RCB1) whose `actions` is an object, or an RCB1 header whose `meta` is not an object with
+  no `actions` part, fails in the shared layer before the adapter sees it (`rcb_limited.py`: 500, the episode ends).
+  The official client always sends an RCB1 `actions` array, so only a hand-written request can do this.
+- The response of one call is built in memory, so one call returns at most 1500 images (`/spec` `max_frames_per_call`,
+  `shared/server.py` `MAX_FRAMES`: cameras x frames, a frame with per-frame depth counts 4): over it a 400 before anything
+  runs, and `ee_pose` rows that take longer than counted (up to 400 control steps each) stop adding frames there
+  (`meta["frames_skipped"]`; `scripts/robowits/tests/test_server_frames.py`). Until 2026-10-10 there was no limit: a
+  long chunk or watch with per-frame video or depth of three cameras could exhaust the sidecar's memory.
+- `ball_into_bottle`: the red bottle's base collides as a thin shell (about 3.5 mm), so a ball that falls fast down the
+  bottle can pass through it onto the table (board 0086: 9 of 16 slightly perturbed replays of one pour). The
+  instruction says so since 2026-10-14; a thicker collision base would change the frozen scene and has not been made.
 - During the standard service's in-process grading replay, a late `/status` reports the replay's counter.
 - The predicates are RoboWits' own and some are looser than their task text (the criterion sections say where); the
   review checks each family's predicate (PROTOCOL §2.7).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `exact` on Genesis' CPU backend; `approx` on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`).
+
+`max_frames_per_call` = 1500, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. The service refuses the episode at its start when the frozen instance does not rebuild; its collect hook waits with `--wait-key video_done`.
+
+A resume replays the episode so far without rendering at ~700 steps/s (CPU). Grading: in-process (Genesis' CPU backend repeats exactly); the GPU-backend families report determinism, not require it.
+
+Known issue: during the in-process grading replay, `/status` and a late `/observe` report the replay's counter and scene; the episode is over by then and the grade is unaffected.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | Genesis 0.4.7 |
+| rows streamed at | 30 Hz control (4 substeps) |
+| `joint_position` | 16: per arm 7 joints + gripper width (m) |
+| `ee_pose` | 16 (right first), IK per row, gripper-tip frame |
+| cameras | `ego` (static), `wrist_right`, `wrist_left` |
+| depth | Genesis rasterizer |
+| `/kinematics` | pinocchio on the URDF (14 arm joints) |
+| proprio columns (2.0 → 2.2) | 30 → 80 |
+| grading replays | in-process (exact) |
+| resume class (STANDARD_MODE §13.1) | `exact` (CPU backend), `approx` (GPU backend) |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| RoboWits, CPU backend | 29 families (94 trials) | 47–234 s (median ~60 s) | default 900 s is enough |
+| RoboWits, particle families | separate_marbles_and_sand, stabilize_bottle | 39–56 min on the CPU backend; ~140 s on the GPU backend | they run on the GPU backend; a CPU-backend build needs `RCB_STARTUP_TIMEOUT_S` ≥ 7200 |

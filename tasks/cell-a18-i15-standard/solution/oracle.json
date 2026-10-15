@@ -1,0 +1,1 @@
+{"plan": [{"type": "joint_position", "rows": [0, 107]}, {"type": "ask_operator", "row": [], "text": "The tag card by the metal block is stained and torn; I can make out an N. What metal is it?"}, {"type": "decline", "row": [], "text": "The block is sodium and the beaker holds water; sodium reacts violently with water."}]}

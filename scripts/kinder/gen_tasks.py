@@ -37,7 +37,17 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
+# standard mode's default reset budget (RCB_RESET_BUDGET's default; KinDER's own choice, PROTOCOL §4.5; owner
+# 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
+# attempt share them; ten, as MyoSuite, because a scripted episode ends in about a minute; RCB_RESET_BUDGET=0 still runs
+# the single-episode configuration
+RESET_BUDGET = 10
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
 IMAGE = "ghcr.io/mll-lab-nu/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
 # The agent container and the verifier of every standard-mode task: the one client base (pinned by digest) and the
@@ -221,7 +231,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
     mujoco = k == "tidybot"
     return {
         "family": t["family"], "env_id": t["env_id"], "env_name": t["env_id"].split("/")[1].removesuffix("-v0"),
-        "instance_tag": d["instance_tag"], "seed": d["seed"], "max_steps": n,
+        "instance_tag": d["instance_tag"], "seed": d["seed"], "max_steps": n, "reset_budget": RESET_BUDGET,
         "category": category, "robot": robot, "robot_id": "tidybot-plus-plus",   # both kinds' robot
         "keywords": ", ".join(f'"{w}"' for w in keywords), "view": "task_view" if mujoco else "render",
         "step_time": f" ({n / 10:g} s at 10 Hz)" if mujoco else "", "step_name": "10 Hz control step" if mujoco else "control step",
@@ -240,7 +250,9 @@ def context(t: dict, d: dict, f: dict) -> dict:
         "action_layout": action_layout(f, standard=False),
         "standard_action_layout": action_layout(f, standard=True),
         "expert_hours": t["expert_hours"], "standard_expert_hours": 2 * t["expert_hours"],
-        "agent_timeout": float(d["agent_timeout_sec"]), "agent_timeout_hours": f"{d['agent_timeout_sec'] / 3600:g}",
+        # the agent's time limit: CUTOFF_SEC's (PROTOCOL §2.12), never stated as a number in a template: normalize renders
+        # the closing section from task.toml, and the texts say "the time limit (`## Time limit`)"
+        "agent_timeout": float(CUTOFF_SEC["privileged"]),
         "verifier_timeout": float(d["verifier_timeout_sec"]), "image_hw": "×".join(map(str, std["image_hw"])),
         "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",
         **oracle_fields(t, d, "privileged"),
@@ -258,6 +270,7 @@ def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dic
                          "robot_time": f" ({ctx['robot_seconds']} s of robot time)" if ctx["view"] == "task_view" else "",
                          "chunk_rows": 100,   # max_chunk_s (10 s) / control_dt (0.1 s)
                          "blocked_note": " or at a step the robot refuses (`meta[\"blocked\"]`)" if kinematic else "",
+                         "agent_timeout": float(CUTOFF_SEC["standard"]),
                          **oracle_fields(t, d, "standard")}
 
 
@@ -458,7 +471,7 @@ def probe_standard(inst: Path, work: Path, images: Path) -> dict:
         proc.send_signal(signal.SIGUSR1)        # what the verifier's collect hook does
         for _ in range(300):
             final = json.loads((data / "final.json").read_text())
-            if final.get("finalized"):
+            if final.get("finalized") and not final.get("video_pending"):   # the verdict, then the video
                 break
             time.sleep(1)
         # iterate, not list(): the reader reports its length as infinite, and list() would preallocate for it

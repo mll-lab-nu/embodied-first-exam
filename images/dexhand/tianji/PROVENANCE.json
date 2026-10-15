@@ -1,0 +1,322 @@
+{
+  "geometry_source": "DexForceAI/embodichain_data robot_assets/TianjiMarvin.zip",
+  "geometry_revision": "48317bd8733182f36d306cc2a7a60ae5e47ed2c9",
+  "geometry_dataset_license": "Apache-2.0",
+  "inertia_source": "https://huggingface.co/datasets/Genesis-Intelligence/assets/resolve/deffbe1685e5ce6aa289efdd541f762f1eb3353f/dual_arms_primitives.urdf",
+  "inertia_dataset_license": "MIT",
+  "source_arm_urdf_sha256": "511fc081e4b7a75c94f6acb285c43e72be6a3a8b4110d6e3ed821ce7d341ff9d",
+  "genesis_urdf_sha256": "650267de2b874b3a888d1f732d7b9c2cf42f36b0d5e9d79d1bff7e6906ad8c05",
+  "arm_xml_sha256": "3ab7a8aff7c6277e5584dc2fcf965ce9de860888f6472e73b8a08ac8f603b41d",
+  "inertia_changes": [
+    {
+      "link": "shoulder_pitch_l_j1_link",
+      "source_mass_kg": 0.001022352266920573,
+      "simulation_mass_kg": 1.9705,
+      "inertia_source": "Genesis Link1_L"
+    },
+    {
+      "link": "shoulder_roll_l_j2_link",
+      "source_mass_kg": 0.0015613550419125903,
+      "simulation_mass_kg": 2.24398,
+      "inertia_source": "Genesis Link2_L"
+    },
+    {
+      "link": "elbow_pitch_l_j3_link",
+      "source_mass_kg": 0.0013059921871783956,
+      "simulation_mass_kg": 1.9242,
+      "inertia_source": "Genesis Link3_L"
+    },
+    {
+      "link": "elbow_yaw_l_j4_link",
+      "source_mass_kg": 0.0011258463088203098,
+      "simulation_mass_kg": 1.6085,
+      "inertia_source": "Genesis Link4_L"
+    },
+    {
+      "link": "wrist_pitch_l_j5_link",
+      "source_mass_kg": 0.001503691797829414,
+      "simulation_mass_kg": 2.0883,
+      "inertia_source": "Genesis Link5_L"
+    },
+    {
+      "link": "wrist_yaw_l_j6_link",
+      "source_mass_kg": 0.0003375777501435227,
+      "simulation_mass_kg": 0.72496,
+      "inertia_source": "Genesis Link6_L"
+    },
+    {
+      "link": "wrist_roll_l_j7_link",
+      "source_mass_kg": 0.0005118967491441608,
+      "simulation_mass_kg": 0.68606,
+      "inertia_source": "Genesis Link7_L"
+    },
+    {
+      "link": "shoulder_pitch_r_j1_link",
+      "source_mass_kg": 0.0010388907393414969,
+      "simulation_mass_kg": 1.9705,
+      "inertia_source": "Genesis Link1_R"
+    },
+    {
+      "link": "shoulder_roll_r_j2_link",
+      "source_mass_kg": 0.0015644293828819304,
+      "simulation_mass_kg": 2.24398,
+      "inertia_source": "Genesis Link2_R"
+    },
+    {
+      "link": "elbow_pitch_r_j3_link",
+      "source_mass_kg": 0.0012687073893219852,
+      "simulation_mass_kg": 1.9242,
+      "inertia_source": "Genesis Link3_R"
+    },
+    {
+      "link": "elbow_yaw_r_j4_link",
+      "source_mass_kg": 0.0010931425767976867,
+      "simulation_mass_kg": 1.6085,
+      "inertia_source": "Genesis Link4_R"
+    },
+    {
+      "link": "wrist_pitch_r_j5_link",
+      "source_mass_kg": 0.0015247527828858188,
+      "simulation_mass_kg": 2.0883,
+      "inertia_source": "Genesis Link5_R"
+    },
+    {
+      "link": "wrist_yaw_r_j6_link",
+      "source_mass_kg": 0.0003362982463811784,
+      "simulation_mass_kg": 0.72496,
+      "inertia_source": "Genesis Link6_R"
+    },
+    {
+      "link": "wrist_roll_r_j7_link",
+      "source_mass_kg": 0.0005264684248123574,
+      "simulation_mass_kg": 0.68606,
+      "inertia_source": "Genesis Link7_R"
+    }
+  ],
+  "inertia_caveat": "Public asset estimates; not certified manufacturer system identification.",
+  "controller_caveat": "Position gains, damping, and armature are prototype simulation parameters.",
+  "joint_ranges_and_torque": "Source URDF values retained.",
+  "fixed_base": true,
+  "wheel_joints": [],
+  "hand_attached": false,
+  "collision_exclusions": [
+    [
+      "base_link",
+      "shoulder_pitch_l_j1_link"
+    ],
+    [
+      "wrist_pitch_l_j5_link",
+      "wrist_roll_l_j7_link"
+    ],
+    [
+      "base_link",
+      "shoulder_pitch_r_j1_link"
+    ],
+    [
+      "wrist_pitch_r_j5_link",
+      "wrist_roll_r_j7_link"
+    ]
+  ],
+  "collision_exclusion_caveat": "Only assembly-adjacent shoulder mount and wrist housing pairs are excluded.",
+  "nq": 14,
+  "nv": 14,
+  "nu": 14,
+  "joints": [
+    {
+      "name": "SHOULDER_PITCH_L_J1",
+      "range_rad": [
+        -3.1066860685499065,
+        3.1066860685499065
+      ],
+      "force_limit_nm": 108.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "SHOULDER_ROLL_L_J2",
+      "range_rad": [
+        -2.0943951023931953,
+        2.0943951023931953
+      ],
+      "force_limit_nm": 108.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "ELBOW_PITCH_L_J3",
+      "range_rad": [
+        -3.1066860685499065,
+        3.1066860685499065
+      ],
+      "force_limit_nm": 66.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "ELBOW_YAW_L_J4",
+      "range_rad": [
+        -2.530727415391778,
+        1.0471975511965976
+      ],
+      "force_limit_nm": 66.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "WRIST_PITCH_L_J5",
+      "range_rad": [
+        -3.1066860685499065,
+        3.1066860685499065
+      ],
+      "force_limit_nm": 18.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "WRIST_YAW_L_J6",
+      "range_rad": [
+        -1.0471975511965976,
+        1.0471975511965976
+      ],
+      "force_limit_nm": 18.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "WRIST_ROLL_L_J7",
+      "range_rad": [
+        -1.5707963267948966,
+        1.5707963267948966
+      ],
+      "force_limit_nm": 18.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "SHOULDER_PITCH_R_J1",
+      "range_rad": [
+        -3.1066860685499065,
+        3.1066860685499065
+      ],
+      "force_limit_nm": 108.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "SHOULDER_ROLL_R_J2",
+      "range_rad": [
+        -2.0943951023931953,
+        2.0943951023931953
+      ],
+      "force_limit_nm": 108.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "ELBOW_PITCH_R_J3",
+      "range_rad": [
+        -3.1066860685499065,
+        3.1066860685499065
+      ],
+      "force_limit_nm": 66.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "ELBOW_YAW_R_J4",
+      "range_rad": [
+        -2.530727415391778,
+        1.0471975511965976
+      ],
+      "force_limit_nm": 66.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "WRIST_PITCH_R_J5",
+      "range_rad": [
+        -3.1066860685499065,
+        3.1066860685499065
+      ],
+      "force_limit_nm": 18.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "WRIST_YAW_R_J6",
+      "range_rad": [
+        -1.0471975511965976,
+        1.0471975511965976
+      ],
+      "force_limit_nm": 18.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    },
+    {
+      "name": "WRIST_ROLL_R_J7",
+      "range_rad": [
+        -1.5707963267948966,
+        1.5707963267948966
+      ],
+      "force_limit_nm": 18.0,
+      "source_velocity_limit_rad_s": 3.141592653589793
+    }
+  ],
+  "home_rad": [
+    0.2303173887,
+    -0.6985149333,
+    0.1181439914,
+    -1.5353402992,
+    0.0,
+    -0.0570802685,
+    -0.0221954653,
+    -0.2303173887,
+    -0.6985149333,
+    -0.1181439914,
+    -1.5353402992,
+    0.0,
+    -0.0570802685,
+    0.0221954653
+  ],
+  "end_effectors": {
+    "left": {
+      "body": "left_ee",
+      "site": "left_flange",
+      "home_position_m": [
+        0.4999678079925093,
+        0.1900520304491507,
+        0.9500225308486017
+      ],
+      "home_rotation": [
+        [
+          -0.6413806166349983,
+          -0.33002866134640774,
+          0.6926124365724348
+        ],
+        [
+          -0.7518108831135532,
+          0.09031788197481783,
+          -0.6531638969107215
+        ],
+        [
+          0.15300751823660863,
+          -0.9396402305592703,
+          -0.3060472781738026
+        ]
+      ]
+    },
+    "right": {
+      "body": "right_ee",
+      "site": "right_flange",
+      "home_position_m": [
+        0.4999678079925093,
+        -0.1900520304491507,
+        0.9500225308486017
+      ],
+      "home_rotation": [
+        [
+          -0.6413806166349981,
+          0.3300286613464076,
+          0.6926124365724347
+        ],
+        [
+          0.751810883113553,
+          0.0903178819748176,
+          0.6531638969107214
+        ],
+        [
+          0.15300751823660858,
+          0.9396402305592702,
+          -0.3060472781738024
+        ]
+      ]
+    }
+  }
+}

@@ -67,6 +67,48 @@ def play_once(self):
         }
         return self.info
 
+# The agent image's load_actors does not set the reference values this expert reads
+# (handover_middle_pose; images/robotwin/scrub_oracles.py). Rebuild the scene with upstream's load_actors,
+# which sets them: the same objects from the same random draws, so the scene is the frozen instance (Session.reset
+# checks its hash). Recording restarts from there.
+import math
+from copy import deepcopy
+
+
+def load_actors(self):
+        rand_pos = rand_pose(
+            xlim=[-0.2, 0.2],
+            ylim=[-0.05, 0.0],
+            qpos=[0.707, 0.707, 0, 0],
+            rotate_rand=False,
+        )
+        while abs(rand_pos.p[0]) < 0.15:
+            rand_pos = rand_pose(
+                xlim=[-0.2, 0.2],
+                ylim=[-0.05, 0.0],
+                qpos=[0.707, 0.707, 0, 0],
+                rotate_rand=False,
+            )
+        self.microphone_id = np.random.choice([0, 4, 5], 1)[0]
+
+        self.microphone = create_actor(
+            scene=self,
+            pose=rand_pos,
+            modelname="018_microphone",
+            convex=True,
+            model_id=self.microphone_id,
+        )
+
+        self.add_prohibit_area(self.microphone, padding=0.07)
+        self.handover_middle_pose = [0, -0.05, 0.98, 0, 1, 0, 0]
+        self.grasp_arm_tag = ArmTag("right" if self.microphone.get_pose().p[0] > 0 else "left")
+        self.handover_arm_tag = self.grasp_arm_tag.opposite
+
+
+type(env).load_actors = load_actors
+s.reset()
+s.record_start()
+
 
 for _f in (play_once,):
     setattr(env, _f.__name__, types.MethodType(_f, env))

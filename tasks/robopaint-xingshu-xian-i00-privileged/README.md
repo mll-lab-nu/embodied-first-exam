@@ -7,8 +7,8 @@
 | Twin | `robopaint-xingshu-xian-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_xingshu_xian` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 875 and mark_width_mm 6.29, against the colouring-in limits 2630 mm and 1.88 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Oracle | `partial` — Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; docs/benchmarks/robopaint.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1234 and mark_width_mm 4.59, against the colouring-in limits 2630 mm and 1.88 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation). |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
@@ -36,11 +36,16 @@ position-controlled arm (PD lag ~0.1 s). The tooling gives only thin primitives;
 `s.brush_state()` are privileged feedback. The stroke cap rules out filling the exemplar with many thin strokes.
 
 ## Reference solution
-Generated once (the kaishu oracle, DESIGN §17), on the graders' copy: per region of the exemplar's ink (one brush contact each), a robot-free trajectory optimisation against the brush model
-(handle control points (x, y, press) initialised by inverting the trailing dynamics along the stroke, scipy least_squares on the
-rendered stroke), then executed on the robot with lag feed-forward and iterative learning control, a dip before every stroke, the
-arm parked at the end. The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
-1982 control steps, 7 strokes, IoU 0.888, boundary F 0.862, min stroke coverage 0.809, stray 0.0134.
+Generated on the graders' copy (the calligraphy planner of 2026-10-09, `solution/opt_calli.py --profile print`; DESIGN §17): per
+brush contact (connected strokes of the exemplar, several regions of its ink each), a robot-free trajectory optimisation against
+the brush model: handle control points (x, y, press) about every 6 mm along a path through the contact's ink (several paths
+tried, the best kept; one of them follows each region's ink branch by branch, rings round and side branches out and back),
+initialised by inverting the trailing dynamics, scipy least_squares on the rendered contact against the exemplar with stray ink
+weighted up, under-covered regions optimised again. The brush enters the paper along the stroke and leaves it back onto its own
+root (回锋), with a minimum press so that every contact stays one. Then executed on the robot with lag feed-forward and
+iterative learning control, a dip before every contact, the arm parked at the end. The plan is frozen at generation time
+(`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
+2360 control steps, 7 strokes, IoU 0.934, boundary F 0.938, min stroke coverage 0.944, stray 0.0054.
 
 ## Verification
 "The rule" below is the picture rule and the process rules (Task); the replays run
@@ -53,6 +58,24 @@ rebuilt frozen instance matches the recorded one (target picture and scoring dat
 brush runs in float64 on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
 (`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the
 verdict.
+A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
+`bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
+or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
+The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
+67-102 steps/s (docs/benchmarks/robopaint.md).
+
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 1 GB | 1 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+- Measured: GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial the agent drives (the benchmark's own `scorer` service is recorded only): 5 GiB GPU memory, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 5 GiB GPU memory, 21 GiB memory. Limits measured: GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
@@ -75,3 +98,9 @@ Wikimedia Commons, File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wi
 ### Licences
 The exemplar is a public-domain rubbing/scan of a historical work of running-script calligraphy (Wikimedia Commons, PD-Art /
 PD-old; Sources above); licence notices: `environment/NOTICE-exemplar.md` (the agent's), `tests/NOTICE-exemplar.md` (the graders').
+
+### Change Log
+- 2026-10-09: the reference solution only, re-made so that it copies the exemplar closely (the owner's request: every stroke, no blob where a stroke starts, no needle where it ends): the calligraphy planner of 2026-10-09 and its plan (the privileged twin's `solution/`, its `README.md` has the method) and the new trajectory (`solution/oracle_qpos.npy`, the same in both twins). The reference's verifier metrics went from IoU 0.888, boundary F 0.862, minimum stroke coverage 0.809, stray 0.0134 to 0.934, 0.938, 0.944, 0.0054; `path_mm` 875 -> 1234 mm and `mark_width_mm` 6.29 -> 4.59 mm, far from colouring in. Harbor oracle 1 and nop 0 on both modes after the change (ws3, 2026-10-09). The instance, the picture, the pass rule and the process limits (set on the first reference) are unchanged, so the task keeps its name.
+- 2026-10-10: the verifier and the scoring service only (review of 2026-10-10, board 0067). The verifier's timeout is 3600 s (was 1800 s): two fresh replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured 67-102 steps/s, so a long painting timed the verifier out and the trial had no reward. A file that is not a readable trajectory (not an npz, pickled arrays, no `actions`) scores 0 as `bad_trajectory` (was `grader_error`); every `reward.json` has `deterministic`. The `scorer` service restarts if its process dies (`restart: on-failure`). The verdict of a trajectory the verifier could replay before is unchanged, and so are the instance, the picture and the rules: the task keeps its name.
+- 2026-10-10 (2): `task.toml` `[agent].allowed_hosts` only. The allowlist is now the one every other allowlist task has (`scripts/set_agent_egress.py`): it gains `*.openai.azure.com` and `*.cognitiveservices.azure.com`, so that an agent whose model is served by Azure OpenAI can reach it directly (without them such an agent could not reach its model and ended as a 0 without having acted). Nothing else changes: the task keeps its name.
+- 2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A frozen instance that the verifier's host does not rebuild (`instance_ok = 0`) is `grader_error = 1` and `infra_error = 1` (it was a plain 0 without a flag: the replays ran on another scene and say nothing about the trajectory), and every `grader_error = 1` (a replay process without a result or past its time limit) now has `infra_error = 1` next to it; every `reward.json` carries `infra_error`. The reward is 0 in these cases, as before; the pass rule, the frozen instance and the tooling are unchanged.

@@ -1,0 +1,25 @@
+{
+ "task": "insert_tubes",
+ "goal": "Insert all three test tubes into the tube rack and return the arms to their start pose.",
+ "instruction_templates": [
+  "Insert the three tubes into the rack one by one."
+ ],
+ "success": [
+  "For each tube t in {tube0, tube1, tube2}:",
+  "  - slot bbox z_max - t bbox z_min > 0.045 m (tube's lowest point at least 4.5 cm below the rack's top; is_A_depth_in_B).",
+  "  - t's origin xy is inside the convex hull of the rack's (slot) world bbox and t's origin z > rack bbox z_min (is_A_in_B).",
+  "  - t's local y-axis is within 30 deg of world up (is_axis_up axis [0,1,0], threshold=30) -- the tube's long axis is its local y.",
+  "all_robot_back_to_origin(): every agent-controlled (target) arm's end-effector must be within 0.15 m on EACH of x, y, z (per-axis) and within 20 degrees of its pose at the start of the episode, at the same action boundary as all other conditions. Grippers are NOT required to be open by the success test (only by partial-credit scoring)."
+ ],
+ "evaluation": "All listed conditions are checked together, in order, after every action (reward_manager.step runs once per action, after the action's whole control sequence has executed; nothing is checked between actions). They form a single stage: all must be true at the same action boundary (any list inside the conditions means 'at least one of'). Success is declared at the first action boundary where all hold; the episode then ends. No final_check list is used. Otherwise the episode ends as a failure after step_lim actions. No early-fail rule.",
+ "step_lim": 500,
+ "objects": [
+  "tube0, tube1, tube2: test tubes (category test_tube, idx 2, all the same model), 3, start lying on their side (place_tag 'side') at x in [-0.4,-0.15] or [0.15,0.4], y in [-0.25,-0.05], random yaw up to +-60 deg",
+  "slot: the test tube rack (category test_tube_slot, idx 0), static geometry, 1, at x=0.0, y in [-0.025,0.025], yaw up to +-15 deg (table centre)"
+ ],
+ "scene_dynamics": "none",
+ "needs_memory_or_language": "none",
+ "end_requirements": "all_robot_back_to_origin(): every agent-controlled (target) arm's end-effector must be within 0.15 m on EACH of x, y, z (per-axis) and within 20 degrees of its pose at the start of the episode, at the same action boundary as all other conditions. Grippers are NOT required to be open by the success test (only by partial-credit scoring).",
+ "physics_kind": "rigid",
+ "notes": "Tubes are indistinguishable and the success test does not assign tubes to particular holes. The check that the tube's local y is the long axis is inferred from the 30-deg-from-vertical requirement; confirm with the asset if needed. The 'one by one' wording is not enforced. Predicate conventions (from func_parser.py): object 'position' = the object's root/origin position in world coordinates (metres, z up); 'bbox' = the 8 corners of the object's local bounding box transformed to world; is_A_in_B = A's origin xy lies inside the convex hull of B's world-projected bbox AND A's origin z > B's bbox z_min; is_axis_up(label, axis, threshold) = angle between (object rotation applied to the local axis) and world +z is < threshold degrees (wrapper default threshold 15 deg); is_axis_aligned = angle between two (optionally functional-point-frame) axes < align_threshold degrees, optionally after projection onto a plane (project_plane='xy' drops z and renormalises); all_robot_back_to_origin() default = for every target (agent-controlled) arm, end-effector pose vs its pose at episode start: |dx|,|dy|,|dz| each <= 0.15 m (per-axis, not Euclidean) and orientation difference <= 20 deg; is_all_gripper_open(open_threshold) = every target gripper's normalised opening ((val-scale0)/(scale1-scale0)) >= open_threshold (wrapper default 0.6). "
+}

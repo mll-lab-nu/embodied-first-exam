@@ -9,7 +9,7 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | tasks | `tasks/robocasa-<task>-i00-privileged` and `tasks/robocasa-<task>-i00-standard`, 29 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
+| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | generator | `scripts/robocasa/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
 
 ## Scope
@@ -70,9 +70,62 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
 4. The protocol is reported as `eai-standard/2.1`, with HumanoidBench's client (accepts both spellings); a simulator
    error (500) ends the episode with `reason = "error"`; a body over 64 MB gets 413; the grader writes numeric fields.
 5. A first collect hook stops every process in the agent's container before the episode is ended (as HumanoidBench).
+6. **The verdict is final before the video** (2026-10-10). At the end of the episode the service replays it in a fresh
+   simulator and writes the verdict together with `"finalized": true` in one atomic write of `final.json` (temporary
+   file + rename). Only then it renders `replay.mp4` / `replay.last.png` (a second replay, under a temporary name,
+   renamed when complete; `/data/video.pending` exists meanwhile): optional, it can add `"video": true` and nothing
+   else. An exception, a crash (the restarted service finds the verdict and idles: nothing is replayed or rewritten)
+   or the hook giving up on the video leave the verdict as it is. `_give_up` never overwrites a `final.json` that has
+   a verdict (`deterministic`), finalized or not.
+7. **Collect hook** `environment/sim/finalize.sh` (`scripts/robocasa/shared/finalize.sh`; `timeout_sec = 3600`). It
+   sends SIGUSR1 (again every 30 s) and waits for the verdict for up to 3450 s on the clock (`RCB_COLLECT_WAIT_S`),
+   then for the video for at most as long again as the verdict took + 120 s. Without any episode (the service never
+   became ready) it stops after 600 s. Budget: the verdict costs one scene build (20–60 s) and one replay at about
+   0.035 s per control step (oracle trials, 2026-10-02: both passes together 0.064–0.078 s per step; the live service
+   takes 0.047–0.062 s per step with its cameras), so 3450 s covers about 97,000 control steps, 48,000 on a host
+   twice as slow. Episodes have no step limit (D1), but the replay runs the episode's own physics once more without
+   its cameras, in the same container: it cannot take longer than the agent's time did. The hook's 3600 s is a number
+   of its own, sized for the agent cutoff of 3600 s (the cutoff is each task's own `[agent] timeout_sec`, history in
+   `docs/CUTOFFS.md`, and every instruction states it in its closing `## Time limit` section): lowering the cutoff keeps
+   it safe, raising it means raising `COLLECT_TIMEOUT_S` in the three RoboCasa generators too. Before, the hook waited
+   980 s of a 1500 s timeout for verdict and video together, which lost episodes over about 10,000 control steps.
+8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
+   a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,
+   a `note` that is not a string, actions that are not a `(T, N)` array of finite numbers are a 400 and nothing ran
+   (PROTOCOL §4.6); `null` means "not given". Only an error while the simulator executes is a 500 and ends the
+   episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
+   "last frame only". `dt = 0` used to mean `control_dt` and is now a 400.
+9. Since 2026-10-13 `time_s` and `time_left_s` count from the agent's first request to the service (any endpoint;
+   logged as `first_request` in `episode.jsonl`, which a resume reads back), as in every other benchmark
+   (STANDARD_MODE.md, "The agent's clock"). The rule of 2026-10-10 below started the clock too early: Harbor counts
+   the agent's cutoff around the agent's run only, and the sidecar starts with the environment, before the harness
+   is installed (a median of 79 s earlier over the recorded trials, board 0085), so `time_left_s` reached 0 while the
+   agent still had that time. 2026-10-10 to 2026-10-13:
+   `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
+   sidecar starts together with the agent's container, so this is the agent's own clock to within a second or two
+   (oracle trial: 1.1 s after it; earlier when the harness sets the agent up first). Before, it counted from the end
+   of the scene build (27 s later in that trial, more after a failed start) and overstated what was left by that
+   much. `time_s` and `elapsed_s` count from the episode's start (the service ready), as before.
+
+Synthetic tests of 6–8 (a stub in place of the simulator; no MuJoCo) were run for the change; they are not part of the
+repository's checks.
+
+10. **Camera calibration = the rendered viewpoint** (2026-10-13, board 0093; found in board 0086). `cam2world_gl` is
+   `data.cam_xpos` / `data.cam_xmat` of the camera, the pose the renderer draws the mono RGB and depth images from
+   (`cam2world()`, as `server_mj.py` since #135). Until 2026-10-13 it was MuJoCo's left-eye camera `scene.camera[0]`,
+   which sits half the camera's interpupillary distance (`cam_ipd` 0.068 m) to its left: 3.4 cm off, in all three
+   RoboCasa benchmarks. Checked with MuJoCo's own renders of 4 mm marker spheres at known world points (nothing else
+   drawn), every served camera, at the start and after the robot had moved: the marker's projection through the
+   reported calibration was 10.5–10.7 px median (up to 28 px for near points, always to the same side) from where it was
+   drawn, and is now 0.15 px median, at most 0.4 px. The intrinsics (`fx = fy = (H / 2) / tan(fovy / 2)`, principal
+   point at the image centre) were already right: every camera of these models is given by its `fovy` (no
+   `sensorsize`, checked on the RoboCasa, RoboCasa365 and RoboCasa-GR1 models), unlike ALOHA's (#164). **Standard-mode
+   results from before 2026-10-13 used the offset calibration** (a point located from the images came out about
+   3.4 cm to the side; agents missed a microwave button by 3.5 cm) and are not strictly comparable with later ones.
+   The service is copied into each task (`environment/sim/server_casa.py`, mounted into the sidecar): no image rebuild.
 
 ## Egress
-The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs
+The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries
 (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench and HumanoidBench do.
 The image contains no demonstration data and no pointer to it: the Dockerfile deletes RoboCasa's
 `robocasa/scripts/download_datasets.py` and the clone's `.git`, and blanks the demonstration links (`*.hdf5`) in

@@ -1,11 +1,12 @@
 """A toy eai-standard/2.2 sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
 "simulator" (a 3-joint point robot pushing a block on a plane), CPU only. selftest.py drives it to test the layer's crash
-recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/STANDARD_MODE_2_2.md).
+recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/STANDARD_MODE.md).
 
 Env: RCB_DATA (record dir), RCB_TOY_RESUME (exact | approx), RCB_TOY_MODE (inprocess: grade by an in-process replay, as
 RoboWits | dump: dump the episode and exit on SIGUSR1, as RoboLab / BEHAVIOR / RoboPaint), test knobs RCB_TOY_STEP_S (wall
 time per control step), RCB_TOY_PERTURB (added to the joints at every step after a restart: a nondeterministic simulator),
-RCB_TOY_HANG_S (the scene build hangs that long on the first start), RCB_TOY_PORT."""
+RCB_TOY_HANG_S (the scene build hangs that long on the first start), RCB_TOY_REFUSE (a reason: the service refuses the
+episode at its start, as DexJoCo does with too few CPUs), RCB_TOY_PORT."""
 from __future__ import annotations
 import hashlib, os, sys, threading, time
 import numpy as np
@@ -20,6 +21,8 @@ LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 EP = L.Episode(DATA, dim=N, resume=os.environ.get("RCB_TOY_RESUME", "exact"), persist=("last_note",))
 EP.startup()
+if os.environ.get("RCB_TOY_REFUSE"):
+    EP.give_up(os.environ["RCB_TOY_REFUSE"], infra=True)   # never returns: the verdict, then 409 to every request
 
 
 class Toy:
@@ -113,6 +116,12 @@ def ctrl_step(a, rec) -> bool:
     return E["done"] or stop
 
 
+def clock() -> dict:
+    """meta time_s / time_left_s: the agent's clock, from its first request (rcb_limited.agent_time), as every adapter."""
+    t = L.agent_time(E)
+    return {"time_s": round(t, 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - t, 1))}
+
+
 def do_submit(meta, A):
     if meta.get("type") != "joint_position": raise ValueError("type must be joint_position")
     if A.ndim != 2 or A.shape[1] != N: raise ValueError(f"actions must be (T, {N})")
@@ -129,7 +138,7 @@ def do_submit(meta, A):
     rec.tick(force=True, last=True)
     EP.log({"ev": "submit", "call": E["calls"], "rows": E["step"] - step0, "control_steps": ctrl_steps()})
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "executed_rows": E["step"] - step0, "done": E["done"],
-            "reason": E["reason"], "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True}, rec.parts("none", 10)
+            "reason": E["reason"], "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True, **clock()}, rec.parts("none", 10)
 
 
 def do_observe(meta):
@@ -142,7 +151,7 @@ def do_observe(meta):
             if ctrl_step(S.target.copy(), rec): break
     E["calls"] += 1
     return {"calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True}, rec.parts("none", 10)
+            "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True, **clock()}, rec.parts("none", 10)
 
 
 def status() -> dict:
@@ -164,14 +173,17 @@ def end_episode() -> None:
         r = Toy(live=False)
         for a in acts:                                      # a fresh replay of the recorded episode
             r.step(a)
-        E["deterministic"] = r.state_sha() == live; E["finalized"] = True
+        # the replay's fields first, the verdict (finalized + deterministic) last: the collect hook stops waiting at the
+        # verdict, so it must never see one without them (the main thread's write_final can run in between)
         fin = L._read_json(os.path.join(DATA, "final.json")); fin.update({"replay_success": r.success(), "n_actions": len(acts), "live_sha": live})
-        L._write_json(os.path.join(DATA, "final.json"), fin); write_final()
+        L._write_json(os.path.join(DATA, "final.json"), fin)
+        E["deterministic"] = r.state_sha() == live; E["finalized"] = True; write_final()
 
 
 S.rec = []                                                  # record_start: the resume replay is recorded too
 EP.begin(state=E, step=S.step, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, start_event={"task": "toy"}, on_end=end_episode)
-E["ready"] = True; write_final()
+with LOCK:                                                  # a SIGUSR1 kept during the resume is being served already
+    E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{L.PROTOCOL} toy sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=lambda req: {"ok": True, "op": req["op"]},

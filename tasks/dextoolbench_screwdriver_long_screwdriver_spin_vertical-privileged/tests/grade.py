@@ -37,12 +37,15 @@ def cost() -> dict:
 def main() -> int:
     c = cost(); traj = "/app/output/trajectory.npz"
     if not os.path.isfile(traj):
-        write(0.0, {"success": 0, "progress": 0.0, "missing_trajectory": 1, "grader_error": 0, **c}); return 0
+        write(0.0, {"success": 0, "progress": 0.0, "deterministic": 0, "missing_trajectory": 1, "grader_error": 0, **c}); return 0
     try:
         import rcb_dtb
-        d = np.load(traj, allow_pickle=False); A = np.asarray(d["actions"], dtype=np.float64)
-        if A.ndim != 2 or A.shape[1] != rcb_dtb.N or A.shape[0] > MAX_TRAJ_STEPS or not np.all(np.isfinite(A)):
-            write(0.0, {"success": 0, "progress": 0.0, "bad_trajectory": 1, "grader_error": 0, **c}); return 0
+        try:   # the agent's file: one that cannot be read as an npz with a numeric `actions` array is a bad trajectory, not a grader failure
+            A = np.asarray(np.load(traj, allow_pickle=False)["actions"], dtype=np.float64)
+        except Exception:
+            traceback.print_exc(file=sys.stderr); A = None
+        if A is None or A.ndim != 2 or A.shape[1] != rcb_dtb.N or A.shape[0] > MAX_TRAJ_STEPS or not np.all(np.isfinite(A)):
+            write(0.0, {"success": 0, "progress": 0.0, "deterministic": 0, "bad_trajectory": 1, "grader_error": 0, **c}); return 0
         s = rcb_dtb.Session("/tests/instance.json", enable_render=True)
         r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"] and r1["reached"] == r2["reached"]
         prog = float(r1["progress"]) if det else 0.0
@@ -71,7 +74,7 @@ def main() -> int:
         except Exception: traceback.print_exc(file=sys.stderr)
         write(prog, out)
     except Exception:
-        traceback.print_exc(file=sys.stderr); write(0.0, {"success": 0, "progress": 0.0, "grader_error": 1, **c})
+        traceback.print_exc(file=sys.stderr); write(0.0, {"success": 0, "progress": 0.0, "deterministic": 0, "grader_error": 1, **c})
     return 0
 
 

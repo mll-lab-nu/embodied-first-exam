@@ -32,7 +32,7 @@ The episode lasts exactly 1000 control steps: the trajectory must have T = 1000 
 the 12 joint position actuators, in `s.joint_names` order (front-left, hind-left, front-right, hind-right legs, each abduction, hip, knee), in radians; T = 1000 (the whole schedule). Values
 outside the actuator ranges (`s.lower`, `s.upper`) are clipped. `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your 3600 s are up is graded. The tooling logs your sessions and
+you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling logs your sessions and
 resets (cost accounting, not graded).
 
 ## Tooling (installed; `python` from any directory)
@@ -60,3 +60,14 @@ The grader runs exactly this CLI in two fresh processes, so run it to check your
   the control step 0.01 s (5 physics steps); a row holds until the next one.
 - World frame z up, metres; quaternions **wxyz**. The IMU frame is the trunk's: x forward, y left, z up.
 - Physics is MuJoCo on the CPU: the same rows from the same start give the same result in every fresh process.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

@@ -13,6 +13,11 @@ trajectory : the per-physics-step control record (T, 34) = for the 16 active joi
              Every `scene.step()` that RoboTwin's primitives take goes through a hook that (a) applies gravity
              compensation, (b) records this row. Replaying the rows open-loop from the same instance must
              reproduce the outcome (PhysX CPU is deterministic on the same build).
+gripper    : RoboTwin's success clauses is_{left,right}_gripper_{open,close}() read a number that Robot.set_gripper()
+             stores next to the finger drive targets it sets. A row carries both (the finger targets in the joint
+             columns, the stored number in the last two), so the two can disagree. Here the clauses read the FINGERS:
+             the opening each finger joint's drive target commands (0 = closed, 1 = open), with RoboTwin's thresholds
+             (`Session.gripper_opening`). A gripper counts as open only when its finger targets are open.
 
 CLI
 ---
@@ -31,6 +36,8 @@ Python (what the agent gets)
   s.record_start(); ...; actions = s.record_stop()
   s.replay(actions) -> dict(success=bool, sim_steps=int, state_sha=str)
   s.save_trajectory(actions, "traj.npz")
+A trajectory has at most MAX_T = 200,000 rows (800 s of physics): the verifier grades a longer file as bad_trajectory, so
+save_trajectory() and replay() refuse one (ValueError) instead of saving a file, or reporting a success, that cannot count.
 """
 from __future__ import annotations
 
@@ -56,6 +63,12 @@ SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jso
 # videos of what the agent tried. Self-reported like the session log. RCB_AGENT_TRACE_DIR="" disables it.
 TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", "/app/output/rcb_trace")
 TRACE_MAX_FILES = 300; TRACE_MAX_BYTES = 400 * 1024 * 1024
+# The longest trajectory the verifier grades (tests/grade.py MAX_T: about 13 minutes of physics at 250 Hz; a longer file
+# is `bad_trajectory`). Session.save_trajectory and Session.replay refuse more rows, so that the tool never saves, or
+# reports as a success, a file the verifier rejects (until 2026-10-13 it did: a 209,233-row trajectory replayed to
+# success here and was graded 0). Session.max_rows = None lifts it: the standard-mode service, whose episode has no
+# row cap and is not handed in as a file, does that for its own Session.
+MAX_T = 200_000
 
 
 def _slog(ev: str, **kw) -> None:
@@ -97,6 +110,26 @@ BASE_ARGS: dict[str, Any] = {
     "clear_cache_freq": 5, "collect_data": False, "eval_video_log": False,
     "save_data": False, "need_plan": True, "eval_mode": False, "dual_arm": True,
 }
+
+
+class _SortedGlob:
+    """While a scene is built, glob.glob / glob.iglob return their matches sorted. Four RoboTwin tasks (place_a2b_left,
+    place_a2b_right, place_object_scale, place_object_stand: envs/<task>.py load_actors) list an object's model files
+    with glob.glob and then draw one with the seeded np.random.choice; glob returns the file system's directory order,
+    which differs between hosts (and image layers), so one seed built a different object on another host and the frozen
+    instance's hash check failed there (board 0086 claim 5; never rebuilt off the reference workstation). Sorted, the
+    draw depends on the seed alone. No other task of ours lists files while it builds its scene."""
+
+    def __enter__(self):
+        import glob
+        self._glob, self._orig = glob, (glob.glob, glob.iglob)
+        glob.glob = lambda *a, **k: sorted(self._orig[0](*a, **k))
+        glob.iglob = lambda *a, **k: iter(sorted(self._orig[1](*a, **k)))
+        return self
+
+    def __exit__(self, *exc):
+        self._glob.glob, self._glob.iglob = self._orig
+        return False
 
 
 def _chdir_root() -> None:
@@ -144,7 +177,14 @@ class _SceneProxy:
 # --------------------------------------------------------------------------- session
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, seed: int = 0,
-                 embodiment: str | None = None, enable_render: bool = False, render_shader: str = "default"):
+                 embodiment: str | None = None, enable_render: bool = False, render_shader: str = "default",
+                 gripper_state: str = "fingers"):
+        """`gripper_state`: what RoboTwin's gripper clauses (is_*_gripper_open / _open_half / _close) read. "fingers"
+        (default; the verifier's setting): the finger joints' drive targets, see `gripper_opening`. "command":
+        RoboTwin's own stored command value (the standard-mode service, whose rows only ever come from set_gripper)."""
+        if gripper_state not in ("fingers", "command"):
+            raise ValueError(f"gripper_state must be 'fingers' or 'command', got {gripper_state!r}")
+        self.gripper_state = gripper_state
         if not os.path.isfile(os.path.join(ROBOTWIN_ROOT, "envs", f"{task}.py")):
             raise KeyError(f"unknown RoboTwin task {task!r} (no envs/{task}.py)")
         self.task = task
@@ -160,6 +200,7 @@ class Session:
         envs_module = importlib.import_module(f"envs.{task}")
         self.env = getattr(envs_module, task)()      # RoboTwin Base_Task subclass (not yet set up)
         self._recording: list[np.ndarray] | None = None
+        self.max_rows: int | None = MAX_T            # the hand-in cap save_trajectory / replay enforce (None: no cap)
         self._sim_steps = 0
         self._resets = 0
         self._joints = None
@@ -196,7 +237,8 @@ class Session:
         if self.enable_render:
             sapien.render.set_camera_shader_dir(self.render_shader)
         args = _build_args(self.task, self.embodiment, self.seed)
-        self.env.setup_demo(**args)
+        with _SortedGlob():                          # the object draw depends on the seed alone, not the host's directory order
+            self.env.setup_demo(**args)
         if self.enable_render:  # setup_scene() switches the shader to ray tracing; put it back for cheap frames
             sapien.render.set_camera_shader_dir(self.render_shader)
         self._raw_scene = self.env.scene
@@ -205,6 +247,8 @@ class Session:
         self._joints = list(r.left_arm_joints) + [g[0] for g in r.left_gripper] + \
             list(r.right_arm_joints) + [g[0] for g in r.right_gripper]
         self._entities = [r.left_entity] + ([r.right_entity] if r.right_entity is not r.left_entity else [])
+        if self.gripper_state == "fingers":
+            self._install_gripper_predicates()
         self._total_steps += self._sim_steps
         _slog("reset", task=self.task, n=self._resets + 1, sim_steps_before=self._sim_steps)
         self._sim_steps = 0
@@ -235,6 +279,40 @@ class Session:
             j.set_drive_target(float(p)); j.set_drive_velocity_target(float(v))
         self.env.robot.left_gripper_val = float(row[2 * n]); self.env.robot.right_gripper_val = float(row[2 * n + 1])
 
+    # ---- gripper state read by the success predicate
+    # RoboTwin: is_*_gripper_open() = gripper value > 0.8, _open_half() = > 0.45, _close() = < 0.2 (envs/robot/robot.py),
+    # on Robot.{left,right}_gripper_val, which only records the last command. A trajectory row sets that value and the
+    # finger drive targets separately, so a row can say "open" while its finger targets stay closed on the object.
+    GRIPPER_OPEN, GRIPPER_OPEN_HALF, GRIPPER_CLOSE = 0.8, 0.45, 0.2
+
+    def gripper_opening(self, side: str) -> tuple[float, float]:
+        """(least open, most open) finger of the `side` ("left" | "right") gripper, read from the finger joints' DRIVE
+        TARGETS in the gripper command's units (0 = closed, 1 = open): the inverse of Robot.set_gripper, which sets
+        target = (scale[0] + value * (scale[1] - scale[0])) * multiplier + bias on every finger joint. With
+        gripper_state="fingers" the success clauses use it: open needs the least open finger above 0.8, closed the
+        most open finger below 0.2. Targets, not measured positions: a gripper closed on an object still reads closed."""
+        r = self.env.robot
+        fingers = r.left_gripper if side == "left" else r.right_gripper
+        lo, hi = [float(x) for x in (r.left_gripper_scale if side == "left" else r.right_gripper_scale)[:2]]
+        vals = []
+        for joint, mult, bias in fingers:
+            if not mult or hi == lo:
+                continue
+            target = float(np.asarray(joint.get_drive_target()).reshape(-1)[0])
+            vals.append(((target - float(bias)) / float(mult) - lo) / (hi - lo))
+        if not vals:   # no finger joint to read: fall back to the stored command
+            vals = [float(r.left_gripper_val if side == "left" else r.right_gripper_val)]
+        return float(np.clip(min(vals), 0.0, 1.0)), float(np.clip(max(vals), 0.0, 1.0))
+
+    def _install_gripper_predicates(self) -> None:
+        """Point the robot's gripper clauses at the fingers (instance attributes; RoboTwin's task classes and
+        Base_Task call them through `self.robot`)."""
+        r = self.env.robot
+        for side in ("left", "right"):
+            setattr(r, f"is_{side}_gripper_open", lambda s=side: self.gripper_opening(s)[0] > self.GRIPPER_OPEN)
+            setattr(r, f"is_{side}_gripper_open_half", lambda s=side: self.gripper_opening(s)[0] > self.GRIPPER_OPEN_HALF)
+            setattr(r, f"is_{side}_gripper_close", lambda s=side: self.gripper_opening(s)[1] < self.GRIPPER_CLOSE)
+
     @property
     def action_dim(self) -> int:
         return 2 * len(self._joints) + 2
@@ -244,7 +322,9 @@ class Session:
         n = len(self._joints)
         names = [j.get_name() for j in self._joints]
         return (f"one row per physics step (1/250 s): {n} joint drive position targets (rad/m) {names}, "
-                f"then {n} drive velocity targets, then the left and right gripper commands (0 = closed, 1 = open)")
+                f"then {n} drive velocity targets, then the left and right gripper commands (0 = closed, 1 = open). "
+                f"The success check reads the gripper state from the finger joints' position targets (the last two "
+                f"of each arm's eight), not from the two command columns: see Session.gripper_opening")
 
     def step(self, row: np.ndarray | None = None) -> None:
         """Advance one physics step; `row` (action_dim,) sets the drive targets first. Records if recording."""
@@ -279,13 +359,28 @@ class Session:
     def record_start(self) -> None:
         self._recording = []
 
+    def _too_long(self, n: int) -> str | None:
+        """Why a trajectory of `n` rows cannot be handed in (None if it can): the verifier's row cap."""
+        cap = getattr(self, "max_rows", MAX_T)
+        if cap is None or n <= cap:
+            return None
+        return (f"the trajectory has {n:,} rows; the verifier grades at most {cap:,} rows (MAX_T: {cap / 250:.0f} s of "
+                f"physics at 250 Hz) and rejects a longer file as bad_trajectory. Hand in a shorter one: {n - cap:,} rows "
+                "too many (rows are physics steps; waiting and slow motions cost rows)")
+
     def record_stop(self) -> np.ndarray:
         acts = np.array(self._recording or [], dtype=np.float64).reshape(-1, self.action_dim)
         self._recording = None
         _slog("record", task=self.task, n_actions=int(len(acts)), success=bool(self.env.check_success()))
+        why = self._too_long(len(acts))
+        if why:                                      # the rows are returned (they are the agent's work), with the warning
+            print(f"[rcb_traj] WARNING: {why}. save_trajectory() and replay() will refuse it.", file=sys.stderr, flush=True)
         return acts
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
+        why = self._too_long(len(np.asarray(actions)))
+        if why:
+            raise ValueError(f"not saved: {why}")
         np.savez(path, actions=np.asarray(actions, dtype=np.float64), task=self.task, seed=self.seed,
                  instance_sha=self.expected_sha or "", action_layout=self.action_layout, meta=json.dumps(meta or {}))
 
@@ -295,10 +390,13 @@ class Session:
                 "resets": int(self._resets), "state_sha": self.state_sha()}
 
     def replay(self, actions: np.ndarray) -> dict[str, Any]:
-        self.reset(); self._trace_kind = "replay"
         acts = np.asarray(actions, dtype=np.float64)
         if acts.ndim != 2 or acts.shape[1] != self.action_dim:
             raise ValueError(f"actions must be (T, {self.action_dim}), got {acts.shape}")
+        why = self._too_long(len(acts))
+        if why:
+            raise ValueError(f"not replayed: {why}")
+        self.reset(); self._trace_kind = "replay"
         for row in acts:
             self.step(row)
         st = self.status(); _slog("replay", task=self.task, n_actions=int(len(acts)), success=st["success"]); return st

@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for DexJoCo (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/2.2 sim service for DexJoCo (docs/STANDARD_MODE.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -11,7 +11,9 @@ The robot is a Franka Panda with a 16-DoF Allegro hand, or two of them side by s
                   by forward kinematics (the controller tracks the tcp pose, not the joints).
 Either way, the executed (journaled, recorded) row is DexJoCo's own row, so the recorded trajectory replays in the
 privileged tooling unchanged. As in DexJoCo's evaluation the episode ends at the first success or task failure;
-otherwise when the agent's time is over (the collect hook's SIGUSR1).
+otherwise when the agent's time is over (the collect hook's SIGUSR1). Nothing about the objects leaves this process: a
+camera that rides on a body of the scene (bimanual_photograph's `cam_pos_z`, on the camera the hands pick up) gives
+images and depth only, its pose would be that object's (SCENE_CAMS). One call returns at most MAX_FRAMES images.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service rebuilds the instance and replays the journal. When the
@@ -37,6 +39,12 @@ TASK_TEXT_FILE = os.environ.get("RCB_TASK_TEXT", os.path.join(os.path.dirname(os
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_FPS = 50
+# Images one call may return (cameras x frames, per-frame depth counted again), checked before anything is executed:
+# every frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per
+# 1000 RGB frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.9 GB,
+# under the sidecar's 8 GiB cap (docs/benchmarks/dexjoco.md). The 2.1 services' 3000 would need more than the cap.
+MAX_FRAMES = 1000
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
 DT = 1.0 / CTRL_HZ
@@ -54,6 +62,16 @@ BIM = TASK.startswith("bimanual_")
 ADIM = 46 if BIM else 23
 EP = L.Episode(DATA, dim=ADIM, resume="exact")
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
+# The simulation's result depends on OpenBLAS's thread count below 4 (docs/benchmarks/dexjoco.md, "Threads"), and the
+# count cannot exceed the CPUs this container may run on (its affinity; a `cpus:` quota does not change it). With fewer
+# than 4 the episode would run on other numerics than the references and the published results: no episode, no verdict
+# on the agent (an infrastructure failure: final.json too_few_cpus = 1, infra_error = 1; the verifier adds grader_error).
+THREADS = M.blas_threads()
+if not THREADS["threads_ok"]:
+    print(f"[dexjoco] {M.threads_message(THREADS)}: the service does not start an episode", flush=True)
+    if not L.final_verdict(DATA):
+        L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "too_few_cpus": 1, **THREADS})
+    EP.give_up("too_few_cpus", infra=True)   # writes the verdict (never overwrites one) and idles until the container ends
 S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W))
 MD, D = S.model, S.data
 ARMS = S.arms()
@@ -119,6 +137,37 @@ CAMS = S.cameras()
 HAND_CAMS = [c for c in CAMS if c.startswith("handcam")]
 DEFAULT_CAMS = [S.default_camera()]
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
+OWN_JOINTS = {MD.joint(j).id for j in JOINTS}        # the arms' and the hands' joints: what moves the robot itself
+
+
+def own_body(b: int) -> bool:
+    """Whether the MuJoCo body `b` is fixed in the world or moved by the robot's own joints alone. A mocap body or a
+    body behind any other joint (the objects: free joints, hinges, slides) is scene state: where it is must never leave
+    this process (PROTOCOL §4.5). Decided from the model, never from a name (the rule of MyoSuite's service)."""
+    while b > 0:
+        if int(MD.body_mocapid[b]) >= 0:
+            return False
+        first = int(MD.body_jntadr[b])
+        if any(j not in OWN_JOINTS for j in range(first, first + int(MD.body_jntnum[b]))):
+            return False
+        b = int(MD.body_parentid[b])
+    return True
+
+
+def scene_camera(cam: str) -> bool:
+    """A camera that is mounted on, tracks or is aimed at a body of the scene that is not the robot's own (in
+    bimanual_photograph: `cam_pos_z`, the lens of the camera the hands pick up): its pose is that object's pose, so the
+    service gives its images (and depth) and never its pose."""
+    i = MD.camera(cam).id
+    bodies = [int(MD.cam_bodyid[i])]
+    if int(MD.cam_mode[i]) in (3, 4):                # targetbody, targetbodycom: the orientation follows the target
+        bodies.append(int(MD.cam_targetbodyid[i]))
+    return not all(own_body(b) for b in bodies if b >= 0)
+
+
+SCENE_CAMS = [c for c in CAMS if scene_camera(c)]
+NO_POSE = ("not published: this camera rides on an object of the scene, so its pose would be that object's pose; it "
+           "gives images and depth (camera frame) only")
 
 
 def _intrinsic(cam: str) -> list:
@@ -140,12 +189,19 @@ def _extrinsic(cam: str) -> np.ndarray:
 
 
 def camera_info(cam: str) -> dict:
+    if cam in SCENE_CAMS:
+        return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": None, "cam2world_gl": None, "image_size": [CAM_W, CAM_H],
+                "pose": NO_POSE}
     return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": _extrinsic(cam).tolist(), "cam2world_gl": _cam2world_gl(cam).tolist(),
             "image_size": [CAM_W, CAM_H]}
 
 
 def _mount(cam: str) -> dict:
     i = MD.camera(cam).id
+    if cam in SCENE_CAMS:   # neither the body it rides on nor an offset: either would place that object
+        return {"type": "link", "parent_link": None, "pose": NO_POSE,
+                "note": "it moves with an object of the scene; extrinsic_cv and cam2world_gl are null in meta[\"cameras\"] "
+                        "and the per-frame extrinsic_cv rows are NaN"}
     body = MD.body(int(MD.cam_bodyid[i])).name
     if int(MD.cam_bodyid[i]) == 0:
         return {"type": "static", "extrinsic_cv": _extrinsic(cam).tolist(), "cam2world_gl": _cam2world_gl(cam).tolist()}
@@ -158,6 +214,8 @@ def _mount(cam: str) -> dict:
 
 
 def _mounted(cam: str) -> str:
+    if cam in SCENE_CAMS:
+        return "on an object of the scene (it moves with it): images and depth only, no pose"
     if cam.startswith("handcam"):
         side = "the right" if cam.endswith("_right") else "the left" if cam.endswith("_left") else "the"
         return f"on {side} hand's mount (moves with the hand)"
@@ -282,6 +340,7 @@ SPEC = {
     "physics_hz": CTRL_HZ * SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_watch_s": MAX_WATCH_S,
+    "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": _mounted(c), "resolution": [CAM_W, CAM_H], "intrinsic_cv": _intrinsic(c),
                     "mount": _mount(c)} for c in CAMS},
     "default_cameras": DEFAULT_CAMS,
@@ -379,7 +438,8 @@ def grab(cams, want_depth: bool):
 
 
 def extrinsics(cams) -> dict:
-    return {c: _extrinsic(c) for c in cams}
+    """Per frame; a scene camera has none (the recorder writes NaN rows for a camera that is not in the dict)."""
+    return {c: _extrinsic(c) for c in cams if c not in SCENE_CAMS}
 
 
 def summary() -> dict:
@@ -387,7 +447,7 @@ def summary() -> dict:
     return {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
             "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"],
             "task": TASK, "protocol": L.PROTOCOL, "n_actions": len(ROWS), "task_failure": int(str(E["reason"] or "").startswith("failure")),
-            **EP.final_fields()}
+            **THREADS, **EP.final_fields()}
 
 
 def write_final() -> None:
@@ -415,7 +475,7 @@ def dump() -> None:
     E["dumped"] = True
     E["live_sha"] = S.state_sha()
     S.save_trajectory(np.asarray(ROWS, dtype=np.float64).reshape(-1, ADIM), os.path.join(DATA, "trajectory.npz"),
-                      {"source": "standard-mode episode", "reason": E["reason"]})
+                      {"source": "standard-mode episode", "reason": E["reason"]}, max_rows=None)   # no hand-in cap here
     L._write_json(os.path.join(DATA, "episode.json"), {**summary(), "live_sha": E["live_sha"]})
     write_final()
 
@@ -437,27 +497,79 @@ def recorder(cams, fps: int, meta: dict) -> L.Recorder:
                       depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
 
 
+def frames_ok(cams, fps: int, steps: int, meta: dict) -> None:
+    """The images a call of `steps` control steps would hold and return, refused (ValueError: 400, nothing executed)
+    above MAX_FRAMES: the recorder's first and last frame plus one every `every` control steps (recorder()'s), for each
+    camera, whatever `video` says (video="none" still records them for `last/` and the proprio rows); per-frame depth
+    counts again."""
+    every = max(1, int(round(CTRL_HZ / max(1, fps))))
+    L.check_frames(len(cams), 2 + steps // every, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
+
+
+def checked(parse):
+    """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
+    other exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises
+    while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
+    def run(*args):
+        try:
+            return parse(*args)
+        except ValueError:
+            raise
+        except (TypeError, OverflowError, AttributeError, LookupError, ArithmeticError) as exc:
+            raise ValueError(f"malformed request: {exc!r}"[:300]) from exc
+    return run
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A request's number: absent or null is the default; anything but a finite number is a 400."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"{key} must be a number, got {type(v).__name__}")
+    try:
+        v = float(v)
+    except OverflowError:
+        v = math.inf
+    if not math.isfinite(v):
+        raise ValueError(f"{key} must be finite")
+    return v
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log: checked with the other fields, before anything is executed."""
+    v = meta.get("note")
+    if v is None:
+        return ""
+    if not isinstance(v, str):
+        raise ValueError("note must be a string")
+    return v[:500]
+
+
 def video_fps(meta: dict) -> int:
     fps = meta.get("video_fps")
     if fps is None:
         return 10
-    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= 50):
-        raise ValueError("video_fps must be in [1, 50]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= MAX_FPS):
+        raise ValueError(f"video_fps must be in [1, {MAX_FPS}]")
     return int(fps)
 
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or DEFAULT_CAMS
-    if not isinstance(cams, list) or any(c not in CAMS for c in cams):
-        raise ValueError(f"unknown cameras {cams}; cameras: {CAMS}")
+    if isinstance(cams, str) or not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
+    bad = [c for c in cams if c not in CAMS]
+    if bad:
+        raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
     return list(dict.fromkeys(cams))
 
 
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
-            "sim_time_s": round(n * DT, 3), "time_s": round(time.time() - E["t0"], 2),
-            "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
+            "sim_time_s": round(n * DT, 3), "time_s": round(L.agent_time(E), 2),
+            "time_left_s": max(0.0, round(WALL_CLOCK_S - L.agent_time(E), 1)),
             "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             "cameras": {c: camera_info(c) for c in cams}}
 
@@ -493,7 +605,18 @@ def _native_from_joints(q: np.ndarray) -> np.ndarray:
     return np.concatenate(out)
 
 
-def _check_chunk(typ: str, A: np.ndarray, dt: float, interp: str, video: str) -> int:
+@checked
+def parse_submit(meta: dict, A: np.ndarray):
+    """Every field of a /submit request and the shape of its rows, checked; nothing is executed here."""
+    typ = meta.get("type")
+    if not isinstance(typ, str) or typ not in ("ee_pose", "joint_position"):
+        raise ValueError(f"type must be ee_pose or joint_position (not yet: {SPEC['action_types']['not_yet']})")
+    cams, note = cameras_of(meta), note_of(meta)
+    L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the rows
+    dt = number(meta, "dt", DT)
+    interp = meta.get("interpolate", "linear")
+    video = meta.get("video", "mp4")
+    fps = video_fps(meta)
     k = dt / DT
     if A.ndim != 2 or A.shape[1] != ADIM:
         raise ValueError(f"{typ} actions must be (T, {ADIM}), got {list(A.shape)}")
@@ -505,22 +628,17 @@ def _check_chunk(typ: str, A: np.ndarray, dt: float, interp: str, video: str) ->
         raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
     if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
         raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
+    if not isinstance(interp, str) or interp not in ("hold", "linear"):
         raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
-    return int(round(k))
+    frames_ok(cams, fps, A.shape[0] * int(round(k)), meta)
+    return typ, dt, interp, video, cams, fps, note
 
 
 def do_submit(meta: dict, A: np.ndarray):
-    typ = meta.get("type")
-    if typ not in ("ee_pose", "joint_position"):
-        raise ValueError(f"type must be ee_pose or joint_position (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
-    interp = meta.get("interpolate", "linear")
-    video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
-    n = _check_chunk(typ, A, dt, interp, video)
+    typ, dt, interp, video, cams, fps, note = parse_submit(meta, A)
+    n = int(round(dt / DT))
     clipped: list = []
     if typ == "ee_pose":
         A = np.stack([_native_from_ee(np.asarray(r, dtype=np.float64), i, clipped) for i, r in enumerate(A)])
@@ -559,18 +677,27 @@ def do_submit(meta: dict, A: np.ndarray):
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": [], "ok": True}
     EP.log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp,
             "cameras": cams, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
-            "note": (meta.get("note") or "")[:500], **({"stopped": EP.stop_reason} if EP.stopping else {})})
+            "note": note, **({"stopped": EP.stop_reason} if EP.stopping else {})})
     return out, rec.parts(video, fps)
 
 
-def do_observe(meta: dict):
+@checked
+def parse_observe(meta: dict):
+    """Every field of an /observe request, checked; nothing is executed here."""
     cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
+    seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
+    if seconds < 0 or seconds > MAX_WATCH_S:
         raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
+    L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the watch
+    frames_ok(cams, fps, int(round(seconds / DT)), meta)
+    return cams, fps, seconds, video
+
+
+def do_observe(meta: dict):
+    cams, fps, seconds, video = parse_observe(meta)
     rec, before = recorder(cams, fps, meta), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
@@ -613,7 +740,7 @@ def replay_row(row) -> None:
 
 
 EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
-         start_event={"task": TASK, "instance_sha": S.instance_sha, "instance_ok": bool(S.instance_exact), "cameras": CAMS})
+         start_event={"task": TASK, "instance_sha": S.instance_sha, "instance_ok": bool(S.instance_exact), "cameras": CAMS, **THREADS})
 if E["done"]:
     dump()  # resumed after the episode had ended: the record is rewritten from the replay
 E["ready"] = True

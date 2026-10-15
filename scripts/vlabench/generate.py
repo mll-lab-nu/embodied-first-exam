@@ -6,7 +6,7 @@
     python3 scripts/vlabench/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: tasks.json (candidates, dropped, instruction restatements, oracle sources), frozen/<task>/{instance.json,
-oracle.npy} and frozen/report.json (import_pr4.py, freeze.sh), the
+oracle.npy}, imported from PR #4 (commit ad3c5109), and frozen/report.json (freeze.sh), the
 templates in templates/, the shared sources in shared/ (copied byte for byte) and the standard client's base image and
 pins (scripts/eai_standard/client.env, client-requirements.txt). Each task directory is written from scratch and
 finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a vlabench-* directory this does not write is
@@ -24,6 +24,12 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 1800, "standard": 1800}
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -44,7 +50,7 @@ CLIENT_PIP = " ".join(
 AUTHOR, ORG = "Changhe Chen", "MLL Lab"
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
+    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
 MAX_CONTROL_STEPS = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's timeout)
 IMAGE_HW = 320
@@ -105,11 +111,13 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: {json.dumps(task_text)}
       RCB_EPISODE: {json.dumps(episode)}
-      RCB_WALL_CLOCK_S: "3600.0"
+      RCB_WALL_CLOCK_S: "{float(CUTOFF_SEC["standard"])}"
       RCB_MAX_CONTROL_STEPS: "{MAX_CONTROL_STEPS}"
       RCB_IMAGE_HW: "{IMAGE_HW}"
-      # The default is the standard configuration (one episode, no reset); results with resets are reported separately.
-      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-0}}"
+      # One episode, no reset, as instruction.md tells the agent: pinned, not a knob (a `${{RCB_RESET_BUDGET:-0}}` here
+      # would take the budget from the shell that runs harbor, and a host that exports it for another benchmark would
+      # hand this task resets its instruction rules out).
+      RCB_RESET_BUDGET: "0"
       PYTHONPATH: /srv:{PATH_ENV}
 """
 
@@ -177,6 +185,7 @@ def make(task: str, rec: dict, source: str, restated: dict, out: Path) -> tuple[
         'your time is up ("timeout"), or on a simulator error ("error").'
     )
     values = {
+        "agent_timeout": float(CUTOFF_SEC["privileged"]),   # both modes (PROTOCOL §2.15)
         "task": task,
         "dash": dash,
         "instruction": instruction,

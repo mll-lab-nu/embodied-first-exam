@@ -1,4 +1,4 @@
-"""eai-standard/2.4 client (the 2.2 client, formerly rcb-limited/2.x, plus operation ids; docs/STANDARD_MODE_2_4.md) — the
+"""eai-standard/2.4 client (the 2.2 client, formerly rcb-limited/2.x, plus operation ids; docs/STANDARD_MODE.md) — the
 only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py). Against a 2.4 service every submit /
 get_obs carries an operation id and a request deadline: after a timeout, `r.operation_status()` (or
 `r.operation_status(r.last_operation_id)`) says whether the call ran; never re-send it blindly.
@@ -40,6 +40,19 @@ ACCEPTED = ("eai-standard/2.", "rcb-limited/2.")   # every 2.x service, under th
 
 class EpisodeOver(RuntimeError):
     pass
+
+
+def _over(r) -> str:
+    """What a 409 says: the reason the episode is over. A service that gave up on the episode for good (it refused to
+    start it, or could not resume it after its crashes) answers every request with one, GET /spec and /status too."""
+    try: err = r.json()
+    except Exception: return "episode finished"
+    if not isinstance(err, dict): return "episode finished"
+    if err.get("gave_up"):
+        return (f"the sim service gave up on this episode: {err.get('reason')}"
+                + (" (an infrastructure failure, recorded as one: not a result of your actions)" if err.get("infra_error") else "")
+                + ". It will not serve this trial again: waiting or calling again cannot help.")
+    return err.get("reason")
 
 
 def _decode_depth_frames(p: dict) -> np.ndarray:
@@ -108,22 +121,32 @@ class Result:
 
 
 class Robot:
-    def __init__(self, base: str | None = None, timeout: float = 600.0):
+    def __init__(self, base: str | None = None, timeout: float = 3600.0):
+        """Connect to the sim service and wait until it answers GET /spec. `timeout` (seconds) is how long to wait for a
+        service that is still starting: the default outlasts every task's start-up watchdog (the longest is 2400 s; an
+        Isaac Sim start on a busy host takes 10-30 minutes), so the first Robot() returns when the simulator is up. The
+        wait is part of your wall-clock budget; progress is printed to stderr once a minute."""
         cands = [base or os.environ.get("SIM_URL"), "http://sim:8000", "http://localhost:8000"]
-        t0 = time.time(); last = None
+        t0 = time.time(); last = None; told = t0
         while time.time() - t0 < timeout:
             for b in [c for c in cands if c]:
                 try:
                     r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503: last = "warming up"; break
+                    if r.status_code == 409: raise EpisodeOver(_over(r))   # it gave up for good: no wait brings it back
                     r.raise_for_status(); self.base = b; self._spec = r.json()
                     if not str(self._spec.get("protocol", "")).startswith(ACCEPTED):
                         raise RuntimeError(f"not a 2.x service: protocol {self._spec.get('protocol')!r}")
                     return
                 except requests.exceptions.RequestException as e:
                     last = e
+            if time.time() - told >= 60:
+                told = time.time()
+                print(f"[rcb_client] still waiting for the sim service to start ({told - t0:.0f} s of at most {timeout:.0f} s; "
+                      f"last answer: {str(last)[:200]})", file=sys.stderr, flush=True)
             time.sleep(2)
-        raise RuntimeError(f"sim service unavailable: {last}")
+        raise RuntimeError(f"sim service unavailable after {time.time() - t0:.0f} s (Robot(timeout={timeout:.0f}); last answer: {last}). "
+                           "If the simulator is still starting, call Robot() again: nothing has been executed.")
 
     def spec(self) -> dict:
         return self._spec
@@ -140,7 +163,7 @@ class Robot:
         body = rcb1.encode(meta, parts)
         r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
         if r.status_code == 409:
-            raise EpisodeOver(r.json().get("reason") if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
+            raise EpisodeOver(_over(r) if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
         if r.status_code >= 400:
             try: err = r.json()
             except Exception: err = {"error": r.text[:300]}
@@ -148,6 +171,7 @@ class Robot:
         m, p = rcb1.decode(r.content); return Result(m, p, self._spec)
 
     def _common(self, cameras, video_fps, depth, include_depth) -> dict:
+        if isinstance(cameras, str): cameras = [cameras]      # one camera name, not its characters
         cams = list(cameras) if cameras is not None else self._spec.get("default_cameras")
         if depth is None or depth is False: depth = "frames" if include_depth else "none"
         elif depth is True: depth = "last"
@@ -187,11 +211,14 @@ class Robot:
         return r.json()
 
     def status(self) -> dict:
-        r = requests.get(self.base + "/status", timeout=(5, 60)); r.raise_for_status(); return r.json()
+        r = requests.get(self.base + "/status", timeout=(5, 60))
+        if r.status_code == 409: raise EpisodeOver(_over(r))   # the service gave up for good (wait_ready() ends here too)
+        r.raise_for_status(); return r.json()
 
     def wait_ready(self, timeout: float = 3600.0) -> dict:
         """After a connection error: wait until the service answers GET /status again (it resumes the same episode after a
-        crash), then return the status. Raises RuntimeError after `timeout` seconds."""
+        crash), then return the status. Raises RuntimeError after `timeout` seconds, and EpisodeOver at once when the
+        service answers that it gave up on the episode."""
         t0 = time.time(); last = None
         while time.time() - t0 < timeout:
             try:

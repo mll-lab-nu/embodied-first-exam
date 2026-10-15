@@ -62,15 +62,15 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
-| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's exception, PROTOCOL §4.5; the mode's default is 0) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
+| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §4.5; the realtime template's default is 10) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
 
 ### Standard mode's reset budget: 50
 
 HumanoidBench's standard configuration grants **50 resets** (`RCB_RESET_BUDGET` defaults to 50 in every
 `-standard` task's `environment/docker-compose.yaml`, so `spec()["budget"]["reset"]` is 50), by the owner's decision
 of 2026-10-07. Without one, the agent gets a single blind attempt: the H1 falls within 1-3 s of robot time under a
-first guess, and in standard mode there is no simulator to practise in. This is a per-benchmark exception to PROTOCOL
-D1's default of 0 (§4.5); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
+first guess, and in standard mode there is no simulator to practise in. This is HumanoidBench's own choice of budget
+(PROTOCOL §4.5: each task declares its budget; the standard template's default is 0); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
 `eai-standard/2.1` service shared with KinDER and VLABench; `scripts/humanoidbench/shared/standard/`):
 
 - `POST /reset` (`r.reset()`) abandons the running episode, or follows one that has ended (`failed`: a fall or the
@@ -98,9 +98,9 @@ recorded before this change (budget 0) are a different configuration from today'
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
 chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTOCOL §4b, protocol v1.1;
 `tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50, HumanoidBench's exception to the mode's default of 0, PROTOCOL §4.5), wall clock (1 h) and client, on a
+instance, sensors, success rule, reset budget (50, HumanoidBench's choice, PROTOCOL §4.5), wall clock (each task's own `[agent] timeout_sec`, history in [`../CUTOFFS.md`](../CUTOFFS.md) and stated by the closing `## Time limit` section of every instruction, PROTOCOL §2.12; 3600 s on 2026-10-11) and client, on a
 clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMITED_MODE_PROTOCOL.md "Standard-realtime mode"):
+wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STANDARD_MODE.md "Standard-realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
@@ -110,18 +110,29 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMI
   in 2.1 (rows `dt` apart, `linear` or `hold`) and writes it into the plan from control step `at` (default: the next
   one), replacing what was planned from there, and answers at once with the robot as it is now. A row whose step has
   already run when the request arrives is dropped (`late_steps`). When the plan runs out, the last target is held
-  (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would.
+  (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would. (The layer
+  is shared with BiGym 2.0 and RoboOlympics, whose plans mix action types: rows of different types are never combined,
+  fixed 2026-10-10; HumanoidBench has one type, a target, and its plan behaves as it always did.)
 - **Observations.** `get_obs()` is the robot now; `get_obs(seconds=s)` watches the next s seconds and returns what the
   cameras saw, without touching the plan. `cameras=[]` returns proprioception only (the controller's call).
 - **Grading.** Unchanged: the journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control
   step, whatever was submitted, and the finalize replays the last episode's rows in a fresh simulator. The replay
   therefore equals the live run however late or early the agent was; `deterministic` checks it. Evidence beside it:
   `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
-  row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
+  row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps` (since 2026-10-10 they cover
+  the whole trial after a crash-resume, not only what followed the last restart), with `clock_s`, `stalled_s` and
+  `stalled_share` (the wall time the clock ran, the time its stalls dropped, and their ratio), `requests_refused` and
+  `request_busy_s`; `reward.json` repeats them (review R2 M1: before, `reward.json` had none of them and `max_lag_s`
+  never passed 0.5). They are evidence: a stalled trial is flagged, not failed. In both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict (2026-10-10).
 - **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
   physics takes 0.4–2.1 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
-  0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot.
+  0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot. Requests cannot slow the clock
+  (review R2 M1; before, four threads of refused 21 MB bodies left 3 control steps in 6 s, and four threads of
+  `/observe` with a 25 ms render 234 of 300): a request is read, decoded and checked off the simulator's thread (large
+  JSON bodies by a child process), waiting requests are served once the clock has caught up, and the cameras are
+  rendered once per control step for everyone who asks (`docs/STANDARD_MODE.md`, "What a request can cost the
+  clock"; `scripts/humanoidbench/tests/test_realtime_load.py` measures it on a stub simulator).
 - **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
   `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator error that
   ends the graded episode (`reason = "error"`) counts too; `final.json` and `reward.json` carry `infra_error = 1`.
@@ -161,9 +172,10 @@ Results on image 0.1.6 or earlier are other physics and are reported apart; none
 numbers. The instances were drawn on MuJoCo 3.1.6 and load identically on 0.2.0, room's redrawn with its fix
 (`scripts/humanoidbench/README.md`). Known and not fixed: masses where upstream set no density (room's packages 24 and 40 kg) or chose one (the door, 160 kg at
 `density="600"`), the ±0.01 start noise on every `qpos` (feet start up to 18 mm in the floor), `sit_simple`'s chair box
-overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which upstream draws
-without collision geometry and its reward never reads (the robot runs through them; the task text says so since
-2026-10-08).
+overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which its reward
+never reads: each is one collision box 37.5 cm high across the track (`generated_xml_hurdles.xml`; the bars drawn on it,
+about 40 cm tall, have no collision geometry of their own), so the robot has to get over it. The task text said so until 2026-10-08, said the
+hurdles had no collision geometry from then (it had looked only at the drawn bars), and says so again since 2026-10-11.
 
 ## Answer-key leakage
 
@@ -171,7 +183,7 @@ A dense reward is the answer key: with it the task is to invert an expression, n
 every `get_reward()` and the constants only it read deleted (`images/humanoidbench/scrub_oracles.py`, in the same
 layer as the clone, `.git` included); each task's own formula ships only where scoring happens -- `tests/` (privileged)
 or `environment/sim/` (standard) -- and is patched back there (`shared/rcb_rewards.py`, from `rewards.json`). The agent
-reaches the model APIs and nothing else (`[agent]` allowlist, `scripts/set_agent_egress.py`), so it cannot fetch the
+reaches the model APIs and the package registries (`[agent]` allowlist, `scripts/set_agent_egress.py`), so it cannot fetch the
 public upstream back; instructions describe the scoring in words, with no tolerance or weight
 (`scripts/humanoidbench/subset.toml`, "HOW TO WRITE scoring_note"; `gen_tasks.py check` looks for formula fragments).
 Known gaps: the image still holds `_WALK_SPEED` and `_RUN_SPEED`, which a class body references (the move
@@ -181,13 +193,12 @@ its model-API key in its container, so it could call a search-enabled model thro
 ## Run
 
 ```bash
-harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-hurdle-i00-standard
+harbor run -p tasks/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
-harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-standard-realtime
+harbor run -p tasks/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`). Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
+Agent, provider and effort settings: docs/RUNNING.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
 with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).
@@ -201,3 +212,13 @@ HumanoidBench standard-mode run recorded before that date -- are reported separa
 protocol v1.0 are marked as such. Standard-realtime results (`-standard-realtime`) are their own mode and are never pooled with
 standard ones; they state the reset budget and `slowdown`. Official runs use `slowdown` 1 (the default); results
 with `RCB_SLOWDOWN` ≠ 1 are reported separately from them (PROTOCOL §4b).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+**KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
+shared service (`scripts/{kinder,humanoidbench}/shared/standard/rcb_service.py`, identical in both) with a per-benchmark
+simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
+PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step
+counters are `rows` and `control_steps`. No world coordinates are given (odometry and camera poses are in the robot's
+starting frame). A request body over 64 MB gets 413 before it is decoded. The service implements the optional reset
+capability (`RCB_RESET_BUDGET`).

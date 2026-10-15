@@ -11,9 +11,9 @@ copy the painting shown in the picture `/app/target.png` (a small acrylic painti
   efforts and its brush-tip pose. There is no sheet readout, no brush state and **no score**: the grader computes it afterwards from
   the service's own record of your episode.
 - A **practice sheet** lies beside the main sheet: test the brush there as much as you like; it is never scored or counted.
-- Steps are unlimited; your wall-clock budget of **2 h (7200 s)** is the limit (`meta["time_left_s"]`). Actions and simulated time
-  are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of simulated time; watching with
-  `seconds > 0` also advances it).
+- Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
+  it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
+  simulated time; watching with `seconds > 0` also advances it).
 - There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
@@ -112,5 +112,20 @@ view along the sheets that shows the brush's height).
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate` =
   `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
+- One call returns at most 640 images (`spec["max_frames_per_call"]`: cameras x frames; a frame with `depth="frames"`
+  counts 4). A request that would exceed it is answered 400 before anything moves: ask for fewer cameras, a lower
+  `video_fps` or a shorter call (an `ee_pose` row that is slowed down to 0.25 m/s takes the control steps its distance
+  needs).
 
 The exemplar is this robot's painting after Paul Cézanne, *Apples and Oranges* (1895-1900), a public-domain work (Wikimedia Commons `File:Nature morte aux pommes et aux oranges, par Paul Cézanne.jpg`, Public domain); the exemplar picture is CC0.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **9 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

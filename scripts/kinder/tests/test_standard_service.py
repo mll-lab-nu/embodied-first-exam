@@ -15,12 +15,15 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 
 import numpy as np
 
-STANDARD = Path(__file__).resolve().parents[1] / "shared" / "standard"
+# RCB_SERVICE_DIR: another benchmark's copy of the service (LIBERO-MAX's rcb_service.py is its own variant; the unit
+# tests job runs the classes that apply to it against scripts/libero-max/shared/standard)
+STANDARD = Path(os.environ.get("RCB_SERVICE_DIR") or Path(__file__).resolve().parents[1] / "shared" / "standard").resolve()
 sys.path.insert(0, str(STANDARD))
 import rcb1  # noqa: E402
 import rcb_service  # noqa: E402
@@ -255,6 +258,28 @@ class Submit(Base):
         self.assertEqual(code, 400)
         self.assertEqual(svc.sim.t, 0)
 
+    def test_a_repeated_camera_is_rendered_and_returned_once(self):
+        """Before: N copies of one name were rendered into one list N times and returned N times (N * N images) while
+        the frame budget counted N -- a request of a few hundred bytes could exhaust the service's memory."""
+        sim = FakeSim(goal=99)
+        asked = []
+        images = sim.images
+        sim.images = lambda cams, depth: asked.append(list(cams)) or images(cams, depth)
+        svc = self.service(sim, max_frames_per_call=50)
+        code, meta, parts = self.submit(svc, [[0.1]] * 4, video="frames", video_fps=10,
+                                        cameras=["side"] + ["cam"] * 40 + ["side"])
+        self.assertEqual(code, 200)
+        self.assertTrue(all(a == ["side", "cam"] for a in asked), asked)       # each once, in the order asked for
+        n = parts["proprio"]["data"].shape[0]
+        self.assertEqual(parts["frames/cam"]["data"].shape, (n, 4, 6, 3))
+        self.assertEqual(parts["frames/side"]["data"].shape, (n, 4, 6, 3))
+        self.assertEqual([e for e in events(self.data) if e["ev"] == "submit"][-1]["cameras"], ["side", "cam"])
+        code, meta, parts = call(svc, "POST", "/observe", {"cameras": ["cam"] * 2000, "video": "frames"})
+        self.assertEqual((code, parts["frames/cam"]["data"].shape), (200, (1, 4, 6, 3)))
+        # the budget counts what is really returned: 2 cameras x (100 steps at 10 fps + 2) > 50
+        code, body, _ = self.submit(svc, [[0.1]] * 100, video="frames", video_fps=10, cameras=["cam", "cam", "side"])
+        self.assertEqual(code, 400)
+
     def test_oversized_body_is_413(self):
         svc = self.service()
         code, ctype, out = svc.handle("POST", "/submit", b"", content_length=64 * 1024 * 1024 + 1)
@@ -382,6 +407,40 @@ class EndOfTrial(Base):
         svc.poll()
         f = final(self.data)
         self.assertEqual((f["finalized"], f["deterministic"], f["video"]), (True, True, False))
+        self.assertEqual((f["success"], f["video_pending"]), (True, False))
+        self.assertIn("video_error", [e["ev"] for e in events(self.data)])
+
+    def test_the_verdict_is_finalized_before_the_video_is_rendered(self):
+        """What the collect hook and the verifier key on ("finalized": true) is on disk with the verdict, so a video
+        that is slow, hangs or is killed with the hook costs the video, never the verdict."""
+        seen = {}
+        sim = FakeSim()
+        render = sim.render_video
+
+        def slow_video(actions, path):
+            seen.update(final(self.data))                    # final.json while the video renders
+            render(actions, path)
+        sim.render_video = slow_video
+        svc = self.service(sim)
+        self.submit(svc, [[1.0]] * 10)
+        svc.on_sigusr1()
+        svc.poll()
+        self.assertEqual((seen["finalized"], seen["success"], seen["deterministic"], seen["replay_success"]),
+                         (True, True, True, True))
+        self.assertEqual((seen["video"], seen["video_pending"]), (False, True))
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["video"], f["video_pending"]), (True, True, True, False))
+        self.assertEqual({k: f[k] for k in seen if k not in ("video", "video_pending")},
+                         {k: seen[k] for k in seen if k not in ("video", "video_pending")})   # nothing else moved
+
+    def test_a_failed_finalize_waits_for_no_video(self):
+        svc = self.service(FakeSim(verify_raises=RuntimeError("replay broke")))
+        self.submit(svc, [[1.0]] * 3)
+        svc.on_sigusr1()
+        svc.poll()
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["video_pending"]), (True, False))
+        self.assertFalse(os.path.exists(os.path.join(self.data, "replay.mp4")))
 
     def test_a_failing_finalize_is_recorded_not_raised(self):
         svc = self.service(FakeSim(verify_raises=RuntimeError("replay broke")))
@@ -513,12 +572,28 @@ class CrashRecovery(Base):
         svc.on_sigusr1()
         with self.assertRaises(Crash):
             svc.poll()
+        f = final(self.data)                                 # the process is dead: the verdict is there, finalized
+        self.assertEqual((f["finalized"], f["success"], f["video_pending"]), (True, True, True))
         with self.assertRaises(GiveUp):
             self.service()
         f = final(self.data)
         self.assertEqual((f["finalized"], f["success"], f["live_success"], f["replay_success"], f["deterministic"],
                           f["video"]), (True, True, True, True, True, False))
+        self.assertFalse(f["video_pending"])                 # the restarted service: no video is coming, do not wait
         self.assertNotIn("infra_error", f)
+
+    def test_a_verdict_of_an_older_service_without_finalized_is_kept(self):
+        """A final.json with the verdict but "finalized": false (written before finalized moved ahead of the video)."""
+        svc = self.service()
+        self.submit(svc, [[1.0]] * 10)
+        svc.on_sigusr1()
+        svc.poll()
+        fin = {k: v for k, v in final(self.data).items() if k != "video_pending"}
+        Path(self.data, "final.json").write_text(json.dumps({**fin, "finalized": False, "video": False}))
+        with self.assertRaises(GiveUp):
+            self.service()
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["deterministic"], f["video"]), (True, True, True, False))
 
     def test_a_timeout_survives_a_crash_during_finalize(self):
         svc = self.service(FakeSim(goal=99, verify_raises=Crash()))
@@ -540,6 +615,36 @@ class CrashRecovery(Base):
         t0 = svc.t0
         svc2 = self.service()
         self.assertEqual(svc2.t0, t0)
+
+
+class AgentClock(Base):
+    """meta time_s / time_left_s: the agent's clock. Harbor counts the agent's cutoff around the agent's run only, and
+    the sidecar is up before that, so the clock starts at the agent's first request, never with the service."""
+
+    def test_it_starts_at_the_first_request_not_with_the_service(self):
+        svc = self.service(FakeSim(goal=99))                        # started and ready; nobody has asked anything
+        time.sleep(0.7)                                             # ... while the harness is being installed
+        self.assertIsNone(svc.t0)
+        self.assertFalse([e for e in events(self.data) if e["ev"] == "first_request"])
+        t = time.time()
+        code, spec, _ = call(svc, "GET", "/spec")                   # the first request, whatever the endpoint
+        self.assertIn("first request", spec["clock"])
+        code, meta, _ = call(svc, "POST", "/observe", {"seconds": 0, "video": "none"})
+        lag = time.time() - t
+        self.assertLessEqual(meta["time_s"], lag + 0.05)
+        self.assertGreaterEqual(meta["time_left_s"], 3600.0 - lag - 0.2)
+        self.assertEqual(len([e for e in events(self.data) if e["ev"] == "first_request"]), 1)
+
+    def test_a_resume_does_not_set_it_back(self):
+        svc = self.service(FakeSim(goal=99))
+        code, m0, _ = self.submit(svc, [[0.5]] * 2)
+        time.sleep(0.7)
+        svc2 = self.service(FakeSim(goal=99))                       # the restarted process resumes the episode
+        self.assertEqual(svc2.t0, svc.t0)
+        code, m1, _ = call(svc2, "POST", "/observe", {"seconds": 0, "video": "none"})
+        self.assertGreaterEqual(m1["time_s"], m0["time_s"] + 0.7)
+        self.assertLessEqual(m1["time_left_s"], m0["time_left_s"] - 0.7)
+        self.assertEqual(len([e for e in events(self.data) if e["ev"] == "first_request"]), 1)
 
 
 class ResetCapability(Base):
@@ -595,6 +700,37 @@ class ResetCapability(Base):
         self.assertEqual((st["control_steps"], st["resets_left"], st["episode"]), (2, 1, 2))
 
 
+class ResetChecks(Base):
+    def test_a_refused_reset_changes_nothing(self):
+        svc = self.service(reset_budget=1)
+        self.submit(svc, [[0.1]] * 2)
+        code, body, _ = call(svc, "POST", "/reset", {"cameras": ["nope"]})
+        self.assertEqual(code, 400)
+        code, st, _ = call(svc, "GET", "/status")
+        self.assertEqual((st["control_steps"], st["done"], st["resets_left"]), (2, False, 1))
+        self.assertEqual(call(svc, "POST", "/reset", {})[0], 200)
+        code, body, _ = call(svc, "POST", "/reset", {})
+        self.assertEqual((code, body["error"]), (409, "reset budget exhausted"))
+
+    def test_a_reset_the_simulator_fails_is_a_simulator_error(self):
+        """Before (LIBERO-MAX's variant until 2026-10): the trial ended "reset" -- the agent's own choice -- when the
+        simulator failed to start the new episode."""
+        sim = FakeSim(goal=99)
+        svc = self.service(sim, reset_budget=2)
+        self.submit(svc, [[0.1]] * 2)
+
+        def boom():
+            raise RuntimeError("the scene did not build")
+        sim.reset = boom
+        code, body, _ = call(svc, "POST", "/reset", {})
+        self.assertEqual(code, 500)
+        code, st, _ = call(svc, "GET", "/status")
+        self.assertEqual((st["done"], st["reason"]), (True, "error"))
+        self.assertEqual(final(self.data)["reason"], "error")
+        ends = [e for e in events(self.data) if e["ev"] == "end"]
+        self.assertTrue(ends[-1].get("reset_failed"), ends)
+
+
 class Grade(Base):
     def grade(self, fin: dict | None) -> tuple[str, dict]:
         logs = os.path.join(self.data, "logs")
@@ -618,6 +754,29 @@ class Grade(Base):
     def test_a_missing_log_is_infrastructure(self):
         txt, r = self.grade(None)
         self.assertEqual((txt, r["success"], r["missing_log"], r["infra_error"]), ("0", 0, 1, 1))
+        self.assertEqual((r["deterministic"], r["sim_error"], r["grader_error"]), (0, 0, 0))
+
+    def test_an_unreadable_log_is_infrastructure(self):
+        for text in ('{"finalized": true, "live_succ', "[1, 2]", "null", ""):
+            Path(self.data, "final.json").write_text(text)
+            txt, r = self.grade(None)
+            self.assertEqual((txt, r["success"], r["deterministic"], r["infra_error"], r["grader_error"]),
+                             ("0", 0, 0, 1, 1), text)
+
+    def test_a_simulator_error_is_reported(self):
+        txt, r = self.grade({"finalized": True, "live_success": False, "replay_success": False, "deterministic": True,
+                             "reason": "error"})
+        self.assertEqual((r["success"], r["sim_error"], r["deterministic"]), (0, 1, 1))
+        txt, r = self.grade({"finalized": True, "live_success": False, "replay_success": False, "deterministic": True,
+                             "reason": "failed"})
+        self.assertEqual(r["sim_error"], 0)
+
+    def test_a_verdict_whose_video_never_came_stands(self):
+        """The collect hook ran out of time while the video rendered: finalized, video_pending still true."""
+        txt, r = self.grade({"finalized": True, "live_success": True, "replay_success": True, "deterministic": True,
+                             "video": False, "video_pending": True, "reason": "success"})
+        self.assertEqual((txt, r["success"], r["infra_error"], r["video_rendered"]), ("1", 1, 0, 0))
+        self.assertTrue(all(isinstance(v, (int, float)) for v in r.values()))
 
     def test_a_crashed_service_or_failed_finalize_is_not_the_agents(self):
         txt, r = self.grade({"finalized": True, "success": False, "reason": "sim_crashed", "infra_error": 1})
@@ -711,6 +870,28 @@ class Boot(Base):
         t.join(5)
         self.assertFalse(t.is_alive())
         got["srv"].server_close()
+
+    def test_a_service_that_gave_up_answers_every_request(self):
+        """Before: nothing listened after a give-up, and a client waited out its connection timeout."""
+        import socket
+        import requests
+        import rcb_client
+        with socket.socket() as k:
+            k.bind(("127.0.0.1", 0))
+            port = k.getsockname()[1]
+        threading.Thread(target=rcb_service.refuse_forever, args=("sim_crashed", port), daemon=True).start()
+        url = f"http://127.0.0.1:{port}"
+        for _ in range(100):
+            try:
+                r = requests.get(url + "/status", timeout=5)
+                break
+            except requests.exceptions.ConnectionError:
+                threading.Event().wait(0.05)
+        self.assertEqual((r.status_code, r.json()["reason"], r.json()["gave_up"]), (409, "sim_crashed", True))
+        self.assertEqual(requests.post(url + "/submit", data=b"x" * 100000, timeout=5).status_code, 409)
+        with self.assertRaises(requests.exceptions.HTTPError) as ctx:      # the client: at once, not after its timeout
+            rcb_client.Robot(url, timeout=120)
+        self.assertEqual(ctx.exception.response.status_code, 409)
 
     def test_every_start_is_counted(self):
         rcb_service.count_start(self.data)

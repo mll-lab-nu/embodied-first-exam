@@ -1,0 +1,30 @@
+{
+ "task": "build_tower",
+ "goal": "Stack the wooden blocks and boards into a three-level tower: two pillar blocks (one on the left, one on the right) with a long board across them, two more blocks standing on that board with a second board on top, and finally the two top pieces stacked on the second board; then send the arm home.",
+ "instruction_templates": [
+  "Build a tower using the wooden blocks and wooden boards."
+ ],
+ "success": [
+  "Eight pieces block0..block7 must all be 'upright': for block0,1,2,3,5,6,7 the local +z axis makes an angle < 5 degrees with world +z; for block4 the local +y axis (not z) must make an angle < 5 degrees with world +z (block4 is a different piece type, index 3, which stands on a different axis).",
+  "Layer 1 (base): block0 (board, index 0) sits above exactly one left-side and one right-side support chosen from the four identical blocks block1, block2, block5, block6: at least one of these pairs must hold: (block1 and block2), (block5 and block6), (block1 and block6), (block5 and block2), where 'X is above Y' means root z of block0 minus root z of Y is > 0.025 m (is_A_up_B z_threshold_min=0.025, no upper bound, no xy check), and both supports must be upright (< 5 degrees as above). Also block0 upright (< 5 degrees).",
+  "Layer 2 (middle): at least one of block1, block5 has root z more than 0.025 m above block0's root z; at least one of block2, block6 has root z more than 0.025 m above block0's root z (these are the two remaining supports sitting on the board); block7 (second board, index 4) has root z more than 0.025 m above at least one of block1/block5 AND more than 0.025 m above at least one of block2/block6; and block7's root xy lies within 0.043 m (horizontal distance, strict <) of block0's support point 'block/0' (the board's support-circle centre defined in its asset metadata; this is a placement-centre check, radius 0.043 m overriding the asset radius).",
+  "Layer 3 (top): block3 (index 1, the piece with place_tag up/0) root z is more than 0.012 m above block7's root z, and its root xy is within 0.023 m (strict <) of block7's support point 'block/0'; block4 (index 3) root z is more than 0.015 m above block3's root z, and its root xy is within 0.023 m of block3's support point 'block/0'.",
+  "Alignment: local +x axis of block3 is within 20 degrees (strict <) of block7's local +x or -x axis (either parallel or anti-parallel); local +x axis of block4 is within 20 degrees of block3's local +x or -x axis.",
+  "All target robots back at their start end-effector pose: |dx|,|dy|,|dz| each <= 0.15 m and rotation difference <= 20 degrees (all_robot_back_to_origin defaults)."
+ ],
+ "evaluation": "Checked after every action (the reward manager step runs after each action's control sequence completes). One single stage: all conditions above must hold at the same step (including the arm being back home); the first step at which all hold ends the episode with success. There is no early-fail rule apart from generic ones. Otherwise the episode fails at step_lim=1050 actions. Process score (partial credit only, not needed for success; transition mode, scores 10, 30, 100): stage 1 base structure with grippers open (open fraction >= 0.8) and block0 not moved more than 0.002 m since the last check; stage 2 plus block7 on the middle layer; stage 3 the whole tower with grippers open.",
+ "step_lim": 1050,
+ "objects": [
+  "block0: wooden board (category block, index 0), 1, placed at exactly x=0.0, y=-0.2 on the table, no rotation. Base board of the tower.",
+  "block1, block5: block category index 2 (identical pillar blocks), 1 each, x in [-0.4,-0.17], y in [-0.2,0.0], yaw in [-25,0] degrees (left side of table).",
+  "block2, block6: block category index 2 (identical pillar blocks), 1 each, x in [0.17,0.4], y in [-0.2,0.0], yaw in [0,25] degrees (right side of table).",
+  "block3: block category index 1, 1, x in [-0.45,-0.3] or [0.3,0.45], y in [-0.2,0.0], yaw +/-10 deg, place_tag up/0 (placed in its 'up/0' stable pose).",
+  "block4: block category index 3, 1, x in [-0.45,-0.3] or [0.3,0.45], y in [-0.2,0.0], yaw +/-10 deg.",
+  "block7: block category index 4 (second board), 1, placed at exactly x=0.0, y=-0.3 on the table, no rotation."
+ ],
+ "scene_dynamics": "none",
+ "needs_memory_or_language": "none (fixed goal structure; the agent must infer from the shapes which piece goes where, the reward is purely geometric on labelled pieces).",
+ "end_requirements": "All target arms must be back within 0.15 m per axis and 20 degrees of their start end-effector pose at the moment of success. Gripper state is not part of the success check.",
+ "physics_kind": "rigid (stacking of rigid wooden pieces)",
+ "notes": "Piece shapes/dimensions are not determinable from the source (asset geometry not in the source tree), so which block index is which shape is inferred from the checks only. Heights use root-origin z differences (>0.025 m, >0.012 m, >0.015 m), not bbox contact, and x-y centring tolerances are 0.043 m (block7 on block0) and 0.023 m (block3 on block7, block4 on block3). The check list uses OR-groups: for layer 1 any one of the four (left, right) support pairs works, and for layer 2 the supports above block0 must come from the remaining blocks, but the code does not enforce that the same blocks are used consistently (e.g. block1 below and block1 above block0 is geometrically impossible, so effectively two supports below and two above). block4's uprightness is judged on its local y axis. The arm has to be home at the same time as the tower stands, and with a 5 degree uprightness tolerance the stacks must be carefully levelled."
+}

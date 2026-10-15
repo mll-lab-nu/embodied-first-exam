@@ -31,8 +31,9 @@ forward down the walled track, past the hurdles, without touching the side or ba
 - There is nothing to hand in: the service records every episode, replays the last one in a fresh simulator
   and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it
   early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way,
-  so do not stop early: while the episode runs, or a reset is left, the run can still pass.
+- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
+  earlier ends the run the same way, so do not stop early: while the episode runs, or a reset is left, the run
+  can still pass.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
@@ -41,10 +42,11 @@ upright (head at standing height, torso vertical) and low actuator force, multip
 target is a sprint rather than a walk, on the order of 5 m/s. On top of that, touching any barrier's collision
 geometry multiplies that entire step down to a small fraction of its value: contact is a gate to be respected,
 not a penalty to be traded off. Only the walls that line the track on both sides and behind the start count as
-barriers here; the hurdles carry no such penalty, and in upstream's model they have no collision geometry at
-all (drawn, not solid): the robot runs through them. The service ends the episode the moment the pass mark is
-reached (`reason = "success"`), and a fresh replay of the recorded episode must reach it as well and end in
-the same state.
+barriers here; the hurdles carry no such penalty. They are solid all the same: each hurdle is one collision
+box 37.5 cm high across the whole track (the bars drawn on it have no collision geometry of their own), so the
+robot has to get over it. The service ends the episode the moment the pass mark is reached
+(`reason = "success"`), and a fresh replay of the recorded episode must reach it as well and end in the same
+state.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 Your whole interface to the robot. Its docstring is the full reference
@@ -85,3 +87,14 @@ order). A target of −1 or +1 commands one end of that servo's range,
 `spec()["action_types"]["joint_position"]["range_rad"]` in radians, and the scale is linear, so 0 is
 mid-range, not 0 rad. A constant action commands joint *targets*, not a pose: whether the robot stays there
 depends on whether that pose is stable under gravity and contact.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).

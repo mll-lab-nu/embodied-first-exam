@@ -6,3 +6,5 @@ FROM ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0
 COPY grade.py instance.npz rcb_hb.py rcb_rewards.py rewards.json test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 WORKDIR /tests
+# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+COPY rcb_limits.py rcb_limits.json /tests/

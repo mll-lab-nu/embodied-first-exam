@@ -1,32 +1,32 @@
 #!/usr/bin/env bash
-# One frozen instance per task pair (PROTOCOL §2.2: a standard or standard-realtime task shares its privileged twin's
-# frozen instance; §3: the privileged instance is copied into environment/ and tests/). The verifier's copy, the
-# privileged task's tests/instance.{json,npz}, and the copy the task runs from (privileged: environment/; standard and
-# standard-realtime: the sim sidecar's environment/sim/) are byte-identical, and neither exists without the other.
-# RoboPaint's privileged environment/ copy is reduced by design (check-robopaint-leak.sh), so its scorer sidecar's
-# environment/scorer/ copy is compared instead. A standard or standard-realtime task's twin <base>-privileged must
-# exist, except for the benchmarks PROTOCOL §4b exempts by owner decision (NO_TWIN below; the same list:
-# scripts/task_conventions.py NO_TWIN): they have no privileged mode and nothing to compare.
+# INVARIANT (docs/PROTOCOL.md Appendix H.4 identical instance copies, H.7 twins share one frozen instance): part of the
+# required CI job `invariants` (ci_checks/run_invariants.sh). The verifier's copy of the frozen instance, the privileged
+# task's tests/instance.{json,npz}, and the copy the task runs from (privileged: environment/, or environment/scorer/
+# where a scorer sidecar holds the trusted copy and the agent's environment/ copy is reduced by design; standard and
+# standard-realtime: the sim sidecar's environment/sim/) are byte-identical, and neither exists without the other. A
+# standard or standard-realtime task shares its privileged twin's copy where the twin exists; without a twin (a benchmark
+# may ship any subset of the modes; the README's Twin row says why, an advisory check reads it) it carries its own, and
+# its sim copy and its tests/ copy, where both exist, are byte-identical.
 # Usage: check-instance-copies.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
-NO_TWIN=(roboolympics-)   # PROTOCOL §4b: RoboOlympics (owner, 2026-10-08), standard-realtime only
-case "$n" in
-  *-standard-realtime) base="${n%-standard-realtime}"; ref="$base-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too
-  *-standard) base="${n%-standard}"; ref="$base-privileged/tests"; copy="environment/sim" ;;
-  robopaint-*) base=""; ref="$n/tests"; copy="environment/scorer" ;;
-  *) base=""; ref="$n/tests"; copy="environment" ;;
-esac
-if [ -n "$base" ]; then
-  for p in "${NO_TWIN[@]}"; do
-    if [[ "$n" == "$p"* ]]; then
-      for f in instance.json instance.npz; do   # no twin, so no instance copy to keep in step with one
-        [ -f "$t/$copy/$f" ] && { echo "FAIL $t: $copy/$f without a privileged twin (PROTOCOL §4b NO_TWIN)"; rc=1; }
-      done
-      exit $rc
-    fi
+root="$(cd "$(dirname "$0")/.." && pwd)"
+# the mode registry (PROTOCOL §2.16; run_all.sh reads it once): "<mode> <sidecar 0|1> <twin mode or ->", longest first
+modes="${RCB_MODES_TABLE:-$(python3 "$root/scripts/task_conventions.py" modes)}"
+base=""; ref="$n/tests"; copy="environment"; twin=""
+[ -d "$t/environment/scorer" ] && copy="environment/scorer"   # a scorer sidecar holds the trusted copy
+while read -r m sidecar tw; do
+  [ -n "$m" ] && [[ "$n" == *"-$m" ]] || continue
+  if [ "$tw" != "-" ]; then base="${n%-$m}"; twin="$tw"; ref="$base-$tw/tests"; fi
+  [ "$sidecar" = 1 ] && copy="environment/sim"
+  break
+done <<< "$modes"
+if [ -n "$base" ] && [ ! -d "$(dirname "$t")/$base-$twin" ]; then
+  for f in instance.json instance.npz; do   # no twin: its own two copies, where both exist, agree
+    a="$t/tests/$f"; b="$t/$copy/$f"
+    [ -f "$a" ] && [ -f "$b" ] && ! cmp -s "$a" "$b" && { echo "FAIL $t: $copy/$f and tests/$f differ"; rc=1; }
   done
-  [ -d "$(dirname "$t")/$base-privileged" ] || { echo "FAIL $t: its privileged twin $base-privileged is missing (PROTOCOL §2.2)"; exit 1; }
+  exit $rc
 fi
 for f in instance.json instance.npz; do
   a="$(dirname "$t")/$ref/$f"; b="$t/$copy/$f"
