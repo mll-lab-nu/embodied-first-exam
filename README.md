@@ -37,6 +37,9 @@ drives it from a controller program of its own. It is offered where a benchmark'
 
 ## Benchmarks
 
+The current list of tasks, with each task's mode, cutoff, oracle and digest and the counts per benchmark, is generated
+after every merge: [`TASKS.md` on the branch `task-list`](../../blob/task-list/TASKS.md) (`tasks.json`, `dataset.toml` next to it).
+
 | Benchmark | Simulator / robot | Tasks (per mode) | Oracle |
 |---|---|---|---|
 | RoboTwin 2.0 (`robotwin_2_0_<task>`) | SAPIEN 3 + CuRobo · ALOHA-AgileX dual arm | 47 of 50 | full (upstream expert) |
