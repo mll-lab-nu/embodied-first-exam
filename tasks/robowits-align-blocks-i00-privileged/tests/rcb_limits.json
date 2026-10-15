@@ -1,5 +1,10 @@
 {
  "caps": {
+  "blenderkit": {
+   "cpus": 1.0,
+   "memory_gb": 4.0,
+   "pids": 4096
+  },
   "main": {
    "cpus": 4.0,
    "memory_gb": 20.0,
@@ -22,7 +27,8 @@
  "mode": "privileged",
  "scope": "trial",
  "scope_services": [
-  "main"
+  "main",
+  "blenderkit"
  ],
  "sustain_sec": 60.0,
  "task": "robowits-align-blocks-i00-privileged",
