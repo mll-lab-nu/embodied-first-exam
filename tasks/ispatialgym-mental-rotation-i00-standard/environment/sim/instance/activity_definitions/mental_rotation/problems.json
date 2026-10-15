@@ -1,0 +1,115 @@
+{
+  "activity": "mental_rotation",
+  "problems": [
+    {
+      "variant": "mental_rotation-mug",
+      "id": 0,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#02",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-teaspoon",
+      "id": 1,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#03",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-toy_figure",
+      "id": 2,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#04",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-carving_knife",
+      "id": 3,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#06",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-crab",
+      "id": 4,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#07",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-soup_ladle",
+      "id": 5,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#08",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-hook",
+      "id": 6,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#09",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-statue",
+      "id": 7,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#10",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-classroom_mock_up",
+      "id": 8,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#01",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "mental_rotation-walker",
+      "id": 9,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "mental_rotation",
+      "iddl": "mental_rotation/mental_rotation.iddl",
+      "pick": "mental_rotation#05",
+      "slot": "representative",
+      "mode": "representative"
+    }
+  ]
+}

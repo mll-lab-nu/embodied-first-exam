@@ -1,0 +1,39 @@
+(define (problem inter_object_relation_satisfaction-11)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-nextto_small_scale-salt_shaker-pepper_shaker-breakfast_table)
+
+    ; IORS - nextto (small-scale). Target and partner on the support with an init gap above the NextTo bound; the target
+    ; is moved to the nearest position that satisfies NextTo (gap below mean(dims_a + dims_b)/6, adjacency rays), same
+    ; orientation.
+
+    (:objects
+        salt__shaker.n.01_1 - salt__shaker.n.01
+        pepper__shaker.n.01_1 - pepper__shaker.n.01
+        breakfast_table.n.01_1 - breakfast_table.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop salt__shaker.n.01_1 breakfast_table.n.01_1)
+        (ontop pepper__shaker.n.01_1 breakfast_table.n.01_1)
+        (not (nextto salt__shaker.n.01_1 pepper__shaker.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (nextto ?salt__shaker.n.01_1 ?pepper__shaker.n.01_1)
+            (not (grasped ?agent.n.01_1 ?salt__shaker.n.01_1))
+            (not (grasped ?agent.n.01_1 ?pepper__shaker.n.01_1))
+            (pose_settled ?salt__shaker.n.01_1)
+            (pose_settled ?pepper__shaker.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?salt__shaker.n.01_1)
+        (pose_reached ?pepper__shaker.n.01_1)
+    )
+)

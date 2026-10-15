@@ -1,0 +1,18 @@
+{
+ "task_family": "camera_relocalization",
+ "task": "camera_relocalization_obstructed",
+ "subtask": "camera_relocalization_obstructed_hamper_1",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "camera_relocalization-2",
+ "activity": "camera_relocalization",
+ "definition_id": 2,
+ "instance_id": "house_single_floor_task_camera_relocalization_obstructed_hamper_1_0_0_template",
+ "demo_length": 662,
+ "files_sha256": {
+  "template": "582b440f43bebfb10cfc7bbb6da57ddb4b76f6ed8e4e84c5be56345425a59429",
+  "template_meta": "94265d969f43e5331ffc588b3a4a75a78c690acc869ea903b0904045b94f34c7",
+  "tro_state": "41fa94082ffbd57bfd09c3beb12fd569d510793452862417aa8db68ab40c489c",
+  "goal_rgb": "fd0a7fd82fe3000c6d8a02c153f485e35f61dc3aa634a717045e8c6411d55e43"
+ }
+}

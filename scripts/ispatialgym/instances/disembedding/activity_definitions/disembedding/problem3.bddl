@@ -1,0 +1,49 @@
+(define (problem disembedding-3)
+    (:domain ispatialgym)
+    (:variant disembedding-pencil_case-sunglasses_1_pencil_1_pen_1-desk)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        pencil_box.n.01_1 - pencil_box.n.01
+        sunglasses.n.02_1 - sunglasses.n.02
+        pencil.n.01_1 - pencil.n.01
+        pen.n.01_1 - pen.n.01
+        desk.n.01_1 - desk.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        sunglasses.n.02_1 pencil.n.01_1 pen.n.01_1 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 desk.n.01_1)
+        (ontop tray.n.01_2 desk.n.01_1)
+        (ontop pencil_box.n.01_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop pencil_box.n.01_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?pencil_box.n.01_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?pencil_box.n.01_1))
+            (pose_settled ?pencil_box.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?pencil_box.n.01_1)
+    )
+)

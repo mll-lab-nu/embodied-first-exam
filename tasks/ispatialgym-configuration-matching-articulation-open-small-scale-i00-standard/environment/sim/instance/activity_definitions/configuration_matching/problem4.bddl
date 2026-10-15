@@ -1,0 +1,33 @@
+(define (problem configuration_matching-4)
+    (:domain ispatialgym)
+    (:variant configuration_matching-articulation_open_large_scale-door)
+
+    ; Configuration matching - articulation (large-scale, open). The target is a scene articulated object (cabinet, fridge,
+    ; oven, drawer, door; roles/candidates.csv kind scene, bound per scene); one joint is chosen (customs list roles.target.joint /
+    ; handle_key); closed -> open to a passively stable angle q_goal in S. Handle grasp with the arm on the handle's side;
+    ; opening primarily by base / trunk motion (base-follow), arm secondary.
+
+    (:objects
+        door.n.01_1 - door.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (not (open door.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (open ?door.n.01_1)
+            (not (grasped ?agent.n.01_1 ?door.n.01_1))
+            (pose_settled ?door.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (layout_reached ?door.n.01_1)
+    )
+)

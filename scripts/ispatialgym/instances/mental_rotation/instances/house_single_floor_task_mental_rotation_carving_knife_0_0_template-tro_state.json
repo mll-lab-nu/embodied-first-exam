@@ -1,0 +1,294 @@
+{
+  "carving_knife.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        23.417251586914062,
+        11.695796966552734,
+        1.2100071907043457
+      ],
+      "ori": [
+        0.5683920383453369,
+        -0.7648448944091797,
+        0.23736527562141418,
+        0.18868109583854675
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          23.37213706970215,
+          11.568029403686523,
+          1.1381734609603882,
+          23.458606719970703,
+          11.78604793548584,
+          1.3053531646728516
+        ]
+      },
+      "SlicerActive": {
+        "value": true,
+        "previously_touching": false,
+        "delay_counter": 0.0
+      }
+    }
+  },
+  "floor.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        22.365032196044922,
+        10.85877513885498,
+        -0.13880929350852966
+      ],
+      "ori": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          19.72869873046875,
+          9.706157684326172,
+          -0.2776094079017639,
+          24.989099502563477,
+          11.972857475280762,
+          -9.417533874511719e-06
+        ]
+      }
+    }
+  },
+  "robot_poses": {
+    "robot": [
+      {
+        "position": [
+          23.099998474121094,
+          11.10000228881836,
+          0.005277156829833984
+        ],
+        "orientation": [
+          -4.6475790441036224e-05,
+          6.457342533394694e-05,
+          0.5142968893051147,
+          0.8576123118400574
+        ]
+      }
+    ]
+  },
+  "ispatialgym": {
+    "schema_version": "isg-tro-v1",
+    "activity": "mental_rotation",
+    "activity_definition_id": 3,
+    "task_variant": "mental_rotation-carving_knife",
+    "instance_id": "mental_rotation-carving_knife__house_single_floor__room-bathroom_0__target-carving_knife-alekva__0000",
+    "generation_seed": 3720530090784787685,
+    "evaluation_profile": "isg-v1",
+    "bddl_sha256": "204ad0f1d27f29fa422d030eedd1d9a7cc3706e2a32b571aaefbf322e2acea27",
+    "task_spec_sha256": "eb8f914ed357e187aacb3521e484edb5d5e8827d876281208671ba409e89b11d",
+    "layout_template_id": null,
+    "scene": {
+      "model": "house_single_floor",
+      "floor": 0,
+      "template_path": "../template.json",
+      "template_sha256": "1195346a283bbed9c17061c151f28ab8304b529fdb3d5c338e108e36b763f65c",
+      "load_room_instances": [
+        "bathroom_0",
+        "childs_room_1",
+        "corridor_0",
+        "garden_0"
+      ],
+      "task_rooms": [
+        "bathroom_0"
+      ],
+      "sampled_with_rooms": [
+        "bathroom_0",
+        "childs_room_1",
+        "corridor_0",
+        "garden_0"
+      ],
+      "scene_variant": null,
+      "required_scene_objects": [
+        "floors_mawnss_0"
+      ]
+    },
+    "object_bindings": {
+      "floor.n.01_1": {
+        "scene_object_name": "floors_mawnss_0",
+        "category": "floors",
+        "model": "mawnss"
+      },
+      "carving_knife.n.01_1": {
+        "scene_object_name": "target_carving_knife_alekva_0",
+        "category": "carving_knife",
+        "model": "alekva"
+      }
+    },
+    "robot_state": {
+      "bddl_instance": "agent.n.01_1",
+      "model": "r1pro",
+      "joint_positions": {
+        "torso_joint1": 1.025022029876709,
+        "torso_joint2": -1.4499584436416626,
+        "torso_joint3": -0.4700271487236023,
+        "torso_joint4": 5.533838702831417e-05,
+        "left_arm_joint1": -7.031651330180466e-05,
+        "right_arm_joint1": -1.2863248586654663,
+        "left_arm_joint2": -8.513019338352024e-07,
+        "right_arm_joint2": 0.021758897230029106,
+        "left_arm_joint3": -4.222848292556591e-05,
+        "right_arm_joint3": 0.4426182210445404,
+        "left_arm_joint4": 4.62742245872505e-05,
+        "right_arm_joint4": -0.40246227383613586,
+        "left_arm_joint5": -6.555609161296161e-06,
+        "right_arm_joint5": -0.46781355142593384,
+        "left_arm_joint6": -2.0262526959413663e-05,
+        "right_arm_joint6": -0.8949053883552551,
+        "left_arm_joint7": -8.72517489369784e-07,
+        "right_arm_joint7": 1.3130934238433838,
+        "left_gripper_finger_joint1": 0.04999860003590584,
+        "left_gripper_finger_joint2": 0.04999859258532524,
+        "right_gripper_finger_joint1": 0.012010072357952595,
+        "right_gripper_finger_joint2": 0.012003137730062008
+      },
+      "joint_velocities": {
+        "torso_joint1": 0.0,
+        "torso_joint2": 0.0,
+        "torso_joint3": 0.0,
+        "torso_joint4": 0.0,
+        "left_arm_joint1": 0.0,
+        "right_arm_joint1": 0.0,
+        "left_arm_joint2": 0.0,
+        "right_arm_joint2": 0.0,
+        "left_arm_joint3": 0.0,
+        "right_arm_joint3": 0.0,
+        "left_arm_joint4": 0.0,
+        "right_arm_joint4": 0.0,
+        "left_arm_joint5": 0.0,
+        "right_arm_joint5": 0.0,
+        "left_arm_joint6": 0.0,
+        "right_arm_joint6": 0.0,
+        "left_arm_joint7": 0.0,
+        "right_arm_joint7": 0.0,
+        "left_gripper_finger_joint1": 0.0,
+        "left_gripper_finger_joint2": 0.0,
+        "right_gripper_finger_joint1": 0.0,
+        "right_gripper_finger_joint2": 0.0
+      },
+      "controller_targets": {
+        "torso_joint1": 1.0250180959701538,
+        "torso_joint2": -1.4499659538269043,
+        "torso_joint3": -0.47002339363098145,
+        "torso_joint4": 3.617008405853994e-05,
+        "left_arm_joint1": -4.9565678637009114e-05,
+        "left_arm_joint2": -9.032993375512888e-07,
+        "left_arm_joint3": -3.8214115193113685e-05,
+        "left_arm_joint4": 2.9389299015747383e-05,
+        "left_arm_joint5": -9.276212949771434e-06,
+        "left_arm_joint6": -1.3703025615541264e-05,
+        "left_arm_joint7": -1.3510756389223388e-06,
+        "right_arm_joint1": -1.286330223083496,
+        "right_arm_joint2": 0.021762743592262268,
+        "right_arm_joint3": 0.44313952326774597,
+        "right_arm_joint4": -0.40232422947883606,
+        "right_arm_joint5": -0.46597227454185486,
+        "right_arm_joint6": -0.9001972079277039,
+        "right_arm_joint7": 1.3061139583587646
+      }
+    },
+    "goal_observation": {
+      "sensor_key": "robot_r1:zed_link:Camera:0",
+      "rgb_path": "house_single_floor_task_mental_rotation_carving_knife_0_0_template-goal_rgb.png",
+      "rgb_sha256": "a80c6dba1df0a37a95492a6fd192014b462206371467dd74d4c1e11bdc7418d0",
+      "resolution": [
+        1080,
+        1080
+      ],
+      "intrinsics": {
+        "fx": 459.0,
+        "fy": 459.0,
+        "cx": 540.0,
+        "cy": 540.0,
+        "width": 1080,
+        "height": 1080
+      },
+      "camera_pose_world": {
+        "position": [
+          23.213029861450195,
+          11.311761856079102,
+          1.3970580101013184
+        ],
+        "orientation": [
+          0.5382766127586365,
+          -0.1346995085477829,
+          -0.20194479823112488,
+          0.8070518374443054
+        ]
+      },
+      "evaluation_profile": "isg-v1",
+      "n_render_iterations": 1
+    },
+    "pose_targets": {
+      "carving_knife.n.01_1": {
+        "link": null,
+        "frame": "world",
+        "position": null,
+        "orientation": [
+          0.13503913581371307,
+          -0.5567713975906372,
+          0.5268321633338928,
+          0.6278677582740784
+        ],
+        "position_metric": null,
+        "orientation_metric": "full",
+        "position_tolerance": null,
+        "orientation_tolerance": 0.15,
+        "orientation_equivalences": []
+      }
+    },
+    "groups": {},
+    "articulation_targets": {},
+    "grasps": [
+      {
+        "agent": "agent.n.01_1",
+        "arm": "right",
+        "object": "carving_knife.n.01_1",
+        "grasp_key": "carving_knife__alekva",
+        "grasp_name": "grasp_1",
+        "object_pose_in_eef_frame": {
+          "position": [
+            -0.0268096923828125,
+            0.00128173828125,
+            -0.011071205139160156
+          ],
+          "orientation": [
+            -0.04240545630455017,
+            -0.8479810953140259,
+            -0.5282726883888245,
+            0.007608234882354736
+          ]
+        },
+        "finger_q": [
+          0.012010072357952595,
+          0.012003137730062008
+        ],
+        "ag_anchor_in_eef": [
+          0.007458686828613281,
+          0.013246536254882812,
+          -0.01378631591796875
+        ]
+      }
+    ]
+  }
+}

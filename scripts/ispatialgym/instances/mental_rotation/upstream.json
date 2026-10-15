@@ -1,0 +1,18 @@
+{
+ "task_family": "mental_rotation",
+ "task": "mental_rotation",
+ "subtask": "mental_rotation_carving_knife",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "mental_rotation-3",
+ "activity": "mental_rotation",
+ "definition_id": 3,
+ "instance_id": "house_single_floor_task_mental_rotation_carving_knife_0_0_template",
+ "demo_length": 136,
+ "files_sha256": {
+  "template": "1195346a283bbed9c17061c151f28ab8304b529fdb3d5c338e108e36b763f65c",
+  "template_meta": "17a71f323519214774397ebb9620f69e88c9824f512dc54f8cc6fd854774390a",
+  "tro_state": "685121c06ce8682762b69247c995deb8bc38f2fc059bfb34af183296e5059598",
+  "goal_rgb": "a80c6dba1df0a37a95492a6fd192014b462206371467dd74d4c1e11bdc7418d0"
+ }
+}

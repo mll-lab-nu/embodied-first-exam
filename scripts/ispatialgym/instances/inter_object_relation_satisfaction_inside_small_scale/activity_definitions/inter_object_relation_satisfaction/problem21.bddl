@@ -1,0 +1,39 @@
+(define (problem inter_object_relation_satisfaction-21)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-touching_small_scale-box_of_cereal_s080-box_of_cereal-bar)
+
+    ; IORS - touching (small-scale). Target grasped and set down next to the partner (partner on the robot's left), then
+    ; pushed against it while the other gripper braces the partner's far side (push and brace computed geometrically, no
+    ; artefact); the partner must not move (> 5 mm) at the goal.
+    ; Here the target is box_of_cereal/iucshm scaled by 0.8 (box_of_cereal__iucshm__s080).
+
+    (:objects
+        box__of__cereal.n.01_1 box__of__cereal.n.01_2 - box__of__cereal.n.01
+        countertop.n.01_1 - countertop.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop box__of__cereal.n.01_1 countertop.n.01_1)
+        (ontop box__of__cereal.n.01_2 countertop.n.01_1)
+        (not (touching box__of__cereal.n.01_1 box__of__cereal.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (touching ?box__of__cereal.n.01_1 ?box__of__cereal.n.01_2)
+            (not (grasped ?agent.n.01_1 ?box__of__cereal.n.01_1))
+            (not (grasped ?agent.n.01_1 ?box__of__cereal.n.01_2))
+            (pose_settled ?box__of__cereal.n.01_1)
+            (pose_settled ?box__of__cereal.n.01_2)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?box__of__cereal.n.01_1)
+        (pose_reached ?box__of__cereal.n.01_2)
+    )
+)

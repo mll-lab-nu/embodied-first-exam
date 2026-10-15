@@ -1,0 +1,18 @@
+{
+ "task_family": "object_scaling",
+ "task": "object_scaling",
+ "subtask": "object_scaling_apple",
+ "instance": 0,
+ "scene": "house_double_floor_lower",
+ "problem": "object_scaling-1",
+ "activity": "object_scaling",
+ "definition_id": 1,
+ "instance_id": "house_double_floor_lower_task_object_scaling_apple_0_0_template",
+ "demo_length": 75,
+ "files_sha256": {
+  "template": "d054ac9455fd7507469b000d42a9aae6b2d78345e038d1f651f197a96d1999f1",
+  "template_meta": "dc545992531894a31b8577a48711cbe8b14e8fdb2984d136873f9711fe2ba8ec",
+  "tro_state": "f7dfd957bffb1cf253cd7de83daf7850e26a9bb87a92cedc7cbd8660d1fe7ea9",
+  "goal_rgb": "e5522868ec3ae4255308b714725be67dbf4130af7f8c1ba70232092f1f32619d"
+ }
+}

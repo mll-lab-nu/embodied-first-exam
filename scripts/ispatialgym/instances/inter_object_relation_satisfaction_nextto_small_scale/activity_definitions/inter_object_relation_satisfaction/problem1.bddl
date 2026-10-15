@@ -1,0 +1,37 @@
+(define (problem inter_object_relation_satisfaction-1)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-ontop_small_scale-pack_of_kielbasa-platter-breakfast_table)
+
+    ; IORS - ontop (small-scale). Target and partner both on the support; the target ends centred on top of the partner with
+    ; its init orientation; the partner stays where it was. Both poses measured.
+
+    (:objects
+        pack__of__kielbasa.n.01_1 - pack__of__kielbasa.n.01
+        platter.n.01_1 - platter.n.01
+        breakfast_table.n.01_1 - breakfast_table.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop pack__of__kielbasa.n.01_1 breakfast_table.n.01_1)
+        (ontop platter.n.01_1 breakfast_table.n.01_1)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?pack__of__kielbasa.n.01_1 ?platter.n.01_1)
+            (not (grasped ?agent.n.01_1 ?pack__of__kielbasa.n.01_1))
+            (not (grasped ?agent.n.01_1 ?platter.n.01_1))
+            (pose_settled ?pack__of__kielbasa.n.01_1)
+            (pose_settled ?platter.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?pack__of__kielbasa.n.01_1)
+        (pose_reached ?platter.n.01_1)
+    )
+)

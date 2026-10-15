@@ -1,0 +1,596 @@
+{
+ "template_id": "house_single_floor__room-bathroom_0__target-carving_knife-alekva",
+ "scene": "house_single_floor",
+ "timings": {
+  "bind_spawn_s": 18.98333215713501,
+  "bind_spawn_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 0,
+   "collision_configs": 0,
+   "collision_s": 0.0
+  },
+  "sample_template_s": 227.67940306663513,
+  "sample_template_kit": {
+   "ik_calls": 2,
+   "ik_s": 16.233,
+   "ik_batch_calls": 5,
+   "ik_batch_problems": 1560,
+   "ik_batch_s": 165.269,
+   "collision_calls": 1,
+   "collision_configs": 1,
+   "collision_s": 0.014,
+   "orient_choices": 1,
+   "orient_arm_choices": 1,
+   "orient_reason.only_feasible": 1,
+   "orient_arm.right": 1,
+   "orient_arm_reason.only_feasible": 1
+  },
+  "save_template_s": 1.0120370388031006
+ },
+ "variant": "mental_rotation-carving_knife",
+ "subtask": "mental_rotation",
+ "sampler_version": "2.0.0-dev",
+ "spec_hash": "596112ea684b7a9e1c259ea5112a080290e0bd51619167c5f2e3a87866d0b050",
+ "choice": {
+  "scene": "house_single_floor",
+  "rooms": [
+   "bathroom_0"
+  ],
+  "bindings": {
+   "floor": {
+    "room": "bathroom_0"
+   }
+  },
+  "models": {
+   "target": {
+    "category": "carving_knife",
+    "model": "alekva",
+    "dataset": "behavior-1k-assets",
+    "grasp_key": "carving_knife__alekva",
+    "scale": null
+   }
+  },
+  "groups": {},
+  "template_id": "house_single_floor__room-bathroom_0__target-carving_knife-alekva",
+  "room_tag": "bathroom_0"
+ },
+ "rooms": [
+  "bathroom_0"
+ ],
+ "customs": "/vision/u/minyeong/projects/isg_home/eval85/code_14a2f58b_6a6194600/ispatialgym/assets/task_specs/isg_customs.json",
+ "joint_limit_margin_rad": 0.05,
+ "split": {
+  "split": "eval",
+  "index": 0,
+  "seed": 469821812,
+  "seed_source": "split",
+  "scene": "house_single_floor",
+  "room": "bathroom_0",
+  "scene_source": "split",
+  "room_override": true
+ },
+ "init_arms": "left tucked (JoyLo reset), right hold",
+ "bddl_sha256": "204ad0f1d27f29fa422d030eedd1d9a7cc3706e2a32b571aaefbf322e2acea27",
+ "init_orientation": {
+  "drawn": true,
+  "init_angle_range_deg": [
+   0.0,
+   180.0
+  ],
+  "init_draws_per_template": 312,
+  "init_axis": "uniform on the sphere",
+  "init_angle": "continuous",
+  "start_set_rng": {
+   "template_seed": 3720518929228,
+   "spawn_key": [
+    19794
+   ]
+  },
+  "goal_angle_range_deg": [
+   30.0,
+   120.0
+  ],
+  "goal_axis": "uniform on the sphere",
+  "goal_angle": "continuous",
+  "goal_draws_per_start": 192
+ },
+ "hold": {
+  "key": "132d4c9fc9fa3a92",
+  "source": "solved",
+  "robot": "r1pro",
+  "depth_m": 0.5,
+  "trunk": [
+   0.5,
+   0.0
+  ],
+  "roll_deg": 15.0,
+  "approach": "base +y",
+  "closing": "world down rolled 15.0 deg about the approach",
+  "eef_in_base": {
+   "position": [
+    0.7012443542480469,
+    0.011838912963867188,
+    1.199889063835144
+   ],
+   "orientation": [
+    -0.7010573744773865,
+    0.09229595959186554,
+    0.09229595214128494,
+    0.7010574340820312
+   ]
+  },
+  "pad_in_base": [
+   0.7012443542480469,
+   -2.09808349609375e-05,
+   1.199889063835144
+  ],
+  "camera_in_base": {
+   "position": [
+    0.23955917358398438,
+    -2.193450927734375e-05,
+    1.3918462991714478
+   ],
+   "orientation": [
+    0.39245912432670593,
+    -0.39245203137397766,
+    -0.5882040858268738,
+    0.5881949067115784
+   ]
+  },
+  "right_arm_q": [
+   -1.3561484813690186,
+   -0.05332815274596214,
+   0.5576712489128113,
+   -0.5513119101524353,
+   -0.09235911816358566,
+   -1.0440443754196167,
+   1.0924667119979858
+  ],
+  "idle_arms": "tucked"
+ },
+ "hold_arm": {
+  "arm": "right",
+  "reason": "only feasible",
+  "against_default": false,
+  "default": "right",
+  "offered": [
+   "right",
+   "left"
+  ],
+  "arm_choice": {
+   "default": "right",
+   "offered": [
+    "right",
+    "left"
+   ],
+   "chosen": "right",
+   "reason": "only feasible",
+   "against_default": false,
+   "viable": [
+    "right"
+   ]
+  },
+  "decision": {
+   "stage": "hold",
+   "arm": "right",
+   "chosen": "right:hold",
+   "source": "ik",
+   "reason": "only feasible",
+   "against_default": false,
+   "options": [
+    {
+     "label": "right:hold",
+     "arm": "right",
+     "rank": 0,
+     "source": "ik",
+     "ok": true,
+     "margin_rad": 0.0032,
+     "nearest_joint": "right_arm_joint6",
+     "reach_rad": 1.356
+    },
+    {
+     "label": "left:hold",
+     "arm": "left",
+     "rank": 1,
+     "source": "ik",
+     "ok": false,
+     "margin_rad": null,
+     "nearest_joint": null,
+     "reach_rad": null,
+     "why": "[hold_pose] no left-arm IK solution for the fixed hold (depth 0.5, trunk (0.5, 0.0), roll 15.0 deg; pad in base [0.701, "
+    }
+   ],
+   "arm_choice": {
+    "default": "right",
+    "offered": [
+     "right",
+     "left"
+    ],
+    "chosen": "right",
+    "reason": "only feasible",
+    "against_default": false,
+    "viable": [
+     "right"
+    ]
+   }
+  }
+ },
+ "template_facts": {
+  "contact_height_extra_m": 0.0,
+  "hold_arm": {
+   "arm": "right",
+   "reason": "only feasible",
+   "against_default": false,
+   "default": "right",
+   "offered": [
+    "right",
+    "left"
+   ],
+   "arm_choice": {
+    "default": "right",
+    "offered": [
+     "right",
+     "left"
+    ],
+    "chosen": "right",
+    "reason": "only feasible",
+    "against_default": false,
+    "viable": [
+     "right"
+    ]
+   },
+   "decision": {
+    "stage": "hold",
+    "arm": "right",
+    "chosen": "right:hold",
+    "source": "ik",
+    "reason": "only feasible",
+    "against_default": false,
+    "options": [
+     {
+      "label": "right:hold",
+      "arm": "right",
+      "rank": 0,
+      "source": "ik",
+      "ok": true,
+      "margin_rad": 0.0032,
+      "nearest_joint": "right_arm_joint6",
+      "reach_rad": 1.356
+     },
+     {
+      "label": "left:hold",
+      "arm": "left",
+      "rank": 1,
+      "source": "ik",
+      "ok": false,
+      "margin_rad": null,
+      "nearest_joint": null,
+      "reach_rad": null,
+      "why": "[hold_pose] no left-arm IK solution for the fixed hold (depth 0.5, trunk (0.5, 0.0), roll 15.0 deg; pad in base [0.701, "
+     }
+    ],
+    "arm_choice": {
+     "default": "right",
+     "offered": [
+      "right",
+      "left"
+     ],
+     "chosen": "right",
+     "reason": "only feasible",
+     "against_default": false,
+     "viable": [
+      "right"
+     ]
+    }
+   }
+  },
+  "start_options": {
+   "grasps": 5,
+   "starts": 312,
+   "grasps_out_of_view": 0,
+   "out_of_view": 0,
+   "ik_failed": 991,
+   "feasible": 569,
+   "grasps_with_options": 5,
+   "per_grasp": {
+    "grasp_0": 124,
+    "grasp_1": 121,
+    "grasp_2": 107,
+    "grasp_3": 104,
+    "grasp_4": 113
+   }
+  },
+  "hold": {
+   "key": "132d4c9fc9fa3a92",
+   "source": "solved",
+   "robot": "r1pro",
+   "depth_m": 0.5,
+   "trunk": [
+    0.5,
+    0.0
+   ],
+   "roll_deg": 15.0,
+   "approach": "base +y",
+   "closing": "world down rolled 15.0 deg about the approach",
+   "eef_in_base": {
+    "position": [
+     0.7012443542480469,
+     0.011838912963867188,
+     1.199889063835144
+    ],
+    "orientation": [
+     -0.7010573744773865,
+     0.09229595959186554,
+     0.09229595214128494,
+     0.7010574340820312
+    ]
+   },
+   "pad_in_base": [
+    0.7012443542480469,
+    -2.09808349609375e-05,
+    1.199889063835144
+   ],
+   "camera_in_base": {
+    "position": [
+     0.23955917358398438,
+     -2.193450927734375e-05,
+     1.3918462991714478
+    ],
+    "orientation": [
+     0.39245912432670593,
+     -0.39245203137397766,
+     -0.5882040858268738,
+     0.5881949067115784
+    ]
+   },
+   "right_arm_q": [
+    -1.3561484813690186,
+    -0.05332815274596214,
+    0.5576712489128113,
+    -0.5513119101524353,
+    -0.09235911816358566,
+    -1.0440443754196167,
+    1.0924667119979858
+   ],
+   "idle_arms": "tucked"
+  },
+  "grasp_key": "carving_knife__alekva",
+  "n_grasps": 5,
+  "orientation_equivalences": null,
+  "visibility_prior_rows": 869
+ },
+ "bindings": [
+  {
+   "role": "floor",
+   "name": "floor.n.01_1",
+   "synset": "floor.n.01",
+   "category": "floors",
+   "model": "mawnss",
+   "scene_object_name": "floors_mawnss_0",
+   "dataset": null
+  },
+  {
+   "role": "target",
+   "name": "carving_knife.n.01_1",
+   "synset": "carving_knife.n.01",
+   "category": "carving_knife",
+   "model": "alekva",
+   "scene_object_name": "target_carving_knife_alekva_0",
+   "dataset": "behavior-1k-assets"
+  }
+ ],
+ "template_sha256": "1195346a283bbed9c17061c151f28ab8304b529fdb3d5c338e108e36b763f65c",
+ "template_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s2_3tasks/mental_rotation-carving_knife/inst/mental_rotation-carving_knife/house_single_floor__room-bathroom_0__target-carving_knife-alekva/template.json",
+ "template_partial_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s2_3tasks/mental_rotation-carving_knife/inst/mental_rotation-carving_knife/house_single_floor__room-bathroom_0__target-carving_knife-alekva/template-partial_rooms.json",
+ "load_room_instances": [
+  "bathroom_0",
+  "childs_room_1",
+  "corridor_0",
+  "garden_0"
+ ],
+ "task_rooms": [
+  "bathroom_0"
+ ],
+ "sampled_with_rooms": [
+  "bathroom_0",
+  "childs_room_1",
+  "corridor_0",
+  "garden_0"
+ ],
+ "scene_variant": null,
+ "problem": "mental_rotation-3",
+ "choices": {
+  "target": {
+   "category": "carving_knife",
+   "model": "alekva",
+   "dataset": "behavior-1k-assets",
+   "grasp_key": "carving_knife__alekva",
+   "scale": null
+  }
+ },
+ "inst_to_name": {
+  "floor.n.01_1": "floors_mawnss_0",
+  "carving_knife.n.01_1": "target_carving_knife_alekva_0",
+  "agent.n.01_1": "robot_r1"
+ },
+ "scene_load_s": 391.76927304267883,
+ "activity_definition": "../activity_definitions/mental_rotation/problem5.bddl",
+ "bddl_variant": "mental_rotation-carving_knife",
+ "stances": {
+  "init": {
+   "base_pose2d": [
+    23.100000381469727,
+    11.100000381469727,
+    1.0803868539990384
+   ],
+   "translate": 0.5,
+   "tilt": 0.0,
+   "arms": [
+    "right"
+   ],
+   "carried": "carving_knife.n.01_1",
+   "idle_posture": "untucked",
+   "posture": {
+    "left_arm": "reset",
+    "right_arm": "hold"
+   },
+   "hold": {
+    "depth_m": 0.5,
+    "trunk": [
+     0.5,
+     0.0
+    ],
+    "roll_deg": 15.0,
+    "start_rotation": {
+     "axis_base": [
+      0.5347310304641724,
+      0.8274085521697998,
+      0.17163267731666565
+     ],
+     "angle_deg": 27.566007256286866,
+     "axis_world": [
+      -0.47803887724876404,
+      0.8614064455032349,
+      0.17163267731666565
+     ]
+    }
+   },
+   "arms_q": {
+    "right": [
+     -1.28632,
+     0.02176,
+     0.44262,
+     -0.40246,
+     -0.46781,
+     -0.89491,
+     1.31309
+    ],
+    "left": [
+     -7e-05,
+     -0.0,
+     -4e-05,
+     5e-05,
+     -1e-05,
+     -2e-05,
+     -0.0
+    ]
+   },
+   "fingers": 0.012010072357952595,
+   "fingers_by_arm": {
+    "right": 0.012,
+    "left": null
+   },
+   "name": "init",
+   "extras": {
+    "posture": {
+     "left_arm": "reset",
+     "right_arm": "hold"
+    },
+    "hold": {
+     "depth_m": 0.5,
+     "trunk": [
+      0.5,
+      0.0
+     ],
+     "roll_deg": 15.0,
+     "start_rotation": {
+      "axis_base": [
+       0.5347310304641724,
+       0.8274085521697998,
+       0.17163267731666565
+      ],
+      "angle_deg": 27.566007256286866,
+      "axis_world": [
+       -0.47803887724876404,
+       0.8614064455032349,
+       0.17163267731666565
+      ]
+     }
+    },
+    "arms_q": {
+     "right": [
+      -1.28632,
+      0.02176,
+      0.44262,
+      -0.40246,
+      -0.46781,
+      -0.89491,
+      1.31309
+     ],
+     "left": [
+      -7e-05,
+      -0.0,
+      -4e-05,
+      5e-05,
+      -1e-05,
+      -2e-05,
+      -0.0
+     ]
+    },
+    "fingers": 0.012010072357952595,
+    "fingers_by_arm": {
+     "right": 0.012,
+     "left": null
+    }
+   }
+  }
+ },
+ "n_constraints_recorded": 2,
+ "checks": {
+  "attached_object": true,
+  "program_check": "expand"
+ },
+ "rejections": {
+  "goal_occluded": 1
+ },
+ "rejection_examples": {
+  "goal_occluded": [
+   {
+    "message": "[goal_occluded] target_carving_knife_alekva_0 predicted 53% hidden in the goal image (>= 50%) {'objects': {'target_carving_knife_alekva_0': 0.5299}}",
+    "phase": "goal_occlusion",
+    "index": 0,
+    "attempt": 0,
+    "seed": 3720530090784787684,
+    "objects": "{'target_carving_knife_alekva_0': 0.5299}"
+   }
+  ]
+ },
+ "counters": {
+  "scene_reset": 4,
+  "goal_occluded": 1
+ },
+ "seeds": [
+  3720530090784787685
+ ],
+ "kit_stats": {
+  "ik_calls": 16,
+  "ik_s": 16.59152364730835,
+  "ik_batch_calls": 9,
+  "ik_batch_problems": 2334,
+  "ik_batch_s": 324.15792965888977,
+  "collision_calls": 22,
+  "collision_configs": 24,
+  "collision_s": 0.19971776008605957,
+  "orient_choices": 1,
+  "orient_arm_choices": 1,
+  "orient_reason.only_feasible": 1,
+  "orient_arm.right": 1,
+  "orient_arm_reason.only_feasible": 1,
+  "limit_retry_poses": 3,
+  "limit_reject.right_arm_joint2": 1,
+  "limit_retry_random": 2,
+  "limit_retry_random_rescued": 1,
+  "limit_retry_seeded_rescued": 1
+ },
+ "n_written": 1,
+ "eval": {
+  "task_family": "mental_rotation",
+  "task": "mental_rotation",
+  "subtask": "mental_rotation_carving_knife",
+  "variant": "mental_rotation-carving_knife"
+ }
+}

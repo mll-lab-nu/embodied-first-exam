@@ -1,0 +1,564 @@
+{
+  "board_game.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        8.310981750488281,
+        3.2140543460845947,
+        0.8251066207885742
+      ],
+      "ori": [
+        -0.0005013746558688581,
+        -6.202422810019925e-05,
+        -0.2211257666349411,
+        0.9752452373504639
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          8.196442604064941,
+          3.0710697174072266,
+          0.8122851848602295,
+          8.425827980041504,
+          3.3568222522735596,
+          0.8378140926361084
+        ]
+      }
+    }
+  },
+  "breakfast_table.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        7.294930458068848,
+        3.5004782676696777,
+        0.764854371547699
+      ],
+      "ori": [
+        3.9539943827548996e-05,
+        6.652135198237374e-05,
+        0.7062076330184937,
+        0.7080047726631165
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          5.83055305480957,
+          2.9049179553985596,
+          -0.0004181861877441406,
+          8.760101318359375,
+          4.095338821411133,
+          0.8128657341003418
+        ]
+      }
+    }
+  },
+  "floor.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        6.781831741333008,
+        3.26104998588562,
+        -0.13887082040309906
+      ],
+      "ori": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          3.8204739093780518,
+          1.8885823488235474,
+          -0.2777208387851715,
+          9.36577320098877,
+          4.7315826416015625,
+          -2.0831823348999023e-05
+        ]
+      }
+    }
+  },
+  "robot_poses": {
+    "robot": [
+      {
+        "position": [
+          9.191509246826172,
+          3.3117942810058594,
+          0.0052700042724609375
+        ],
+        "orientation": [
+          -9.261071681976318e-05,
+          -7.38712469683378e-06,
+          0.9999991655349731,
+          0.0012763305567204952
+        ]
+      }
+    ]
+  },
+  "ispatialgym": {
+    "schema_version": "isg-tro-v1",
+    "activity": "alignment",
+    "activity_definition_id": 0,
+    "task_variant": "alignment-axial-board_game-breakfast_table",
+    "instance_id": "alignment-axial-board_game-breakfast_table__house_single_floor__support-breakfast_table_rhjoby_0-T1__target-board_game-qgvsnb__0000",
+    "generation_seed": 1884071341315067362,
+    "evaluation_profile": "isg-v1",
+    "bddl_sha256": "8c5900621c7ccfc40915bd987d80b34f09d8ec1d67be9adbcbffe18ca80c21fe",
+    "task_spec_sha256": "6a7e0694d13456f7aeedbdf5a8d0ef0cb38f800bd51f0d9d543a86230aab2db4",
+    "layout_template_id": null,
+    "scene": {
+      "model": "house_single_floor",
+      "floor": 0,
+      "template_path": "../template.json",
+      "template_sha256": "07b61f959311b8da883ddd3d9b3517f7f455f96390b93d1d7e8f297c073c7761",
+      "load_room_instances": [
+        "dining_room_0",
+        "entryway_0",
+        "garden_0",
+        "kitchen_0",
+        "living_room_0",
+        "living_room_1"
+      ],
+      "task_rooms": [
+        "dining_room_0"
+      ],
+      "sampled_with_rooms": [
+        "dining_room_0",
+        "entryway_0",
+        "garden_0",
+        "kitchen_0",
+        "living_room_0",
+        "living_room_1"
+      ],
+      "scene_variant": {
+        "scene_file": "../../scene_variants/house_single_floor__cc5e0dab4b.json",
+        "removed_objects": [
+          "straight_chair_jgoolz_0",
+          "straight_chair_jgoolz_1",
+          "straight_chair_jgoolz_2",
+          "straight_chair_jgoolz_3",
+          "straight_chair_jgoolz_4",
+          "straight_chair_jgoolz_5"
+        ],
+        "freed_footprints": {
+          "free": [
+            [
+              [
+                7.993353843688965,
+                3.1143271923065186
+              ],
+              [
+                8.363746643066406,
+                3.248072862625122
+              ],
+              [
+                8.546874046325684,
+                2.7409231662750244
+              ],
+              [
+                8.176481246948242,
+                2.607177495956421
+              ]
+            ],
+            [
+              [
+                8.428321838378906,
+                3.81669282913208
+              ],
+              [
+                8.04768180847168,
+                3.715738296508789
+              ],
+              [
+                7.909452438354492,
+                4.236918926239014
+              ],
+              [
+                8.290092468261719,
+                4.337873458862305
+              ]
+            ],
+            [
+              [
+                7.475783348083496,
+                3.7558629512786865
+              ],
+              [
+                7.083395957946777,
+                3.722538948059082
+              ],
+              [
+                7.037768363952637,
+                4.259805202484131
+              ],
+              [
+                7.4301557540893555,
+                4.293128967285156
+              ]
+            ],
+            [
+              [
+                6.607521057128906,
+                3.804436206817627
+              ],
+              [
+                6.21530818939209,
+                3.8397560119628906
+              ],
+              [
+                6.263669013977051,
+                4.3767828941345215
+              ],
+              [
+                6.655881881713867,
+                4.341463088989258
+              ]
+            ],
+            [
+              [
+                6.289393901824951,
+                3.2292425632476807
+              ],
+              [
+                6.669515132904053,
+                3.1263527870178223
+              ],
+              [
+                6.528636455535889,
+                2.605881929397583
+              ],
+              [
+                6.148515224456787,
+                2.7087717056274414
+              ]
+            ],
+            [
+              [
+                7.140786647796631,
+                3.0244858264923096
+              ],
+              [
+                7.520907878875732,
+                2.921595573425293
+              ],
+              [
+                7.380028247833252,
+                2.401125192642212
+              ],
+              [
+                6.99990701675415,
+                2.5040154457092285
+              ]
+            ]
+          ],
+          "block": [
+            [
+              [
+                5.848289966583252,
+                4.084524154663086
+              ],
+              [
+                8.743980407714844,
+                4.077131748199463
+              ],
+              [
+                8.741019248962402,
+                2.9172356128692627
+              ],
+              [
+                5.845329284667969,
+                2.9246277809143066
+              ]
+            ]
+          ]
+        },
+        "moved_objects": {
+          "straight_chair_jgoolz_0": {
+            "pos": [
+              8.276880264282227,
+              2.908885955810547,
+              0.32601872086524963
+            ],
+            "ori": [
+              1.6197562217712402e-05,
+              -1.215015072375536e-05,
+              0.8184217810630798,
+              0.5746181011199951
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -124.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_1": {
+            "pos": [
+              8.163780212402344,
+              4.046063423156738,
+              0.32601845264434814
+            ],
+            "ori": [
+              -1.2665987014770508e-05,
+              -1.56183959916234e-05,
+              -0.6097702980041504,
+              0.7925782799720764
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -129.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_2": {
+            "pos": [
+              7.255090236663818,
+              4.027685642242432,
+              0.32602065801620483
+            ],
+            "ori": [
+              -6.452202796936035e-06,
+              -7.124384865164757e-06,
+              -0.6765273213386536,
+              0.7364175915718079
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -134.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_3": {
+            "pos": [
+              6.437382221221924,
+              4.110452651977539,
+              0.32601872086524963
+            ],
+            "ori": [
+              -1.7136335372924805e-05,
+              -1.3347831554710865e-05,
+              -0.7381362915039062,
+              0.6746516227722168
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -139.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_4": {
+            "pos": [
+              6.403809547424316,
+              2.8983311653137207,
+              0.3260188698768616
+            ],
+            "ori": [
+              1.1816620826721191e-05,
+              -1.826148945838213e-05,
+              0.6077523231506348,
+              0.7941267490386963
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -144.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_5": {
+            "pos": [
+              7.255201816558838,
+              2.6935744285583496,
+              0.3260185718536377
+            ],
+            "ori": [
+              1.1801719665527344e-05,
+              -1.615926157683134e-05,
+              0.6077519059181213,
+              0.7941270470619202
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -149.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          }
+        }
+      },
+      "required_scene_objects": [
+        "breakfast_table_rhjoby_0",
+        "floors_qgmjvd_0"
+      ]
+    },
+    "object_bindings": {
+      "floor.n.01_1": {
+        "scene_object_name": "floors_qgmjvd_0",
+        "category": "floors",
+        "model": "qgmjvd"
+      },
+      "breakfast_table.n.01_1": {
+        "scene_object_name": "breakfast_table_rhjoby_0",
+        "category": "breakfast_table",
+        "model": "rhjoby"
+      },
+      "board_game.n.01_1": {
+        "scene_object_name": "target_board_game_qgvsnb_0",
+        "category": "board_game",
+        "model": "qgvsnb"
+      }
+    },
+    "robot_state": {
+      "bddl_instance": "agent.n.01_1",
+      "model": "r1pro",
+      "joint_positions": {
+        "torso_joint1": 1.5420053005218506,
+        "torso_joint2": -2.3940930366516113,
+        "torso_joint3": -0.8925950527191162,
+        "torso_joint4": -2.538195360557438e-07,
+        "left_arm_joint1": 1.7988902982324362e-05,
+        "right_arm_joint1": 4.8953250370686874e-05,
+        "left_arm_joint2": 1.5700006484985352,
+        "right_arm_joint2": -1.5699999332427979,
+        "left_arm_joint3": -1.9563667592592537e-06,
+        "right_arm_joint3": 1.113537223318417e-06,
+        "left_arm_joint4": -1.570001244544983,
+        "right_arm_joint4": -1.5699983835220337,
+        "left_arm_joint5": 1.5699949264526367,
+        "right_arm_joint5": -1.5700055360794067,
+        "left_arm_joint6": -4.6790583496658655e-07,
+        "right_arm_joint6": -5.792423962702742e-07,
+        "left_arm_joint7": -8.243015940934129e-07,
+        "right_arm_joint7": -7.464120130862284e-07,
+        "left_gripper_finger_joint1": 0.049999743700027466,
+        "left_gripper_finger_joint2": 0.04999987408518791,
+        "right_gripper_finger_joint1": 0.04999961331486702,
+        "right_gripper_finger_joint2": 0.04999985918402672
+      },
+      "joint_velocities": {
+        "torso_joint1": 0.0,
+        "torso_joint2": 0.0,
+        "torso_joint3": 0.0,
+        "torso_joint4": 0.0,
+        "left_arm_joint1": 0.0,
+        "right_arm_joint1": 0.0,
+        "left_arm_joint2": 0.0,
+        "right_arm_joint2": 0.0,
+        "left_arm_joint3": 0.0,
+        "right_arm_joint3": 0.0,
+        "left_arm_joint4": 0.0,
+        "right_arm_joint4": 0.0,
+        "left_arm_joint5": 0.0,
+        "right_arm_joint5": 0.0,
+        "left_arm_joint6": 0.0,
+        "right_arm_joint6": 0.0,
+        "left_arm_joint7": 0.0,
+        "right_arm_joint7": 0.0,
+        "left_gripper_finger_joint1": 0.0,
+        "left_gripper_finger_joint2": 0.0,
+        "right_gripper_finger_joint1": 0.0,
+        "right_gripper_finger_joint2": 0.0
+      },
+      "controller_targets": {}
+    },
+    "goal_observation": {
+      "sensor_key": "robot_r1:zed_link:Camera:0",
+      "rgb_path": "house_single_floor_task_alignment_axial_board_game_0_0_template-goal_rgb.png",
+      "rgb_sha256": "db38028a8402ff86db1e764c5acb8ebfd434e5b9f57f7d6d9ce7dd93db54a234",
+      "resolution": [
+        1080,
+        1080
+      ],
+      "intrinsics": {
+        "fx": 459.0,
+        "fy": 459.0,
+        "cx": 540.0,
+        "cy": 540.0,
+        "width": 1080,
+        "height": 1080
+      },
+      "camera_pose_world": {
+        "position": [
+          8.711817741394043,
+          3.22326922416687,
+          1.2952735424041748
+        ],
+        "orientation": [
+          0.25300082564353943,
+          0.2466745525598526,
+          0.6530823707580566,
+          0.6697952151298523
+        ]
+      },
+      "evaluation_profile": "isg-v1",
+      "n_render_iterations": 1
+    },
+    "pose_targets": {
+      "board_game.n.01_1": {
+        "link": null,
+        "frame": "world",
+        "position": null,
+        "orientation": [
+          -4.495764005696401e-05,
+          7.304250175366178e-05,
+          -0.00806456059217453,
+          0.9999674558639526
+        ],
+        "position_metric": null,
+        "orientation_metric": "full",
+        "position_tolerance": null,
+        "orientation_tolerance": 0.1,
+        "orientation_equivalences": []
+      }
+    },
+    "groups": {},
+    "articulation_targets": {},
+    "constraints": [
+      {
+        "type": "revolute",
+        "child": "board_game.n.01_1",
+        "parent": "breakfast_table.n.01_1",
+        "parent_link": "base_link",
+        "anchor_position": [
+          8.31114387512207,
+          3.213942050933838,
+          0.8241193294525146
+        ],
+        "axis": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "limits": null
+      }
+    ]
+  }
+}

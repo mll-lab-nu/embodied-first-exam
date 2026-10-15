@@ -1,0 +1,18 @@
+{
+ "task_family": "inter_object_relation_satisfaction",
+ "task": "inter_object_relation_satisfaction_ontop_small_scale",
+ "subtask": "inter_object_relation_satisfaction_ontop_small_scale_pack_of_kielbasa_platter",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "inter_object_relation_satisfaction-1",
+ "activity": "inter_object_relation_satisfaction",
+ "definition_id": 1,
+ "instance_id": "house_single_floor_task_inter_object_relation_satisfaction_ontop_small_scale_pack_of_kielbasa_platter_0_0_template",
+ "demo_length": 950,
+ "files_sha256": {
+  "template": "d149ec10ed6aa494d36f66cd1b3ae817536c6aa25d5e4b467eb8cd70142f34d6",
+  "template_meta": "35665bcf291e8a8950a8c995f20ba9d2f8c2033c9bde71d4f90626277200a4bb",
+  "tro_state": "07a20216491ea308e75aee7c179d1ff820907445e4b0f064030fb53f84553515",
+  "goal_rgb": "e83e959a5e12d87a2d787526ce107be6cd7d91edfb737cd6673962835332b60c"
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "task_family": "inter_object_relation_satisfaction",
+ "task": "inter_object_relation_satisfaction_touching_small_scale",
+ "subtask": "inter_object_relation_satisfaction_touching_small_scale_box_of_sanitary_napkins_box_of_tissues",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "inter_object_relation_satisfaction-3",
+ "activity": "inter_object_relation_satisfaction",
+ "definition_id": 3,
+ "instance_id": "house_single_floor_task_inter_object_relation_satisfaction_touching_small_scale_box_of_sanitary_napkins_box_of_tissues_0_0_template",
+ "demo_length": 1571,
+ "files_sha256": {
+  "template": "dda68c0dfce33491fd1e5b9ca33eb4222419eb89e13805fd551c46ee91dfcda5",
+  "template_meta": "a2d6b8a3dbe11e41ec06e0d362fbefce15f49eb9557e2e2e298ef992a9c4d3f0",
+  "tro_state": "34eda4d567c82a526578b9aa10cb4f638491cb2e7f2afde32bc4b2102d6ba37a",
+  "goal_rgb": "e83241d5d76501d6d6252a71b0ea95973537d2e51005039df765aa0b72b218f9"
+ }
+}

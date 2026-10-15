@@ -1,0 +1,39 @@
+(define (problem inter_object_relation_satisfaction-7)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-under_small_scale-plate-place_mat-breakfast_table)
+
+    ; IORS - under (small-scale). Both objects on the support; the manipulated target (glass, teacup, fries, bottle) is set
+    ; down centred on the partner (coaster, saucer, platter, tray) so that the PARTNER ends under the target. Argument order
+    ; is therefore (under partner target). Both poses measured.
+
+    (:objects
+        plate.n.04_1 - plate.n.04
+        place_mat.n.01_1 - place_mat.n.01
+        breakfast_table.n.01_1 - breakfast_table.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop plate.n.04_1 breakfast_table.n.01_1)
+        (ontop place_mat.n.01_1 breakfast_table.n.01_1)
+        (not (under place_mat.n.01_1 plate.n.04_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (under ?place_mat.n.01_1 ?plate.n.04_1)
+            (not (grasped ?agent.n.01_1 ?plate.n.04_1))
+            (not (grasped ?agent.n.01_1 ?place_mat.n.01_1))
+            (pose_settled ?plate.n.04_1)
+            (pose_settled ?place_mat.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?plate.n.04_1)
+        (pose_reached ?place_mat.n.01_1)
+    )
+)

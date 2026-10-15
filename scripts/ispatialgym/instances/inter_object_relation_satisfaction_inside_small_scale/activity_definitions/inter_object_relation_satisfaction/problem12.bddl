@@ -1,0 +1,35 @@
+(define (problem inter_object_relation_satisfaction-12)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-ontop_large_scale-soap_dispenser-countertop-floor)
+
+    ; IORS - ontop (large-scale). The target starts on a support (a table within 3 m of the partner, or the floor beside it -
+    ; an explicit support choice made by ground_isg, never a runtime fallback) and ends on top of a large scene partner
+    ; (bed, sofa, desk, breakfast table, countertop; roles/candidates.csv kind scene). Three recorded stances: init A, manipulation B,
+    ; placement C.
+
+    (:objects
+        soap_dispenser.n.01_1 - soap_dispenser.n.01
+        countertop.n.01_1 - countertop.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop soap_dispenser.n.01_1 floor.n.01_1)
+        (not (ontop soap_dispenser.n.01_1 countertop.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?soap_dispenser.n.01_1 ?countertop.n.01_1)
+            (not (grasped ?agent.n.01_1 ?soap_dispenser.n.01_1))
+            (pose_settled ?soap_dispenser.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?soap_dispenser.n.01_1)
+    )
+)

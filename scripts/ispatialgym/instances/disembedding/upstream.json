@@ -1,0 +1,18 @@
+{
+ "task_family": "disembedding",
+ "task": "disembedding",
+ "subtask": "disembedding_jigsaw_puzzle_piece_jigsaw_puzzle_piece_3",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "disembedding-7",
+ "activity": "disembedding",
+ "definition_id": 7,
+ "instance_id": "house_single_floor_task_disembedding_jigsaw_puzzle_piece_jigsaw_puzzle_piece_3_0_0_template",
+ "demo_length": 887,
+ "files_sha256": {
+  "template": "5514743ab52b0a5313a04cda224634e6b8a60afbf51229ed3a57c48c0389c16c",
+  "template_meta": "48b89675aff4de84bdc1e7c76e2de7d4c9c13ae60ebda0ad03b170a45d480b19",
+  "tro_state": "10c8e49a7c59fda14e4a072636a93ac341037ecb474e0da8c0154e56892ac211",
+  "goal_rgb": "2eb579e34600a316cfe090b31ccae19bcda4f5cd3cd98b73e6f49177e7274d71"
+ }
+}

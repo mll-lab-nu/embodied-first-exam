@@ -1,0 +1,37 @@
+(define (problem inter_object_relation_satisfaction-5)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-ontop_small_scale-carving_knife-cutting_board-commercial_kitchen_table)
+
+    ; IORS - ontop (small-scale). Target and partner both on the support; the target ends centred on top of the partner with
+    ; its init orientation; the partner stays where it was. Both poses measured.
+
+    (:objects
+        carving_knife.n.01_1 - carving_knife.n.01
+        chopping_board.n.01_1 - chopping_board.n.01
+        countertop.n.01_1 - countertop.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop carving_knife.n.01_1 countertop.n.01_1)
+        (ontop chopping_board.n.01_1 countertop.n.01_1)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?carving_knife.n.01_1 ?chopping_board.n.01_1)
+            (not (grasped ?agent.n.01_1 ?carving_knife.n.01_1))
+            (not (grasped ?agent.n.01_1 ?chopping_board.n.01_1))
+            (pose_settled ?carving_knife.n.01_1)
+            (pose_settled ?chopping_board.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?carving_knife.n.01_1)
+        (pose_reached ?chopping_board.n.01_1)
+    )
+)

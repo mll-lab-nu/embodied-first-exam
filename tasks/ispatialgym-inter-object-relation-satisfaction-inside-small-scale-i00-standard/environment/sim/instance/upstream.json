@@ -1,0 +1,18 @@
+{
+ "task_family": "inter_object_relation_satisfaction",
+ "task": "inter_object_relation_satisfaction_inside_small_scale",
+ "subtask": "inter_object_relation_satisfaction_inside_small_scale_brussels_sprouts_bowl",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "inter_object_relation_satisfaction-0",
+ "activity": "inter_object_relation_satisfaction",
+ "definition_id": 0,
+ "instance_id": "house_single_floor_task_inter_object_relation_satisfaction_inside_small_scale_brussels_sprouts_bowl_0_0_template",
+ "demo_length": 1185,
+ "files_sha256": {
+  "template": "e9e62b8404b7ef8f981e457da184e6b9c43f6e33ada6acb0d4bd31ca6ad22293",
+  "template_meta": "c0f85e27bba413d6a44d28393e556391c37dc90997742c80e70c58e6c5281b0d",
+  "tro_state": "be633de78c9cd97d8681f92b0f2e2d202f76db1626b81ad5a0fc3450ebc17724",
+  "goal_rgb": "766330244bf08940b2094673fa8e6946883927c70e3b6ea0600209a2b041708b"
+ }
+}

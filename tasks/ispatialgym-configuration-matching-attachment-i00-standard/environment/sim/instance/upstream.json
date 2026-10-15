@@ -1,0 +1,18 @@
+{
+ "task_family": "configuration_matching",
+ "task": "configuration_matching_attachment",
+ "subtask": "configuration_matching_attachment_lid_teapot",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "configuration_matching-1",
+ "activity": "configuration_matching",
+ "definition_id": 1,
+ "instance_id": "house_single_floor_task_configuration_matching_attachment_lid_teapot_0_0_template",
+ "demo_length": 1007,
+ "files_sha256": {
+  "template": "ed0bfd30d5cddf1bf9ee7e91a9c9dd82da329d29197309bd8301468c6d2ec1ea",
+  "template_meta": "42bf132e6c1fc312c15cb3f235e2b38bce9953e8058ec4259e0e687765e330d8",
+  "tro_state": "90a192f8c3fd31fbdd16ed952d167241835a28f19e48ea4c2c9bbafe9b7e2479",
+  "goal_rgb": "a0b5f6609ea960601c30ea1fecc4457880394d3798409616c37bfc526c24ccc9"
+ }
+}

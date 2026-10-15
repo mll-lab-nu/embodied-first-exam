@@ -1,0 +1,308 @@
+{
+  "painting.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        17.615402221679688,
+        1.849517583847046,
+        1.450980305671692
+      ],
+      "ori": [
+        0.0,
+        0.21504469215869904,
+        0.9766042232513428,
+        0.0
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          17.587997436523438,
+          1.5316778421401978,
+          1.1541063785552979,
+          17.633970260620117,
+          2.167357921600342,
+          1.7484130859375
+        ]
+      }
+    }
+  },
+  "wall.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        17.875518798828125,
+        1.8627177476882935,
+        1.5257939100265503
+      ],
+      "ori": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          17.63697052001953,
+          1.2454676628112793,
+          -0.001256108283996582,
+          18.11406707763672,
+          2.4799678325653076,
+          3.0528440475463867
+        ]
+      }
+    }
+  },
+  "floor.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        13.494917869567871,
+        0.7989608645439148,
+        -0.13880740106105804
+      ],
+      "ori": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          9.365768432617188,
+          -2.50658917427063,
+          -0.27760744094848633,
+          17.624067306518555,
+          4.10451078414917,
+          -7.465481758117676e-06
+        ]
+      }
+    }
+  },
+  "robot_poses": {
+    "robot": [
+      {
+        "position": [
+          16.824296951293945,
+          2.236225128173828,
+          0.005279064178466797
+        ],
+        "orientation": [
+          1.0505784302949905e-05,
+          8.057621016632766e-05,
+          -0.22026047110557556,
+          0.9754411578178406
+        ]
+      }
+    ]
+  },
+  "ispatialgym": {
+    "schema_version": "isg-tro-v1",
+    "activity": "alignment",
+    "activity_definition_id": 3,
+    "task_variant": "alignment-world_vertical-painting-walls",
+    "instance_id": "alignment-world_vertical-painting-walls__house_single_floor__support-walls_dhsptd_0-r00__target-painting-dacihj__0000",
+    "generation_seed": 2703541264137460616,
+    "evaluation_profile": "isg-v1",
+    "bddl_sha256": "1a245b27d47729079bf4be006a86cd27186aea8e375a84827529e941cb2eccf4",
+    "task_spec_sha256": "44157081aa95ed2b403b091ff4fa1bbd891511e33357d391bdc7dc043b8ca7c0",
+    "layout_template_id": null,
+    "scene": {
+      "model": "house_single_floor",
+      "floor": 0,
+      "template_path": "../template.json",
+      "template_sha256": "85c091f6c0e5887ce3dae3cd35657740099aa5503e9cd09fe58e9b797e1f4abc",
+      "load_room_instances": [
+        "living_room_0",
+        "corridor_0",
+        "dining_room_0",
+        "garden_0",
+        "kitchen_0"
+      ],
+      "task_rooms": [
+        "living_room_0"
+      ],
+      "sampled_with_rooms": [
+        "living_room_0",
+        "corridor_0",
+        "dining_room_0",
+        "garden_0",
+        "kitchen_0"
+      ],
+      "scene_variant": null,
+      "required_scene_objects": [
+        "floors_uzsntg_0",
+        "walls_dhsptd_0"
+      ]
+    },
+    "object_bindings": {
+      "floor.n.01_1": {
+        "scene_object_name": "floors_uzsntg_0",
+        "category": "floors",
+        "model": "uzsntg"
+      },
+      "painting.n.01_1": {
+        "scene_object_name": "target_painting_dacihj_0",
+        "category": "painting",
+        "model": "dacihj"
+      },
+      "wall.n.01_1": {
+        "scene_object_name": "walls_dhsptd_0",
+        "category": "walls",
+        "model": "dhsptd"
+      }
+    },
+    "robot_state": {
+      "bddl_instance": "agent.n.01_1",
+      "model": "r1pro",
+      "joint_positions": {
+        "torso_joint1": 0.4499969184398651,
+        "torso_joint2": -0.40000709891319275,
+        "torso_joint3": 1.1142134326291853e-06,
+        "torso_joint4": -1.1626830200839322e-06,
+        "left_arm_joint1": -7.769150215608533e-06,
+        "right_arm_joint1": 3.1398394639836624e-05,
+        "left_arm_joint2": 1.570001482963562,
+        "right_arm_joint2": -1.570000171661377,
+        "left_arm_joint3": -4.451462245924631e-06,
+        "right_arm_joint3": -3.4490653888497036e-07,
+        "left_arm_joint4": -1.5700055360794067,
+        "right_arm_joint4": -1.5699927806854248,
+        "left_arm_joint5": 1.5699795484542847,
+        "right_arm_joint5": -1.5700170993804932,
+        "left_arm_joint6": -2.352647697989596e-06,
+        "right_arm_joint6": -2.472396545272204e-06,
+        "left_arm_joint7": -4.478278242459055e-06,
+        "right_arm_joint7": -2.984965476571233e-06,
+        "left_gripper_finger_joint1": 0.04999934136867523,
+        "left_gripper_finger_joint2": 0.04999956116080284,
+        "right_gripper_finger_joint1": 0.049999501556158066,
+        "right_gripper_finger_joint2": 0.04999982938170433
+      },
+      "joint_velocities": {
+        "torso_joint1": 0.0,
+        "torso_joint2": 0.0,
+        "torso_joint3": 0.0,
+        "torso_joint4": 0.0,
+        "left_arm_joint1": 0.0,
+        "right_arm_joint1": 0.0,
+        "left_arm_joint2": 0.0,
+        "right_arm_joint2": 0.0,
+        "left_arm_joint3": 0.0,
+        "right_arm_joint3": 0.0,
+        "left_arm_joint4": 0.0,
+        "right_arm_joint4": 0.0,
+        "left_arm_joint5": 0.0,
+        "right_arm_joint5": 0.0,
+        "left_arm_joint6": 0.0,
+        "right_arm_joint6": 0.0,
+        "left_arm_joint7": 0.0,
+        "right_arm_joint7": 0.0,
+        "left_gripper_finger_joint1": 0.0,
+        "left_gripper_finger_joint2": 0.0,
+        "right_gripper_finger_joint1": 0.0,
+        "right_gripper_finger_joint2": 0.0
+      },
+      "controller_targets": {}
+    },
+    "goal_observation": {
+      "sensor_key": "robot_r1:zed_link:Camera:0",
+      "rgb_path": "house_single_floor_task_alignment_vertical_painting_0_0_template-goal_rgb.png",
+      "rgb_sha256": "51dbfe26d79576ed181f116b445ce9867aa0eec36bef2c91f758045330a4262c",
+      "resolution": [
+        1080,
+        1080
+      ],
+      "intrinsics": {
+        "fx": 459.0,
+        "fy": 459.0,
+        "cx": 540.0,
+        "cy": 540.0,
+        "width": 1080,
+        "height": 1080
+      },
+      "camera_pose_world": {
+        "position": [
+          17.058509826660156,
+          1.69959557056427,
+          1.57541823387146
+        ],
+        "orientation": [
+          -0.3909001648426056,
+          0.3909255266189575,
+          0.5892367959022522,
+          -0.5892149806022644
+        ]
+      },
+      "evaluation_profile": "isg-v1",
+      "n_render_iterations": 1
+    },
+    "pose_targets": {
+      "painting.n.01_1": {
+        "link": null,
+        "frame": "world",
+        "position": null,
+        "orientation": [
+          2.1334988094614343e-20,
+          0.005589957349002361,
+          0.9999843835830688,
+          2.5489173529127522e-18
+        ],
+        "position_metric": null,
+        "orientation_metric": "full",
+        "position_tolerance": null,
+        "orientation_tolerance": 0.08,
+        "orientation_equivalences": []
+      }
+    },
+    "groups": {},
+    "articulation_targets": {},
+    "constraints": [
+      {
+        "type": "revolute",
+        "child": "painting.n.01_1",
+        "parent": "wall.n.01_1",
+        "parent_link": "base_link",
+        "anchor_position": [
+          17.615190505981445,
+          1.8494999408721924,
+          1.449317216873169
+        ],
+        "axis": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "limits": null,
+        "friction": 0.8115364833433603,
+        "damping": 324.6145933373441,
+        "drive": "UsdPhysics angular drive, stiffness 0, target velocity 0: torque = clamp(-damping * omega, +-friction)",
+        "resistance_facts": {
+          "inertia_kgm2": 0.08115364833433603,
+          "mass_kg": 2.25,
+          "extents_perp_m": [
+            0.5056953430175781,
+            0.4208226203918457
+          ],
+          "stop_decel_rad_s2": 10.0,
+          "viscous_tau_s": 0.02,
+          "brake_omega_rad_s": 0.0025
+        }
+      }
+    ]
+  }
+}

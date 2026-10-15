@@ -1,0 +1,49 @@
+(define (problem disembedding-2)
+    (:domain ispatialgym)
+    (:variant disembedding-cellulose_tape-cork_1_coaster_1_cap_1-conference_table)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        cellulose_tape.n.01_1 - cellulose_tape.n.01
+        cork.n.04_1 - cork.n.04
+        coaster.n.03_1 - coaster.n.03
+        cap.n.02_1 - cap.n.02
+        conference_table.n.01_1 - conference_table.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        cork.n.04_1 coaster.n.03_1 cap.n.02_1 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 conference_table.n.01_1)
+        (ontop tray.n.01_2 conference_table.n.01_1)
+        (ontop cellulose_tape.n.01_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop cellulose_tape.n.01_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?cellulose_tape.n.01_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?cellulose_tape.n.01_1))
+            (pose_settled ?cellulose_tape.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?cellulose_tape.n.01_1)
+    )
+)

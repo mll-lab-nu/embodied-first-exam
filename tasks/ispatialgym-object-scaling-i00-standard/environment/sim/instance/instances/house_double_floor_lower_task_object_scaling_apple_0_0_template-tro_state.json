@@ -1,0 +1,294 @@
+{
+  "apple.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        4.2830305099487305,
+        5.076624870300293,
+        1.2213367223739624
+      ],
+      "ori": [
+        0.5239374041557312,
+        0.6601284146308899,
+        -0.5359572172164917,
+        -0.04969903454184532
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          4.244824409484863,
+          5.036072254180908,
+          1.1820052862167358,
+          4.319112300872803,
+          5.115219593048096,
+          1.2572894096374512
+        ]
+      },
+      "Temperature": {
+        "temperature": 23.0
+      },
+      "MaxTemperature": {
+        "max_temperature": 23.0
+      }
+    }
+  },
+  "floor.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        3.866909980773926,
+        5.666343688964844,
+        -0.15000006556510925
+      ],
+      "ori": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          1.115159273147583,
+          3.5217437744140625,
+          -0.30000007152557373,
+          6.618659019470215,
+          7.810943603515625,
+          -5.960464477539063e-08
+        ]
+      }
+    }
+  },
+  "robot_poses": {
+    "robot": [
+      {
+        "position": [
+          4.750052452087402,
+          5.549907684326172,
+          0.005284786224365234
+        ],
+        "orientation": [
+          7.275119423866272e-05,
+          3.862059747916646e-05,
+          -0.9233867526054382,
+          0.38387101888656616
+        ]
+      }
+    ]
+  },
+  "ispatialgym": {
+    "schema_version": "isg-tro-v1",
+    "activity": "object_scaling",
+    "activity_definition_id": 1,
+    "task_variant": "object_scaling-apple",
+    "instance_id": "object_scaling-apple__house_double_floor_lower__room-living_room_0__target-apple-omzprq__0000",
+    "generation_seed": 337545125004337116,
+    "evaluation_profile": "isg-v1",
+    "bddl_sha256": "bca812caf87cdb474101856c5b6815e5589b55c36bb22f0d619a1ccd874bd7f9",
+    "task_spec_sha256": "eb8f914ed357e187aacb3521e484edb5d5e8827d876281208671ba409e89b11d",
+    "layout_template_id": null,
+    "scene": {
+      "model": "house_double_floor_lower",
+      "floor": 0,
+      "template_path": "../template.json",
+      "template_sha256": "d054ac9455fd7507469b000d42a9aae6b2d78345e038d1f651f197a96d1999f1",
+      "load_room_instances": [
+        "living_room_0",
+        "corridor_0",
+        "garden_0",
+        "kitchen_0"
+      ],
+      "task_rooms": [
+        "living_room_0"
+      ],
+      "sampled_with_rooms": [
+        "living_room_0",
+        "corridor_0",
+        "garden_0",
+        "kitchen_0"
+      ],
+      "scene_variant": null,
+      "required_scene_objects": [
+        "floors_ulujpr_0"
+      ]
+    },
+    "object_bindings": {
+      "floor.n.01_1": {
+        "scene_object_name": "floors_ulujpr_0",
+        "category": "floors",
+        "model": "ulujpr"
+      },
+      "apple.n.01_1": {
+        "scene_object_name": "target_apple_omzprq_0",
+        "category": "apple",
+        "model": "omzprq"
+      }
+    },
+    "robot_state": {
+      "bddl_instance": "agent.n.01_1",
+      "model": "r1pro",
+      "joint_positions": {
+        "torso_joint1": 1.025024175643921,
+        "torso_joint2": -1.4499411582946777,
+        "torso_joint3": -0.4699971377849579,
+        "torso_joint4": 1.2069034710293636e-05,
+        "left_arm_joint1": -5.592643719865009e-05,
+        "right_arm_joint1": -1.1846479177474976,
+        "left_arm_joint2": 3.8609829289271147e-07,
+        "right_arm_joint2": 0.020139334723353386,
+        "left_arm_joint3": 5.515604425454512e-05,
+        "right_arm_joint3": 0.16540510952472687,
+        "left_arm_joint4": 8.941191481426358e-06,
+        "right_arm_joint4": -0.9197483658790588,
+        "left_arm_joint5": 2.038574530160986e-05,
+        "right_arm_joint5": -0.16060438752174377,
+        "left_arm_joint6": -8.270562830148265e-06,
+        "right_arm_joint6": 0.48102089762687683,
+        "left_arm_joint7": 3.247910399295506e-06,
+        "right_arm_joint7": 1.4115301370620728,
+        "left_gripper_finger_joint1": 0.04999963566660881,
+        "left_gripper_finger_joint2": 0.04999984800815582,
+        "right_gripper_finger_joint1": 0.038766298443078995,
+        "right_gripper_finger_joint2": 0.03840797767043114
+      },
+      "joint_velocities": {
+        "torso_joint1": 0.0,
+        "torso_joint2": 0.0,
+        "torso_joint3": 0.0,
+        "torso_joint4": 0.0,
+        "left_arm_joint1": 0.0,
+        "right_arm_joint1": 0.0,
+        "left_arm_joint2": 0.0,
+        "right_arm_joint2": 0.0,
+        "left_arm_joint3": 0.0,
+        "right_arm_joint3": 0.0,
+        "left_arm_joint4": 0.0,
+        "right_arm_joint4": 0.0,
+        "left_arm_joint5": 0.0,
+        "right_arm_joint5": 0.0,
+        "left_arm_joint6": 0.0,
+        "right_arm_joint6": 0.0,
+        "left_arm_joint7": 0.0,
+        "right_arm_joint7": 0.0,
+        "left_gripper_finger_joint1": 0.0,
+        "left_gripper_finger_joint2": 0.0,
+        "right_gripper_finger_joint1": 0.0,
+        "right_gripper_finger_joint2": 0.0
+      },
+      "controller_targets": {
+        "torso_joint1": 1.025020956993103,
+        "torso_joint2": -1.4499469995498657,
+        "torso_joint3": -0.4699971079826355,
+        "torso_joint4": 8.13026235846337e-06,
+        "left_arm_joint1": -4.800159877049737e-05,
+        "left_arm_joint2": 1.0980615883227074e-07,
+        "left_arm_joint3": 4.7945221012923867e-05,
+        "left_arm_joint4": 5.0022199502564035e-06,
+        "left_arm_joint5": 1.750884075590875e-05,
+        "left_arm_joint6": -6.2195367718231864e-06,
+        "left_arm_joint7": 3.364759777468862e-06,
+        "right_arm_joint1": -1.184601902961731,
+        "right_arm_joint2": 0.020124763250350952,
+        "right_arm_joint3": 0.16546212136745453,
+        "right_arm_joint4": -0.9199460744857788,
+        "right_arm_joint5": -0.15993276238441467,
+        "right_arm_joint6": 0.4789036512374878,
+        "right_arm_joint7": 1.4087334871292114
+      }
+    },
+    "goal_observation": {
+      "sensor_key": "robot_r1:zed_link:Camera:0",
+      "rgb_path": "house_double_floor_lower_task_object_scaling_apple_0_0_template-goal_rgb.png",
+      "rgb_sha256": "e5522868ec3ae4255308b714725be67dbf4130af7f8c1ba70232092f1f32619d",
+      "resolution": [
+        1080,
+        1080
+      ],
+      "intrinsics": {
+        "fx": 459.0,
+        "fy": 459.0,
+        "cx": 540.0,
+        "cy": 540.0,
+        "width": 1080,
+        "height": 1080
+      },
+      "camera_pose_world": {
+        "position": [
+          4.580780506134033,
+          5.379726886749268,
+          1.3970732688903809
+        ],
+        "orientation": [
+          0.21169047057628632,
+          0.5129138827323914,
+          0.7690129280090332,
+          0.3173729181289673
+        ]
+      },
+      "evaluation_profile": "isg-v1",
+      "n_render_iterations": 1
+    },
+    "pose_targets": {
+      "apple.n.01_1": {
+        "link": null,
+        "frame": "agent.n.01_1::robot_r1:zed_link:Camera:0",
+        "position": [
+          -0.002041339874267578,
+          0.0018483400344848633,
+          -0.38116455078125
+        ],
+        "orientation": null,
+        "position_metric": "depth",
+        "orientation_metric": null,
+        "position_tolerance": 0.02,
+        "orientation_tolerance": null,
+        "orientation_equivalences": []
+      }
+    },
+    "groups": {},
+    "articulation_targets": {},
+    "grasps": [
+      {
+        "agent": "agent.n.01_1",
+        "arm": "right",
+        "object": "apple.n.01_1",
+        "grasp_key": "apple__omzprq",
+        "grasp_name": "grasp_4",
+        "object_pose_in_eef_frame": {
+          "position": [
+            -0.0009337663650512695,
+            -0.0008974075317382812,
+            -0.009141683578491211
+          ],
+          "orientation": [
+            0.5297300815582275,
+            0.46044039726257324,
+            -0.1995842605829239,
+            0.6837740540504456
+          ]
+        },
+        "finger_q": [
+          0.038766298443078995,
+          0.03840797767043114
+        ],
+        "ag_anchor_in_eef": [
+          0.0029135942459106445,
+          0.03899335861206055,
+          -0.025654494762420654
+        ]
+      }
+    ]
+  }
+}

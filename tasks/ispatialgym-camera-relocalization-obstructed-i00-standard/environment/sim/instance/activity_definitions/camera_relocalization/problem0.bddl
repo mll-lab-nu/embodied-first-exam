@@ -1,0 +1,29 @@
+(define (problem camera_relocalization-0)
+    (:domain ispatialgym)
+    (:variant camera_relocalization-standard)
+
+    ; Camera relocalization - standard. Navigate from a random init pose to the base / trunk configuration whose head-camera
+    ; pose is the goal (goal image). No manipulated object. Path length buckets (MAX LENGTH 3 / 5 / 10 m) are a generation
+    ; parameter of the customs list (generation.path_buckets), not part of the variant. The scene / room is bounded by the
+    ; icl (roles/candidates.csv `room` rows: house_single_floor living_room_0 for now).
+
+    (:objects
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (pose_reached ?agent.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?agent.n.01_1)
+    )
+)

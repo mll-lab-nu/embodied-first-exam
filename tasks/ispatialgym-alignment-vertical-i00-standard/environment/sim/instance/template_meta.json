@@ -1,0 +1,548 @@
+{
+ "template_id": "house_single_floor__support-walls_dhsptd_0-r00__target-painting-dacihj",
+ "scene": "house_single_floor",
+ "timings": {
+  "bind_spawn_s": 49.19943690299988,
+  "bind_spawn_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 0,
+   "collision_configs": 0,
+   "collision_s": 0.0
+  },
+  "sample_template_s": 46.63271141052246,
+  "sample_template_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 32,
+   "collision_configs": 8160,
+   "collision_s": 3.684
+  },
+  "save_template_s": 1.507129192352295
+ },
+ "variant": "alignment-world_vertical-painting-walls",
+ "subtask": "alignment-world_vertical",
+ "sampler_version": "2.0.0-dev",
+ "spec_hash": "8210728987e3273efaf153767f811664e75ff69cee8e38ed001b4f187e4c6398",
+ "choice": {
+  "scene": "house_single_floor",
+  "rooms": [
+   "living_room_0"
+  ],
+  "bindings": {
+   "support": [
+    "walls_dhsptd_0"
+   ],
+   "support_regions": [
+    {
+     "id": "living_room_0/walls_dhsptd_0/r00",
+     "wall": "walls_dhsptd_0",
+     "room": "living_room_0",
+     "p0": [
+      17.637,
+      2.109
+     ],
+     "p1": [
+      17.637,
+      1.59
+     ],
+     "normal": [
+      -1.0,
+      0.0
+     ],
+     "hang_z": 1.45,
+     "length_m": 0.77,
+     "max_object_m": 0.5
+    }
+   ],
+   "floor": {
+    "room": "living_room_0"
+   }
+  },
+  "models": {
+   "target": {
+    "category": "painting",
+    "model": "dacihj",
+    "dataset": "behavior-1k-assets",
+    "grasp_key": null,
+    "scale": null
+   }
+  },
+  "groups": {},
+  "template_id": "house_single_floor__support-walls_dhsptd_0-r00__target-painting-dacihj",
+  "support_tag": "walls_dhsptd_0-r00"
+ },
+ "rooms": [
+  "living_room_0"
+ ],
+ "customs": "/vision/u/minyeong/projects/isg_home/eval85/code_612712e1_6a6194600/ispatialgym/assets/task_specs/isg_customs.json",
+ "joint_limit_margin_rad": 0.05,
+ "split": {
+  "split": "eval",
+  "index": 0,
+  "seed": 341398302,
+  "seed_source": "split",
+  "scene": "house_single_floor",
+  "room": null,
+  "scene_source": "--scene"
+ },
+ "candidate": {
+  "scene": "house_single_floor",
+  "support": "walls_dhsptd_0",
+  "row": "living_room_0/walls_dhsptd_0/r00",
+  "init": null,
+  "top_z": null,
+  "surface": null,
+  "regions": [
+   "living_room_0/walls_dhsptd_0/r00"
+  ],
+  "rooms": [
+   "living_room_0"
+  ],
+  "floor_room": "living_room_0",
+  "tag": "walls_dhsptd_0-r00",
+  "source": "--support"
+ },
+ "init_arms": "untucked",
+ "bddl_sha256": "1a245b27d47729079bf4be006a86cd27186aea8e375a84827529e941cb2eccf4",
+ "template_facts": {
+  "spot_search": {
+   "regions": 1,
+   "patch_wh": [
+    0.5056953430175781,
+    0.4208226203918457
+   ],
+   "n_spots": 2,
+   "walls": [
+    "walls_dhsptd_0"
+   ]
+  },
+  "frame": {
+   "front_axis": "+x",
+   "up_axis": "+z",
+   "level_axis_derived": "+y",
+   "symmetric_180": false,
+   "source": "customs"
+  },
+  "dims": {
+   "thickness": 0.0459747314453125,
+   "width": 0.5056953430175781,
+   "height": 0.4208226203918457
+  },
+  "scale": null,
+  "wall": "walls_dhsptd_0",
+  "com_local": [
+   0.000209808349609375,
+   -0.000682830810546875,
+   -0.0015172958374023438
+  ],
+  "contact_height_extra_m": 0.0,
+  "deviation_range_applied_deg": [
+   15.0,
+   25.0
+  ],
+  "template_filter_deg": 25,
+  "stance_arm_posture": "tucked",
+  "spots": [
+   {
+    "id": 0,
+    "point": [
+     17.63697052001953,
+     2.1089999675750732,
+     1.4500000476837158
+    ],
+    "normal": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "n_step1": 1871,
+    "survivors_pm_filter": {
+     "+25": 35,
+     "-25": 36
+    },
+    "wall_protrusion_m": 0.0
+   },
+   {
+    "id": 1,
+    "point": [
+     17.63697052001953,
+     1.8494999408721924,
+     1.4500000476837158
+    ],
+    "normal": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "n_step1": 1870,
+    "survivors_pm_filter": {
+     "+25": 35,
+     "-25": 36
+    },
+    "wall_protrusion_m": 0.0
+   }
+  ]
+ },
+ "bindings": [
+  {
+   "role": "floor",
+   "name": "floor.n.01_1",
+   "synset": "floor.n.01",
+   "category": "floors",
+   "model": "uzsntg",
+   "scene_object_name": "floors_uzsntg_0",
+   "dataset": null
+  },
+  {
+   "role": "target",
+   "name": "painting.n.01_1",
+   "synset": "painting.n.01",
+   "category": "painting",
+   "model": "dacihj",
+   "scene_object_name": "target_painting_dacihj_0",
+   "dataset": "behavior-1k-assets"
+  },
+  {
+   "role": "support",
+   "name": "wall.n.01_1",
+   "synset": "wall.n.01",
+   "category": "walls",
+   "model": "dhsptd",
+   "scene_object_name": "walls_dhsptd_0",
+   "dataset": null
+  }
+ ],
+ "template_sha256": "85c091f6c0e5887ce3dae3cd35657740099aa5503e9cd09fe58e9b797e1f4abc",
+ "template_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s3_55tasks/alignment-world_vertical_01/c1_k0/inst/alignment-world_vertical-painting-walls/house_single_floor__support-walls_dhsptd_0-r00__target-painting-dacihj/template.json",
+ "template_partial_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s3_55tasks/alignment-world_vertical_01/c1_k0/inst/alignment-world_vertical-painting-walls/house_single_floor__support-walls_dhsptd_0-r00__target-painting-dacihj/template-partial_rooms.json",
+ "load_room_instances": [
+  "living_room_0",
+  "corridor_0",
+  "dining_room_0",
+  "garden_0",
+  "kitchen_0"
+ ],
+ "task_rooms": [
+  "living_room_0"
+ ],
+ "sampled_with_rooms": [
+  "living_room_0",
+  "corridor_0",
+  "dining_room_0",
+  "garden_0",
+  "kitchen_0"
+ ],
+ "scene_variant": null,
+ "problem": "alignment-3",
+ "choices": {
+  "target": {
+   "category": "painting",
+   "model": "dacihj",
+   "dataset": "behavior-1k-assets",
+   "grasp_key": null,
+   "scale": null
+  }
+ },
+ "inst_to_name": {
+  "floor.n.01_1": "floors_uzsntg_0",
+  "painting.n.01_1": "target_painting_dacihj_0",
+  "wall.n.01_1": "walls_dhsptd_0",
+  "agent.n.01_1": "robot_r1"
+ },
+ "scene_load_s": 523.1883442401886,
+ "activity_definition": "../activity_definitions/alignment/problem26.bddl",
+ "bddl_variant": "alignment-world_vertical-painting-walls",
+ "stances": {
+  "init": {
+   "base_pose2d": [
+    16.82429551694064,
+    2.236228966639235,
+    -0.4441593155417682
+   ],
+   "translate": 0.0,
+   "tilt": 0.0,
+   "arms": "untucked",
+   "stand_off": 0.9,
+   "face": "wall",
+   "d": 0.9,
+   "lambda": 0.0,
+   "bearing_deg": -25.448454211962726,
+   "distance": 0.9,
+   "face_normal": [
+    -1.0,
+    0.0
+   ],
+   "axis_angle_deg": 13.956808510770138,
+   "target_centre": [
+    17.6088,
+    1.859,
+    1.4724
+   ],
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "name": "init",
+   "face_frame": {
+    "name": "wall",
+    "n": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "P": [
+     17.63697052001953,
+     1.8494999408721924,
+     1.4500000476837158
+    ],
+    "d": 0.9,
+    "lambda": 0.0
+   },
+   "extras": {
+    "bearing_deg": -25.448454211962726,
+    "distance": 0.9,
+    "face_normal": [
+     -1.0,
+     0.0
+    ],
+    "axis_angle_deg": 13.956808510770138,
+    "target_centre": [
+     17.6088,
+     1.859,
+     1.4724
+    ],
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "manipulation": {
+   "base_pose2d": [
+    16.836971282958984,
+    1.6994999647140503,
+    -0.0
+   ],
+   "translate": 0.0,
+   "tilt": 0.0,
+   "arms": [
+    "left",
+    "right"
+   ],
+   "stand_off": 0.8,
+   "face": "wall",
+   "d": 0.8,
+   "lambda": -0.15,
+   "focus": [
+    17.615190505981445,
+    1.8494999408721924,
+    1.4500000476837158
+   ],
+   "contacts": [
+    "push",
+    "brace"
+   ],
+   "band": [
+    -0.15,
+    0.0
+   ],
+   "angle_class": 1,
+   "clearance_tier": 0,
+   "grid_tilt": 0.0,
+   "arm_posture": "tucked",
+   "axis_angle_deg": 17.77035450858064,
+   "closing_axes": {
+    "brace": "s+0/-",
+    "push": "s+0/+"
+   },
+   "arms_q": {
+    "right": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "fingers": 0.0,
+   "fingers_by_arm": {
+    "right": 0.0,
+    "left": 0.0
+   },
+   "name": "manipulation",
+   "face_frame": {
+    "name": "wall",
+    "n": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "P": [
+     17.63697052001953,
+     1.8494999408721924,
+     1.4500000476837158
+    ],
+    "d": 0.8,
+    "lambda": -0.15
+   },
+   "extras": {
+    "band": [
+     -0.15,
+     0.0
+    ],
+    "angle_class": 1,
+    "clearance_tier": 0,
+    "grid_tilt": 0.0,
+    "arm_posture": "tucked",
+    "axis_angle_deg": 17.77035450858064,
+    "closing_axes": {
+     "brace": "s+0/-",
+     "push": "s+0/+"
+    },
+    "arms_q": {
+     "right": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "fingers": 0.0,
+    "fingers_by_arm": {
+     "right": 0.0,
+     "left": 0.0
+    }
+   }
+  }
+ },
+ "n_constraints_recorded": 1,
+ "checks": {
+  "attached_object": true,
+  "program_check": "expand"
+ },
+ "rejections": {
+  "push_unreachable": 1,
+  "ik_joint_limit": 1
+ },
+ "rejection_examples": {
+  "push_unreachable": [
+   {
+    "message": "[push_unreachable] 40 Phase-2 survivors (\u03b4 +15.4\u00b0, {'brace_kinds_clear': ['below_high', 'below_high', 'below_high', 'below_high', 'below_high', 'below_high', 'above_low', 'above_low', 'above_low', 'above_low', 'above_low', 'above_low', 'side_high', 'side_high', 'side_high', 'side_high', 'side_high', 'side_high'], 'brace_kinds_blocked_by_tilted_hull': [], 'step2_push_reach': 403, 'step2_brace_reach",
+    "phase": "sample",
+    "index": 0,
+    "attempt": 0,
+    "seed": 2703541264137460614
+   }
+  ],
+  "ik_joint_limit": [
+   {
+    "message": "[ik_joint_limit] retreat: ik_joint_limit: right_arm_joint4 within 5 mrad of its limit at the pose (every solution found; the approach from it would stall) (stance manipulation, arm right, carried None, left arm locked at its contact, after push) {'action': 'retreat'}",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 1,
+    "seed": 2703541264137460615,
+    "action": "retreat"
+   }
+  ]
+ },
+ "counters": {
+  "scene_reset": 9
+ },
+ "seeds": [
+  2703541264137460616
+ ],
+ "kit_stats": {
+  "ik_calls": 600,
+  "ik_s": 113.38104891777039,
+  "ik_batch_calls": 15,
+  "ik_batch_problems": 15,
+  "ik_batch_s": 16.743472814559937,
+  "collision_calls": 572,
+  "collision_configs": 14259,
+  "collision_s": 8.422006368637085,
+  "limit_retry_poses": 56,
+  "limit_retry_seeded_rescued": 27,
+  "limit_reject.right_arm_joint2": 9,
+  "limit_reject.left_arm_joint2": 6,
+  "orient_choices": 62,
+  "orient_reason.reach": 11,
+  "orient_source.map": 5,
+  "orient_against_default": 7,
+  "limit_reject.left_arm_joint5": 4,
+  "orient_reason.only_feasible": 6,
+  "orient_reason.default": 3,
+  "limit_retry_random": 41,
+  "limit_retry_random_rescued": 8,
+  "limit_reject.right_arm_joint5": 1,
+  "limit_reject.right_arm_joint4": 1
+ },
+ "n_written": 1,
+ "eval": {
+  "task_family": "alignment",
+  "task": "alignment_vertical",
+  "subtask": "alignment_vertical_painting",
+  "variant": "alignment-world_vertical-painting-walls"
+ }
+}

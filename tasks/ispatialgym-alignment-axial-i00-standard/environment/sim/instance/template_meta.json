@@ -1,0 +1,1108 @@
+{
+ "template_id": "house_single_floor__support-breakfast_table_rhjoby_0-T1__target-board_game-qgvsnb",
+ "scene": "house_single_floor",
+ "timings": {
+  "bind_spawn_s": 20.607019901275635,
+  "bind_spawn_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 0,
+   "collision_configs": 0,
+   "collision_s": 0.0
+  },
+  "sample_template_s": 33.67120289802551,
+  "sample_template_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 6,
+   "collision_configs": 1540,
+   "collision_s": 2.51
+  },
+  "save_template_s": 1.3803775310516357
+ },
+ "variant": "alignment-axial-board_game-breakfast_table",
+ "subtask": "alignment-axial",
+ "sampler_version": "2.0.0-dev",
+ "spec_hash": "dbcd70910f3e87d7bb83318b4d6ef0df303a2852a73b69dd5ff44e793cb6835c",
+ "choice": {
+  "scene": "house_single_floor",
+  "rooms": [
+   "dining_room_0"
+  ],
+  "bindings": {
+   "support": [
+    "breakfast_table_rhjoby_0"
+   ],
+   "support_surfaces": [
+    {
+     "name": "breakfast_table_rhjoby_0",
+     "init": "ontop",
+     "top_z": 0.81,
+     "row": "alignment-axial#01~T1"
+    }
+   ],
+   "floor": {
+    "room": "dining_room_0"
+   }
+  },
+  "models": {
+   "target": {
+    "category": "board_game",
+    "model": "qgvsnb",
+    "dataset": "behavior-1k-assets",
+    "grasp_key": null,
+    "scale": null
+   }
+  },
+  "groups": {},
+  "template_id": "house_single_floor__support-breakfast_table_rhjoby_0-T1__target-board_game-qgvsnb",
+  "support_tag": "breakfast_table_rhjoby_0-T1"
+ },
+ "rooms": [
+  "dining_room_0"
+ ],
+ "customs": "/vision/u/minyeong/projects/isg_home/eval85/code_729abef3_6a6194600/ispatialgym/assets/task_specs/isg_customs.json",
+ "joint_limit_margin_rad": 0.05,
+ "split": {
+  "split": "eval",
+  "index": 1,
+  "seed": 237917122,
+  "seed_source": "split",
+  "scene": "house_single_floor",
+  "room": null,
+  "scene_source": "--scene"
+ },
+ "candidate": {
+  "scene": "house_single_floor",
+  "support": "breakfast_table_rhjoby_0",
+  "row": "alignment-axial#01~T1",
+  "init": "ontop",
+  "top_z": 0.81,
+  "surface": null,
+  "regions": null,
+  "rooms": [
+   "dining_room_0"
+  ],
+  "floor_room": "dining_room_0",
+  "tag": "breakfast_table_rhjoby_0-T1",
+  "source": "--support"
+ },
+ "init_arms": "untucked",
+ "bddl_sha256": "8c5900621c7ccfc40915bd987d80b34f09d8ec1d67be9adbcbffe18ca80c21fe",
+ "template_facts": {
+  "contact_height_extra_m": 0.0,
+  "support": {
+   "name": "breakfast_table_rhjoby_0",
+   "z": 0.8126290440559387,
+   "yaw": 1.5682430267333984,
+   "local_bounds": [
+    2.935961961746216,
+    4.09616231918335,
+    -8.733030319213867,
+    -5.830231189727783
+   ],
+   "n_free_cells": 8463,
+   "occupants": [],
+   "resolution": 0.02
+  },
+  "edge": {
+   "name": "-v",
+   "mid": [
+    8.741979598999023,
+    3.4937527179718018
+   ],
+   "inward": [
+    -0.9999967217445374,
+    0.002553297206759453
+   ],
+   "tangent": [
+    -0.002553297206759453,
+    -0.9999967217445374
+   ],
+   "length_m": 1.1602003574371338,
+   "overhang_m": 0.0
+  },
+  "init_stance": {
+   "base_pose2d": [
+    9.191516876220703,
+    3.311793088912964,
+    3.1390393535612717
+   ],
+   "translate": 0.9495694525696253,
+   "tilt": 0.0,
+   "arms": "untucked",
+   "stand_off": 0.45,
+   "edge": "-v",
+   "lateral": 0.1808113002600177,
+   "H_max": 0.02524280548095703,
+   "delta": 0.5607038573163574,
+   "delta_aim": 0.5607038573163574,
+   "delta_min": 0.31301496028900144,
+   "delta_max": 0.6371937155949394,
+   "conflict": false,
+   "d_ws": 0.34887291218193484,
+   "d_near": 0.029999226331710815,
+   "d_far": 0.7499998509883881,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2381588771587386,
+   "z_c": 1.3733536884921616,
+   "b": 0.7761452794075012,
+   "b_right": 0.7761452794075012,
+   "b_left": 0.7761459350585938,
+   "R_img": 0.7761452794075012,
+   "t_range": [
+    0.3901395979120866,
+    0.9495694525696253
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 71,
+   "left_band": true,
+   "lam_min_right": -0.5600000023841858,
+   "lam_max_right": 0.0,
+   "lam_min_left": 0.0,
+   "lam_max_left": 0.5600000023841858,
+   "margins": {
+    "kind": "axial",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.7761452794075012,
+    "R_img": 0.7761452794075012,
+    "safety": 0.02,
+    "w_diag": 0.14398227723597293,
+    "m_R": 0.7239822796201587,
+    "m_L": 0.16398227723597292
+   },
+   "lateral_bounds": [
+    0.14388210090159181,
+    0.416117901482594
+   ],
+   "init_translate_moved_for_edge": true,
+   "name": "init",
+   "edge_frame": {
+    "name": "-v",
+    "mid": [
+     8.741979598999023,
+     3.4937527179718018
+    ],
+    "inward": [
+     -0.9999967217445374,
+     0.002553297206759453
+    ],
+    "tangent": [
+     -0.002553297206759453,
+     -0.9999967217445374
+    ],
+    "length_m": 1.1602003574371338,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.4500004053115845,
+   "extras": {
+    "H_max": 0.02524280548095703,
+    "delta": 0.5607038573163574,
+    "delta_aim": 0.5607038573163574,
+    "delta_min": 0.31301496028900144,
+    "delta_max": 0.6371937155949394,
+    "conflict": false,
+    "d_ws": 0.34887291218193484,
+    "d_near": 0.029999226331710815,
+    "d_far": 0.7499998509883881,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2381588771587386,
+    "z_c": 1.3733536884921616,
+    "b": 0.7761452794075012,
+    "b_right": 0.7761452794075012,
+    "b_left": 0.7761459350585938,
+    "R_img": 0.7761452794075012,
+    "t_range": [
+     0.3901395979120866,
+     0.9495694525696253
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 71,
+    "left_band": true,
+    "lam_min_right": -0.5600000023841858,
+    "lam_max_right": 0.0,
+    "lam_min_left": 0.0,
+    "lam_max_left": 0.5600000023841858,
+    "margins": {
+     "kind": "axial",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.7761452794075012,
+     "R_img": 0.7761452794075012,
+     "safety": 0.02,
+     "w_diag": 0.14398227723597293,
+     "m_R": 0.7239822796201587,
+     "m_L": 0.16398227723597292
+    },
+    "lateral_bounds": [
+     0.14388210090159181,
+     0.416117901482594
+    ],
+    "init_translate_moved_for_edge": true
+   }
+  },
+  "n_manipulation_candidates": 1292,
+  "extents": {
+   "long": 0.25518798828125,
+   "short": 0.13342666625976562,
+   "height": 0.02524280548095703,
+   "w_diag": 0.14398227723597293
+  },
+  "band": "/vision/u/minyeong/projects/isg_home/eval85/code_729abef3_6a6194600/runlogs/reach_bands_20260915/bands/tabletop__house_single_floor__breakfast_table_rhjoby_0__board_game-qgvsnb__01f6d1b3621c1477.npz",
+  "left_band": "/vision/u/minyeong/projects/isg_home/eval85/code_729abef3_6a6194600/runlogs/reach_bands_20260915/bands/contact__house_single_floor__breakfast_table_rhjoby_0__left_h0.02__401f802305bd7dd2.npz",
+  "front_axis": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "long_axis": [
+   0.0,
+   1.0,
+   0.0
+  ]
+ },
+ "bindings": [
+  {
+   "role": "floor",
+   "name": "floor.n.01_1",
+   "synset": "floor.n.01",
+   "category": "floors",
+   "model": "qgmjvd",
+   "scene_object_name": "floors_qgmjvd_0",
+   "dataset": null
+  },
+  {
+   "role": "support",
+   "name": "breakfast_table.n.01_1",
+   "synset": "breakfast_table.n.01",
+   "category": "breakfast_table",
+   "model": "rhjoby",
+   "scene_object_name": "breakfast_table_rhjoby_0",
+   "dataset": null
+  },
+  {
+   "role": "target",
+   "name": "board_game.n.01_1",
+   "synset": "board_game.n.01",
+   "category": "board_game",
+   "model": "qgvsnb",
+   "scene_object_name": "target_board_game_qgvsnb_0",
+   "dataset": "behavior-1k-assets"
+  }
+ ],
+ "template_sha256": "07b61f959311b8da883ddd3d9b3517f7f455f96390b93d1d7e8f297c073c7761",
+ "template_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s3_55tasks/alignment-axial_01/c1_k1/inst/alignment-axial-board_game-breakfast_table/house_single_floor__support-breakfast_table_rhjoby_0-T1__target-board_game-qgvsnb/template.json",
+ "template_partial_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s3_55tasks/alignment-axial_01/c1_k1/inst/alignment-axial-board_game-breakfast_table/house_single_floor__support-breakfast_table_rhjoby_0-T1__target-board_game-qgvsnb/template-partial_rooms.json",
+ "load_room_instances": [
+  "dining_room_0",
+  "entryway_0",
+  "garden_0",
+  "kitchen_0",
+  "living_room_0",
+  "living_room_1"
+ ],
+ "task_rooms": [
+  "dining_room_0"
+ ],
+ "sampled_with_rooms": [
+  "dining_room_0",
+  "entryway_0",
+  "garden_0",
+  "kitchen_0",
+  "living_room_0",
+  "living_room_1"
+ ],
+ "scene_variant": {
+  "scene_file": "../../scene_variants/house_single_floor__cc5e0dab4b.json",
+  "removed_objects": [
+   "straight_chair_jgoolz_0",
+   "straight_chair_jgoolz_1",
+   "straight_chair_jgoolz_2",
+   "straight_chair_jgoolz_3",
+   "straight_chair_jgoolz_4",
+   "straight_chair_jgoolz_5"
+  ],
+  "freed_footprints": {
+   "free": [
+    [
+     [
+      7.993353843688965,
+      3.1143271923065186
+     ],
+     [
+      8.363746643066406,
+      3.248072862625122
+     ],
+     [
+      8.546874046325684,
+      2.7409231662750244
+     ],
+     [
+      8.176481246948242,
+      2.607177495956421
+     ]
+    ],
+    [
+     [
+      8.428321838378906,
+      3.81669282913208
+     ],
+     [
+      8.04768180847168,
+      3.715738296508789
+     ],
+     [
+      7.909452438354492,
+      4.236918926239014
+     ],
+     [
+      8.290092468261719,
+      4.337873458862305
+     ]
+    ],
+    [
+     [
+      7.475783348083496,
+      3.7558629512786865
+     ],
+     [
+      7.083395957946777,
+      3.722538948059082
+     ],
+     [
+      7.037768363952637,
+      4.259805202484131
+     ],
+     [
+      7.4301557540893555,
+      4.293128967285156
+     ]
+    ],
+    [
+     [
+      6.607521057128906,
+      3.804436206817627
+     ],
+     [
+      6.21530818939209,
+      3.8397560119628906
+     ],
+     [
+      6.263669013977051,
+      4.3767828941345215
+     ],
+     [
+      6.655881881713867,
+      4.341463088989258
+     ]
+    ],
+    [
+     [
+      6.289393901824951,
+      3.2292425632476807
+     ],
+     [
+      6.669515132904053,
+      3.1263527870178223
+     ],
+     [
+      6.528636455535889,
+      2.605881929397583
+     ],
+     [
+      6.148515224456787,
+      2.7087717056274414
+     ]
+    ],
+    [
+     [
+      7.140786647796631,
+      3.0244858264923096
+     ],
+     [
+      7.520907878875732,
+      2.921595573425293
+     ],
+     [
+      7.380028247833252,
+      2.401125192642212
+     ],
+     [
+      6.99990701675415,
+      2.5040154457092285
+     ]
+    ]
+   ],
+   "block": [
+    [
+     [
+      5.848289966583252,
+      4.084524154663086
+     ],
+     [
+      8.743980407714844,
+      4.077131748199463
+     ],
+     [
+      8.741019248962402,
+      2.9172356128692627
+     ],
+     [
+      5.845329284667969,
+      2.9246277809143066
+     ]
+    ]
+   ]
+  },
+  "moved_objects": {
+   "straight_chair_jgoolz_0": {
+    "pos": [
+     8.276880264282227,
+     2.908885955810547,
+     0.32601872086524963
+    ],
+    "ori": [
+     1.6197562217712402e-05,
+     -1.215015072375536e-05,
+     0.8184217810630798,
+     0.5746181011199951
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -124.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_1": {
+    "pos": [
+     8.163780212402344,
+     4.046063423156738,
+     0.32601845264434814
+    ],
+    "ori": [
+     -1.2665987014770508e-05,
+     -1.56183959916234e-05,
+     -0.6097702980041504,
+     0.7925782799720764
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -129.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_2": {
+    "pos": [
+     7.255090236663818,
+     4.027685642242432,
+     0.32602065801620483
+    ],
+    "ori": [
+     -6.452202796936035e-06,
+     -7.124384865164757e-06,
+     -0.6765273213386536,
+     0.7364175915718079
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -134.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_3": {
+    "pos": [
+     6.437382221221924,
+     4.110452651977539,
+     0.32601872086524963
+    ],
+    "ori": [
+     -1.7136335372924805e-05,
+     -1.3347831554710865e-05,
+     -0.7381362915039062,
+     0.6746516227722168
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -139.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_4": {
+    "pos": [
+     6.403809547424316,
+     2.8983311653137207,
+     0.3260188698768616
+    ],
+    "ori": [
+     1.1816620826721191e-05,
+     -1.826148945838213e-05,
+     0.6077523231506348,
+     0.7941267490386963
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -144.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_5": {
+    "pos": [
+     7.255201816558838,
+     2.6935744285583496,
+     0.3260185718536377
+    ],
+    "ori": [
+     1.1801719665527344e-05,
+     -1.615926157683134e-05,
+     0.6077519059181213,
+     0.7941270470619202
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -149.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   }
+  }
+ },
+ "problem": "alignment-0",
+ "choices": {
+  "target": {
+   "category": "board_game",
+   "model": "qgvsnb",
+   "dataset": "behavior-1k-assets",
+   "grasp_key": null,
+   "scale": null
+  }
+ },
+ "inst_to_name": {
+  "floor.n.01_1": "floors_qgmjvd_0",
+  "breakfast_table.n.01_1": "breakfast_table_rhjoby_0",
+  "board_game.n.01_1": "target_board_game_qgvsnb_0",
+  "agent.n.01_1": "robot_r1"
+ },
+ "scene_load_s": 461.3478055000305,
+ "activity_definition": "../activity_definitions/alignment/problem2.bddl",
+ "bddl_variant": "alignment-axial-board_game-breakfast_table",
+ "stances": {
+  "init": {
+   "base_pose2d": [
+    9.191516876220703,
+    3.311793088912964,
+    3.1390393535612717
+   ],
+   "translate": 0.9495694525696253,
+   "tilt": 0.0,
+   "arms": "untucked",
+   "stand_off": 0.45,
+   "edge": "-v",
+   "lateral": 0.1808113002600177,
+   "H_max": 0.02524280548095703,
+   "delta": 0.5607038573163574,
+   "delta_aim": 0.5607038573163574,
+   "delta_min": 0.31301496028900144,
+   "delta_max": 0.6371937155949394,
+   "conflict": false,
+   "d_ws": 0.34887291218193484,
+   "d_near": 0.029999226331710815,
+   "d_far": 0.7499998509883881,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2381588771587386,
+   "z_c": 1.3733536884921616,
+   "b": 0.7761452794075012,
+   "b_right": 0.7761452794075012,
+   "b_left": 0.7761459350585938,
+   "R_img": 0.7761452794075012,
+   "t_range": [
+    0.3901395979120866,
+    0.9495694525696253
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 71,
+   "left_band": true,
+   "lam_min_right": -0.5600000023841858,
+   "lam_max_right": 0.0,
+   "lam_min_left": 0.0,
+   "lam_max_left": 0.5600000023841858,
+   "margins": {
+    "kind": "axial",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.7761452794075012,
+    "R_img": 0.7761452794075012,
+    "safety": 0.02,
+    "w_diag": 0.14398227723597293,
+    "m_R": 0.7239822796201587,
+    "m_L": 0.16398227723597292
+   },
+   "lateral_bounds": [
+    0.14388210090159181,
+    0.416117901482594
+   ],
+   "init_translate_moved_for_edge": true,
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "name": "init",
+   "edge_frame": {
+    "name": "-v",
+    "mid": [
+     8.741979598999023,
+     3.4937527179718018
+    ],
+    "inward": [
+     -0.9999967217445374,
+     0.002553297206759453
+    ],
+    "tangent": [
+     -0.002553297206759453,
+     -0.9999967217445374
+    ],
+    "length_m": 1.1602003574371338,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.4500004053115845,
+   "extras": {
+    "H_max": 0.02524280548095703,
+    "delta": 0.5607038573163574,
+    "delta_aim": 0.5607038573163574,
+    "delta_min": 0.31301496028900144,
+    "delta_max": 0.6371937155949394,
+    "conflict": false,
+    "d_ws": 0.34887291218193484,
+    "d_near": 0.029999226331710815,
+    "d_far": 0.7499998509883881,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2381588771587386,
+    "z_c": 1.3733536884921616,
+    "b": 0.7761452794075012,
+    "b_right": 0.7761452794075012,
+    "b_left": 0.7761459350585938,
+    "R_img": 0.7761452794075012,
+    "t_range": [
+     0.3901395979120866,
+     0.9495694525696253
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 71,
+    "left_band": true,
+    "lam_min_right": -0.5600000023841858,
+    "lam_max_right": 0.0,
+    "lam_min_left": 0.0,
+    "lam_max_left": 0.5600000023841858,
+    "margins": {
+     "kind": "axial",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.7761452794075012,
+     "R_img": 0.7761452794075012,
+     "safety": 0.02,
+     "w_diag": 0.14398227723597293,
+     "m_R": 0.7239822796201587,
+     "m_L": 0.16398227723597292
+    },
+    "lateral_bounds": [
+     0.14388210090159181,
+     0.416117901482594
+    ],
+    "init_translate_moved_for_edge": true,
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "manipulation": {
+   "base_pose2d": [
+    9.191261291503906,
+    3.2117934226989746,
+    3.1390393535612717
+   ],
+   "translate": 0.5,
+   "tilt": -0.4541999896367391,
+   "arms": [
+    "right"
+   ],
+   "stand_off": 0.45,
+   "edge": "-v",
+   "lateral": 0.2808113002600177,
+   "focus": [
+    8.311264038085938,
+    3.2140402793884277,
+    0.8252504467964172
+   ],
+   "contacts": [
+    "push"
+   ],
+   "idle_posture": "untucked",
+   "H_max": 0.02524280548095703,
+   "delta": 0.5607038573163574,
+   "delta_aim": 0.5607038573163574,
+   "delta_min": 0.31301496028900144,
+   "delta_max": 0.6371937155949394,
+   "conflict": false,
+   "d_ws": 0.34887291218193484,
+   "d_near": 0.029999226331710815,
+   "d_far": 0.7499998509883881,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2381588771587386,
+   "z_c": 1.3733536884921616,
+   "b": 0.7761452794075012,
+   "b_right": 0.7761452794075012,
+   "b_left": 0.7761459350585938,
+   "R_img": 0.7761452794075012,
+   "t_range": [
+    0.3901395979120866,
+    0.9495694525696253
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 71,
+   "left_band": true,
+   "lam_min_right": -0.5600000023841858,
+   "lam_max_right": 0.0,
+   "lam_min_left": 0.0,
+   "lam_max_left": 0.5600000023841858,
+   "margins": {
+    "kind": "axial",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.7761452794075012,
+    "R_img": 0.7761452794075012,
+    "safety": 0.02,
+    "w_diag": 0.14398227723597293,
+    "m_R": 0.7239822796201587,
+    "m_L": 0.16398227723597292
+   },
+   "lateral_bounds": [
+    0.14388210090159181,
+    0.416117901482594
+   ],
+   "init_translate_moved_for_edge": true,
+   "lateral_shift_m": 0.1,
+   "axis_angle": 0.0160690036180427,
+   "angle_class": 0,
+   "focus_info": null,
+   "init_view_angle": 0.1344958285827804,
+   "init_view_class": 0,
+   "init_travel": {
+    "lateral_m": 0.1,
+    "base_m": 0.1,
+    "path_m": 0.1414,
+    "departure_stand_off_m": 0.55,
+    "transition_stand_off_m": 0.45
+   },
+   "push_pitch_deg": 0.0,
+   "brace": "none",
+   "brace_class": null,
+   "brace_geometry": {
+    "reason": "no_joint_cell",
+    "brace_fails": [],
+    "blade_skips": {}
+   },
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "name": "manipulation",
+   "edge_frame": {
+    "name": "-v",
+    "mid": [
+     8.741979598999023,
+     3.4937527179718018
+    ],
+    "inward": [
+     -0.9999967217445374,
+     0.002553297206759453
+    ],
+    "tangent": [
+     -0.002553297206759453,
+     -0.9999967217445374
+    ],
+    "length_m": 1.1602003574371338,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.45000016689300537,
+   "extras": {
+    "H_max": 0.02524280548095703,
+    "delta": 0.5607038573163574,
+    "delta_aim": 0.5607038573163574,
+    "delta_min": 0.31301496028900144,
+    "delta_max": 0.6371937155949394,
+    "conflict": false,
+    "d_ws": 0.34887291218193484,
+    "d_near": 0.029999226331710815,
+    "d_far": 0.7499998509883881,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2381588771587386,
+    "z_c": 1.3733536884921616,
+    "b": 0.7761452794075012,
+    "b_right": 0.7761452794075012,
+    "b_left": 0.7761459350585938,
+    "R_img": 0.7761452794075012,
+    "t_range": [
+     0.3901395979120866,
+     0.9495694525696253
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 71,
+    "left_band": true,
+    "lam_min_right": -0.5600000023841858,
+    "lam_max_right": 0.0,
+    "lam_min_left": 0.0,
+    "lam_max_left": 0.5600000023841858,
+    "margins": {
+     "kind": "axial",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.7761452794075012,
+     "R_img": 0.7761452794075012,
+     "safety": 0.02,
+     "w_diag": 0.14398227723597293,
+     "m_R": 0.7239822796201587,
+     "m_L": 0.16398227723597292
+    },
+    "lateral_bounds": [
+     0.14388210090159181,
+     0.416117901482594
+    ],
+    "init_translate_moved_for_edge": true,
+    "lateral_shift_m": 0.1,
+    "axis_angle": 0.0160690036180427,
+    "angle_class": 0,
+    "focus_info": null,
+    "init_view_angle": 0.1344958285827804,
+    "init_view_class": 0,
+    "_position": [
+     11,
+     1
+    ],
+    "init_travel": {
+     "lateral_m": 0.1,
+     "base_m": 0.1,
+     "path_m": 0.1414,
+     "departure_stand_off_m": 0.55,
+     "transition_stand_off_m": 0.45
+    },
+    "push_pitch_deg": 0.0,
+    "brace": "none",
+    "brace_class": null,
+    "brace_geometry": {
+     "reason": "no_joint_cell",
+     "brace_fails": [],
+     "blade_skips": {}
+    },
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  }
+ },
+ "n_constraints_recorded": 2,
+ "checks": {
+  "attached_object": true,
+  "program_check": "expand"
+ },
+ "rejections": {
+  "ik_joint_limit": 2,
+  "target_placement": 3,
+  "approach_untrackable": 1,
+  "program_check_failed": 2
+ },
+ "rejection_examples": {
+  "ik_joint_limit": [
+   {
+    "message": "[ik_joint_limit] retreat: ik_joint_limit: right_arm_joint7 within 12 mrad of its limit at the pose (every solution found; the approach from it would stall) (stance manipulation, arm right, carried None, after push) {'action': 'retreat'}",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 0,
+    "seed": 1884071341315067354,
+    "action": "retreat"
+   },
+   {
+    "message": "[ik_joint_limit] retreat: ik_joint_limit: right_arm_joint2 within 5 mrad of its limit at the pose (every solution found; the approach from it would stall) (stance manipulation, arm right, carried None, after push) {'action': 'retreat'}",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 4,
+    "seed": 1884071341315067358,
+    "action": "retreat"
+   }
+  ],
+  "target_placement": [
+   {
+    "message": "[target_placement] candidate 0: [grasp_unreachable] no long-axis end in the right band has an IK-feasible push arc at any pitch (['0\u00b0: first waypoint fails the exact IK', '30\u00b0: first waypoint fails the exact IK', '30\u00b0: last waypoint fails the exact IK', '45\u00b0: first waypoint fails the exact IK'])",
+    "phase": "sample",
+    "index": 0,
+    "attempt": 1,
+    "seed": 1884071341315067355
+   },
+   {
+    "message": "[target_placement] candidate 0: [grasp_unreachable] no long-axis end in the right band has an IK-feasible push arc at any pitch (['0\u00b0: first waypoint fails the exact IK', '0\u00b0: last waypoint fails the exact IK', '30\u00b0: last waypoint fails the exact IK', '45\u00b0: last waypoint fails the exact IK'])",
+    "phase": "sample",
+    "index": 0,
+    "attempt": 2,
+    "seed": 1884071341315067356
+   },
+   {
+    "message": "[target_placement] candidate 0: [grasp_unreachable] no long-axis end in the right band has an IK-feasible push arc at any pitch (['0\u00b0: first waypoint fails the exact IK', '30\u00b0: last waypoint fails the exact IK', '45\u00b0: last waypoint fails the exact IK', '60\u00b0: last waypoint fails the exact IK'])",
+    "phase": "sample",
+    "index": 0,
+    "attempt": 5,
+    "seed": 1884071341315067359
+   }
+  ],
+  "approach_untrackable": [
+   {
+    "message": "[approach_untrackable] waypoints: approach_untrackable: push pre-contact witness 2.97 rad from the raw IK from the stance posture (another branch): trajopt reaches such a witness only through the pushed object and the closed-loop arc fails from either branch (stance manipulation, arm right, carried None, push of board_game.n.01_1); the first pose is reachable in an empty world and there free at ma",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 3,
+    "seed": 1884071341315067357,
+    "action": "push"
+   }
+  ],
+  "program_check_failed": [
+   {
+    "message": "[program_check_failed] waypoints: first waypoint fails the exact IK (stance manipulation, arm right, carried None, push of board_game.n.01_1); the first pose has no IK solution even in an empty world (first pose at base depth 0.90, lateral -0.03, z 0.834); check world blocks (base mm)  {'action': 'push'}",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 6,
+    "seed": 1884071341315067360,
+    "action": "push"
+   },
+   {
+    "message": "[program_check_failed] retreat: exact IK failed at pose 1 of 3 (stance manipulation, arm right, carried None, after push) {'action': 'retreat'}",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 7,
+    "seed": 1884071341315067361,
+    "action": "retreat"
+   }
+  ]
+ },
+ "counters": {
+  "scene_reset": 27
+ },
+ "seeds": [
+  1884071341315067362
+ ],
+ "kit_stats": {
+  "ik_calls": 1047,
+  "ik_s": 132.07355952262878,
+  "ik_batch_calls": 9,
+  "ik_batch_problems": 18,
+  "ik_batch_s": 7.829343795776367,
+  "collision_calls": 224,
+  "collision_configs": 2451,
+  "collision_s": 4.652785778045654,
+  "limit_retry_poses": 99,
+  "limit_reject.right_arm_joint2": 20,
+  "orient_choices": 82,
+  "limit_reject.right_arm_joint7": 7,
+  "limit_retry_seeded_rescued": 31,
+  "limit_reject.right_arm_joint6": 8,
+  "limit_reject.right_arm_joint5": 4,
+  "orient_reason.reach": 4,
+  "orient_against_default": 5,
+  "limit_retry_random": 406,
+  "limit_retry_random_rescued": 29,
+  "orient_reason.only_feasible": 2
+ },
+ "n_written": 1,
+ "eval": {
+  "task_family": "alignment",
+  "task": "alignment_axial",
+  "subtask": "alignment_axial_board_game",
+  "variant": "alignment-axial-board_game-breakfast_table"
+ }
+}

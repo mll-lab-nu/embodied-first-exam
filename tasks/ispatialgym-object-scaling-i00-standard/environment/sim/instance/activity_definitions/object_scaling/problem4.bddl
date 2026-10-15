@@ -1,0 +1,31 @@
+(define (problem object_scaling-4)
+    (:domain ispatialgym)
+    (:variant object_scaling-beeswax_candle)
+
+    ; Object scaling. The target is held (right arm, fixed hold pose) at init and at the goal; the goal is a depth change of
+    ; the target along the head-camera optical axis (TRO pose target: frame = head camera, position_metric = depth).
+
+    (:objects
+        beeswax_candle.n.01_1 - beeswax_candle.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop agent.n.01_1 floor.n.01_1)
+        (grasped agent.n.01_1 beeswax_candle.n.01_1)
+    )
+
+    (:goal
+        (and
+            (grasped ?agent.n.01_1 ?beeswax_candle.n.01_1)
+            (pose_reached ?beeswax_candle.n.01_1)
+            (pose_settled ?beeswax_candle.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?beeswax_candle.n.01_1)
+    )
+)

@@ -1,0 +1,40 @@
+(define (problem inter_object_relation_satisfaction-0)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-inside_small_scale-brussels_sprouts-bowl-breakfast_table)
+
+    ; IORS - inside (small-scale). Target lowered into the partner (fillable container) on the support; the target's
+    ; goal orientation is whatever settles (TRO orientation_metric null), which also admits flowers stood in vases. Both
+    ; poses measured. The insert grasp pipeline (pads on the upper part of the object so the lower body can enter the
+    ; container; flowers held by the upper stem) is required.
+
+    (:objects
+        brussels_sprouts.n.01_1 - brussels_sprouts.n.01
+        bowl.n.01_1 - bowl.n.01
+        breakfast_table.n.01_1 - breakfast_table.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop brussels_sprouts.n.01_1 breakfast_table.n.01_1)
+        (ontop bowl.n.01_1 breakfast_table.n.01_1)
+        (not (inside brussels_sprouts.n.01_1 bowl.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (inside ?brussels_sprouts.n.01_1 ?bowl.n.01_1)
+            (not (grasped ?agent.n.01_1 ?brussels_sprouts.n.01_1))
+            (not (grasped ?agent.n.01_1 ?bowl.n.01_1))
+            (pose_settled ?brussels_sprouts.n.01_1)
+            (pose_settled ?bowl.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?brussels_sprouts.n.01_1)
+        (pose_reached ?bowl.n.01_1)
+    )
+)

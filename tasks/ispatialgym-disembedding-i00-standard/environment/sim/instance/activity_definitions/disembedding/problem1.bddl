@@ -1,0 +1,48 @@
+(define (problem disembedding-1)
+    (:domain ispatialgym)
+    (:variant disembedding-beaker-beaker_1_soda_cup_1_water_glass_1-countertop)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        beaker.n.02_1 beaker.n.02_2 - beaker.n.02
+        dixie_cup.n.01_1 - dixie_cup.n.01
+        water_glass.n.02_1 - water_glass.n.02
+        countertop.n.01_1 - countertop.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        beaker.n.02_2 dixie_cup.n.01_1 water_glass.n.02_1 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 countertop.n.01_1)
+        (ontop tray.n.01_2 countertop.n.01_1)
+        (ontop beaker.n.02_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop beaker.n.02_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?beaker.n.02_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?beaker.n.02_1))
+            (pose_settled ?beaker.n.02_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?beaker.n.02_1)
+    )
+)

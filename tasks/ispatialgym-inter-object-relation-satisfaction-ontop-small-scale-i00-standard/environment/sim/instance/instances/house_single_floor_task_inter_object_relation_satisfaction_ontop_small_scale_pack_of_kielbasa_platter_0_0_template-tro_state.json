@@ -1,0 +1,628 @@
+{
+  "pack__of__kielbasa.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        6.862522602081299,
+        3.1624491214752197,
+        0.8438829183578491
+      ],
+      "ori": [
+        0.000611534109339118,
+        -2.3298756786971353e-05,
+        0.9461035132408142,
+        0.3238637149333954
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          6.768985271453857,
+          3.0842535495758057,
+          0.8127520084381104,
+          6.9543328285217285,
+          3.2406888008117676,
+          0.8750147223472595
+        ]
+      }
+    }
+  },
+  "platter.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        7.097161769866943,
+        3.1618728637695312,
+        0.8207446336746216
+      ],
+      "ori": [
+        -3.5887238482246175e-05,
+        -5.173219688003883e-05,
+        -0.9971359372138977,
+        0.07563021779060364
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          6.987091064453125,
+          2.9889800548553467,
+          0.8127508163452148,
+          7.207180500030518,
+          3.3337273597717285,
+          0.8294119834899902
+        ]
+      },
+      "Temperature": {
+        "temperature": 23.0
+      }
+    }
+  },
+  "breakfast_table.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        7.294806480407715,
+        3.500743865966797,
+        0.7648563385009766
+      ],
+      "ori": [
+        -0.00012023102317471057,
+        0.00013855932047590613,
+        0.7062034010887146,
+        0.7080090641975403
+      ],
+      "lin_vel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ang_vel": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          5.830511093139648,
+          2.9049298763275146,
+          -0.0004145503044128418,
+          8.759990692138672,
+          4.095603942871094,
+          0.8128691911697388
+        ]
+      }
+    }
+  },
+  "floor.n.01_1": {
+    "is_asleep": false,
+    "root_link": {
+      "pos": [
+        6.781831741333008,
+        3.26104998588562,
+        -0.13887082040309906
+      ],
+      "ori": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "non_kin": {
+      "AABB": {
+        "aabb": [
+          3.8204739093780518,
+          1.8885823488235474,
+          -0.2777208387851715,
+          9.36577320098877,
+          4.7315826416015625,
+          -2.0831823348999023e-05
+        ]
+      }
+    }
+  },
+  "robot_poses": {
+    "robot": [
+      {
+        "position": [
+          6.958224296569824,
+          2.46820068359375,
+          0.005265712738037109
+        ],
+        "orientation": [
+          -5.974434316158295e-05,
+          5.115231397212483e-05,
+          0.7062032222747803,
+          0.7080092430114746
+        ]
+      }
+    ]
+  },
+  "ispatialgym": {
+    "schema_version": "isg-tro-v1",
+    "activity": "inter_object_relation_satisfaction",
+    "activity_definition_id": 1,
+    "task_variant": "inter_object_relation_satisfaction-ontop_small_scale-pack_of_kielbasa-platter-breakfast_table",
+    "instance_id": "inter_object_relation_satisfaction-ontop_small_scale-pack_of_kielbasa-platter-breakfast_table__house_single_floor__support-breakfast_table_rhjoby_0-T1__partner-platter-csanbr__target-pack_of_kielbasa-dgodnn__0000",
+    "generation_seed": 2328223821236509758,
+    "evaluation_profile": "isg-v1",
+    "bddl_sha256": "05a9d5faffc882231fd62591d4257c3ffabd00f97648b4561a794179469e0fdb",
+    "task_spec_sha256": "6a7e0694d13456f7aeedbdf5a8d0ef0cb38f800bd51f0d9d543a86230aab2db4",
+    "layout_template_id": null,
+    "scene": {
+      "model": "house_single_floor",
+      "floor": 0,
+      "template_path": "../template.json",
+      "template_sha256": "d149ec10ed6aa494d36f66cd1b3ae817536c6aa25d5e4b467eb8cd70142f34d6",
+      "load_room_instances": [
+        "dining_room_0",
+        "entryway_0",
+        "garden_0",
+        "kitchen_0",
+        "living_room_0",
+        "living_room_1"
+      ],
+      "task_rooms": [
+        "dining_room_0"
+      ],
+      "sampled_with_rooms": [
+        "dining_room_0",
+        "entryway_0",
+        "garden_0",
+        "kitchen_0",
+        "living_room_0",
+        "living_room_1"
+      ],
+      "scene_variant": {
+        "scene_file": "../../scene_variants/house_single_floor__cc5e0dab4b.json",
+        "removed_objects": [
+          "straight_chair_jgoolz_0",
+          "straight_chair_jgoolz_1",
+          "straight_chair_jgoolz_2",
+          "straight_chair_jgoolz_3",
+          "straight_chair_jgoolz_4",
+          "straight_chair_jgoolz_5"
+        ],
+        "freed_footprints": {
+          "free": [
+            [
+              [
+                7.993353843688965,
+                3.1143271923065186
+              ],
+              [
+                8.363746643066406,
+                3.248072862625122
+              ],
+              [
+                8.546874046325684,
+                2.7409231662750244
+              ],
+              [
+                8.176481246948242,
+                2.607177495956421
+              ]
+            ],
+            [
+              [
+                8.428321838378906,
+                3.81669282913208
+              ],
+              [
+                8.04768180847168,
+                3.715738296508789
+              ],
+              [
+                7.909452438354492,
+                4.236918926239014
+              ],
+              [
+                8.290092468261719,
+                4.337873458862305
+              ]
+            ],
+            [
+              [
+                7.475783348083496,
+                3.7558629512786865
+              ],
+              [
+                7.083395957946777,
+                3.722538948059082
+              ],
+              [
+                7.037768363952637,
+                4.259805202484131
+              ],
+              [
+                7.4301557540893555,
+                4.293128967285156
+              ]
+            ],
+            [
+              [
+                6.607521057128906,
+                3.804436206817627
+              ],
+              [
+                6.21530818939209,
+                3.8397560119628906
+              ],
+              [
+                6.263669013977051,
+                4.3767828941345215
+              ],
+              [
+                6.655881881713867,
+                4.341463088989258
+              ]
+            ],
+            [
+              [
+                6.289393901824951,
+                3.2292425632476807
+              ],
+              [
+                6.669515132904053,
+                3.1263527870178223
+              ],
+              [
+                6.528636455535889,
+                2.605881929397583
+              ],
+              [
+                6.148515224456787,
+                2.7087717056274414
+              ]
+            ],
+            [
+              [
+                7.140786647796631,
+                3.0244858264923096
+              ],
+              [
+                7.520907878875732,
+                2.921595573425293
+              ],
+              [
+                7.380028247833252,
+                2.401125192642212
+              ],
+              [
+                6.99990701675415,
+                2.5040154457092285
+              ]
+            ]
+          ],
+          "block": [
+            [
+              [
+                5.848289966583252,
+                4.084524154663086
+              ],
+              [
+                8.743980407714844,
+                4.077131748199463
+              ],
+              [
+                8.741019248962402,
+                2.9172356128692627
+              ],
+              [
+                5.845329284667969,
+                2.9246277809143066
+              ]
+            ]
+          ]
+        },
+        "moved_objects": {
+          "straight_chair_jgoolz_0": {
+            "pos": [
+              8.276880264282227,
+              2.908885955810547,
+              0.32601872086524963
+            ],
+            "ori": [
+              1.6197562217712402e-05,
+              -1.215015072375536e-05,
+              0.8184217810630798,
+              0.5746181011199951
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -124.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_1": {
+            "pos": [
+              8.163780212402344,
+              4.046063423156738,
+              0.32601845264434814
+            ],
+            "ori": [
+              -1.2665987014770508e-05,
+              -1.56183959916234e-05,
+              -0.6097702980041504,
+              0.7925782799720764
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -129.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_2": {
+            "pos": [
+              7.255090236663818,
+              4.027685642242432,
+              0.32602065801620483
+            ],
+            "ori": [
+              -6.452202796936035e-06,
+              -7.124384865164757e-06,
+              -0.6765273213386536,
+              0.7364175915718079
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -134.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_3": {
+            "pos": [
+              6.437382221221924,
+              4.110452651977539,
+              0.32601872086524963
+            ],
+            "ori": [
+              -1.7136335372924805e-05,
+              -1.3347831554710865e-05,
+              -0.7381362915039062,
+              0.6746516227722168
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -139.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_4": {
+            "pos": [
+              6.403809547424316,
+              2.8983311653137207,
+              0.3260188698768616
+            ],
+            "ori": [
+              1.1816620826721191e-05,
+              -1.826148945838213e-05,
+              0.6077523231506348,
+              0.7941267490386963
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -144.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          },
+          "straight_chair_jgoolz_5": {
+            "pos": [
+              7.255201816558838,
+              2.6935744285583496,
+              0.3260185718536377
+            ],
+            "ori": [
+              1.1801719665527344e-05,
+              -1.615926157683134e-05,
+              0.6077519059181213,
+              0.7941270470619202
+            ],
+            "fixed_base": false,
+            "moved_to": [
+              -149.84286308288574,
+              -115.73151111602783,
+              -100.9590277671814
+            ]
+          }
+        }
+      },
+      "required_scene_objects": [
+        "breakfast_table_rhjoby_0",
+        "floors_qgmjvd_0"
+      ]
+    },
+    "object_bindings": {
+      "floor.n.01_1": {
+        "scene_object_name": "floors_qgmjvd_0",
+        "category": "floors",
+        "model": "qgmjvd"
+      },
+      "breakfast_table.n.01_1": {
+        "scene_object_name": "breakfast_table_rhjoby_0",
+        "category": "breakfast_table",
+        "model": "rhjoby"
+      },
+      "pack__of__kielbasa.n.01_1": {
+        "scene_object_name": "target_pack_of_kielbasa_dgodnn_0",
+        "category": "pack_of_kielbasa",
+        "model": "dgodnn"
+      },
+      "platter.n.01_1": {
+        "scene_object_name": "partner_platter_csanbr_0",
+        "category": "platter",
+        "model": "csanbr"
+      }
+    },
+    "robot_state": {
+      "bddl_instance": "agent.n.01_1",
+      "model": "r1pro",
+      "joint_positions": {
+        "torso_joint1": 1.2054859399795532,
+        "torso_joint2": -1.7795438766479492,
+        "torso_joint3": -0.617520272731781,
+        "torso_joint4": -1.1077071349063772e-07,
+        "left_arm_joint1": 3.476241181488149e-05,
+        "right_arm_joint1": 4.473594162845984e-05,
+        "left_arm_joint2": 1.570000171661377,
+        "right_arm_joint2": -1.570000171661377,
+        "left_arm_joint3": -2.528617187635973e-06,
+        "right_arm_joint3": 1.4802969872107496e-06,
+        "left_arm_joint4": -1.5700000524520874,
+        "right_arm_joint4": -1.5700006484985352,
+        "left_arm_joint5": 1.56999933719635,
+        "right_arm_joint5": -1.5700005292892456,
+        "left_arm_joint6": 1.529851090253942e-08,
+        "right_arm_joint6": 1.7720617506711278e-07,
+        "left_arm_joint7": -2.0425520119715657e-07,
+        "right_arm_joint7": 7.035723115222936e-08,
+        "left_gripper_finger_joint1": 0.04999939724802971,
+        "left_gripper_finger_joint2": 0.04999997466802597,
+        "right_gripper_finger_joint1": 0.04999939352273941,
+        "right_gripper_finger_joint2": 0.04999980330467224
+      },
+      "joint_velocities": {
+        "torso_joint1": 0.0,
+        "torso_joint2": 0.0,
+        "torso_joint3": 0.0,
+        "torso_joint4": 0.0,
+        "left_arm_joint1": 0.0,
+        "right_arm_joint1": 0.0,
+        "left_arm_joint2": 0.0,
+        "right_arm_joint2": 0.0,
+        "left_arm_joint3": 0.0,
+        "right_arm_joint3": 0.0,
+        "left_arm_joint4": 0.0,
+        "right_arm_joint4": 0.0,
+        "left_arm_joint5": 0.0,
+        "right_arm_joint5": 0.0,
+        "left_arm_joint6": 0.0,
+        "right_arm_joint6": 0.0,
+        "left_arm_joint7": 0.0,
+        "right_arm_joint7": 0.0,
+        "left_gripper_finger_joint1": 0.0,
+        "left_gripper_finger_joint2": 0.0,
+        "right_gripper_finger_joint1": 0.0,
+        "right_gripper_finger_joint2": 0.0
+      },
+      "controller_targets": {}
+    },
+    "goal_observation": {
+      "sensor_key": "robot_r1:zed_link:Camera:0",
+      "rgb_path": "house_single_floor_task_inter_object_relation_satisfaction_ontop_small_scale_pack_of_kielbasa_platter_0_0_template-goal_rgb.png",
+      "rgb_sha256": "e83e959a5e12d87a2d787526ce107be6cd7d91edfb737cd6673962835332b60c",
+      "resolution": [
+        1080,
+        1080
+      ],
+      "intrinsics": {
+        "fx": 459.0,
+        "fy": 459.0,
+        "cx": 540.0,
+        "cy": 540.0,
+        "width": 1080,
+        "height": 1080
+      },
+      "camera_pose_world": {
+        "position": [
+          6.860358715057373,
+          2.8772666454315186,
+          1.3776657581329346
+        ],
+        "orientation": [
+          0.316539466381073,
+          -0.0005978430854156613,
+          -0.0017426753183826804,
+          0.9485775828361511
+        ]
+      },
+      "evaluation_profile": "isg-v1",
+      "n_render_iterations": 1
+    },
+    "pose_targets": {
+      "platter.n.01_1": {
+        "link": null,
+        "frame": "world",
+        "position": [
+          7.09611177444458,
+          3.1616718769073486,
+          0.8207426071166992
+        ],
+        "orientation": [
+          -5.629336374113336e-05,
+          -2.6328703825129196e-05,
+          -0.9963536858558655,
+          0.08531966060400009
+        ],
+        "position_metric": "full",
+        "orientation_metric": "full",
+        "position_tolerance": 0.03,
+        "orientation_tolerance": 0.2,
+        "orientation_equivalences": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ]
+        ]
+      },
+      "pack__of__kielbasa.n.01_1": {
+        "link": null,
+        "frame": "world",
+        "position": [
+          7.0866475105285645,
+          3.150744915008545,
+          0.8600798845291138
+        ],
+        "orientation": [
+          -0.06860234588384628,
+          -0.2061190903186798,
+          0.9275151491165161,
+          0.3041781187057495
+        ],
+        "position_metric": "full",
+        "orientation_metric": "full",
+        "position_tolerance": 0.03,
+        "orientation_tolerance": 0.2,
+        "orientation_equivalences": []
+      }
+    },
+    "groups": {},
+    "articulation_targets": {}
+  }
+}

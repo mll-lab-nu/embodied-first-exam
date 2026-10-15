@@ -1,0 +1,37 @@
+(define (problem inter_object_relation_satisfaction-16)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-inside_large_scale-plate-drop_in_sink_lkklqs_0-bar)
+
+    ; IORS - inside (large-scale). The target starts on a support (a table near the partner, or the floor beside it - an
+    ; explicit support choice made by ground_isg, never a runtime fallback) and ends inside a large scene partner (a copy of
+    ; ontop_large_scale with the goal predicate inside). Three recorded stances: init A, manipulation B, placement C.
+    ; Here the plate (plate/luhkiz) starts on a bar top near drop_in_sink_lkklqs_0 (set in bar_egwapq_0) and ends inside
+    ; the sink.
+
+    (:objects
+        plate.n.04_1 - plate.n.04
+        sink.n.01_1 - sink.n.01
+        countertop.n.01_1 - countertop.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop plate.n.04_1 countertop.n.01_1)
+        (not (inside plate.n.04_1 sink.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (inside ?plate.n.04_1 ?sink.n.01_1)
+            (not (grasped ?agent.n.01_1 ?plate.n.04_1))
+            (pose_settled ?plate.n.04_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?plate.n.04_1)
+    )
+)

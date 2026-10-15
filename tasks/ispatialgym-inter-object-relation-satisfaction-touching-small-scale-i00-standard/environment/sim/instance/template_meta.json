@@ -1,0 +1,1317 @@
+{
+ "template_id": "house_single_floor__support-breakfast_table_rhjoby_0-T1__partner-box_of_tissues-ntbrtz__target-box_of_sanitary_napkins-humkqw",
+ "scene": "house_single_floor",
+ "timings": {
+  "bind_spawn_s": 45.19733929634094,
+  "bind_spawn_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 0,
+   "collision_configs": 0,
+   "collision_s": 0.0
+  },
+  "sample_template_s": 44.51212477684021,
+  "sample_template_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 4,
+   "collision_configs": 1376,
+   "collision_s": 0.207
+  },
+  "save_template_s": 1.7619562149047852
+ },
+ "variant": "inter_object_relation_satisfaction-touching_small_scale-box_of_sanitary_napkins-box_of_tissues-breakfast_table",
+ "subtask": "inter_object_relation_satisfaction-touching_small_scale",
+ "sampler_version": "2.0.0-dev",
+ "spec_hash": "f7780599235bd45d2bd903ad470f43269b9990c1711eb38e5194c8e3fcee54d3",
+ "choice": {
+  "scene": "house_single_floor",
+  "rooms": [
+   "dining_room_0"
+  ],
+  "bindings": {
+   "support": [
+    "breakfast_table_rhjoby_0"
+   ],
+   "support_surfaces": [
+    {
+     "name": "breakfast_table_rhjoby_0",
+     "init": "ontop",
+     "top_z": 0.81,
+     "row": "inter_object_relation_satisfaction-touching#01~T1"
+    }
+   ],
+   "floor": {
+    "room": "dining_room_0"
+   }
+  },
+  "models": {
+   "target": {
+    "category": "box_of_sanitary_napkins",
+    "model": "humkqw",
+    "dataset": "behavior-1k-assets",
+    "grasp_key": "box_of_sanitary_napkins__humkqw",
+    "scale": null
+   },
+   "partner": {
+    "category": "box_of_tissues",
+    "model": "ntbrtz",
+    "dataset": "behavior-1k-assets",
+    "grasp_key": null,
+    "scale": null
+   }
+  },
+  "groups": {},
+  "template_id": "house_single_floor__support-breakfast_table_rhjoby_0-T1__partner-box_of_tissues-ntbrtz__target-box_of_sanitary_napkins-humkqw",
+  "support_tag": "breakfast_table_rhjoby_0-T1"
+ },
+ "rooms": [
+  "dining_room_0"
+ ],
+ "customs": "/vision/u/minyeong/projects/isg_home/eval85/code_4e067cdf_6a6194600/ispatialgym/assets/task_specs/isg_customs.json",
+ "joint_limit_margin_rad": 0.05,
+ "split": {
+  "split": "eval",
+  "index": 0,
+  "seed": 1015168642,
+  "seed_source": "split",
+  "scene": "house_single_floor",
+  "room": null,
+  "scene_source": "--scene"
+ },
+ "candidate": {
+  "scene": "house_single_floor",
+  "support": "breakfast_table_rhjoby_0",
+  "row": "inter_object_relation_satisfaction-touching#01~T1",
+  "init": "ontop",
+  "top_z": 0.81,
+  "surface": null,
+  "regions": null,
+  "rooms": [
+   "dining_room_0"
+  ],
+  "floor_room": "dining_room_0",
+  "tag": "breakfast_table_rhjoby_0-T1",
+  "source": "--support"
+ },
+ "init_arms": "untucked",
+ "bddl_sha256": "028fc4f20b08f20092b5214ff5d3da75b65cf3e650a3c6a872cf12b7705662b4",
+ "template_facts": {
+  "contact_height_extra_m": 0.0,
+  "grasps_dropped_not_attachable": [],
+  "grasp_pinch_recentre": {},
+  "grasp_pinch_offset_m": {
+   "grasp_0": -0.0,
+   "grasp_1": 0.0,
+   "grasp_2": 0.0,
+   "grasp_3": -0.0,
+   "grasp_4": -0.0
+  },
+  "grasps_recentred": [],
+  "grasp_closing_tilt_deg": {
+   "grasp_0": 0.0,
+   "grasp_1": 0.0,
+   "grasp_2": 0.0,
+   "grasp_3": 0.0,
+   "grasp_4": 0.0
+  },
+  "grasp_pivot_arms_m": {
+   "grasp_0": 0.0153,
+   "grasp_1": 0.0206,
+   "grasp_2": 0.0231,
+   "grasp_3": 0.0311,
+   "grasp_4": 0.0245
+  },
+  "grasp_pinch_vs_long_axis_deg": {
+   "grasp_0": 90.0,
+   "grasp_1": 90.0,
+   "grasp_2": 90.0,
+   "grasp_3": 90.0,
+   "grasp_4": 90.0
+  },
+  "grasps_flush_first": [
+   "grasp_0",
+   "grasp_1",
+   "grasp_2",
+   "grasp_3",
+   "grasp_4"
+  ],
+  "grasps_inclined_fallback": [],
+  "pair": {
+   "target_extent": [
+    0.06953811645507812,
+    0.0957794189453125,
+    0.10920429229736328
+   ],
+   "partner_extent": [
+    0.10694122314453125,
+    0.1265716552734375,
+    0.07463312149047852
+   ],
+   "relation": "touching",
+   "g_NT": 0.0323704369366169
+  },
+  "support_surface": {
+   "support": "breakfast_table_rhjoby_0",
+   "spec": {
+    "name": "breakfast_table_rhjoby_0",
+    "init": "ontop",
+    "top_z": 0.81,
+    "row": "inter_object_relation_satisfaction-touching#01~T1"
+   },
+   "top_z_above_floor": 0.8126,
+   "top_error": null,
+   "surface": "top"
+  },
+  "support": {
+   "name": "breakfast_table_rhjoby_0",
+   "z": 0.8126289248466492,
+   "yaw": 1.568243384361267,
+   "local_bounds": [
+    2.9359593391418457,
+    4.0961594581604,
+    -8.73303508758545,
+    -5.830236434936523
+   ],
+   "n_free_cells": 8463,
+   "occupants": [],
+   "resolution": 0.02
+  },
+  "edge": {
+   "name": "-u",
+   "mid": [
+    7.289107322692871,
+    2.917360305786133
+   ],
+   "inward": [
+    0.0025529395788908005,
+    0.9999967217445374
+   ],
+   "tangent": [
+    -0.9999967217445374,
+    0.0025529395788908005
+   ],
+   "length_m": 2.902798652648926,
+   "overhang_m": 0.0
+  },
+  "init_stance": {
+   "base_pose2d": [
+    6.7326979637146,
+    2.4687793254852295,
+    1.5682433843930847
+   ],
+   "translate": 0.6968210308107295,
+   "tilt": 0.0,
+   "arms": "untucked",
+   "stand_off": 0.45,
+   "edge": "-u",
+   "lateral": 0.5552626834839016,
+   "H_max": 0.10920429229736328,
+   "delta": 0.4748956503205142,
+   "delta_aim": 0.4748956503205142,
+   "delta_min": 0.3969764471054077,
+   "delta_max": 0.6635120708729941,
+   "conflict": false,
+   "d_ws": 0.25307682958933025,
+   "d_near": 0.02999979257583618,
+   "d_far": 0.5099999606609344,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2278330266253783,
+   "z_c": 1.2875453622870288,
+   "b": 0.6573094129562378,
+   "b_right": 0.6573149561882019,
+   "b_left": 0.6573094129562378,
+   "R_img": 0.6573094129562378,
+   "t_range": [
+    0.32899902719068064,
+    0.8221303781629437
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 52,
+   "left_band": false,
+   "margins": {
+    "kind": "iors",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "safety": 0.02,
+    "D_p": 0.1565716552734375,
+    "m_R": 0.9110330224037171,
+    "m_L": 0.3510330200195313
+   },
+   "lateral_bounds": [
+    -0.5403663039207458,
+    1.1003663063049316
+   ],
+   "name": "init",
+   "edge_frame": {
+    "name": "-u",
+    "mid": [
+     7.289107322692871,
+     2.917360305786133
+    ],
+    "inward": [
+     0.0025529395788908005,
+     0.9999967217445374
+    ],
+    "tangent": [
+     -0.9999967217445374,
+     0.0025529395788908005
+    ],
+    "length_m": 2.902798652648926,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.44999998807907104,
+   "extras": {
+    "H_max": 0.10920429229736328,
+    "delta": 0.4748956503205142,
+    "delta_aim": 0.4748956503205142,
+    "delta_min": 0.3969764471054077,
+    "delta_max": 0.6635120708729941,
+    "conflict": false,
+    "d_ws": 0.25307682958933025,
+    "d_near": 0.02999979257583618,
+    "d_far": 0.5099999606609344,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2278330266253783,
+    "z_c": 1.2875453622870288,
+    "b": 0.6573094129562378,
+    "b_right": 0.6573149561882019,
+    "b_left": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "t_range": [
+     0.32899902719068064,
+     0.8221303781629437
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 52,
+    "left_band": false,
+    "margins": {
+     "kind": "iors",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.6573094129562378,
+     "R_img": 0.6573094129562378,
+     "safety": 0.02,
+     "D_p": 0.1565716552734375,
+     "m_R": 0.9110330224037171,
+     "m_L": 0.3510330200195313
+    },
+    "lateral_bounds": [
+     -0.5403663039207458,
+     1.1003663063049316
+    ]
+   }
+  },
+  "n_manipulation_candidates": 508,
+  "grasp_key": "box_of_sanitary_napkins__humkqw",
+  "n_grasps": 5,
+  "bands": "/vision/u/minyeong/projects/isg_home/eval85/code_4e067cdf_6a6194600/runlogs/reach_bands_20260915/bands/tabletop__house_single_floor__breakfast_table_rhjoby_0__box_of_sanitary_napkins-humkqw__6057a78539119c58.npz",
+  "H_max": 0.10920429229736328,
+  "segment_arms": [
+   "right"
+  ]
+ },
+ "bindings": [
+  {
+   "role": "floor",
+   "name": "floor.n.01_1",
+   "synset": "floor.n.01",
+   "category": "floors",
+   "model": "qgmjvd",
+   "scene_object_name": "floors_qgmjvd_0",
+   "dataset": null
+  },
+  {
+   "role": "support",
+   "name": "breakfast_table.n.01_1",
+   "synset": "breakfast_table.n.01",
+   "category": "breakfast_table",
+   "model": "rhjoby",
+   "scene_object_name": "breakfast_table_rhjoby_0",
+   "dataset": null
+  },
+  {
+   "role": "target",
+   "name": "box__of__sanitary_napkin.n.01_1",
+   "synset": "box__of__sanitary_napkin.n.01",
+   "category": "box_of_sanitary_napkins",
+   "model": "humkqw",
+   "scene_object_name": "target_box_of_sanitary_napkins_humkqw_0",
+   "dataset": "behavior-1k-assets"
+  },
+  {
+   "role": "partner",
+   "name": "box__of__tissue.n.01_1",
+   "synset": "box__of__tissue.n.01",
+   "category": "box_of_tissues",
+   "model": "ntbrtz",
+   "scene_object_name": "partner_box_of_tissues_ntbrtz_0",
+   "dataset": "behavior-1k-assets"
+  }
+ ],
+ "template_sha256": "dda68c0dfce33491fd1e5b9ca33eb4222419eb89e13805fd551c46ee91dfcda5",
+ "template_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s3_55tasks/inter_object_relation_satisfaction-touching_01/c1_k0/inst/inter_object_relation_satisfaction-touching-box_of_sanitary_napkins-box_of_tissues-breakfast_table/house_single_floor__support-breakfast_table_rhjoby_0-T1__partner-box_of_tissues-ntbrtz__target-box_of_sanitary_napkins-humkqw/template.json",
+ "template_partial_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s3_55tasks/inter_object_relation_satisfaction-touching_01/c1_k0/inst/inter_object_relation_satisfaction-touching-box_of_sanitary_napkins-box_of_tissues-breakfast_table/house_single_floor__support-breakfast_table_rhjoby_0-T1__partner-box_of_tissues-ntbrtz__target-box_of_sanitary_napkins-humkqw/template-partial_rooms.json",
+ "load_room_instances": [
+  "dining_room_0",
+  "entryway_0",
+  "garden_0",
+  "kitchen_0",
+  "living_room_0",
+  "living_room_1"
+ ],
+ "task_rooms": [
+  "dining_room_0"
+ ],
+ "sampled_with_rooms": [
+  "dining_room_0",
+  "entryway_0",
+  "garden_0",
+  "kitchen_0",
+  "living_room_0",
+  "living_room_1"
+ ],
+ "scene_variant": {
+  "scene_file": "../../scene_variants/house_single_floor__cc5e0dab4b.json",
+  "removed_objects": [
+   "straight_chair_jgoolz_0",
+   "straight_chair_jgoolz_1",
+   "straight_chair_jgoolz_2",
+   "straight_chair_jgoolz_3",
+   "straight_chair_jgoolz_4",
+   "straight_chair_jgoolz_5"
+  ],
+  "freed_footprints": {
+   "free": [
+    [
+     [
+      7.993353843688965,
+      3.1143271923065186
+     ],
+     [
+      8.363746643066406,
+      3.248072862625122
+     ],
+     [
+      8.546874046325684,
+      2.7409231662750244
+     ],
+     [
+      8.176481246948242,
+      2.607177495956421
+     ]
+    ],
+    [
+     [
+      8.428321838378906,
+      3.81669282913208
+     ],
+     [
+      8.04768180847168,
+      3.715738296508789
+     ],
+     [
+      7.909452438354492,
+      4.236918926239014
+     ],
+     [
+      8.290092468261719,
+      4.337873458862305
+     ]
+    ],
+    [
+     [
+      7.475783348083496,
+      3.7558629512786865
+     ],
+     [
+      7.083395957946777,
+      3.722538948059082
+     ],
+     [
+      7.037768363952637,
+      4.259805202484131
+     ],
+     [
+      7.4301557540893555,
+      4.293128967285156
+     ]
+    ],
+    [
+     [
+      6.607521057128906,
+      3.804436206817627
+     ],
+     [
+      6.21530818939209,
+      3.8397560119628906
+     ],
+     [
+      6.263669013977051,
+      4.3767828941345215
+     ],
+     [
+      6.655881881713867,
+      4.341463088989258
+     ]
+    ],
+    [
+     [
+      6.289393901824951,
+      3.2292425632476807
+     ],
+     [
+      6.669515132904053,
+      3.1263527870178223
+     ],
+     [
+      6.528636455535889,
+      2.605881929397583
+     ],
+     [
+      6.148515224456787,
+      2.7087717056274414
+     ]
+    ],
+    [
+     [
+      7.140786647796631,
+      3.0244858264923096
+     ],
+     [
+      7.520907878875732,
+      2.921595573425293
+     ],
+     [
+      7.380028247833252,
+      2.401125192642212
+     ],
+     [
+      6.99990701675415,
+      2.5040154457092285
+     ]
+    ]
+   ],
+   "block": [
+    [
+     [
+      5.848289966583252,
+      4.084524154663086
+     ],
+     [
+      8.743980407714844,
+      4.077131748199463
+     ],
+     [
+      8.741019248962402,
+      2.9172356128692627
+     ],
+     [
+      5.845329284667969,
+      2.9246277809143066
+     ]
+    ]
+   ]
+  },
+  "moved_objects": {
+   "straight_chair_jgoolz_0": {
+    "pos": [
+     8.276880264282227,
+     2.908885955810547,
+     0.32601872086524963
+    ],
+    "ori": [
+     1.6197562217712402e-05,
+     -1.215015072375536e-05,
+     0.8184217810630798,
+     0.5746181011199951
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -124.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_1": {
+    "pos": [
+     8.163780212402344,
+     4.046063423156738,
+     0.32601845264434814
+    ],
+    "ori": [
+     -1.2665987014770508e-05,
+     -1.56183959916234e-05,
+     -0.6097702980041504,
+     0.7925782799720764
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -129.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_2": {
+    "pos": [
+     7.255090236663818,
+     4.027685642242432,
+     0.32602065801620483
+    ],
+    "ori": [
+     -6.452202796936035e-06,
+     -7.124384865164757e-06,
+     -0.6765273213386536,
+     0.7364175915718079
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -134.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_3": {
+    "pos": [
+     6.437382221221924,
+     4.110452651977539,
+     0.32601872086524963
+    ],
+    "ori": [
+     -1.7136335372924805e-05,
+     -1.3347831554710865e-05,
+     -0.7381362915039062,
+     0.6746516227722168
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -139.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_4": {
+    "pos": [
+     6.403809547424316,
+     2.8983311653137207,
+     0.3260188698768616
+    ],
+    "ori": [
+     1.1816620826721191e-05,
+     -1.826148945838213e-05,
+     0.6077523231506348,
+     0.7941267490386963
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -144.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   },
+   "straight_chair_jgoolz_5": {
+    "pos": [
+     7.255201816558838,
+     2.6935744285583496,
+     0.3260185718536377
+    ],
+    "ori": [
+     1.1801719665527344e-05,
+     -1.615926157683134e-05,
+     0.6077519059181213,
+     0.7941270470619202
+    ],
+    "fixed_base": false,
+    "moved_to": [
+     -149.84286308288574,
+     -115.73151111602783,
+     -100.9590277671814
+    ]
+   }
+  }
+ },
+ "problem": "inter_object_relation_satisfaction-3",
+ "choices": {
+  "target": {
+   "category": "box_of_sanitary_napkins",
+   "model": "humkqw",
+   "dataset": "behavior-1k-assets",
+   "grasp_key": "box_of_sanitary_napkins__humkqw",
+   "scale": null
+  },
+  "partner": {
+   "category": "box_of_tissues",
+   "model": "ntbrtz",
+   "dataset": "behavior-1k-assets",
+   "grasp_key": null,
+   "scale": null
+  }
+ },
+ "inst_to_name": {
+  "floor.n.01_1": "floors_qgmjvd_0",
+  "breakfast_table.n.01_1": "breakfast_table_rhjoby_0",
+  "box__of__sanitary_napkin.n.01_1": "target_box_of_sanitary_napkins_humkqw_0",
+  "box__of__tissue.n.01_1": "partner_box_of_tissues_ntbrtz_0",
+  "agent.n.01_1": "robot_r1"
+ },
+ "scene_load_s": 523.2211961746216,
+ "activity_definition": "../activity_definitions/inter_object_relation_satisfaction/problem24.bddl",
+ "bddl_variant": "inter_object_relation_satisfaction-touching_small_scale-box_of_sanitary_napkins-box_of_tissues-breakfast_table",
+ "stances": {
+  "init": {
+   "base_pose2d": [
+    6.7326979637146,
+    2.4687793254852295,
+    1.5682433843930847
+   ],
+   "translate": 0.6968210308107295,
+   "tilt": 0.0,
+   "arms": "untucked",
+   "stand_off": 0.45,
+   "edge": "-u",
+   "lateral": 0.5552626834839016,
+   "H_max": 0.10920429229736328,
+   "delta": 0.4748956503205142,
+   "delta_aim": 0.4748956503205142,
+   "delta_min": 0.3969764471054077,
+   "delta_max": 0.6635120708729941,
+   "conflict": false,
+   "d_ws": 0.25307682958933025,
+   "d_near": 0.02999979257583618,
+   "d_far": 0.5099999606609344,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2278330266253783,
+   "z_c": 1.2875453622870288,
+   "b": 0.6573094129562378,
+   "b_right": 0.6573149561882019,
+   "b_left": 0.6573094129562378,
+   "R_img": 0.6573094129562378,
+   "t_range": [
+    0.32899902719068064,
+    0.8221303781629437
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 52,
+   "left_band": false,
+   "margins": {
+    "kind": "iors",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "safety": 0.02,
+    "D_p": 0.1565716552734375,
+    "m_R": 0.9110330224037171,
+    "m_L": 0.3510330200195313
+   },
+   "lateral_bounds": [
+    -0.5403663039207458,
+    1.1003663063049316
+   ],
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "name": "init",
+   "edge_frame": {
+    "name": "-u",
+    "mid": [
+     7.289107322692871,
+     2.917360305786133
+    ],
+    "inward": [
+     0.0025529395788908005,
+     0.9999967217445374
+    ],
+    "tangent": [
+     -0.9999967217445374,
+     0.0025529395788908005
+    ],
+    "length_m": 2.902798652648926,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.44999998807907104,
+   "extras": {
+    "H_max": 0.10920429229736328,
+    "delta": 0.4748956503205142,
+    "delta_aim": 0.4748956503205142,
+    "delta_min": 0.3969764471054077,
+    "delta_max": 0.6635120708729941,
+    "conflict": false,
+    "d_ws": 0.25307682958933025,
+    "d_near": 0.02999979257583618,
+    "d_far": 0.5099999606609344,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2278330266253783,
+    "z_c": 1.2875453622870288,
+    "b": 0.6573094129562378,
+    "b_right": 0.6573149561882019,
+    "b_left": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "t_range": [
+     0.32899902719068064,
+     0.8221303781629437
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 52,
+    "left_band": false,
+    "margins": {
+     "kind": "iors",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.6573094129562378,
+     "R_img": 0.6573094129562378,
+     "safety": 0.02,
+     "D_p": 0.1565716552734375,
+     "m_R": 0.9110330224037171,
+     "m_L": 0.3510330200195313
+    },
+    "lateral_bounds": [
+     -0.5403663039207458,
+     1.1003663063049316
+    ],
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "manipulation": {
+   "base_pose2d": [
+    6.632442474365234,
+    2.369034767150879,
+    1.5682433843930847
+   ],
+   "translate": 0.25,
+   "tilt": -0.798799991607666,
+   "arms": [
+    "right"
+   ],
+   "stand_off": 0.55,
+   "edge": "-u",
+   "lateral": 0.6552626834839016,
+   "focus": [
+    6.714280128479004,
+    3.0888283252716064,
+    0.8672310709953308
+   ],
+   "idle_posture": "untucked",
+   "H_max": 0.10920429229736328,
+   "delta": 0.4748956503205142,
+   "delta_aim": 0.4748956503205142,
+   "delta_min": 0.3969764471054077,
+   "delta_max": 0.6635120708729941,
+   "conflict": false,
+   "d_ws": 0.25307682958933025,
+   "d_near": 0.02999979257583618,
+   "d_far": 0.5099999606609344,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2278330266253783,
+   "z_c": 1.2875453622870288,
+   "b": 0.6573094129562378,
+   "b_right": 0.6573149561882019,
+   "b_left": 0.6573094129562378,
+   "R_img": 0.6573094129562378,
+   "t_range": [
+    0.32899902719068064,
+    0.8221303781629437
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 52,
+   "left_band": false,
+   "margins": {
+    "kind": "iors",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "safety": 0.02,
+    "D_p": 0.1565716552734375,
+    "m_R": 0.9110330224037171,
+    "m_L": 0.3510330200195313
+   },
+   "lateral_bounds": [
+    -0.5403663039207458,
+    1.1003663063049316
+   ],
+   "lateral_shift_m": 0.1,
+   "axis_angle": 0.22106574691062011,
+   "angle_class": 1,
+   "focus_info": null,
+   "init_view_angle": 0.42908410909611283,
+   "init_view_class": 1,
+   "init_travel": {
+    "lateral_m": 0.1,
+    "base_m": 0.1414,
+    "path_m": 0.1,
+    "departure_stand_off_m": 0.55,
+    "transition_stand_off_m": 0.55
+   },
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "name": "manipulation",
+   "edge_frame": {
+    "name": "-u",
+    "mid": [
+     7.289107322692871,
+     2.917360305786133
+    ],
+    "inward": [
+     0.0025529395788908005,
+     0.9999967217445374
+    ],
+    "tangent": [
+     -0.9999967217445374,
+     0.0025529395788908005
+    ],
+    "length_m": 2.902798652648926,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.5500001907348633,
+   "extras": {
+    "H_max": 0.10920429229736328,
+    "delta": 0.4748956503205142,
+    "delta_aim": 0.4748956503205142,
+    "delta_min": 0.3969764471054077,
+    "delta_max": 0.6635120708729941,
+    "conflict": false,
+    "d_ws": 0.25307682958933025,
+    "d_near": 0.02999979257583618,
+    "d_far": 0.5099999606609344,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2278330266253783,
+    "z_c": 1.2875453622870288,
+    "b": 0.6573094129562378,
+    "b_right": 0.6573149561882019,
+    "b_left": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "t_range": [
+     0.32899902719068064,
+     0.8221303781629437
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 52,
+    "left_band": false,
+    "margins": {
+     "kind": "iors",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.6573094129562378,
+     "R_img": 0.6573094129562378,
+     "safety": 0.02,
+     "D_p": 0.1565716552734375,
+     "m_R": 0.9110330224037171,
+     "m_L": 0.3510330200195313
+    },
+    "lateral_bounds": [
+     -0.5403663039207458,
+     1.1003663063049316
+    ],
+    "lateral_shift_m": 0.1,
+    "axis_angle": 0.22106574691062011,
+    "angle_class": 1,
+    "focus_info": null,
+    "init_view_angle": 0.42908410909611283,
+    "init_view_class": 1,
+    "_position": [
+     8,
+     0
+    ],
+    "init_travel": {
+     "lateral_m": 0.1,
+     "base_m": 0.1414,
+     "path_m": 0.1,
+     "departure_stand_off_m": 0.55,
+     "transition_stand_off_m": 0.55
+    },
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  },
+  "push": {
+   "base_pose2d": [
+    6.587939262390137,
+    2.3691484928131104,
+    1.5682433843930847
+   ],
+   "translate": 0.25,
+   "tilt": -0.798799991607666,
+   "arms": [
+    "right",
+    "left"
+   ],
+   "stand_off": 0.55,
+   "edge": "-u",
+   "lateral": 0.6997661738126904,
+   "focus": [
+    6.674989700317383,
+    3.0850718021392822,
+    0.8674094676971436
+   ],
+   "contacts": [
+    "push",
+    "brace"
+   ],
+   "carried": "box__of__sanitary_napkin.n.01_1",
+   "H_max": 0.10920429229736328,
+   "delta": 0.4748956503205142,
+   "delta_aim": 0.4748956503205142,
+   "delta_min": 0.3969764471054077,
+   "delta_max": 0.6635120708729941,
+   "conflict": false,
+   "d_ws": 0.25307682958933025,
+   "d_near": 0.02999979257583618,
+   "d_far": 0.5099999606609344,
+   "lam_min": -0.5600000023841858,
+   "lam_max": 0.0,
+   "x_c": 0.2278330266253783,
+   "z_c": 1.2875453622870288,
+   "b": 0.6573094129562378,
+   "b_right": 0.6573149561882019,
+   "b_left": 0.6573094129562378,
+   "R_img": 0.6573094129562378,
+   "t_range": [
+    0.32899902719068064,
+    0.8221303781629437
+   ],
+   "camera_pitch_deg": 22.580477940295808,
+   "hand_below": 0.18777215480804443,
+   "n_workspace_cells": 52,
+   "left_band": false,
+   "margins": {
+    "kind": "iors",
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "b": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "safety": 0.02,
+    "D_p": 0.1565716552734375,
+    "m_R": 0.9110330224037171,
+    "m_L": 0.3510330200195313
+   },
+   "lateral_bounds": [
+    -0.5403663039207458,
+    1.1003663063049316
+   ],
+   "lateral_shift_m": 0.0445,
+   "axis_angle": 0.22106574691062011,
+   "angle_class": 1,
+   "focus_info": null,
+   "init_view_angle": 0.42908410909611283,
+   "init_view_class": 1,
+   "init_travel": {
+    "lateral_m": 0.1,
+    "base_m": 0.1414,
+    "path_m": 0.1,
+    "departure_stand_off_m": 0.55,
+    "transition_stand_off_m": 0.55
+   },
+   "second_base_pose": true,
+   "push_contact_lateral_m": -0.12,
+   "rule": "base moved along the edge (box in hand) so the push contact lies at push_contact_lateral_m from the centre line",
+   "path_length_m": 0.04450335728489173,
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "name": "push",
+   "edge_frame": {
+    "name": "-u",
+    "mid": [
+     7.289107322692871,
+     2.917360305786133
+    ],
+    "inward": [
+     0.0025529395788908005,
+     0.9999967217445374
+    ],
+    "tangent": [
+     -0.9999967217445374,
+     0.0025529395788908005
+    ],
+    "length_m": 2.902798652648926,
+    "overhang_m": 0.0
+   },
+   "edge_depth": 0.5500000715255737,
+   "extras": {
+    "H_max": 0.10920429229736328,
+    "delta": 0.4748956503205142,
+    "delta_aim": 0.4748956503205142,
+    "delta_min": 0.3969764471054077,
+    "delta_max": 0.6635120708729941,
+    "conflict": false,
+    "d_ws": 0.25307682958933025,
+    "d_near": 0.02999979257583618,
+    "d_far": 0.5099999606609344,
+    "lam_min": -0.5600000023841858,
+    "lam_max": 0.0,
+    "x_c": 0.2278330266253783,
+    "z_c": 1.2875453622870288,
+    "b": 0.6573094129562378,
+    "b_right": 0.6573149561882019,
+    "b_left": 0.6573094129562378,
+    "R_img": 0.6573094129562378,
+    "t_range": [
+     0.32899902719068064,
+     0.8221303781629437
+    ],
+    "camera_pitch_deg": 22.580477940295808,
+    "hand_below": 0.18777215480804443,
+    "n_workspace_cells": 52,
+    "left_band": false,
+    "margins": {
+     "kind": "iors",
+     "lam_min": -0.5600000023841858,
+     "lam_max": 0.0,
+     "b": 0.6573094129562378,
+     "R_img": 0.6573094129562378,
+     "safety": 0.02,
+     "D_p": 0.1565716552734375,
+     "m_R": 0.9110330224037171,
+     "m_L": 0.3510330200195313
+    },
+    "lateral_bounds": [
+     -0.5403663039207458,
+     1.1003663063049316
+    ],
+    "lateral_shift_m": 0.0445,
+    "axis_angle": 0.22106574691062011,
+    "angle_class": 1,
+    "focus_info": null,
+    "init_view_angle": 0.42908410909611283,
+    "init_view_class": 1,
+    "_position": [
+     8,
+     0
+    ],
+    "init_travel": {
+     "lateral_m": 0.1,
+     "base_m": 0.1414,
+     "path_m": 0.1,
+     "departure_stand_off_m": 0.55,
+     "transition_stand_off_m": 0.55
+    },
+    "second_base_pose": true,
+    "push_contact_lateral_m": -0.12,
+    "rule": "base moved along the edge (box in hand) so the push contact lies at push_contact_lateral_m from the centre line",
+    "path_length_m": 0.04450335728489173,
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  }
+ },
+ "n_constraints_recorded": 4,
+ "checks": {
+  "attached_object": true,
+  "program_check": "expand"
+ },
+ "rejections": {
+  "ik_joint_limit": 1,
+  "approach_untrackable": 3
+ },
+ "rejection_examples": {
+  "ik_joint_limit": [
+   {
+    "message": "[ik_joint_limit] pre-grasp / grasp at the settled target pose fail the exact IK (ik_joint_limit: right_arm_joint6 within 12 mrad of its limit at the pose (every solution found; the approach from it would stall); pre alone fail, pre with the partner removed fail, pre with every object removed fail; target settled 2.9 mm / 0 deg from its draft (goal 46 mm away); trunk (0.25, -0.53), grasp grasp_3 ya",
+    "phase": "settle_validate",
+    "index": 0,
+    "attempt": 0,
+    "seed": 8039144593359427994
+   }
+  ],
+  "approach_untrackable": [
+   {
+    "message": "[approach_untrackable] waypoints: approach_untrackable: push pre-contact witness 2.74 rad from the raw IK from the stance posture (another branch): trajopt reaches such a witness only through the pushed object and the closed-loop arc fails from either branch (stance push, arm right, carried None, left arm locked at its contact, push of box__of__sanitary_napkin.n.01_1 push_blade_0_high); the first ",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 1,
+    "seed": 8039144593359427995,
+    "action": "push"
+   },
+   {
+    "message": "[approach_untrackable] waypoints: approach_untrackable: push pre-contact witness 2.65 rad from the raw IK from the stance posture (another branch): trajopt reaches such a witness only through the pushed object and the closed-loop arc fails from either branch (stance push, arm right, carried None, left arm locked at its contact, push of box__of__sanitary_napkin.n.01_1 push_blade_0_high); the first ",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 2,
+    "seed": 8039144593359427996,
+    "action": "push"
+   },
+   {
+    "message": "[approach_untrackable] waypoints: approach_untrackable: push pre-contact witness 2.86 rad from the raw IK from the stance posture (another branch): trajopt reaches such a witness only through the pushed object and the closed-loop arc fails from either branch (stance manipulation, arm right, carried None, left arm locked at its contact, push of box__of__sanitary_napkin.n.01_1 push_blade_0_high); th",
+    "phase": "program_check",
+    "index": 0,
+    "attempt": 3,
+    "seed": 8039144593359427997,
+    "action": "push"
+   }
+  ]
+ },
+ "counters": {
+  "scene_reset": 15
+ },
+ "seeds": [
+  8039144593359427998
+ ],
+ "kit_stats": {
+  "ik_calls": 1534,
+  "ik_s": 291.4741370677948,
+  "ik_batch_calls": 16,
+  "ik_batch_problems": 554,
+  "ik_batch_s": 201.93217182159424,
+  "collision_calls": 1401,
+  "collision_configs": 4042,
+  "collision_s": 8.901888132095337,
+  "limit_retry_poses": 145,
+  "limit_reject.right_arm_joint2": 39,
+  "twin_picks": 41,
+  "twin_solves": 45,
+  "orient_choices": 111,
+  "limit_reject.right_arm_joint3": 3,
+  "limit_retry_seeded_rescued": 41,
+  "orient_reason.reach": 5,
+  "orient_source.map": 1,
+  "orient_against_default": 12,
+  "twin_taken": 3,
+  "twin_taken.reach": 1,
+  "limit_reject.right_arm_joint4": 2,
+  "limit_reject.right_arm_joint5": 2,
+  "orient_reason.only_feasible": 20,
+  "twin_taken.only_feasible": 2,
+  "limit_reject.right_arm_joint6": 19,
+  "limit_retry_random": 569,
+  "limit_retry_random_rescued": 15,
+  "limit_reject.left_arm_joint7": 20,
+  "orient_reason.default": 1,
+  "limit_reject.right_arm_joint7": 3,
+  "limit_reject.left_arm_joint1": 1
+ },
+ "n_written": 1,
+ "eval": {
+  "task_family": "inter_object_relation_satisfaction",
+  "task": "inter_object_relation_satisfaction_touching_small_scale",
+  "subtask": "inter_object_relation_satisfaction_touching_small_scale_box_of_sanitary_napkins_box_of_tissues",
+  "variant": "inter_object_relation_satisfaction-touching_small_scale-box_of_sanitary_napkins-box_of_tissues-breakfast_table"
+ }
+}

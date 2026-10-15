@@ -1,0 +1,18 @@
+{
+ "task_family": "configuration_matching",
+ "task": "configuration_matching_articulation_open_small_scale",
+ "subtask": "configuration_matching_articulation_open_small_scale_blender",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "configuration_matching-6",
+ "activity": "configuration_matching",
+ "definition_id": 6,
+ "instance_id": "house_single_floor_task_configuration_matching_articulation_open_small_scale_blender_0_0_template",
+ "demo_length": 1191,
+ "files_sha256": {
+  "template": "a919bc182d4062b7468b7ea1a279db89f5b54c92c38c4477329436a4f1e98d04",
+  "template_meta": "257f91a454e5420ae70dccc60d76ba24fdce2b83114a4d3d510e0d31cf2c9380",
+  "tro_state": "f68e0cc177c036d331140216211dfa31c5a1f12fd448d182d0b6f05ea10d1f9c",
+  "goal_rgb": "8e65fed35ce4131f9fed98d70d6624d3dfcade10cc2a03ba2e687c743430e388"
+ }
+}

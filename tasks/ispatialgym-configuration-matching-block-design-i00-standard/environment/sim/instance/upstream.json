@@ -1,0 +1,18 @@
+{
+ "task_family": "configuration_matching",
+ "task": "configuration_matching_block_design",
+ "subtask": "configuration_matching_block_design_block_4",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "configuration_matching-11",
+ "activity": "configuration_matching",
+ "definition_id": 11,
+ "instance_id": "house_single_floor_task_configuration_matching_block_design_block_4_0_0_template",
+ "demo_length": 4149,
+ "files_sha256": {
+  "template": "b47d23b232d8de095ae3c450048c0e40b4ee093a0482088cb3f07f2c51a36634",
+  "template_meta": "0cc5256f6090b36e472c1e991ba7433adffd878d4144bb5dbc17810a4ad4b781",
+  "tro_state": "201231b1aabe02a2d7fb70287b594941f645db78c937dc1c9ddce95a499c4072",
+  "goal_rgb": "4a37b1b29552e60c3ea312690eb76b2a6db95b9522fe015987a6c809cde0b3a3"
+ }
+}

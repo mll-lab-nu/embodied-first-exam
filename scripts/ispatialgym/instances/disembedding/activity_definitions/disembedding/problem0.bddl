@@ -1,0 +1,48 @@
+(define (problem disembedding-0)
+    (:domain ispatialgym)
+    (:variant disembedding-bottle_of_milk-bottle_of_milk_1_bottle_of_soy_milk_1_carton_of_milk_1-commercial_kitchen_table)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        bottle__of__milk.n.01_1 bottle__of__milk.n.01_2 - bottle__of__milk.n.01
+        bottle__of__soy_milk.n.01_1 - bottle__of__soy_milk.n.01
+        carton__of__milk.n.01_1 - carton__of__milk.n.01
+        countertop.n.01_1 - countertop.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        bottle__of__milk.n.01_2 bottle__of__soy_milk.n.01_1 carton__of__milk.n.01_1 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 countertop.n.01_1)
+        (ontop tray.n.01_2 countertop.n.01_1)
+        (ontop bottle__of__milk.n.01_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop bottle__of__milk.n.01_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?bottle__of__milk.n.01_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?bottle__of__milk.n.01_1))
+            (pose_settled ?bottle__of__milk.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?bottle__of__milk.n.01_1)
+    )
+)

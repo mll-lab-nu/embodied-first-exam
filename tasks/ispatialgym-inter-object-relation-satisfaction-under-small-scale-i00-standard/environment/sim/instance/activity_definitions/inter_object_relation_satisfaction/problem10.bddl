@@ -1,0 +1,40 @@
+(define (problem inter_object_relation_satisfaction-10)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-inside_small_scale-garlic_clove-saucepot-commercial_kitchen_table)
+
+    ; IORS - inside (small-scale). Target lowered into the partner (fillable container) on the support; the target's
+    ; goal orientation is whatever settles (TRO orientation_metric null), which also admits flowers stood in vases. Both
+    ; poses measured. The insert grasp pipeline (pads on the upper part of the object so the lower body can enter the
+    ; container; flowers held by the upper stem) is required.
+
+    (:objects
+        clove.n.03_1 - clove.n.03
+        saucepot.n.01_1 - saucepot.n.01
+        countertop.n.01_1 - countertop.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop clove.n.03_1 countertop.n.01_1)
+        (ontop saucepot.n.01_1 countertop.n.01_1)
+        (not (inside clove.n.03_1 saucepot.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (inside ?clove.n.03_1 ?saucepot.n.01_1)
+            (not (grasped ?agent.n.01_1 ?clove.n.03_1))
+            (not (grasped ?agent.n.01_1 ?saucepot.n.01_1))
+            (pose_settled ?clove.n.03_1)
+            (pose_settled ?saucepot.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?clove.n.03_1)
+        (pose_reached ?saucepot.n.01_1)
+    )
+)

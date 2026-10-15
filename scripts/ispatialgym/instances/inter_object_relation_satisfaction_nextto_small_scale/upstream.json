@@ -1,0 +1,18 @@
+{
+ "task_family": "inter_object_relation_satisfaction",
+ "task": "inter_object_relation_satisfaction_nextto_small_scale",
+ "subtask": "inter_object_relation_satisfaction_nextto_small_scale_marker_colored_pencil",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "inter_object_relation_satisfaction-14",
+ "activity": "inter_object_relation_satisfaction",
+ "definition_id": 14,
+ "instance_id": "house_single_floor_task_inter_object_relation_satisfaction_nextto_small_scale_marker_colored_pencil_0_0_template",
+ "demo_length": 1038,
+ "files_sha256": {
+  "template": "532d5fdf3a79fa6aa431d894f02087f7d58704aeecf88fdef488698bdf03b275",
+  "template_meta": "c8332a4c2ef01715f69cafbfe3c011bfc05f408addb6fbbf36bd2e5470693573",
+  "tro_state": "fe75de330e07a21e05f69c5d3072089f7b052f0473dc21c5403b0360530c6c0c",
+  "goal_rgb": "fbcbb668633ab5d8d8cb166fde4d0eaf1813191e962c3d3c0ce07073f2c9df4e"
+ }
+}

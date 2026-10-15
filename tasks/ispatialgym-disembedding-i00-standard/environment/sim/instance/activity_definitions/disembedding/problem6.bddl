@@ -1,0 +1,48 @@
+(define (problem disembedding-6)
+    (:domain ispatialgym)
+    (:variant disembedding-box_of_shampoo-box_of_shampoo_1_box_of_sanitary_napkins_1_box_of_tissues_1-commercial_kitchen_table)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        box__of__shampoo.n.01_1 box__of__shampoo.n.01_2 - box__of__shampoo.n.01
+        box__of__sanitary_napkin.n.01_1 - box__of__sanitary_napkin.n.01
+        box__of__tissue.n.01_1 - box__of__tissue.n.01
+        countertop.n.01_1 - countertop.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        box__of__shampoo.n.01_2 box__of__sanitary_napkin.n.01_1 box__of__tissue.n.01_1 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 countertop.n.01_1)
+        (ontop tray.n.01_2 countertop.n.01_1)
+        (ontop box__of__shampoo.n.01_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop box__of__shampoo.n.01_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?box__of__shampoo.n.01_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?box__of__shampoo.n.01_1))
+            (pose_settled ?box__of__shampoo.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?box__of__shampoo.n.01_1)
+    )
+)

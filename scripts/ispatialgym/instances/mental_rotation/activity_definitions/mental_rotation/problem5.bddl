@@ -1,0 +1,31 @@
+(define (problem mental_rotation-5)
+    (:domain ispatialgym)
+    (:variant mental_rotation-soup_ladle)
+
+    ; Mental rotation. The target is held (right arm, fixed hold pose) at init and at the goal; the goal is a world-frame
+    ; orientation of the target, its position unchanged (TRO pose target: orientation_metric = full, equivalences per model).
+
+    (:objects
+        soup_ladle.n.01_1 - soup_ladle.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop agent.n.01_1 floor.n.01_1)
+        (grasped agent.n.01_1 soup_ladle.n.01_1)
+    )
+
+    (:goal
+        (and
+            (grasped ?agent.n.01_1 ?soup_ladle.n.01_1)
+            (pose_reached ?soup_ladle.n.01_1)
+            (pose_settled ?soup_ladle.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?soup_ladle.n.01_1)
+    )
+)

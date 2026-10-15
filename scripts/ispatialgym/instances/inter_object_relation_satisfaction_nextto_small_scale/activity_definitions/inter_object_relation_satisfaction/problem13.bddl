@@ -1,0 +1,36 @@
+(define (problem inter_object_relation_satisfaction-13)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-touching_large_scale-storage_box-bookcase-floor)
+
+    ; IORS - touching (large-scale). The target starts on a support (a table near the partner, or the floor beside it - an
+    ; explicit support choice made by ground_isg, never a runtime fallback) and ends touching a large scene partner (a copy of
+    ; ontop_large_scale with the goal predicate touching). Three recorded stances: init A, manipulation B, placement C.
+    ; Here the tray storage_box/eicujj starts on the floor of house_double_floor_upper/living_room_0 and ends on the floor
+    ; touching bookcase_otwukr_1's face nearest the init (dropped in front of it, pushed along the floor).
+
+    (:objects
+        storage_container.n.01_1 - storage_container.n.01
+        bookcase.n.01_1 - bookcase.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop storage_container.n.01_1 floor.n.01_1)
+        (not (touching storage_container.n.01_1 bookcase.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (touching ?storage_container.n.01_1 ?bookcase.n.01_1)
+            (not (grasped ?agent.n.01_1 ?storage_container.n.01_1))
+            (pose_settled ?storage_container.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?storage_container.n.01_1)
+    )
+)

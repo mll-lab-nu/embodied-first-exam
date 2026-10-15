@@ -1,0 +1,31 @@
+(define (problem object_scaling-6)
+    (:domain ispatialgym)
+    (:variant object_scaling-bottle_of_catsup)
+
+    ; Object scaling. The target is held (right arm, fixed hold pose) at init and at the goal; the goal is a depth change of
+    ; the target along the head-camera optical axis (TRO pose target: frame = head camera, position_metric = depth).
+
+    (:objects
+        bottle__of__catsup.n.01_1 - bottle__of__catsup.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop agent.n.01_1 floor.n.01_1)
+        (grasped agent.n.01_1 bottle__of__catsup.n.01_1)
+    )
+
+    (:goal
+        (and
+            (grasped ?agent.n.01_1 ?bottle__of__catsup.n.01_1)
+            (pose_reached ?bottle__of__catsup.n.01_1)
+            (pose_settled ?bottle__of__catsup.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?bottle__of__catsup.n.01_1)
+    )
+)

@@ -1,0 +1,34 @@
+(define (problem alignment-3)
+    (:domain ispatialgym)
+    (:variant alignment-world_vertical-painting-walls)
+
+    ; Alignment - world vertical. The target hangs on the support (a wall region, roles/candidates.csv kind scene) through a revolute
+    ; hinge at its centre of mass (axis = wall normal, TRO constraint installed by the sampler, spec 5.5), starts tilted
+    ; 15-45 deg in the wall plane and must be pushed upright (tangential push at the low end + brace at the high end).
+    ; Orientation-only target; the position is fixed by the hinge. Push / brace contacts from
+    ; contacts/<category>__<model>.json; spawn scale from the customs list (roles.target.scale).
+
+    (:objects
+        painting.n.01_1 - painting.n.01
+        wall.n.01_1 - wall.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (pose_reached ?painting.n.01_1)
+            (not (grasped ?agent.n.01_1 ?painting.n.01_1))
+            (pose_settled ?painting.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?painting.n.01_1)
+    )
+)

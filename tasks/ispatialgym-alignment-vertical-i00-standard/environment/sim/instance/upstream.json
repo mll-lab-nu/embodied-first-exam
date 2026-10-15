@@ -1,0 +1,18 @@
+{
+ "task_family": "alignment",
+ "task": "alignment_vertical",
+ "subtask": "alignment_vertical_painting",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "alignment-3",
+ "activity": "alignment",
+ "definition_id": 3,
+ "instance_id": "house_single_floor_task_alignment_vertical_painting_0_0_template",
+ "demo_length": 1136,
+ "files_sha256": {
+  "template": "85c091f6c0e5887ce3dae3cd35657740099aa5503e9cd09fe58e9b797e1f4abc",
+  "template_meta": "2998b4806f57e179aa995352b1189462977b3d406a663f79b19ffd15ccd75355",
+  "tro_state": "3d35b01a34fb2ba1909b70c0011b2f57c1541332eee43148aaf0d2aa97cc81e9",
+  "goal_rgb": "51dbfe26d79576ed181f116b445ce9867aa0eec36bef2c91f758045330a4262c"
+ }
+}

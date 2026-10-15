@@ -1,0 +1,261 @@
+{
+  "activity": "inter_object_relation_satisfaction",
+  "problems": [
+    {
+      "variant": "inter_object_relation_satisfaction-inside_small_scale-brussels_sprouts-bowl-breakfast_table",
+      "id": 0,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-inside_small_scale",
+      "iddl": "inter_object_relation_satisfaction/inside_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-inside#01~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-ontop_small_scale-pack_of_kielbasa-platter-breakfast_table",
+      "id": 1,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-ontop_small_scale",
+      "iddl": "inter_object_relation_satisfaction/ontop_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-ontop_small_scale#01~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-ontop_small_scale-bar_soap_utgixp-soap_dish-shelf",
+      "id": 2,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-ontop_small_scale",
+      "iddl": "inter_object_relation_satisfaction/ontop_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-ontop_small_scale#03~T2",
+      "slot": "representative",
+      "mode": "representative",
+      "fallback_of": "inter_object_relation_satisfaction-ontop_small_scale-bar_soap-soap_dish-shelf",
+      "fallback_rank": 1,
+      "fallback_kind": "next_model"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-touching_small_scale-box_of_sanitary_napkins-box_of_tissues-breakfast_table",
+      "id": 3,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-touching_small_scale",
+      "iddl": "inter_object_relation_satisfaction/touching_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-touching#01~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-under_small_scale-teacup-saucer-breakfast_table",
+      "id": 4,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-under_small_scale",
+      "iddl": "inter_object_relation_satisfaction/under_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-under_small_scale#01~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-ontop_small_scale-carving_knife-cutting_board-commercial_kitchen_table",
+      "id": 5,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-ontop_small_scale",
+      "iddl": "inter_object_relation_satisfaction/ontop_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-ontop_small_scale#04~T4",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-under_small_scale-beer_glass-coaster-booth",
+      "id": 6,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-under_small_scale",
+      "iddl": "inter_object_relation_satisfaction/under_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-under_small_scale#02~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-under_small_scale-plate-place_mat-breakfast_table",
+      "id": 7,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-under_small_scale",
+      "iddl": "inter_object_relation_satisfaction/under_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-under_small_scale#03~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-inside_small_scale-hard_candy-hingeless_jar-coffee_table",
+      "id": 8,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-inside_small_scale",
+      "iddl": "inter_object_relation_satisfaction/inside_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-inside#02~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-inside_small_scale-sunflower-vase-coffee_table",
+      "id": 9,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-inside_small_scale",
+      "iddl": "inter_object_relation_satisfaction/inside_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-inside#03~T3",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-inside_small_scale-garlic_clove-saucepot-commercial_kitchen_table",
+      "id": 10,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-inside_small_scale",
+      "iddl": "inter_object_relation_satisfaction/inside_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-inside#04~T3",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-nextto_small_scale-salt_shaker-pepper_shaker-breakfast_table",
+      "id": 11,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-nextto_small_scale",
+      "iddl": "inter_object_relation_satisfaction/nextto_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-nextto#02~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-ontop_large_scale-soap_dispenser-countertop-floor",
+      "id": 12,
+      "grounded": "2026-10-12",
+      "by": "hand-grounded (ground_isg 2.0.0 on the sheet rows, inter_object_relation_satisfaction-ontop_large_scale-shampoo_dispenser-countertop-floor's generation; owner 2026-10-12 ~15:55 iors_large inter_object_relation_satisfaction-ontop_large_scale#01 c2)",
+      "subtask": "inter_object_relation_satisfaction-ontop_large_scale",
+      "iddl": "inter_object_relation_satisfaction/ontop_large_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-ontop_large_scale#01~c2",
+      "slot": "representative",
+      "mode": "test"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-touching_large_scale-storage_box-bookcase-floor",
+      "id": 13,
+      "grounded": "2026-10-12",
+      "by": "hand-grounded (bddl_from_iddl.render of touching_large_scale.iddl; owner 2026-10-12 ~16:05 inter_object_relation_satisfaction-touching_large_scale#03 c2)",
+      "subtask": "inter_object_relation_satisfaction-touching_large_scale",
+      "iddl": "inter_object_relation_satisfaction/touching_large_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-touching_large_scale#03~c2",
+      "slot": "representative",
+      "mode": "test"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-nextto_small_scale-marker-colored_pencil-breakfast_table",
+      "id": 14,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-nextto_small_scale",
+      "iddl": "inter_object_relation_satisfaction/nextto_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-nextto#01~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-under_large_scale-sandal-bed-bed_iorsl",
+      "id": 15,
+      "grounded": "2026-10-12",
+      "by": "hand-grounded (copy of inter_object_relation_satisfaction-74 with the iors_large keys, owner ~19:20 under_large#01)",
+      "subtask": "inter_object_relation_satisfaction-under_large_scale",
+      "iddl": "inter_object_relation_satisfaction/under_large_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-under_large_scale#01",
+      "slot": "representative",
+      "mode": "test"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-inside_large_scale-plate-drop_in_sink_lkklqs_0-bar",
+      "id": 16,
+      "grounded": "2026-10-12",
+      "by": "hand-grounded (rendered from inside_large_scale.iddl, alias 121's generation with the V3 inside keys; owner 2026-10-12 ~20:30 inside03v inter_object_relation_satisfaction-inside_large_scale#03 variant V3 V3a/V3b)",
+      "subtask": "inter_object_relation_satisfaction-inside_large_scale",
+      "iddl": "inter_object_relation_satisfaction/inside_large_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-inside_large_scale#03~V3a/V3b",
+      "slot": "representative",
+      "mode": "test"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-under_large_scale-trash_can-desk-floor_pitched",
+      "id": 17,
+      "grounded": "2026-10-12",
+      "by": "hand-grounded (copy of inter_object_relation_satisfaction-115, variant 'pitched', owner ~20:55 under_large#02 / #03)",
+      "subtask": "inter_object_relation_satisfaction-under_large_scale",
+      "iddl": "inter_object_relation_satisfaction/under_large_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-under_large_scale#03~c1_pitched",
+      "slot": "representative",
+      "mode": "test"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-under_small_scale-spatula-paper_sheet-commercial_kitchen_table",
+      "id": 18,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-under_small_scale",
+      "iddl": "inter_object_relation_satisfaction/under_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-under_small_scale#04~T3",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-nextto_small_scale-tablespoon-chopstick-breakfast_table",
+      "id": 19,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-nextto_small_scale",
+      "iddl": "inter_object_relation_satisfaction/nextto_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-nextto#03~T4",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-nextto_small_scale-gym_shoe-gym_shoe-bench",
+      "id": 20,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "inter_object_relation_satisfaction-nextto_small_scale",
+      "iddl": "inter_object_relation_satisfaction/nextto_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-nextto#04~T3",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-touching_small_scale-box_of_cereal_s080-box_of_cereal-bar",
+      "id": 21,
+      "grounded": "2026-10-12",
+      "by": "hand-grounded (ground_isg 2.0.0 on a scratch sheet, target x0.8 with box_of_cereal__iucshm__s080; owner 2026-10-12 ~10:25 item 4 touching#02 variant B)",
+      "subtask": "inter_object_relation_satisfaction-touching_small_scale",
+      "iddl": "inter_object_relation_satisfaction/touching_small_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-touching#02~B3",
+      "slot": "representative",
+      "mode": "test"
+    },
+    {
+      "variant": "inter_object_relation_satisfaction-nextto_large_scale-serving_cart-coffee_table-floor",
+      "id": 22,
+      "grounded": "2026-10-13",
+      "by": "hand-grounded (copy of inter_object_relation_satisfaction-123 with the partner coffee_table.n.01 (coffee_table_rlsebe_0), owner ~20:34 nextto_large#02)",
+      "subtask": "inter_object_relation_satisfaction-nextto_large_scale",
+      "iddl": "inter_object_relation_satisfaction/nextto_large_scale.iddl",
+      "pick": "inter_object_relation_satisfaction-nextto_large_scale#02~coffee_table",
+      "slot": "variation_geometry",
+      "mode": "test"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+(define (problem disembedding-7)
+    (:domain ispatialgym)
+    (:variant disembedding-jigsaw_puzzle_piece-jigsaw_puzzle_piece_3-breakfast_table)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        jigsaw_puzzle_piece.n.01_1 jigsaw_puzzle_piece.n.01_2 jigsaw_puzzle_piece.n.01_3 jigsaw_puzzle_piece.n.01_4 - jigsaw_puzzle_piece.n.01
+        breakfast_table.n.01_1 - breakfast_table.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        jigsaw_puzzle_piece.n.01_2 jigsaw_puzzle_piece.n.01_3 jigsaw_puzzle_piece.n.01_4 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 breakfast_table.n.01_1)
+        (ontop tray.n.01_2 breakfast_table.n.01_1)
+        (ontop jigsaw_puzzle_piece.n.01_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop jigsaw_puzzle_piece.n.01_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?jigsaw_puzzle_piece.n.01_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?jigsaw_puzzle_piece.n.01_1))
+            (pose_settled ?jigsaw_puzzle_piece.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?jigsaw_puzzle_piece.n.01_1)
+    )
+)

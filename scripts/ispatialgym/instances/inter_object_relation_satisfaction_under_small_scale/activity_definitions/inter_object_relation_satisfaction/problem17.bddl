@@ -1,0 +1,36 @@
+(define (problem inter_object_relation_satisfaction-17)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-under_large_scale-trash_can-desk-floor_pitched)
+
+    ; IORS - under (large-scale). The target starts on a support (a table near the partner, the floor beside it, or the
+    ; partner's own top) and ends on the floor under a large scene partner (bed, sofa, desk, breakfast table; roles/candidates.csv
+    ; kind scene) at a goal cell where an upward ray hits the partner above target height + 3 cm. Argument order: the
+    ; target is under the partner. When partner and support are the same scene object the BDDL declares it once.
+    ; Here the trash can (trash_can/jlawet) starts on the floor of private_office_2 and is pushed under desk_mdhelw_1.
+
+    (:objects
+        ashcan.n.01_1 - ashcan.n.01
+        desk.n.01_1 - desk.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop ashcan.n.01_1 floor.n.01_1)
+        (not (under ashcan.n.01_1 desk.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (under ?ashcan.n.01_1 ?desk.n.01_1)
+            (not (grasped ?agent.n.01_1 ?ashcan.n.01_1))
+            (pose_settled ?ashcan.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?ashcan.n.01_1)
+    )
+)

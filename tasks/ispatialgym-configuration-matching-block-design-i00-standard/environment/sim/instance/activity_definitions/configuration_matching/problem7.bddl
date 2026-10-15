@@ -1,0 +1,43 @@
+(define (problem configuration_matching-7)
+    (:domain ispatialgym)
+    (:variant configuration_matching-attachment-cap-lemonade_bottle-breakfast_table)
+
+    ; Configuration matching - attachment. Target = male part (grasped), partner = female part (stands on the support, braced
+    ; by the other gripper while attaching). The assembly group carries the fixed member-to-slot layout target; the
+    ; partner's pose stays as at init. Male / female pairs with matching BEHAVIOR attachment meta-links come from
+    ; roles/constraints_compatible.csv (partner_of, attach_type); the partner brace is computed geometrically (no artefact).
+
+    (:objects
+        cap.n.02_1 - cap.n.02
+        lemonade__bottle.n.01_1 - lemonade__bottle.n.01
+        breakfast_table.n.01_1 - breakfast_table.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        cap.n.02_1 lemonade__bottle.n.01_1 - assembly_group.n.01_1
+    )
+
+    (:init
+        (ontop assembly_group.n.01_1 breakfast_table.n.01_1)
+        (not (attached cap.n.02_1 lemonade__bottle.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (attached ?cap.n.02_1 ?lemonade__bottle.n.01_1)
+            (ontop ?lemonade__bottle.n.01_1 ?breakfast_table.n.01_1)
+            (layout_reached ?assembly_group.n.01_1)
+            (not (grasped ?agent.n.01_1 ?assembly_group.n.01_1))
+            (pose_settled ?assembly_group.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?assembly_group.n.01_1)
+        (layout_reached ?assembly_group.n.01_1)
+    )
+)

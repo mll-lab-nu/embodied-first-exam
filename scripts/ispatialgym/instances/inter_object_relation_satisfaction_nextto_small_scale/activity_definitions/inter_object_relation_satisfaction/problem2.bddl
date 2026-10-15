@@ -1,0 +1,38 @@
+(define (problem inter_object_relation_satisfaction-2)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-ontop_small_scale-bar_soap_utgixp-soap_dish-shelf)
+
+    ; IORS - ontop (small-scale). Target and partner both on the support; the target ends centred on top of the partner with
+    ; its init orientation; the partner stays where it was. Both poses measured.
+    ; Here the target is the bar soap model utgixp.
+
+    (:objects
+        bar_soap.n.01_1 - bar_soap.n.01
+        soap_dish.n.01_1 - soap_dish.n.01
+        shelf.n.01_1 - shelf.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop bar_soap.n.01_1 shelf.n.01_1)
+        (ontop soap_dish.n.01_1 shelf.n.01_1)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?bar_soap.n.01_1 ?soap_dish.n.01_1)
+            (not (grasped ?agent.n.01_1 ?bar_soap.n.01_1))
+            (not (grasped ?agent.n.01_1 ?soap_dish.n.01_1))
+            (pose_settled ?bar_soap.n.01_1)
+            (pose_settled ?soap_dish.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?bar_soap.n.01_1)
+        (pose_reached ?soap_dish.n.01_1)
+    )
+)

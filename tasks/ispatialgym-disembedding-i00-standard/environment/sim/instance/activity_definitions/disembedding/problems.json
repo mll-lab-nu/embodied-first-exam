@@ -1,0 +1,104 @@
+{
+  "activity": "disembedding",
+  "problems": [
+    {
+      "variant": "disembedding-bottle_of_milk-bottle_of_milk_1_bottle_of_soy_milk_1_carton_of_milk_1-commercial_kitchen_table",
+      "id": 0,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#04~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-beaker-beaker_1_soda_cup_1_water_glass_1-countertop",
+      "id": 1,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#05~T3",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-cellulose_tape-cork_1_coaster_1_cap_1-conference_table",
+      "id": 2,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#07~T2",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-pencil_case-sunglasses_1_pencil_1_pen_1-desk",
+      "id": 3,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#08~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-toy_dice-toy_dice_2_toy_figure_1-breakfast_table",
+      "id": 4,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#09~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-tablefork-tablefork_1_table_knife_1_tablespoon_1-breakfast_table",
+      "id": 5,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#10~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-box_of_shampoo-box_of_shampoo_1_box_of_sanitary_napkins_1_box_of_tissues_1-commercial_kitchen_table",
+      "id": 6,
+      "grounded": "2026-10-12",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#02~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-jigsaw_puzzle_piece-jigsaw_puzzle_piece_3-breakfast_table",
+      "id": 7,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#01~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "disembedding-video_game-video_game_2_board_game_1-desk",
+      "id": 8,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "disembedding",
+      "iddl": "disembedding/disembedding.iddl",
+      "pick": "disembedding#03~T5",
+      "slot": "representative",
+      "mode": "representative"
+    }
+  ]
+}

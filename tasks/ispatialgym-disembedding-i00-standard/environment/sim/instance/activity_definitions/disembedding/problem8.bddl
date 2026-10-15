@@ -1,0 +1,47 @@
+(define (problem disembedding-8)
+    (:domain ispatialgym)
+    (:variant disembedding-video_game-video_game_2_board_game_1-desk)
+
+    ; Disembedding. Target and distractors on the source tray, destination tray beside it on the support; the target ends on
+    ; the destination tray (centre, init orientation), no distractor does. Distractor categories come from the icl pools
+    ; (roles/constraints_compatible.csv same-category / other-category), the member count (1-3) from the customs list
+    ; (generation.groups.distractors); both are part of the variant (e.g. bottle_of_beer_3_bottle_of_sake_1). Trays are
+    ; fixed models for now (tray uekqey source, tray hvlfig destination; roles/candidates.csv).
+
+    (:objects
+        computer_game.n.01_1 computer_game.n.01_2 computer_game.n.01_3 - computer_game.n.01
+        board_game.n.01_1 - board_game.n.01
+        desk.n.01_1 - desk.n.01
+        tray.n.01_1 tray.n.01_2 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:groups
+        computer_game.n.01_2 computer_game.n.01_3 board_game.n.01_1 - distractors_group.n.01_1
+    )
+
+    (:init
+        (ontop tray.n.01_1 desk.n.01_1)
+        (ontop tray.n.01_2 desk.n.01_1)
+        (ontop computer_game.n.01_1 tray.n.01_1)
+        (ontop distractors_group.n.01_1 tray.n.01_1)
+        (not (ontop computer_game.n.01_1 tray.n.01_2))
+        (not (ontop distractors_group.n.01_1 tray.n.01_2))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?computer_game.n.01_1 ?tray.n.01_2)
+            (not (ontop ?distractors_group.n.01_1 ?tray.n.01_2))
+            (not (grasped ?agent.n.01_1 ?computer_game.n.01_1))
+            (pose_settled ?computer_game.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?computer_game.n.01_1)
+    )
+)

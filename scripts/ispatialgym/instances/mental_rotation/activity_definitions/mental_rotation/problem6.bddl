@@ -1,0 +1,31 @@
+(define (problem mental_rotation-6)
+    (:domain ispatialgym)
+    (:variant mental_rotation-hook)
+
+    ; Mental rotation. The target is held (right arm, fixed hold pose) at init and at the goal; the goal is a world-frame
+    ; orientation of the target, its position unchanged (TRO pose target: orientation_metric = full, equivalences per model).
+
+    (:objects
+        hook.n.05_1 - hook.n.05
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop agent.n.01_1 floor.n.01_1)
+        (grasped agent.n.01_1 hook.n.05_1)
+    )
+
+    (:goal
+        (and
+            (grasped ?agent.n.01_1 ?hook.n.05_1)
+            (pose_reached ?hook.n.05_1)
+            (pose_settled ?hook.n.05_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?hook.n.05_1)
+    )
+)

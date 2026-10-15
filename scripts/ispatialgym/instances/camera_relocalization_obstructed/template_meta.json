@@ -1,0 +1,397 @@
+{
+ "template_id": "house_single_floor__obstacles-hamper_1",
+ "scene": "house_single_floor",
+ "timings": {
+  "bind_spawn_s": 17.96384572982788,
+  "bind_spawn_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 0,
+   "collision_configs": 0,
+   "collision_s": 0.0
+  },
+  "sample_template_s": 2.1163740158081055,
+  "sample_template_kit": {
+   "ik_calls": 0,
+   "ik_s": 0.0,
+   "ik_batch_calls": 0,
+   "ik_batch_problems": 0,
+   "ik_batch_s": 0.0,
+   "collision_calls": 0,
+   "collision_configs": 0,
+   "collision_s": 0.0
+  },
+  "save_template_s": 1.0545659065246582
+ },
+ "variant": "camera_relocalization-obstructed-hamper_1",
+ "subtask": "camera_relocalization-obstructed",
+ "sampler_version": "2.0.0-dev",
+ "spec_hash": "1dcc34e38615ce0500bc17f4e0143a980490d6d3ea503782df9314580a9ec2a1",
+ "choice": {
+  "scene": "house_single_floor",
+  "rooms": [
+   "living_room_0"
+  ],
+  "bindings": {
+   "floor": {
+    "room": "living_room_0"
+   }
+  },
+  "models": {},
+  "groups": {
+   "obstacles": [
+    {
+     "category": "hamper",
+     "model": "xjftlf",
+     "dataset": "behavior-1k-assets",
+     "grasp_key": null,
+     "scale": null
+    }
+   ]
+  },
+  "template_id": "house_single_floor__obstacles-hamper_1"
+ },
+ "rooms": [
+  "living_room_0"
+ ],
+ "customs": "/vision/u/minyeong/projects/isg_home/eval85/code_6cabe73f_6a6194600/ispatialgym/assets/task_specs/isg_customs.json",
+ "joint_limit_margin_rad": 0.05,
+ "split": {
+  "split": "eval",
+  "index": 0,
+  "seed": 911922094,
+  "seed_source": "split",
+  "scene": null,
+  "room": null,
+  "scene_source": "customs (no scene draw for camera_relocalization-obstructed)"
+ },
+ "init_arms": "untucked",
+ "bddl_sha256": "1dd77e6557a8d3f0c1a0538a37915e6fdfe11241cc96c8ccf31efe172dfc2028",
+ "init_config": {
+  "trunk": [
+   0.5,
+   0.0
+  ],
+  "arms": "untucked"
+ },
+ "obstacles": {
+  "instances": {
+   "hamper.n.02_1": {
+    "scene_object_name": "obstacles_hamper_xjftlf_0",
+    "category": "hamper",
+    "model": "xjftlf",
+    "bottom_offset_m": 0.17891836166381836,
+    "height_m": 0.3854660987854004,
+    "footprint_m": [
+     0.3634071350097656,
+     0.47946929931640625
+    ],
+    "radius_m": 0.27665022015571594
+   }
+  },
+  "generation": {
+   "footprint_range_m": [
+    0.12,
+    0.8
+   ],
+   "height_range_m": [
+    0.1,
+    1.7
+   ],
+   "preferred_footprint_range_m": [
+    0.2,
+    0.55
+   ],
+   "preferred_height_range_m": [
+    0.2,
+    1.1
+   ],
+   "settle_steps": 60,
+   "settle_drift_max_m": 0.005,
+   "min_detour_m": 0.3,
+   "min_corridor_width_m": 0.75,
+   "in_frame_margin": 0.05
+  },
+  "per_instance": {
+   "camera_relocalization-obstructed-hamper_1__house_single_floor__obstacles-hamper_1__0000": {
+    "blocked_footprints": {
+     "free": [],
+     "block": [
+      [
+       [
+        13.329234580993653,
+        2.2831697273254394
+       ],
+       [
+        13.87267448425293,
+        2.2831697273254394
+       ],
+       [
+        13.87267448425293,
+        2.7166421604156494
+       ],
+       [
+        13.329234580993653,
+        2.7166421604156494
+       ]
+      ]
+     ]
+    },
+    "free_geodesic_m": 5.86568546295166,
+    "blocked_geodesic_m": 6.031370162963867,
+    "view_waypoint_index": {
+     "hamper.n.02_1": 4
+    },
+    "divergence_waypoint_index": {
+     "hamper.n.02_1": 3
+    },
+    "positions": {
+     "hamper.n.02_1": [
+      13.6,
+      2.5001,
+      0.1789
+     ]
+    }
+   }
+  }
+ },
+ "template_facts": {
+  "contact_height_extra_m": 0.0,
+  "path_buckets": [
+   {
+    "max_m": 3.0,
+    "n": 10
+   },
+   {
+    "max_m": 5.0,
+    "n": 10
+   },
+   {
+    "max_m": 10.0,
+    "n": 5
+   }
+  ],
+  "bucket_counts_existing": {}
+ },
+ "bindings": [
+  {
+   "role": "floor",
+   "name": "floor.n.01_1",
+   "synset": "floor.n.01",
+   "category": "floors",
+   "model": "uzsntg",
+   "scene_object_name": "floors_uzsntg_0",
+   "dataset": null
+  },
+  {
+   "role": "obstacles",
+   "name": "hamper.n.02_1",
+   "synset": "hamper.n.02",
+   "category": "hamper",
+   "model": "xjftlf",
+   "scene_object_name": "obstacles_hamper_xjftlf_0",
+   "dataset": "behavior-1k-assets"
+  }
+ ],
+ "template_sha256": "582b440f43bebfb10cfc7bbb6da57ddb4b76f6ed8e4e84c5be56345425a59429",
+ "template_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s2_3tasks/camera_relocalization-obstructed-hamper_1/inst/camera_relocalization-obstructed-hamper_1/house_single_floor__obstacles-hamper_1/template.json",
+ "template_partial_path": "/vision/u/minyeong/projects/isg_home/eval85/runs/s2_3tasks/camera_relocalization-obstructed-hamper_1/inst/camera_relocalization-obstructed-hamper_1/house_single_floor__obstacles-hamper_1/template-partial_rooms.json",
+ "load_room_instances": [
+  "living_room_0",
+  "corridor_0",
+  "dining_room_0",
+  "garden_0",
+  "kitchen_0"
+ ],
+ "task_rooms": [
+  "living_room_0"
+ ],
+ "sampled_with_rooms": [
+  "living_room_0",
+  "corridor_0",
+  "dining_room_0",
+  "garden_0",
+  "kitchen_0"
+ ],
+ "scene_variant": null,
+ "problem": "camera_relocalization-2",
+ "choices": {
+  "obstacles[0]": {
+   "category": "hamper",
+   "model": "xjftlf",
+   "dataset": "behavior-1k-assets",
+   "grasp_key": null,
+   "scale": null
+  }
+ },
+ "inst_to_name": {
+  "floor.n.01_1": "floors_uzsntg_0",
+  "hamper.n.02_1": "obstacles_hamper_xjftlf_0",
+  "agent.n.01_1": "robot_r1"
+ },
+ "scene_load_s": 366.0049617290497,
+ "activity_definition": "../activity_definitions/camera_relocalization/problem2.bddl",
+ "bddl_variant": "camera_relocalization-obstructed-hamper_1",
+ "stances": {
+  "init": {
+   "base_pose2d": [
+    16.399999618530273,
+    2.5,
+    -2.2673290782725424
+   ],
+   "translate": 0.5,
+   "tilt": 0.0,
+   "arms": "untucked",
+   "posture": "untucked",
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "fingers_by_arm": {
+    "right": 0.05,
+    "left": 0.05
+   },
+   "name": "init",
+   "extras": {
+    "posture": "untucked",
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    },
+    "fingers_by_arm": {
+     "right": 0.05,
+     "left": 0.05
+    }
+   }
+  },
+  "goal": {
+   "base_pose2d": [
+    10.699999809265137,
+    2.9000000953674316,
+    -2.069956250572017
+   ],
+   "translate": 0.5718506481728638,
+   "tilt": 0.2980956911114412,
+   "arms": "untucked",
+   "arms_q": {
+    "right": [
+     0.0,
+     -1.57,
+     0.0,
+     -1.57,
+     -1.57,
+     0.0,
+     0.0
+    ],
+    "left": [
+     0.0,
+     1.57,
+     0.0,
+     -1.57,
+     1.57,
+     0.0,
+     0.0
+    ]
+   },
+   "fingers_by_arm": {
+    "right": 0.05,
+    "left": 0.05
+   },
+   "name": "goal",
+   "extras": {
+    "arms_q": {
+     "right": [
+      0.0,
+      -1.57,
+      0.0,
+      -1.57,
+      -1.57,
+      0.0,
+      0.0
+     ],
+     "left": [
+      0.0,
+      1.57,
+      0.0,
+      -1.57,
+      1.57,
+      0.0,
+      0.0
+     ]
+    },
+    "fingers_by_arm": {
+     "right": 0.05,
+     "left": 0.05
+    }
+   }
+  }
+ },
+ "bucket_counts": {
+  "10.0": 1
+ },
+ "n_constraints_recorded": 1,
+ "checks": {
+  "attached_object": true,
+  "program_check": "expand"
+ },
+ "rejections": {},
+ "rejection_examples": {},
+ "counters": {
+  "scene_reset": 3
+ },
+ "seeds": [
+  7221532726919187158
+ ],
+ "kit_stats": {
+  "ik_calls": 0,
+  "ik_s": 0.0,
+  "ik_batch_calls": 0,
+  "ik_batch_problems": 0,
+  "ik_batch_s": 0.0,
+  "collision_calls": 9,
+  "collision_configs": 253,
+  "collision_s": 2.1786108016967773
+ },
+ "n_written": 1,
+ "eval": {
+  "task_family": "camera_relocalization",
+  "task": "camera_relocalization_obstructed",
+  "subtask": "camera_relocalization_obstructed_hamper_1",
+  "variant": "camera_relocalization-obstructed-hamper_1"
+ }
+}

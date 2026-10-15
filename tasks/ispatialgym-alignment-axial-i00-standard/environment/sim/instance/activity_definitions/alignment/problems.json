@@ -1,0 +1,104 @@
+{
+  "activity": "alignment",
+  "problems": [
+    {
+      "variant": "alignment-axial-board_game-breakfast_table",
+      "id": 0,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-axial",
+      "iddl": "alignment/axial.iddl",
+      "pick": "alignment-axial#01~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-axial-keyboard-desk",
+      "id": 1,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-axial",
+      "iddl": "alignment/axial.iddl",
+      "pick": "alignment-axial#03~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-axial-tablespoon-breakfast_table",
+      "id": 2,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-axial",
+      "iddl": "alignment/axial.iddl",
+      "pick": "alignment-axial#05~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-world_vertical-painting-walls",
+      "id": 3,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-world_vertical",
+      "iddl": "alignment/world_vertical.iddl",
+      "pick": "alignment-world_vertical#01~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-world_vertical-paper_towel_dispenser-walls",
+      "id": 4,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-world_vertical",
+      "iddl": "alignment/world_vertical.iddl",
+      "pick": "alignment-world_vertical#03~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-world_vertical-signpost-walls",
+      "id": 5,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-world_vertical",
+      "iddl": "alignment/world_vertical.iddl",
+      "pick": "alignment-world_vertical#04~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-world_vertical-license_plate-walls",
+      "id": 6,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-world_vertical",
+      "iddl": "alignment/world_vertical.iddl",
+      "pick": "alignment-world_vertical#05~T5",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-axial-magazine-desk",
+      "id": 7,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-axial",
+      "iddl": "alignment/axial.iddl",
+      "pick": "alignment-axial#04~T1",
+      "slot": "representative",
+      "mode": "representative"
+    },
+    {
+      "variant": "alignment-world_vertical-wall_clock-walls",
+      "id": 8,
+      "grounded": "2026-10-11",
+      "by": "ground_isg 2.0.0",
+      "subtask": "alignment-world_vertical",
+      "iddl": "alignment/world_vertical.iddl",
+      "pick": "alignment-world_vertical#02~T5",
+      "slot": "representative",
+      "mode": "representative"
+    }
+  ]
+}

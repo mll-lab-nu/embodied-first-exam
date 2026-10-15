@@ -1,0 +1,36 @@
+(define (problem alignment-1)
+    (:domain ispatialgym)
+    (:variant alignment-axial-keyboard-desk)
+
+    ; Alignment - axial (former world_alignment-0 / table_surface). The target rests on the support; the sampler installs a
+    ; vertical hinge through its centre of mass (TRO constraint, parent = support; an initialization rule, spec 6.10). It
+    ; starts yawed 20-70 deg off and is pushed at one end (right hand) while the other gripper braces the stop edge, until
+    ; its long axis is aligned with the support edges and its front faces the robot. Orientation-only target. Push ends and
+    ; stop edges come from contacts/<category>__<model>.json; the spawn scale from the customs list (roles.target.scale).
+
+    (:objects
+        keyboard.n.01_1 - keyboard.n.01
+        desk.n.01_1 - desk.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop keyboard.n.01_1 desk.n.01_1)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?keyboard.n.01_1 ?desk.n.01_1)
+            (pose_reached ?keyboard.n.01_1)
+            (not (grasped ?agent.n.01_1 ?keyboard.n.01_1))
+            (pose_settled ?keyboard.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?keyboard.n.01_1)
+    )
+)

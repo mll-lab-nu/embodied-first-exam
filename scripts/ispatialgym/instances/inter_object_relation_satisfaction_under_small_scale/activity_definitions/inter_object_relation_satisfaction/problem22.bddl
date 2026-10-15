@@ -1,0 +1,33 @@
+(define (problem inter_object_relation_satisfaction-22)
+    (:domain ispatialgym)
+    (:variant inter_object_relation_satisfaction-nextto_large_scale-serving_cart-coffee_table-floor)
+
+    ; IORS - nextto (large-scale). The serving cart (serving_cart/heqtlk) starts on the floor away from the partner
+    ; coffee_table_rlsebe_0 (house_single_floor living_room_0) and ends next to it, pushed by the base (no grasp).
+
+    (:objects
+        serving_cart.n.01_1 - serving_cart.n.01
+        coffee_table.n.01_1 - coffee_table.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop serving_cart.n.01_1 floor.n.01_1)
+        (not (nextto serving_cart.n.01_1 coffee_table.n.01_1))
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (nextto ?serving_cart.n.01_1 ?coffee_table.n.01_1)
+            (not (grasped ?agent.n.01_1 ?serving_cart.n.01_1))
+            (pose_settled ?serving_cart.n.01_1)
+            (pose_settled ?agent.n.01_1)
+        )
+    )
+
+    (:measure
+        (pose_reached ?serving_cart.n.01_1)
+    )
+)
