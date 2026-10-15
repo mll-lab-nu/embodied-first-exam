@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "id": "boot_sole_brush",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": []
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 28,
+    "wuji": 26
+  },
+  "robot": "sharpa-wave-floating",
+  "max_rows": 3000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/trajectory.npz: the 1,329-row Sharpa Wave authoring witness (success at control 1,178, then hold rows); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, 8/8 successes under 1e-4 m / 1e-3 rad row noise. Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (standard: the same rows through rcb_client, live = replay).",
+    "expert_time_estimate_hours": 3.0,
+    "keywords": [
+      "tool_use",
+      "brushing",
+      "cleaning",
+      "debris",
+      "contact-rich",
+      "free-objects"
+    ]
+  },
+  "control_hz": 50,
+  "timeouts": {
+    "verifier_privileged_sec": 1800,
+    "verifier_standard_sec": 600,
+    "collect_sec": 1800,
+    "replay_sec": 300,
+    "video_sec": 900
+  },
+  "notes": {
+    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; with all six wrist targets at zero the palm faces down with the fingers pointing +y."
+  }
+}

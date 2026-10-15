@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "book_page_turn",
+  "task": "task.json",
+  "runtime": {
+    "files": ["runtime.py", "replay.py", "scene.py", "checker.py", "task.json"],
+    "dirs": ["assets"],
+    "shared": []
+  },
+  "hands": ["sharpa", "wuji"],
+  "action_dim": {"sharpa": 28, "wuji": 26},
+  "robot": "sharpa-wave-floating",
+  "max_rows": 3000,
+  "instruction": {"privileged": "instruction/privileged.md", "standard": "instruction/standard.md"},
+  "readme": "README.task.md",
+  "solution": {"privileged": "solution/trajectory.npz", "standard": "solution/trajectory.npz"},
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "",
+    "expert_time_estimate_hours": 3.0,
+    "keywords": ["articulated", "page-turning", "thin-objects", "book"]
+  },
+  "control_hz": 50,
+  "timeouts": {"verifier_privileged_sec": 600, "verifier_standard_sec": 600, "collect_sec": 1500,
+               "replay_sec": 300, "video_sec": 600},
+  "notes": {
+    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; Sharpa starts palm up with the index finger straight, Wuji with its fingers at 0."
+  }
+}

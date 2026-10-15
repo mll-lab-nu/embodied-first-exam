@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "id": "coffee_stir",
+  "title": "Stir milk into a mug of coffee with a teaspoon",
+  "category": "tool_use",
+  "description": "With a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a wrist stage, pick up the teaspoon that leans in a mug of coffee, stir at least three full revolutions with the bowl in the coffee, and leave the spoon resting in the mug; a knocked mug or dropped spoon fails the episode at once.",
+  "difficulty": "hard",
+  "mechanism": "free rigid mug and teaspoon; coffee summarised by bowl revolutions",
+  "instruction": "Mix the milk into the coffee: stir the coffee with the teaspoon, then leave the spoon resting in the mug. The 300 g mug (inner radius 50 mm, 100 mm tall, 8 mm floor) stands upright on the stone worktop (top at z = 0.75 m) with its axis at x = 0.48 m, y = 0.015 m; the coffee, milk already poured, fills it to 64 mm above the mug base (z = 0.814 m). The coffee is not simulated as a fluid: mixing is measured as stirring. The 35 g stainless teaspoon (181.7 mm long, 24 x 46 mm bowl) starts leaning in the mug with its bowl on the mug floor and its handle on the rim. Three stages must be completed in order. (1) In the coffee: while the spoon is in the hand (the thumb and at least one other finger touch it), the bowl is submerged, i.e. the bowl centre and both bowl ends (23 mm either side of the centre along the spoon axis) lie below the coffee surface and above the mug floor (mug frame z between 0.004 and 0.064 m) and within 50 mm of the mug axis. (2) Stir: while the bowl stays submerged, at least 8 mm from the mug axis, and the spoon is in the hand (thumb and at least one other finger touching it; a single finger pushing the spoon does not count), the unwrapped angle of the bowl centre about the mug's vertical axis (world frame) must accumulate three full revolutions (1080 degrees net in one direction). Increments larger than 45 degrees per control are not counted, and the count restarts from zero whenever the bowl leaves the coffee before the three revolutions are complete. (3) Rest: the spoon is released (no hand contact) with its bowl still submerged in the mug, the spoon touching the mug, spoon and mug linear speeds at most 0.02 m/s and angular speeds at most 0.5 rad/s, continuously for 50 controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the mug tilts more than 10 degrees, slides more than 20 mm horizontally from its start or is lifted more than 5 mm above its start height; when the spoon touches the worktop or the floor (dropped or carried out of the mug) or the mug touches the floor; when the spoon touches neither the hand nor the mug while its centre of mass falls faster than 0.2 m/s (a dropped spoon fails at that physics substep; there is no window to catch it again); when a spoon reference point (bowl centre, bowl ends, handle end) falls below the worktop top or the mug base falls below it; when the bowl centre or handle end leaves the workspace box x in [0, 0.96] m, y in [-0.48, 0.48] m, z in [0.70, 1.60] m; when a fingertip enters the coffee (inside the mug radius and below the coffee surface); or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The episode allows at most 3000 controls at 50 Hz (60 s); reaching that limit without success is a failure.",
+  "robot": "sharpa-wave-floating",
+  "physics_dt": 0.002,
+  "control_dt": 0.02,
+  "max_steps": 3000,
+  "table_z": 0.75,
+  "cup_pos": [
+    0.47999,
+    0.014998,
+    0.749998,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "spoon_pos": [
+    0.479962,
+    0.043053,
+    0.777461,
+    0.92169,
+    0.387925,
+    -0.000559,
+    0.001025
+  ],
+  "wrist_range": [
+    [
+      0.0,
+      0.96
+    ],
+    [
+      -0.48,
+      0.48
+    ],
+    [
+      0.76,
+      1.4
+    ],
+    [
+      -3.14,
+      3.14
+    ],
+    [
+      -3.14,
+      3.14
+    ],
+    [
+      -3.14,
+      3.14
+    ]
+  ],
+  "initial_targets": {
+    "sharpa": [
+      0.48,
+      -0.12,
+      1.15,
+      -1.5707963267948966,
+      0.0,
+      1.5707963267948966,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "wuji": [
+      0.48,
+      -0.12,
+      1.15,
+      -1.5707963267948966,
+      0.0,
+      1.5707963267948966,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "workspace": {
+    "min": [
+      0.0,
+      -0.48,
+      0.7
+    ],
+    "max": [
+      0.96,
+      0.48,
+      1.6
+    ]
+  },
+  "cup_max_tilt_deg": 10.0,
+  "cup_max_slide_m": 0.02,
+  "stir_revolutions": 3,
+  "stir_min_radius_m": 0.008,
+  "stir_max_step_rad": 0.785398,
+  "rest_linear_speed_m_s": 0.02,
+  "rest_angular_speed_rad_s": 0.5,
+  "rest_hold_steps": 50,
+  "modeling": "Free rigid mug (300 g; floor disk, 32 wall boxes and three handle boxes as contact geometry under the approved T11 refined visual mesh) and teaspoon (35 g; 2.7 mm shaft capsule and two crossed flat bowl slabs under the approved visual mesh). The coffee/milk is a visual surface only; stirring is measured by the revolutions of the bowl about the mug axis while the bowl is below the surface. No fluid drag, buoyancy or mixing dynamics are simulated.",
+  "cup_max_lift_m": 0.005,
+  "drop_speed_m_s": 0.2
+}

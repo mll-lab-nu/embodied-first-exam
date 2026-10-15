@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "schema_version": 1,
+      "id": "book_page_turn",
+      "title": "Turn one page of a board book",
+      "category": "articulated_object_manipulation",
+      "description": "Turn exactly one rigid board page of a free board book lying open on a desk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2): lift the next right-hand board, carry it past vertical over the spine and lay it on the left stack, then let go; a shoved book, a second page or a closing cover fails the episode at once.",
+      "difficulty": "hard",
+      "mechanism": "passive hinged rigid board leaves in a free board book",
+      "instruction": "Turn one page of the board book lying open on the desk. The book shows pages 4 (left) and 5 (right). Turn the next right-hand board, leaf 2 (printed pages 5 and 6), over the spine onto the left stack so that the book shows pages 6 and 7, and take the hand off the book. Progress is measured by leaf 2's binding hinge angle (joint `leaf_2_binding`: 0 = flat on the right-hand stack, pi = flat on the left-hand stack; it starts at about 0.068 rad because the board rests on its binding springback stop). The stages must happen in this order: lifted (angle above 30 degrees), past vertical (above 90 degrees), laid. Laid means, all at the same control: angle above 170 degrees, leaf 2 in physical contact with the left-hand stack (leaf 0, leaf 1 or the left cover), leaf-2 hinge speed at most 0.2 rad/s, every other leaf and both covers within 5 degrees of their start angles, and no contact between the hand and any part of the book. The laid condition must then hold for 50 consecutive controls (1 s); the episode ends with success at that moment. A partly turned page never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the book's spine body moves more than 3 cm or rotates more than 10 degrees from its start pose (book shoved or lifted), when any other leaf moves more than 30 degrees from its start angle (a second page turned), when either cover moves more than 30 degrees (the book closing), when the centre of mass of any book part is more than 2 mm below the desk top (z = 0.30 m), or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, welds, scripted page motion or direct forces on the book. The book is free on the desk: eight rigid 1.2 mm laminated boards and two covers on passive binding hinges with friction and damping and a small vertical binding compliance; the board next to the open spread rests on its binding springback stop 4 degrees above the stack. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.",
+      "robot": "sharpa-wave-floating",
+      "physics_dt": 0.002,
+      "control_dt": 0.02,
+      "max_steps": 3000,
+      "settle_substeps": 250,
+      "table_z": 0.3,
+      "table": {
+        "center_x": 0.0,
+        "center_y": 0.05,
+        "half_x": 0.55,
+        "half_y": 0.4
+      },
+      "book_xy": [
+        0.0,
+        0.0
+      ],
+      "book": {
+        "spine_origin_height_m": 0.0006,
+        "cover_hinge_stiffness_Nm_rad": 0.5,
+        "binding_mass_kg": 0.01,
+        "springback_rad": 0.07,
+        "hinge_damping_Nms": 0.006,
+        "hinge_frictionloss_Nm": 0.002,
+        "compliance_stiffness_N_m": 200.0,
+        "compliance_damping_Ns_m": 1.0,
+        "compliance_range_m": 0.006,
+        "board_friction": 0.35
+      },
+      "target_leaf": "leaf_2",
+      "stage_angles_deg": {
+        "lifted": 30.0,
+        "past_vertical": 90.0,
+        "laid": 170.0
+      },
+      "other_leaf_tolerance_deg": 5.0,
+      "second_leaf_turn_deg": 30.0,
+      "book_max_displacement_m": 0.03,
+      "book_max_rotation_deg": 10.0,
+      "below_table_margin_m": 0.002,
+      "laid_max_speed_rad_s": 0.2,
+      "hold_steps": 50,
+      "cameras": [
+        {
+          "name": "overview",
+          "pos": [
+            -0.04,
+            -0.66,
+            0.76
+          ],
+          "xyaxes": [
+            0.99135,
+            -0.13121,
+            0.0,
+            0.05688,
+            0.42979,
+            0.90114
+          ],
+          "fovy": 44
+        },
+        {
+          "name": "closeup",
+          "pos": [
+            0.4,
+            -0.36,
+            0.5
+          ],
+          "xyaxes": [
+            0.76822,
+            0.64018,
+            -0.0,
+            -0.21832,
+            0.26198,
+            0.94005
+          ],
+          "fovy": 42
+        },
+        {
+          "name": "front",
+          "pos": [
+            0.0,
+            -0.62,
+            0.4
+          ],
+          "xyaxes": [
+            1.0,
+            -0.0,
+            0.0,
+            0.0,
+            0.06438,
+            0.99793
+          ],
+          "fovy": 42
+        },
+        {
+          "name": "top",
+          "pos": [
+            0.0,
+            -0.03,
+            0.8
+          ],
+          "xyaxes": [
+            1.0,
+            -0.0,
+            0.0,
+            0.0,
+            0.9982,
+            0.05989
+          ],
+          "fovy": 40
+        }
+      ],
+      "initial_targets": {
+        "sharpa": [
+          0.443,
+          -0.042,
+          0.476,
+          0.0,
+          -0.3,
+          3.08,
+          1.0,
+          0.0,
+          0.7,
+          0.0,
+          0.8,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.3,
+          0.0,
+          1.5,
+          0.9,
+          1.3,
+          0.0,
+          1.5,
+          0.9,
+          0.1,
+          1.3,
+          0.0,
+          1.5,
+          0.9
+        ],
+        "wuji": [
+          0.443,
+          -0.042,
+          0.476,
+          0.0,
+          -0.3,
+          3.08,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "modeling": "Eight rigid 1.2 mm laminated 6 x 6 in boards and two covers hinged to one free spine body (passive hinge with damping 0.006 N m s/rad and friction 0.002 N m, vertical binding compliance 200 N/m); box contact geometry with the board footprint (4 mm gutter gap), rounded-board visuals with the original sixteen page prints. Leaf 2 rests on a binding springback stop at 0.07 rad (4 degrees). This is a rigid-board / flexible-binding reduced model, not a paper continuum, damage or strength model."
+    }
+  ]
+}

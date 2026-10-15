@@ -1,0 +1,328 @@
+{
+ "schema_version": 1,
+ "id": "batter_whisk",
+ "title": "Whisk batter in a bowl, drain and set the whisk down",
+ "category": "tool_use",
+ "description": "Hold a balloon whisk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2), whisk the batter in a steel bowl with at least five revolutions, lift the whisk out to drain over the bowl and lay it down on the counter; the bowl must not tip or slide.",
+ "difficulty": "hard",
+ "mechanism": "free rigid bowl and whisk, tool use through contact, non-simulated batter summarised by whisk-head revolutions",
+ "instruction": "Whisk the batter in the steel bowl, drain the whisk over the bowl and lay it down on the counter. The hand starts holding the balloon whisk upright just above the free-standing bowl (its 25 mm handle in a closed grasp). The batter is not simulated: whisking is measured on the whisk-head point, 20 mm above the wire tip on the whisk axis, which is in the batter while it is between 3 mm above the bowl origin and the batter surface (35.7 mm above the bowl origin) and at least 4 mm inside the bowl wall. Complete four stages in order. (1) Immersed: the head point enters the batter. (2) Whisked: the head point circles the bowl axis by at least 5 full revolutions of net (signed, unwrapped) angle while it stays in the batter; leaving the batter before 5 revolutions resets the count to zero, and controls with the head point closer than 8 mm to the bowl axis add nothing. (3) Drained: while the hand touches the whisk, the wire tip is at least 10 mm above the bowl rim, the head point is within 55 mm of the bowl axis (over the opening) and the whisk hangs head-down within 30 degrees of vertical, for 25 consecutive controls (0.5 s). (4) Set down: lower the whisk until it touches the counter top while the hand still touches it (it is then placed), then let go; the episode succeeds when, for 50 consecutive controls (1 s), the whisk touches the counter top, touches neither the hand nor the bowl, lies within 30 degrees of horizontal with its centre of mass at least 120 mm from the bowl axis, and its centre of mass moves slower than 0.02 m/s and it turns slower than 0.3 rad/s. The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every control, when: the bowl tilts more than 10 degrees, slides more than 30 mm or rises more than 20 mm from its start; the whisk touches nothing, its lowest point is more than 2 mm above the counter top and its centre of mass moves downward faster than 0.2 m/s (dropped); before it is placed, the whisk touches the counter or is out of hand contact for more than 10 consecutive controls (dropped); after it is placed, the whisk touches neither the hand nor the counter for more than 5 consecutive controls (tossed); the bowl or the whisk touches the floor, has its centre of mass below the counter top (z < 0.68 m) or outside the workspace x in [0.25, 0.99] m, y in [-0.36, 0.36] m, z in [0.60, 1.50] m; or the physics becomes unstable. Later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct forces. The episode allows at most 4000 controls at 50 Hz; reaching that limit without success is a failure.",
+ "robot": "sharpa-wave-floating",
+ "physics_dt": 0.002,
+ "control_dt": 0.02,
+ "max_steps": 4000,
+ "table_z": 0.68,
+ "counter": [
+  0.62,
+  0.0,
+  0.37,
+  0.36
+ ],
+ "bowl_pos": [
+  0.58,
+  0.0,
+  0.6805
+ ],
+ "bowl_sectors": 32,
+ "bowl_wall_proxy_m": 0.0025,
+ "whisk_pos": [
+  0.58,
+  0.0,
+  0.78
+ ],
+ "wire_proxy_radius_m": 0.0012,
+ "wire_points_per_strand": 9,
+ "head_point_z": 0.02,
+ "stage": {
+  "origin": [
+   0.58,
+   0.0,
+   1.07
+  ],
+  "grip_in_hand": [
+   0.0421,
+   0.0,
+   0.0669
+  ],
+  "mount_matrix": [
+   [
+    1,
+    0,
+    0
+   ],
+   [
+    0,
+    0,
+    -1
+   ],
+   [
+    0,
+    1,
+    0
+   ]
+  ],
+  "range": [
+   [
+    0.15,
+    1.05
+   ],
+   [
+    -0.45,
+    0.45
+   ],
+   [
+    0.62,
+    1.5
+   ],
+   [
+    -3.14,
+    3.14
+   ],
+   [
+    -3.14,
+    3.14
+   ],
+   [
+    -3.14,
+    3.14
+   ]
+  ]
+ },
+ "workspace": {
+  "min": [
+   0.25,
+   -0.36,
+   0.6
+  ],
+  "max": [
+   0.99,
+   0.36,
+   1.5
+  ]
+ },
+ "predicate": {
+  "wall_margin_m": 0.004,
+  "min_orbit_radius_m": 0.008,
+  "revolutions_required": 5,
+  "drain_clearance_m": 0.01,
+  "drain_max_radius_m": 0.055,
+  "drain_max_tilt_deg": 30,
+  "drain_steps": 25,
+  "rest_max_axis_deg": 30,
+  "rest_min_distance_m": 0.12,
+  "rest_max_speed_m_s": 0.02,
+  "rest_max_spin_rad_s": 0.3,
+  "hold_steps": 50,
+  "bowl_max_tilt_deg": 10,
+  "bowl_max_slide_m": 0.03,
+  "bowl_max_lift_m": 0.02,
+  "max_free_steps": 10,
+  "max_unsupported_steps": 5,
+  "fall_speed_m_s": 0.2,
+  "support_margin_m": 0.002
+ },
+ "cameras": [
+  {
+   "name": "overview",
+   "pos": [
+    1.12,
+    -0.98,
+    1.5
+   ],
+   "xyaxes": [
+    0.904432,
+    0.426619,
+    -0.0,
+    -0.183927,
+    0.389924,
+    0.902291
+   ],
+   "fovy": 44
+  },
+  {
+   "name": "closeup",
+   "pos": [
+    0.8,
+    -0.34,
+    0.99
+   ],
+   "xyaxes": [
+    0.879707,
+    0.475517,
+    -0.0,
+    -0.212417,
+    0.392971,
+    0.89468
+   ],
+   "fovy": 42
+  },
+  {
+   "name": "side",
+   "pos": [
+    0.06,
+    -0.32,
+    1.16
+   ],
+   "xyaxes": [
+    0.561501,
+    -0.827476,
+    0.0,
+    0.371475,
+    0.252072,
+    0.893569
+   ],
+   "fovy": 45
+  }
+ ],
+ "reset_state": {
+  "sharpa": {
+   "qpos": [
+    0.5800000253971842,
+    1.4335131313975183e-07,
+    1.0639369696740897,
+    -0.0004752357028405728,
+    -0.0034518692052305706,
+    1.0732072185908799e-07,
+    1.787894619671117,
+    -0.07799105023070947,
+    1.140399356524048,
+    0.34861664354988225,
+    1.3310438189373088,
+    0.6611669695490938,
+    0.003862054834598801,
+    0.9932952310172285,
+    0.6611259793902583,
+    0.6611208063492962,
+    0.003862135499558325,
+    0.9932952248515067,
+    0.6611255038218256,
+    0.6613539063467021,
+    0.0032838548672346375,
+    0.9926902499566392,
+    0.6611265264234332,
+    0.02825648377020565,
+    0.6607751046499342,
+    0.0043043800020148935,
+    0.9932582495212453,
+    0.6611282557251908,
+    0.5799999999958592,
+    6.774887829987252e-12,
+    0.6799997365757813,
+    0.9999999999999957,
+    9.561207878009632e-08,
+    2.600304894925608e-08,
+    1.4475627690184721e-11,
+    0.5792440639429897,
+    9.471760356148742e-05,
+    0.7783074486542813,
+    0.9995469440726755,
+    0.008577311295294283,
+    -0.014500952434853283,
+    0.024941104714941535
+   ],
+   "ctrl": [
+    0.58,
+    0.0,
+    1.07,
+    0.0,
+    0.0,
+    0.0,
+    1.8683,
+    0.0354,
+    1.2223,
+    0.349,
+    1.5388,
+    0.6632,
+    0.0,
+    1.1508,
+    0.7582,
+    0.6632,
+    0.0,
+    1.1508,
+    0.7582,
+    0.6632,
+    0.0,
+    1.1508,
+    0.7582,
+    0.1,
+    0.6632,
+    0.0,
+    1.1508,
+    0.7582
+   ]
+  },
+  "wuji": {
+   "qpos": [
+    0.5800000027508442,
+    -4.801454602677594e-10,
+    1.0663985650570895,
+    0.000368540647047379,
+    -0.0019865321664326117,
+    6.90560195237887e-10,
+    0.050151400228151476,
+    0.4561185229825954,
+    0.28898330600174094,
+    0.5680292572300334,
+    1.4312545401167989,
+    0.031195595908064117,
+    1.452055970309931,
+    0.8542454790766137,
+    1.3114014989582776,
+    0.08247240572026938,
+    1.5027526071573352,
+    0.9372821412766366,
+    1.4242391707224724,
+    0.07801799543281687,
+    1.4777290952717668,
+    0.9095102444139213,
+    1.5002448250061127,
+    0.13342047581555808,
+    1.5691689557165327,
+    0.948343816932525,
+    0.5799999999958592,
+    6.774887829987252e-12,
+    0.6799997365757813,
+    0.9999999999999957,
+    9.561207878009632e-08,
+    2.600304894925608e-08,
+    1.4475627690184721e-11,
+    0.523732687262805,
+    -0.0015865263883638465,
+    0.7820182949243892,
+    0.9971722103267948,
+    -0.002858810032868836,
+    0.07068350228014633,
+    0.025362426196692458
+   ],
+   "ctrl": [
+    0.58,
+    0.0,
+    1.07,
+    0.0,
+    0.0,
+    0.0,
+    0.1822,
+    0.4028,
+    0.2444,
+    0.5616,
+    1.552,
+    0.0,
+    1.7478,
+    0.9957,
+    1.552,
+    0.0,
+    1.7478,
+    0.9957,
+    1.552,
+    0.0,
+    1.7478,
+    0.9957,
+    1.552,
+    0.0,
+    1.7478,
+    0.9957
+   ]
+  }
+ },
+ "modeling": "Free rigid Roesle bowl (233 g shell plus the 252 g batter charge lumped rigidly into its inertia) and free rigid balloon whisk (220 g); original T49 meshes for the look, convex contact proxies (32 wall strips x 7 profile bands, floor disc, rolled-rim capsules; handle capsule, 8 wire loops of capsules). The batter is not simulated (no viscous drag, no mixing field): whisking is summarised by whisk-head revolutions inside the batter volume. Each hand starts from a frozen, settled contact grasp of the whisk (no weld)."
+}

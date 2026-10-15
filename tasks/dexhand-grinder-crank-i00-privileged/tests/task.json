@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "id": "grinder_crank",
+  "title": "Operate a manual coffee grinder",
+  "category": "tool_mechanism",
+  "description": "Counterhold a free-standing manual coffee grinder with one dexterous hand and turn its passive, friction-loaded crank two full turns clockwise by the knob with the other (two Sharpa Wave hands by default, or two Wuji Hand 2.2), then let go and leave it standing; tipping, sliding, spinning or reversing the crank fails at once.",
+  "difficulty": "hard",
+  "instruction": "Operate the manual coffee grinder on the counter with your two hands. The HARIO-style hand mill (0.40 kg, 174 mm body, 26 mm base radius) stands free on the counter top (z = 0.70 m) with its base centre at (0.45, 0, 0.70) m. Its crank turns on a passive hinge about the grinder axis with grinding resistance (0.08 N m dry friction and 0.012 N m s/rad damping); the knob sits on a free spin bearing at 80 mm crank radius. The grinder is light and narrow: it tips over if the crank is driven without holding the body. Hold the grinder body with one hand and turn the crank by its knob with the other until the crank has turned at least two full turns (720 degrees) net clockwise as seen from above, measured as the unwrapped crank hinge angle relative to the grinder body. Then let go of the grinder. Success requires, at the same time: the crank still at least 720 degrees net clockwise, no contact between any part of either hand and any part of the grinder (body, crank or knob), the grinder base resting on the counter, the grinder axis within 10 degrees of vertical, grinder centre-of-mass linear speed at most 0.02 m/s, grinder angular speed at most 0.2 rad/s and crank speed at most 0.5 rad/s; this complete condition must hold for 50 consecutive controls (1 s). The episode ends with success at that moment; turning the crank without the released hold never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the grinder axis tilts more than 10 degrees from vertical, the grinder base moves more than 2 cm horizontally from its start or rises more than 2 cm, the base falls below the counter top (z < 0.695 m), the grinder body turns more than 45 degrees about its own axis, the crank has turned more than 90 degrees net counter-clockwise, or the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed: no object teleports, grasp welds, scripted object motion or direct forces on the grinder. Grinding itself is summarised by the crank angle; no beans or grounds are simulated. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.",
+  "robot": "sharpa-wave-floating-bimanual",
+  "physics_dt": 0.002,
+  "control_dt": 0.02,
+  "max_steps": 3000,
+  "counter": {
+    "center": [
+      0.7,
+      0.0,
+      0.68
+    ],
+    "half_size": [
+      0.38,
+      0.4,
+      0.02
+    ],
+    "floor_z": -0.1,
+    "friction": [
+      0.35,
+      0.0001,
+      1e-05
+    ]
+  },
+  "grinder": {
+    "base_position": [
+      0.45,
+      0.0,
+      0.7
+    ],
+    "crank_frictionloss_nm": 0.08,
+    "crank_damping_nms": 0.012,
+    "crank_armature": 0.0002,
+    "knob_armature": 1e-05,
+    "base_friction": [
+      0.35,
+      0.0001,
+      1e-05
+    ],
+    "base_condim": 3,
+    "knob_friction": [
+      1.0,
+      0.005,
+      0.0001
+    ]
+  },
+  "wrist_stage": {
+    "right_wrist": {
+      "range": {
+        "x": [
+          0.0,
+          0.9
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ],
+        "z": [
+          0.7,
+          1.4
+        ],
+        "rx": [
+          -3.14,
+          3.14
+        ],
+        "ry": [
+          -3.14,
+          3.14
+        ],
+        "rz": [
+          -3.14,
+          3.14
+        ]
+      }
+    },
+    "left_wrist": {
+      "range": {
+        "x": [
+          0.0,
+          0.9
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ],
+        "z": [
+          0.7,
+          1.4
+        ],
+        "rx": [
+          -3.14,
+          3.14
+        ],
+        "ry": [
+          -3.14,
+          3.14
+        ],
+        "rz": [
+          -3.14,
+          3.14
+        ]
+      }
+    }
+  },
+  "cameras": {
+    "overview": {
+      "pos": [
+        0.8,
+        -0.45,
+        1.08
+      ],
+      "target": [
+        0.45,
+        0.0,
+        0.84
+      ],
+      "fovy": 45
+    },
+    "closeup": {
+      "pos": [
+        0.62,
+        -0.26,
+        1.03
+      ],
+      "target": [
+        0.45,
+        0.0,
+        0.89
+      ],
+      "fovy": 45
+    },
+    "top": {
+      "pos": [
+        0.45,
+        0.0,
+        1.45
+      ],
+      "target": [
+        0.4501,
+        0.0,
+        0.7
+      ],
+      "fovy": 40
+    }
+  },
+  "initial_targets": {
+    "sharpa": [
+      0.3,
+      -0.2,
+      1.1,
+      3.14,
+      0.0,
+      0.0,
+      0.6,
+      0.25,
+      0.85,
+      1.5707963267948966,
+      0.0,
+      -3.14,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "wuji": [
+      0.3,
+      -0.2,
+      1.1,
+      3.14,
+      0.0,
+      0.0,
+      0.6,
+      0.25,
+      0.85,
+      1.5707963267948966,
+      0.0,
+      -3.14,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "checker": {
+    "required_turns": 2.0,
+    "max_tilt_deg": 10.0,
+    "max_slide_m": 0.02,
+    "max_lift_m": 0.02,
+    "below_counter_tolerance_m": 0.005,
+    "max_body_yaw_deg": 45.0,
+    "max_reverse_deg": 90.0,
+    "rest_linear_speed_m_s": 0.02,
+    "rest_angular_speed_rad_s": 0.2,
+    "rest_crank_speed_rad_s": 0.5,
+    "released_hold_steps": 50
+  },
+  "mechanism": "free-standing grinder body, passive friction-loaded crank hinge and free-spinning knob",
+  "modeling": "Unchanged T15 HARIO-style grinder geometry, materials, masses and passive joints (assets/source/hario_mechanism.py); contact cylinders for the body as in the source; internal shaft and burr excluded from contact; rubber-like knob friction 1.0; grinding is a reduced passive hinge load, no bean fracture or grounds."
+}

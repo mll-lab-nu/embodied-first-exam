@@ -1,0 +1,22 @@
+{
+  "source": "scene-expansion T36 'Align and staple paper documents' (robot_coding_bench/scripts/scene_expansion/repairs/stapler_meta_delivery_polish_r1_trajectory_r1/legacy_geometry.py + scene.py); authored NOVUS B2 envelope estimate, not manufacturer CAD",
+  "generator": "tools/export_assets.py",
+  "files": {
+    "anvil_wall_left.obj": {
+      "sha256": "ff3f0b620c40773b10bc7c6519c26430a1c38315860de46a855cd041c52a5759",
+      "bytes": 475
+    },
+    "anvil_wall_right.obj": {
+      "sha256": "a665092cf02bfd2d0ded9d5256a9ba839a19cdc83699857080e121ee24ef57cd",
+      "bytes": 483
+    },
+    "stapler_base_shell.obj": {
+      "sha256": "4f56f4b071e9f8017f6091f165c54b66363dfe616a94df6d8f66b5157f9b9f33",
+      "bytes": 3875
+    },
+    "stapler_handle_shell.obj": {
+      "sha256": "c6d1481180dd4454afc39e9c4b81f9135aab06bfb540e4f78ffe1697c53bbef3",
+      "bytes": 4810
+    }
+  }
+}

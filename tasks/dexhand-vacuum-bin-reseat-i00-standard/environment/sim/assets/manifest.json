@@ -1,0 +1,14 @@
+{
+  "source": "robot_coding_bench/scripts/scene_expansion/tasks/vacuum_dustbin/meta_delivery_trajectory_r1/assets (T19, accepted scene-expansion delivery; authored Bosch UniversalVac18 reduced geometry, no manufacturer CAD)",
+  "files": {
+    "vacuum_scene.xml": {
+      "sha256": "834dbc8f49c71679ac885a3b0c43e4eed8999b73ff0102c4ca995a4a8453c012",
+      "bytes": 84427
+    },
+    "initial_state.npz": {
+      "sha256": "fef3003c082dec8bfdd04cb8c16bd91065e8d28ad3b7fa86c4bcd165dec30ba8",
+      "bytes": 726
+    }
+  },
+  "notes": "vacuum_scene.xml = model.xml copied verbatim (meshes, materials, passive release-button slide, contact pairs); initial_state.npz = initial-state.npz (assembled qpos)."
+}

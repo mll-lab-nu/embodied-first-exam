@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "files": {
+    "t48_tray_glasses.xml": "029acd1c99d3caa0802c0ba0c3ff33cd1ddd3bc789c77f3b4fecf0246f6f4ad6",
+    "sharpa_bimanual_hands.xml": "e93b7a4fab51baa978e62233db1ad93ecbf2a76076904af4d48150fc35f86ca9"
+  },
+  "sources": {
+    "t48_tray_glasses.xml": {
+      "path": "scripts/hand_support/tasks/T48/model.xml",
+      "sha256": "74dd52ce9a8303d356c9204ef9de6c3b03288e60e05a1b66dae747614755bc3e"
+    },
+    "sharpa_bimanual_hands.xml": {
+      "path": "scripts/dexhand/families/sweep_dustpan/assets/sweep_sharpa.xml",
+      "sha256": "0ef4e039b664a2cb2324a30742ca18f6cbbe76327399b49083a75fe187c59496"
+    }
+  }
+}

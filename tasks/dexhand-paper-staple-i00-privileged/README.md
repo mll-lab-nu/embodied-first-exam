@@ -1,0 +1,64 @@
+# dexhand-paper-staple-i00-privileged
+
+| | |
+|---|---|
+| Benchmark | DexHand |
+| Mode | privileged |
+| Twin | `dexhand-paper-staple-i00-standard` |
+| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
+| Family / instance | `paper_staple` |
+| Oracle | `full` — solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,125 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+
+## Task
+Square up three loose A5 sheets and staple them at a corner with the desk stapler. The sheets lie as a misaligned stack (each upper sheet shifted toward +x) with the bottom sheet's corner resting on the stapler's anvil mouth and the far edge on the desk. Slide the stack into the stapler throat against the stapler's paper stop, square the sheets, press the stapler head through its full stroke onto the stack and let it spring back. Stages, in order: (1) aligned: every corner of sheets 1 and 2 within 2.0 mm of the matching corner of sheet 0 (in sheet 0's plane), the sheets stacked in order (each 0.25-1.5 mm above the one below, along sheet 0's normal) and sheets 0-1 and 1-2 in contact; (2) in the throat: with (1), the staple point (stapler base frame (0.063, 0, 0.012) m, on the anvil under the driver blade) lies inside every sheet 3-30 mm from both edges of one corner and every sheet mid-plane is 0-6 mm above it; (3) pressed: with (1) and (2), the head hinge within 0.01 rad of its bottom stop (0.1701 rad) and the driver blade touching the top sheet; (4) released: after (3), with (1) and (2), the head back up (hinge <= 0.02 rad), no hand contact with any sheet or the stapler and every sheet's centre of mass slower than 0.02 m/s for 50 consecutive controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when a sheet centre falls below z = 0.77925 m (1 mm under its resting height on the desk top) or any sheet corner below z = 0.765 m, a sheet centre leaves the desk (x 0.25-0.99 m, y -0.36-0.36 m) or the workspace box (x 0.2-1.1 m, y -0.45-0.45 m, z 0.70-1.20 m), a sheet or the stapler touches the floor or a desk leg, a sheet or the stapler has no contact at all while its centre of mass falls faster than 0.2 m/s, the stapler base moves more than 3 cm horizontally from its reset position or tilts more than 0.26 rad, or the physics becomes unstable; later actions cannot undo a failure. Only hand and wrist-stage actuator targets are allowed. Sheets are 0.5 mm rigid plates (real A5 size and mass); staple formation is not simulated. At most 6000 controls at 50 Hz; reaching that limit without success is a failure.
+
+## Difficulty
+The three sheets must be squared to 2 mm at all four corners while being slid as one stack into a narrow stapler
+throat against its paper stop; pushing too low rides over the sheet edges, pushing off-centre rotates the stack or
+shoves the stapler, and the head must then be pressed through its full stroke and released with the stack still
+squared and in place. Any sheet pushed off the desk, a dropped sheet or a knocked/tipped stapler ends the episode at once.
+
+## Reference solution
+`solution/` replays the validated Sharpa Wave authoring trajectory (946 controls; the replay ends at success after 746
+controls): a two-fingertip rake squares and feeds the stack against the paper stop, then the index and middle fingertips
+press the handle to the bottom stop and release it. The authoring controller
+(`scripts/dexhand/families/paper_staple/demo.py`) computes robot kinematics and motor targets only; it never drives an
+object pose or applies an object force, and it is never copied into the agent's environment or image.
+
+Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (1,125 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
+
+## Verification
+privileged mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
+twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
+mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+Failures are fail-fast and permanent (see the task text). The frozen instance and thresholds come from the task, never
+from an agent archive. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as
+provisional.
+
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 2 GB | 2 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: wave-2 integration smoke (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier <= 0.64 GiB with two concurrent replays, standard sim sidecar <= 0.96 GiB, agent containers < 0.05 GiB; one fresh replay process 0.26-0.39 GiB max RSS (os.wait4); x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3-0.5 GiB each)
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 8 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 8 GiB memory. Limits measured: memory: 8 GiB lets an agent run more than a dozen 0.3-0.5 GiB simulator sessions next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured.
+
+## Details
+
+### Notes
+Source: `scripts/dexhand/families/paper_staple/`, generated by `scripts/dexhand/generate.py`, from the scene-expansion
+T36 scene (desk, NOVUS B2 envelope stapler, A5 sheets; stapler shells exported to `assets/*.obj` with sha256 manifest).
+Sharpa Wave: MuJoCo Menagerie `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); Wuji Hand 2.2 (`hand2/hand2_2`):
+wuji-technology/wuji-description `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted on the same wrist stage.
+Modelling scope: sheets are rigid 0.5 mm plates (five times real thickness, real A5 size and 80 g/m2 mass); the reset
+props the bottom sheet's corner on the anvil mouth (a physically settled rest pose) instead of lifting the sheets; a
+small paper insertion stop behind the anvil sets the staple position; the magazine is rigid with the base and the
+handle with its driver blade turns on one passive spring-returned hinge with a bottom stop; staple piercing and
+clinching are not simulated. Paper-paper, paper-desk and paper-chrome friction are 0.4, 0.15 and 0.1.

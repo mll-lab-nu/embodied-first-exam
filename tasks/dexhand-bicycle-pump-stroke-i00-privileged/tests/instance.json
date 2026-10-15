@@ -1,0 +1,171 @@
+{
+  "cameras": {
+    "closeup": {
+      "fovy": 48,
+      "pos": [
+        -0.1,
+        -0.1,
+        1.32
+      ],
+      "target": [
+        0.42,
+        0.07,
+        1.0
+      ]
+    },
+    "overview": {
+      "fovy": 40,
+      "pos": [
+        0.05,
+        -0.62,
+        1.42
+      ],
+      "target": [
+        0.5,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  "category": "tool_use",
+  "control_dt": 0.02,
+  "description": "Pump a portable bicycle pump with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2): six full strokes of the passive air-spring piston raise the connected tire to 210 kPa, then release the handle at the top; tipping or shifting the free-standing pump fails the episode at once.",
+  "difficulty": "medium",
+  "fail_fast": {
+    "max_displacement_m": 0.03,
+    "max_lift_m": 0.02,
+    "max_tilt_rad": 0.2618
+  },
+  "id": "bicycle_pump_stroke",
+  "initial_targets": {
+    "sharpa": [
+      -0.3,
+      -0.15,
+      0.6,
+      0,
+      0,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "wuji": [
+      -0.3,
+      -0.15,
+      0.6,
+      0,
+      0,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "instruction": "Inflate the bicycle tire with the portable bicycle pump. A mini floor pump (Topeak Mini Morph type, 154 g class, barrel 0.25 m tall) stands free on its folding foot on the bench next to a 406 (20 inch) wheel lying on the bench; the pump's hose head is already locked on the wheel's Schrader valve and the tire starts partly inflated at 207.8 kPa gauge. The pump's T handle rests at the top of its 0.20 m travel: the piston is a passive slide whose compressed-air spring pushes the handle back up (about 6 N at the top and 46 N at the bottom of the stroke) with viscous damping and 1 N seal friction. A stroke counts when the handle is pushed down to a piston depth of at least 0.18 m (90 % of the travel) and then returns to a depth of at most 0.04 m (20 %); shallower strokes never count and are not failures. The tire pressure is a checker quantity, not simulated air: every counted stroke adds 380 Pa (the mean rise per stroke of the source gas model). Success requires, in this order: (1) at least 6 counted strokes; (2) tire pressure at least 210.0 kPa gauge; (3) the handle released at the top: piston depth at most 0.01 m, no hand contact with any part of the pump, pump tilt at most 0.0873 rad (5 degrees) from upright, pump centre-of-mass speed at most 0.02 m/s and handle speed at most 0.02 m/s, held continuously for 50 consecutive controls (1 s). The episode ends with success at that moment. The episode ends immediately with failure, checked after every 2 ms physics substep, when the pump tilts more than 0.2618 rad (15 degrees) from upright, when its base moves more than 0.03 m horizontally from its start or rises more than 0.02 m above it, when its centre of mass falls below the bench top (z < 0.70 m) or any pump part touches the floor, or when the physics becomes unstable; later actions cannot undo a failure. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The wheel, valve, locked pump head and hose are static props.",
+  "max_steps": 3000,
+  "mechanism": "free pump body with a passive air-spring piston (slide joint)",
+  "modeling": "Free rigid pump (source masses, 125 g with piston) on its foot with an over-damped plastic-on-wood base contact; piston + T handle on a passive slide with a linear air spring (200 N/m, spring reference 0.23 m, i.e. 6 N preload at the top and 46 N at the bottom), 15 N s/m damping and 1 N seal friction; tire pressure integrated by the checker from counted strokes; wheel, valve, locked head and hose frozen at the approved T50 film pose.",
+  "physics_dt": 0.002,
+  "pump": {
+    "air_spring_n_m": 200.0,
+    "air_spring_ref_m": 0.23,
+    "base_lift_m": 0.0,
+    "base_solref": [
+      0.005,
+      3.0
+    ],
+    "damping_n_s_m": 15.0,
+    "limit_solref": [
+      0.004,
+      1.0
+    ],
+    "seal_friction_n": 1.0,
+    "travel_m": 0.2
+  },
+  "release": {
+    "hold_steps": 50,
+    "max_depth_fraction": 0.05,
+    "max_handle_speed_m_s": 0.02,
+    "max_pump_speed_m_s": 0.02,
+    "max_tilt_rad": 0.0873
+  },
+  "robot": "sharpa-wave-floating",
+  "schema_version": 1,
+  "stage_origin": [
+    0.6,
+    0.0,
+    0.7
+  ],
+  "strokes": {
+    "down_depth_fraction": 0.9,
+    "initial_gauge_pa": 207800.0,
+    "pressure_rise_pa_per_stroke": 380.0,
+    "required": 6,
+    "return_depth_fraction": 0.2,
+    "target_gauge_pa": 210000.0
+  },
+  "table_z": 0.7,
+  "title": "Inflate a tire with a portable bicycle pump",
+  "wrist_range": [
+    [
+      -0.8,
+      0.8
+    ],
+    [
+      -0.8,
+      0.8
+    ],
+    [
+      -0.8,
+      0.8
+    ],
+    [
+      -3.14,
+      3.14
+    ],
+    [
+      -3.14,
+      3.14
+    ],
+    [
+      -3.14,
+      3.14
+    ]
+  ]
+}
