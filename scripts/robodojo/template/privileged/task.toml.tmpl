@@ -33,7 +33,7 @@ cpus = 8
 memory_mb = 32768
 
 [agent]
-timeout_sec = @@AGENT_TIMEOUT_S@@.0              # the agent's cutoff: scripts/task_cutoffs.toml, the one table (written by normalize, PROTOCOL §2.12); every Python process pays a few minutes of Isaac Sim launch + scene build
+timeout_sec = @@AGENT_TIMEOUT_S@@.0              # the agent's cutoff, this task's own (PROTOCOL §2.12); every Python process pays a few minutes of Isaac Sim launch + scene build
 # RoboDojo's training demonstrations and policy checkpoints are public (Hugging Face), so the agent reaches the model APIs and the package registries,
 # nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

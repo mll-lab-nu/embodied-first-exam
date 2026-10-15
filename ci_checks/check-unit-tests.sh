@@ -45,6 +45,7 @@ for t in robolab/tests/test_grade_standard.py \
          roboolympics/tests/test_skill_sandbox.py; do
   run 300 "$t"
 done
+run 120 account_failure_check.py --selftest   # the runner's lane stop and infra rules (account, usage gateway) on synthetic trials
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
 # grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi

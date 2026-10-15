@@ -15,6 +15,17 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 if git -C "$root" ls-files --error-unmatch tasks/dataset.toml >/dev/null 2>&1; then
   echo "FAIL tasks/dataset.toml is tracked: it is generated for a release (scripts/dataset_manifest.py write), not committed (git rm --cached tasks/dataset.toml)"; exit 1
 fi
+# Every directory under tasks/ that holds a tracked file is a task: it has its task.toml. Every other check skips a
+# directory without one, so a half-deleted task (36 DIGEST-only dirs were left on main by a merge, board 0121 m3) would pass
+# them all. Always over the whole of tasks/ (git's index: cheap).
+orphans=$(git -C "$root" ls-files -- tasks | python3 -c 'import sys
+files = {l.rstrip("\n") for l in sys.stdin}
+dirs = sorted({f.split("/")[1] for f in files if f.count("/") >= 2})
+print("\n".join(d for d in dirs if f"tasks/{d}/task.toml" not in files))')
+if [ -n "$orphans" ]; then
+  echo "FAIL tasks/<dir> without a task.toml (a task directory removed only in part: remove the rest, or restore task.toml):"
+  sed 's#^#  tasks/#' <<< "$orphans" | head -50; exit 1
+fi
 python3 - "$root" "$@" <<'PY'
 import fnmatch, hashlib, pathlib, re, sys
 root = pathlib.Path(sys.argv[1])

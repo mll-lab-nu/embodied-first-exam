@@ -91,15 +91,15 @@ BENCHMARKS = [  # (directory prefix, label)
 # RoboOlympics' exported tasks (PROTOCOL §4c, owner 2026-10-14; scripts/roboolympics/exported.toml): its own service and
 # grader, matches and skill tasks with no trajectory deliverable, in a benchmark that has a privileged mode.
 _RO_EXPORTED = "— (none: a task RoboOlympics exports with its own service, PROTOCOL §4c)"
-NO_TWIN = {**{n: _RO_EXPORTED for n in (
-               "roboolympics-badminton-actskill-i00-standard",
-               "roboolympics-badminton-match-i01-standard-realtime",
-               "roboolympics-badminton-match-i02-standard-realtime",
-               "roboolympics-soccer-match-i00-standard-realtime",
-               "roboolympics-soccerssl-match-i00-standard-realtime",
-               "roboolympics-tabletennis-hitskill-i00-standard",
-               "roboolympics-tabletennis-match-i01-standard-realtime",
-               "roboolympics-tabletennis-match-i02-standard-realtime")},
+RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
+                     "roboolympics-badminton-match-i01-standard-realtime",
+                     "roboolympics-badminton-match-i02-standard-realtime",
+                     "roboolympics-soccer-match-i00-standard-realtime",
+                     "roboolympics-soccerssl-match-i00-standard-realtime",
+                     "roboolympics-tabletennis-hitskill-i00-standard",
+                     "roboolympics-tabletennis-match-i01-standard-realtime",
+                     "roboolympics-tabletennis-match-i02-standard-realtime")
+NO_TWIN = {**{n: _RO_EXPORTED for n in RO_EXPORTED_TASKS},
            "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
            "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
@@ -236,6 +236,13 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
+# RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
+# RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
+CUTOFF_NOTE_TASK = {n: (
+    "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
+    "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
+    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+    for n in RO_EXPORTED_TASKS}
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
@@ -627,10 +634,11 @@ def no_twin_reason(task: Path) -> str | None:
     return None
 
 
-def render_cutoff(sec: int, mode: str, bench: str = "") -> str:
+def render_cutoff(sec: int, mode: str, bench: str = "", name: str = "") -> str:
     """instruction.md's last section (PROTOCOL §2.12): the heading, the cutoff sentence, then what the cutoff means in
-    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note)."""
-    note = CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
+    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note;
+    `name`, the task directory's name: a task exported with its own service, CUTOFF_NOTE_TASK)."""
+    note = CUTOFF_NOTE_TASK.get(name) or CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
     return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
 
 
@@ -723,7 +731,7 @@ def normalize_instruction(task: Path) -> None:
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
     if sec is not None:
-        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task))
+        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task), task.name)
     write_if_changed(p, s)
 
 

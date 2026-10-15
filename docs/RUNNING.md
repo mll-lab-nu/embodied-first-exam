@@ -210,6 +210,14 @@ self-hosted endpoint work with the gateway and the package registries as the onl
 and Hugging Face fail from the container; a ChatGPT login works with the exception, with `chatgpt.com` answering
 directly and the other hosts failing.
 The runner waits `GATEWAY_START_WAIT` seconds (10) for the gateway to come up; raise it on busy shared nodes.
+Before each job it checks that the gateway still runs and answers `/_gateway/health`; a dead gateway is restarted on its
+port (the agents' base URLs keep working), and the lane stops if that fails. A job during which the gateway died gets
+`<job>/gateway_down.json`. A model call that fails on the way is recorded as `upstream_failure` in `usage.jsonl` (the
+upstream unreachable: the gateway answers 502; the provider's stream broken off; a provider 5xx), counted in
+`totals.json` (`upstream_failures`; `failures_in_a_row` up to the latest call). A trial that ends on such failures, or
+whose job has `gateway_down.json`, is an infrastructure failure: `write_task_results.py` publishes it as "not a result",
+never the agent's 0, and three or more failed calls in a row at its end stop the lane like an account failure
+(`scripts/account_failure_check.py`; board 0121 M4).
 
 Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
 ```

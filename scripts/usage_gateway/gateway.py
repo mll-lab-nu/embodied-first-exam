@@ -44,7 +44,10 @@ trial directory <jobs>/<job>/<trial>/. Everything a trial's requests produce goe
 own agent/ and verifier/ (not inside agent/, which the agent's container mounts and could rewrite):
 
     usage.jsonl        one line per request: time, duration, host, path, status, model, normalized and raw usage
-    totals.json        running totals (rewritten after every request): requests, input / cached / output tokens
+    totals.json        running totals (rewritten after every request): requests, input / cached / output tokens;
+                       upstream_failures / failures_in_a_row / last_upstream_failure: model calls that failed on the
+                       way (the upstream unreachable: the gateway answers 502; the stream broken off; a provider 5xx),
+                       which make a trial that ends on them an infrastructure failure (account_failure_check.py)
     raw.jsonl.gz       with --raw: every request body and response body (SSE text) as sent and received, deduplicated
                        (rawlog.py: each conversation item is stored once, a request as references to them; lossless);
                        credentials, cookies and account ids are removed from the recorded headers. usage.jsonl's "raw"
@@ -456,35 +459,54 @@ def record(trial: pathlib.Path | None, rec: dict, raw: dict | None) -> None:
         tp = d / "totals.json"
         tot = json.loads(tp.read_text()) if tp.exists() else {"requests": 0, "input": 0, "cached": 0, "output": 0,
                                                                "no_usage": 0}
-        u = rec.get("usage") or {}
-        if rec.get("refused") == "path_not_allowed":
-            tot["refused_paths"] = tot.get("refused_paths", 0) + 1
-        elif rec.get("refused") == "server_tool":
-            tot["refused_server_tools"] = tot.get("refused_server_tools", 0) + 1
-        elif rec.get("refused") == "body_unreadable":
-            tot["refused_bodies"] = tot.get("refused_bodies", 0) + 1
-        elif rec.get("refused") == "host_not_allowed":
-            tot["refused_hosts"] = tot.get("refused_hosts", 0) + 1
-        elif rec.get("refused"):
-            tot["refused"] = tot.get("refused", 0) + 1
-        else:
-            tot["requests"] += 1
-            if u:
-                for k in ("input", "cached", "output"):
-                    tot[k] += u.get(k, 0)
-            else:
-                tot["no_usage"] += 1
-            if rec.get("server_tools"):
-                tot["server_tool_requests"] = tot.get("server_tool_requests", 0) + 1
-            if rec.get("body_unchecked"):
-                tot["body_unchecked"] = tot.get("body_unchecked", 0) + 1
-        tot["updated"] = rec["ts"]
-        tot["budget"] = {"input": ARGS.budget_input, "output": ARGS.budget_output}
-        if over_budget(tot):
-            tot["over_token_budget"] = 1
+        tally(tot, rec)
         tmp = tp.with_suffix(".tmp")
         tmp.write_text(json.dumps(tot, indent=1))
         tmp.replace(tp)
+
+
+def tally(tot: dict, rec: dict) -> None:
+    """Add one record to a trial's totals.json. A model call that failed on the way (`upstream_failure`: the upstream
+    unreachable, the gateway's 502; its stream broken off mid-way; an HTTP 5xx from the provider) counts in
+    "upstream_failures", and "failures_in_a_row" is how many model calls in a row up to the latest one failed so (0 after
+    a call that came back whole; refusals leave it as it is): scripts/account_failure_check.py reads a trial whose last
+    model calls failed so as an infrastructure failure, not the agent's 0 (board 0121 M4)."""
+    u = rec.get("usage") or {}
+    if rec.get("refused") == "path_not_allowed":
+        tot["refused_paths"] = tot.get("refused_paths", 0) + 1
+    elif rec.get("refused") == "server_tool":
+        tot["refused_server_tools"] = tot.get("refused_server_tools", 0) + 1
+    elif rec.get("refused") == "body_unreadable":
+        tot["refused_bodies"] = tot.get("refused_bodies", 0) + 1
+    elif rec.get("refused") == "host_not_allowed":
+        tot["refused_hosts"] = tot.get("refused_hosts", 0) + 1
+    elif rec.get("refused"):
+        tot["refused"] = tot.get("refused", 0) + 1
+    elif rec.get("forwarded") is False:            # the upstream could not be reached: a failure, not a request
+        tot["upstream_failures"] = tot.get("upstream_failures", 0) + 1
+        tot["failures_in_a_row"] = tot.get("failures_in_a_row", 0) + 1
+        tot["last_upstream_failure"] = rec.get("upstream_failure")
+    else:
+        tot["requests"] += 1
+        if u:
+            for k in ("input", "cached", "output"):
+                tot[k] += u.get(k, 0)
+        else:
+            tot["no_usage"] += 1
+        if rec.get("server_tools"):
+            tot["server_tool_requests"] = tot.get("server_tool_requests", 0) + 1
+        if rec.get("body_unchecked"):
+            tot["body_unchecked"] = tot.get("body_unchecked", 0) + 1
+        if rec.get("upstream_failure"):
+            tot["upstream_failures"] = tot.get("upstream_failures", 0) + 1
+            tot["failures_in_a_row"] = tot.get("failures_in_a_row", 0) + 1
+            tot["last_upstream_failure"] = rec["upstream_failure"]
+        else:
+            tot["failures_in_a_row"] = 0
+    tot["updated"] = rec["ts"]
+    tot["budget"] = {"input": ARGS.budget_input, "output": ARGS.budget_output}
+    if over_budget(tot):
+        tot["over_token_budget"] = 1
 
 
 def over_budget(tot: dict) -> bool:
@@ -666,6 +688,12 @@ class Handler(BaseHTTPRequestHandler):
             r = conn.getresponse()
         except Exception as exc:  # noqa: BLE001 -- the agent sees an upstream error, as it would without the gateway
             log(f"upstream {host[:253]}: {type(exc).__name__}")        # not the message: it can hold the request's URL
+            # recorded (board 0121 M4): a trial whose model calls end like this is an infrastructure failure
+            record(trial or TRIALS.lookup(ip), {
+                "ts": round(t0, 3), "dur_s": round(time.time() - t0, 2), "client_ip": ip, "host": host, "method": self.command,
+                "path": path.split("?")[0], "status": 502, "model": None, "usage": {}, "usage_raw": {}, "request_bytes": len(body),
+                "response_bytes": 0, "client_gone": False, "forwarded": False,
+                "upstream_failure": f"unreachable: {type(exc).__name__}"}, None)
             return self._reply(502, {"error": f"usage gateway: upstream {host} unreachable: {type(exc).__name__}"})
         self.send_response(r.status)
         for k, v in r.getheaders():
@@ -673,9 +701,18 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header(k, v)
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
+        broken = None
         while True:
-            chunk = r.read1(65536)
+            try:
+                chunk = r.read1(65536)
+            except Exception as exc:  # noqa: BLE001 -- the upstream broke the stream off: recorded, the agent sees it end
+                broken = type(exc).__name__
+                log(f"upstream {host[:253]}: stream broken off ({broken})")
+                break
             if not chunk:
+                if not r.chunked and r.length:     # http.client ends a short Content-Length body without an error
+                    broken = "IncompleteRead"
+                    log(f"upstream {host[:253]}: stream broken off ({broken})")
                 break
             chunks.append(chunk)
             if not client_gone:                    # the agent hung up: keep reading, the request is billed anyway
@@ -683,7 +720,9 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.write(b"%x\r\n%s\r\n" % (len(chunk), chunk)); self.wfile.flush()
                 except OSError:
                     client_gone = True
-        if not client_gone:
+        if broken:                                 # no closing chunk: the agent sees a broken stream, as without the gateway
+            self.close_connection = True
+        elif not client_gone:
             try:
                 self.wfile.write(b"0\r\n\r\n"); self.wfile.flush()
             except OSError:
@@ -696,6 +735,10 @@ class Handler(BaseHTTPRequestHandler):
                "usage": normalize(acc.get("raw") or {}), "usage_raw": acc.get("raw") or {},
                "request_bytes": len(body), "response_bytes": len(resp), "client_gone": client_gone,
                "session": {k.lower(): v for k, v in self.headers.items() if "session" in k.lower()}}
+        if broken:                                  # what was billed until then counts (the usage parsed so far)
+            rec["upstream_failure"] = f"stream broken off: {broken}"
+        elif r.status >= 500:                       # the provider's own server error (502, 503, 529 overloaded, ...)
+            rec["upstream_failure"] = f"HTTP {r.status}"
         raw = None
         if tools:                                   # --server-tools record: forwarded, and flagged
             rec["server_tools"] = tools

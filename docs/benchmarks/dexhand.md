@@ -26,7 +26,7 @@ nine families (all but `sweep_dustpan`) also package a successful Wuji Hand 2.2 
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
-(PROTOCOL §2.7). The agent's time limit is the benchmark's row of `scripts/task_cutoffs.toml` (3600 s in both modes).
+(PROTOCOL §2.7). The agent's time limit is each task's own `[agent] timeout_sec` (3600 s in both modes).
 
 ## Strict success and failure
 

@@ -44,7 +44,10 @@
 #   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
 #                calls through scripts/usage_gateway/gateway.py, which forwards
 #                them unchanged (the agent keeps its own credentials) and records each trial's tokens per request in
-#                <trial>/gateway/ (usage.jsonl, totals.json)
+#                <trial>/gateway/ (usage.jsonl, totals.json). Before each job the runner checks that the gateway answers
+#                (/_gateway/health) and restarts it on its port, or stops the lane; a job during which it died gets
+#                <job>/gateway_down.json, and a trial whose last model calls failed at the gateway (upstream unreachable,
+#                stream broken off, provider 5xx) is published as "not a result", never the agent's 0 (board 0121 M4)
 #   GATEWAY_RAW  1 (default, takes effect with GATEWAY=1) = the gateway also keeps every request and response body
 #                (<trial>/gateway/raw.jsonl.xz, deduplicated, see scripts/usage_gateway/rawlog.py; private: it holds the
 #                whole conversation); 0 = token usage only
@@ -179,15 +182,26 @@ if [ "$GATEWAY" = 1 ]; then
   # a plain-HTTP base URL (a self-hosted model server, e.g. sglang): the gateway may forward to exactly that host:port
   [ "$AGENT" = claude-code ] && agent_up=$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com) || agent_up=$(upstream OPENAI_BASE_URL https://api.openai.com/v1)
   [[ "$agent_up" =~ ^http://([A-Za-z0-9.-]+:[0-9]+)(/|$) ]] && gw_args+=(--http-host "${BASH_REMATCH[1]}")
-  setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
-  gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
+  gw_start() {  # [port]: start the gateway (a restart: on the port the agent's base URLs already name); 0 = it listens
+    rm -f "$ready"
+    setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" ${1:+--port "$1"} >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
+    gw_pid=$!
+    local _; for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && return 0; kill -0 "$gw_pid" 2>/dev/null || return 1; sleep 0.2; done
+    [ -s "$ready" ]
+  }
+  gw_alive() {  # the gateway process runs and answers its health check (board 0121 M4: it was started once, never checked)
+    kill -0 "$gw_pid" 2>/dev/null && python3 -c 'import sys, urllib.request as u
+u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_gateway/health" 2>/dev/null
+  }
+  gw_pid=""; trap '[ -n "$gw_pid" ] && kill "$gw_pid" 2>/dev/null' EXIT
+  gw_start
   # job copies a killed runner left behind (run_job removes its own; never here on exit: Harbor may still be tearing a
   # trial down from that directory, whose compose file and bind mounts it holds; a copy is at most 11 MB, and no job
   # runs for a month)
   [ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
-  for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
   [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
-  GW="http://$GATEWAY_BIND:$(cat "$ready")"
+  gw_port="$(cat "$ready")"; GW="http://$GATEWAY_BIND:$gw_port"
+  gw_alive || { log "usage gateway $GW does not answer its health check (see $JOBS/.gateway/gateway.$$.err); not starting"; exit 2; }
   # https://host/path -> $GW/u/host/path; http://host:port/path -> $GW/h/host:port/path (`t`: one rewrite only)
   via_gw() { sed -E -e "s#^https://([^/]+)#$GW/u/\1#; t" -e "s#^http://([A-Za-z0-9.-]+:[0-9]+)#$GW/h/\1#" <<< "$1"; }
   if [ "$AGENT" = claude-code ]; then
@@ -237,6 +251,24 @@ if [ "$GATEWAY" = 1 ]; then
   esac
   log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out, agent egress: $GATEWAY_EGRESS); per-trial records in <trial>/gateway/"
 fi
+
+gateway_check() {  # before a job is claimed (GATEWAY=1): the gateway answers, else it is restarted on its port; 1 = it is
+  # down for good and the lane stops (every trial would end as an infrastructure failure, board 0121 M4)
+  [ "$GATEWAY" = 1 ] || return 0
+  gw_alive && return 0
+  log "usage gateway $GW (pid $gw_pid) does not answer; restarting it on port $gw_port"
+  kill "$gw_pid" 2>/dev/null; sleep 1
+  gw_start "$gw_port" && gw_alive && { log "usage gateway restarted (pid $gw_pid)"; return 0; }
+  log "STOP lane $$: the usage gateway could not be restarted on port $gw_port (see $JOBS/.gateway/gateway.$$.err)"; return 1
+}
+
+gateway_after() {  # <job>: the gateway died during the job: its trials are infrastructure failures, not the agent's 0
+  # (<job>/gateway_down.json, read by scripts/account_failure_check.py and write_task_results.py)
+  [ "$GATEWAY" = 1 ] && [ -d "$JOBS/$1" ] || return 0
+  gw_alive && return 0
+  printf '{"gateway": "%s", "pid": "%s", "checked": "%s"}\n' "$GW" "$gw_pid" "$(date -u +%FT%TZ)" > "$JOBS/$1/gateway_down.json"
+  log "$1: the usage gateway was down when the job ended: its trials are not results (gateway_down.json)"
+}
 
 wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
   local w
@@ -394,13 +426,14 @@ if [ "$SEQ" = 1 ]; then
       if [ -f "$JOBS/$job/result.json" ]; then log "skip $job (already has result.json)"; continue; fi
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
+      gateway_check || { rmdir "$JOBS/.claims/$job" 2>/dev/null; break 2; }
       run_job "$job" 1 -i "$(name "$m" "$t")" || { rmdir "$JOBS/.claims/$job" 2>/dev/null; not_started=$((not_started + 1)); continue; }   # another lane or a later run may take it
-      finish_job "$job"; summary
+      gateway_after "$job"; finish_job "$job"; summary
       # the model account is out of credits, rate-limited or logged out: every further job would fail within minutes. Only
       # structured evidence counts (Codex's rate_limits and last event, Claude Code's result event): scripts/account_failure_check.py
       why=$(python3 "$R/scripts/account_failure_check.py" "$JOBS/$job"/*__*/ 2>&1); rc=$?
       if [ $rc -eq 4 ]; then
-        log "STOP lane $$: $job hit a model-account or config failure ($(grep -m1 '"stop": true' <<< "$why" | cut -c1-300)); move its dir and claim aside to rerun it"; break 2
+        log "STOP lane $$: $job hit a model-account or config failure, or its model API was unreachable through the gateway ($(grep -m1 '"stop": true' <<< "$why" | cut -c1-300)); move its dir and claim aside to rerun it"; break 2
       elif [ $rc -ne 0 ]; then
         log "account check of $job failed (rc $rc): $(tail -1 <<< "$why" | cut -c1-200)"
       fi
@@ -416,7 +449,7 @@ else
     pids+=($!)
   done
   wait "${pids[@]}"
-  for m in $MODES; do finish_job "$batch-$m"; done
+  for m in $MODES; do gateway_after "$batch-$m"; finish_job "$batch-$m"; done
 fi
 [ -d "${JOBS}_mirror" ] && python3 "$R/scripts/scan_secrets.py" "${JOBS}_mirror" "${SCAN[@]}" 2>&1 | tail -2 | sed "s/^/[mirror] /" | tee -a "$LOG"
 summary
