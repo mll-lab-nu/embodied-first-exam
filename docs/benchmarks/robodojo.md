@@ -75,7 +75,7 @@ Test per task (`make-instance`, then two fresh-process replays of a 120-action t
 
 **The six tasks whose physics does not replay bit for bit** (`fold_clothes`, `fold_clothes_random`, `make_toast_random`,
 `pour_liquid_into_cup`, `pour_liquid_into_cup_random`, `pour_by_language`; instance.json `"determinism": "verdict"` with
-the reason) are **standard only, graded by the live episode** (since 2026-10-11, the PROTOCOL exception for declared
+the reason) are **standard only, graded by the live episode** (since 2026-10-11, PROTOCOL §4.8's live grading for declared
 non-reproducible physics). An open-loop trajectory of them cannot be graded reproducibly: the same file can succeed in one
 fresh replay and fail in the next, so a privileged twin, whose only evidence is replay, would score chance, and the
 replays of a standard episode cannot decide either (the `fold_clothes` trial above succeeded live and was scored 0). In

@@ -209,11 +209,10 @@ camera poses are in the robot's starting frame); see [docs/benchmarks/](benchmar
 tables. A request body over 64 MB gets 413 before it is decoded.
 
 ### Optional reset capability
-Off by default in standard mode (`budget.reset = 0`): one trial is one episode. In standard-realtime mode it is on, 10
-by default (owner, 2026-10-14; PROTOCOL §4b: HumanoidBench 50, BiGym 2.0, RoboOlympics and RoboSafeBench 0). Exceptions in standard mode, by
-owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
-to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`; BiGym2's and KinDER's standard
-tasks (2026-10-11) to `budget.reset = 10`; DexToolBench's standard tasks (2026-10-13) and DexHand's (2026-10-14) to `budget.reset = 20`; MuJoCo Playground's quadruped standard tasks (2026-10-14) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
+Each task declares its own budget N (PROTOCOL §4.5): the `RCB_RESET_BUDGET` default of its `sim` service, served as
+`/spec.budget.reset` and stated in its instruction. The templates' defaults: 0 in standard mode (one trial is one
+episode), 10 in standard-realtime mode (PROTOCOL §4b); a benchmark that chooses another number gives it and its reason
+in its doc (`docs/benchmarks/<bench>.md`). A run may set `RCB_RESET_BUDGET=N`
 on the service (implemented by the KinDER, HumanoidBench, BiGym2, MyoSuite and MuJoCo (`server_mj.py`: DexToolBench, Playground ALOHA / Panda) services and the Playground quadrupeds' and DexHand's 2.2 services; the 2.2 client has no `reset()`,
 so MyoSuite's, the quadrupeds' and DexHand's instructions call `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
@@ -556,9 +555,8 @@ standard-realtime tasks only (`<base>-standard-realtime`, `mode = "standard-real
 addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
 recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
 time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
-Defaults of the mode: `budget.reset = 10` (since 2026-10-14; before, 0 as in standard mode: the optional reset capability of
-Part 1; `RCB_RESET_BUDGET` overrides it; HumanoidBench's per-benchmark exception is 50, BiGym 2.0's 0,
-PROTOCOL §4b), and S stated per task (`[metadata] slowdown`, RCB_SLOWDOWN's default: 1 unless the service's measured
+Each task declares its reset budget (the optional reset capability of Part 1; `RCB_RESET_BUDGET`'s default, which
+stays an override; the template's default is 10, PROTOCOL §4b; a benchmark's own number is in its doc), and S stated per task (`[metadata] slowdown`, RCB_SLOWDOWN's default: 1 unless the service's measured
 real-time factor is below 3, PROTOCOL §4b).
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step

@@ -38,7 +38,7 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "roboolympics-sprint-i00-standard"                      # open egress by a documented exception (PROTOCOL §2.11)
+OPEN = "roboolympics-sprint-i00-standard"                      # open egress, its benchmark's documented choice (PROTOCOL §2.11)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -311,10 +311,16 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r'^dynamics = "static"', 'dynamics = "dynamic"'), DYNAMICS, "the table says"),
     ("a task.toml without dynamics",
      TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), DYNAMICS, "[metadata] dynamics is missing"),
-    # PROTOCOL §4b: a standard-realtime task states its slowdown S
+    # PROTOCOL §4b: a standard-realtime task declares its slowdown S and its reset budget, and they agree
     ("a standard-realtime task.toml whose slowdown is not its service's",
      "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r"^slowdown = [0-9.]+", "slowdown = 2"), REALTIME,
-     "but its service's RCB_SLOWDOWN default is 1"),
+     "but its service's default is 1"),
+    ("a standard-realtime service whose reset budget is not the one its instruction states",
+     "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"RCB_RESET_BUDGET:-50\}", "RCB_RESET_BUDGET:-7}"),
+     REALTIME, "instruction.md states 50 resets, but the task's reset budget is 7"),
+    ("a standard-realtime service that declares no reset budget",
+     "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
+     "must declare its reset budget"),
 ]
 
 

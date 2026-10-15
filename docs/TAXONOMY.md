@@ -34,16 +34,16 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | RoboARC | `difficulty` | `very_easy` · `easier` · `easy` · `medium` · `hard` (the owner's rating of the task within its family; task names carry no difficulty) |
 | RoboARC | `grasp` | `assisted (<model> grasp regions on <parts>)` · `physical (no assisted grasping)` |
 | RoboARC | `success_rule`, `tooling_version` | the task-native success rule and its terminal revision; the tooling generation (text) |
-| RoboOlympics | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's default slowdown S (the world runs at 1/S of real speed; PROTOCOL §4b exception: 10) |
+| RoboOlympics | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's default slowdown S (the world runs at 1/S of real speed; PROTOCOL §4b) |
 | RoboOlympics | `revision`, `play`, `action_level`, `source_task` | the sport's revision; `program`; `high` · `low`; the RoboOlympics task it was exported from |
 | RoboFunOlympics | `category` | `track-and-jumps` · `football-and-volleyball` · `basketball-and-rackets` · `throwing-catching-striking` · `parkour-apparatus-balance` |
-| RoboFunOlympics | `reset_budget` | integer: the standard task's default reset budget (PROTOCOL §4.5 exception) |
+| RoboFunOlympics | `reset_budget` | integer: the task's default reset budget, its service's `RCB_RESET_BUDGET` default (PROTOCOL §4.5) |
 | DexHand | `hands`, `default_hand` | the hand models the task runs with: `sharpa` (Sharpa Wave, 22 finger actuators) · `wuji` (Wuji Hand 2.2, 20 finger actuators), mounted in place of each Sharpa Wave on the same wrist stage or arm; `default_hand = "sharpa"` (selected with `DEXHAND_HAND`; the verifier replays with the hand the trajectory records) |
 | DexHand | `difficulty`, `release_status` | `hard` (proposed before calibration with agent trials); `provisional` (human solvability review pending, PROTOCOL §2.7) |
 | RoboOlympics (exported, PROTOCOL §4c) | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's slowdown S (the world runs at 1/S of real speed; the sport's official one: 5, 10 or 20) |
 | RoboOlympics (exported, PROTOCOL §4c) | `revision`, `play`, `player_mode`, `action_level`, `source_task`, `source_commits`, `exporter`, `official`; skill tasks also `skill_deliverable`, `dev_requests`, `success_line` | the sport's revision; `program`; `high` · `low`; the RoboOlympics task it was exported from, its commits and exporter; `false` (development seeds); the deliverable's path, the number of graded requests, the success rate needed |
 | RoboOlympics | `category` | `track-and-jumps` · `football-and-volleyball` · `basketball-and-rackets` · `throwing-catching-striking` · `parkour-apparatus-balance` |
-| RoboOlympics | `reset_budget` | integer: the standard task's default reset budget (PROTOCOL §4.5 exception) |
+| RoboOlympics | `reset_budget` | integer: the task's default reset budget, its service's `RCB_RESET_BUDGET` default (PROTOCOL §4.5) |
 | LabUtopia | `level` | `1` (an atomic action) · `2` (a short-horizon task): LabUtopia's own level of the task |
 | AutoBio | `difficulty` | `easy` · `medium` · `hard` (the level AutoBio's paper gives the task) |
 | AutoBio | `success_rule` | `first` (the first control step at which AutoBio's check holds ends the episode) · `final` (judged in the state in which the episode ends) |
