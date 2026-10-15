@@ -2,8 +2,8 @@
 {{TASK_TEXT}}
 
 ## Difficulty
-The episode starts as the approved source film does: the hand holds the thin teaspoon (5.4 mm handle) upright above the
-mug in a light thumb-index pinch near the top of the handle. The arm has no gravity compensation, the spoon hangs like
+The approved source film (kinematic, without hands) starts with the spoon suspended above the rim; here the hand holds
+the thin teaspoon (5.4 mm handle) upright above the mug in a light thumb-index pinch near the top of the handle. The arm has no gravity compensation, the spoon hangs like
 a pendulum and slowly creeps through a two-finger pinch, and the bowl must circle six full turns inside a 50 mm cavity
 below the coffee surface while the hand stays out of the coffee. The spoon then has to be lifted clear of the rim,
 carried beside the mug and laid flat on the worktop without dropping it, and released so that it lies still: a light,

@@ -868,9 +868,9 @@ trial):
 | `paper_half_fold` | 1 / 0 | 1 / 0 | 5 min | 0.50 / 0.64 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
 | `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
-| `remote_battery_swap` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.61 | standard nop 0 (hand_wuji 1; no Wuji solution) |
+| `remote_battery_swap` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.23 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `coffee_stir` | 1 / 0 | 1 / 0 | 2 min | 0.45 / 0.61 | standard nop 0 (no Wuji solution) |
-| `jar_lid_open` | 1 / 0 | 1 / 0 | 2 min | 0.42 / 0.70 | Wuji oracle 1 in both modes; standard nop 0 |
+| `jar_lid_open` | 1 / 0 | 1 / 0 | 8 min | 3.40 / 2.38 | wave 3 (2026-10-15; standard nop: the family's final trial); Wuji privileged oracle 1 (wave 3, arm) |
 | `grinder_crank` | 1 / 0 | 1 / 0 | 11 min | 3.47 / 2.40 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `pancake_serve` | 1 / 0 | 1 / 0 | 5 min | 0.43 / 0.58 | Wuji nop 0 in both modes (Wuji solution packaged) |
 | `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 4 min | 0.40 / 0.52 | standard nop 0 (no Wuji solution) |
@@ -883,11 +883,11 @@ trial):
 | `boot_sole_brush` | 1 / 0 | 1 / 0 | 3 min | 0.55 / 0.75 | Wuji oracle 1 in both modes; standard nop 0 |
 | `paper_staple` | 1 / 0 | 1 / 0 | 2 min | 0.40 / 0.82 | Wuji oracle 1 in both modes; standard nop 0 |
 | `binder_page_load` | 1 / 0 | 1 / 0 | 6 min | 0.44 / 0.67 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `envelope_letter_insert` | 1 / 0 | 1 / 0 | 5 min | 0.42 / 0.72 | Wuji privileged oracle 1; standard Wuji nop 0 |
-| `book_page_turn` | 1 / 0 | 1 / 0 | 2 min | 0.52 / 0.74 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
+| `envelope_letter_insert` | 1 / 0 | 1 / 0 | 19 min | 3.40 / 2.38 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
+| `book_page_turn` | 1 / 0 | 1 / 0 | 5 min | 3.47 / 2.48 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `tray_glass_carry` | 1 / 0 | 1 / 0 | 3 min | 0.61 / 0.84 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `batter_whisk` | 1 / 0 | 1 / 0 | 2 min | 0.44 / 0.61 | Wuji standard oracle 1; Wuji privileged nop 0 |
-| `bicycle_pump_stroke` | 1 / 0 | 1 / 0 | 2 min | 0.45 / 0.64 | Wuji oracle 1 in both modes; standard nop 0 |
+| `bicycle_pump_stroke` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.28 | wave 3 (2026-10-15; standard nop: the family's final trial); Wuji privileged oracle 1 (wave 3, arm) |
 
 The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`). Wave-2 rows: the oracle / nop and Wuji verdicts are the family authors' trials on the final task files (2026-10-14/15, same image and settings); wall time and peaks are this branch's integration smoke (one privileged and one standard Sharpa oracle per family, both 1, every standard live episode = its replays).
 
