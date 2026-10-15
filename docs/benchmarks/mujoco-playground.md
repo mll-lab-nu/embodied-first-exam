@@ -221,7 +221,7 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   one episode and are reported separately.
 
 ## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`; until 2026-10-14 `scripts/task_dynamics.toml`)
 get a `-standard-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
 frozen moments: an external force that is neither the robot's nor gravity).
 - **Service.** The shared realtime layer, unchanged (`shared/realtime/rcb_realtime.py`, `rcb_service.py`,
@@ -249,3 +249,28 @@ frozen moments: an external force that is neither the robot's nor gravity).
 | `train/` | the reference-policy training (CPU PPO), not used by any task |
 | `shared/realtime/` | the standard-realtime twin's service (`server.py`, the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
 | `generate.py`, `templates/` | the task directories (`--check` compares) |
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+**MuJoCo service (DexToolBench, MuJoCo Playground manipulation; `eai-standard/2.1`).** Same endpoints and RCB1 frames,
+served by `images/mujoco/limited/server_mj.py`. Differences: one action type, `joint_position` with the task's own
+actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt` is a multiple of `control_dt` (1/60 s
+DexToolBench, 1/50 s Playground), hold or linear interpolation per control step. Actions are sent as **float64** (MuJoCo
+on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing). `meta.task` carries the task definition
+(DexToolBench: current goal pose and index; Playground: the target) and `meta.cameras` each camera's intrinsics
+(`intrinsic_cv` for the returned image; fx = fy for a camera defined by its field of view, fx ≠ fy for one defined by its
+sensor size: ALOHA's overhead and wrist cameras, 158.52 and 216.45 px; until 2026-10-13 the service reported
+fx = fy = 216.45 for them) and camera-to-world pose: the viewpoint the image is rendered from, in the state the response
+ends in (until 2026-10-10 the position was MuJoCo's left-eye camera, 3.4 cm to the side, and the pose was the one at
+service start). Cameras carry `moving` (true for ALOHA's wrist cameras). `final.json` is `finalized` as soon as the
+replay's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the collect hook waits
+for (the MetaWorld+ service, `images/metaworld/standard/server_mw.py`, follows the same rules). DexToolBench's own eval
+gives each goal 10 s; here the standard twins have **no per-goal limit** and **20 resets** (owner, 2026-10-13: the
+optional reset capability; until then one episode, no reset) and an episode cap of 360,000 control steps (100 min of
+robot time, `spec.max_control_steps`), while the privileged tasks give each goal 30 s (replayed offline, free resets).
+DexToolBench episodes end when all goals are reached, at the cap, or when the agent's time is up; Playground episodes
+run to the end of the agent phase and the final state is graded. The service journals and resumes like the shared
+layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s) and replays the recorded episode
+in a fresh simulator at the end (`deterministic`: same final state hash). It implements the optional reset capability.
+
+**Quadrupeds (`eai-standard/2.2`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. The service states no `max_frames_per_call` yet.

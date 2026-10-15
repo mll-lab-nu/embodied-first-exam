@@ -610,7 +610,7 @@ services:
 
 
 # -- standard-realtime twins (PROTOCOL §4b; owner 2026-10-14, board 0112) -----------------------------------------
-# The dynamic environments (scripts/task_dynamics.toml; PROTOCOL §2.14) get a `-standard-realtime` twin: the same frozen
+# The dynamic environments (each task's `[metadata] dynamics`; PROTOCOL §2) get a `-standard-realtime` twin: the same frozen
 # instance and success check, served by shared/realtime/server.py (rcb_service.Sim on casa_tool.Session) behind the
 # shared eai-standard/2.3 layer (rcb_realtime.py, rcb_service.py, rcb_client.py, grade.py: unchanged copies of
 # scripts/humanoidbench/shared/; check-tooling-identity.sh). Per environment: the slowdown S, from the real-time factor

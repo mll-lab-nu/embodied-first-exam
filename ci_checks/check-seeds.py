@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Seeds (docs/PROTOCOL.md §2.13): every task names the frozen instances it may run from. For every task:
+"""ADVISORY. Seeds (docs/PROTOCOL.md §2): every task names the frozen instances it may run from. For every task:
   - task.toml has `[metadata.seeds]` with `default` (an integer), `allowed` (a list of distinct integers, a range
     `{ from = A, to = B }` with both ends included, or "any"; `default` among them; a range or "any" only with
     `build = "runtime"`: the task builds a seed's instance itself, since they cannot all be committed) and `oracle` (the seeds the reference solution is for: a subset of `allowed`; empty when `oracle = "none"`, not
     empty when it is "full" or "partial"); `instance_seed`, where the task has one, equals `default`;
-  - a standard or standard-realtime task has the same `default` and `allowed` as its privileged twin;
+  - (a standard or standard-realtime task has its privileged twin's seeds: ci_checks/check-twins.py, an invariant);
   - `build = "frozen"` (the default): every listed seed other than the default has its frozen instance under the verifier's files of the task that
     holds the pair's instance (the privileged twin; a task without one: itself): `tests/seeds/<seed>/instance.json` or
     `instance.npz`, of the same kind as the default instance; and `tests/seeds/` holds nothing for a seed that is not
@@ -85,12 +85,7 @@ def check(task: Path) -> list[str]:
         errs.append(f"instance_seed {md['instance_seed']} differs from seeds.default {default}")
     if errs:
         return errs
-    h = holder(task)
-    if h != task:
-        _, hsd = seeds_table(h)
-        if not isinstance(hsd, dict) or (hsd.get("default"), hsd.get("allowed"), hsd.get("build", "frozen")) \
-                != (default, allowed, build):
-            errs.append(f"seeds.default / allowed / build differ from its privileged twin's ({hsd})")
+    h = holder(task)     # the twins' equal seeds: ci_checks/check-twins.py (an invariant, PROTOCOL Appendix H.7)
     kinds = instance_kinds(h / "tests")
     if build == "frozen":                      # a list: every listed seed is a committed instance
         for s in allowed:

@@ -1,9 +1,28 @@
 #!/usr/bin/env bash
-# Reproducibility: FROM must be a registry image with an explicit, non-'latest' tag or digest.
-t="$1"; from=$(grep -m1 '^FROM ' "$t/environment/Dockerfile" | awk '{print $2}')
-case "$from" in
-  *@sha256:*) exit 0 ;;
-  *:latest|*:*latest) echo "FAIL $t: Dockerfile FROM '$from' uses :latest"; exit 1 ;;
-  */*:*) exit 0 ;;
-  *) echo "FAIL $t: Dockerfile FROM '$from' must be <registry>/<image>:<tag> (pinned)"; exit 1 ;;
-esac
+# ADVISORY (docs/PROTOCOL.md §1: images pinned for reproducibility; the frozen instance's hash check backs it up at run
+# time): every FROM of environment/Dockerfile and tests/Dockerfile (every stage) is a registry image with an explicit,
+# non-`latest` tag or digest, and so is every compose `image:` (environment/ and tests/). Moved here from
+# check-verifier-isolation.sh (board 0124): a pin is reproducibility, not the trust boundary.
+t="$1"; python3 - "$t" <<'PY'
+import pathlib, re, sys
+t = pathlib.Path(sys.argv[1]); rc = 0
+PINNED = re.compile(r"^[\w.\-]+(:\d+)?/.+[:@].+")
+def fail(m):
+    global rc; print(f"FAIL {t}: {m}"); rc = 1
+for rel in ("environment/Dockerfile", "tests/Dockerfile"):
+    df = t / rel
+    if not df.is_file():
+        continue
+    froms = re.findall(r"^FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?", df.read_text(), re.M | re.I) or [("", "")]
+    for k, (frm, _) in enumerate(froms):
+        if frm in [a for _, a in froms[:k] if a]: continue     # an earlier stage of this file
+        if not (PINNED.match(frm) and not frm.endswith(":latest") and "$" not in frm):
+            fail(f"{rel} FROM {frm!r} must be a pinned registry image (<registry>/<image>:<tag> or @sha256, never :latest)")
+for cf in (t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"):
+    if cf.is_file():
+        for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
+            img = img.strip("'\"")
+            if not (PINNED.match(img) and not img.endswith(":latest") and "$" not in img):
+                fail(f"compose sidecar image {img!r} must be pinned")
+sys.exit(rc)
+PY

@@ -107,6 +107,112 @@ def test_results():
         check("EnvironmentStartTimeoutError" in line and "no reward.json" in line, f"the reason names Harbor's exception: {line}")
 
 
+UNVALIDATED = "humanoidbench-loco-walk-i00-standard-realtime"   # oracle = "none": never ranked with validated tasks
+WTR = [sys.executable, str(ROOT / "scripts/write_task_results.py")]
+
+
+def make_trial(jobs: Path, job: str, name: str, task: str, started: str, reward=None, result=None, config=None) -> Path:
+    t = jobs / job / f"{task}__{name}"
+    t.mkdir(parents=True)
+    (t / "result.json").write_text(json.dumps({"task_name": task, "id": name, "started_at": started, **(result or {})}))
+    if reward is not None:
+        (t / "verifier").mkdir()
+        (t / "verifier/reward.json").write_text(json.dumps(reward))
+    if config is not None:
+        (t / "config.json").write_text(json.dumps(config))
+    return t
+
+
+def write(jobs: Path, job: str, out: Path) -> subprocess.CompletedProcess:
+    r = subprocess.run(WTR + [str(jobs), job, "codex-x-high", "label", "--out", str(out)], capture_output=True, text=True)
+    check(r.returncode == 0, f"write_task_results.py exited {r.returncode}: {r.stderr[-500:]}")
+    return r
+
+
+def test_config_and_attempts():
+    """PROTOCOL v2.0 / RUNNING.md: every result records its effective configuration (config.json); an infrastructure
+    failure (not a result) is voided and never counted, one retry replaces it, a voided attempt never replaces a counted
+    one, more than 2 attempts of one task x run id are flagged; a trial of another task version is legacy."""
+    infra = {"success": 0, "infra_error": 1}
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td); jobs, out = td / "jobs", td / "out"
+        dg = (ROOT / "tasks" / TASK / "DIGEST").read_text().strip().removeprefix("sha256:")
+        make_trial(jobs, "a", "t1", TASK, "2026-10-14T01:00:00Z", infra, {"task_checksum": dg})
+        make_trial(jobs, "a", "t2", TASK, "2026-10-14T02:00:00Z", {"success": 1}, {"task_checksum": dg})
+        write(jobs, "a", out)
+        res = out / TASK / "codex-x-high"
+        cfg = json.loads((res / "config.json").read_text())
+        for k, v in {"protocol_version": "2.0", "mode": "standard", "network": "allowlist", "validated": True, "result": "success",
+                     "counted": True, "attempts": 2, "attempts_over_cap": False, "seed_source": "default", "digest_match": True,
+                     "trial": f"{TASK}__t2"}.items():
+            check(cfg.get(k) == v, f"config.json {k} = {cfg.get(k)!r}, want {v!r}")
+        for k in ("cutoff_s", "reset_budget", "slowdown", "seed", "digest"):
+            check(k in cfg, f"config.json has no {k}")
+        att = json.loads((res / "attempts.json").read_text())["attempts"]
+        check([a["counted"] for a in att] == [False, True], f"attempts.json: the infra attempt is counted: {att}")
+        check("| configuration | protocol 2.0, standard" in (res / "README.md").read_text(), "README has no configuration row")
+        # a later infrastructure failure of the same task x run id never replaces the counted result, and a third attempt is flagged
+        make_trial(jobs, "b", "t3", TASK, "2026-10-14T03:00:00Z", infra, {"task_checksum": dg})
+        r = write(jobs, "b", out)
+        cfg = json.loads((res / "config.json").read_text())
+        check(cfg.get("trial") == f"{TASK}__t2" and cfg.get("result") == "success", f"a voided attempt replaced the result: {cfg}")
+        check("WARN" in r.stdout and "3 attempts" in r.stdout, f"no WARN for 3 attempts: {r.stdout}")
+        check(len(json.loads((res / "attempts.json").read_text())["attempts"]) == 3, "attempts.json does not list the third attempt")
+        # only infrastructure failures: the folder shows the latest as not a result, not counted
+        make_trial(jobs, "c", "u1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", infra)
+        write(jobs, "c", out)
+        cfg = json.loads((out / f"{SMALL}-privileged" / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("result") == "not_a_result" and cfg.get("counted") is False and cfg.get("not_a_result_reason"),
+              f"an infrastructure failure is counted: {cfg}")
+        # a trial of another version of the task (its checksum is not today's DIGEST): legacy fields, still written
+        make_trial(jobs, "d", "l1", f"{SMALL}-standard", "2026-10-14T01:00:00Z", {"success": 0}, {"task_checksum": "0" * 64})
+        write(jobs, "d", out)
+        cfg = json.loads((out / f"{SMALL}-standard" / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("cutoff_s") == "legacy" and cfg.get("digest_match") is False and cfg.get("mode") == "standard"
+              and cfg.get("result") == "fail", f"legacy trial: {cfg}")
+        # a legacy result.json without a checksum: derived from task.toml as it is
+        make_trial(jobs, "e", "l2", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 0})
+        write(jobs, "e", out)
+        cfg = json.loads((out / UNVALIDATED / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("validated") is False and cfg.get("slowdown") is not None and cfg.get("digest_match") is None,
+              f"an unvalidated realtime task without a checksum: {cfg}")
+        # the seed the runner chose: its copy of the task says it (scripts/task_seed.py materialize)
+        copy = td / "copy" / TASK
+        shutil.copytree(ROOT / "tasks" / TASK, copy)
+        s = (copy / "task.toml").read_text()
+        (copy / "task.toml").write_text(re.sub(r"(?m)^(\[metadata\.seeds\]\n(?:.*\n)*?default = )\d+", r"\g<1>4242", s, count=1))
+        make_trial(jobs, "f", "s1", TASK, "2026-10-14T01:00:00Z", {"success": 0}, None, {"task": {"path": str(copy)}})
+        write(jobs, "f", td / "out2")
+        cfg = json.loads((td / "out2" / TASK / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("seed") == 4242 and cfg.get("seed_source") == "runner copy", f"the runner's seed: {cfg}")
+
+
+def summary_code() -> str:
+    s = (ROOT / "scripts/run_agent_batch.sh").read_text()
+    m = re.search(r"(?ms)^summary\(\) \{.*?<<'PY'\n(.*?)^PY$", s)
+    check(m is not None, "run_agent_batch.sh has no summary() heredoc")
+    return m.group(1) if m else ""
+
+
+def test_summary_grouping():
+    """run_agent_batch.sh's summary: one table per comparable configuration, unvalidated tasks apart, voided trials not
+    counted in a success rate."""
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td); jobs = td / "jobs"
+        make_trial(jobs, "bx-standard-a", "t1", TASK, "2026-10-14T01:00:00Z", {"success": 0, "infra_error": 1})
+        make_trial(jobs, "bx-standard-a", "t2", TASK, "2026-10-14T02:00:00Z", {"success": 1})
+        make_trial(jobs, "bx-privileged-a", "p1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 0})
+        make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
+        r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True)
+        check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
+        out = r.stdout
+        head, _, unval = out.partition("## Unvalidated tasks (not ranked)")
+        check(bool(unval) and UNVALIDATED in unval and UNVALIDATED not in head, f"the unvalidated task is not apart:\n{out}")
+        check(head.count("\n## protocol 2.0, ") == 2, f"not one table per configuration:\n{out}")
+        check("Success (results only): 1 / 1; 1 voided." in head, f"a voided trial counted in the success rate:\n{out}")
+        check("not a result (voided" in head, f"the voided trial is not marked:\n{out}")
+
+
 def caps(task: Path) -> list[str]:
     out = re.findall(r"(?m)^cpus\s*=\s*\S+", (task / "task.toml").read_text())
     for f in sorted((task / "environment").glob("*docker-compose.y*ml")):
@@ -237,10 +343,12 @@ def test_gateway_restart():
 
 if __name__ == "__main__":
     test_results()
+    test_config_and_attempts()
+    test_summary_grouping()
     test_clamp()
     test_batch_runner()
     test_gateway_restart()
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
-    print("ok: write_task_results not-a-result cases, clamp_cpus, run_agent_batch.sh clamped copies and gateway restart")
+    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, clamp_cpus, run_agent_batch.sh clamped copies and gateway restart")

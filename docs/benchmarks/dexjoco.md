@@ -228,3 +228,7 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
     numerics: a 0 there with `deterministic = 1` may be a false failure, and such a trial would now be
     `infra_error = 1`. A past standard trial that ended with `sim_error = 1` after a non-string `note` or a `null`
     field would now go on (it could score 1).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, STANDARD_MODE §13).

@@ -16,6 +16,7 @@ family = "toes_to_bar"
 category = "parkour-apparatus-balance"
 mode = "privileged"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+network = "open"                 # the agent's egress (docs/PROTOCOL.md §2): open, the author's choice
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 3.0
@@ -81,8 +82,8 @@ memory_mb = 8192
 
 [agent]
 timeout_sec = 7200.0
-# Egress: open (Harbor's default). RoboOlympics lets the agent search for and download public tools, robot models and
-# pretrained controllers (owner, 2026-10-11; PROTOCOL §2.11 exception, docs/benchmarks/roboolympics.md).
+# Egress: open (Harbor's default), as `[metadata] network` declares. RoboOlympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md).
 
 [environment]
 build_timeout_sec = 1800.0
