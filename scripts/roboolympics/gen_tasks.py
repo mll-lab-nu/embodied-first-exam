@@ -29,7 +29,7 @@ HERE = ROOT / "scripts/roboolympics"
 SHARED = HERE / "shared"
 REGISTRY = "ghcr.io/mll-lab-nu"
 PREFIX = "roboolympics"
-RESET_BUDGET = 50        # standard mode's attempts (PROTOCOL §4.5 per-benchmark default; owner, 2026-10-12)
+RESET_BUDGET = 50        # standard mode's attempts (RoboOlympics' own choice, PROTOCOL §4.5; owner, 2026-10-12)
 RT_RESET_BUDGET = 10     # standard-realtime: PROTOCOL §4b's default (owner, 2026-10-14: every realtime task, 10 resets)
 # The standard-realtime twins (PROTOCOL §4b; owner, 2026-10-14, board 0112): the families whose scene is dynamic
 # (scripts/task_dynamics.toml), served by the standard twin's server.py behind the shared realtime layer

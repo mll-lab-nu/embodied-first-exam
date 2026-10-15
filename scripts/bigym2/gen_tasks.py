@@ -28,9 +28,9 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 REVIEW_PR = 123  # the pull request that holds the human review of these tasks (PROTOCOL §2.7)
 IMAGE_HW = 84  # the onboard cameras' default image side in standard modes (compose RCB_IMAGE_HW): upstream's, its agents' and policies'
 MODES = {"privileged": "privileged", "standard": "standard", "standard-realtime": "realtime"}
-# the service modes' default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
+# the service modes' default reset budget (RCB_RESET_BUDGET's default; BiGym 2.0's own choice, PROTOCOL §4.5; owner
 # 2026-10-11): standard 10, since the horizon bounds each episode and without a reset the practice and the graded
-# attempt share it; ten, as MyoSuite, because a scripted episode ends in about a minute; standard-realtime keeps the mode's 0
+# attempt share it; ten, as MyoSuite, because a scripted episode ends in about a minute; standard-realtime keeps 0, as its twins have since 2026-10-08
 RESET_BUDGET = {"standard": 10, "standard-realtime": 0}
 CLIENT = dict(
     line.split("=", 1)

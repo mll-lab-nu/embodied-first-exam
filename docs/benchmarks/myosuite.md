@@ -151,7 +151,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   the simulator's 1.4 GB under the sidecar's 8 GiB cap), and before, one request within the documented ranges could
   exhaust that memory. The default camera at 10 fps needs 302 images for the longest watch. One gap is left in the shared 2.2 layer (`scripts/eai_standard/
   rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
-- **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5, a per-benchmark exception to "no reset"). MyoSuite's own
+- **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5: the task's own budget; the standard template's default is no reset). MyoSuite's own
   termination ends most standard episodes within one or two seconds of simulated time (measured in #116: a constant
   command held from the frozen instance ends dex_*, baoding, obj_hold, pen_twirl and obj_reorient after 12-71 control
   steps, chase_tag after 42-86), so one episode was one blind attempt at muscle-level control.
