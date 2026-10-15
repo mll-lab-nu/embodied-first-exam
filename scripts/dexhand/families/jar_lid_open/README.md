@@ -1,34 +1,46 @@
 # jar_lid_open: authoring notes
 
 Physical DexHand version of scene T14 "Open a jam jar" (scene-expansion catalog; the approved film is a kinematic
-demo with prescribed lid motion). Here a dexterous hand unscrews, lifts and sets aside the lid in physics; only the
-28 (Sharpa Wave) or 26 (Wuji Hand 2.2) motor targets of the hand and its six-axis wrist stage are commanded.
+demo with prescribed lid motion). Here a dexterous hand on the right arm of a Tianji Marvin robot unscrews, lifts and
+sets aside the lid in physics; only the 58 (Sharpa Wave) or 54 (Wuji Hand 2.2) motor targets of the two 7-DoF arms
+and the two hands are commanded (the left arm stays parked).
 
 ## Files
 
 | file | role |
 |---|---|
-| `scene.py` | MJCF builder: worktop, free jar and lid with the contact-only lug thread, hand on the wrist stage (`hands.py` swaps in Wuji) |
+| `scene.py` | MJCF builder: worktop, free jar and lid with the contact-only lug thread, the Marvin rig (`shared/arm_rig.py`, Wuji via `hands.py`) |
 | `checker.py` | strict verdict: ordered stages, terminal hold, fail-fast invariants (evaluated after every physics substep) |
 | `runtime.py` | `Session` (FAMILY_PLUGIN section 4, plus `snapshot`/`restore`) |
 | `replay.py` | fresh-process replay CLI (FAMILY_PLUGIN section 5), optional mp4 with a status overlay |
-| `task.json` | frozen instance (geometry, physics step, reset targets per hand, task text) |
+| `task.json` | frozen instance (geometry, robot base, physics step, reset targets per hand, task text) |
 | `assets/` | visual jar meshes and the printed label copied byte for byte from the T14 build (`manifest.json`, sha256-checked at build) |
-| `solution/trajectory.npz` | Sharpa Wave authoring witness (825 rows, success after 675) |
-| `solution/wuji/trajectory.npz` | Wuji Hand 2.2 witness (905 rows, success after 755); packaged by the generator as the per-hand oracle `solution/wuji/` of both modes |
-| `grasp.py`, `demo.py` | authoring only: fingertip grasp IK and the closed-loop scripted controller recorded as open-loop rows |
+| `solution/trajectory.npz` | Sharpa Wave witness on the arm (1,159 rows, success after 1,009) |
+| `solution/wuji/trajectory.npz` | Wuji Hand 2.2 witness on the arm (1,242 rows, success after 1,097); packaged as the per-hand oracle `solution/wuji/` of both modes |
+| `tools/arm_port.py` | authoring only: records the wave-2 floating-stage witness's hand poses, sets the arm start pose and tracks those poses with the arm (`shared/arm_ik.py`), re-timed for the arm |
 | `presentation.py`, `studio_renderer.py` | authoring only: exact native pose export of a successful replay and the Blender 4.5.3 Cycles studio film (T14 film materials, lights and camera direction) |
 | `tests/test_jar_lid_open.py` | authoring tests (`python -m pytest tests/test_jar_lid_open.py` or `python -m unittest` from `tests/`) |
 
 ## Modelling choices
 
-- Controllers: Sharpa uses one continuous wrist turn (its compliant pads grip well). The Wuji servos are weak
-  (kp 0.2-0.7 N m/rad, 0.3-0.6 N m caps), so its witness commands fingertip targets 20 mm inside the skirt as a grip
-  force, turns in two regrasp strokes and regrasps lightly before lifting.
-- Rig: one Sharpa Wave on the six-axis wrist stage used by `assemble_hamburger` (same joints, ranges, gains, force
-  bounds), mounted palm-down (`quat 0.7071 0 0.7071 0`) with the stage origin about 4 cm below the palm, so
-  `wrist_rz` turns the hand about a vertical axis near the grasped lid. Wuji Hand 2.2 replaces the Wave under the same
-  wrist stage via `hands.replace_wave_hands`; its reset is the neutral pose (all finger targets 0, inside the ranges).
+- Rig (wave 3): the Tianji Marvin stand with two 7-DoF arms (`shared/arm_rig.py`: pot_shelf_transfer's robot, kp 700,
+  kv 48, no gravity compensation) at base (-0.56, 0.08, 0), facing +x; the right flange carries the working hand under
+  the fixed body `wrist_stage` (the checker's hand root), the left arm is parked at `arm_rig.PARK` with its hand open.
+  Both hands and the arm links count as robot for every contact rule. The Sharpa tweaks of wave 2 (fingertip friction
+  1.5, dissipative finger velocity feedback -0.9) are applied before mounting, so both Waves carry them. Wuji Hand
+  2.2 replaces both Waves under the same flange mounts via `hands.replace_wave_hands`.
+- Placement: the scene keeps the T14 objects and their relation, with the worktop raised to a table height for the
+  robot (top z = 0.75, was 0.30 on the floating stage) and the jar at (-0.22, -0.08), 0.34 m in front of the shoulders;
+  the lid's set-aside spot then stays inside the right arm's reach with the wrist clear of the worktop.
+- Stand clearance (exact check, `stand_check` in the wave-3 status): the floor is 0.1 m below the stand origin (the
+  stand's plate rests on it) and the worktop is 1.16 m wide (|y| <= 0.58) so its legs stand outside the stand's
+  floor plate (x <= -0.167, -0.313 <= y <= 0.473); no robot collision or visual geom overlaps the worktop, its legs or
+  the floor at reset or during either oracle (only fingertip pads touch the worktop while the lid is set down).
+- Controllers: the arm witnesses track the hand-root poses of the accepted wave-2 floating-stage witnesses
+  (`tools/arm_port.py`: closed-loop IK from the measured arm state with a joint integral for servo sag). The unscrew
+  and carry are re-timed 2x slower and the grip turns 0.08 rad further about the jar axis (the arm lags the stage's
+  fast wrist turn); everything else follows the old hand path. Sharpa uses one continuous turn; the Wuji witness
+  (weak servos, kp 0.2-0.7 N m/rad) keeps its two regrasp strokes.
 - Jar: free rigid body, 550 g (glass plus jam; the jam is not simulated), 67 mm body, 110 mm tall; collision is a body
   cylinder, a shoulder and a finish (neck) cylinder, and twelve 1.5 mm glass pads on the base ring (friction 0.8 on
   the worktop, which resists about 0.13 N m of twisting torque by weight alone). Visuals: the T14 revolved glass mesh,
@@ -72,9 +84,12 @@ thread zone upward while its lugs are not in a ramp gap, +-0.03 rad), `unstable_
 
 ```bash
 export DEXHAND_ASSET_DIR=<checkout>/images/dexhand/assets/hand MUJOCO_GL=egl
-python demo.py --out out/jar.npz                          # regenerates solution/trajectory.npz bit for bit
-python demo.py --hand wuji --angles 140 30 -10 -50 --squeeze 0.02 --joint-squeeze --ratchet 0.9 --twist-steps 60 \
-    --height 0.004 --regrasp-before-lift --turn 1.07 --lift-squeeze 0.010 --out out/wuji.npz   # solution/wuji/trajectory.npz
+python tools/arm_port.py poses --hand sharpa --old <wave-2 jar_lid_open folder> --out out/poses_sharpa.npz
+python tools/arm_port.py ready --hand sharpa --poses out/poses_sharpa.npz        # initial_targets in task.json
+python tools/arm_port.py author --hand sharpa --poses out/poses_sharpa.npz --slow 2 --extra 0.08 --slow-end 480 \
+    --out out/jar.npz                                    # regenerates solution/trajectory.npz
+python tools/arm_port.py author --hand wuji --poses out/poses_wuji.npz --slow 2 --extra 0.08 --slow-end 480 \
+    --out out/wuji.npz                                   # solution/wuji/trajectory.npz
 python replay.py --task jar_lid_open --traj solution/trajectory.npz --out out/r1.json   # twice: same state_sha
 python replay.py --task jar_lid_open --traj solution/trajectory.npz --video out/jar.mp4 --fps 25 --width 1280 --height 720
 ```

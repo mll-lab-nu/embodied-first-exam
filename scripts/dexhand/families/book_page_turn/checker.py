@@ -41,6 +41,12 @@ class PageTurnChecker:
                     self.hand_body[b] = True
                     break
                 parent = int(model.body_parentid[parent])
+        # The robot (stand, both arms, the parked left hand) counts as hand for contact purposes: the page must be
+        # laid with no robot contact at all.
+        from scene import arm_rig
+
+        for b in arm_rig.robot_body_ids(model) | arm_rig.hand_body_ids(model, "left"):
+            self.hand_body[b] = True
         self.book_body_ids = np.flatnonzero(self.book_body)
         self.book_geom = self.book_body[model.geom_bodyid]
         self.hand_geom = self.hand_body[model.geom_bodyid]

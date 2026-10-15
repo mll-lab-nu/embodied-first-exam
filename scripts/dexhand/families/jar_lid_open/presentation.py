@@ -21,6 +21,7 @@ import numpy as np
 
 from replay import load_trajectory
 from runtime import Session
+from scene import arm_rig
 
 HERE = Path(__file__).resolve().parent
 BLENDER = os.environ.get("BLENDER", "blender")
@@ -38,19 +39,22 @@ def export(trajectory, directory, stride=2):
     session = Session(hand=hand)
     m = session.model
     owner = session.checker.owner
+    left_hand = set(arm_rig.hand_body_ids(m, "left"))
     arrays, geoms, meshes, ids = {}, [], {}, []
     for gid in range(m.ngeom):
         if m.geom_group[gid] > 2 or m.geom_rgba[gid, 3] == 0:
             continue
         name = m.geom(gid).name or f"geom_{gid}"
-        if name.startswith("r_wuji_") and "_collision" in name:
+        if name.startswith(("r_wuji_", "l_wuji_")) and "_collision" in name:
             continue  # the Wuji vendor's translucent collision proxies; its visual meshes are kept
         mid = int(m.geom_matid[gid])
         mesh = int(m.geom_dataid[gid]) if int(m.geom_type[gid]) == 7 else None
         ids.append(gid)
         geoms.append({
             "id": gid, "name": name, "kind": int(m.geom_type[gid]), "size": m.geom_size[gid].tolist(), "mesh": mesh,
-            "owner": ["other", "jar", "lid", "hand", "worktop", "floor"][int(owner[gid])],
+            # the parked left hand is drawn like the arm (it never acts; it is kept out of the camera framing)
+            "owner": "arm" if int(m.geom_bodyid[gid]) in left_hand else
+            ["other", "jar", "lid", "hand", "worktop", "floor", "arm"][int(owner[gid])],
             "material": m.material(mid).name if mid >= 0 else "",
             "rgba": (m.mat_rgba[mid] if mid >= 0 else m.geom_rgba[gid]).tolist(),
         })

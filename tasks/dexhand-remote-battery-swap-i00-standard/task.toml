@@ -4,7 +4,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/dexhand-remote-battery-swap-i00-standard"
-description = "With a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) slide open a remote's battery door, move the old gray AA cell from its slot into a receiving tray, seat a new green AA cell with correct polarity and slide the door shut; drops, knock-offs and a displaced remote fail the episode at once."
+description = "With a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a Tianji Marvin arm, press the latch tab and slide open a remote's battery door, move the old gray AA cell from its slot into a receiving tray, seat a new green AA cell with correct polarity and slide the door shut until it latches; drops, knock-offs and a displaced remote fail the episode at once."
 authors = [{ name = "Embodied Exam contributors" }]
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "articulated_assembly", "battery-replacement", "sliding-door", "pick-and-place", "polarity", "articulated"]
 
@@ -12,7 +12,7 @@ keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
-robot = "sharpa-wave-floating"
+robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "remote_battery_swap"
@@ -20,7 +20,7 @@ mode = "standard"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
-oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory (2,250 controls; success after 2,100, the last 150 rows are hold slack) in both modes: two fresh-process replays with identical state hashes, also with the rows rounded to float32; standard mode streams the same rows through the public client."
+oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (2,416 controls; success after 2,266, the last 150 rows are hold slack) in both modes: two fresh-process replays with identical state hashes, also with the rows rounded to float32; standard mode streams the same rows through the public client."
 expert_time_estimate_hours = 4.0
 difficulty = "hard"
 release_status = "provisional"

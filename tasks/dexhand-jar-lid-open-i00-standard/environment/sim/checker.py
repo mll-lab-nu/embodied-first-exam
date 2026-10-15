@@ -27,7 +27,7 @@ import math
 import mujoco
 import numpy as np
 
-from scene import LID_RADIUS, LID_SEAT_Z, RELEASE_ANGLE, RIM_Z, STOP_ANGLE
+from scene import LID_RADIUS, LID_SEAT_Z, RELEASE_ANGLE, RIM_Z, STOP_ANGLE, robot_bodies
 
 STAGES = ("lid_unscrewed", "lid_lifted_clear", "lid_set_aside")
 HOLD_STEPS = 50
@@ -43,7 +43,7 @@ SKIRT_BOTTOM = -0.0018
 FINAL = dict(lid_tilt=0.15, lid_distance=0.09, lid_speed=0.02, lid_spin=0.3, jar_tilt=0.10, jar_speed=0.02)
 GAP_TOLERANCE = 0.03
 
-OTHER, JAR, LID, HAND, WORKTOP, FLOOR = range(6)
+OTHER, JAR, LID, HAND, WORKTOP, FLOOR, ARM = range(7)
 
 
 def tilt_of(xmat):
@@ -58,19 +58,23 @@ class Checker:
         self.lid = model.body("lid").id
         self.lid_dof = int(model.jnt_dofadr[model.joint("lid_free").id])
         self.jar_dof = int(model.jnt_dofadr[model.joint("jar_free").id])
-        stage_body = model.body("wrist_stage").id
+        # Robot parts: both hands (the working right hand under "wrist_stage" and the parked left hand) are HAND,
+        # the Marvin stand and arm links are ARM; touching the jar or lid with either counts as robot contact.
+        hand_bodies, arm_bodies = robot_bodies(model)
         owner = np.full(model.ngeom, OTHER, dtype=np.int8)
         for g in range(model.ngeom):
             b = int(model.geom_bodyid[g])
             root = b
-            while root and root != stage_body and root not in (self.jar, self.lid):
+            while root and root not in (self.jar, self.lid):
                 root = int(model.body_parentid[root])
             if root == self.jar:
                 owner[g] = JAR
             elif root == self.lid:
                 owner[g] = LID
-            elif root == stage_body and b:
+            elif b in hand_bodies:
                 owner[g] = HAND
+            elif b in arm_bodies:
+                owner[g] = ARM
         owner[model.geom("worktop").id] = WORKTOP
         owner[model.geom("floor").id] = FLOOR
         self.owner = owner
@@ -224,10 +228,10 @@ class Checker:
         jar_v, _ = self.velocities(data, self.jar)
         return dict(
             lid_on_worktop=frozenset((LID, WORKTOP)) in pairs,
-            lid_hand_contact=frozenset((LID, HAND)) in pairs,
+            lid_hand_contact=frozenset((LID, HAND)) in pairs or frozenset((LID, ARM)) in pairs,
             lid_jar_contact=frozenset((LID, JAR)) in pairs,
             jar_on_worktop=frozenset((JAR, WORKTOP)) in pairs,
-            jar_hand_contact=frozenset((JAR, HAND)) in pairs,
+            jar_hand_contact=frozenset((JAR, HAND)) in pairs or frozenset((JAR, ARM)) in pairs,
             lid_tilt_rad=tilt_of(data.xmat[self.lid]),
             jar_tilt_rad=tilt_of(data.xmat[self.jar]),
             lid_distance_m=float(np.linalg.norm(lid_p[:2] - jar_p[:2])),

@@ -15,6 +15,11 @@ sys.path.insert(0, str(HERE))
 from scene import hands  # noqa: E402
 
 
+# Marvin arm layout (sharpa): right arm J1..J7 = columns 7..13, right thumb + index = columns 36..44.
+RIGHT_J2 = 8
+PINCH = slice(36, 45)
+
+
 def variants(actions, initial, success_step, closed_step):
     out = {"float32": actions.astype(np.float32).astype(np.float64)}
     out["nop"] = np.repeat(initial[None], 300, axis=0)
@@ -22,21 +27,16 @@ def variants(actions, initial, success_step, closed_step):
     out["truncated_before_cover_closed"] = actions[: closed_step - 60]
     out["one_row_short_of_hold"] = actions[: success_step - 1]
     drop = actions.copy()
-    drop[680:, 6:15] = actions[440, 6:15]  # open the thumb-index pinch mid-carry, ~6 cm above the table
+    drop[720:, PINCH] = actions[480, PINCH]  # open the thumb-index pinch mid-carry, several cm above the table
     out["drop_old_cell_mid_carry"] = drop[:900]
-    knock = actions[:400].copy()
-    row = actions[399].copy()
+    # knock: while the hand pinches the gray cell in the remote, the right shoulder rolls 0.6 rad over 80 controls
+    row = actions[599].copy()
     sweep = []
-    for t in np.linspace(0, 1, 40):
-        r = row.copy()
-        r[2] -= 0.045 * t
-        sweep.append(r)
-    base = sweep[-1].copy()
     for t in np.linspace(0, 1, 80):
-        r = base.copy()
-        r[1] += 0.14 * t
+        r = row.copy()
+        r[RIGHT_J2] += 0.6 * t
         sweep.append(r)
-    out["knock_remote_sideways"] = np.concatenate([knock, np.asarray(sweep)])
+    out["knock_remote_sideways"] = np.concatenate([actions[:600], np.asarray(sweep)])
     return out
 
 
@@ -47,21 +47,28 @@ def main():
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--only", nargs="*")
     parser.add_argument("--live", required=True, help="live summary json of the oracle (success/closed steps)")
+    parser.add_argument("--extra", nargs="*", default=[], help="more archives to replay (tools/negatives.py output)")
     args = parser.parse_args()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    actions, hand, _ = hands.read_trajectory(args.traj, widths={"sharpa": 28, "wuji": 26}, max_rows=6000,
+    actions, hand, _ = hands.read_trajectory(args.traj, widths={"sharpa": 58, "wuji": 54}, max_rows=6000,
                                              task="remote_battery_swap")
     task = json.loads((HERE / "task.json").read_text())
     initial = np.asarray(task["initial_targets"][hand], dtype=float)
     summary = {}
     procs = []
     live = json.loads(Path(args.live).read_text())
-    for name, rows in variants(actions, initial, live["success_step"], live["stage_steps"]["cover_closed"]).items():
+    jobs = [(name, rows) for name, rows in variants(actions, initial, live["success_step"],
+                                                     live["stage_steps"]["cover_closed"]).items()]
+    jobs += [(Path(p).stem, Path(p)) for p in args.extra]
+    for name, rows in jobs:
         if args.only and name not in args.only:
             continue
         path = out / f"{name}.npz"
-        hands.write_trajectory(path, rows, hand=hand, task="remote_battery_swap")
+        if isinstance(rows, Path):
+            path = rows
+        else:
+            hands.write_trajectory(path, rows, hand=hand, task="remote_battery_swap")
         result = out / f"{name}.json"
         procs.append((name, result, subprocess.Popen(
             [args.python, str(HERE / "replay.py"), "--task", "remote_battery_swap", "--traj", str(path), "--out",

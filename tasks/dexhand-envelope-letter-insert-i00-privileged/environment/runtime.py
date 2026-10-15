@@ -36,6 +36,8 @@ class Session:
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
         self.robot = self.hand_info["robot"] + "-floating"
+        if self.config.get("rig") == "marvin":  # wave 3: the hand on the right arm of the Marvin dual-arm robot
+            self.robot = "marvin-bimanual-sharpa-wave" if self.hand == "sharpa" else "marvin-bimanual-wuji-hand-2.2"
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu

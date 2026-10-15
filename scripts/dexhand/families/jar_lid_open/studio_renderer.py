@@ -130,6 +130,7 @@ def main():
                    "jam": jam, "liner": liner, "printed_jam_label": label, "worktop_material": worktop}
 
     objects, audit = [], []
+    arm_materials = {}
     mesh_cache = {}
     for record in payload["geoms"]:
         name, kind, size = record["name"], record["kind"], record["size"]
@@ -205,6 +206,12 @@ def main():
                 chosen = dark
             else:
                 chosen = shell
+        elif record["owner"] == "arm":
+            # Tianji Marvin links (and the parked left hand): native rgba, the accepted arm films' finish.
+            key = tuple(round(c, 3) for c in record["rgba"][:3])
+            chosen = arm_materials.get(key)
+            if chosen is None:
+                chosen = arm_materials[key] = material(f"Marvin {len(arm_materials)}", record["rgba"][:3], 0.29, 0.15)
         elif name == "floor":
             chosen = floor
         elif name.startswith("table_leg"):
@@ -224,7 +231,7 @@ def main():
     # hand grasps and unscrews the lid, then a wider one from the lift on (T14 camera revision 4 cut at the lift). Each
     # shot's target and distance are solved so the hand, jar and lid over all of its frames fit with margins.
     jar_origin = np.asarray(payload["frames"][0]["features"]["positions"]["jar"])
-    normal = np.array([0.29, -0.45, 0.35])
+    normal = np.array([0.75, 0.2, 0.5])  # in front of the robot, slightly left: the right arm reaches in from behind the hand
     normal /= np.linalg.norm(normal)
     right = np.cross([0, 0, 1], normal)
     right /= np.linalg.norm(right)
@@ -234,7 +241,7 @@ def main():
     tan_x = 0.018 / (lens / 1000)
     tan_y = tan_x / (1280 / 720)
 
-    def solve(first, last, margin=0.94, pad=0.015):
+    def solve(first, last, margin=0.85, pad=0.015):
         points = positions[first:last, keep].reshape(-1, 3)
         points = np.concatenate([points + np.array(c) for c in itertools.product((-pad, pad), repeat=3)])
         target = (points.min(axis=0) + points.max(axis=0)) / 2
@@ -250,7 +257,10 @@ def main():
         distance = max(np.max(z + np.abs(x) / (margin * tan_x)), np.max(z + np.abs(y) / (margin * tan_y)))
         return target, distance
 
-    cut = next((i for i, f in enumerate(payload["frames"]) if f["phase"].startswith("lift")), len(payload["frames"]))
+    cut = next((i for i, f in enumerate(payload["frames"]) if f["phase"].startswith("lift")), None)
+    if cut is None:  # rows without phase labels: cut a little after the lid is unscrewed (stage 1)
+        first = next((i for i, f in enumerate(payload["frames"]) if f["features"]["stage"] >= 1), len(payload["frames"]))
+        cut = min(first + 10, len(payload["frames"]))
     shots = []
     for first, last in ((0, cut), (cut, len(payload["frames"]))):
         if last > first:

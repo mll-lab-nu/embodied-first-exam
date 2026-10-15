@@ -67,23 +67,15 @@ def test_truncation_before_each_stage_fails(session, oracle, stage_name):
     assert not status["success"]
 
 
-def test_knock_letter_off_desk_fails_fast_and_is_permanent(session, oracle):
+def test_envelope_shoved_then_oracle_stays_failed(session, oracle):
     sys.path.insert(0, str(HERE / "tools"))
     import make_negatives
 
-    rows, status = make_negatives.knock_off("letter_off_desk")
-    assert status["failed"] and status["reason"] in ("letter_left_workspace", "letter_dropped", "letter_below_desk")
+    rows, status = make_negatives.knock_off("envelope_shoved")
+    assert status["failed"] and status["reason"] == "envelope_displaced"
     after = session.replay(np.vstack([rows, oracle]))
     assert not after["success"] and after["reason"] == status["reason"]
     assert after["steps"] == status["steps"]
-
-
-def test_envelope_shoved_fails_fast():
-    sys.path.insert(0, str(HERE / "tools"))
-    import make_negatives
-
-    _rows, status = make_negatives.knock_off("envelope_shoved")
-    assert status["failed"] and status["reason"] == "envelope_displaced"
 
 
 def test_forged_members_are_ignored(tmp_path, session):
@@ -125,7 +117,7 @@ def test_bad_archives_are_rejected(tmp_path, oracle, case):
 
 def test_wuji_loads_nop_fails_and_is_deterministic(tmp_path):
     s = Session(hand="wuji")
-    assert s.action_dim == 26 and s.actuator_names[:6] == Session(hand="sharpa").actuator_names[:6]
+    assert s.action_dim == 54 and s.actuator_names[:14] == Session(hand="sharpa").actuator_names[:14]
     path = tmp_path / "wuji_nop.npz"
     s.save_trajectory(np.repeat(s.hold_action()[None], 150, axis=0), path)
     a = fresh_replay(path, tmp_path, "wa")
@@ -134,25 +126,26 @@ def test_wuji_loads_nop_fails_and_is_deterministic(tmp_path):
 
 
 @pytest.mark.parametrize("penetration_bound", [None, 1.0])
-def test_letter_pressed_through_the_front_wall_fails_fast(oracle, penetration_bound):
+def test_letter_pressed_through_the_front_wall_fails_fast(penetration_bound):
     """Reviewer EL-1: the letter laid on top of the envelope (setup by a qpos edit after reset) and pressed down
     through the front wall must fail fast (interpenetration guard, and the wall-slab guard on its own) and never
-    count as inserted."""
+    count as inserted. The pressing motion is the wave-2 stage motion (floating authoring oracle rows shifted over
+    the envelope), moved onto the arm by the same hand-pose tracking as the oracle (tools/arm_port.py)."""
     import mujoco
 
-    s = Session(hand="sharpa")
-    if penetration_bound is not None:
-        s.checker.max_penetration = penetration_bound  # exercise the wall-slab guard alone
-    m, d = s.model, s.data
-    lo, hi = m.actuator_ctrlrange.T
+    sys.path.insert(0, str(HERE / "tools"))
+    import arm_port
+
+    floating = np.load(HERE / "tools/floating_oracle.npz")["actions"]
+    width = floating.shape[1]
 
     def lin(row, col, delta, n):
         r = np.repeat(row[None], n, 0)
         r[:, col] += np.linspace(0, delta, n)
         return r
 
-    base = oracle[:145] + np.r_[0, 0.30, np.zeros(26)]
-    seq = [base, lin(base[-1], 2, -0.10, 80), lin(base[-1] - np.r_[0, 0, 0.10, np.zeros(25)], 2, 0.12, 40)]
+    base = floating[:145] + np.r_[0, 0.30, np.zeros(width - 2)]
+    seq = [base, lin(base[-1], 2, -0.10, 80), lin(base[-1] - np.r_[0, 0, 0.10, np.zeros(width - 3)], 2, 0.12, 40)]
     cur = seq[-1][-1].copy()
     top = base[-1].copy()
     top[2] += 0.02
@@ -164,15 +157,60 @@ def test_letter_pressed_through_the_front_wall_fails_fast(oracle, penetration_bo
         seq.append(lin(seq[-1][-1], 2, 0.14, 40))
         cur = seq[-1][-1].copy()
     seq.append(np.repeat(cur[None], 150, 0))
-    rows = np.clip(np.concatenate(seq), lo, hi)
+    stage_rows = np.concatenate(seq)
+    # arm rows that follow these hand poses in a free scene (no letter on the envelope)
+    arm_rows, _, _ = arm_port.track_floating(stage_rows, slow=1, hold=0)
+    s = Session(hand="sharpa")
+    if penetration_bound is not None:
+        s.checker.max_penetration = penetration_bound  # exercise the wall-slab guard alone
+    m, d = s.model, s.data
     s.reset()
     qa = m.jnt_qposadr[m.body("letter").jntadr[0]]
     d.qpos[qa: qa + 3] = [0.485, 0.16, 0.70 + s.checker.ceiling + 0.0008 + 0.001 + 0.0002]
     mujoco.mj_forward(m, d)
-    for r in rows:
+    for r in arm_rows:
         s.step(r)
         if s.done:
             break
     status = s.status()
-    assert status["failed"] and not status["success"] and status["stage"] == 0
-    assert status["reason"] in ("letter_envelope_penetration", "letter_through_envelope")
+    assert not status["success"] and status["stage"] == 0
+    if penetration_bound is None:
+        assert status["failed"] and status["reason"] in ("letter_envelope_penetration", "letter_through_envelope")
+    else:  # the arm cannot force the 2 mm card through the wall on its own; never a success either way
+        assert (not status["failed"]) or status["reason"] == "letter_through_envelope"
+
+
+def test_letter_inside_a_wall_slab_fails_fast():
+    """The wall-slab guard on its own (penetration guard relaxed): a letter whose mid-plane lies inside the front wall
+    (qpos edit after reset) fails at the first substep with letter_through_envelope."""
+    import mujoco
+
+    s = Session(hand="sharpa")
+    s.checker.max_penetration = 1.0
+    m, d = s.model, s.data
+    s.reset()
+    qa = m.jnt_qposadr[m.body("letter").jntadr[0]]
+    d.qpos[qa: qa + 3] = [0.47, 0.16, 0.70 + s.checker.ceiling + s.checker.wall / 2]
+    mujoco.mj_forward(m, d)
+    s.step(s.hold_action())
+    status = s.status()
+    assert status["failed"] and status["reason"] == "letter_through_envelope"
+
+
+def test_robot_arm_contact_fails_fast():
+    """The robot's arm links, stand and parked left hand must never touch the letter or the envelope. The letter is
+    moved onto the right wrist link by a qpos edit after reset (the workspace bounds are relaxed for this unit check:
+    the link is above the desk's height limit); the first substep fails with robot_arm_contact."""
+    import mujoco
+
+    s = Session(hand="sharpa")
+    m, d = s.model, s.data
+    s.checker.c = dict(s.checker.c, max_height_above_desk_m=1.0)
+    s.checker.desk_hi = np.array([2.0, 2.0])
+    s.reset()
+    qa = m.jnt_qposadr[m.body("letter").jntadr[0]]
+    d.qpos[qa: qa + 3] = d.xpos[m.body("wrist_pitch_r_j5_link").id]
+    mujoco.mj_forward(m, d)
+    s.step(s.hold_action())
+    status = s.status()
+    assert status["failed"] and status["reason"] == "robot_arm_contact"

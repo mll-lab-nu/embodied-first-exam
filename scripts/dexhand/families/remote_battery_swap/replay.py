@@ -14,8 +14,8 @@ from runtime import Session
 from scene import hands
 
 TASK = "remote_battery_swap"
-# Six wrist-stage targets followed by the selected hand's native finger actuators.
-WIDTHS = {"sharpa": 28, "wuji": 26}
+# Marvin layout: 14 arm joint targets (left J1-J7, right J1-J7), then the left and the right hand fingers.
+WIDTHS = {"sharpa": 58, "wuji": 54}  # Marvin arm rig: 14 arm joints + 2 x 22 (Sharpa) or 2 x 20 (Wuji) fingers
 MAX_ROWS = 6000
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 

@@ -35,15 +35,24 @@ def export(trajectory, directory, stride=4):
     session = Session(hand=hand)
     m = session.model
     arrays, geoms, meshes, ids = {}, {}, {}, []
+    from scene import _arm_rig_module
+
+    arm_rig = _arm_rig_module()
+    left_hand = arm_rig.hand_body_ids(m, "left")
+    robot = arm_rig.robot_body_ids(m) | left_hand
     for gid in range(m.ngeom):
         if m.geom_group[gid] > 2 or m.geom_rgba[gid, 3] == 0:
             continue
         name = m.geom(gid).name or f"geom_{gid}"
-        owner = session.owner.get(int(m.geom_bodyid[gid]), "world")
-        if owner == "hand" and hand == "wuji" and "_collision" in name:
+        bid = int(m.geom_bodyid[gid])
+        owner = "robot" if bid in robot else session.owner.get(bid, "world")
+        hand_like = owner == "hand" or bid in left_hand
+        if hand_like and hand == "wuji" and "_collision" in name:
             continue  # vendor collision meshes are not drawn
-        if owner == "hand" and hand == "sharpa" and m.geom_group[gid] != 2:
+        if hand_like and hand == "sharpa" and m.geom_group[gid] != 2:
             continue  # Sharpa: draw the visual meshes only
+        if bid in left_hand:
+            owner = "left_hand"
         mid = int(m.geom_matid[gid])
         mesh = int(m.geom_dataid[gid]) if int(m.geom_type[gid]) == 7 else None
         ids.append(gid)

@@ -5,7 +5,7 @@ Geometry and layout follow the approved T38 scene (`envelope_meta_delivery`): wr
 the 99 x 210 mm folded letter at (0.48, -0.14). Physics simplifications (documented in README.md):
 
 * the envelope is one light free rigid pocket: back and front walls, permanent 3 mm side seams and a 4 mm bottom seam
-  are solid walls, the front wall has a slightly parted (flared) mouth lip and the open flap is a thin ramp on the desk;
+  are solid walls, the front wall ends in a hinged mouth lip (closed at the start) and the open flap is a thin ramp on the desk;
 * the folded letter is one light free rigid card (2 mm thick, the paper's bending is not simulated).
 
 Nothing is attached to the hand; both objects move only through contact.
@@ -41,6 +41,21 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = Path(__file__).resolve().parents[2] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
 
 PAPER_FRICTION = (0.35, 0.005, 0.0001)
 DESK_FRICTION = (0.5, 0.005, 0.0001)
@@ -101,17 +116,18 @@ def add_envelope(world, assets, cfg):
     hd, hw, t, gap = g["half_depth"], g["half_width"], g["wall"], g["gap"]
     mass = e["mass_kg"]
     paper = dict(material="envelope_paper")
-    # Back wall (lies on the desk) and front wall; the last `lip` metres of the front wall are parted upwards.
+    # Back wall (lies on the desk) and front wall; the last `lip` metres of the front wall form the hinged mouth lip.
     solid(body, "envelope_back", "box", (hd, hw, t / 2), pos=(0, 0, t / 2), mass=0.42 * mass, **paper)
     main_half = (2 * hd - g["lip"]) / 2
     solid(body, "envelope_front", "box", (main_half, hw, t / 2), pos=(-hd + main_half, 0, g["ceiling"] + t / 2),
           mass=0.36 * mass, **paper)
-    # The parted mouth: the last `lip` metres of the front wall bend about the fold line as a passive elastic hinge
-    # (paper stiffness), resting slightly open; a fingertip or the letter can lift it further.
+    # The mouth lip: the last `lip` metres of the front wall bend about the fold line as a passive elastic hinge
+    # (paper stiffness), resting at task.json lip_angle_rad (0 = closed); a fingertip or the letter can lift it.
     a = g["lip_angle"]
     hinge_x = hd - g["lip"]
     lip = node(body, "body", name="envelope_lip", pos=(hinge_x, 0, g["ceiling"] + t / 2), euler=(0, -a, 0))
-    node(lip, "joint", name="envelope_lip_fold", type="hinge", axis=(0, -1, 0), ref=a, springref=a,
+    node(lip, "joint", name="envelope_lip_fold", type="hinge", axis=(0, -1, 0), ref=a,
+         springref=e.get("lip_springref_rad", a),
          range=(0.0, e["lip_max_angle_rad"]), stiffness=e["lip_stiffness_nm_rad"], damping=e["lip_damping"],
          armature=1e-5)
     solid(lip, "envelope_mouth_lip", "box", (g["lip"] / 2, hw, t / 2), pos=(g["lip"] / 2, 0, 0),
@@ -217,23 +233,9 @@ def _default_hand_dir():
     return Path("/opt/dexhand/hand")
 
 
-def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen scene with the selected genuine hand on the same six-axis wrist stage."""
-    hand_id = hands.canonical(hand)
-    folder = Path(asset_dir or os.environ.get("DEXHAND_ASSET_DIR") or _default_hand_dir())
-    root = ET.parse(folder / "right_hand.xml").getroot()
-    root.set("model", hands.info(hand_id)["model"] + " envelope letter insertion")
-    root.find("compiler").set("meshdir", str((folder / "assets/right").resolve()))
-    option = root.find("option")
-    option.set("timestep", str(config["physics_dt"]))
-    option.set("gravity", "0 0 -9.81")
-    option.set("iterations", "80")
-    option.set("integrator", "implicitfast")
-    option.set("cone", "elliptic")
-    node(option, "flag", multiccd="enable")
-    for key in root.findall("keyframe"):
-        root.remove(key)
-    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
+def _wrist_stage(root, config, hand_id, folder):
+    """The wave-2 floating six-axis wrist stage (authoring reference rig; the task uses the Marvin arm)."""
+    world, actuator = root.find("worldbody"), root.find("actuator")
     hand_body = world.find("body")
     world.remove(hand_body)
     stage = config["wrist_stage"]
@@ -283,6 +285,43 @@ def build(config, asset_dir=None, hand="sharpa"):
         # joints, actuators, gains and contact geometry are kept as published. Wrist actuators stay first.
         sibling = folder.parent / "wuji_v2_2"
         hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
+
+def build(config, asset_dir=None, hand="sharpa"):
+    """Compose the frozen scene with the selected genuine hand on the same six-axis wrist stage."""
+    hand_id = hands.canonical(hand)
+    folder = Path(asset_dir or os.environ.get("DEXHAND_ASSET_DIR") or _default_hand_dir())
+    root = ET.parse(folder / "right_hand.xml").getroot()
+    root.set("model", hands.info(hand_id)["model"] + " envelope letter insertion")
+    root.find("compiler").set("meshdir", str((folder / "assets/right").resolve()))
+    option = root.find("option")
+    option.set("timestep", str(config["physics_dt"]))
+    option.set("gravity", "0 0 -9.81")
+    option.set("iterations", "80")
+    option.set("integrator", "implicitfast")
+    option.set("cone", "elliptic")
+    node(option, "flag", multiccd="enable")
+    for key in root.findall("keyframe"):
+        root.remove(key)
+    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
+    if config.get("rig", "floating") == "marvin":
+        # Marvin arm rig (wave 3): the Sharpa tweaks first (they reach the mirrored left Wave too), then the stand and
+        # both 7-DoF arms; the right hand hangs from the right flange under the mount body "wrist_stage".
+        for a in actuator:
+            if a.tag == "general":
+                bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
+                bias[2] = -0.9
+                a.set("biasprm", " ".join(map(str, bias)))
+        for g in world.iter("geom"):
+            if "fingertip_collision" in g.get("name", ""):
+                g.set("friction", "1.5 .005 .0001")
+        sibling = folder.parent / "wuji_v2_2"
+        marvin = config["marvin"]
+        _arm_rig_module().mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                                       mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                                       wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    else:
+        _wrist_stage(root, config, hand_id, folder)
     texture_dir = HERE / "assets"
     node(assets, "texture", name="letter_print_tex", type="2d", file=str((texture_dir / "letter.png").resolve()))
     node(assets, "material", name="letter_print", texture="letter_print_tex", specular=0.05, rgba=(1, 1, 1, 1))

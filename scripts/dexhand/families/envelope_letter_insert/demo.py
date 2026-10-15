@@ -234,7 +234,8 @@ def make_demo(output, hand="sharpa", params=None):
     if hand == "wuji":
         p.update(press_depth=0.0025)
     p.update(params or {})
-    s = Session(hand=hand)
+    # Authored on the wave-2 floating wrist stage; tools/arm_port.py moves the result onto the Marvin arm.
+    s = Session(hand=hand, config=json.loads((Path(__file__).resolve().parent / "tools/floating_task.json").read_text()))
     cfg = s.config
     top = cfg["desk_top_z"]
     letter_t = cfg["letter"]["thickness_m"]
@@ -406,6 +407,8 @@ def make_demo(output, hand="sharpa", params=None):
             Image.fromarray(s.render_frame(p["debug"], 960, 540)).save(Path(output).with_name(f"debug_push_{k}.png"))
         if remaining <= 0 or s.done:
             break
+        if s.status()["stage"] >= 2 and f["outside_m"] <= p.get("stop_outside_m", -1.0):
+            break  # inserted with margin: stop before the fingertip drags the envelope along
         ep, ey, _ = c.envelope()
         lateral = -float(corners[:, 1].mean()) * p["lateral_gain"]
         target = target + rot2(ey) @ np.array([-min(p["push_increment"], remaining + 0.004), lateral])

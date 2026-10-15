@@ -36,7 +36,7 @@ class Checker:
                 if name in TASK_OBJECTS:
                     self.owner[bid] = name
                     break
-                if name == "wrist_stage":
+                if name in ("wrist_stage", "base_link"):  # the hand(s), the arms and the stand: all robot
                     self.owner[bid] = "hand"
                     break
                 parent = int(m.body_parentid[parent])
@@ -50,6 +50,7 @@ class Checker:
         self.rib_geoms = {m.geom("cradle_rib_neg").id, m.geom("cradle_rib_pos").id}
         self.cover_qadr = int(m.jnt_qposadr[m.joint("cover_slide").id])
         self.cover_dof = int(m.jnt_dofadr[m.joint("cover_slide").id])
+        self.tab_qadr = int(m.jnt_qposadr[m.joint("tab_depth").id])
         self.free_dof = {name: int(m.jnt_dofadr[m.body_jntadr[self.body[name]]]) for name in TASK_OBJECTS}
         self.slot = np.asarray(config["slot_center_local"], dtype=float)
         self.fall_speed = math.sqrt(2 * 9.81 * self.c["drop_height_m"])
@@ -169,6 +170,7 @@ class Checker:
             if (a == "new_cell" and g2 == self.table_geom) or (b == "new_cell" and g1 == self.table_geom):
                 new_on_table = True
         cover = float(data.qpos[self.cover_qadr])
+        tab = float(data.qpos[self.tab_qadr])
         # Old cell in the tray (tray frame).
         tray_R = data.xmat[self.body["tray"]].reshape(3, 3)
         old_local = tray_R.T @ (data.xpos[self.body["old_cell"]] - data.xpos[self.body["tray"]])
@@ -195,10 +197,12 @@ class Checker:
             "cover_open": cover >= c["cover_open_m"],
             "old_cell_in_tray": old_in_tray,
             "new_cell_seated": seated,
-            "cover_closed": cover <= c["cover_closed_m"],
+            # shut AND latched: the released thumb tab is up, so its hook sits in front of the latch stop
+            "cover_closed": cover <= c["cover_closed_m"] and tab <= c["latch_tab_up_max_m"],
         }
         return {
             "cover_slide_m": cover,
+            "tab_depth_m": tab,
             "conditions": conditions,
             "old_cell_tray_local_m": old_local.tolist(),
             "old_cell_remote_local_m": old_local_remote.tolist(),

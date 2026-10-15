@@ -13,7 +13,7 @@ import mujoco
 import numpy as np
 
 from checker import STAGES, PageTurnChecker
-from scene import build, hands
+from scene import arm_rig, build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "book_page_turn"
@@ -22,6 +22,7 @@ HASHED_KEYS = (
     "physics_dt", "control_dt", "max_steps", "settle_substeps", "table_z", "table", "book_xy", "book", "target_leaf",
     "stage_angles_deg", "other_leaf_tolerance_deg", "second_leaf_turn_deg", "book_max_displacement_m",
     "book_max_rotation_deg", "below_table_margin_m", "laid_max_speed_rad_s", "hold_steps", "initial_targets",
+    "book_yaw_deg", "floor_z", "desk_legs_x", "marvin",
 )
 
 
@@ -50,8 +51,8 @@ class Session:
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.robot = self.hand_info["robot"] + "-floating"
-        self.tcp_body = self.model.body(int(self.model.jnt_bodyid[self.model.actuator_trnid[5, 0]])).name
+        self.robot = arm_rig.ROBOT_ID
+        self.tcp_body = "wrist_stage"  # right-hand mount on the Marvin right flange
         self.checker = PageTurnChecker(self.model, self.config)
         self.lo, self.hi = self.model.actuator_ctrlrange.T.copy()
         self.renderer = None

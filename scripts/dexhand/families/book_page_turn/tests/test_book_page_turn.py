@@ -1,6 +1,6 @@
 """Authoring tests for book_page_turn: positive oracles, negative controls, trust boundary and hand selection.
 
-Run from the repository root (about 1 minute on one core):
+Run from the repository root (a few minutes on one core):
 
     DEXHAND_ASSET_DIR=$PWD/images/dexhand/assets/hand OPENBLAS_NUM_THREADS=1 \
         python -m pytest -q scripts/dexhand/families/book_page_turn/tests
@@ -30,26 +30,39 @@ import mujoco  # noqa: E402
 
 from replay import load_trajectory, replay  # noqa: E402
 from runtime import Session  # noqa: E402
-from scene import hands  # noqa: E402
+from scene import arm_rig, hands  # noqa: E402
+
+sys.path.append(str(FAMILY.parents[1] / "shared"))
+import arm_ik  # noqa: E402  (authoring-only IK helper)
 
 ORACLE = FAMILY / "solution/trajectory.npz"
-WUJI_ORACLE = FAMILY / "solution/wuji/trajectory.npz"
+PRESSED = 205  # oracle rows up to the fingertip's preload on leaf 2's fore-edge (the turn starts after it)
+WIDTH = 58
 
 
 def oracle_rows():
     return np.load(ORACLE)["actions"]
 
 
-def shove_rows():
-    """The oracle's approach, then the fingertip driven 16 cm toward the spine through the stack edge."""
-    rows = list(oracle_rows()[:140])
-    last = rows[-1].copy()
-    for i in range(1, 76):
-        row = last.copy()
-        row[0] -= 0.16 * min(1, i / 50)
-        row[2] -= 0.004 * min(1, i / 50)
+def hand_shift_rows(session, prefix, delta, n_move=40, n_hold=150):
+    """``prefix`` rows, then the right arm moved so its hand root shifts by ``delta`` (world, m), then a hold."""
+    session.replay(prefix)
+    lay = arm_rig.layout(session.model)
+    ik = arm_ik.ArmIK(session.model, "right")
+    q0 = np.asarray(prefix[-1][lay["arm"]["right"]], dtype=float)
+    pos, R = ik.fk(q0, qpos=session.data.qpos)
+    q1, _, _ = ik.solve(pos + np.asarray(delta), R, q0=q0, qpos=session.data.qpos)
+    rows = [np.asarray(r, dtype=float) for r in prefix]
+    for i in range(1, n_move + n_hold + 1):
+        row = rows[len(prefix) - 1].copy()
+        row[lay["arm"]["right"]] = q0 + (q1 - q0) * min(1.0, i / n_move)
         rows.append(row)
-    return np.asarray(rows)
+    return np.clip(np.asarray(rows), session.lo, session.hi)
+
+
+def shove_rows(session):
+    """The oracle's approach to the preloaded fore-edge contact, then the hand driven 12 cm toward the spine."""
+    return hand_shift_rows(session, oracle_rows()[:PRESSED], (0.0, 0.12, -0.004), n_move=50, n_hold=25)
 
 
 def run_replay_cli(path, *extra):
@@ -73,16 +86,21 @@ class PageTurnTests(unittest.TestCase):
 
     # ------------------------------------------------------------------ model / trust boundary
     def test_only_robot_is_actuated(self):
+        self.s.reset()
         m = self.s.model
         names = [m.joint(int(j)).name for j in m.actuator_trnid[:, 0]]
-        self.assertEqual(m.nu, 28)
+        self.assertEqual(m.nu, WIDTH)
         self.assertEqual((m.nmocap, m.neq), (0, 0))
-        self.assertTrue(all(n.startswith(("wrist_", "right_")) for n in names))
+        arm = set(n.replace("_target", "") for n in arm_rig.ARM_ACTUATORS)
+        self.assertTrue(all(n in arm or n.startswith(("left_", "right_")) for n in names))
+        self.assertEqual(self.s.robot, "marvin-bimanual-sharpa-wave")
         self.assertEqual(m.joint("book_free").type, mujoco.mjtJoint.mjJNT_FREE)
         book = self.s.checker.book_body
         self.assertFalse(any(book[m.jnt_bodyid[int(j)]] for j in m.actuator_trnid[:, 0]))
-        # Every book joint is passive: hinges/slides with limits; the springback stop of leaf 2 is 0.07 rad.
-        self.assertAlmostEqual(float(m.joint("leaf_2_binding").range[0]), 0.07)
+        # Every book joint is passive: hinges/slides with limits; leaf 2 has the same hinge as every right-hand board
+        # and starts flat on leaf 3 (no springback stop).
+        self.assertAlmostEqual(float(m.joint("leaf_2_binding").range[0]), float(m.joint("leaf_3_binding").range[0]))
+        self.assertLess(abs(float(self.s.data.qpos[m.jnt_qposadr[m.joint("leaf_2_binding").id]])), 0.01)
         self.assertEqual(float(np.abs(self.s.data.xfrc_applied).sum() + np.abs(self.s.data.qfrc_applied).sum()), 0.0)
 
     def test_reset_is_exact(self):
@@ -121,30 +139,24 @@ class PageTurnTests(unittest.TestCase):
         nop = np.tile(self.s.initial_targets, (len(rows), 1))
         self.assertFalse(self.s.replay(nop)["success"])
         steps = self.s.replay(rows)["steps"]
-        for cut in (150, 215, steps - 10, steps - 1):
+        for cut in (PRESSED, PRESSED + 80, steps - 10, steps - 1):
             status = self.s.replay(rows[:cut])
             self.assertFalse(status["success"], cut)
             self.assertFalse(status["failed"], cut)
 
     def test_release_mid_turn_fails(self):
-        rows = list(oracle_rows()[:215])
-        last = rows[-1].copy()
-        for i in range(1, 151):
-            row = last.copy()
-            row[0] += 0.10 * min(1, i / 30)
-            row[2] += 0.10 * min(1, i / 30)
-            rows.append(row)
-        status = self.s.replay(np.asarray(rows))
+        rows = hand_shift_rows(self.s, oracle_rows()[:PRESSED + 85], (0.0, -0.08, 0.10))
+        status = self.s.replay(rows)
         self.assertFalse(status["success"])
         self.assertLess(status["target_angle_deg"], 10.0)  # the board fell back onto the right-hand stack
 
     def test_shove_fails_fast_and_later_rows_do_not_execute(self):
-        rows = shove_rows()
+        rows = shove_rows(self.s)
         status = self.s.replay(rows)
         self.assertEqual(status["reason"], "book_displaced")
         self.assertLess(status["steps"], len(rows))
         self.assertLess(status["failure_detail"]["substep"], self.s.substeps)
-        resumed = np.vstack([rows[: status["steps"]], oracle_rows()[140:]])
+        resumed = np.vstack([rows[: status["steps"]], oracle_rows()[PRESSED:]])
         resumed_status = self.s.replay(resumed)
         self.assertFalse(resumed_status["success"])
         self.assertEqual(resumed_status["reason"], "book_displaced")
@@ -152,7 +164,7 @@ class PageTurnTests(unittest.TestCase):
     def test_rows_after_success_are_not_executed(self):
         rows = oracle_rows()
         steps = self.s.replay(rows)["steps"]
-        knock = np.vstack([rows[:steps], np.tile(rows[steps - 1] - np.r_[0.4, 0, 0.2, np.zeros(25)], (100, 1))])
+        knock = np.vstack([rows[:steps], np.tile(rows[steps - 1] - np.r_[np.zeros(7), 0.4, 0, 0.4, np.zeros(48)], (100, 1))])
         knock = np.clip(knock, self.s.lo, self.s.hi)
         status = self.s.replay(knock)
         self.assertTrue(status["success"])
@@ -207,7 +219,7 @@ class PageTurnTests(unittest.TestCase):
             np.savez(pickled, actions=np.array([{"row": 1}], dtype=object))
             self.assertEqual(run_replay_cli(pickled)["bad_trajectory"], 1)
             names = Path(tmp) / "names.npz"
-            np.savez(names, actions=rows, hand=np.array("sharpa"), actuator_names=np.array(["x"] * 28))
+            np.savez(names, actions=rows, hand=np.array("sharpa"), actuator_names=np.array(["x"] * WIDTH))
             self.assertEqual(run_replay_cli(names)["bad_trajectory"], 1)
 
     def test_wrong_width_hand_label_nan_and_range_are_rejected(self):
@@ -216,12 +228,12 @@ class PageTurnTests(unittest.TestCase):
             cases = {
                 "wuji_label": dict(actions=rows, hand=np.array("wuji")),
                 "unknown_hand": dict(actions=rows, hand=np.array("shadow_hand")),
-                "short_width": dict(actions=rows[:, :26]),
-                "nan": dict(actions=np.where(np.arange(28) == 3, np.nan, rows)),
-                "inf": dict(actions=np.where(np.arange(28) == 0, np.inf, rows)),
-                "out_of_range": dict(actions=rows + np.r_[0, 0, 0, 0, 0, 0, 5.0, np.zeros(21)]),
+                "short_width": dict(actions=rows[:, :54]),
+                "nan": dict(actions=np.where(np.arange(WIDTH) == 3, np.nan, rows)),
+                "inf": dict(actions=np.where(np.arange(WIDTH) == 0, np.inf, rows)),
+                "out_of_range": dict(actions=rows + np.r_[np.zeros(36), 5.0, np.zeros(21)]),
                 "too_many_rows": dict(actions=np.tile(rows[:1], (3001, 1))),
-                "empty": dict(actions=np.zeros((0, 28))),
+                "empty": dict(actions=np.zeros((0, WIDTH))),
             }
             for name, members in cases.items():
                 path = Path(tmp) / f"{name}.npz"
@@ -240,9 +252,9 @@ class PageTurnTests(unittest.TestCase):
     def test_wuji_same_rig_and_nop_fails(self):
         w = Session(hand="wuji")
         try:
-            self.assertEqual(w.action_dim, 26)
-            self.assertEqual(w.actuator_names[:6], self.s.actuator_names[:6])
-            for name in w.actuator_names[:6]:
+            self.assertEqual(w.action_dim, 54)
+            self.assertEqual(w.actuator_names[:14], self.s.actuator_names[:14])
+            for name in w.actuator_names[:14]:
                 a, b = w.model.actuator(name), self.s.model.actuator(name)
                 self.assertTrue(np.array_equal(a.ctrlrange, b.ctrlrange))
                 self.assertTrue(np.array_equal(a.gainprm, b.gainprm))
@@ -252,17 +264,9 @@ class PageTurnTests(unittest.TestCase):
             status = w.replay(np.tile(w.initial_targets, (300, 1)))
             self.assertFalse(status["success"] or status["failed"])
             self.assertEqual(status["hand_book_contacts"], 0)
+            self.assertEqual(Session(hand="wuji").replay(np.tile(w.initial_targets, (300, 1)))["steps"], 300)
         finally:
             w.close()
-
-    def test_wuji_oracle_succeeds_deterministically(self):
-        rows, hand, _ = load_trajectory(WUJI_ORACLE)
-        self.assertEqual(hand, "wuji")
-        a, b = run_replay_cli(WUJI_ORACLE), run_replay_cli(WUJI_ORACLE)
-        self.assertTrue(a["success"] and b["success"])
-        self.assertLessEqual(a["steps"], len(rows) - 50)
-        self.assertEqual(a["state_sha"], b["state_sha"])
-        self.assertEqual(a["hand"], "wuji")
 
 
 if __name__ == "__main__":

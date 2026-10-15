@@ -27,6 +27,9 @@ sys.path.insert(0, str(HERE))
 from runtime import Session  # noqa: E402
 from scene import hands  # noqa: E402
 
+sys.path.append(str(HERE.parents[1] / "shared"))
+import arm_rig  # noqa: E402
+
 BLENDER = os.environ.get("BLENDER", "blender")  # Blender 4.5.3 LTS (authoring films only)
 PHYSICS_SOURCES = ("task.json", "runtime.py", "scene.py", "checker.py", "replay.py")
 # collision-only geoms that are real visible features of the remote (group 3 in the MJCF)
@@ -41,18 +44,20 @@ def sha(path):
 def export(trajectory, directory, stride=4, hand_filter=None):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    actions, hand, _ = hands.read_trajectory(trajectory, widths={"sharpa": 28, "wuji": 26}, max_rows=6000,
+    actions, hand, _ = hands.read_trajectory(trajectory, widths={"sharpa": 58, "wuji": 54}, max_rows=6000,
                                              task="remote_battery_swap")
     session = Session(hand=hand)
     m = session.model
-    owner = session.owner
+    owner = dict(session.owner)
+    for body in arm_rig.robot_body_ids(m):  # stand + arm links: their own (factory) materials in the film
+        owner[body] = "arm"
     arrays, geoms, meshes, ids = {}, [], {}, []
     for gid in range(m.ngeom):
         name = m.geom(gid).name or f"geom_{gid}"
         visible = (m.geom_group[gid] <= 2 and m.geom_rgba[gid, 3] > 0) or name in EXTRA_VISIBLE
         if not visible or name == "floor":
             continue
-        if name.startswith("r_wuji_") and "_collision" in name:
+        if name.startswith(("r_wuji_", "l_wuji_")) and "_collision" in name:
             continue
         kind = int(m.geom_type[gid])
         mesh = int(m.geom_dataid[gid]) if kind == 7 else None
@@ -108,6 +113,7 @@ def export(trajectory, directory, stride=4, hand_filter=None):
         "source_sha256": {name: sha(HERE / name) for name in PHYSICS_SOURCES},
         "files": files, "geoms": geoms, "meshes": meshes, "frames": frames, "control_dt": session.control_dt,
         "stride": stride, "fps": 25, "playback_speed": stride * session.control_dt * 25,
+        "floor_z": session.config.get("floor_z", 0.0),
     }
     (directory / "scene.json").write_text(json.dumps(payload, indent=1) + "\n")
     session.close()
@@ -145,7 +151,7 @@ def encode(directory, output, max_mb=9.0):
                           fill=(46, 120, 70) if record["success"] else (90, 96, 100))
                 stages = record["stages"]
                 marks = [("door open", "cover_open"), ("old AA in tray", "old_cell_in_tray"),
-                         ("new AA seated (+ to gold)", "new_cell_seated"), ("door shut", "cover_closed")]
+                         ("new AA seated (+ to gold)", "new_cell_seated"), ("door shut + latched", "cover_closed")]
                 text = "   ".join(("✓ " if stages.get(key) else "○ ") + label for label, key in marks)
                 w = draw.textlength(text, font=small)
                 draw.rounded_rectangle((18, 688, 36 + w, 712), radius=7, fill=(250, 246, 240, 210))

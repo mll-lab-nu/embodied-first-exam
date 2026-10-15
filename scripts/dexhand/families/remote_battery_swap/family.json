@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 28,
-    "wuji": 26
+    "sharpa": 58,
+    "wuji": 54
   },
-  "robot": "sharpa-wave-floating",
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 6000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -32,7 +34,7 @@
   "readme": "README.task.md",
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory (2,250 controls; success after 2,100, the last 150 rows are hold slack) in both modes: two fresh-process replays with identical state hashes, also with the rows rounded to float32; standard mode streams the same rows through the public client.",
+    "oracle_evidence": "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (2,416 controls; success after 2,266, the last 150 rows are hold slack) in both modes: two fresh-process replays with identical state hashes, also with the rows rounded to float32; standard mode streams the same rows through the public client.",
     "expert_time_estimate_hours": 4.0,
     "keywords": [
       "battery-replacement",
@@ -51,7 +53,7 @@
     "video_sec": 600
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task; one row is one 50 Hz control (ten 2 ms physics substeps)."
   },
   "solution": {
     "privileged": "solution/trajectory.npz",

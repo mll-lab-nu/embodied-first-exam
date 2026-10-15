@@ -30,7 +30,10 @@ from scene import hands  # noqa: E402
 
 ORACLE = FAMILY / "solution/trajectory.npz"
 TASK = "remote_battery_swap"
-WIDTHS = {"sharpa": 28, "wuji": 26}
+WIDTHS = {"sharpa": 58, "wuji": 54}
+# Marvin arm layout (sharpa): left arm J1..J7 = 0..6, right arm J1..J7 = 7..13, left fingers 14..35, right 36..57
+RIGHT_J2 = 8
+PINCH = slice(36, 45)  # right thumb + index
 
 
 def oracle_rows():
@@ -58,8 +61,7 @@ def settled_fixture(**edits):
     config = json.loads((FAMILY / "task.json").read_text())
     config.update(copy.deepcopy(edits))
     s = Session(config=config)
-    hold = s.hold_action()
-    hold[2] = 0.70
+    hold = s.hold_action()  # the arm holds its start pose, the hand 0.18 m above the table
     for _ in range(60):
         s.step(hold)
     return s
@@ -85,10 +87,12 @@ class OracleTests(unittest.TestCase):
 class NegativeTests(unittest.TestCase):
     def test_only_robot_is_actuated(self):
         s = Session()
-        self.assertEqual(s.model.nu, 28)
+        self.assertEqual(s.model.nu, 58)
+        self.assertEqual(s.robot, "marvin-bimanual-sharpa-wave")
         self.assertEqual(s.model.nmocap, 0)
         self.assertEqual(s.model.neq, 0)
-        self.assertTrue(all(n.startswith(("wrist_", "right_")) for n in s.joint_names))
+        self.assertTrue(all(n.endswith(("_J1", "_J2", "_J3", "_J4", "_J5", "_J6", "_J7")) or
+                            n.startswith(("left_", "right_")) for n in s.joint_names))
         for name in ("remote", "tray", "old_cell", "new_cell"):
             self.assertEqual(s.model.joint(name + "_free").type, mujoco.mjtJoint.mjJNT_FREE)
         slide = s.model.joint("cover_slide").id
@@ -128,7 +132,7 @@ class NegativeTests(unittest.TestCase):
     def test_drop_mid_carry_fails_fast_and_later_rows_do_not_run(self):
         actions, _ = oracle_rows()
         rows = actions.copy()
-        rows[680:, 6:15] = actions[440, 6:15]  # open the pinch about 6 cm above the table
+        rows[720:, PINCH] = actions[480, PINCH]  # open the pinch mid-carry, several cm above the table
         s = Session()
         status = s.replay(rows)
         self.assertEqual(status["reason"], "cell_dropped")
@@ -143,24 +147,42 @@ class NegativeTests(unittest.TestCase):
         # would let it through
         actions, _ = oracle_rows()
         s = Session()
-        s.replay(actions[:791])
-        tray_floor = s.data.xpos[s.model.body("tray").id][2] + 0.003
-        height = s.data.xpos[s.model.body("old_cell").id][2] - 0.007 - tray_floor
-        opened = np.repeat(actions[790:791], 60, axis=0)
-        opened[:, 6:15] = actions[440, 6:15]
-        status = s.replay(np.concatenate([actions[:791], opened]))
+        s.reset()
+        k, height = None, None
+        for i, row in enumerate(actions[:1000]):
+            s.step(row)
+            tray_floor = s.data.xpos[s.model.body("tray").id][2] + 0.003
+            h = s.data.xpos[s.model.body("old_cell").id][2] - 0.007 - tray_floor
+            if i > 800 and h < 0.031:
+                k, height = i + 1, h
+                break
+        opened = np.repeat(actions[k - 1:k], 60, axis=0)
+        opened[:, PINCH] = actions[480, PINCH]
+        status = s.replay(np.concatenate([actions[:k], opened]))
         self.assertTrue(0.02 < height < 0.04, height)
         self.assertEqual(status["reason"], "cell_dropped", status.get("failure_detail"))
         self.assertIn("unsupported", status["failure_detail"]["why"])
 
     def test_knocked_remote_fails_fast(self):
+        # while the hand pinches the gray cell in the remote, the right shoulder rolls 0.6 rad over 80 controls
         actions, _ = oracle_rows()
-        row = actions[399].copy()
-        sweep = [row + np.r_[0, 0, -0.045 * t, np.zeros(25)] for t in np.linspace(0, 1, 40)]
-        base = sweep[-1]
-        sweep += [base + np.r_[0, 0.14 * t, 0, np.zeros(25)] for t in np.linspace(0, 1, 80)]
-        status = Session().replay(np.concatenate([actions[:400], np.asarray(sweep)]))
+        row = actions[599].copy()
+        sweep = [row + np.eye(len(row))[RIGHT_J2] * 0.6 * t for t in np.linspace(0, 1, 80)]
+        status = Session().replay(np.concatenate([actions[:600], np.asarray(sweep)]))
         self.assertIn(status["reason"], ("remote_tipped", "remote_displaced"))
+
+    def test_latch_holds_the_door_without_the_tab_pressed(self):
+        # the index pad pushes the thumb tab's front edge toward -x without pressing the tab: the hook stays in front
+        # of the latch stop and the door does not open (tools/negatives.py, authoring controller)
+        sys.path.insert(0, str(FAMILY / "tools"))
+        import negatives
+
+        with tempfile.TemporaryDirectory() as tmp:
+            status = negatives.force_door(Path(tmp) / "force.npz")
+            result = fresh_replay(Path(tmp) / "force.npz")
+        self.assertLess(status["cover_slide_m"], 0.002)
+        self.assertFalse(result["success"])
+        self.assertEqual(result["stage"], 0)
 
     def test_object_dropped_on_the_table_fails(self):
         # the gray cell may never touch the table: a test instance that starts it just above the table top
@@ -226,7 +248,7 @@ class TrustBoundaryTests(unittest.TestCase):
         s = Session()
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "shadow.npz"
-            self.write(path, **{"actions.npy": np.tile(s.hold_action(), (60, 1)), "actions": np.zeros((5, 28))})
+            self.write(path, **{"actions.npy": np.tile(s.hold_action(), (60, 1)), "actions": np.zeros((5, 58))})
             result = fresh_replay(path)
         self.assertEqual(result["bad_trajectory"], 1)
         self.assertFalse(result["success"])
@@ -235,7 +257,7 @@ class TrustBoundaryTests(unittest.TestCase):
         actions, _ = oracle_rows()
         with tempfile.TemporaryDirectory() as tmp:
             cases = {}
-            cases["wrong_width"] = actions[:, :26]
+            cases["wrong_width"] = actions[:, :28]  # the old floating-stage width
             cases["sharpa_rows_as_wuji"] = actions
             nan = actions[:10].copy()
             nan[3, 7] = np.nan
@@ -261,10 +283,10 @@ class TrustBoundaryTests(unittest.TestCase):
 
 
 class WujiTests(unittest.TestCase):
-    def test_wuji_loads_on_the_same_stage_and_nop_fails_deterministically(self):
+    def test_wuji_loads_on_the_same_arms_and_nop_fails_deterministically(self):
         s = Session(hand="wuji")
-        self.assertEqual(s.action_dim, 26)
-        self.assertEqual(s.actuator_names[:6], Session().actuator_names[:6])
+        self.assertEqual(s.action_dim, 54)
+        self.assertEqual(s.actuator_names[:14], Session().actuator_names[:14])
         rows = np.tile(s.hold_action(), (200, 1))
         first = s.replay(rows)
         sha = s.state_sha()

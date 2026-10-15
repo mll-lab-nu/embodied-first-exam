@@ -1,24 +1,24 @@
 # book_page_turn: authoring notes
 
 Physical DexHand version of scene T39 of the 50-scene expansion ("Turn a page in a real board book"). The source
-scene was a kinematic demonstration (a prescribed leaf trace backed by a historical force-driven episode); here a
-dexterous hand on a wrist stage turns the page through contact only.
+scene was a kinematic demonstration (a prescribed leaf trace backed by a historical force-driven episode); here the
+Tianji Marvin two-arm robot with dexterous hands turns the page through contact only (wave 3: Marvin arm rig, all
+boards flat as in the source, source desk and book pose).
 
 ## Files
 
 | file | role |
 |---|---|
-| `scene.py` | MJCF: desk, free board book (8 leaves + 2 covers + spine), Sharpa Wave on the six-axis wrist stage; Wuji via `hands.replace_wave_hands` |
+| `scene.py` | MJCF: T39 desk, free board book (8 leaves + 2 covers + spine), Marvin stand with two arms and Sharpa Waves (`arm_rig.mount_marvin`; Wuji via the rig) |
 | `checker.py` | verdict from simulator state: ordered stages, terminal hold, fail-fast invariants |
 | `runtime.py` | `Session` (reset/step/status/state_sha/hold_action/snapshot/restore/save_trajectory/replay/render_frame) |
 | `replay.py` | fresh-process replay CLI (FAMILY_PLUGIN section 5) |
 | `task.json` | frozen instance: physics, book parameters, thresholds, cameras, per-hand start targets |
 | `assets/` | the T39 page prints, cover and licenses, copied unchanged; `manifest.json` holds sha256 + size (checked at build) |
-| `author.py` | authoring controller (not shipped): closed-loop scripted page turn (both hands) recorded as open-loop rows |
-| `tests/test_book_page_turn.py` | authoring tests (not shipped): oracles, nop, truncations, release, shove fail-fast, post-success rows, state-edit invariants, forged/shadowed/pickled members, wrong width/hand/task/names, NaN/inf/range/row limits, Wuji |
+| `author.py` | authoring controller (not shipped): closed-loop two-arm page turn (Marvin IK through `arm_ik`) recorded as open-loop rows |
+| `tests/test_book_page_turn.py` | authoring tests (not shipped): oracles, nop, truncations, release, shove fail-fast, post-success rows, state-edit invariants, forged/shadowed/pickled members, wrong width/hand/task/names, NaN/inf/range/row limits, Wuji composition + nop |
 | `presentation.py`, `studio_renderer.py`, `film.json` | authoring film (not shipped): exact native pose export + the T39 scene's Blender studio renderer (caption adapted) |
-| `solution/trajectory.npz` | Sharpa oracle rows (`actions`, `hand`, `task`): 650 rows, success after 391 |
-| `solution/wuji/trajectory.npz` | Wuji oracle rows: 650 rows, success after 347 (per-hand oracle, packaged as `solution/wuji/`) |
+| `solution/trajectory.npz` | Sharpa oracle rows (`actions`, `hand`, `task`): 553 rows of 58 targets, success after 453 |
 
 ## Modelling choices
 
@@ -30,10 +30,14 @@ dexterous hand on a wrist stage turns the page through contact only.
   pushed past vertical settles onto the left stack in about a second instead of slamming down.
 - Hinge ranges: right-hand boards (-0.25, pi + 0.25), left-hand boards (-pi - 0.25, 0.25) so any board can be turned in
   either direction (the source let left boards rise only 0.25 rad).
-- Springback: leaf 2, the right-hand board of the open spread, rests on its binding stop at 0.07 rad (4 deg; a joint
-  limit), as a new board book's stiff glued binding holds the spread's boards slightly open. This leaves a 10.9 mm gap
-  under its fore-edge, which a fingertip (8.1 mm capsule radius) can catch; with all boards flat (0.2 mm gaps) no
-  fingertip contact can lift the top board without also dragging the one below.
+- All boards lie flat on their stacks (0.2 mm gaps), as in the T39 source; leaf 2 has the same hinge as every other
+  right-hand board. (Wave 2 rested leaf 2 on a 4 degree springback stop so a fingertip could get under it; removed.)
+- Desk and book in the T39 source pose: desk top z = 0.78 (centre (0.52, 0), 0.60 x 0.52 m), book spine at
+  (0.51, 0, 0.7806), yaw -90 deg (spine along world x, right-hand stack toward -y). Robot: the Marvin stand at the
+  world origin facing +x (`arm_rig.py`, robot id `marvin-bimanual-sharpa-wave`, the pot_shelf_transfer arm gains;
+  floor at z = -0.1 = base_z - 0.1 under the stand's plate; the desk's front legs are set back from 0.29 to x = 0.43
+  (`desk_legs_x`) so they stand clear of the stand's base plate; the robot never overlaps the desk: exact
+  convex-hull check in the status record).
 - Covers are glued to the spine wrap (hinge stiffness 0.5 N m/rad); a flat 16 mm "binding base" contact box under the
   gutter keeps the free spine level (with the source's tall thin wrap the spine tipped ~1.5 deg while settling). The
   teal wrap is visual only.
@@ -59,17 +63,26 @@ non-finite state / MuJoCo instability warnings; 3000-control budget.
 
 ## Authoring controller (author.py)
 
-Palm-up Sharpa hand, index straight, other fingers curled. The index fingertip sphere is placed 4.4 mm below and just
-outside leaf 2's bottom fore-edge corner (1.5 mm preload), then the whole hand rotates rigidly about the spine axis
-by 2.2 rad over 3 s, carrying the board past vertical; the hand backs off, parks palm-up and holds. The only feedback
-is an integral correction of the fingertip position for the wrist stage's gravity sag during the approach. Rows are
-recorded and replayed open loop; 100 extra hold rows give slack. Robustness: constant wrist offsets of +-3 mm in x and
--3/+1.5 mm in z and per-row noise (0.5 mm, 2 mrad, 0.01 rad fingers) still succeed; +3 mm in z misses the catch
-(17/18 variants).
+The plan is written in the canonical book frame of wave 2 (spine along +y, right stack toward +x) and mapped to the
+world through the book's start pose. Right hand palm up, index straight, other fingers curled. The left arm first
+moves (joint space via a waypoint beside the stand, outside the desk, and one above the desk, then IK) its index fingertip, pointing down, against the left
+stack's fore-edge (sphere centre 8.5 mm above the desk): a stop that keeps the free book from sliding. The right index
+fingertip sphere comes to 1 mm outside leaf 2's fore-edge face, 1.5 mm above leaf 2's top face, settles there, then presses in by
+4.5 mm (it mainly loads leaf 2's fore-edge; it also brushes the fore-edges of leaves 3-5, at most 1.4 mm deep, which
+move less than 0.003 deg); the hand then turns about the measured leaf-2 hinge (the fingertip
+target keeps its place in the board frame, the hand itself turns only 0.45 x the board angle to stay inside the
+wrist's range): fingertip friction on the edge face lifts the board and carries it to 126 deg. The left hand lets go
+at 100 deg (board angle of the plan) and moves 0.12 m outward and 0.15 m up, clear of the right hand's retreat, the board settles on the left stack under its binding damping, the right hand
+backs away and parks. Each control: right-arm IK (`arm_ik.ArmIK`) to the planned hand-root pose, a joint integral for
+servo sag that adapts only in free space (frozen while touching the book, so a preloaded contact target cannot wind
+it up), and a velocity feed-forward `(kv / kp) qdot` against servo lag. Rows are recorded and replayed open loop;
+100 extra hold rows give slack. Variants with a 3.5 / 4.5 / 5.5 mm press all succeed; 1.5-2.5 mm presses lose the
+edge (arm tracking error ~5 mm), and without the left-hand stop any press above ~2 mm shoves the book. Open-loop robustness of the recorded rows to i.i.d. per-row target noise (arm joints / fingers): 0.5 mrad / 0.005 rad 3 of 3 succeed, 1 mrad / 0.01 rad 2 of 3 (one shoved book), 2 mrad / 0.01 rad 1 of 3.
 
-Wuji: the same controller with per-hand overrides (`HAND_DEFAULTS`: pitch 0.15 rad, catch 4 mm below the corner,
-index PIP/DIP flexed 0.3/0.2 rad so the distal pad leads, and a slide under the raised board between 0.35 and 0.8 rad
-of rotation), found by a small physics sweep; 15/18 perturbation variants succeed.
+No Wuji reference solution. The Wuji settings in `HAND_DEFAULTS` (pitch 0.4 rad, 6.5 mm press, hand turn 0.6 rising to
+0.85-0.9 x the board angle) turn the page, but late in the turn the right-arm IK target leaves the reachable set and
+the right arm brushes the left arm (robot self-contact), so no Wuji episode is packaged; Wuji composes on the rig with a
+deterministic nop.
 
 ## Evidence
 
@@ -78,17 +91,16 @@ films) was kept in the authoring workspace; the commands below regenerate it. Ru
 `DEXHAND_ASSET_DIR` pointing at the Sharpa assets:
 
 ```bash
-python author.py --out solution/trajectory.npz                    # Sharpa oracle (650 rows, success after 391)
-python author.py --hand wuji --out solution/wuji/trajectory.npz   # Wuji oracle (650 rows, success after 347)
+python author.py --out solution/trajectory.npz                    # Sharpa oracle (553 rows, success after 453)
 python replay.py --task book_page_turn --traj solution/trajectory.npz --out r1.json   # twice: identical state_sha
-python -m pytest -q tests                                        # authoring tests (about 1 minute)
+python -m pytest -q tests                                        # authoring tests (a few minutes)
 python presentation.py export --export <export dir> --config film.json && python presentation.py verify --export <export dir>
 BLENDER=<blender 4.5.3> python studio_renderer.py --export <export dir> --output film.mp4 --engine eevee --width 1280 --height 720 --samples 32 --fps 25
 ```
 
-## Harbor (local, 2026-10-14)
+## Harbor
 
-Harbor 0.23, `eai-dexhand:0.2.0`, CPU only, `RCB_LIMITS_ENFORCE=0`, on snapshot copies of the generated pair:
-privileged oracle 1 (success at control 391, deterministic) / nop 0 (missing trajectory); standard oracle 1 (live
-success, live hash = replay hash, 391 controls, about 2 min per trial) / nop 0; Wuji (`DEXHAND_HAND=wuji`): oracle 1 in
-both modes (per-hand `solution/wuji/`, success at control 347, `hand_wuji = 1`), standard nop 0, privileged nop 0.
+Wave 3 (Harbor 0.23, eai-dexhand:0.2.0, snapshot copies of the generated pair, 2026-10-15): privileged oracle 1 (553
+rows, success at 453, deterministic) / nop 0; standard oracle 1 (live success, live hash = replay hash) / nop 0; Wuji
+standard nop 0. Robot checks (exact convex-hull stand/arm vs desk check, every-substep contact audit: zero robot
+self-contacts, zero arm/stand contacts with the world) are recorded in the family's status record.

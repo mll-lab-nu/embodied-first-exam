@@ -1,24 +1,24 @@
 {
-  "display_title": "Turn one board-book page",
+  "display_title": "Turn one board-book page with the Marvin arms",
   "exposure": -1.05,
   "visual_bevel_m": 0.0002,
   "camera": {
     "position": [
-      0.28,
-      -0.68,
-      0.86
+      1.32,
+      -0.78,
+      1.38
     ],
     "target": [
-      0.1,
-      0.02,
-      0.4
+      0.42,
+      -0.04,
+      0.88
     ],
     "lens": 30
   },
   "light_target": [
+    0.51,
     0.0,
-    0.0,
-    0.316
+    0.8
   ],
   "lights": [
     {

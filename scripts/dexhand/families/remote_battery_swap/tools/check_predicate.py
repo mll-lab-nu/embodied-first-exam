@@ -31,7 +31,7 @@ def case(base, **edits):
         cfg[k] = v
     s = Session(config=cfg)
     hold = s.hold_action()
-    hold[2] = 0.70  # park the hand high (wrist z), far from everything
+    # the arm holds its start pose (hand 0.18 m above the table, clear of every object)
     for _ in range(60):
         s.step(hold)
     f = s.features()

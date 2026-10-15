@@ -125,6 +125,7 @@ def main():
         links.new(ramp.outputs["Color"], nodes["Principled BSDF"].inputs["Base Color"])
         return mat
 
+    arm_materials = {}
     shell = material("Pearl white polymer housing", (0.89, 0.91, 0.89), 0.30, 0.08)
     rubber = material("Green silicone fingertips", (0.18, 0.62, 0.30), 0.62)
     steel = material("Brushed stainless mechanics", (0.36, 0.39, 0.41), 0.30, 0.8)
@@ -163,7 +164,7 @@ def main():
                     for loop in mesh.loops:
                         u, v = coords[loop.vertex_index]
                         uv.data[loop.index].uv = (float(u), float(1.0 - v) if FLIP_V else float(v))
-                if owner == "hand":
+                if owner in ("hand", "left_hand", "robot"):
                     for polygon in mesh.polygons:
                         polygon.use_smooth = True
                 cache[mid] = mesh
@@ -202,11 +203,17 @@ def main():
             raise ValueError(f"Unsupported geometry {kind}")
         obj.name = name
         bevel = 0.0
-        if owner == "hand":
+        if owner in ("hand", "left_hand"):
             if payload["hand"] == "wuji":
                 chosen = wuji_shell
             else:
                 chosen = rubber if record["material"] == "green" else steel if "_VL" in name else shell
+        elif owner == "robot":
+            # Tianji Marvin arm: the factory rgba per sub-mesh, roughness 0.29 / metallic 0.15 (pot T17 film look)
+            key = tuple(round(float(c), 3) for c in record["rgba"][:3])
+            if key not in arm_materials:
+                arm_materials[key] = material(f"Marvin arm {key}", key, 0.29, 0.15)
+            chosen = arm_materials[key]
         elif name == "floor":
             chosen = floor
         elif name == "desk":
@@ -258,8 +265,9 @@ def main():
     if args.still is None and indices[-1] != len(frames) - 1:
         indices.append(len(frames) - 1)
     id_index = {g["id"]: i for i, g in enumerate(payload["geoms"])}
-    p0, t0 = Vector((0.96, -0.43, 1.29)), Vector((0.52, 0.03, 0.703))
-    p1, t1 = Vector((0.80, -0.10, 1.00)), Vector((0.535, 0.15, 0.703))
+    # The robot stands at the desk's +x edge: overview from the -x side facing it, then a raised side view of the mouth
+    p0, t0 = Vector((-0.12, -0.78, 1.42)), Vector((0.58, 0.0, 0.84))
+    p1, t1 = Vector((0.66, 0.62, 1.02)), Vector((0.55, 0.12, 0.72))
     measurements = []
     for index in indices:
         record = frames[index]

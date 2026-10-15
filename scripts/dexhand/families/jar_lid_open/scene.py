@@ -41,6 +41,24 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = Path(__file__).resolve().parents[2] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_module()
 ASSETS = Path(__file__).resolve().with_name("assets")
 
 # ---------------------------------------------------------------------------------------------- jar geometry
@@ -225,9 +243,11 @@ def add_jar(root, position):
     return jar, lid
 
 
-# ---------------------------------------------------------------------------------------------- hand rig
-HAND_MOUNT_QUAT = (0.7071067811865476, 0.0, 0.7071067811865476, 0.0)  # palm down, fingers +x, thumb +y
-HAND_MOUNT_POS = (-0.075, -0.005, 0.06)  # stage origin ~4 cm below the palm centre (the grasp centre)
+# ---------------------------------------------------------------------------------------------- robot
+def robot_bodies(model):
+    """(hand body ids, arm + stand body ids) of the Marvin rig in a compiled model (both hands count as hands)."""
+    hand = set(arm_rig.hand_body_ids(model, "left")) | set(arm_rig.hand_body_ids(model, "right"))
+    return hand, set(arm_rig.robot_body_ids(model))
 
 
 def look_at(pos, target):
@@ -260,40 +280,10 @@ def build(config, asset_dir=None, hand="sharpa"):
     node(option, "flag", multiccd="enable")
     for key in root.findall("keyframe"):
         root.remove(key)
-    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
+    world, actuator = root.find("worldbody"), root.find("actuator")
     hand_body = world.find("body")
-    world.remove(hand_body)
-    wrist = node(world, "body", name="wrist_stage")
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    hand_body.set("quat", vec(HAND_MOUNT_QUAT))
-    hand_body.set("pos", vec(HAND_MOUNT_POS))
-    wrist.append(hand_body)
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        wrist.insert(
-            i,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range="-0.8 0.8" if i < 3 else "-3.14 3.14",
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
+    # The family's Sharpa tweaks (as on the old wrist stage), applied before mounting so the mirrored left Wave gets
+    # them too: dissipative finger velocity feedback and grippy fingertip pads.
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -302,9 +292,14 @@ def build(config, asset_dir=None, hand="sharpa"):
     for g in hand_body.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    # Tianji Marvin stand + both 7-DoF arms; the right arm carries the working hand under the fixed body
+    # "wrist_stage" (the checker's hand root), the left arm is parked (arm_rig.PARK) with its hand.
+    arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                         mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                         wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    assets = root.find("asset")
 
     node(assets, "texture", name="worktop_tex", type="2d", builtin="flat", width=512, height=512,
          rgb1=(0.90, 0.89, 0.86), rgb2=(0.86, 0.85, 0.82), mark="random", random=0.02, markrgb=(0.80, 0.79, 0.76))
@@ -314,24 +309,27 @@ def build(config, asset_dir=None, hand="sharpa"):
          rgb1=(0.62, 0.64, 0.64), rgb2=(0.86, 0.86, 0.84))
     tz = config["table_z"]
     half = config["table_half"]
-    node(world, "geom", name="floor", type="plane", size=(2, 2, 0.1), rgba=(0.40, 0.42, 0.41, 1))
+    # Floor 0.1 m below the robot stand's origin: the stand's platform (z -0.099..0.104 in its frame) rests on it.
+    floor_z = config["marvin"]["base_pos"][2] - 0.1
+    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.1), pos=(0, 0, floor_z), rgba=(0.40, 0.42, 0.41, 1))
     node(world, "geom", name="worktop", type="box", size=(half[0], half[1], 0.02), pos=(0, 0, tz - 0.02),
          material="worktop_material", friction=(0.6, 0.002, 0.0001), condim=3)
     for sx in (-1, 1):
         for sy in (-1, 1):
-            node(world, "geom", name=f"table_leg_{sx}_{sy}", type="box", size=(0.02, 0.02, (tz - 0.04) / 2),
-                 pos=(sx * (half[0] - 0.05), sy * (half[1] - 0.05), (tz - 0.04) / 2), rgba=(0.32, 0.28, 0.22, 1),
-                 contype=0, conaffinity=0)
+            node(world, "geom", name=f"table_leg_{sx}_{sy}", type="box", size=(0.02, 0.02, (tz - 0.04 - floor_z) / 2),
+                 pos=(sx * (half[0] - 0.05), sy * (half[1] - 0.05), (tz - 0.04 + floor_z) / 2),
+                 rgba=(0.32, 0.28, 0.22, 1), contype=0, conaffinity=0)
     add_jar(root, (*config["jar_xy"], tz))
-    node(world, "light", name="key", pos=(0.5, -0.6, 1.4), dir=(-0.4, 0.5, -1), diffuse=(0.75, 0.72, 0.66),
-         castshadow="true")
-    node(world, "light", name="fill", pos=(-0.5, 0.5, 1.2), dir=(0.5, -0.4, -1), diffuse=(0.40, 0.44, 0.48),
-         castshadow="false")
     jar = np.array([*config["jar_xy"], tz])
+    node(world, "light", name="key", pos=jar + (0.5, -0.6, 1.1), dir=(-0.4, 0.5, -1), diffuse=(0.75, 0.72, 0.66),
+         castshadow="true")
+    node(world, "light", name="fill", pos=jar + (-0.5, 0.5, 0.9), dir=(0.5, -0.4, -1), diffuse=(0.40, 0.44, 0.48),
+         castshadow="false")
     for name, offset, target, fovy in (
         ("overview", (0.40, -0.52, 0.32), (0.04, -0.05, 0.09), 40),
         ("closeup", (0.20, -0.26, 0.17), (0.0, 0.0, 0.09), 38),
         ("side", (0.0, -0.55, 0.12), (0.0, -0.06, 0.08), 45),
+        ("wide", (1.05, -0.85, 0.75), (-0.25, 0.05, 0.12), 45),
     ):
         node(world, "camera", name=name, pos=jar + offset, xyaxes=look_at(jar + offset, jar + target), fovy=fovy)
     v = node(root, "visual")

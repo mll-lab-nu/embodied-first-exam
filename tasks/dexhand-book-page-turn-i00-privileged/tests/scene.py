@@ -1,4 +1,4 @@
-"""Board-book page-turn scene: a free 6x6 in board book on a desk and one dexterous hand on a wrist stage.
+"""Board-book page-turn scene: a free 6x6 in board book on a desk and the Tianji Marvin arm robot with dexterous hands.
 
 The book reuses the T39 scene's board-book design (eight rigid 1.2 mm laminated leaves with sixteen fixed printed
 pages, two covers, a teal flexible spine wrap). Every leaf is a passive hinge (with friction and damping) plus a small
@@ -38,6 +38,24 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = Path(__file__).resolve().parents[2] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
 
 # Board-book geometry (T39 source: common 6 x 6 in trim, two 350 gsm sheets laminated per leaf).
 WIDTH = HEIGHT = 0.1524
@@ -122,9 +140,9 @@ def add_book_assets(asset):
 def add_board(parent, name, z, side, config, page=None):
     """One rigid laminated board: passive binding hinge + small vertical binding compliance."""
     book = config["book"]
-    # Leaf-2 starts on its springback stop: its body frame is authored at that angle and the hinge's ``ref`` makes
-    # qpos measure the physical opening angle from the flat right-hand position for every right-hand board.
-    rest = book["springback_rad"] if name == f"leaf_{TARGET_LEAF}" else 0.0
+    # Every board starts flat on its stack (as in the T39 source); qpos measures the opening angle from the flat
+    # authored side.
+    rest = 0.0
     angle = np.pi if side == "left" else rest
     body = node(parent, "body", name=name, pos=(0, 0, z), quat=(np.cos(angle / 2), 0, -np.sin(angle / 2), 0))
     node(
@@ -145,10 +163,6 @@ def add_board(parent, name, z, side, config, page=None):
     if name.endswith("_cover"):
         # Covers are glued to the spine wrap: a stiff binding spring keeps the spine level with the covers.
         stiffness, damping = book["cover_hinge_stiffness_Nm_rad"], 0.02
-    if name == f"leaf_{TARGET_LEAF}":
-        # Binding springback of the board at the open spread: its stiff glued hinge stops it a few degrees above
-        # the stack instead of letting it lie flat (passive joint limit, see README).
-        lower = book["springback_rad"]
     node(
         body,
         "joint",
@@ -240,7 +254,9 @@ def add_book(world, asset, config):
     add_book_assets(asset)
     xy = config["book_xy"]
     book_cfg = config["book"]
-    book = node(world, "body", name="book_spine", pos=(xy[0], xy[1], config["table_z"] + config["book"]["spine_origin_height_m"]))
+    yaw = np.radians(config.get("book_yaw_deg", 0.0))
+    book = node(world, "body", name="book_spine", pos=(xy[0], xy[1], config["table_z"] + config["book"]["spine_origin_height_m"]),
+                quat=(np.cos(yaw / 2), 0, 0, np.sin(yaw / 2)))
     node(book, "freejoint", name="book_free")
     # The teal cloth spine wrap seen in the gutter (visual) and the glued binding base it covers, which rests
     # flat on the desk under the gutter (contact; keeps the free spine level).
@@ -292,7 +308,7 @@ def verify_assets():
 
 
 def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen book scene with the selected genuine hand on the six-axis wrist stage."""
+    """Compose the frozen book scene with the Marvin robot carrying the selected genuine hands."""
     verify_assets()
     hand_id = hands.canonical(hand)
     folder = Path(
@@ -313,37 +329,7 @@ def build(config, asset_dir=None, hand="sharpa"):
         root.remove(key)
     assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
     hand_body = world.find("body")
-    world.remove(hand_body)
-    wrist = node(world, "body", name="wrist_stage")
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    hand_body.set("quat", "0 0.7071067811865476 0 0.7071067811865476")
-    wrist.append(hand_body)
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        wrist.insert(
-            i,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range="-0.8 0.8" if i < 3 else "-3.14 3.14",
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
+    # The family's Sharpa tweaks (finger bias, fingertip friction), applied before mounting so both Waves share them.
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -352,11 +338,13 @@ def build(config, asset_dir=None, hand="sharpa"):
     for g in hand_body.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.2 .005 .0001")
-    if hand_id != "sharpa":
-        # Swap the Wave body under the unchanged wrist stage for the genuine Wuji Hand 2.2 model; the vendor's
-        # joints, actuators, gains and contact geometry are kept as published. Wrist actuators stay first.
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    # Tianji Marvin robot standing at the desk (both 7-DoF arms; the right arm turns the page, the left arm is parked).
+    # Wuji: the genuine Wuji Hand 2.2 replaces both Waves inside mount_marvin.
+    marvin = config["marvin"]
+    sibling = folder.parent / "wuji_v2_2"
+    arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                         mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                         wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
     table = config["table"]
     node(assets, "texture", name="desk_grain", type="2d", builtin="flat", width=512, height=512,
          rgb1=(0.74, 0.48, 0.30), rgb2=(0.66, 0.42, 0.26), mark="random", random=0.04, markrgb=(0.62, 0.40, 0.25))
@@ -364,8 +352,18 @@ def build(config, asset_dir=None, hand="sharpa"):
          specular=0.25, shininess=0.3)
     node(assets, "texture", name="studio_sky", type="skybox", builtin="gradient", width=256, height=256,
          rgb1=(0.42, 0.45, 0.45), rgb2=(0.20, 0.23, 0.24))
-    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.1), rgba=(0.30, 0.33, 0.34, 1),
+    floor_z = config.get("floor_z", 0.0)
+    node(world, "geom", name="floor", type="plane", pos=(0, 0, floor_z), size=(3, 3, 0.1), rgba=(0.30, 0.33, 0.34, 1),
          friction=(0.65, 0.002, 0.0001))
+    top = config["table_z"] - 0.05
+    # Desk legs: the T39 desk's front legs (0.07 m from the front edge) would stand inside the Marvin stand's base
+    # plate (+-0.393 m around the stand origin); they are set back to desk_legs_x so that no robot geom (convex hull,
+    # collision or visual) overlaps any furniture geom. The desk top keeps the source pose and size.
+    legs_x = config.get("desk_legs_x", [table["center_x"] - table["half_x"] + 0.07, table["center_x"] + table["half_x"] - 0.07])
+    for lx in legs_x:
+        for ly in (table["center_y"] - table["half_y"] + 0.05, table["center_y"] + table["half_y"] - 0.05):
+            node(world, "geom", name=f"desk_leg_{lx:.2f}_{ly:.2f}", type="box", pos=(lx, ly, (top + floor_z) / 2),
+                 size=(0.02, 0.02, (top - floor_z) / 2), rgba=(0.25, 0.26, 0.27, 1))
     node(
         world,
         "geom",
@@ -379,9 +377,9 @@ def build(config, asset_dir=None, hand="sharpa"):
         solref=(0.004, 1),
     )
     add_book(world, assets, config)
-    node(world, "light", name="key", pos=(0.25, -0.9, 1.6), dir=(-0.15, 0.55, -1), diffuse=(0.62, 0.60, 0.57),
+    node(world, "light", name="key", pos=(0.85, -0.95, 2.1), dir=(-0.25, 0.65, -1), diffuse=(0.62, 0.60, 0.57),
          specular=(0.15, 0.15, 0.15), castshadow="true")
-    node(world, "light", name="fill", pos=(-0.5, 0.6, 1.2), dir=(0.4, -0.4, -1), diffuse=(0.30, 0.32, 0.35),
+    node(world, "light", name="fill", pos=(0.1, 0.7, 1.8), dir=(0.4, -0.5, -1), diffuse=(0.30, 0.32, 0.35),
          specular=(0, 0, 0), castshadow="false")
     for camera in config["cameras"]:
         node(world, "camera", name=camera["name"], pos=camera["pos"], xyaxes=camera["xyaxes"], fovy=camera["fovy"])

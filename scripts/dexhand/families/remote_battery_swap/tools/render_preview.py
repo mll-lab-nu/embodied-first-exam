@@ -47,7 +47,7 @@ def main():
     p.add_argument("--fps", type=int, default=25)
     p.add_argument("--frames", nargs="*", type=int, default=[], help="control steps to save as PNG stills")
     a = p.parse_args()
-    actions, hand, _ = hands.read_trajectory(a.traj, widths={"sharpa": 28, "wuji": 26}, max_rows=6000,
+    actions, hand, _ = hands.read_trajectory(a.traj, widths={"sharpa": 58, "wuji": 54}, max_rows=6000,
                                              task="remote_battery_swap")
     phases = np.load(a.phases)["phases"] if a.phases else np.full(len(actions), "actuator replay")
     s = Session(hand=hand)

@@ -17,9 +17,9 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `paper_half_fold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 40 x 0.5 ms | 1,108 rows (+ 250 hold rows) |
 | `sweep_dustpan` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 2000 Hz, one 0.5 ms step | 132,521 rows (+ 16,000 hold rows) |
 | `pot_shelf_transfer` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 500 Hz, one 2 ms step | 8,850 rows |
-| `remote_battery_swap` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,250 rows |
+| `remote_battery_swap` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 2,416 rows |
 | `coffee_stir` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,265 rows |
-| `jar_lid_open` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 825 rows |
+| `jar_lid_open` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,159 rows |
 | `grinder_crank` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 1,096 rows |
 | `pancake_serve` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 874 rows |
 | `vacuum_bin_reseat` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 1,019 rows |
@@ -32,8 +32,8 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `boot_sole_brush` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,329 rows |
 | `paper_staple` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 942 rows |
 | `binder_page_load` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,095 rows |
-| `envelope_letter_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,298 rows |
-| `book_page_turn` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 650 rows |
+| `envelope_letter_insert` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 2,446 rows |
+| `book_page_turn` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 553 rows |
 | `tray_glass_carry` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 1,072 rows |
 | `batter_whisk` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,048 rows |
 | `bicycle_pump_stroke` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 3,581 rows |
@@ -43,7 +43,7 @@ family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted i
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and eight of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and six of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Seventeen families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Fifteen families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -138,11 +138,9 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `assemble_hamburger` | 5,847 x 26 | control 5,847 | `families/assemble_hamburger/tools/wuji_gen.py` (pinch IK over wrist, thumb and index; per-layer parameters from `tools/wuji_layers.py`) |
 | `paper_half_fold` | 620 x 26 | control 554 | `families/paper_half_fold/tools/wuji_gen.py` (fingertip pads under the overhang, rigid rotation about the fold line, press, lift) |
 | `pot_shelf_transfer` | 8,266 x 54 | step 8,266 | `families/pot_shelf_transfer/tools/wuji_gen.py` (the Sharpa authoring controller's phases with a Wuji power-grip posture) |
-| `jar_lid_open` | 905 x 26 | control 755 | `families/jar_lid_open/demo.py --hand wuji` (fingertip targets inside the skirt as grip force, two regrasp strokes: the Wuji servos are too weak for the Sharpa's single wrist turn) |
+| `jar_lid_open` | 1,242 x 54 | control 1,097 | `families/jar_lid_open/tools/arm_port.py author --hand wuji` (the old Wuji hand path tracked by the arm, slowed for the Wuji servos; README) |
 | `pancake_serve` | 875 x 26 | control 725 | `families/pancake_serve/tools/demo.py --params '{"hand": "wuji"}'` (the same closed-loop turner-pose servo as Sharpa, with the Wuji frozen power grasp from `tools/make_reset.py`) |
 | `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
-| `envelope_letter_insert` | 1,588 x 26 | control 1,488 | `families/envelope_letter_insert/demo.py --hand wuji` (the Sharpa controller, vertex-based fingertip targets for Wuji) |
-| `book_page_turn` | 650 x 26 | control 347 | `families/book_page_turn/author.py` (the Sharpa controller with per-hand overrides, `HAND_DEFAULTS`) |
 | `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
 | `batter_whisk` | 1,540 x 26 | control 1,440 | `families/batter_whisk/tools/author_oracle.py --hand wuji` (the Sharpa authoring controller with the Wuji frozen power grasp from `tools/make_reset.py`) |
 | `bicycle_pump_stroke` | 3,561 x 54 | control 3,411 | `families/bicycle_pump_stroke/tools/arm_port.py author --hand wuji` (the Sharpa arm port with Wuji push, swing and press offsets; README) |
@@ -424,36 +422,42 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`), or, since wave 3
-(2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`grinder_crank`, `picture_hang`
-with both arms; `bicycle_pump_stroke`, `paper_staple` with the right arm, the left one parked) completes each one with
-motor targets only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides,
-detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium
-that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from
-simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the
-first violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released
-or held terminal window. Each instruction states the exact predicate and every threshold; each family's authoring
-`README.md` lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms),
-`oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is
-packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically
-feasible (pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each section names what was
-restored and what remains, with the reason.
+(2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`book_page_turn`, `grinder_crank`,
+`picture_hang` with both arms; `bicycle_pump_stroke`, `envelope_letter_insert`, `jar_lid_open`, `paper_staple`,
+`remote_battery_swap` with the right arm, the left one parked) completes each one with motor targets only. Mechanisms
+are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches); nothing is welded
+to a hand, scripted or pushed, and object state is written only at reset. A medium that is not simulated (coffee,
+batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator state (revolutions,
+strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first violating physics
+substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held terminal window.
+Each instruction states the exact predicate and every threshold; each family's authoring `README.md` lists its modelling
+choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded
+physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as `solution/wuji/` (see
+Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically feasible (pre-closed or pre-placed
+parts, enlarged parts and widened clearances reverted); each section names what was restored and what remains, with the
+reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
-A TV remote lies on the table; its sliding battery door (a passive slide, 85 mm travel) is closed over a one-cell
-compartment holding an old gray AA cell; a new green AA cell lies on the table next to an empty receiving tray.
-**Success**, in order: (1) the door at least 0.060 m open; (2) the gray cell resting on the tray floor (centre inside
-the tray's inner box |x| <= 0.037 m, |y| <= 0.032 m, at most 0.014 m above the tray origin, no hand contact); (3) the
-green cell seated with correct polarity (centre within 5 mm along, 3 mm across and 2 mm in height of the slot centre,
-on both cradle ribs, axis within 10 degrees of the remote's long axis, + end at the gold contact); (4) the door shut
-(at most 0.004 m open); then, with no hand contact on any task object and every object at rest (<= 0.02 m/s,
-<= 0.5 rad/s), the condition held for 50 controls (1 s). **Immediate failure**, after every 2 ms substep: a cell, the
-door, the remote or the tray below the table top or outside the workspace box, or on the floor; the remote or the
-tray slid more than 0.03 m or tilted more than 15 degrees; the gray cell touching the table top; the green cell
-touching the table again after it was lifted; a cell without hand contact falling faster than 0.886 m/s, or a cell
-touching nothing falling faster than 0.5 m/s (no grace period); unstable physics; 6,000 controls. The remote shell is widened 1.25 times across so
-two fingertips fit beside a cell; the door is held by friction only (the source's latch tab and the compartment's
-compressible - spring are not modelled). Oracle: 2,250 Sharpa rows (success at 2,100); no Wuji solution.
+Wave 3: the right Tianji Marvin arm and hand (stand at base (-0.45, 0.15, -0.45) facing +x, the left arm parked). Layout
+change for this hand-scale scene: the floor is lowered with the stand to z = -0.55 m, so the source's 0.30 m table top
+stands 0.85 m above the floor. A TV remote at the source size (shell 160 x 64 mm) lies on the table; its sliding battery
+door (a passive slide, 85 mm travel) is shut and latched over a one-cell compartment holding an old gray AA cell: a
+spring-loaded thumb tab on the door (5 mm, 120 N/m) carries a hook in front of a fixed latch stop, so the door slides
+only while the tab is pressed; a new green AA cell lies on the table next to an empty receiving tray. **Success**, in
+order: (1) the latch released and the door at least 0.060 m open; (2) the gray cell resting on the tray floor (centre
+inside the tray's inner box |x| <= 0.037 m, |y| <= 0.032 m, at most 0.014 m above the tray origin, no hand contact); (3)
+the green cell seated with correct polarity (centre within 5 mm along, 3 mm across and 2 mm in height of the slot
+centre, on both cradle ribs, axis within 10 degrees of the remote's long axis, + end at the gold contact); (4) the door
+shut and latched (at most 0.002 m open, tab released); then, with no hand contact on any task object and every object at
+rest (<= 0.02 m/s, <= 0.5 rad/s), the condition held for 50 controls (1 s). **Immediate failure**, after every 2 ms
+substep: a cell, the door, the remote or the tray below the table top or outside the workspace box, or on the floor; the
+remote or the tray slid more than 0.03 m or tilted more than 15 degrees; the gray cell touching the table top; the green
+cell touching the table again after it was lifted; a cell without hand contact falling faster than 0.886 m/s, or a cell
+touching nothing falling faster than 0.5 m/s (no grace period); unstable physics; 6,000 controls. Wave 3 restored the
+source size (the shell was widened 1.25 times) and the door latch (the door was held by friction only). Remaining
+deviation: the compartment's compressible - spring is replaced by fixed terminals with 3 mm play. Oracle: 2,416 Sharpa
+rows on the arm (success at 2,266); no Wuji solution.
 
 ### Stir milk into coffee (`coffee_stir`, T11)
 
@@ -471,19 +475,24 @@ physics; 3,000 controls. Oracle: 1,265 Sharpa rows (success at 1,165); no Wuji s
 
 ### Jam jar lid (`jar_lid_open`, T14)
 
-One hand on the wrist stage, mounted palm-down; nothing holds the jar (550 g, it stands on its weight and friction).
-The red twist-off lid (32 g) is closed by a contact-only lug thread: four inclined glass ramps hold four lid lugs; after
-a 1.049 rad counter-clockwise turn the lugs sit in the ramp gaps and the lid lifts off. **Success**, in order: (1)
-while the lid is still seated (origin < 6 mm above its closed height, within 4 mm of the jar axis) its unwrapped
-counter-clockwise turn relative to the jar reaches 1.049 rad; (2) the lowest point of the lid skirt rises more than
-30 mm above the rim; (3) for 50 consecutive controls (1 s) the lid rests on the worktop touching neither hand nor jar,
-upright within 0.15 rad, at least 90 mm from the jar axis, slower than 0.02 m/s and 0.3 rad/s, while the jar stands
-untouched, upright within 0.10 rad and slower than 0.02 m/s. **Immediate failure**, after every 2 ms substep: jar tilt
-above 15 degrees, slide above 30 mm or lift above 15 mm; the lid touching the worktop before stage 2; the lid touching
-nothing while falling faster than 0.3 m/s (or falling faster than 1.0 m/s at any time); floor contact or leaving the
-worktop or workspace; the lid leaving the thread upward outside the ramp gaps; unstable physics; 3,000 controls. The
-lid is lightly closed (no vacuum, seal adhesion or preload); the jam is part of the jar's rigid mass. Oracle: 825
-Sharpa rows (success at 675); Wuji: `solution/wuji/` (905 rows, success at 755).
+Wave 3: the right Tianji Marvin arm and hand (stand at base (-0.56, 0.08, 0) behind the worktop on the floor z = -0.1 m,
+the left arm parked); the worktop is at a real table height (top z = 0.75 m; it was 0.30 m on the wrist stage) with the
+jar at (-0.22, -0.08). Nothing holds the jar (550 g, it stands on its weight and friction). The red twist-off lid (32 g)
+is closed by a contact-only lug thread: four inclined glass ramps hold four lid lugs; after a 1.049 rad
+counter-clockwise turn the lugs sit in the ramp gaps and the lid lifts off. **Success**, in order: (1) while the lid is
+still seated (origin < 6 mm above its closed height, within 4 mm of the jar axis) its unwrapped counter-clockwise turn
+relative to the jar reaches 1.049 rad; (2) the lowest point of the lid skirt rises more than 30 mm above the rim; (3)
+for 50 consecutive controls (1 s) the lid rests on the worktop touching neither hand nor jar, upright within 0.15 rad,
+at least 90 mm from the jar axis, slower than 0.02 m/s and 0.3 rad/s, while the jar stands untouched, upright within
+0.10 rad and slower than 0.02 m/s. **Immediate failure**, after every 2 ms substep: jar tilt above 15 degrees, slide
+above 30 mm or lift above 15 mm; the lid touching the worktop before stage 2; the lid touching nothing while falling
+faster than 0.3 m/s (or falling faster than 1.0 m/s at any time); floor contact or leaving the worktop or workspace; the
+lid leaving the thread upward outside the ramp gaps; unstable physics; 3,000 controls. The lid is lightly closed (no
+vacuum, seal adhesion or preload); the jam is part of the jar's rigid mass. Not restored, with evidence in the family
+README: a second hand holding the jar (on the 67 mm body just above the worktop the holding palm could not be placed:
+forearm and wrist against the worktop, J6/J7 limits; the best grips held only 0.06-1.02 N m) and a seal breakaway torque
+of 1-2 N m (without a holding hand, one hand would turn the whole jar, which stands on about 0.13 N m of friction).
+Oracle: 1,159 Sharpa rows on the arm (success at 1,009); Wuji: `solution/wuji/` (1,242 rows, success at 1,097).
 
 ### Manual coffee grinder (`grinder_crank`, T15)
 
@@ -709,32 +718,41 @@ flat page by the edge pinch). Oracle: 3,095 Sharpa rows (success at 2,940); no W
 
 ### Letter into an envelope (`envelope_letter_insert`, T38)
 
-A tri-folded A4 letter (a stiff 99 x 210 x 2 mm card, 5 g) lies flat on the desk; an empty DL wallet envelope
-(110 x 220 mm, 6 g) lies flat beside it with its open mouth along a long edge and the open flap on the desk. The
-envelope is a rigid pocket: walls 4 mm apart, 3 mm side seams, a 4 mm bottom seam and a 30 mm elastic mouth lip (a
-passive spring hinge, resting parted). Both objects are free. Stages, measured on the letter's corners in the
-envelope frame: (1) at the mouth: both leading corners at least 10 mm past the mouth line, inside the seams and
-between the walls, the trailing corners still outside; (2) inserted: at most 5 % of the letter's length outside, all
-four corners inside the seams, in front of the bottom seam and between the walls; (3) released: stage 2 with no hand
-contact on letter or envelope and both at rest, for 50 consecutive controls (1 s). **Immediate failure**, after every
-2 ms substep: letter or envelope below the desk top, on the floor, dropped (touching nothing while falling faster than
-0.1 m/s) or off the desk; the letter pressed through a wall, seam or the lip, or into the envelope by more than
-0.7 mm; the envelope pushed more than 5 cm or tilted more than 0.35 rad; unstable physics; 6,000 controls. The folded
-letter is one rigid card (no paper bending); the flap is never sealed. Oracle: 1,298 Sharpa rows (success at 1,198);
-Wuji: `solution/wuji/` (1,588 rows, success at 1,488).
+A tri-folded A4 letter (a stiff 99 x 210 x 2 mm card, 5 g) lies flat on the desk; an empty DL wallet envelope (110 x 220
+mm, 6 g) lies flat beside it with its open mouth along a long edge and the open flap on the desk. The envelope is a
+rigid pocket: walls 4 mm apart, 3 mm side seams, a 4 mm bottom seam and a 30 mm elastic mouth lip (a passive spring
+hinge that starts closed, flush with the front wall, as in the source). Both objects are free. Wave 3: the right Tianji
+Marvin arm (stand at base (1.15, -0.25, 0.10) on the floor at the desk's +x edge, facing -x, its base plate 6 mm from
+the nearest desk leg; the left arm parked). Stages, measured on the letter's corners in the envelope frame: (1) at the
+mouth: both leading corners at least 10 mm past the mouth line, inside the seams and between the walls, the trailing
+corners still outside; (2) inserted: at most 5 % of the letter's length outside, all four corners inside the seams, in
+front of the bottom seam and between the walls; (3) released: stage 2 with no hand contact on letter or envelope and
+both at rest, for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: letter or envelope
+below the desk top, on the floor, dropped (touching nothing while falling faster than 0.1 m/s) or off the desk; the
+letter pressed through a wall, seam or the lip, or into the envelope by more than 0.7 mm; the envelope pushed more than
+5 cm or tilted more than 0.35 rad; the robot's arm, stand or parked hand touching the letter or the envelope; unstable
+physics; 6,000 controls. The folded letter is one rigid card (no paper bending); the flap is never sealed. Modelling
+simplification: the walls are 4 mm apart for the 2 mm rigid card, so the letter enters the closed mouth without parting
+the lip (the source's "part the mouth" step is not required). Oracle: 2,446 Sharpa rows on the arm (success at 2,346);
+the wave-2 Wuji solution is not packaged (Wuji selectable, no success).
 
 ### Board-book page turn (`book_page_turn`, T39)
 
-A free 6 x 6 in board book lies open at pages 4 / 5 on the desk (spine along world y through x = 0, y = 0; desk top
-z = 0.30 m): eight rigid 1.2 mm boards and two covers on passive binding hinges (friction 0.002 N m, damping
-0.006 N m s/rad) with a 200 N/m vertical binding compliance; leaf 2, the board to turn, rests on its binding springback
-stop at 0.07 rad (4 degrees). **Success**, in order: leaf 2 lifted (> 30 degrees), past vertical (> 90 degrees), then
-laid: > 170 degrees, in contact with the left stack, hinge speed <= 0.2 rad/s, every other board and cover within
-5 degrees of its start, no hand contact with the book, for 50 consecutive controls (1 s). **Immediate failure**, after
-every 2 ms substep: the spine moved more than 3 cm or rotated more than 10 degrees; another leaf moved more than 30
-degrees; a cover moved more than 30 degrees; a book part's centre of mass more than 2 mm below the desk top; unstable
-physics; 3,000 controls. Boards are rigid; no paper bending, tearing or damage is modelled. Oracle: 650 Sharpa rows
-(success at 391); Wuji: `solution/wuji/` (650 rows, success at 347).
+Wave 3: both Tianji Marvin arms (arm rig above; stand at the world origin facing +x on the floor z = -0.1 m), the left
+hand steadying the book and the right one turning. A free 6 x 6 in board book lies open at pages 4 / 5 on the desk in
+the T39 source pose (desk top z = 0.78 m, book centre (0.51, 0)): eight rigid 1.2 mm boards and two covers on passive
+binding hinges (friction 0.002 N m, damping 0.006 N m s/rad) with a 200 N/m vertical binding compliance; every board
+lies flat on its stack, 0.2 mm apart, so the hand separates the top board itself (wave 3 removed the earlier 4-degree
+springback stop of leaf 2). Layout change: the desk's two front legs are set back from x = 0.29 to 0.43 m (top
+unchanged) because they stood inside the stand's base plate. **Success**, in order: leaf 2 lifted (> 30 degrees), past
+vertical (> 90 degrees), then laid: > 170 degrees, in contact with the left stack, hinge speed <= 0.2 rad/s, every other
+board and cover within 5 degrees of its start, no hand contact with the book, for 50 consecutive controls (1 s).
+**Immediate failure**, after every 2 ms substep: the spine moved more than 3 cm or rotated more than 10 degrees; another
+leaf moved more than 30 degrees; a cover moved more than 30 degrees; a book part's centre of mass more than 2 mm below
+the desk top; unstable physics; 3,000 controls. Boards are rigid; no paper bending, tearing or damage is modelled; the
+turning fingertip lifts the leaf by friction on its 1.2 mm fore-edge face, pressing up to 4.5 mm into the soft fingertip
+contact. Oracle: 553 Sharpa rows on the arms (success at 453); the wave-2 Wuji solution belonged to the wrist stage and
+is not packaged (Wuji selectable, no success).
 
 ### Tray with two filled glasses (`tray_glass_carry`, T48)
 

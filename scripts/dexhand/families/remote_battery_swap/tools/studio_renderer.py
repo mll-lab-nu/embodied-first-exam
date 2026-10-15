@@ -130,8 +130,16 @@ def main():
     new_wrap = material("New AA wrap", (1, 1, 1), 0.15, 0.52, texture="new_aa_wrap.png")
     old_wrap = material("Old AA wrap", (1, 1, 1), 0.15, 0.52, texture="old_aa_wrap.png")
 
+    table_legs = material("Dark steel table legs", (0.16, 0.16, 0.17), 0.6, 0.45)
+    floor_mat = material("Studio floor", (0.80, 0.76, 0.71), 0, 0.8)
+
     def choose(record):
         name, owner = record["name"], record["owner"]
+        if owner == "arm":  # Tianji Marvin factory colours (pot_shelf_transfer film look)
+            rgba = record["rgba"][:3]
+            return material("Marvin " + "_".join(f"{c:.3f}" for c in rgba), rgba, 0.15, 0.29)
+        if name.startswith("table_leg"):
+            return table_legs
         if owner == "hand":
             return rubber if record["material"] == "green" or "fingertip" in name else shell
         if name == "table":
@@ -193,10 +201,8 @@ def main():
             obj = bpy.data.objects.new(name, mesh_cache[key].copy())  # own data: per-object material
             scene.collection.objects.link(obj)
         elif kind == 6:
-            if name == "table":
-                bpy.ops.mesh.primitive_plane_add(size=2)
-                obj = bpy.context.object
-                obj.data.transform(Matrix.Translation((0, 0, size[2])) @ Matrix.Diagonal((3.0, 3.0, 1, 1)))
+            if False:
+                pass
             else:
                 bpy.ops.mesh.primitive_cube_add(size=2)
                 obj = bpy.context.object
@@ -233,22 +239,26 @@ def main():
         obj.location = Vector(target) + Vector(offset)
         obj.rotation_euler = (Vector(target) - obj.location).to_track_quat("-Z", "Y").to_euler()
 
-    # T07 presentation lights (offsets from the light target), scaled for the wider hand framing
+    # studio floor under the robot stand and the table
+    bpy.ops.mesh.primitive_plane_add(size=12, location=(0, 0, payload.get("floor_z", 0.0)))
+    floor = bpy.context.object
+    floor.data.materials.append(floor_mat)
+    # T07 presentation lights (offsets from the light target), scaled up for the arm framing
     light_target = (0.02, 0.0, 0.33)
-    area("Large soft key", (-0.25, -0.3, 0.45), 22, 0.6, (1, 0.94, 0.85), light_target)
-    area("Soft fill", (0.24, 0.2, 0.32), 11, 0.5, (0.86, 0.94, 1), light_target)
-    area("Top sheen", (-0.1, 0.2, 0.4), 12, 0.4, (1, 1, 1), light_target)
-    area("Hand rim", (-0.35, 0.3, 0.55), 10, 0.6, (1, 0.97, 0.93), light_target)
+    area("Large soft key", (-0.25, -0.45, 0.65), 45, 1.0, (1, 0.94, 0.85), light_target)
+    area("Soft fill", (0.40, 0.25, 0.45), 22, 0.9, (0.86, 0.94, 1), light_target)
+    area("Top sheen", (-0.1, 0.2, 0.6), 22, 0.7, (1, 1, 1), light_target)
+    area("Robot rim", (-0.9, 0.5, 1.0), 60, 1.2, (1, 0.97, 0.93), light_target)
     cam_data = bpy.data.cameras.new("Studio camera")
     camera = bpy.data.objects.new("Studio camera", cam_data)
     scene.collection.objects.link(camera)
     scene.camera = camera
-    camera.location = (0.27, -0.50, 0.80)
-    target = Vector((0.015, -0.015, 0.345))
+    camera.location = (0.50, -0.58, 0.88)
+    target = Vector((-0.05, 0.0, 0.40))
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     cam_data.lens, cam_data.clip_start, cam_data.clip_end = 35, 0.005, 20
     cam_data.dof.use_dof = True
-    cam_data.dof.aperture_fstop = 11
+    cam_data.dof.aperture_fstop = 16
     cam_data.dof.focus_distance = (target - camera.location).length
 
     indices = list(range(0, len(payload["frames"]), args.frame_step))

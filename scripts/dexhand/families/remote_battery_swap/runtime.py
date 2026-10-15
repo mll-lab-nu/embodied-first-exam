@@ -13,6 +13,7 @@ import mujoco
 import numpy as np
 
 from checker import STAGES, Checker
+import scene as scene_module
 from scene import build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
@@ -35,7 +36,10 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        if self.config.get("rig", "floating") == "marvin":
+            self.robot = scene_module.arm_rig_id()
+        else:
+            self.robot = self.hand_info["robot"] + "-floating"
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu

@@ -15,7 +15,8 @@ Fail-fast (checked after every physics substep; the first failure is permanent a
   the envelope by more than ``max_letter_envelope_penetration_m``, letter/envelope below the desk top, letter/envelope
   touching the floor, letter/envelope dropped (touching nothing while
   its centre of mass falls faster than ``unsupported_fall_speed_m_s``), letter/envelope leaving the desk workspace,
-  envelope displaced more than ``envelope_max_shift_m`` or tilted more than ``envelope_max_tilt_rad``, unstable physics.
+  envelope displaced more than ``envelope_max_shift_m`` or tilted more than ``envelope_max_tilt_rad``, the robot's arm,
+  stand or parked left hand touching the letter or the envelope, unstable physics.
 """
 
 from __future__ import annotations
@@ -72,6 +73,16 @@ class Checker:
         self.is_envelope = kind == "envelope"
         self.is_floor = np.zeros(n, dtype=bool)
         self.is_floor[model.geom("floor").id] = True
+        # The robot (stand, arm links, the parked left hand): any contact with the letter or envelope fails.
+        robot_bodies = set()
+        for bid in range(1, model.nbody):
+            p = bid
+            while p:
+                if model.body(p).name == "base_link":
+                    robot_bodies.add(bid)
+                    break
+                p = int(model.body_parentid[p])
+        self.is_robot = np.array([int(model.geom_bodyid[g]) in robot_bodies for g in range(n)]) & ~self.is_hand
 
     # ------------------------------------------------------------------ geometry
     def letter_in_envelope(self, data):
@@ -192,6 +203,10 @@ class Checker:
                 c.dist < -self.max_penetration
             ):
                 return "letter_envelope_penetration", "letter"
+            if (self.is_robot[g1] or self.is_robot[g2]) and (
+                self.is_letter[g1] or self.is_letter[g2] or self.is_envelope[g1] or self.is_envelope[g2]
+            ):
+                return "robot_arm_contact", "letter" if (self.is_letter[g1] or self.is_letter[g2]) else "envelope"
             touching["letter"] |= bool(self.is_letter[g1] or self.is_letter[g2])
             touching["envelope"] |= bool(self.is_envelope[g1] or self.is_envelope[g2])
         through = self.through_wall(data)

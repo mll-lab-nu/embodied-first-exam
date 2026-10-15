@@ -3,27 +3,60 @@
   "id": "jar_lid_open",
   "task": "task.json",
   "runtime": {
-    "files": ["runtime.py", "replay.py", "scene.py", "checker.py", "task.json"],
-    "dirs": ["assets"],
-    "shared": []
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": [
+      "arm_rig.py"
+    ]
   },
-  "hands": ["sharpa", "wuji"],
-  "action_dim": {"sharpa": 28, "wuji": 26},
-  "robot": "sharpa-wave-floating",
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 3000,
-  "instruction": {"privileged": "instruction/privileged.md", "standard": "instruction/standard.md"},
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
   "readme": "README.task.md",
-  "solution": {"privileged": "solution/trajectory.npz", "standard": "solution/trajectory.npz"},
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/ replays the validated Sharpa Wave witness (825 controls, success after 675); it passes two fresh-process replays with identical state hashes, float32 rounding, and the Harbor oracle in both modes (standard: the same rows submitted through the public client).",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave episode on the Marvin right arm (1,159 controls, success after 1,009); it passes two fresh-process replays with identical state hashes, float32 rounding, and the Harbor oracle in both modes (standard: the same rows submitted through the public client).",
     "expert_time_estimate_hours": 3.0,
-    "keywords": ["twist-off-lid", "lug-thread", "unscrewing", "pick-and-place", "contact-mechanism"]
+    "keywords": [
+      "twist-off-lid",
+      "lug-thread",
+      "unscrewing",
+      "pick-and-place",
+      "contact-mechanism"
+    ]
   },
   "control_hz": 50,
-  "timeouts": {"verifier_privileged_sec": 1200, "verifier_standard_sec": 600, "collect_sec": 1800,
-               "replay_sec": 600, "video_sec": 600},
+  "timeouts": {
+    "verifier_privileged_sec": 1200,
+    "verifier_standard_sec": 600,
+    "collect_sec": 1800,
+    "replay_sec": 600,
+    "video_sec": 600
+  },
   "notes": {
-    "layout": "Both hands hang palm-down from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; wrist_rz turns the hand about the vertical through the stage origin, which sits about 4 cm below the palm."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
   }
 }

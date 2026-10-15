@@ -1,6 +1,9 @@
-"""Authoring evidence: negative trajectories (nop, truncations, partial push, knock-offs, drop-then-oracle).
+"""Authoring evidence (not shipped): negative trajectories on the Marvin arm rig.
 
 python tools/make_negatives.py --out-dir DIR    # writes DIR/<case>.npz; grade each with replay.py in a fresh process
+
+Cartesian negatives (knock-offs) are authored on the floating wrist stage (tools/floating_task.json, demo.Controller)
+and moved onto the arm with the same hand-pose tracking as the oracle (tools/arm_port.py).
 """
 
 from __future__ import annotations
@@ -12,17 +15,21 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+HERE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE / "tools"))
+sys.path.append(str(HERE.parents[1] / "shared"))
 import demo  # noqa: E402
 import replay  # noqa: E402
 from runtime import Session  # noqa: E402
+import arm_port  # noqa: E402
 
-HERE = Path(__file__).resolve().parents[1]
+FLOATING = json.loads((HERE / "tools/floating_task.json").read_text())
 
 
-def knock_off(kind):
-    """Press the letter (or the envelope) and shove it off: letter off the desk edge / envelope pushed away."""
-    s = Session()
+def knock_off_floating(kind, shove=(0.08, 0.0), depth=0.0015, press_offset=(0.03, -0.06)):
+    """Press the letter (or the envelope) and shove it off, on the floating stage: the stage rows."""
+    s = Session(config=FLOATING)
     posture = np.asarray(s.config["initial_targets"]["sharpa"][6:])
     c = demo.Controller(s, posture, 0.55)
     top = s.config["desk_top_z"]
@@ -33,15 +40,20 @@ def knock_off(kind):
         c.run(c.pose(press, 0.0, surface - 0.0015), 60, "press")
         goal = press + np.array([0.0, -0.33])
         c.run(c.pose(goal, 0.0, surface - 0.0015), 200, "shove the letter off the desk")
-    else:  # envelope shoved more than 5 cm
+    else:  # envelope shoved more than 5 cm (towards the robot: the arm reaches the mouth side, not the far side)
         ep, _, _ = c.envelope()
-        press = ep[:2] + np.array([0.0, -0.06])
+        press = ep[:2] + np.asarray(press_offset)
         surface = top + 0.0064
         c.run(c.pose(press, 0.0, surface + 0.06), 60, "approach")
-        c.run(c.pose(press, 0.0, surface - 0.0015), 60, "press the envelope")
-        c.run(c.pose(press + np.array([-0.08, 0.0]), 0.0, surface - 0.0015), 150, "shove the envelope")
+        c.run(c.pose(press, 0.0, surface - depth), 60, "press the envelope")
+        c.run(c.pose(press + np.asarray(shove), 0.0, surface - depth), 150, "shove the envelope")
     c.hold(60, "hold")
-    return np.asarray(s.actions), s.status()
+    return np.asarray(s.actions)
+
+
+def knock_off(kind, **kw):
+    rows, status, _ = arm_port.track_floating(knock_off_floating(kind, **kw), slow=2, hold=30)
+    return rows, status
 
 
 def main():
@@ -59,27 +71,19 @@ def main():
     cases["truncated_before_stage1"] = oracle[: stage_steps["letter_at_mouth"] - 1]
     cases["truncated_before_stage2"] = oracle[: stage_steps["letter_inserted"] - 1]
     cases["truncated_before_release"] = oracle[: stage_steps["released_hold"] - 1]
-    # Partial insertion: stop the final edge push when about 85 % of the letter is inside (later push rows replaced by
-    # holding that target), then the oracle's withdrawal and waiting rows.
-    s.reset()
-    cut = None
-    for i, row in enumerate(oracle):
-        f = s.step(row)
-        if s.stage >= 1 and f["inserted_fraction"] >= 0.85:
-            cut = i + 1
-            break
-    held = oracle[cut - 1]
-    lift = [held + np.r_[0.03 * r, 0.0, 0.03 * r, np.zeros(len(held) - 3)] for r in np.linspace(0, 1, 51)[1:]]
-    away = [lift[-1] + np.r_[0.07 * r, 0.0, 0.09 * r, np.zeros(len(held) - 3)] for r in np.linspace(0, 1, 61)[1:]]
-    partial = np.vstack([oracle[:cut], np.repeat(held[None], 30, axis=0), lift, away, np.repeat(away[-1][None], 150, axis=0)])
-    cases["partial_push_then_withdraw"] = partial
-    rows, status = knock_off("letter_off_desk")
-    cases["letter_knocked_off_desk"] = rows
-    knocked = rows
+    cases["one_row_short_of_the_hold"] = oracle[: st["steps"] - 1]
+    # Released too early: the oracle until the letter is at the mouth, then the hand rises straight up and waits.
+    lay_right = slice(7, 14)
+    held = oracle[stage_steps["letter_at_mouth"]].copy()
+    up = held.copy()
+    up[8] -= 0.25  # right shoulder roll: lift the hand away
+    lift = np.linspace(held, up, 80)
+    cases["stage1_only_then_release"] = np.vstack([oracle[: stage_steps["letter_at_mouth"] + 1], lift,
+                                                   np.repeat(up[None], 200, axis=0)])
     rows, status = knock_off("envelope_shoved")
     cases["envelope_shoved"] = rows
-    # Drop, then resume the oracle: the failure is permanent.
-    cases["knock_off_then_oracle"] = np.vstack([knocked, oracle])
+    # Shove, then resume the oracle: the failure is permanent.
+    cases["envelope_shoved_then_oracle"] = np.vstack([rows, oracle])
     for name, rows in cases.items():
         s.save_trajectory(rows, out / f"{name}.npz")
     (out / "cases.json").write_text(json.dumps({k: len(v) for k, v in cases.items()}, indent=1) + "\n")

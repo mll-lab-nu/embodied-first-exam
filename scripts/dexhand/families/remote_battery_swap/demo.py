@@ -1,7 +1,11 @@
-"""Authoring controller (Sharpa Wave): closed-loop scripted battery swap, recorded as open-loop actuator rows.
+"""Authoring controller (Sharpa Wave on the Marvin right arm): closed-loop scripted battery swap, recorded as
+open-loop actuator rows.
 
-The controller reads simulator state only to plan its next motor targets (inverse kinematics of fingertip
-positions with collision margins); the recorded rows are plain actuator targets that replay without it.
+The controller reads simulator state only to plan its next motor targets: fingertip inverse kinematics over the
+right arm's seven joints plus the finger joints (collision margins against the remote, tray, cells and table), and
+straight-line hand-root motions between key postures (damped-least-squares arm IK every control). Each row adds the
+gravity/bias torque of every actuated joint divided by its servo gain (a feed-forward on plain position targets) and
+a proportional finger boost. The recorded rows are plain actuator targets that replay without the controller.
 """
 
 from __future__ import annotations
@@ -10,21 +14,26 @@ import argparse
 import json
 import os
 from pathlib import Path
+import sys
 import time
 
 os.environ.setdefault("MUJOCO_GL", "egl")
 import mujoco
 import numpy as np
 from scipy.optimize import least_squares
-from scipy.spatial.transform import Rotation
+from scipy.spatial.transform import Rotation, Slerp
 
 from runtime import Session
 
+HERE = Path(__file__).resolve().parent
+sys.path.append(str(HERE.parents[1] / "shared"))
+import arm_ik  # noqa: E402  (authoring-only helper)
+import arm_rig  # noqa: E402
+
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
-# Sharpa actuator index ranges (wrist 0..5).
-ACT = {"thumb": list(range(6, 11)), "index": list(range(11, 15)), "middle": list(range(15, 19)),
-       "ring": list(range(19, 23)), "pinky": list(range(23, 28))}
+FINGER_COUNTS = {"thumb": 5, "index": 4, "middle": 4, "ring": 4, "pinky": 5}
 CURLED = {"middle": [1.3, 0.0, 1.5, 0.9], "ring": [1.3, 0.0, 1.5, 0.9], "pinky": [0.1, 1.3, 0.0, 1.5, 0.9]}
+PITCH = 0.45  # fingers pitched down from horizontal (natural for an arm reaching forward and down to a table)
 
 
 def hand_rotation(fingers_dir, palm_dir):
@@ -36,6 +45,13 @@ def hand_rotation(fingers_dir, palm_dir):
     x /= np.linalg.norm(x)
     y = np.cross(z, x)
     return np.column_stack([x, y, z])
+
+
+def yaw_rotation(yaw, pitch=PITCH):
+    """Palm down, fingers along heading ``yaw`` pitched down by ``pitch``, thumb to the left of the fingers."""
+    f = np.array([np.cos(yaw) * np.cos(pitch), np.sin(yaw) * np.cos(pitch), -np.sin(pitch)])
+    palm = np.array([-np.cos(yaw) * np.sin(pitch), -np.sin(yaw) * np.sin(pitch), -np.cos(pitch)])
+    return hand_rotation(f, palm)
 
 
 class Controller:
@@ -52,22 +68,27 @@ class Controller:
         self.lo, self.hi = m.actuator_ctrlrange.T.copy()
         self.target = session.hold_action().copy()
         self.phases = []
-        self.tip = self.find_tips()
+        lay = arm_rig.layout(m)
+        self.WRIST = list(range(lay["arm"]["right"].start, lay["arm"]["right"].stop))
+        f0 = lay["fingers"]["right"].start
+        self.ACT, k = {}, f0
+        for f in FINGERS:
+            self.ACT[f] = list(range(k, k + FINGER_COUNTS[f]))
+            k += FINGER_COUNTS[f]
+        self.release_slice = slice(f0, f0 + 9)  # thumb + index
+        self.finger_cols = np.arange(lay["fingers"]["left"].start, lay["fingers"]["right"].stop)
+        self.tip = {f: m.geom(f"right_{f}_fingertip_collision").id for f in FINGERS}
         self.hand_body = m.body("right_hand_C_MC").id
+        right = arm_rig.hand_body_ids(m, "right")
+        self.hand_geoms = [g for g in range(m.ngeom) if int(m.geom_bodyid[g]) in right and m.geom_contype[g]]
         own = session.checker.geom_owner
-        self.hand_geoms = [g for g in range(m.ngeom) if own[g] == "hand" and m.geom_contype[g]]
         self.obstacle = {}
         for g in range(m.ngeom):
             if own[g] in ("remote", "tray", "old_cell", "new_cell") and (m.geom_contype[g] or m.geom_conaffinity[g]):
                 self.obstacle.setdefault(own[g], []).append(g)
         self.obstacle["table"] = [m.geom("table").id]
-        # wrist mount: the hand root frame relative to the wrist body frame
-        self.mount = np.empty(9)
-        mujoco.mju_quat2Mat(self.mount, m.body_quat[self.hand_body])
-        self.mount = self.mount.reshape(3, 3)
-
-    def find_tips(self):
-        return {f: self.m.geom(f"right_{f}_fingertip_collision").id for f in FINGERS}
+        self.ik = arm_ik.ArmIK(m, "right", body="right_hand_C_MC")
+        self.max_ik_err = (0.0, 0.0)
 
     # ------------------------------------------------------------------------------------------ kinematics
     def fk(self, q):
@@ -78,20 +99,57 @@ class Controller:
         mujoco.mj_comPos(self.m, d)
         return d
 
-    def wrist_euler_for(self, R_hand):
-        R_wrist = R_hand @ self.mount.T
-        return Rotation.from_matrix(R_wrist).as_euler("XYZ")
+    def pose(self, q):
+        d = self.fk(q)
+        return d.xpos[self.hand_body].copy(), d.xmat[self.hand_body].reshape(3, 3).copy()
+
+    def at_pose(self, q, pos=None, R=None, dp=None):
+        """``q`` with the arm joints re-solved so the hand root reaches ``pos`` (or its pose + ``dp``) and ``R``."""
+        p0, R0 = self.pose(q)
+        pos = (p0 if pos is None else np.asarray(pos, float)) + (0 if dp is None else np.asarray(dp, float))
+        R = R0 if R is None else R
+        out = np.asarray(q, float).copy()
+        best = None
+        for seed in (out[self.WRIST], self.target[self.WRIST]):
+            arm, ep, er = self.ik.solve(pos, R, q0=seed, qpos=self.d.qpos, iters=300)
+            if best is None or ep + 0.1 * er < best[1] + 0.1 * best[2]:
+                best = (arm, ep, er)
+        arm, ep, er = best
+        if ep > 0.001 or er > 0.01:
+            arm2, ep2, er2 = self.arm_lsq(pos, R, out)
+            if ep2 + 0.1 * er2 < ep + 0.1 * er:
+                arm, ep, er = arm2, ep2, er2
+        if ep > 0.003 or er > 0.03:
+            self.log(f"  warning: arm IK error {ep * 1000:.1f} mm / {er:.3f} rad")
+        out[self.WRIST] = arm
+        return out
+
+    def arm_lsq(self, pos, R, q):
+        """Bounded least-squares arm IK for a hand-root pose (more robust than DLS far from the seed)."""
+        q = np.asarray(q, float).copy()
+        lo, hi = self.lo[self.WRIST] + 0.02, self.hi[self.WRIST] - 0.02
+
+        def residual(values):
+            q[self.WRIST] = values
+            d = self.fk(q)
+            return np.concatenate([(d.xpos[self.hand_body] - pos) * 100,
+                                   (d.xmat[self.hand_body].reshape(3, 3) - R).ravel() * 0.5,
+                                   (values - x0) * 0.002])
+
+        x0 = np.clip(q[self.WRIST], lo + 1e-6, hi - 1e-6)
+        fit = least_squares(residual, x0, bounds=(lo, hi), max_nfev=400)
+        p, Rn = self.pose(np.r_[q[: self.WRIST[0]], fit.x, q[self.WRIST[-1] + 1:]])
+        return fit.x, float(np.linalg.norm(p - pos)), float(np.linalg.norm(arm_ik.rot_error(R, Rn)))
 
     def solve(self, tips, seed, variable, R_hand=None, rot_weight=0.5, avoid=(), avoid_margin=0.002, allow=(),
-              reg=0.01, max_nfev=200, lo_override=None, pad=False, tip_axis=None, axis_weight=2.0):
-        """Least-squares IK: ``tips`` = {finger: world point for the fingertip capsule centre}."""
+              reg=0.01, max_nfev=200, pad=False, tip_axis=None, axis_weight=2.0):
+        """Least-squares IK: ``tips`` = {finger: world point for the fingertip capsule centre (or pad centre)}."""
         m = self.m
         q = np.asarray(seed, float).copy()
         variable = np.asarray(variable)
         lo, hi = self.lo[variable].copy(), self.hi[variable].copy()
-        if lo_override:
-            for k, v in lo_override.items():
-                lo[list(variable).index(k)] = v
+        lo[np.isin(variable, self.WRIST)] += 0.02
+        hi[np.isin(variable, self.WRIST)] -= 0.02
         initial = q[variable].copy()
         obstacles = [g for name in avoid for g in self.obstacle[name]]
         checked = [g for g in self.hand_geoms if not any(m.geom(g).name.startswith(f"right_{f}_fingertip") for f in allow)]
@@ -131,31 +189,48 @@ class Controller:
 
     # ------------------------------------------------------------------------------------------ execution
     default_boost = 2.0
-    release_slice = slice(6, 15)  # thumb + index actuators (Sharpa)
 
-    def execute(self, target, count, phase, boost=None):
+    def execute(self, target, count, phase, boost=None, cartesian=True):
+        """Blend to ``target`` over ``count`` controls: the hand root moves on a straight line (slerp rotation),
+        the arm joints come from IK at every control, the other columns blend linearly (smoothstep timing)."""
         boost = self.default_boost if boost is None else boost
         s = self.s
         start = self.target.copy()
-        target = np.asarray(target, float)
+        target = np.asarray(target, float).copy()
+        if cartesian:
+            p0, R0 = self.pose(start)
+            p1, R1 = self.pose(target)
+            slerp = Slerp([0, 1], Rotation.from_matrix([R0, R1]))
+        arm = start[self.WRIST].copy()
         for ratio in np.linspace(0, 1, count + 1)[1:]:
             if s.done:
                 break
             blend = ratio * ratio * (3 - 2 * ratio)
-            self.target = start + (target - start) * blend
+            row = start + (target - start) * blend
+            if cartesian:
+                p = p0 + (p1 - p0) * blend
+                R = slerp([blend]).as_matrix()[0]
+                arm, ep, er = self.ik.solve(p, R, q0=arm, qpos=self.d.qpos, iters=60)
+                if ep > 0.002 or er > 0.02:
+                    arm, ep, er = self.arm_lsq(p, R, row)
+                self.max_ik_err = (max(self.max_ik_err[0], ep), max(self.max_ik_err[1], er))
+                row[self.WRIST] = arm
+            self.target = row
             action = self.target + self.d.qfrc_bias[s.dofs] / self.gains
-            action[6:] += boost * (self.target[6:] - self.d.qpos[s.qadr[6:]])
+            cols = self.finger_cols
+            action[cols] += boost * (self.target[cols] - self.d.qpos[s.qadr[cols]])
             # stay 1e-5 inside the native bounds so float32-rounded rows stay valid
             action = np.clip(action, self.lo + 1e-5, self.hi - 1e-5)
             s.step(action)
             self.phases.append(phase)
         f = s.features()
         self.log(f"[{s.steps:5d}] {phase:32s} stage={f['stage']} cover={f['cover_slide_m']:.4f} "
-                 f"hand={f['hand_contacts']} fail={f['failure']} remote_disp={f['remote_displacement_m']:.4f}")
+                 f"tab={f['tab_depth_m'] * 1000:.2f}mm hand={f['hand_contacts']} fail={f['failure']} "
+                 f"remote_disp={f['remote_displacement_m']:.4f}")
         return f
 
     def hold(self, count, phase, boost=None):
-        return self.execute(self.target.copy(), count, phase, boost)
+        return self.execute(self.target.copy(), count, phase, boost, cartesian=False)
 
     def body_pos(self, name):
         return self.d.xpos[self.m.body(name).id].copy()
@@ -163,128 +238,155 @@ class Controller:
     def body_axis(self, name, k=2):
         return self.d.xmat[self.m.body(name).id].reshape(3, 3)[:, k].copy()
 
+    def remote_yaw(self):
+        Rr = self.d.xmat[self.m.body("remote").id].reshape(3, 3)
+        return float(np.arctan2(Rr[1, 0], Rr[0, 0]))
+
 
 # ---------------------------------------------------------------------------------------------- task phases
-R_DOWN_X = hand_rotation((1, 0, 0), (0, 0, -1))  # palm down, fingers along +x, thumb toward +y
 TIP_R = 0.008
 
 
-def base_seed(c, R):
-    seed = c.target.copy()
-    seed[3:6] = c.wrist_euler_for(R)
-    seed[ACT["thumb"]] = [0.3, 0.0, 0.3, 0.0, 0.5]
-    seed[ACT["index"]] = [1.2, 0.0, 1.0, 0.6]
+def base_seed(c, q=None):
+    seed = (c.target if q is None else q).copy()
+    seed[c.ACT["thumb"]] = [0.3, 0.0, 0.3, 0.0, 0.5]
+    seed[c.ACT["index"]] = [1.2, 0.0, 1.0, 0.6]
     for f, v in CURLED.items():
-        seed[ACT[f]] = v
+        seed[c.ACT[f]] = v
     return seed
 
 
-def phase_open_cover(c):
-    s = c.s
-    R = R_DOWN_X
-    seed = base_seed(c, R)
-    remote = c.body_pos("remote")
-    ridge = remote + np.array([-0.025 + s.config["cover_ridge_local_x"], 0, 0.014 + 0.0035])
-    cover_top = remote[2] + 0.016
-    pre = np.array([ridge[0] + 0.0015 + TIP_R + 0.003, remote[1], cover_top + TIP_R + 0.012])
-    q_pre, err, _ = c.solve({"index": pre}, seed, list(range(6)) + ACT["index"], R_hand=R, avoid=("remote",),
-                            allow=("index",))
-    down = pre.copy()
-    down[0] = ridge[0] + 0.0015 + TIP_R + 0.0005
-    down[2] = cover_top + TIP_R - 0.0015
-    q_down, err, _ = c.solve({"index": down}, q_pre, list(range(6)) + ACT["index"], R_hand=R, allow=("index",))
-    above = q_pre.copy()
-    above[2] += 0.10
-    c.execute(above, 60, "approach above the door")
-    c.execute(q_pre, 50, "finger behind the door ridge")
-    c.execute(q_down, 40, "press on the door")
-    push = q_down.copy()
-    push[0] -= 0.080
-    c.execute(push, 150, "slide the door open")
+TAB_LOCAL = np.array([-0.06, 0.0, 0.019])  # thumb-tab top centre in the remote frame with the door shut
+
+
+def tab_point(c, opened):
+    """World position of the thumb-tab top centre with the door ``opened`` metres open."""
+    Rr = c.d.xmat[c.m.body("remote").id].reshape(3, 3)
+    return c.body_pos("remote") + Rr @ (TAB_LOCAL + np.array([-opened, 0, 0]))
+
+
+def tab_depth(c):
+    return float(c.d.qpos[c.m.jnt_qposadr[c.m.joint("tab_depth").id]])
+
+
+def press_tab(c, q_pre, steps=40, step_dz=0.0006, want=0.0036, max_extra=0.008, phase="press the tab"):
+    """Lower the pressing finger (hand root straight down) until the latch tab is ``want`` deep (closed loop)."""
+    q = q_pre.copy()
+    c.execute(q, steps, phase)
+    extra = 0.0
+    while tab_depth(c) < want and extra < max_extra and not c.s.done:
+        q = c.at_pose(q, dp=(0, 0, -step_dz))
+        extra += step_dz
+        c.execute(q, 4, phase)
+    c.hold(6, phase)
+    c.log(f"  tab depth {tab_depth(c) * 1000:.2f} mm after {extra * 1000:.1f} mm extra")
+    return q
+
+
+def door_press_postures(c, opened, seed, press=0.0045, pitch=0.75):
+    """Index pad over / pressed into the latch tab (fingers pitched down toward +x, palm down)."""
+    tab = tab_point(c, opened)
+    R = yaw_rotation(c.remote_yaw(), pitch)
+    var = c.WRIST + c.ACT["index"]
+    pre = tab + np.array([0.0, 0.0, 0.012 + TIP_R])
+    down = tab + np.array([0.0, 0.0, -press + TIP_R])
+    axis = {"index": np.array([0.35, 0.0, -0.94]) / np.linalg.norm([0.35, 0.0, -0.94])}
+    q_pre, e1, _ = c.solve({"index": pre}, seed, var, R_hand=R, rot_weight=0.2, avoid=("remote",), allow=("index",),
+                           pad=True, tip_axis=axis)
+    q_down, e2, _ = c.solve({"index": down}, q_pre, var, R_hand=R, rot_weight=0.2, allow=("index",), pad=True,
+                            tip_axis=axis)
+    c.log(f"door press ik pre={e1} down={e2}")
+    return q_pre, q_down
+
+
+def slide_posture(c, q, opened_to, pitch=0.75):
+    """The pressing posture moved along with the door to ``opened_to`` (fingertip IK; the index pad keeps its depth)."""
+    d = c.fk(q)
+    pad = c.tip_point(d, "index", True)
+    tab_now = tab_point(c, float(c.d.qpos[c.s.checker.cover_qadr]))
+    target = tab_point(c, opened_to) + (pad - tab_now)
+    axis = {"index": np.array([0.35, 0.0, -0.94]) / np.linalg.norm([0.35, 0.0, -0.94])}
+    q2, e, _ = c.solve({"index": target}, q, c.WRIST + c.ACT["index"], R_hand=yaw_rotation(c.remote_yaw(), pitch),
+                       rot_weight=0.2, allow=("index",), pad=True, tip_axis=axis)
+    c.log(f"slide posture ik {e}")
+    return q2
+
+
+def phase_open_cover(c, travel=0.080):
+    seed = base_seed(c)
+    q_pre, q_down = door_press_postures(c, 0.0, seed)
+    above = c.at_pose(q_pre, dp=(0, 0, 0.08))
+    c.execute(above, 70, "approach above the door")
+    c.execute(q_pre, 50, "finger over the latch tab")
+    q = press_tab(c, q_down, phase="press the latch tab")
+    push = slide_posture(c, q, travel)
+    c.execute(push, 160, "slide the door open")
     c.hold(15, "door open")
-    lift = push.copy()
-    lift[2] += 0.06
+    lift = c.at_pose(push, dp=(0, 0, 0.06))
     c.execute(lift, 40, "lift off the door")
     return lift
 
 
-def pinch_targets(center, across, clearance, dz, pad=False):
-    """Thumb on the +across side, index on the -across side of a cell centre."""
+def pinch_targets(center, across, clearance, dz):
+    """Pad centres: thumb on the +across side, index on the -across side of a cell centre."""
     across = np.asarray(across, float)
     up = np.array([0, 0, dz])
-    if pad:
-        return {"thumb": center + (0.007 + 0.00943 + clearance) * across + up,
-                "index": center - (0.007 + 0.00806 + clearance) * across + up}
-    off = (0.007 + TIP_R + clearance) * across
-    return {"thumb": center + off + up, "index": center - off + up}
+    return {"thumb": center + (0.007 + 0.00943 + clearance) * across + up,
+            "index": center - (0.007 + 0.00806 + clearance) * across + up}
 
 
-def pad_pinch(c, name, yaw, dz, open_clear, squeeze, tilt, avoid, seed):
+def pad_pinch(c, name, yaw, dz, open_clear, squeeze, tilt, avoid, seed, pitch=PITCH, rot_weight=0.4):
     """Thumb/index pad pinch across a lying cell: open and closed postures (IK, collision margins)."""
-    var = list(range(6)) + ACT["thumb"] + ACT["index"]
+    var = c.WRIST + c.ACT["thumb"] + c.ACT["index"]
     cell = c.body_pos(name)
-    R = yaw_rotation(yaw)
-    across = R[:, 1]
+    R = yaw_rotation(yaw, pitch)
+    across = np.array([-np.sin(yaw), np.cos(yaw), 0.0])
     down = np.array([0, 0, -1.0])
     # fingertip capsules nearly vertical, tilted slightly toward the cell: pads meet it just above its equator
     axes = {"thumb": down * np.cos(tilt) - across * np.sin(tilt), "index": down * np.cos(tilt) + across * np.sin(tilt)}
-    seed = seed.copy()
-    seed[3:6] = c.wrist_euler_for(R)
-    q_open, e1, _ = c.solve(pinch_targets(cell, across, open_clear, dz, pad=True), seed, var, R_hand=R,
-                            rot_weight=0.1, avoid=tuple(avoid) + (name,), avoid_margin=0.0008, pad=True, tip_axis=axes)
-    q_close, e2, _ = c.solve(pinch_targets(cell, across, squeeze, dz, pad=True), q_open, var, R_hand=R,
-                             rot_weight=0.1, avoid=tuple(avoid), avoid_margin=0.0003, allow=("thumb", "index"),
-                             pad=True, tip_axis=axes)
-    c.log(f"{name} pinch ik open={e1} close={e2}")
+    q_open, e1, _ = c.solve(pinch_targets(cell, across, open_clear, dz), seed, var, R_hand=R, rot_weight=rot_weight,
+                            avoid=tuple(avoid) + (name,), avoid_margin=0.0008, pad=True, tip_axis=axes)
+    q_close, e2, _ = c.solve(pinch_targets(cell, across, squeeze, dz), q_open, var, R_hand=R, rot_weight=rot_weight,
+                             avoid=tuple(avoid), avoid_margin=0.0003, allow=("thumb", "index"), pad=True,
+                             tip_axis=axes)
+    c.log(f"{name} pinch ik open={e1} close={e2} rot dev {np.linalg.norm(c.pose(q_close)[1] - R):.3f}")
     return q_open, q_close
 
 
-def phase_old_to_tray(c, start, release_clearance=0.004):
-    s = c.s
-    remote_yaw = float(np.arctan2(c.d.xmat[c.m.body("remote").id][3], c.d.xmat[c.m.body("remote").id][0]))
-    q_open, q_close = pad_pinch(c, "old_cell", remote_yaw, 0.0025, 0.004, -0.004, 0.12, ("remote",), start)
-    above = q_open.copy()
-    above[2] += 0.06
-    c.execute(above, 50, "over the old cell")
+def phase_old_to_tray(c, start, release_clearance=0.004, squeeze=-0.006, lower_steps=110, pitch=1.2, rot_weight=1.5):
+    q_open, q_close = pad_pinch(c, "old_cell", c.remote_yaw(), 0.0025, 0.004, squeeze, 0.12, ("remote",),
+                                base_seed(c, start), pitch=pitch, rot_weight=rot_weight)
+    above = c.at_pose(q_open, dp=(0, 0, 0.06))
+    c.execute(above, 60, "over the old cell")
     c.execute(q_open, 60, "fingers beside the old cell")
     c.execute(q_close, 40, "pinch the old cell")
     c.hold(30, "stabilize the pinch")
-    up = q_close.copy()
-    up[2] += 0.07
+    up = c.at_pose(q_close, dp=(0, 0, 0.07))
     c.execute(up, 60, "lift the old cell")
     tray = c.body_pos("tray")
     floor_top = tray[2] + 0.003
-    carry = up.copy()
-    carry[:2] += tray[:2] - c.body_pos("old_cell")[:2]
-    c.execute(carry, 110, "carry to the tray")
+    d = tray - c.body_pos("old_cell")
+    carry = c.at_pose(up, dp=(d[0], d[1], 0.0))
+    c.execute(carry, 120, "carry to the tray")
     c.hold(20, "settle over the tray")
-    carry[:2] += tray[:2] - c.body_pos("old_cell")[:2]
-    carry[2] += (floor_top + 0.007 + release_clearance) - c.body_pos("old_cell")[2]
-    c.execute(carry, 70, "lower into the tray")
+    d = tray - c.body_pos("old_cell")
+    carry = c.at_pose(carry, dp=(d[0], d[1], (floor_top + 0.007 + release_clearance) - c.body_pos("old_cell")[2]))
+    c.execute(carry, lower_steps, "lower into the tray")
     c.hold(20, "settle in the tray")
     release = carry.copy()
-    release[6:15] = q_open[6:15]
+    release[c.release_slice] = q_open[c.release_slice]
     c.execute(release, 40, "open the pinch")
     c.hold(30, "let the old cell rest")
-    away = release.copy()
-    away[2] += 0.08
+    away = c.at_pose(release, dp=(0, 0, 0.08))
     c.execute(away, 50, "withdraw from the tray")
     return away
 
 
-def yaw_rotation(yaw):
-    return hand_rotation((np.cos(yaw), np.sin(yaw), 0), (0, 0, -1))
-
-
 def rotate_about(c, q, center, delta):
-    """Wrist targets that turn the whole hand by ``delta`` (rad) about a vertical axis through ``center``."""
-    q = q.copy()
+    """``q`` with the whole hand turned by ``delta`` (rad) about a vertical axis through ``center``."""
+    p, R = c.pose(q)
     Rz = Rotation.from_euler("z", delta).as_matrix()
-    q[:3] = center + Rz @ (q[:3] - center)
-    Rw = Rotation.from_euler("XYZ", q[3:6]).as_matrix()
-    e = Rotation.from_matrix(Rz @ Rw).as_euler("XYZ")
-    q[3:6] = q[3:6] + np.angle(np.exp(1j * (e - q[3:6])))
-    return q
+    return c.at_pose(q, pos=center + Rz @ (p - center), R=Rz @ R)
 
 
 def cell_yaw(c, name):
@@ -292,82 +394,73 @@ def cell_yaw(c, name):
     return float(np.arctan2(axis[1], axis[0]))
 
 
-def phase_new_pick(c, start, dz=0.003, squeeze=-0.003, tilt=0.3):
+def wrap(a):
+    return float(np.angle(np.exp(1j * a)))
+
+
+def phase_new_pick(c, start, dz=0.003, squeeze=-0.003, tilt=0.3, pitch=1.2, rot_weight=1.5):
     yaw = cell_yaw(c, "new_cell")
-    q_open, q_close = pad_pinch(c, "new_cell", yaw, dz, 0.006, squeeze, tilt, ("table",), start)
-    above = q_open.copy()
-    above[2] += 0.07
+    q_open, q_close = pad_pinch(c, "new_cell", yaw, dz, 0.006, squeeze, tilt, ("table",), base_seed(c, start),
+                                pitch=pitch, rot_weight=rot_weight)
+    above = c.at_pose(q_open, dp=(0, 0, 0.07))
     c.execute(above, 90, "over the new cell")
     c.execute(q_open, 60, "fingers beside the new cell")
     c.execute(q_close, 40, "pinch the new cell")
     c.hold(30, "stabilize the pinch")
-    up = q_close.copy()
-    up[2] += 0.07
+    up = c.at_pose(q_close, dp=(0, 0, 0.07))
     c.execute(up, 60, "lift the new cell")
     return up, q_open
 
 
-def phase_new_seat(c, up, q_open, yaw_steps=120, carry_steps=(60, 25, 25), lower=((0.012, 50), (0.0, 50))):
+def phase_new_seat(c, up, q_open, yaw_steps=120, carry_steps=(70, 25, 25), lower=((0.012, 50), (0.0, 50)),
+                   release_dz=0.0025, release_clear=0.003, release_tilt=0.12, withdraw_steps=70):
     s = c.s
     remote = c.body_pos("remote")
     Rr = c.d.xmat[c.m.body("remote").id].reshape(3, 3)
     slot = remote + Rr @ np.asarray(s.config["slot_center_local"])
-    # rotate the wrist yaw so the cell's + end points along the remote's +x
-    yaw_err = np.arctan2(Rr[1, 0], Rr[0, 0]) - cell_yaw(c, "new_cell")
-    carry = rotate_about(c, up, c.body_pos("new_cell"), yaw_err)
+    # turn the hand so the cell's + end points along the remote's +x (toward the gold contact)
+    carry = rotate_about(c, up, c.body_pos("new_cell"), wrap(c.remote_yaw() - cell_yaw(c, "new_cell")))
     c.execute(carry, yaw_steps, "turn the cell: + end to the gold contact")
     for steps in carry_steps:
-        cell = c.body_pos("new_cell")
-        carry[:2] += slot[:2] - cell[:2]
+        d = slot - c.body_pos("new_cell")
+        carry = c.at_pose(carry, dp=(d[0], d[1], 0.0))
         c.execute(carry, steps, "carry over the slot")
-        yaw_err = np.arctan2(Rr[1, 0], Rr[0, 0]) - cell_yaw(c, "new_cell")
-        carry = rotate_about(c, carry, c.body_pos("new_cell"), yaw_err)
+        carry = rotate_about(c, carry, c.body_pos("new_cell"), wrap(c.remote_yaw() - cell_yaw(c, "new_cell")))
     for offset, steps in lower:
         cell = c.body_pos("new_cell")
-        carry[2] += (slot[2] + offset) - cell[2]
+        carry = c.at_pose(carry, dp=(0, 0, (slot[2] + offset) - cell[2]))
         c.execute(carry, steps, "lower into the slot")
     c.hold(20, "settle in the slot")
-    release = carry.copy()
-    release[c.release_slice] = q_open[c.release_slice]
-    c.execute(release, 40, "release the new cell")
+    # Release inside the narrow (source-width) cavity: open the pads only slightly, to a posture that clears the
+    # cavity walls (IK with collision margins), then withdraw straight up.
+    # The arm stays where it is; only the thumb and index open, to pads 3 mm clear of the cell and clear of the walls.
+    cell = c.body_pos("new_cell")
+    yaw = c.remote_yaw()
+    across = np.array([-np.sin(yaw), np.cos(yaw), 0.0])
+    q_rel, e, _ = c.solve(pinch_targets(cell, across, release_clear, release_dz), c.target.copy(),
+                          c.ACT["thumb"] + c.ACT["index"], avoid=("remote", "new_cell"), avoid_margin=0.0005, pad=True)
+    c.log(f"release ik {e}")
+    c.execute(q_rel, 40, "release the new cell", cartesian=False)
     c.hold(30, "let the new cell seat")
-    away = release.copy()
-    away[2] += 0.07
-    c.execute(away, 50, "withdraw from the slot")
+    away = c.at_pose(c.target, dp=(0, 0, 0.07))
+    c.execute(away, withdraw_steps, "withdraw from the slot")
     return away
 
 
-def phase_close_cover(c, start, overshoot=0.004):
+def phase_close_cover(c, start, overshoot=0.003):
     s = c.s
-    R = R_DOWN_X
-    seed = base_seed(c, R)
-    seed[:3] = start[:3]
-    remote = c.body_pos("remote")
     opened = float(c.d.qpos[s.checker.cover_qadr])
-    ridge = remote + np.array([-0.025 - opened + s.config["cover_ridge_local_x"], 0, 0.014 + 0.0035])
-    cover_top = remote[2] + 0.016
-    pre = np.array([ridge[0] - 0.0015 - TIP_R - 0.004, remote[1], cover_top + TIP_R + 0.012])
-    q_pre, _, _ = c.solve({"index": pre}, seed, list(range(6)) + ACT["index"], R_hand=R, avoid=("remote",),
-                          allow=("index",))
-    down = pre.copy()
-    down[0] = ridge[0] - 0.0015 - TIP_R - 0.0005
-    down[2] = cover_top + TIP_R - 0.0015
-    q_down, _, _ = c.solve({"index": down}, q_pre, list(range(6)) + ACT["index"], R_hand=R, allow=("index",))
-    above = q_pre.copy()
-    above[2] += 0.08
-    c.execute(above, 80, "move behind the open door")
-    c.execute(q_pre, 50, "finger behind the door ridge")
-    c.execute(q_down, 40, "press on the door")
-    push = q_down.copy()
-    push[0] += opened + overshoot
-    c.execute(push, 150, "slide the door shut")
-    c.hold(15, "door closed")
-    lift = push.copy()
-    lift[2] += 0.05
-    c.execute(lift, 40, "lift off the door")
-    away = lift.copy()
-    away[0] -= 0.10
-    away[2] += 0.06
+    q_pre, q_down = door_press_postures(c, opened, base_seed(c, start))
+    above = c.at_pose(q_pre, dp=(0, 0, 0.08))
+    c.execute(above, 80, "move over the open door's tab")
+    c.execute(q_pre, 50, "finger over the latch tab")
+    q = press_tab(c, q_down, phase="press the latch tab")
+    push = slide_posture(c, q, -overshoot)
+    c.execute(push, 160, "slide the door shut")
+    c.hold(15, "door shut, tab pressed")
+    lift = c.at_pose(push, dp=(0, 0, 0.05))
+    c.execute(lift, 40, "release the tab: hook behind the stop")
+    away = c.at_pose(lift, dp=(0, 0, 0.08))
     c.execute(away, 60, "hand clear of the remote")
     return away
 
@@ -398,6 +491,7 @@ def make_demo(output, slack_rows=150, log=print, seat_kw=None, tray_kw=None):
         "success": bool(s.success), "success_step": success_step, "rows": int(len(rows)),
         "executed_rows": int(len(actions)), "reason": status["reason"], "stage_steps": status.get("stage_steps"),
         "final_sha": s.state_sha(), "seconds": round(time.time() - t0, 1),
+        "max_arm_ik_error": {"m": c.max_ik_err[0], "rad": c.max_ik_err[1]},
     }
     out.with_suffix(".live.json").write_text(json.dumps(summary, indent=2, default=str) + "\n")
     log(json.dumps(summary, default=str))

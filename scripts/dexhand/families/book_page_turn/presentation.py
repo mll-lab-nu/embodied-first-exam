@@ -49,6 +49,9 @@ def export(trajectory, directory, stride=2, hold_start=15, hold_end=40, config_p
     session = Session(hand=hand)
     m = session.model
     hand_body = session.checker.hand_body
+    from scene import arm_rig
+
+    robot_bodies = arm_rig.robot_body_ids(m)  # stand + arm links (drawn with the Tianji factory colours)
     for name in sorted(p.name for p in (HERE / "assets").iterdir() if p.suffix == ".png"):
         shutil.copy(HERE / "assets" / name, directory / "assets" / name)
     materials = []
@@ -71,13 +74,16 @@ def export(trajectory, directory, stride=2, hold_start=15, hold_end=40, config_p
         rgba = (m.mat_rgba[mid] if mid >= 0 else m.geom_rgba[gid]).tolist()
         if rgba[3] == 0:
             continue
-        is_hand = bool(hand_body[m.geom_bodyid[gid]])
+        is_robot = int(m.geom_bodyid[gid]) in robot_bodies
+        is_hand = bool(hand_body[m.geom_bodyid[gid]]) and not is_robot
         if is_hand and (m.geom_contype[gid] or m.geom_conaffinity[gid]):
             continue  # collision proxies of the hand are not drawn
         mesh = int(m.geom_dataid[gid]) if kind == 7 else None
         record = dict(id=gid, name=name, body=m.body(int(m.geom_bodyid[gid])).name, kind=kind,
                       size=m.geom_size[gid].tolist(), mesh=mesh, material=mid, rgba=rgba, is_hand=is_hand,
                       authored_cad=not is_hand)
+        if is_robot:
+            record["visual_material"] = dict(rgba=rgba, roughness=0.29, metallic=0.15)  # pot_shelf_transfer arm look
         if kind == 0:
             record["visual_material"] = dict(rgba=[0.30, 0.33, 0.34, 1], roughness=0.82)
         elif name == "table":
@@ -144,7 +150,7 @@ def export(trajectory, directory, stride=2, hold_start=15, hold_end=40, config_p
             hand_title=session.hand_info["model"],
             evidence_type="physical_actuator_replay",
             scripted_object_motion=False,
-            physics_claims=["MuJoCo 3.4.0 actuator-only replay of the oracle rows; the board moves only by contact"],
+            physics_claims=["MuJoCo 3.4.0 actuator-only replay of the oracle rows (Marvin arms + hands); the board moves only by contact"],
             presentation_holds={"start_frames": hold_start, "end_frames": hold_end},
             geoms=geoms,
             meshes=meshes,

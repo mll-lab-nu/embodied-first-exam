@@ -1,4 +1,4 @@
-"""Actuator-only jam-jar lid opening: one genuine hand on a six-axis wrist stage, passive contact thread."""
+"""Actuator-only jam-jar lid opening: one genuine hand on the Tianji Marvin right arm, passive contact thread."""
 
 from __future__ import annotations
 
@@ -14,12 +14,12 @@ import mujoco
 import numpy as np
 
 from checker import HOLD_STEPS, STAGES, Checker
-from scene import build, hands
+from scene import arm_rig, build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "jar_lid_open"
 HASHED_CONFIG = ("id", "physics_dt", "control_dt", "max_steps", "table_z", "table_half", "jar_xy", "workspace",
-                 "initial_targets", "release_angle_rad", "stop_angle_rad")
+                 "rig", "marvin", "initial_targets", "release_angle_rad", "stop_angle_rad")
 UNSTABLE = (mujoco.mjtWarning.mjWARN_BADQPOS, mujoco.mjtWarning.mjWARN_BADQVEL, mujoco.mjtWarning.mjWARN_BADQACC)
 
 
@@ -35,7 +35,7 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.robot = arm_rig.ROBOT_ID
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
@@ -49,6 +49,7 @@ class Session:
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
         self.tcp_body = "wrist_stage"
+        self.layout = arm_rig.layout(self.model)
         self.checker = Checker(self.model, self.config)
         self.renderer = None
         self.reset()
@@ -134,7 +135,7 @@ class Session:
         }
 
     def cameras(self):
-        return ["overview", "closeup", "side"]
+        return ["overview", "closeup", "side", "wide"]
 
     # ------------------------------------------------------------------------------------------ tooling
     def snapshot(self):

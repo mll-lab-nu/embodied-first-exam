@@ -31,14 +31,35 @@ def _hands_module():
 
 hands = _hands_module()
 
-# Remote geometry (remote body frame; x = long axis, the cover opens toward -x). The approved presentation shell is
-# 160 x 64 x 30 mm with a 94 x 52 mm battery cavity; the family widens it by WIDTH_SCALE in y (generous clearance
-# for two fingertips beside one AA cell) and keeps the other dimensions.
-WIDTH_SCALE = 1.25
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = HERE.parents[1] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+# Remote geometry (remote body frame; x = long axis, the cover opens toward -x). The approved source shell is
+# 160 x 64 x 30 mm with a 94 x 52 mm battery cavity, kept at source size (WIDTH_SCALE 1).
+WIDTH_SCALE = 1.0
 SHELL_HALF = (0.080, 0.032 * WIDTH_SCALE)
 CAVITY_HALF_Y = 0.026 * WIDTH_SCALE
 SHELL_TOP, SHELL_BOTTOM, CAVITY_FLOOR = 0.012, -0.018, -0.010
 CAVITY_X = (-0.072, 0.022)
+REAR_WALL_TOP = 0.002  # source end wall top between the ears
+REAR_EAR_INNER_Y = 0.012  # source rear ears span |y| 0.012..0.026
+LATCH_STOP_HALF, LATCH_STOP_POS = (0.002, 0.006, 0.0008), (-0.071, 0.0, 0.0085)  # source task_latch_stop
+TAB_LOCAL_X = -0.035  # source cover_tab (thumb pad) position in the door frame
+TAB_HALF, TAB_Z = (0.009, 0.009, 0.002), 0.003  # source task_cover_tab: 3 mm proud of the door plate
+NEG_BLOCK_X0 = -0.0625  # rear end of the negative terminal block (clear of the hook's path)
+HOOK_HALF, HOOK_POS = (0.002, 0.006, 0.002), (-0.007, 0.0, -0.0055)  # source task_cover_hook (tab frame)
 FOOT_HALF_HEIGHT = 0.001
 CELL_RADIUS, CELL_HALF_LENGTH = 0.007, 0.0245
 DARK = (0.045, 0.055, 0.065, 1)
@@ -108,8 +129,17 @@ def add_remote(world, assets, config):
     for sign in (-1, 1):
         box(remote, f"remote_side_{'neg' if sign < 0 else 'pos'}", (hx, wall, height), (0, sign * (cavity_y + wall), zc),
             **plastic)
-    box(remote, "remote_rear_wall", ((CAVITY_X[0] + hx) / 2, cavity_y, height), ((CAVITY_X[0] - hx) / 2, 0, zc),
-        **plastic)
+    # Rear end wall as in the source: low (top at z = REAR_WALL_TOP) between two ears, so the door's latch hook can
+    # pass over it while the tab is pressed; the ears rise to the shell top.
+    rear_hx, rear_x = (CAVITY_X[0] + hx) / 2, (CAVITY_X[0] - hx) / 2
+    box(remote, "remote_rear_wall", (rear_hx, cavity_y, (REAR_WALL_TOP - CAVITY_FLOOR) / 2),
+        (rear_x, 0, (REAR_WALL_TOP + CAVITY_FLOOR) / 2), **plastic)
+    ear_hy = (cavity_y - REAR_EAR_INNER_Y) / 2
+    for sign in (-1, 1):
+        box(remote, f"remote_rear_ear_{'neg' if sign < 0 else 'pos'}", (rear_hx, ear_hy, (SHELL_TOP - REAR_WALL_TOP) / 2),
+            (rear_x, sign * (REAR_EAR_INNER_Y + ear_hy), (SHELL_TOP + REAR_WALL_TOP) / 2), **plastic)
+    # Fixed latch stop (source task_latch_stop): the door's hook rests just in front of it when the door is shut.
+    box(remote, "latch_stop", LATCH_STOP_HALF, LATCH_STOP_POS, color=(0.10, 0.11, 0.12, 1), **plastic)
     box(remote, "remote_front_block", ((hx - CAVITY_X[1]) / 2, cavity_y, height), ((hx + CAVITY_X[1]) / 2, 0, zc),
         **plastic)
     for i, (x, y) in enumerate(((-0.064, -0.028), (-0.064, 0.028), (0.064, -0.028), (0.064, 0.028))):
@@ -127,9 +157,10 @@ def add_remote(world, assets, config):
     axis_z = slot[2]
     box(remote, "positive_terminal_block", ((CAVITY_X[1] - plus_face - 0.001) / 2, 0.009, (axis_z - CAVITY_FLOOR) / 2 + 0.003),
         ((CAVITY_X[1] + plus_face + 0.001) / 2, 0, (axis_z + CAVITY_FLOOR) / 2 + 0.003), **plastic)
-    box(remote, "negative_terminal_block", ((minus_face - 0.004 - CAVITY_X[0]) / 2, 0.009,
+    # The negative terminal block stops short of the rear wall, leaving room for the latch hook (source: no block).
+    box(remote, "negative_terminal_block", ((minus_face - 0.004 - NEG_BLOCK_X0) / 2, 0.009,
                                             (axis_z - CAVITY_FLOOR) / 2 + 0.003),
-        ((minus_face - 0.004 + CAVITY_X[0]) / 2, 0, (axis_z + CAVITY_FLOOR) / 2 + 0.003), **plastic)
+        ((minus_face - 0.004 + NEG_BLOCK_X0) / 2, 0, (axis_z + CAVITY_FLOOR) / 2 + 0.003), **plastic)
     node(remote, "geom", name="positive_contact", type="cylinder", size=(0.005, 0.0005),
          pos=(plus_face + 0.0005, 0, axis_z), euler=(0, np.pi / 2, 0), rgba=GOLD, friction=(0.6, 0.005, 0.0001),
          condim=4, solref=(0.005, 1), solimp=(0.95, 0.99, 0.0005), mass=0, group=2)
@@ -154,23 +185,32 @@ def add_remote(world, assets, config):
                pos=(slot[0] + sign * 0.017, -0.017 * sy, CAVITY_FLOOR + 0.0001))
     visual(remote, "polarity_mark_pos_bar", "box", (0.67, 0.7, 0.7, 1), size=(0.0005, 0.0022, 0.0001),
            pos=(slot[0] + 0.017, -0.017 * sy, CAVITY_FLOOR + 0.0001))
-    # Sliding battery door: passive slide joint with friction (a light friction detent) and end stops.
+    # Sliding battery door (source mechanism): passive slide joint with the source damping/friction and end stops,
+    # plus the source latch: a spring-loaded thumb tab (slide joint along -z, 0..5 mm, 120 N/m) carrying a hook that
+    # sits in front of the fixed latch stop when the door is shut. Opening (and closing) needs the tab pressed
+    # 2.8..4.5 mm: the hook then passes under the stop and over the low rear wall.
     cover = node(remote, "body", name="cover", pos=(-0.025, 0, SHELL_TOP + 0.002))
     node(cover, "joint", name="cover_slide", type="slide", axis=(-1, 0, 0), range=(0, config["cover_travel_m"]),
-         damping=0.4, frictionloss=config["cover_frictionloss_n"], armature=0.002, limited="true")
+         damping=config["cover_damping"], frictionloss=config["cover_frictionloss_n"], armature=0.002,
+         limited="true")
     node(cover, "inertial", pos=(0, 0, 0), mass=0.012, diaginertia=(2.4e-6, 1.0e-5, 1.2e-5))
     box(cover, "cover_plate", (0.050, 0.027 * sy, 0.002), (-0.001, 0, 0), friction=(1.0, 0.005, 0.0001), mass=0)
-    ridge = config["cover_ridge_local_x"]
-    box(cover, "cover_ridge", (0.0015, 0.013, 0.0015), (ridge, 0, 0.0035), color=(0.14, 0.16, 0.18, 1),
-        friction=(1.2, 0.005, 0.0001), mass=0)
     visual(cover, "cover_visual", "mesh", DARK, mesh="battery_door", material="remote_plastic")
-    visual(cover, "thumb_pad_visual", "mesh", DARK, mesh="thumb_pad", pos=(-0.035, 0, 0), material="remote_plastic")
-    visual(cover, "open_arrow_visual", "mesh", (0.28, 0.32, 0.34, 1), mesh="open_arrow", pos=(-0.035, 0, 0.0002))
-    visual(cover, "cover_ridge_visual", "box", (0.14, 0.16, 0.18, 1), size=(0.0015, 0.013, 0.0015),
-           pos=(ridge, 0, 0.0035))
+    tab = node(cover, "body", name="cover_tab", pos=(TAB_LOCAL_X, 0, 0))
+    node(tab, "joint", name="tab_depth", type="slide", axis=(0, 0, -1), range=(0, config["tab_travel_m"]),
+         stiffness=config["tab_stiffness_n_m"], damping=0.1, armature=0.0005, limited="true")
+    node(tab, "inertial", pos=(0, 0, 0.002), mass=0.003, diaginertia=(1.0e-7, 1.0e-7, 1.6e-7))
+    box(tab, "cover_tab", TAB_HALF, (0, 0, TAB_Z), color=(0.14, 0.16, 0.18, 1), friction=(1.2, 0.005, 0.0001),
+        mass=0)
+    box(tab, "cover_hook", HOOK_HALF, HOOK_POS, color=(0.10, 0.11, 0.12, 1), mass=0)
+    visual(tab, "cover_tab_visual", "box", DARK, size=TAB_HALF, pos=(0, 0, TAB_Z), material="remote_plastic")
+    visual(tab, "thumb_pad_visual", "mesh", DARK, mesh="thumb_pad", pos=(0, 0, TAB_Z + TAB_HALF[2] - 0.0017 + 0.0001),
+           material="remote_plastic")
+    visual(tab, "open_arrow_visual", "mesh", (0.28, 0.32, 0.34, 1), mesh="open_arrow",
+           pos=(0, 0, TAB_Z + TAB_HALF[2] - 0.0019 + 0.0002))
     for k, x in enumerate((-0.006, -0.0036, -0.0012, 0.0012, 0.0036, 0.006)):
-        visual(cover, f"thumb_rib_{k}", "box", (0.14, 0.16, 0.18, 1), size=(0.00025, 0.003 * sy, 0.0001),
-               pos=(-0.035 + x, 0.0, 0.0018))
+        visual(tab, f"thumb_rib_{k}", "box", (0.14, 0.16, 0.18, 1), size=(0.00025, 0.003 * sy, 0.0001),
+               pos=(x, 0.0, TAB_Z + TAB_HALF[2] + 0.0001))
     return remote
 
 
@@ -190,30 +230,32 @@ def add_tray(world, config):
     return tray
 
 
-def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen scene with the selected genuine hand on the six-axis wrist stage."""
-    hand_id = hands.canonical(hand)
-    folder = Path(
-        asset_dir
-        or os.environ.get("DEXHAND_ASSET_DIR")
-        or hands.sharpa_dir()  # DEXHAND_ASSET_DIR, else the image path /opt/dexhand/hand
-    )
-    root = ET.parse(folder / "right_hand.xml").getroot()
-    root.set("model", hands.info(hand_id)["model"] + " remote battery swap")
-    compiler = root.find("compiler")
-    compiler.set("meshdir", str((folder / "assets/right").resolve()))
-    option = root.find("option")
-    option.set("timestep", str(config["physics_dt"]))
-    option.set("gravity", "0 0 -9.81")
-    option.set("iterations", "80")
-    option.set("integrator", "implicitfast")
-    option.set("cone", "elliptic")
-    option.set("impratio", "10")
-    node(option, "flag", multiccd="enable")
-    for key in root.findall("keyframe"):
-        root.remove(key)
-    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
-    hand = world.find("body")
+def arm_rig_id():
+    return _arm_rig_module().ROBOT_ID
+
+
+def add_marvin_rig(root, config, hand_id, folder):
+    """The Tianji Marvin stand with both 7-DoF arms (shared arm_rig); the right arm/hand works, the left is parked."""
+    arm_rig = _arm_rig_module()
+    actuator, hand = root.find("actuator"), root.find("worldbody").find("body")
+    for a in actuator:  # the family's Sharpa tweaks, before mounting (the mirrored left Wave inherits them)
+        if a.tag == "general":
+            bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
+            bias[2] = -0.9
+            a.set("biasprm", " ".join(map(str, bias)))
+    for g in hand.iter("geom"):
+        if "fingertip_collision" in g.get("name", ""):
+            g.set("friction", "1.5 .005 .0001")
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    return arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                                mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                                wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
+
+def add_wrist_stage(root, hand, hand_id, folder):
+    """Authoring/legacy rig: the hand on a floating six-axis wrist stage (assemble_hamburger joints and gains)."""
+    world, actuator = root.find("worldbody"), root.find("actuator")
     world.remove(hand)
     wrist = node(world, "body", name="wrist_stage")
     node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
@@ -256,6 +298,37 @@ def build(config, asset_dir=None, hand="sharpa"):
     if hand_id != "sharpa":
         sibling = folder.parent / "wuji_v2_2"
         hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
+
+def build(config, asset_dir=None, hand="sharpa"):
+    """Compose the frozen scene with the selected genuine hand on the Marvin arm rig (``config["rig"] == "marvin"``;
+    the left arm is parked) or, for authoring only, on the legacy six-axis wrist stage."""
+    hand_id = hands.canonical(hand)
+    folder = Path(
+        asset_dir
+        or os.environ.get("DEXHAND_ASSET_DIR")
+        or hands.sharpa_dir()  # DEXHAND_ASSET_DIR, else the image path /opt/dexhand/hand
+    )
+    root = ET.parse(folder / "right_hand.xml").getroot()
+    root.set("model", hands.info(hand_id)["model"] + " remote battery swap")
+    compiler = root.find("compiler")
+    compiler.set("meshdir", str((folder / "assets/right").resolve()))
+    option = root.find("option")
+    option.set("timestep", str(config["physics_dt"]))
+    option.set("gravity", "0 0 -9.81")
+    option.set("iterations", "80")
+    option.set("integrator", "implicitfast")
+    option.set("cone", "elliptic")
+    option.set("impratio", "10")
+    node(option, "flag", multiccd="enable")
+    for key in root.findall("keyframe"):
+        root.remove(key)
+    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
+    hand = world.find("body")
+    if config.get("rig", "floating") == "marvin":
+        add_marvin_rig(root, config, hand_id, folder)
+    else:
+        add_wrist_stage(root, hand, hand_id, folder)
     # Family meshes/textures are referenced by absolute path so the hand's meshdir stays untouched.
     family_assets = HERE / "assets"
     node(assets, "texture", name="studio_sky", type="skybox", builtin="gradient", width=256, height=256,
@@ -266,12 +339,19 @@ def build(config, asset_dir=None, hand="sharpa"):
          specular=0.05)
     node(assets, "mesh", name="aa_cell", file="aa_cell.obj", inertia="shell")
     world_geom = dict(condim=4, solref=(0.005, 1), solimp=(0.95, 0.99, 0.0005))
-    node(world, "geom", name="floor", type="plane", size=(2, 2, 0.1), rgba=(0.80, 0.76, 0.72, 1), **world_geom)
+    floor_z = config.get("floor_z", 0.0)
+    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.1), pos=(0, 0, floor_z),
+         rgba=(0.80, 0.76, 0.72, 1), **world_geom)
     tz = config["table_z"]
     th = config["table_half"]
-    node(world, "geom", name="table", type="box", size=(th[0], th[1], 0.025), pos=(config["table_center"][0],
-         config["table_center"][1], tz - 0.025), rgba=(0.87, 0.78, 0.70, 1), material="table_material",
-         friction=(0.9, 0.005, 0.0001), **world_geom)
+    tc = config["table_center"]
+    node(world, "geom", name="table", type="box", size=(th[0], th[1], 0.025), pos=(tc[0], tc[1], tz - 0.025),
+         rgba=(0.87, 0.78, 0.70, 1), material="table_material", friction=(0.9, 0.005, 0.0001), **world_geom)
+    leg_h = (tz - 0.05 - floor_z) / 2
+    inset = config.get("table_leg_inset", [0.04, 0.04])  # (robot side, far side): the robot's stand feet sit under
+    for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):  # the front edge, so its legs stand back
+        visual(world, f"table_leg_{i}", "box", (0.30, 0.27, 0.24, 1), size=(0.02, 0.02, leg_h),
+               pos=(tc[0] + sx * (th[0] - inset[0 if sx < 0 else 1]), tc[1] + sy * (th[1] - 0.04), floor_z + leg_h))
     add_remote(world, assets, config)
     add_tray(world, config)
     add_cell(world, assets, "old_cell", config["old_cell_pos"], config["old_cell_quat"], "old_aa_wrap.png")
