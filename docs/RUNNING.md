@@ -18,7 +18,8 @@ PROTOCOL_HISTORY.md):
   cloud agents off (`WEB_SEARCH=disabled`, `scripts/codex_tools_off.py`; below).
 - **Token budget** per trial: 100M input tokens (Harbor `n_input_tokens`, cache included), 10M output (reasoning
   included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`); with the gateway, exceeding either stops the agent and
-  fails the trial (`over_token_budget = 1`). A batch run with another budget records it in its results' metadata.
+  fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
+  labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
   `override_timeout_sec`), and **nothing added to the instruction** (no prompt template, no extra instruction).
 - **The runner's seed, the task's network, at most one infrastructure retry** (the next three sections), and the
@@ -321,7 +322,10 @@ summary shows side by side. They agree exactly when the agent ends by itself; wh
 gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
 before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
 (default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
-the agent stops; `totals.json` records `over_token_budget = 1`, the batch summary marks it, and `write_task_results.py`
+the agent stops; `totals.json` records `over_token_budget = 1` and, from the first refused request, `budget_stop`
+(`limit` input|output, `first_refused_at` / `last_refused_at`, the input / cached / output counts at the stop, `refused`):
+a runner records such a trial as `TokenBudgetExceeded` (not the harness's own exception, which reads as a network or API
+error: Codex `NetworkConnectionError` / `NonZeroAgentExitCodeError`, Claude Code `UnknownApiError`), the batch summary marks it, and `write_task_results.py`
 counts it as failed (Official runs above). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
 The raw log stores each conversation item once and a request as references to the items it resends, like Codex's and
 Claude Code's own session files, and is lossless: `scripts/usage_gateway/rawlog.py cat <trial>/gateway` prints every
