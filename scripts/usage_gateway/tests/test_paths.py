@@ -358,5 +358,88 @@ class EndToEnd(unittest.TestCase):
         self.assertNotIn("BODY-NOT-LOGGED", everything)
 
 
+class Broken(BaseHTTPRequestHandler):
+    """An upstream that fails: /v1/messages answers 503; /v1/responses starts a stream and breaks it off mid-way."""
+
+    def log_message(self, *a):
+        pass
+
+    def do_POST(self):
+        self.rfile.read(int(self.headers.get("Content-Length") or 0))
+        if self.path.startswith("/v1/messages"):
+            body = b'{"type": "error", "error": {"type": "overloaded_error"}}'
+            self.send_response(503); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+            return
+        self.send_response(200); self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Content-Length", "100000"); self.end_headers()
+        self.wfile.write(b'data: {"type": "response.created"}\n\n'); self.wfile.flush()
+        self.close_connection = True               # far short of the announced length: the stream is broken off
+
+
+class UpstreamFailures(unittest.TestCase):
+    """Board 0121 M4: a model call that fails on the way (the upstream unreachable: 502; a stream broken off; a provider
+    5xx) is recorded as an upstream_failure, and totals.json counts the failures in a row up to the latest call."""
+
+    def test_tally(self):
+        gateway.ARGS = type("A", (), {"budget_input": 0, "budget_output": 0})()
+        tot = {"requests": 0, "input": 0, "cached": 0, "output": 0, "no_usage": 0}
+        ok = {"ts": 1, "usage": {"input": 5, "cached": 0, "output": 1}}
+        for rec in (ok, {"ts": 2, "forwarded": False, "upstream_failure": "unreachable: ConnectionRefusedError"},
+                    {"ts": 3, "usage": {"input": 2, "cached": 0, "output": 0}, "upstream_failure": "stream broken off: X"},
+                    {"ts": 4, "refused": "path_not_allowed"}):
+            gateway.tally(tot, rec)
+        self.assertEqual((tot["requests"], tot["input"], tot["upstream_failures"], tot["failures_in_a_row"]), (2, 7, 2, 2))
+        self.assertEqual(tot["last_upstream_failure"], "stream broken off: X")
+        gateway.tally(tot, {**ok, "ts": 5})
+        self.assertEqual((tot["requests"], tot["upstream_failures"], tot["failures_in_a_row"]), (3, 2, 0))
+
+    def test_end_to_end(self):
+        import socket
+        with tempfile.TemporaryDirectory() as td:
+            jobs = pathlib.Path(td)
+            stub = ThreadingHTTPServer(("127.0.0.1", 0), Broken)
+            threading.Thread(target=stub.serve_forever, daemon=True).start()
+            up = f"127.0.0.1:{stub.server_address[1]}"
+            with socket.socket() as sk:                                 # a port nothing listens on
+                sk.bind(("127.0.0.1", 0)); dead = f"127.0.0.1:{sk.getsockname()[1]}"
+            ready = jobs / "ready"
+            proc = subprocess.Popen([sys.executable, str(HERE / "gateway.py"), "--jobs", str(jobs), "--bind", "127.0.0.1",
+                                     "--ready-file", str(ready), "--http-host", up, "--http-host", dead],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            try:
+                for _ in range(100):
+                    if ready.exists() and ready.read_text():
+                        break
+                    time.sleep(0.1)
+                port = int(ready.read_text())
+
+                def call(path):
+                    c = http.client.HTTPConnection("127.0.0.1", port, timeout=30)
+                    c.request("POST", path, body=b'{"model": "m", "input": []}', headers={"Content-Type": "application/json"})
+                    r = c.getresponse()
+                    try:
+                        r.read()
+                        whole = True
+                    except http.client.HTTPException:
+                        whole = False
+                    c.close()
+                    return r.status, whole
+
+                self.assertEqual(call(f"/h/{dead}/v1/responses")[0], 502)
+                self.assertEqual(call(f"/h/{up}/v1/messages"), (503, True))
+                self.assertEqual(call(f"/h/{up}/v1/responses"), (200, False))      # the agent sees the stream end broken
+                recs = [json.loads(x) for x in (jobs / ".gateway" / "unattributed.jsonl").read_text().splitlines()]
+                fails = [r.get("upstream_failure", "") for r in recs]
+                self.assertEqual(len(recs), 3, recs)
+                self.assertTrue(fails[0].startswith("unreachable: ") and recs[0]["forwarded"] is False, recs[0])
+                self.assertEqual(fails[1], "HTTP 503")
+                self.assertTrue(fails[2].startswith("stream broken off: "), recs[2])
+                self.assertEqual(recs[2]["status"], 200)
+            finally:
+                proc.terminate(); proc.wait(10)
+                stub.shutdown(); stub.server_close()
+
+
 if __name__ == "__main__":
     unittest.main()

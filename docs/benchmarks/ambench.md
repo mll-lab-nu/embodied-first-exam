@@ -128,7 +128,7 @@ compiling its shaders on a host at load average ~100 with two other Isaac proces
 `network_mode = "no-network"`: every web asset the scenes load is in the image (BUILD_ONLY, Data).
 
 ## Time budget (D8)
-3600 s for every task (`scripts/task_cutoffs.toml`, the proposal's default; PROTOCOL §2.12), stated in each instruction's
+3600 s for every task (each task's `[agent] timeout_sec`, the proposal's default; PROTOCOL §2.12), stated in each instruction's
 closing `## Time limit` section. Every Python process pays ~2-6 min of Isaac Sim launch and scene build (the upper end with
 other Isaac jobs on the GPU); stepping runs at about 9-15 control steps/s, so a full episode (20-26 s simulated) takes
 3-5 min.

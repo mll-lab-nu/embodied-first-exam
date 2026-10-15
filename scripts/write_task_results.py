@@ -38,8 +38,14 @@ def not_a_result(trial, r, rw):
     if ex and ex != "AgentTimeoutError":
         return f"Harbor ended the trial with `{ex}`"
     try:
-        if account_failure_check.check(str(trial)).get("stop"):
+        chk = account_failure_check.check(str(trial))
+        if chk.get("stop") and not any(w.startswith("gateway:") for w in chk.get("why", [])):
             return "a model-account or configuration failure (scripts/account_failure_check.py)"
+        # board 0121 M4: the usage gateway died, or the trial's last model calls failed on the way (upstream unreachable,
+        # a stream broken off, a provider 5xx): the agent could not reach its model
+        gw = [w for w in chk.get("infra", []) if w.startswith("gateway:")]
+        if gw:
+            return "the model API could not be reached through the usage gateway (" + gw[0].removeprefix("gateway: ") + ")"
     except Exception:
         pass
     return None
