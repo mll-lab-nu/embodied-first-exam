@@ -873,11 +873,11 @@ trial):
 | `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
 | `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `remote_battery_swap` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.23 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `coffee_stir` | 1 / 0 | 1 / 0 | 2 min | 0.45 / 0.61 | standard nop 0 (no Wuji solution) |
+| `coffee_stir` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.26 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `jar_lid_open` | 1 / 0 | 1 / 0 | 8 min | 3.40 / 2.38 | wave 3 (2026-10-15; standard nop: the family's final trial); Wuji privileged oracle 1 (wave 3, arm) |
 | `grinder_crank` | 1 / 0 | 1 / 0 | 11 min | 3.47 / 2.40 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `pancake_serve` | 1 / 0 | 1 / 0 | 5 min | 0.43 / 0.58 | Wuji nop 0 in both modes (Wuji solution packaged) |
-| `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 4 min | 0.40 / 0.52 | standard nop 0 (no Wuji solution) |
+| `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 10 min | 0.59 / 0.71 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `drying_rack_unfold` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.59 | Wuji nop 0 (no Wuji solution) |
 | `picture_hang` | 1 / 0 | 1 / 0 | 7 min | 3.40 / 2.13 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `usb_plug_insert` | 1 / 0 | 1 / 0 | 6 min | 0.45 / 0.96 | Wuji nop 0 in both modes (no Wuji solution) |
