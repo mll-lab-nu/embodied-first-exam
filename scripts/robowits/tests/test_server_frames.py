@@ -52,7 +52,9 @@ def serve(sim: str, data: str, port: int) -> None:
 
         def save_trajectory(s, acts, path, meta=None): np.savez(path, actions=acts, task="t", meta=json.dumps(meta or {}))
         def ik(s, arm, pos, q): return np.zeros(7), 0.0, 0.0         # every pose: the joints at 0
-        def replay(s, acts): return {"success": False, "state_sha": s.state_sha()}
+        def replay(s, acts): return {"success": False, "state_sha": s.state_sha(), "state_sha_rows": s.state_sha()}
+        def goal(s): return {"success": False, "predicate": False, "clause": True, "touching": [], "objects": []}
+        def settle_check(s, step=None): return {"success": False, "why": "stub", "steps": 0, "max_move_m": 0.0}
         def kinematics(s, req): return {"ok": True}
         def start_video(s, path, fps=15): pass
         def stop_video(s): pass

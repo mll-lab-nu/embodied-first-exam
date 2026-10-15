@@ -2,26 +2,33 @@
 
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
 the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Stand the two pages up
-on the table, using the stabilizing bar as a hinge pin: the bar goes through the eyelets of both pages so that they
-brace each other.
+on the table so that they brace each other. They start joined like an open book: the stabilizing bar already runs
+through the eyelets of both pages as a hinge pin, so nothing has to be inserted.
 
 ## Success criterion (as graded)
-This is exactly what the grader checks (RoboWits' success predicate, stated in words). Where the task text says
-something else, this section is what counts. The service evaluates it after every `submit` and after every `get_obs`
-that watches (`seconds` > 0), and once more when the episode ends; the first time it holds, the episode ends as a
-success. The service then replays your recorded episode, which must end in the same state and satisfy it again.
+This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
+condition the grader adds: the last item). Where the task text says something else, this section is what counts. After
+every `submit` and every `get_obs` that watches (`seconds` > 0) the service checks the conditions at that instant;
+when they hold, it keeps your last command for a settle window, inside the same call: 1 s with nothing checked, then 2
+s in which every condition must hold at every 6th control step and at the last one, with each graded object staying
+within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the episode ends as a
+success; if not, the episode goes on and `meta["settle"]` says why. When your session ends, the same window decides
+once more. The service then replays your recorded episode, which must end in the same state and pass again.
 
 - For each of the two pages:
   - it stands upright: within 15 degrees of vertical about both horizontal axes (either face forward, any heading);
   - its footprint lies inside the table bounds (no tolerance);
   - the bottom of its bounding box is within 3 cm of the table top;
   - it is not held.
+- Released and at rest: no part of the robot touches either page or the stabilizing bar (holding the bar holds the
+  pages up), and each page moves at most 2 mm during the check window.
 
-Not checked: the stabilizing bar and any connection between the pages (the hinge), and any speed.
+Not checked: any connection between the pages (the hinge) and where the bar ends up.
 
-Task text vs grader ("Stand the two pages up on the table, using the stabilizing bar as a hinge pin: the bar goes
-through the eyelets of both pages so that they brace each other."): The hinge is not checked: two pages standing
-upright on the table and released at the end pass, with or without the bar through their eyelets.
+Task text vs grader ("Stand the two pages up on the table so that they brace each other."): The hinge is not checked:
+two pages standing upright on the table, released and at rest, pass with or without the bar through their eyelets. In
+this scene the bar already runs through the eyelets of both pages at the start (they lie open like a book): nothing
+has to be inserted.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`
 points of your proprioception) is inside the object's bounding box grown by 3 cm on every side; the *table bounds* are
@@ -34,7 +41,7 @@ not give: keeping clear of the table's edges satisfies it).
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
-  (`meta["done"]`, `reason` "success") the first time it holds.
+  (`meta["done"]`, `reason` "success") the first time it holds through the settle window.
 - **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
   1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
@@ -44,7 +51,10 @@ not give: keeping clear of the table's edges satisfies it).
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
-- **If the service crashes** (a connection error or a 5xx instead of an answer), it restarts and resumes the SAME
+- **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other
+  request waits for it (`r.status()` from another process included), and a client-side timeout during that time means
+  "busy", not "crashed": nothing restarts, the call runs to its end and the episode goes on from there.
+- **If the service crashes** (the connection is refused or reset instead of an answer), it restarts and resumes the SAME
   episode, never a reset, in the state after the last call it completed. `r.wait_ready()` waits until it answers again
   (resuming replays the episode so far: about a second per 700 control steps); then check `r.status()` (`calls`,
   `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]` stops at the next control
@@ -106,7 +116,7 @@ gains and the tool frames; `spec["world"]` the frame conventions.
   number; the motion is executed in full and `meta["frames_skipped"]` counts them.
 
 Objects here: two thin grey pages with a row of eyelets along one edge and a grey bar (20 cm long, 1.5 cm square
-section), all lying flat on the table in front of the robot.
+section) that already runs through the eyelets of both pages, all lying flat on the table in front of the robot.
 
 The wrist joints are limited to ±60°, so a vertical approach only works for finger-closing directions within about ±60°
 of the world y axis.
