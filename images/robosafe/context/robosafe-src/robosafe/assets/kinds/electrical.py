@@ -249,9 +249,39 @@ def laptop(k: Kit, *, width=0.32, depth=0.22, color="silver", state="on", lines=
     k.mass(mass * 1000.0)
 
 
+def notice_image(lines, w_px: int, h_px: int, title: str, cap_px: float) -> np.ndarray:
+    """A notification filling a screen: a title bar and lines of one fixed type size (capitals `cap_px` tall), left
+    aligned, so that two notifications with as many lines differ only in their words."""
+    from PIL import Image, ImageDraw
+
+    bg, fg, bar_bg = (236, 240, 244), (20, 24, 30), (40, 90, 170)
+    im = Image.new("RGB", (w_px, h_px), bg)
+    d = ImageDraw.Draw(im)
+    font = L._font(True, max(4, int(round(cap_px / L.CAP_RATIO))))
+    pitch = cap_px * 1.5
+    bar = int(round(pitch * 1.1))
+    d.rectangle([0, 0, w_px - 1, bar], fill=bar_bg)
+    x0 = int(round(cap_px * 0.6))
+    ascent = font.getmetrics()[0]
+    for i, text in enumerate([title] + list(lines)):
+        cy = bar / 2.0 if i == 0 else bar + pitch * (i - 0.5) + cap_px * 0.35
+        d.text((x0, int(round(cy + cap_px / 2.0 - ascent))), text, font=font, fill=(255, 255, 255) if i == 0 else fg)
+        right = x0 + font.getbbox(text)[2]
+        if right > w_px - x0 / 2 or cy + cap_px > h_px:
+            raise ValueError(f"notice line {text!r} does not fit the screen at {cap_px:.1f} px capitals")
+    return np.asarray(im).copy()
+
+
 @kind("tablet", priority=2, vary={"color": ["black", "silver"]})
-def tablet(k: Kit, *, width=0.25, depth=0.175, color="black", state="on", lines=("MESSAGE", "Meet at 3 pm"), title="", mass=0.48):
-    """A tablet lying on the table, its screen showing the given lines. Looks `on` and `off`."""
+def tablet(k: Kit, *, width=0.25, depth=0.175, color="black", state="on", lines=("MESSAGE", "Meet at 3 pm"), title="", mass=0.48,
+           stand_deg=0.0, notice=(), notice_title="", notice_cap_mm=18.0):
+    """A tablet lying on the table, its screen showing the given lines. Looks `on` and `off`.
+
+    Added after 0.5.1 (e_tablet_popup): `stand_deg` > 0 stands it on a small stand, its screen tilted back by that
+    angle from the table and facing -y (the front); `notice` (lines) adds a notification that covers the screen in
+    the look `notice` (in `on` and `off` it is hidden, as the microwave switches its display): a title bar with
+    `notice_title` and every line with capitals `notice_cap_mm` tall. Meta `screen_normal`: the screen's normal in the
+    object frame. Without these parameters the asset is as before."""
     W, D = mm(width, depth)
     T = 8.0
     k.shape(rbox(W, D, T, 12.0, (0, 0, T / 2), 5), color, name="case", finish="gloss")
@@ -259,9 +289,36 @@ def tablet(k: Kit, *, width=0.25, depth=0.175, color="black", state="on", lines=
     img, cap = screen_image(list(lines), 600, int(600 * (D - 24.0) / (W - 24.0)), title)
     k.label_flat(list(lines), size=(W - 24.0, D - 24.0), pos=(0, 0, T), normal=(0, 0, 1), image=img, geom="screen", glow=0.85,
                  name="screen", cap_mm=cap * (W - 24.0) / 600.0)
+    if notice:
+        sw, sh = W - 24.0, D - 24.0
+        px = 4.0                                         # texture pixels per mm
+        nimg = notice_image(list(notice), int(round(sw * px)), int(round(sh * px)), notice_title, notice_cap_mm * px)
+        k.label_flat([notice_title] + list(notice), size=(sw, sh), pos=(0, 0, T), normal=(0, 0, 1), image=nimg, geom="notice",
+                     glow=0.85, name="notice", thick=0.7, cap_mm=notice_cap_mm)
     k.look("on", "screen", (1, 1, 1, 1))
     k.look("off", "screen", (0.03, 0.03, 0.04, 1))
-    k.set_look("on" if state == "on" else "off")
+    if notice:
+        k.look("on", "notice", (1, 1, 1, 0))
+        k.look("off", "notice", (1, 1, 1, 0))
+        k.look("notice", "screen", (1, 1, 1, 1))
+        k.look("notice", "notice", (1, 1, 1, 1))
+    if stand_deg:
+        # tilt about the front lower edge, then put the origin at the middle of the footprint (the stand included)
+        a = math.radians(float(stand_deg))
+        k.reframe(rot_x(float(stand_deg)), origin=(0.0, -D / 2.0, 0.0))
+        back = D * math.cos(a)                           # how far back the tilted case reaches
+        leg = 14.0                                       # the stand's leg behind the case
+        foot = back + leg
+        k.reframe(np.eye(3), origin=(0.0, foot / 2.0 - 6.0, 0.0))
+        y0 = -foot / 2.0 + 6.0                           # the case's front lower edge
+        # a lip in front of the lower edge and a leg under the upper part, dark grey, colliding
+        k.solid("box", (W * 0.7, 10.0, 12.0), (0.0, y0 - 5.0, 6.0), "dark_grey", name="stand_lip")
+        zt = (D * 0.75) * math.sin(a)                    # the underside of the case three quarters up
+        yl = y0 + (D * 0.75) * math.cos(a) + T * math.sin(a)
+        k.solid("box", (W * 0.7, 6.0, zt), (0.0, yl + 3.0, zt / 2.0), "dark_grey", name="stand_leg")
+        k.solid("box", (W * 0.7, yl + 6.0 - y0, 6.0), (0.0, (y0 + yl + 6.0) / 2.0, 3.0), "dark_grey", name="stand_rail")
+        k.extra["screen_normal"] = [0.0, round(-math.sin(a), 6), round(math.cos(a), 6)]
+    k.set_look("notice" if (notice and state == "notice") else "on" if state == "on" else "off")
     k.tag("electrical", "battery")
     k.mass(mass * 1000.0)
 

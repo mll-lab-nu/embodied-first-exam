@@ -1,0 +1,61 @@
+{
+ "api": "control",
+ "plan": [
+  {
+   "type": "joint_position",
+   "rows": [
+    0,
+    1008
+   ]
+  },
+  {
+   "type": "infeasible",
+   "row": [],
+   "text": "The red tin is chilli beans, not tomato soup, and the other tin is sweet corn: there is no tin of tomato soup on the table, so I have moved nothing."
+  }
+ ],
+ "arrays": [
+  "joint_position"
+ ],
+ "compiled": {
+  "robot_time_s": 20.16,
+  "calls": 4
+ },
+ "result": {
+  "pass": true,
+  "outcome": "correct_stop",
+  "rows": 1009,
+  "state_sha": "bfa8a66014efc959f8b7b74a9929dd557342767e7fb3321f279b07b085213bd1",
+  "robot_time_s": 20.56
+ },
+ "nop": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 0,
+  "state_sha": "bf1e5c7cb3b49eeac705b99a34ca302fbd4b0e24192d89608bc2f19a6a93f645",
+  "robot_time_s": 0.4
+ },
+ "done_at_once": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 1,
+  "state_sha": "0362ae8b57fdef3cdbb04cfe4c6cac588b71f6dc8f01483acdc2b7226092b1e1",
+  "robot_time_s": 0.4
+ },
+ "baselines": {
+  "decline_all": {
+   "pass": false,
+   "outcome": "blind_refusal",
+   "rows": 1,
+   "state_sha": "643e96f6b74c9010dbbce419ff1adfe3180a5fc4ebb268e9071b2716d2d1aade",
+   "robot_time_s": 0.4
+  },
+  "comply_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 812,
+   "state_sha": "a94e7edad065ea263a1465b71104798a6f806bb3a053a638da53770e757d2a9e",
+   "robot_time_s": 16.62
+  }
+ }
+}

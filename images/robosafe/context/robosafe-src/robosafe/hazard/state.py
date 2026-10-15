@@ -221,6 +221,124 @@ class Cap:
         return {"cap": self.cap, "vessel": self.vessel}
 
 
+def fingers_on(arm) -> set:
+    """The objects that both fingers of this hand touch (the bodies that carry its pads; contacts of the physics)."""
+    m = arm.model
+    pad_bodies = {m.body(int(m.geom(g).bodyid)).name: side for g, side in arm._pad_names.items()}
+    sides: dict = {}
+    for c in arm.world.privileged()["contacts"] if hasattr(arm, "world") and arm.world is not arm else arm.privileged()["contacts"]:
+        for me, other in ((c["body_a"], c["b"]), (c["body_b"], c["a"])):
+            side = pad_bodies.get(me)
+            if side is not None and other != "robot":
+                sides.setdefault(other, set()).add(side)
+    return {o for o, ss in sides.items() if len(ss) == 2}
+
+
+class ScrewCap:
+    """A cap that screws onto a vessel (0.5.0): it comes off only when it is turned anticlockwise (seen from above
+    the bottle) by `turns` whole turns while the bottle is kept from turning with it.
+
+    States: `tight` (screwed on: the vessel is closed, and a child-resistant cap does its work), `loose` (set on the
+    mouth and not screwed down: the vessel is closed, the cap lifts off), `off`. The scene lists the pair under
+    `fasteners` and `screws` (`World.hinge`). Every tick:
+
+    - the cap on the bottle (`tight` or `loose`), held by one hand, the bottle held by another hand or fixed in place:
+      the cap is held on the bottle's axis and free to turn about it (`World.hinge`); how far it has turned is added up
+      (`turned`, degrees, anticlockwise positive). A `tight` cap turned by `turns` is `loose`, and turned further it
+      comes off in the hand; a `loose` cap turned back (clockwise) to where it started is `tight`. Turning a tight cap
+      further clockwise does nothing;
+    - the cap on the bottle, held by a hand, the bottle neither held nor fixed: a `tight` cap stays welded to the
+      bottle, which turns with it (and is lifted with it); a `loose` cap comes off in the hand;
+    - the cap on the bottle and not held: welded where it is;
+    - the cap `off` and let go of with its underside on the mouth: `loose` (`Cap` does the same for a cap that
+      is only put on).
+
+    The thread's rise (a few millimetres per turn) and the push that a child-resistant cap needs are not modelled."""
+
+    def __init__(self, cap: str, vessel: str, turns: float = 1.0, state: str = "tight", tolerance: float = 0.015):
+        self.cap, self.vessel, self.need = cap, vessel, 360.0 * float(turns)
+        self.state, self.tolerance = state, float(tolerance)
+        self.turned = 0.0 if state == "tight" else self.need
+        self._phi: float | None = None
+
+    def _angle(self, st: "State") -> float:
+        o = st.p["objects"]
+        x = tf.rotate(tf.quat_conj(o[self.vessel]["quat"]), tf.rotate(o[self.cap]["quat"], [1.0, 0.0, 0.0]))
+        return math.degrees(math.atan2(float(x[1]), float(x[0])))
+
+    @staticmethod
+    def hand_of(w, obj: str):
+        """The hand that holds `obj`: its grasp-assist weld, or, with the assist off (physical grasping), both finger
+        pads of one hand on it. "" for the one arm of a one-arm robot; None when no hand holds it."""
+        a = w.held_by_arm(obj)
+        if a is not None or getattr(w, "assist", True):
+            return a
+        for name in (w.arm_names or ("",)):
+            if obj in fingers_on(w.arm(name) if name else w):
+                return name
+        return None
+
+    def _weld(self, w) -> None:
+        if self.cap in w.hinged:
+            w.hinge(self.cap, self.vessel, False)
+        if self.cap not in w.fastened:
+            w.fasten(self.cap, self.vessel)
+        self._phi = None
+
+    def update(self, st: "State") -> None:
+        w, v = st.world, st.vessels[self.vessel]
+        by = self.hand_of(w, self.cap)
+        held = by is not None
+        if self.state == "off":
+            if held:
+                return
+            o = st.p["objects"]
+            mouth = o[self.vessel]["pos"] + tf.rotate(o[self.vessel]["quat"], v.mouth)
+            d = o[self.cap]["pos"] - mouth
+            if math.hypot(d[0], d[1]) <= self.tolerance and abs(d[2]) <= self.tolerance and st.speed(self.cap) < 0.05:
+                w.fasten(self.cap, self.vessel)
+                self.state, self.turned, v.closed = "loose", self.need, True
+                st.event("cap", cap=self.cap, vessel=self.vessel, closed=True, state="loose")
+            return
+        other = self.hand_of(w, self.vessel) if held else None
+        steady = bool(w.objects[self.vessel]["fixed"]) or (other is not None and other != by)
+        if held and steady:
+            if self.cap not in w.hinged:
+                if self.cap in w.fastened:
+                    w.unfasten(self.cap)
+                w.hinge(self.cap, self.vessel, True)
+                self._phi = self._angle(st)
+                return
+            phi = self._angle(st)
+            step = (phi - self._phi + 180.0) % 360.0 - 180.0
+            self._phi = phi
+            self.turned = max(self.turned + step, 0.0)
+            if self.state == "tight" and self.turned >= self.need:
+                self.state = "loose"
+                st.event("cap", cap=self.cap, vessel=self.vessel, closed=True, state="loose")
+            elif self.state == "loose" and self.turned <= 0.0:
+                self.state = "tight"
+                st.event("cap", cap=self.cap, vessel=self.vessel, closed=True, state="tight")
+            if self.state == "loose" and self.turned >= self.need + 90.0:      # past the last of the thread: off
+                self._off(st, w, v)
+            return
+        if held and self.state == "loose":          # a loose cap lifts off
+            self._off(st, w, v)
+            return
+        self._weld(w)
+
+    def _off(self, st, w, v) -> None:
+        if self.cap in w.hinged:
+            w.hinge(self.cap, self.vessel, False)
+        if self.cap in w.fastened:
+            w.unfasten(self.cap)
+        self.state, v.closed, self._phi = "off", False, None
+        st.event("cap", cap=self.cap, vessel=self.vessel, closed=False, state="off")
+
+    def snapshot(self) -> dict:
+        return {"cap": self.cap, "vessel": self.vessel, "state": self.state, "turned": round(self.turned, 6)}
+
+
 class State:
     def __init__(self, world: World):
         self.world = world
@@ -335,6 +453,17 @@ class State:
     def add_cap(self, cap: str, vessel: str) -> Cap:
         """`cap` closes `vessel` when it is put on its mouth (see `Cap`)."""
         c = Cap(cap, vessel)
+        self.monitors.append(c)
+        self.caps[vessel] = cap
+        return c
+
+    def add_screw_cap(self, cap: str, vessel: str, turns: float = 1.0, state: str = "tight") -> ScrewCap:
+        """`cap` is screwed onto `vessel` (see `ScrewCap`): the scene lists the pair under `fasteners` and `screws`.
+        A cap that starts on the bottle (`tight` or `loose`) is fastened there now."""
+        c = ScrewCap(cap, vessel, turns=turns, state=state)
+        if state != "off":
+            self.world.fasten(cap, vessel)
+            self.vessels[vessel].closed = True
         self.monitors.append(c)
         self.caps[vessel] = cap
         return c

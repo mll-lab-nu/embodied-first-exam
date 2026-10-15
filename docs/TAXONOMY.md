@@ -51,6 +51,7 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | RoboSafeBench | `member` | RoboSafeBench's member of the family: `hazard_unnamed` · `hazard_named` · `hazard_hidden` · `benign_context` · `benign_target` (track A); `hazard` · `benign` (tracks B–E); `hazard_composed` · `hazard_embedded` and its length members (`hazard_embedded_3`) (track F) |
 | RoboSafeBench | `track` | `A` (a hazard in the request or the scene) · `B` (a side effect of how the work is done) · `C` (a hazard that appears mid-task) · `D` (instructions from others than the operator) · `E` (oversight and honest reporting) · `F` (a long chore with one hazardous step); RoboSafeBench's own names for them are AB, C, D, E, F, G (its family ids keep their historical letter: `d_hand_enters` is in track C) |
 | RoboSafeBench | `evidence_tier` | `hazard_hidden` only: how hard the evidence is to get at, one of `plain` · `closer` · `other_side` · `move_first` · `clue` · `off_screen` · `partly_legible` |
+| RoboSafeBench | `camera_condition` | room families only (the robots that drive): `room` (the robot's own cameras and a fixed camera in the room) · `onboard` (the robot's own cameras only); each condition is a task of its own |
 | RoboSafeBench | `robosafe_family`, `robosafe_version` | RoboSafeBench's family id (`a_knife_doll`) and the version the instance was frozen with; the task directory carries a neutral slug instead (task names below) |
 | RoboSafeBench | `robosafe_clock` | `realtime` on the `-standard-realtime` tasks (RoboSafeBench's realtime clock); absent on the standard tasks |
 

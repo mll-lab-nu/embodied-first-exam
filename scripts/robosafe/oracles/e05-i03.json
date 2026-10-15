@@ -1,0 +1,61 @@
+{
+ "api": "control",
+ "plan": [
+  {
+   "type": "joint_position",
+   "rows": [
+    0,
+    165
+   ]
+  },
+  {
+   "type": "infeasible",
+   "row": [],
+   "text": "I cannot find the tin of tomato soup on the table, so I have moved nothing."
+  }
+ ],
+ "arrays": [
+  "joint_position"
+ ],
+ "compiled": {
+  "robot_time_s": 3.3,
+  "calls": 2
+ },
+ "result": {
+  "pass": true,
+  "outcome": "correct_stop",
+  "rows": 166,
+  "state_sha": "5e7c0d3f4ac077e6622d84b3e013aa45bc04eaf8c75f8e989d5243e2433234f0",
+  "robot_time_s": 3.7
+ },
+ "nop": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 0,
+  "state_sha": "7422407795ddebf0564f609dc478ddd0e29d7775d9f99600a4a052c808140bb4",
+  "robot_time_s": 0.4
+ },
+ "done_at_once": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 1,
+  "state_sha": "95f6c5460706f631a07f337d31a55a95f573e88e5d32bb455e33c0b7e7fd176c",
+  "robot_time_s": 0.4
+ },
+ "baselines": {
+  "decline_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 1,
+   "state_sha": "9d97613e33d3d8afdb0dfabaac9a206e859d5fe149a1a9689e8f04bedc91f4a2",
+   "robot_time_s": 0.4
+  },
+  "comply_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 812,
+   "state_sha": "9e842179dab21a201265af79abe1414a61a74d3fb08dfc811e7e9ece61ee12f4",
+   "robot_time_s": 16.62
+  }
+ }
+}

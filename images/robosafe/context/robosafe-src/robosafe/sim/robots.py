@@ -77,6 +77,8 @@ class RobotSpec:
     #   "mirror": the sign of each joint in the posture of an arm mounted as a mirror image (see `arms`)
     #   "drop_lights": leave out the lights the arm's model file brings along
     #   "look_distances": the distances from the point at which `look` tries to hold the pinch point, in order
+    #   "look_elevations": the elevations (degrees above the horizon, in order) at which `look` from a side tries to hold
+    #       the wrist camera (default 37, 55, 70)
     #   "pour_angles": smaller angles `pour` settles for when the arm cannot tip a vessel as far as asked
     #   "pour_turns": the tipping directions `pour` tries, in its own order (default: `actions.POUR_TURNS`)
     #   "cross_low": transfers may lower the hand before crossing (an arm whose reach shrinks with height)
@@ -244,7 +246,15 @@ FR3_2F85 = RobotSpec(
     # `bump_yaw_deg`: the admission's bump into a bystander (verify/bump.py) holds the hand down at the yaw of this
     # arm's ready posture, not at 0, which is a quarter turn from it and runs the flange joint (+-3.03 rad) to its end
     # on one half of the table. Only the FR3 has these keys; every other robot is bumped as before.
-    extra={"near_reach_m": 0.28, "bump_yaw_deg": 90.0},
+    # `look_elevations`: a look from a side at a thing on the robot's own side of it (the camera looking back towards
+    # the base) is out of the FR3's reach at 37 and 55 degrees, and at 70 it sees a printed side at more than 70 degrees
+    # off its normal (`view.LABEL_VIEWS`: not legible); 45, 60 and 65 are tried between them (0.5.1, lane fr3-holds:
+    # the hidden labels of b_biohazard_trash, b_powerbank_water and d_label_revealed). `look_distances`: 0.14 m is
+    # tried after 0.19 and 0.25 (the default two), so that a view the FR3 cannot take from further away is taken from
+    # nearer before a steeper one (b_powerbank_water `closer`: from 0.14 m the print is 65.2 to 66.6 degrees off its
+    # normal on seeds 0 to 2, where from 60 degrees and 0.19 m it was 68.7 to 69.8).
+    extra={"near_reach_m": 0.28, "bump_yaw_deg": 90.0, "look_elevations": (37.0, 45.0, 55.0, 60.0, 65.0, 70.0),
+           "look_distances": (0.19, 0.25, 0.14)},
     **_2F85,
 )
 
@@ -334,7 +344,10 @@ TIDYBOT = RobotSpec(
     arm_joints=tuple(f"joint_{i}" for i in range(1, 8)),
     arm_actuators=tuple(f"joint_{i}" for i in range(1, 8)),
     vel_limits=(1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.0), acc_limits=(4.0, 4.0, 4.0, 4.0, 6.0, 6.0, 6.0), lead=0.05,
-    **{**_2F85, "hand_file": "", "hand_prefix": "tidybot/", "mount_body": "base"},
+    # 0.5.1: the grip at 13 on the tendon (about 113 N a pad, 226 N in all, within the real 2F-85's 20 to 235 N) in place
+    # of the bench arms' 10: a knife held by its handle crept out of the fingers within a minute's slow carry past a
+    # person at 10 (b_room_carry_past_person seeds 1 and 2), and stayed at 13
+    **{**_2F85, "hand_file": "", "hand_prefix": "tidybot/", "mount_body": "base", "grip_servo": {"force": 13.0}},
     base_pos=(0.0, 0.0, 0.0), base_yaw_deg=0.0, pedestal=(0.0, 0.0),
     home=TIDYBOT_HOME,
     # With joints 1 and 5 at zero and joint 3 at half a turn the arm lies in the vertical plane through the base's
@@ -389,6 +402,13 @@ TIDYBOT = RobotSpec(
         "joints": ("joint_x", "joint_y", "joint_th"), "actuators": ("joint_x", "joint_y", "joint_th"), "body": "base_link",
         "vel_limits": (0.5, 0.5, 1.0), "acc_limits": (1.0, 1.0, 2.0), "slow": 0.5,
         "lead": (0.05, 0.05, 0.02), "force": (400.0, 400.0, 150.0),
+        # 0.5.1: the base's x and y servos critically damped (2 sqrt(kp m), kp 1e6, 69 kg: 16 600 N s/m) in place of the
+        # model's 50 000. MuJoCo integrates actuator damping implicitly (`implicitfast`) and the contacts explicitly; with
+        # the model's damping a thing held by friction creeps in the fingers in proportion to the base's speed (a knife
+        # held by its handle: 3.2 mm/s at 0.08 m/s, out of the hand within half a minute of driving; at 16 600 it stayed
+        # through a 100 s carry). The turn's servo likewise (2 sqrt(5e4 x 2.04 kg m^2): 640 for the model's 1000; at 1000
+        # a pot held by its handle tipped 0.1 m in the fingers over a minute of turning).
+        "kv": (16600.0, 16600.0, 640.0),
         # the base is a square of 0.482 m with its corners cut: everything of it is within 0.284 m of its vertical
         "footprint": ((0.241, 0.150), (0.150, 0.241), (-0.150, 0.241), (-0.241, 0.150),
                       (-0.241, -0.150), (-0.150, -0.241), (0.150, -0.241), (0.241, -0.150)),
@@ -499,7 +519,85 @@ G1_GLIDE = RobotSpec(
     },
 )
 
-ROBOTS: dict[str, RobotSpec] = {s.type: s for s in (UR5E_2F85, FR3_2F85, YAM_BIMANUAL, TIDYBOT, G1_GLIDE)}
+# The G1 that walks (0.5.0): BiGym 2.0's G1 with Dex1-1 parallel grippers, its legs and waist driven by NVIDIA's
+# GR00T-WBC (`bodies.g1_wbc`, `wbc`; docs/MOTION.md 14, docs/CONTRACTS.md "Added in 0.5.0"). Its only interface is
+# `control` with the action type `whole_body` (BiGym 2.0's command at 50 Hz); the skills are not offered on it, and
+# the fields below that only the skills read (postures, limits, carry) are those of a robot at rest with its arms
+# hanging. The gripper target is BiGym's: 0 open .. 1 closed (`gripper_max` 1).
+G1_WBC_OPEN = 0.0245            # m: finger joint, open (BiGym `G1_DEX1_QPOS_OPEN`) ...
+G1_WBC_TRAVEL = 0.0445          # ... to closed at -0.02 m: 0.0445 m per finger, 90 mm between the pads
+G1_WBC_HOME = (0.0, 0.1, -0.4, -1.0, 0.0, -0.8, 0.0)
+G1_WBC = RobotSpec(
+    type="g1_wbc",
+    arm_file="", arm_prefix="g1/left_", attach_site="",
+    hand_file="", hand_prefix="g1/left_",
+    arm_joints=G1_ARM, arm_actuators=G1_ARM,
+    # BiGym's arm servos (kp 150 / 100 / 20, damping on the joint); no planned motion uses these limits
+    vel_limits=(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0), acc_limits=(10.0,) * 7, lead=0.0,
+    gripper_actuator="dex1_finger_joint_1", gripper_max=1.0, gripper_ctrl_max=-0.02,
+    driver_joints=("dex1_finger_joint_1", "dex1_finger_joint_2"),
+    # free distance between the pads: 0.0405 m + twice the finger joint (0.0895 open, 0.0005 closed on nothing)
+    opening_table=((0.0, 0.0895), (0.25, 0.06725), (0.5, 0.045), (0.75, 0.02275), (1.0, 0.0005)),
+    tip_reach_closed=0.037,
+    tool_site="pinch", pads={"left": ("dex1_pad_1",), "right": ("dex1_pad_2",)},
+    hand_body="dex1_base_link", mount_body="dex1_base_link",
+    base_pos=(0.0, 0.0, 0.0), base_yaw_deg=0.0, pedestal=(0.0, 0.0),
+    # The rest posture of the arms (not BiGym's, where every joint is at zero: the forearms point ahead and the
+    # grippers stand 0.36 m before the pelvis at 0.8 m, a circle of 0.43 m round the body that no doorway of the flat
+    # lets through): the upper arms down, the forearms lowered and turned in, the grippers before the thighs, nothing
+    # further than 0.20 m from the pelvis axis and no hand lower than 0.90 m (found by search, docs/MOTION.md 14)
+    home=G1_WBC_HOME, ready=G1_WBC_HOME, ready_side=G1_WBC_HOME, ready_side_low=G1_WBC_HOME, ready_alt=(),
+    wrist_camera={"pos": [0.12, 0.0, 0.04], "target": [0.3, 0.0, -0.2], "up": [1.0, 0.0, 0.0], "fovy": 60.0},   # unused: `cameras` below
+    carry="general", payload=2.0, nullspace=0.05,
+    extra={
+        "gripper_ctrl_open": G1_WBC_OPEN,
+        "driver_map": ((-1.0 / G1_WBC_TRAVEL, G1_WBC_OPEN / G1_WBC_TRAVEL),) * 2,
+        "tip_reach": 0.037,
+        "hand_root": "dex1_base_link",
+        "mirror": (1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0),
+        "build": "robosafe.sim.bodies.g1_wbc:make_spec",
+        "build_args": {"hide_logo": True},
+        "model_prefix": "g1/",
+        "arm_prefixes": {"left": ("g1/left_", "g1/left_"), "right": ("g1/right_", "g1/right_")},
+        # what makes this robot other than the rest: its controller, its physics, its own cameras, no gravity
+        # compensation (a robot that stands carries its own weight)
+        "controller": "groot_wbc",
+        "physics": "bigym_g1",
+        "cameras": "bigym_g1",
+        "gravcomp": False,
+        "interfaces": ("control",),
+        # The robot's own rest contacts, exempt from the contact marks by named pairs (`hazard.contact.rest_pairs`,
+        # docs/CONTRACTS.md, "Added in 0.5.1"): standing in the rest posture the fingers of both grippers lean on the
+        # torso (about 5 N; up to `self_max_n` counts as resting, a harder touch is a self contact as before); the feet
+        # stand on what lies flat on the floor (`contact.WALKED_ON`)
+        # what this body needs of a kind of thing in its scenes (`World._build`): the dock's mat 2 mm instead of 8 mm.
+        # GR00T-WBC lifts the feet little at a slow walk: an 8 mm edge (or a ramp up to it) stops it below 0.25 m/s,
+        # 4 mm below 0.15 m/s; 2 mm lets it on at 0.1 m/s (docs/CONTRACTS.md, the walking G1)
+        "scene_params": {"charging_dock": {"mat_thickness": 0.002}},
+        "rest_contacts": {
+            "self": (("torso_link", "left_dex1_finger_link_1"), ("torso_link", "left_dex1_finger_link_2"),
+                     ("torso_link", "right_dex1_finger_link_1"), ("torso_link", "right_dex1_finger_link_2")),
+            "self_max_n": 20.0,
+            "feet": ("left_ankle_roll_link", "right_ankle_roll_link"),
+        },
+    },
+    arms=(("left", (0.0, 0.0, 0.0), 0.0, False), ("right", (0.0, 0.0, 0.0), 0.0, True)),
+    base={
+        # where it stands: the pelvis's slides and its turn about the vertical (BiGym's floating base); nothing drives
+        # them: the legs do
+        "joints": ("pelvis_x", "pelvis_y", "pelvis_rz"), "actuators": (), "body": "pelvis",
+        "vel_limits": (1.0, 1.0, 1.0), "acc_limits": (1.0, 1.0, 2.0), "slow": 0.5, "lead": (0.0, 0.0, 0.0), "force": (),
+        # the outline on the floor, standing at rest after the warm-up, about the pelvis axis (x ahead, y left): the
+        # knees 0.20 m ahead, the toes 0.16 m, the grippers 0.20 m to either side, the back 0.07 m behind (measured
+        # on the shapes; tests/sim/test_g1_wbc.py measures it again)
+        "footprint": ((0.21, 0.12), (0.12, 0.20), (-0.07, 0.20), (-0.07, -0.20), (0.12, -0.20), (0.21, -0.12)),
+        "clearance": 0.0, "height": 1.29,
+        "reach": 0.60, "standoff": 0.45, "standoff_down": 0.35, "level_above": 0.85, "dock_gap": 0.05, "figure_standoff": 0.90,
+        "hand_offset": 0.0, "hand": "right", "close_up": True,
+    },
+)
+
+ROBOTS: dict[str, RobotSpec] = {s.type: s for s in (UR5E_2F85, FR3_2F85, YAM_BIMANUAL, TIDYBOT, G1_GLIDE, G1_WBC)}
 DEFAULT = "ur5e_2f85"
 
 

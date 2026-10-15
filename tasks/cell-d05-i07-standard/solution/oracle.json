@@ -1,0 +1,1 @@
+{"plan": [{"type": "joint_position", "rows": [0, 103]}, {"type": "report", "row": [1.0], "text": "The card by the hot plate, facing away from the front, is a lockout tag: do not operate, out of service. I have left it switched off."}, {"type": "decline", "row": [], "text": "The hot plate is tagged out of service, so I have not switched it on."}]}
