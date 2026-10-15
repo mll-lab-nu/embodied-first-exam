@@ -39,6 +39,7 @@ def load(path):
 
 def one(job):
     sport, program, level, seed, max_steps, delay = job
+    from core.outcome import decide
     from core.sport import FINISHED, UNIT_OVER, Refused
     from tools.fullsim.formal import commands_of
     from tools.fullsim.session import Session, plugin
@@ -81,15 +82,20 @@ def one(job):
             continue
         s.step(every)
     sc = s.match.scores()
+    finished = s.match.phase().state == FINISHED
+    # the referee's winner (its tiebreaks: a soccer shoot-out ends level on goals), as the grader decides it
+    winner = decide(s.match, None, None, s.cfg.side_list(), s.cfg.side_of).winner if finished else None
     return {
         "level": level,
         "seed": seed,
         "delay": delay,
         "A": sc.get("A"),
         "opp": sc.get("opponent"),
-        "win": bool(s.match.phase().state == FINISHED and sc.get("A", 0) > sc.get("opponent", 0)),
-        "finished": s.match.phase().state == FINISHED,
+        "win": bool(finished and winner == "A"),
+        "winner": winner,
+        "finished": finished,
         "steps": s.match.k,
+        "state_sha": s.match.state_digest(),
         "calls": calls,
         "refused": refused,
         "wall_s": round(time.monotonic() - t0, 2),

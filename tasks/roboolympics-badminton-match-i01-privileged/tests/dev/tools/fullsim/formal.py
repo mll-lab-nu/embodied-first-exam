@@ -26,10 +26,12 @@ from tools.fullsim.session import FROZEN, ROOT, match_config, plain, plugin, plu
 
 
 class NoRenderSport:
-    workers = ()
+    """The sport without its render workers (no cameras here); its other workers (a planner, e.g. badminton's stroke
+    plans) run as in the twin's service."""
 
     def __init__(self, sport):
         self.sport = sport
+        self.workers = tuple(w for w in getattr(sport, "workers", ()) if w != "render")
 
     def __getattr__(self, name):
         return getattr(self.sport, name)
