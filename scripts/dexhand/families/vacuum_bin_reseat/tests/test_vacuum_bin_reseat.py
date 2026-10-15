@@ -4,7 +4,7 @@
     DEXHAND_ASSET_DIR=$PWD/images/dexhand/assets/hand \
     python -m pytest -q scripts/dexhand/families/vacuum_bin_reseat/tests
 
-The oracle tests replay the full 869-control episode in fresh processes (about 15 s each).
+The oracle tests replay the full 1,181-control episode in fresh processes (about 20 s each).
 """
 
 from __future__ import annotations
@@ -30,6 +30,8 @@ from runtime import Session  # noqa: E402
 TASK = "vacuum_bin_reseat"
 ORACLE = FAMILY / "solution" / "trajectory.npz"
 OPEN_UNDER = np.array([0.0, 0.0, 0.0, 0, 0.0, -0.1, 0, 0, 0, -0.1, 0, 0, 0, -0.1, 0, 0, 0, 0, -0.1, 0, 0, 0])
+RF = slice(6, 28)  # right fingers; sharpa layout: right stage 6, right fingers 22, left stage 6, left fingers 22
+WIDTH = 56
 
 
 @pytest.fixture(scope="module")
@@ -63,10 +65,12 @@ def save(tmp_path, name, actions, hand="sharpa", **members):
 # ---------------------------------------------------------------------------------------------- model
 def test_only_the_hand_is_actuated(sharpa):
     m = sharpa.model
-    assert sharpa.hand == "sharpa" and m.nu == 28 and sharpa.action_dim == 28
+    assert sharpa.hand == "sharpa" and m.nu == WIDTH and sharpa.action_dim == WIDTH
+    assert sharpa.robot == "sharpa-wave-floating-bimanual"
     assert m.nmocap == 0 and m.neq == 0
     joints = [m.joint(int(j)).name for j in m.actuator_trnid[:, 0]]
-    assert all(name.startswith(("wrist_", "right_")) for name in joints)
+    assert all(name.startswith(("wrist_", "right_", "left_wrist_", "left_")) for name in joints)
+    assert sum(name.startswith("left_wrist_") for name in joints) == 6
     assert m.joint("vacuum_free").type == mujoco.mjtJoint.mjJNT_FREE
     assert m.joint("container_free").type == mujoco.mjtJoint.mjJNT_FREE
     button = m.joint("button_depression")
@@ -146,40 +150,52 @@ def test_oracle_succeeds_in_fresh_processes_and_float32(tmp_path, rows):
     assert rounded["success"]
 
 
+def stage_starts(rows):
+    """First control at which each stage is reached in the oracle replay."""
+    s = Session()
+    s.reset()
+    first = {}
+    for i, row in enumerate(rows):
+        s.step(row)
+        first.setdefault(int(s.status()["stage"]), i + 1)
+        if s.done:
+            break
+    return first
+
+
 def test_nop_and_partials_fail(tmp_path, sharpa, rows):
+    first = stage_starts(rows)
     nop = replay_cli(tmp_path, save(tmp_path, "nop", np.tile(sharpa.hold_action(), (300, 1))))
     assert not nop["success"] and nop["stage"] == 0
-    removed = replay_cli(tmp_path, save(tmp_path, "removed", rows[:700]))
+    removed = replay_cli(tmp_path, save(tmp_path, "removed", rows[: first[1] + 20]))
     assert not removed["success"] and removed["stage"] == 1
-    held = replay_cli(tmp_path, save(tmp_path, "held", rows[:800]))
-    assert not held["success"] and held["stage"] == 2  # reseated but the hand still holds it
-    short = replay_cli(tmp_path, save(tmp_path, "short", rows[: first_success(rows) - 1]))
+    held = replay_cli(tmp_path, save(tmp_path, "held", rows[: first[2] + 5]))
+    assert not held["success"] and held["stage"] == 2  # reseated but the hands still hold it
+    short = replay_cli(tmp_path, save(tmp_path, "short", rows[: first[3] - 1]))
     assert not short["success"]
 
 
-def first_success(rows):
-    s = Session()
-    return s.replay(rows)["steps"]
-
-
 def test_no_release_press_never_counts(tmp_path, rows):
+    # the right hand stays 6 cm above its poke during the press window; the later rows try to remove and reinstall
     lifted = rows.copy()
-    lifted[:255, 2] = np.minimum(lifted[:255, 2] + 0.06, 0.4)  # the poke never reaches the button
+    lifted[165:420, :6] = rows[165, :6]
+    lifted[165:420, 2] = rows[165, 2] + 0.06
     result = replay_cli(tmp_path, save(tmp_path, "nopress", lifted))
     assert not result["success"] and result["stage"] == 0
 
 
-def test_drop_and_catch_fails_fast(tmp_path, rows):
-    dropped = list(rows[:640])
-    for _ in range(3):
-        row = rows[639].copy()
-        row[6:] = OPEN_UNDER
-        row[2] -= 0.04
-        dropped.append(row)
-    dropped += list(rows[640:])
-    result = replay_cli(tmp_path, save(tmp_path, "dropcatch", np.asarray(dropped)))
+def test_drop_mid_carry_fails_fast(tmp_path, rows):
+    # with the bin lifted away from the vacuum, the right hand opens and pulls out from under it
+    first = stage_starts(rows)
+    k = first[1] + 60
+    dropped = rows.copy()
+    for j in range(12):
+        dropped[k + j, RF] = OPEN_UNDER
+        dropped[k + j, 2] -= 0.02 * min(j + 1, 4)
+        dropped[k + j, 0] -= 0.015 * (j + 1)
+    result = replay_cli(tmp_path, save(tmp_path, "drop", dropped))
     assert not result["success"] and result["reason"] == "bin_dropped"
-    assert result["failure_detail"]["control"] <= 643
+    assert result["failure_detail"]["control"] <= k + 12
 
 
 def test_knocking_the_vacuum_fails_fast(tmp_path, sharpa):
@@ -205,7 +221,7 @@ def test_forged_members_are_ignored_or_rejected(tmp_path, sharpa):
     assert ignored["bad_trajectory"] == 0 and not ignored["success"]
     for name, members in {
         "wrong_task": {"task": np.array("assemble_hamburger")},
-        "wrong_names": {"actuator_names": np.array(["x"] * 28)},
+        "wrong_names": {"actuator_names": np.array(["x"] * WIDTH)},
     }.items():
         assert replay_cli(tmp_path, save(tmp_path, name, hold, **members))["bad_trajectory"] == 1
     shadow = tmp_path / "shadow.npz"
@@ -221,12 +237,12 @@ def test_malformed_actions_are_bad_trajectories(tmp_path, sharpa, case):
     hold = np.tile(sharpa.hold_action(), (20, 1))
     actions = {
         "wide": np.hstack([hold, np.zeros((20, 1))]),
-        "narrow": hold[:, :26],  # wuji width under the sharpa label
-        "nan": np.where(np.arange(28) == 7, np.nan, hold),
-        "range": hold + np.eye(1, 28, 3) * 10,
-        "empty": np.zeros((0, 28)),
+        "narrow": hold[:, :52],  # wuji width under the sharpa label
+        "nan": np.where(np.arange(WIDTH) == 7, np.nan, hold),
+        "range": hold + np.eye(1, WIDTH, 3) * 10,
+        "empty": np.zeros((0, WIDTH)),
         "too_many": np.tile(sharpa.hold_action(), (3001, 1)),
-        "object": np.array([[object()] * 28], dtype=object),
+        "object": np.array([[object()] * WIDTH], dtype=object),
     }[case]
     path = tmp_path / f"{case}.npz"
     if case == "object":
@@ -238,10 +254,11 @@ def test_malformed_actions_are_bad_trajectories(tmp_path, sharpa, case):
 
 
 # ---------------------------------------------------------------------------------------------- wuji
-def test_wuji_loads_with_the_same_stage_and_nop_fails(tmp_path, sharpa):
+def test_wuji_loads_with_the_same_stages_and_nop_fails(tmp_path, sharpa):
     wuji = Session(hand="wuji")
-    assert wuji.action_dim == 26 and wuji.actuator_names[:6] == sharpa.actuator_names[:6]
-    assert wuji.actuator_names[6].startswith("r_wuji_")
+    assert wuji.action_dim == 52 and wuji.actuator_names[:6] == sharpa.actuator_names[:6]
+    assert wuji.actuator_names[6:12] == sharpa.actuator_names[28:34]  # the left stage
+    assert wuji.actuator_names[12].startswith("r_wuji_") and wuji.actuator_names[32].startswith("l_wuji_")
     assert np.allclose(wuji.model.actuator_ctrlrange[:6], sharpa.model.actuator_ctrlrange[:6])
     path = save(tmp_path, "wuji_nop", np.tile(wuji.hold_action(), (100, 1)), hand="wuji")
     a, b = replay_cli(tmp_path, path), replay_cli(tmp_path, path)

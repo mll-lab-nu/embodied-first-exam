@@ -42,6 +42,46 @@ def _hands_module():
 
 hands = _hands_module()
 
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = HERE.parents[1] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+def arm_rig_id():
+    return _arm_rig_module().ROBOT_ID
+
+
+def add_marvin_rig(root, config, hand_id, folder):
+    """The Tianji Marvin stand with both 7-DoF arms (shared arm_rig): the left hand holds the vacuum body, the right
+    hand presses the release button and handles the bin."""
+    arm_rig = _arm_rig_module()
+    actuator, hand = root.find("actuator"), root.find("worldbody").find("body")
+    for a in actuator:  # the family's Sharpa tweaks, before mounting (the mirrored left Wave inherits them)
+        if a.tag == "general":
+            bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
+            bias[2] = -0.9
+            a.set("biasprm", " ".join(map(str, bias)))
+    for g in hand.iter("geom"):
+        if "fingertip_collision" in g.get("name", ""):
+            g.set("friction", "1.5 .005 .0001")
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    return arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("left", "right"),
+                                mount_names={"right": "wrist_stage", "left": "left_wrist_stage"},
+                                sharpa_folder=folder,
+                                wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
 # Native scene items that are copied; the native file also carries unused Sharpa default classes and materials.
 SCENE_MATERIALS = ("vac_green", "vac_black", "vac_red", "vac_smoke", "vac_filter")
 
@@ -84,29 +124,39 @@ def _sharpa_folder(asset_dir=None):
     raise FileNotFoundError("Sharpa Wave assets not found (set DEXHAND_ASSET_DIR)")
 
 
-def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen vacuum scene with the selected genuine hand on the six-axis wrist stage."""
-    verify_assets()
-    hand_id = hands.canonical(hand)
-    folder = _sharpa_folder(asset_dir)
-    root = ET.parse(folder / "right_hand.xml").getroot()
-    root.set("model", hands.info(hand_id)["model"] + " vacuum dust bin reseat")
-    root.find("compiler").set("meshdir", str((folder / "assets/right").resolve()))
-    option = root.find("option")
-    option.set("timestep", str(config["physics_dt"]))
-    option.set("gravity", "0 0 -9.81")
-    option.set("iterations", "60")
-    option.set("ls_iterations", "20")
-    option.set("integrator", "implicitfast")
-    option.set("cone", "elliptic")
-    option.set("impratio", "10")
-    for key in root.findall("keyframe"):
-        root.remove(key)
-    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
-    hand_body = world.find("body")
-    world.remove(hand_body)
+def add_left_stage(root, config, folder):
+    """The second hand: the right Wave mirrored in y (shared ``arm_rig.mirrored_left_wave``, same tweaks) on its own
+    six-axis wrist stage (``task.json`` ``left_wrist_stage``); its 6 stage + 22 finger actuators follow the right
+    hand's 28."""
+    arm_rig = _arm_rig_module()
+    world, actuator, asset = root.find("worldbody"), root.find("actuator"), root.find("asset")
+    contact = root.find("contact")
+    if contact is None:
+        contact = node(root, "contact")
+    body, meshes, excludes, fingers = arm_rig.mirrored_left_wave(root, folder)
+    asset.extend(meshes)
+    contact.extend(excludes)
+    stage = config["left_wrist_stage"]
+    wrist = node(world, "body", name="left_wrist_stage", pos=stage["origin"])
+    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
+    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
+        axis = [int(i % 3 == j) for j in range(3)]
+        low, high = stage["range"][i]
+        node(wrist, "joint", name="left_wrist_" + name, type="slide" if i < 3 else "hinge", axis=" ".join(map(str, axis)),
+             range=f"{low} {high}", damping="15" if i < 3 else "1", armature=".02")
+        node(actuator, "position", name="left_wrist_" + name + "_act", joint="left_wrist_" + name,
+             kp="2500" if i < 3 else "120", kv="80" if i < 3 else "8", inheritrange="1",
+             forcerange="-80 80" if i < 3 else "-10 10")
+    body.set("pos", "0 0 0")
+    body.set("quat", stage["hand_quat"])
+    wrist.append(body)
+    actuator.extend(fingers)
 
-    # ------------------------------------------------------------------ wrist stage (same for both hands)
+
+def add_wrist_stage(root, config, hand_body, hand_id, folder):
+    """Authoring/legacy rig: the hand on a floating six-axis wrist stage."""
+    world, actuator = root.find("worldbody"), root.find("actuator")
+    world.remove(hand_body)
     stage = config["wrist_stage"]
     wrist = node(world, "body", name="wrist_stage", pos=stage["origin"])
     node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
@@ -133,6 +183,39 @@ def build(config, asset_dir=None, hand="sharpa"):
     if hand_id != "sharpa":
         sibling = folder.parent / "wuji_v2_2"
         hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
+
+
+def build(config, asset_dir=None, hand="sharpa"):
+    """Compose the frozen vacuum scene with the selected genuine hand on the six-axis wrist stage."""
+    verify_assets()
+    hand_id = hands.canonical(hand)
+    folder = _sharpa_folder(asset_dir)
+    root = ET.parse(folder / "right_hand.xml").getroot()
+    root.set("model", hands.info(hand_id)["model"] + " vacuum dust bin reseat")
+    root.find("compiler").set("meshdir", str((folder / "assets/right").resolve()))
+    option = root.find("option")
+    option.set("timestep", str(config["physics_dt"]))
+    option.set("gravity", "0 0 -9.81")
+    option.set("iterations", "60")
+    option.set("ls_iterations", "20")
+    option.set("integrator", "implicitfast")
+    option.set("cone", "elliptic")
+    option.set("impratio", "10")
+    for key in root.findall("keyframe"):
+        root.remove(key)
+    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
+    hand_body = world.find("body")
+
+    if config.get("rig", "floating") == "marvin":
+        add_marvin_rig(root, config, hand_id, folder)
+    else:
+        add_wrist_stage(root, config, hand_body, "sharpa", folder)
+        if "left_wrist_stage" in config:
+            add_left_stage(root, config, folder)
+        if hand_id != "sharpa":
+            sibling = folder.parent / "wuji_v2_2"
+            hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
 
     # ------------------------------------------------------------------ native T19 scene (verbatim geometry)
     native = ET.parse(ASSETS / "vacuum_scene.xml").getroot()

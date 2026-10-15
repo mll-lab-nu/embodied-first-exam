@@ -1,22 +1,25 @@
 # vacuum_bin_reseat (authoring notes)
 
 Scene T19 "Remove and reinstall a vacuum dust bin" of the scene-expansion delivery, turned into a physical DexHand
-task: one dexterous hand (Sharpa Wave default, Wuji Hand 2.2 selectable) on the six-axis wrist stage presses the spring
-release button, takes the free dust bin off the free-standing handheld vacuum, puts it back tabs-first, closes it until
-the latch tooth snaps behind the bin's catch, lets go and the reinstalled state must hold for 1 s.
+task: two dexterous hands (Sharpa Wave default, Wuji Hand 2.2 selectable), each on its own six-axis wrist stage. The
+left hand holds the free-standing handheld vacuum by its handle; the right hand presses the spring release button, takes
+the free dust bin off, puts it back tabs-first and closes it until the latch tooth snaps behind the bin's catch; both
+let go and the reinstalled state must hold for 1 s. Wave 3 (2026-10-15): the source latch friction 0.55 and button
+travel 6 mm are restored, which needs the second hand (see "Wave-3 changes").
 
 ## Files
 
 | file | role |
 |---|---|
-| `scene.py` | builds the MJCF: Sharpa `right_hand.xml` on the wrist stage (+ `hands.replace_wave_hands` for Wuji) and the native T19 scene from `assets/vacuum_scene.xml` |
+| `scene.py` | builds the MJCF: Sharpa `right_hand.xml` on the right wrist stage, its mirror (`arm_rig.mirrored_left_wave`) on the left wrist stage (+ `hands.replace_wave_hands` for Wuji) and the native T19 scene from `assets/vacuum_scene.xml`; a Marvin-arm code path (`"rig": "marvin"`) is kept but unused |
 | `checker.py` | ordered stages, terminal hold, fail-fast, all from simulator state |
 | `runtime.py` | `Session` (FAMILY_PLUGIN section 4, plus `snapshot` / `restore`) |
 | `replay.py` | fresh-process replay CLI (FAMILY_PLUGIN section 5), optional `--video` |
 | `task.json` | frozen instance: physics, wrist stage, reset, checker thresholds, documented geometry adaptations |
 | `assets/` | `vacuum_scene.xml` and `initial_state.npz` copied verbatim from the T19 source, `manifest.json` (sha256 + size, checked at every build) |
 | `author.py` | authoring-only closed-loop controller that records the oracle rows (not shipped) |
-| `solution/trajectory.npz` | Sharpa oracle rows (1019 rows; success at control 869); the standard oracle submits the same rows |
+| `solution/trajectory.npz` | two-hand Sharpa oracle rows (1,331 rows; success at control 1,181); the standard oracle submits the same rows |
+| `tools/check_oracle.py` | oracle audit (stage timeline, peak unsupported fall, vacuum displacement, penetration) + negative variants replayed in fresh processes |
 | `tests/test_vacuum_bin_reseat.py` | authoring tests: model/actuation, settled reset, text-independent state hash, oracle in fresh processes and float32, nop/partial/no-press, drop-and-catch and knock fail-fast, forged members, malformed rows, Wuji |
 | `tools/film_export.py`, `tools/studio_renderer.py` | authoring-only PR film: MuJoCo replay to a pose bundle, rendered with the accepted T19 studio renderer (Blender 4.5.3) |
 
@@ -40,16 +43,20 @@ bin, accessory port, rectangular filter, lower seat ledges and lips, top release
   `solref 0.002 1` (`guide_pair`).
 - `base_skids`: a 4 mm black rubber skid under the housing (friction 1.2). The native rounded convex housing hull rocks
   and creeps on the counter; with the skid the vacuum stands still and level as in the film.
-- `button_range` 7.5 mm (native 6 mm) and the lower guide stop moved down by 1.5 mm: the settled bin sits about 1 mm
-  lower than the authored pose, so the tooth needs about 6 mm of travel to pass under the catch.
+- Button travel: the source's 6 mm (wave 2 used 7.5 mm and moved the lower guide stop); a 5.9 mm press releases the
+  seated bin (the checker needs >= 5.8 mm).
 - `visual_only_prefixes`: the filter frame, pleats and cartridge and the lower-seat lips are kept visible but do not
   collide. In the native geometry the filter frame protrudes into the bin mouth and, together with the lower lips and
   the ledges inside the mouth, leaves no collision-free removal path (the source itself reports 3.66 mm of buried
   lip/shell interference along its prescribed path). With these changes the bin is retained by the ledge clamp at the
   bottom (tabs on the ledges, shell under them) and the latch at the top, tips forward onto the counter edge when the
   button is pressed, and comes off by sliding the tabs off the ledges.
-- `geom_friction`: latch tooth, catch and bridge 0.15 (smooth plastic ramp; with the native 0.55 the closing push
-  needed to ride the ramp exceeds what the free-standing vacuum can take without sliding).
+- Latch friction: the source's 0.55 on tooth, catch and bridge (wave 2 used 0.15). With 0.55 the closing push needed to
+  ride the catch over the ramp drags an unheld vacuum 50 mm (wave-3 probe: the wave-2 one-hand controller fails with
+  `vacuum_body_disturbed` at the closing push), so a second hand holds the vacuum by its handle (hook grip: a ramped
+  probe force of 30 N along the vacuum axis moves the held vacuum < 1 mm).
+- Second hand: the right Wave mirrored in y on a second six-axis wrist stage (`left_wrist_stage`, same joints, gains and
+  ranges as the right one, hand mounted without rotation).
 - `latch_lips`: a 2 mm fixed lip on the housing 0.7 mm above the bin's latch bridge (review VR-1: the authored tooth
   only resisted the tilt, and a 2.3-2.6 N straight pull lifted the bin out with the button up). With the lip, ramped
   probe pulls of up to 25 N on the seated bin with the button up (up, out, out+up at the COM; up and out at the nozzle)
@@ -62,9 +69,9 @@ bin, accessory port, rectangular filter, lower seat ledges and lips, top release
   fingertip sunk into the cap.
 - Supported-drop notion (review VR-3): a bin sliding down a hand while still touching a finger is "supported"; only
   falls faster than 0.6 m/s without any contact, or faster than 0.99 m/s with contact, fail.
-- Drop detection has no debounce window: an unsupported bin (no active contact) falling faster than 0.6 m/s fails at
+- Drop detection has no debounce window: an unsupported bin (no active contact) falling faster than 0.55 m/s fails at
   that substep; any bin falling faster than 0.99 m/s (free fall from 5 cm) fails as well. The designed release tip of
-  the bin onto the counter edge peaks at 0.50 m/s with no contact (checked under float32 rounding and row noise).
+  the bin onto the counter edge peaks at 0.47 m/s with no contact (per substep; 0.41 m/s at control rate).
 - `state_sha` hashes the integration state, the predicate state, the hand and the physics/predicate parameters of
   `task.json` only (prose keys excluded), so text edits never change evidence hashes.
 
@@ -121,3 +128,19 @@ tooth snaps up), open the hand, drop it below the nozzle, pull it out, hold. Rep
 cd scripts/dexhand/families/vacuum_bin_reseat
 DEXHAND_ASSET_DIR=<repo>/images/dexhand/assets/hand python author.py --out solution/trajectory.npz
 ```
+
+## Wave-3 changes (2026-10-15)
+
+| item | wave 2 | wave 3 |
+|---|---|---|
+| latch tooth / catch / bridge friction | 0.15 | 0.55 (source) |
+| release-button travel | 7.5 mm, lower guide stop moved 1.5 mm | 6 mm (source) |
+| hands | one, on a floating wrist stage (28 / 26 controls) | two, each on its own floating wrist stage (56 / 52): the left holds the vacuum by its handle |
+| unsupported-fall bound | 0.6 m/s | 0.55 m/s (oracle peak 0.47 m/s) |
+| VR-1 lip, visual-only filter frame and lower lips, base skid | kept | kept |
+| robot | floating stage | floating stages: a Marvin-arm port was attempted (wave-3 authoring records `arm_attempt/`, outside the repository) but the arm cannot take the underhand nozzle grasp from below the counter overhang and an overhand grasp let the bin slip 40-100 mm in the hand, so the reinstall never aligned (see status.json) |
+
+Oracle (author.py, deterministic): left hook grip on the handle (vacuum displaced <= 11 mm overall), right index presses
+the button 5.9 mm (forward-down, clear of the left thumb), Euler-branch-safe transit to the underhand grasp, removal to
+stage 1 at control 721, tabs-first reinstall and a closing rotation with a 10 mm-bounded push (latched, stage 2 at 950),
+right hand away, left hand unhooks, success at 1,181; 150 hold rows. Zero hand-hand contacts over all substeps.

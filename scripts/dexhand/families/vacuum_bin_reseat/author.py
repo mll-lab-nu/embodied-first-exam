@@ -39,7 +39,14 @@ class Author:
         self.Rv0 = self.d.xmat[self.vac].reshape(3, 3).copy()
         self.pv0 = self.d.xpos[self.vac].copy()
         self.ctrl = self.s.hold_action()
-        self.fingers = self.ctrl[6:].copy()
+        names = self.s.actuator_names
+        cols = lambda pred: np.array([i for i, n in enumerate(names) if pred(n)])  # noqa: E731
+        self.RF = cols(lambda n: n.startswith(("right_", "r_wuji_")))  # right fingers
+        self.LW = cols(lambda n: n.startswith("left_wrist_"))  # left stage
+        self.LF = cols(lambda n: n.startswith(("left_", "l_wuji_")) and not n.startswith("left_wrist_"))
+        self.lroot = self.m.body("left_hand_C_MC").id if self.s.hand == "sharpa" else self.m.body("left_hand_C_MC").id
+        self.lorigin = np.asarray(self.s.config["left_wrist_stage"]["origin"], float)
+        self.fingers = self.ctrl[self.RF].copy()
         self.lo, self.hi = self.m.actuator_ctrlrange.T
         self.euler = self.ctrl[3:6].copy()
         self.integ_cap, self.integ_r_cap = 0.02, 0.3
@@ -92,7 +99,7 @@ class Author:
         """Fingertip site offset from the root (root frame) for a finger posture."""
         m, d = self.m, mujoco.MjData(self.m)
         d.qpos[:] = self.d.qpos
-        d.qpos[self.s.qadr[6:]] = fingers
+        d.qpos[self.s.qadr[self.RF]] = fingers
         mujoco.mj_kinematics(m, d)
         R = d.xmat[self.root].reshape(3, 3)
         return R.T @ (d.site_xpos[m.site(site).id] - d.xpos[self.root])
@@ -103,13 +110,13 @@ class Author:
             self.ctrl[:6] = wrist
             self.euler = np.asarray(wrist[3:6], float)
         if fingers is not None:
-            self.ctrl[6:] = fingers
+            self.ctrl[self.RF] = fingers
         self.ctrl = np.clip(self.ctrl, self.lo, self.hi)
         st = self.s.step(self.ctrl.copy())
         return st
 
     def move(self, wrist=None, fingers=None, steps=25, settle=0):
-        w0, f0 = self.ctrl[:6].copy(), self.ctrl[6:].copy()
+        w0, f0 = self.ctrl[:6].copy(), self.ctrl[self.RF].copy()
         w1 = w0 if wrist is None else np.asarray(wrist, float)
         f1 = f0 if fingers is None else np.asarray(fingers, float)
         st = None
@@ -133,13 +140,92 @@ class Author:
                  f"body={st['body_displacement_m']*1000:.1f}mm fail={st['failure']}")
         return st
 
+    # ------------------------------------------------------------------ left hand: hold the vacuum by its handle
+    GRIP = (0.11, 0.0, 0.0889)  # on the handle grip axis (vacuum frame); grip axis (0.88, 0, -0.47), radius 14 mm
+    LEFT_WRAP = np.array([1.2, 0.0, 0.6, 0.0, 0.6, 1.5, 0, 1.4, 1.0, 1.5, 0, 1.4, 1.0, 1.5, 0, 1.4, 1.0,
+                          0.1, 1.5, 0, 1.4, 1.0])
+    LEFT_OPEN = np.array([0.6, 0.0, 0.2, 0.0, 0.2, 0.2, 0, 0.2, 0.1, 0.2, 0, 0.2, 0.1, 0.2, 0, 0.2, 0.1,
+                          0.0, 0.2, 0, 0.2, 0.1])
+
+    def left_frame(self):
+        """Left root over the grip: palm down onto it, fingers across it toward the vacuum's right (-y)."""
+        g = unit(self.Ld([0.88, 0, -0.47]))
+        f = unit(self.Ld([0, -1, 0]))
+        x = np.cross(g, f)  # palm normal (points down onto the grip)
+        if x[2] > 0:
+            x = -x
+        return np.column_stack([x, np.cross(f, x), f])
+
+    def left_hold_root(self, up=0.055, back=0.09):
+        R = self.left_frame()
+        return self.L(self.GRIP) - R[:, 0] * up - R[:, 2] * back, R
+
+    def left_wrist(self, pos, R):
+        """Left-stage targets that put the left hand root at ``pos`` with orientation ``R`` (hand at identity)."""
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            a, b, c = Rot.from_matrix(R).as_euler("XYZ")
+        cur = self.ctrl[self.LW][3:6]
+        best = None
+        for base in (np.array([a, b, c]), np.array([a + np.pi, np.pi - b, c + np.pi])):
+            for k in np.ndindex(3, 3, 3):
+                cand = base + (np.array(k) - 1) * 2 * np.pi
+                if np.all(np.abs(cand) <= 3.2) and (best is None or np.linalg.norm(cand - cur)
+                                                     < np.linalg.norm(best - cur)):
+                    best = cand
+        return np.r_[np.asarray(pos, float) - self.lorigin, best]
+
+    def left_move(self, pos=None, R=None, lfingers=None, steps=30, settle=0):
+        w0, f0 = self.ctrl[self.LW].copy(), self.ctrl[self.LF].copy()
+        w1 = w0 if pos is None else self.left_wrist(pos, R)
+        f1 = f0 if lfingers is None else np.asarray(lfingers, float)
+        st = None
+        for i in range(1, steps + 1):
+            a = i / steps
+            a = a * a * (3 - 2 * a)
+            self.ctrl[self.LW] = w0 + (w1 - w0) * a
+            self.ctrl[self.LF] = f0 + (f1 - f0) * a
+            st = self.step()
+            if self.s.done:
+                return st
+        for _ in range(settle):
+            st = self.step()
+        return st
+
+    def left_hold(self, press=0.0):
+        """The left hand takes a hook grip on the handle grip and keeps holding the vacuum down."""
+        root, R = self.left_hold_root()
+        wrap = self.LEFT_WRAP if self.s.hand == "sharpa" else np.full(len(self.LF), 1.2)
+        opened = self.LEFT_OPEN if self.s.hand == "sharpa" else np.zeros(len(self.LF))
+        # from the start pose (fingers up, beside the right hand): turn in place and rise first, then travel
+        target = self.left_wrist(root - R[:, 0] * 0.08, R)
+        start = self.ctrl[self.LW].copy()
+        mid = np.r_[start[:3] + np.array([0.0, 0.08, 0.05]), target[3:]]
+        self.left_move(mid[:3] + self.lorigin, Rot.from_euler("XYZ", mid[3:]).as_matrix(), opened, steps=40)
+        self.left_move(root - R[:, 0] * 0.08, R, steps=40, settle=5)
+        self.left_move(root, R, steps=40, settle=5)
+        self.left_move(root + R[:, 0] * press, R, wrap, steps=40, settle=15)
+        self.info("left hand holds the handle")
+        # the grip settles the vacuum by a few mm: plan the right hand's moves in the held vacuum's frame
+        self.Rv0 = self.d.xmat[self.vac].reshape(3, 3).copy()
+        self.pv0 = self.d.xpos[self.vac].copy()
+        return root, R
+
+    def left_release(self, root, R):
+        self.left_move(lfingers=np.zeros(len(self.LF)), steps=30, settle=10)  # unhook: fingers straight
+        self.left_move(root - R[:, 0] * 0.03 - R[:, 2] * 0.04, R, steps=30)  # up and back along the fingers
+        self.left_move(root - R[:, 0] * 0.10 - R[:, 2] * 0.06, R, steps=30, settle=5)
+        self.info("left hand released")
+
     # ------------------------------------------------------------------ phases
     POKE = np.array([0.9, 0.0, 0.6, 0, 0.8, 0, 0, 0, 0, 1.5, 0, 1.6, 1.2, 1.5, 0, 1.6, 1.2, 0.1, 1.5, 0, 1.6, 1.2])
     POKE_WUJI = np.array([0.8, 0, 0.6, 0.6, 0, 0, 0, 0, 1.5, 0, 1.8, 1.2, 1.5, 0, 1.8, 1.2, 1.5, 0, 1.8, 1.2])
 
     def poke(self, x_local=0.020):
         """Index finger presses the release button until the tooth clears the catch; the bin tips onto the counter."""
-        R = self.frame(-np.array([0, 0, 1.0]) + self.Ld([-0.15, 0, 0]), self.Ld([0, 1, 0]))
+        # index pointing forward-down along the vacuum's +x (clear of the left hand's thumb on the handle)
+        R = self.frame(self.Ld([np.cos(1.2), 0, 0]) + np.array([0, 0, -np.sin(1.2)]), self.Ld([0, 1, 0]))
         poke = self.POKE if self.s.hand == "sharpa" else self.POKE_WUJI
         site = "right_index_fingertip" if self.s.hand == "sharpa" else "r_wuji_r_index_finger_tip"
         off = self.tip_offset(poke, site)
@@ -148,7 +234,7 @@ class Author:
         self.move(self.wrist_from_root(root, R), steps=30, settle=5)
         z = 0.0
         for _ in range(110):
-            if self.s.status()["button_travel_m"] < 0.0072 and z > -0.075:
+            if self.s.status()["button_travel_m"] < 0.0059 and z > -0.075:
                 z -= 0.0008
             self.step(self.wrist_from_root(root + np.array([0, 0, z]), R))
         self.info("pressed")
@@ -163,6 +249,21 @@ class Author:
         pb, Rb = self.bin_pose()
         return pb + Rb @ np.asarray(p_local, float)
 
+    def calm_branch(self, R_root):
+        """The XYZ Euler stage angles of hand-root orientation ``R_root`` with the largest margin to the limits."""
+        import warnings
+        R_e = R_root @ self.R0().T
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            a, b, c = Rot.from_matrix(R_e).as_euler("XYZ")
+        cands = []
+        for base in (np.array([a, b, c]), np.array([a + np.pi, np.pi - b, c + np.pi])):
+            for k in np.ndindex(3, 3, 3):
+                cand = base + (np.array(k) - 1) * 2 * np.pi
+                if np.all(np.abs(cand) <= 3.2):
+                    cands.append(cand)
+        return min(cands, key=lambda e: float(np.max(np.abs(e))))
+
     def root_target(self):
         """Commanded root pose (from the current wrist command)."""
         w = self.ctrl[:6]
@@ -174,7 +275,7 @@ class Author:
         from scipy.spatial.transform import Slerp
         p0, R0 = self.root_target()
         slerp = Slerp([0, 1], Rot.from_matrix([R0, R]))
-        f0 = self.ctrl[6:].copy()
+        f0 = self.ctrl[self.RF].copy()
         f1 = f0 if fingers is None else np.asarray(fingers, float)
         st = None
         for i in range(1, steps + 1):
@@ -217,7 +318,7 @@ class Author:
         integ = np.zeros(3)
         integ_r = np.zeros(3)
         st = None
-        f0 = self.ctrl[6:].copy()
+        f0 = self.ctrl[self.RF].copy()
         f1 = f0 if fingers is None else np.asarray(fingers, float)
         for i in range(1, steps + settle + 1):
             a = min(1.0, i / steps)
@@ -270,11 +371,13 @@ def wrap_grasp(mcp=1.55, thumb=0.8, hand="sharpa", pip=1.4, dip=1.0):
 def author(params=None, hand="sharpa", log=print):
     """Run the closed-loop authoring controller; returns (Author, marks)."""
     P = dict(bx=-0.185, px=0.045, pz=0.075, mcp=1.55, thumb=0.8, load=0.006, up=0.002, out=0.025,
-             over=0.0, pre_tilt=0.14, hold_rows=150)
+             over=0.02, pre_tilt=0.14, hold_rows=150, close_icap=0.01, engage_x=-0.002, engage_z=0.0)
     P.update(params or {})
     A = Author(hand=hand, log=log)
     open_under = OPEN_UNDER if A.s.hand == "sharpa" else OPEN_UNDER_WUJI
     marks = {}
+    lroot, lR = A.left_hold()
+    marks["left_hold"] = A.s.steps
     A.poke()
     marks["released"] = A.s.steps
     # underhand power grasp around the nozzle (approach from in front of the nozzle tip, below its axis)
@@ -286,7 +389,10 @@ def author(params=None, hand="sharpa", log=print):
     A.goto(p0 + np.array([0, 0, 0.10]), R0, steps=25)
     pre = root - R @ np.array([0.08, 0, 0])
     pre1 = pre + Rb @ np.array([-0.13, 0, 0])
-    A.goto(np.array([pre1[0], pre1[1], p0[2] + 0.10]), R, steps=50, fingers=open_under)
+    # free-space transit in stage-joint space onto the Euler branch with the most margin to the +-3.2 rad stage
+    # limits (a Cartesian slerp from the forward poke would otherwise wrap a wrist joint during the bin servo)
+    A.euler = A.calm_branch(R)
+    A.move(A.wrist_from_root(np.array([pre1[0], pre1[1], p0[2] + 0.10]), R), open_under, steps=60)
     A.goto(pre1, R, steps=40)
     A.goto(pre, R, steps=40, settle=5)
     A.goto(root, R, steps=30, settle=5)
@@ -333,6 +439,11 @@ def author(params=None, hand="sharpa", log=print):
     A.servo_bin(lambda a: (start_p + (tab_seat - start_p) * a, sl([a]).as_matrix()[0]), P.get("close_ramp", 50),
                 point=TAB, settle=10, current=FR)
     A.servo_bin(lambda a: (tab_seat, seat_R), 20, point=TAB, settle=10, current=FR)
+    if P.get("nudge_y"):
+        # centre the latched bin across its seat (it has lateral play): push toward the vacuum's -y, then back
+        nudge = np.array([0, -P["nudge_y"], 0])
+        A.servo_bin(lambda a: (tab_seat + nudge * a, seat_R), 20, point=TAB, settle=10, current=FR)
+        A.servo_bin(lambda a: (tab_seat + nudge * (1 - a), seat_R), 15, point=TAB, settle=5, current=FR)
     A.info("latched")
     marks["latched"] = A.s.steps
     # let go: open the hand, drop it below the nozzle, pull it out in front of the nozzle, hold still
@@ -342,6 +453,7 @@ def author(params=None, hand="sharpa", log=print):
     pr, Rr = A.root_target()
     A.goto(pr + Rb @ np.array([-0.15, 0, 0]), Rr, steps=40)
     A.info("hand clear")
+    A.left_release(lroot, lR)
     marks["clear"] = A.s.steps
     hold = A.ctrl.copy()
     rows = [np.asarray(r, float) for r in A.s.actions]

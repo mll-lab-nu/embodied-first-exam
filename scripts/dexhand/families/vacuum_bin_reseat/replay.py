@@ -15,7 +15,7 @@ from scene import hands
 
 TASK = "vacuum_bin_reseat"
 # Six wrist-stage targets followed by the selected hand's native finger actuators.
-WIDTHS = {"sharpa": 28, "wuji": 26}
+WIDTHS = {"sharpa": 56, "wuji": 52}  # two floating hands: (6 stage + 22 fingers) x 2 (Sharpa) or (6 + 20) x 2 (Wuji)
 MAX_ROWS = 3000
 MAX_BYTES = 64_000_000
 

@@ -41,12 +41,14 @@ class Checker:
         self.catch_geom = model.geom("container_latch_catch").id
         self.tooth_face_x = float(self.c["tooth_face_x_m"])
         self.catch_half_x = float(model.geom_size[self.catch_geom][0])
-        hand_root = model.body("wrist_stage").id
+        # the robot: both wrist-stage subtrees (each hand on its own stage)
+        roots = {model.body(name).id for name in ("wrist_stage", "left_wrist_stage", "base_link")
+                 if mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, name) >= 0}
         self.hand_body = np.zeros(model.nbody, dtype=bool)
         for b in range(model.nbody):
             p = b
             while p:
-                if p == hand_root:
+                if p in roots:
                     self.hand_body[b] = True
                     break
                 p = int(model.body_parentid[p])

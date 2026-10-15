@@ -13,6 +13,7 @@ import mujoco
 import numpy as np
 
 from checker import Checker
+import scene as scene_module
 from scene import build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
@@ -33,7 +34,12 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        if self.config.get("rig", "floating") == "marvin":
+            self.robot = scene_module.arm_rig_id()
+        elif "left_wrist_stage" in self.config:
+            self.robot = self.hand_info["robot"] + "-floating-bimanual"
+        else:
+            self.robot = self.hand_info["robot"] + "-floating"
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
@@ -46,7 +52,10 @@ class Session:
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.tcp_body = self.model.body(int(self.model.jnt_bodyid[self.model.actuator_trnid[5, 0]])).name
+        if self.config.get("rig", "floating") == "marvin":
+            self.tcp_body = "wrist_stage"  # the right hand's flange mount
+        else:
+            self.tcp_body = self.model.body(int(self.model.jnt_bodyid[self.model.actuator_trnid[5, 0]])).name
         self.object_qadr = int(self.model.jnt_qposadr[self.model.joint("vacuum_free").id])
         self.object_qpos = np.asarray(self.config["initial_object_qpos"], dtype=float)
         self.checker = Checker(self.model, self.config)

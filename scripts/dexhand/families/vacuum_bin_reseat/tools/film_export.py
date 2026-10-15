@@ -19,6 +19,7 @@ import json
 from pathlib import Path
 import sys
 
+import mujoco
 import numpy as np
 
 FAMILY = Path(__file__).resolve().parents[1]
@@ -64,12 +65,13 @@ def export(traj, out, hand=None, stride=2, fps=25, final_hold=1.5, camera=None, 
     actions, file_hand, _ = load_trajectory(traj)
     s = Session(hand=hand or file_hand)
     m, d = s.model, s.data
-    hand_root = m.body("wrist_stage").id
+    hand_roots = {m.body(name).id for name in ("wrist_stage", "left_wrist_stage")
+                  if mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, name) >= 0}
     is_hand_body = np.zeros(m.nbody, bool)
     for b in range(m.nbody):
         p = b
         while p:
-            if p == hand_root:
+            if p in hand_roots:
                 is_hand_body[b] = True
                 break
             p = int(m.body_parentid[p])
@@ -155,7 +157,7 @@ def export(traj, out, hand=None, stride=2, fps=25, final_hold=1.5, camera=None, 
         "trajectory_sha256": sha(traj), "model_xml_sha256": hashlib.sha256(s.xml.encode()).hexdigest(),
         "initial_sha": s.initial_sha, "final_sha": s.state_sha(), "final_features": {k: v for k, v in st.items()},
         "physics_control_steps_per_video_frame": stride,
-        "physics_claims": "MuJoCo replay of the recorded motor targets (wrist stage + fingers) in the frozen task scene; "
+        "physics_claims": "MuJoCo replay of the recorded motor targets (two wrist stages + fingers) in the frozen task scene; "
                           "objects move only through contact and passive joint dynamics.",
         "presentation_notes": [
             f"filter frame, pleats and cartridge drawn {FILTER_SHIFT_M * 1000:.1f} mm deeper in the housing (visual-only in physics)",

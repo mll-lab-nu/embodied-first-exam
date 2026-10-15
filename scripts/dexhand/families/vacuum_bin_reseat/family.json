@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 28,
-    "wuji": 26
+    "sharpa": 56,
+    "wuji": 52
   },
-  "robot": "sharpa-wave-floating",
+  "robot": "sharpa-wave-floating-bimanual",
   "max_rows": 3000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -36,7 +38,7 @@
   },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/trajectory.npz: 1019 Sharpa Wave rows recorded from the closed-loop authoring controller (author.py, motor targets only; it reproduces the rows bit for bit); the replay ends at success after 869 controls (150 slack rows) in two fresh processes with identical state hashes, also with rows rounded to float32. Harbor 0.23 (eai-dexhand:0.2.0): privileged oracle 1 / nop 0, standard oracle 1 (live = replay, deterministic) / nop 0, standard Wuji nop 0. The standard oracle submits the same rows as float64 through the public client.",
+    "oracle_evidence": "solution/trajectory.npz: 1,331 two-hand Sharpa Wave control rows recorded from the closed-loop authoring controller (author.py; the left hand holds the vacuum by its handle, the right hand presses the release button, removes and reinstalls the bin); the replay ends at success after 1,181 controls (150 slack rows) in two fresh processes with identical state hashes, also with rows rounded to float32. The standard oracle submits the same rows as float64 through the public client.",
     "expert_time_estimate_hours": 3.0,
     "keywords": [
       "household-maintenance",
@@ -56,6 +58,6 @@
     "video_sec": 900
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage (origin task.json wrist_stage.origin), with the same wrist joints, ranges, gains and start targets."
+    "layout": "Two hands, each on its own six-axis wrist stage. Sharpa (56): right stage (6), right fingers (22), left stage (6), left fingers (22). Wuji (52): right stage (6), left stage (6), right fingers (20), left fingers (20). The left hand is the right Wave mirrored in y (shared arm_rig.mirrored_left_wave); one row is one 50 Hz control (twenty 1 ms physics substeps)."
   }
 }

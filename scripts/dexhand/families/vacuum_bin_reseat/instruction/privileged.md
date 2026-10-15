@@ -2,10 +2,13 @@
 
 {{TASK_TEXT}}
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds; the
-vacuum body, the dust bin and the release button move only through contact and their passive dynamics (the button is a
-spring-loaded slide). The controller runs at 50 Hz, with twenty 1 ms physics substeps.
+You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
+serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin `task.json` `wrist_stage.origin`) and
+the left hand (the right hand's mirror image) on `left_wrist_stage` (origin `task.json` `left_wrist_stage.origin`).
+Both are needed as in the real task: one hand steadies the vacuum (or works the button) while the other handles the
+bin. The stages and the fingers are position actuated in the physics engine under native force bounds; the vacuum
+body, the dust bin and the release button move only through contact and their passive dynamics (the button is a spring-loaded
+slide). The controller runs at 50 Hz, with twenty 1 ms physics substeps.
 
 {{HANDS}}
 ## Scene and frames
@@ -13,28 +16,31 @@ The world frame has z up; lengths are in metres, angles in radians, quaternions 
 `vacuum_body`, 0.752 kg) stands on its base skid on the counter (top at z = 0.65 m); its transparent dust bin (free body
 `dust_container`, 0.18 kg) sits in front of the motor housing, with the nozzle overhanging the counter edge. The bin is
 held at the bottom by two tabs resting on two ledges inside its mouth and at the top by the latch tooth of the red
-release button (`release_button`, spring-loaded slide joint `button_depression`, 0 to 7.5 mm of travel, 600 N/m). The
-tooth's ramp lets the bin's catch push it down while the bin is closed; pressing the button (about 6 mm) lowers the
-tooth below the catch. A fixed lip on the housing sits 0.7 mm above the catch's bridge, so the seated bin cannot be
+release button (`release_button`, spring-loaded slide joint `button_depression`, 0 to 6 mm of travel, 600 N/m; the
+source scene's values). The tooth's ramp lets the bin's catch push it down while the bin is closed; pressing the button
+(nearly its full 6 mm) lowers the tooth below the catch. Latch tooth, catch and bridge have the source's plastic friction
+0.55, so pushing the catch over the raised tooth needs a large closing force. A fixed lip on the housing sits 0.7 mm above the catch's bridge, so the seated bin cannot be
 lifted straight out: its top has to tilt out from under the lip, which the raised tooth prevents. The vacuum-body frame is the body frame of `vacuum_body`; the seated bin pose in that frame is
 `task.json` `checker.seat_pos` (metres) and `checker.seat_rot` (row-major 3 x 3). Cameras: `overview` (the counter
 from the front left) and `closeup` (the latch and the bin).
 
 ## Action layout
-Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
-`wrist_x, wrist_y, wrist_z` (metres, offsets of the stage from its origin `task.json` `wrist_stage.origin`, world axes)
-and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints, not a quaternion). The finger targets follow in native
-actuator order, in radians:
+Each row is one 50 Hz control holding a position target for every actuator, in native actuator order:
 
-- `sharpa`: 28 values, the six wrist targets and 22 Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`.
-- `wuji`: 26 values, the same six wrist targets and 20 Wuji Hand 2.2 finger targets `r_wuji_r_THJ0..3`,
-  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`.
+- `sharpa` (56 values): 0-5 the right stage `wrist_x, wrist_y, wrist_z` (metres, offsets from its origin, world axes)
+  and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints, not a quaternion); 6-27 the 22 right Sharpa Wave
+  finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`; 28-33 the left stage `left_wrist_x` ... `left_wrist_rz`
+  (same convention, its hand mounted without rotation); 34-55 the 22 left finger targets `left_thumb_CMC_FE` ...
+  `left_pinky_DIP`.
+- `wuji` (52 values): 0-5 the right stage, 6-11 the left stage, 12-31 the right Wuji Hand 2.2 fingers
+  `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`, 32-51 the left
+  Wuji fingers in the same order (`l_wuji_l_...`); `s.actuator_names` is authoritative.
 
-Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from the same wrist targets; the frozen
-start targets of each hand are in `task.json` (`initial_targets`).
+Every target must lie within `s.model.actuator_ctrlrange`. The frozen start targets of each hand are in `task.json`
+(`initial_targets`).
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or `(T, 26)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 56)` for `sharpa` or `(T, 52)`
 for `wuji`, at most {{MAX_ROWS}} rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical

@@ -22,7 +22,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `jar_lid_open` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,159 rows |
 | `grinder_crank` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 1,096 rows |
 | `pancake_serve` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 874 rows |
-| `vacuum_bin_reseat` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 1,019 rows |
+| `vacuum_bin_reseat` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 20 x 1 ms | 1,331 rows |
 | `drying_rack_unfold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,415 rows |
 | `picture_hang` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 869 rows |
 | `usb_plug_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,134 rows |
@@ -421,21 +421,21 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 
 Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
-tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`), or, since wave 3
-(2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`book_page_turn`, `grinder_crank`,
-`picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`, `envelope_letter_insert`, `jar_lid_open`,
-`paper_staple`, `remote_battery_swap` with the right arm, the left one parked) completes each one with motor targets
-only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches);
-nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium that is not
-simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator
-state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first
-violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held
-terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
-lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
-"full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
-`solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically feasible
-(pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each section names what was restored
-and what remains, with the reason.
+tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
+`vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each
+flange (`book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`,
+`envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the left one parked)
+completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
+springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written
+only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity
+the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules
+above apply: fail-fast at the first violating physics substep (unless the section says otherwise), ordered stages, no
+partial credit, and a released or held terminal window. Each instruction states the exact predicate and every threshold;
+each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its authoring tests. All
+run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success,
+where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever
+that was physically feasible (pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each
+section names what was restored and what remains, with the reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -539,19 +539,23 @@ at 725).
 
 ### Vacuum dust-bin reseat (`vacuum_bin_reseat`, T19)
 
-A handheld vacuum (free body) stands on the counter with its transparent dust bin (free body) held by two lower tabs
-on ledges and a top spring latch: the tooth on the red release button (a passive spring slide) stops the bin's top
-catch from tilting out, and a fixed lip over the catch bridge stops a straight lift, so the top must tilt out from
-under the lip, which the tooth allows only while the button is pressed. Physics step 1 ms, 20 per control.
-**Success**, in order: (1) the button pressed by at least 5.8 mm while the bin is still seated (origin within 5 mm),
-then the bin origin more than 30 mm from its seat (vacuum-body frame); (2) reinstalled: within 3 mm and 0.05 rad of
-the seated pose with the button back up (<= 1.5 mm) and the catch behind the tooth face; (3) no hand contact on bin,
-vacuum or button, bin and vacuum at rest (<= 0.01 m/s, bin <= 0.1 rad/s), for 50 consecutive controls (1 s).
-**Immediate failure**, after every 1 ms substep: the vacuum moved more than 50 mm or tilted more than 0.35 rad; the
-bin falling faster than 0.99 m/s (0.6 m/s while nothing touches it), touching floor or a table leg, below the counter
-top or outside the workspace box; bin and vacuum interpenetrating by more than 4 mm; unstable physics; 3,000 controls.
-Adaptations: a base skid, 7.5 mm button travel, latch friction 0.15, visual-only filter frame and lower lips, the
-latch lip. Oracle: 1,019 Sharpa rows (success at 869); no Wuji solution.
+A handheld vacuum (free body) stands on the counter with its transparent dust bin (free body) held by two lower tabs on
+ledges and a top spring latch: the tooth on the red release button (a passive spring slide) stops the bin's top catch
+from tilting out, and a fixed lip over the catch bridge stops a straight lift, so the top must tilt out from under the
+lip, which the tooth allows only while the button is pressed. Physics step 1 ms, 20 per control. Wave 3: two hands, each
+on its own six-DoF wrist stage (56 / 52 controls; the left one the right Wave's mirror), because in the source the
+second hand holds the vacuum body: closing the latch at the source friction needs a firm push. **Success**, in order:
+(1) the button pressed by at least 5.8 mm while the bin is still seated (origin within 5 mm), then the bin origin more
+than 30 mm from its seat (vacuum-body frame); (2) reinstalled: within 3 mm and 0.05 rad of the seated pose with the
+button back up (<= 1.5 mm) and the catch behind the tooth face; (3) no hand contact on bin, vacuum or button, bin and
+vacuum at rest (<= 0.01 m/s, bin <= 0.1 rad/s), for 50 consecutive controls (1 s). **Immediate failure**, after every 1
+ms substep: the vacuum moved more than 50 mm or tilted more than 0.35 rad; the bin falling faster than 0.99 m/s (0.55
+m/s while nothing touches it), touching floor or a table leg, below the counter top or outside the workspace box; bin
+and vacuum interpenetrating by more than 4 mm; unstable physics; 3,000 controls. Wave 3 restored the source latch
+friction (0.55, was 0.15), the source button travel (6 mm, was 7.5 mm) and the second hand. Kept: a base skid,
+visual-only filter frame and lower lips, and the fixed lip over the catch bridge (without it the latch does not retain
+the bin). Not on the arm: the underhand nozzle grasp needs the palm below the counter overhang, out of the Marvin arm's
+reach, and an overhand grasp let the bin slip 40-100 mm. Oracle: 1,331 Sharpa rows (success at 1,181); no Wuji solution.
 
 ### Folding sweater dryer (`drying_rack_unfold`, T20)
 
