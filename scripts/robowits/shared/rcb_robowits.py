@@ -41,8 +41,8 @@ Python (what the agent gets)
   s.objects()                        # task objects: name -> position, orientation_wxyz, bounds, size, ...
   s.render_frame("ego")              # RGB (H, W, 3) uint8; s.render_grid(), s.render_video(actions, path); s.VIDEO_CAMERAS
   s.record_start(); ...; actions = s.record_stop()   # (T, 16) low-level actions, one row per control step
-  s.status()                         # {'success': bool, 'progress': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
-  s.replay(actions)                  # resets, replays open-loop, returns status (exact on the CPU backend) -> self-check
+  s.status()                         # {'success': goal holds now, 'predicate': RoboWits' alone, 'touching', 'progress', 'sim_steps', 'resets', 'state_sha'}
+  s.replay(actions)                  # resets, replays open-loop, then the settle window: the verdict (exact on the CPU backend) -> self-check
   s.save_trajectory(actions, "/app/output/trajectory.npz")
 """
 from __future__ import annotations
@@ -326,6 +326,40 @@ ARM_SLICE = {"right": slice(0, 7), "left": slice(8, 15)}
 GRIP_INDEX = {"right": 7, "left": 15}
 GRIPPER_OPEN = 0.1
 
+# --------------------------------------------------------------------------- the graded verdict (2026-10-14)
+# RoboWits' predicates are instantaneous and most have no release or speed term: a trajectory cut while the objects were
+# still falling, or ending with the object held in place, passed (failure analysis of the 10-14 snapshot: 25 of 84
+# successes). The verdict is therefore taken after a settle window, in both modes (Session.settle_check):
+#   1. the robot holds its last command for SETTLE_STEPS control steps (1 s): nothing is checked, things come to rest;
+#   2. then for CHECK_STEPS more (2 s) the goal must hold at every CHECK_STRIDE-th step and at the last one, and every
+#      graded object may move at most REST_M (at rest: 2 mm in 2 s is under 1 mm/s).
+# "The goal" (Session.goal) = RoboWits' predicate, unchanged, AND no part of the robot touches a released object (Genesis'
+# contact list) AND the family's own clause below, if any. The objects per family are GRADED[family]: "rest" (graded for
+# rest and release), "release_also" (must not be touched either). move_cube's graded cubes are the ones its clause accepts.
+SETTLE_STEPS = 30
+CHECK_STEPS = 60
+CHECK_STRIDE = 6
+REST_M = 0.002
+GRADED: dict[str, dict] = {
+    "align_blocks": {"rest": ["first target cube", "second target cube", "third target cube"]},
+    "ball_into_bottle": {"rest": ["small ball"]},
+    "ball_onto_tower": {"rest": ["ball"]},
+    "collect_screws": {"rest": ["screw"]},
+    "cover_with_lid": {"rest": ["lid large"]},
+    "dominos": {"rest": ["red block"]},
+    "gap_retrieve": {"rest": ["lemon"]},
+    "hold_cup": {"rest": ["cup"]},
+    "move_cube": {"rest": []},                                  # the cubes past the line, on the table (_family_clause)
+    "raise_platform": {"rest": ["heavy book"]},
+    "retrieve_cube": {"rest": ["cube"]},
+    "stack_bowls": {"rest": ["large bowl", "medium bowl"]},
+    "stack_cubes": {"rest": ["base cube 1", "base cube 2", "apex cube"]},
+    "stand_bulb": {"rest": ["tall object with curved bottom"]},
+    "stand_pages": {"rest": ["page A with eyelets", "page B with eyelets"], "release_also": ["stabilizing bar"]},
+}
+MOVE_CUBE_LINE_X = 0.9      # 28_move_cube.py: a cube's position x > 0.9 m
+FALLEN_M = 0.02             # move_cube: a cube whose bounding box's bottom is more than 2 cm below the table top has fallen off
+
 
 def _log(*a: Any) -> None:
     print("[rcb]", *a, file=sys.stderr, flush=True)
@@ -397,14 +431,25 @@ def top_down_quat(closing_yaw: float, tilt: float = 0.0) -> np.ndarray:
 
 
 # --------------------------------------------------------------------------- BlenderKit models
-# The BlenderKit models are never in the image (images/robowits/NOTICE). A task mounts the host's folder read-only at
-# /opt/robowits/assets/blender_kit: either plaintext (<uuid>/obj.glb, fetched with your own BlenderKit key), which
-# RoboWits reads directly, or our encrypted bundle (<uuid>/obj.glb.enc Fernet tokens + robowits_blenderkit.key). For the
-# bundle, only the models this family loads are decrypted, into a private tmpfs dir that RoboWits finds through
-# GS_GYM_ASSET_PATHS; it is deleted as soon as the scene is built. An unlimited agent is root in the same container and
-# can read the key: the encryption keeps the models from being copied around, not from the agent (NOTICE).
+# The BlenderKit models are never in the image (images/robowits/NOTICE). The verifier and the standard `sim` sidecar mount
+# the host's folder read-only at /opt/robowits/assets/blender_kit: either plaintext (<uuid>/obj.glb, fetched with your
+# own BlenderKit key), which RoboWits reads directly, or our encrypted bundle (<uuid>/obj.glb.enc Fernet tokens +
+# robowits_blenderkit.key). For the bundle, only the models this family loads are decrypted, into a private tmpfs dir
+# that RoboWits finds through GS_GYM_ASSET_PATHS; it is deleted as soon as the scene is built. The privileged agent's
+# container never sees the host's folder or the key (since 2026-10-14): a `blenderkit` service of the task's compose file runs
+# `blenderkit-serve`, which decrypts this family's models alone and serves them on localhost (RCB_BLENDERKIT_URL); the
+# tooling in `main` fetches them into the same private tmpfs dir for the build and deletes them after it (an agent that
+# is root next to the simulator can read the models its scene loads, not the bundle or the key).
 BLENDERKIT_DIR = ROBOWITS_ROOT / "assets" / "blender_kit"
 BLENDERKIT_KEY = BLENDERKIT_DIR / "robowits_blenderkit.key"
+UUID_RE = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+
+
+def _family_uuids(cls) -> list[str]:
+    """The BlenderKit model UUIDs a RoboWits task class can load: every UUID in the source files of its gs_gym classes."""
+    import inspect, re
+    src = "".join(Path(inspect.getsourcefile(c)).read_text() for c in cls.__mro__ if c.__module__.startswith("gs_gym"))
+    return sorted(set(re.findall(UUID_RE, src)))
 
 
 def _fernet_decrypt(token: bytes, key: bytes) -> bytes:
@@ -420,16 +465,47 @@ def _fernet_decrypt(token: bytes, key: bytes) -> bytes:
                           input=body[25:], capture_output=True, check=True).stdout
 
 
+def _blenderkit_fetch(cls, url: str, timeout_s: float = 900.0) -> str:
+    """The privileged agent's container (RCB_BLENDERKIT_URL, the task's `blenderkit` service): wait until the service is
+    ready, then fetch the models this family loads into a fresh 0700 dir under /dev/shm on GS_GYM_ASSET_PATHS."""
+    import tempfile, urllib.request
+    t0 = time.time()
+    while True:
+        try:
+            with urllib.request.urlopen(url.rstrip("/") + "/ready", timeout=10) as r:
+                if r.status == 200:
+                    break
+        except Exception:  # noqa: BLE001 — not up yet
+            pass
+        if time.time() - t0 > timeout_s:
+            raise RuntimeError(f"the BlenderKit models are not served at {url} after {timeout_s:.0f} s (the task's blenderkit service)")
+        time.sleep(2.0)
+    tmp = tempfile.mkdtemp(prefix="rcb_bk_", dir="/dev/shm" if os.path.isdir("/dev/shm") else None)
+    for uid in _family_uuids(cls):
+        try:
+            with urllib.request.urlopen(f"{url.rstrip('/')}/{uid}/obj.glb", timeout=120) as r:
+                data = r.read()
+        except Exception:  # noqa: BLE001 — a UUID in the source that this family's scene does not load
+            continue
+        out = Path(tmp) / "blender_kit" / uid / "obj.glb"
+        out.parent.mkdir(parents=True)
+        out.write_bytes(data)
+    os.environ["GS_GYM_ASSET_PATHS"] = ":".join(p for p in (tmp, os.environ.get("GS_GYM_ASSET_PATHS", "")) if p)
+    return tmp
+
+
 def _blenderkit_prepare(cls) -> str | None:
     """Encrypted bundle mounted: decrypt the models the RoboWits task class can load (every UUID in its source files) into
-    a fresh 0700 dir under /dev/shm and put it on GS_GYM_ASSET_PATHS. Returns the dir (None for a plaintext folder)."""
+    a fresh 0700 dir under /dev/shm and put it on GS_GYM_ASSET_PATHS. RCB_BLENDERKIT_URL set: fetch them from the task's
+    `blenderkit` service instead. Returns the dir (None for a plaintext folder)."""
+    if os.environ.get("RCB_BLENDERKIT_URL"):
+        return _blenderkit_fetch(cls, os.environ["RCB_BLENDERKIT_URL"])
     if not BLENDERKIT_KEY.is_file():
         return None
-    import inspect, re, tempfile
-    src = "".join(Path(inspect.getsourcefile(c)).read_text() for c in cls.__mro__ if c.__module__.startswith("gs_gym"))
+    import tempfile
     tmp = tempfile.mkdtemp(prefix="rcb_bk_", dir="/dev/shm" if os.path.isdir("/dev/shm") else None)
     key = BLENDERKIT_KEY.read_bytes()
-    for uid in sorted(set(re.findall(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", src))):
+    for uid in _family_uuids(cls):
         enc = BLENDERKIT_DIR / uid / "obj.glb.enc"
         if enc.is_file():
             out = Path(tmp) / "blender_kit" / uid / "obj.glb"
@@ -644,8 +720,83 @@ class Session:
         return self._targets.copy()
 
     def status(self) -> dict[str, Any]:
-        return {"success": bool(self.env._check_success().item()), "progress": round(float(self.env.get_reward()[0].item()), 4),
+        """The current state: `success` = the goal holds right now (Session.goal: RoboWits' predicate, the graded objects
+        released, the family's clause); `predicate` = RoboWits' predicate alone. Neither is the verdict: replay() and the
+        graders also require the settle window (settle_check)."""
+        g = self.goal()
+        return {"success": g["success"], "predicate": g["predicate"], "touching": g["touching"],
+                "progress": round(float(self.env.get_reward()[0].item()), 4),
                 "sim_steps": int(self.n_steps), "resets": self._resets, "state_sha": self.state_sha()}
+
+    # ---- the graded verdict (GRADED, SETTLE_STEPS / CHECK_STEPS above)
+    def _family_clause(self) -> tuple[bool, list[str]]:
+        """(holds, the graded objects): the family's own clause on top of RoboWits' predicate. move_cube: a cube past the
+        goal line counts only while it is on the table (or a slope), not fallen off it; its graded objects are those cubes."""
+        if self.task == "move_cube":
+            ok = []
+            for n in ("cube 1", "cube 2", "cube 3"):
+                p, _ = self.object_pose(n)
+                if p[0] > MOVE_CUBE_LINE_X and float(self.object_bounds(n)[0][2]) >= TABLE_Z - FALLEN_M:
+                    ok.append(n)
+            return bool(ok), ok
+        return True, list(GRADED.get(self.task, {}).get("rest", ()))
+
+    def touching_robot(self, names) -> list[str]:
+        """The objects of `names` that some part of the robot touches now (Genesis' contact list; reads, never steps)."""
+        ent = self.robot.robot_entity
+        out = []
+        for n in names:
+            c = ent.get_contacts(with_entity=self.env.get_entity(n))
+            vm = c.get("valid_mask")
+            if vm is not None and bool(np.asarray(vm.detach().cpu() if hasattr(vm, "detach") else vm).any()):
+                out.append(n)
+        return out
+
+    def goal(self) -> dict[str, Any]:
+        """Does the goal hold right now? RoboWits' predicate AND the family's clause AND no robot contact with the graded
+        objects (GRADED). Reads the state, never steps it. Returns success, predicate, touching, objects (graded)."""
+        pred = bool(self.env._check_success().item())
+        clause, objs = self._family_clause()
+        touch = self.touching_robot(objs + list(GRADED.get(self.task, {}).get("release_also", ())))
+        return {"success": bool(pred and clause and not touch), "predicate": pred, "clause": clause, "touching": touch, "objects": objs}
+
+    def settle_check(self, step: Callable | None = None) -> dict[str, Any]:
+        """The verdict at the end of an episode or a trajectory: hold the last command for SETTLE_STEPS control steps (no
+        check), then for CHECK_STEPS more require the goal at every CHECK_STRIDE-th step and at the last, with every graded
+        object within REST_M of where it was at the window's start. Stops at the first failure. `step` executes one row
+        (default self.step; the standard service passes its journaling step). Returns success, why, steps, max_move_m."""
+        step = step or self.step
+        hold = self.hold_action()
+        n = 0
+        res = {"success": False, "why": "", "steps": 0, "max_move_m": 0.0}
+        for _ in range(SETTLE_STEPS):
+            n += 1
+            if step(hold):
+                res.update(why="the step cap was reached during the settle window", steps=n); return res
+        g = self.goal()
+        objs = g["objects"]
+        p0 = {o: self.object_pose(o)[0] for o in objs}
+        move = 0.0
+        for i in range(CHECK_STEPS + 1):
+            if i % CHECK_STRIDE == 0 or i == CHECK_STEPS:
+                g = g if i == 0 else self.goal()
+                if not g["success"]:
+                    why = ("RoboWits' predicate does not hold" if not g["predicate"] else
+                           "the family's clause does not hold" if not g["clause"] else f"the robot touches {', '.join(g['touching'])}")
+                    res.update(why=f"{why} {i} control steps into the check window", steps=n, max_move_m=round(move, 5)); return res
+                if set(g["objects"]) != set(objs):
+                    res.update(why=f"the graded objects changed {i} control steps into the check window", steps=n); return res
+            for o in objs:
+                move = max(move, float(np.linalg.norm(self.object_pose(o)[0] - p0[o])))
+            if move > REST_M:
+                res.update(why=f"not at rest: an object moved {move * 1000:.1f} mm within {i} control steps of the check window",
+                           steps=n, max_move_m=round(move, 5)); return res
+            if i < CHECK_STEPS:
+                n += 1
+                if step(hold):
+                    res.update(why="the step cap was reached during the settle window", steps=n); return res
+        res.update(success=True, why="the goal held, released and at rest, through the check window", steps=n, max_move_m=round(move, 5))
+        return res
 
     # ---- recording / trajectories
     def record_start(self) -> None:
@@ -662,13 +813,19 @@ class Session:
                  eval_index=self.eval_index, instance_sha=self.instance_sha, action_dim=ACTION_DIM, action_layout=ACTION_LAYOUT,
                  meta=json.dumps(meta or {}))
 
-    def replay(self, actions: np.ndarray) -> dict[str, Any]:
-        """Open-loop replay after reset() (exact on the CPU backend): what the verifier does, twice, in its own process."""
+    def replay(self, actions: np.ndarray, settle: bool = True) -> dict[str, Any]:
+        """Open-loop replay after reset() (exact on the CPU backend), then the settle window (settle_check): what the verifier
+        does, twice, in its own process. `success` is the verdict; `goal_at_end` the goal right after the last action;
+        `state_sha_rows` the state then, `state_sha` the state after the settle window. settle=False: the rows only."""
         self.reset()
         for a in np.asarray(actions, dtype=np.float32):
             if self.step(a):
                 break
         st = self.status()
+        st["goal_at_end"] = st["success"]; st["state_sha_rows"] = st["state_sha"]
+        if settle:
+            sc = self.settle_check()
+            st.update(success=sc["success"], settle=sc, state_sha=self.state_sha(), sim_steps=int(self.n_steps))
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st
 
@@ -1193,6 +1350,35 @@ def cmd_render(a) -> None:
     s.close()
 
 
+def cmd_blenderkit_serve(a) -> None:
+    """The privileged task's `blenderkit` service (the host's folder mounted at --src): decrypt (encrypted bundle) or read
+    (plaintext folder) the models this family loads and serve them on 127.0.0.1:--port, GET /<uuid>/obj.glb and /ready,
+    until stopped. The key and the rest of the bundle stay in this container; `main` fetches the models for its builds
+    (RCB_BLENDERKIT_URL). Nothing else is served."""
+    import gs_gym, http.server, re
+    src = Path(a.src)
+    key = (src / BLENDERKIT_KEY.name).read_bytes() if (src / BLENDERKIT_KEY.name).is_file() else None
+    models: dict[str, bytes] = {}
+    for uid in _family_uuids(gs_gym.get_task_class(TASKS[a.task]["robowits_task"])):
+        if key is not None and (src / uid / "obj.glb.enc").is_file():
+            models[uid] = _fernet_decrypt((src / uid / "obj.glb.enc").read_bytes(), key)
+        elif (src / uid / "obj.glb").is_file():
+            models[uid] = (src / uid / "obj.glb").read_bytes()
+    print(json.dumps({"task": a.task, "models": len(models), "port": a.port}), flush=True)
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            m = re.fullmatch(rf"/({UUID_RE})/obj\.glb", self.path)
+            body = b"ok" if self.path == "/ready" else (models.get(m.group(1)) if m else None)
+            if body is None:
+                self.send_response(404); self.end_headers(); return
+            self.send_response(200); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+
+        def log_message(self, *args):  # quiet
+            pass
+    http.server.ThreadingHTTPServer(("127.0.0.1", int(a.port)), H).serve_forever()
+
+
 def cmd_selftest(a) -> None:
     """Determinism evidence in 3 fresh processes: make-instance, run-oracle, replay --repeat 2 (fresh == live, repeats agree)."""
     here, out = Path(__file__).resolve(), Path(a.out_dir); out.mkdir(parents=True, exist_ok=True)
@@ -1209,8 +1395,8 @@ def cmd_selftest(a) -> None:
     r1 = run("run-oracle", "--task", a.task, "--instance", inst, "--code", a.code, "--out", traj)
     r2 = run("replay", "--task", a.task, "--instance", inst, "--traj", traj, "--repeat", 2, "--strict")
     reps = r2.get("replays") or [{}]
-    ok = bool(r1.get("success")) and bool(r2.get("all_success")) and bool(r2.get("deterministic")) \
-        and reps[0].get("state_sha") == r1.get("state_sha") and bool(r2.get("instance_matches"))
+    ok = bool(r2.get("all_success")) and bool(r2.get("deterministic")) \
+        and reps[0].get("state_sha_rows") == r1.get("state_sha") and bool(r2.get("instance_matches"))
     print(json.dumps({"make_instance": r0, "oracle": r1, "replay": r2, "PASS": ok}, indent=1), flush=True)
     sys.exit(0 if ok else 1)
 
@@ -1228,6 +1414,8 @@ def main() -> None:
     q = sub.add_parser("render"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)
     q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=2); q.add_argument("--fps", type=int, default=15)
     q.add_argument("--cameras", default=None); q.add_argument("--cols", type=int, default=3); q.set_defaults(fn=cmd_render)
+    q = sub.add_parser("blenderkit-serve"); q.add_argument("--task", required=True); q.add_argument("--src", required=True)
+    q.add_argument("--port", type=int, default=8765); q.set_defaults(fn=cmd_blenderkit_serve)
     q = sub.add_parser("selftest"); q.add_argument("--task", default="stack_cubes"); q.add_argument("--eval-index", type=int, default=0)
     q.add_argument("--code", required=True); q.add_argument("--out-dir", required=True); q.set_defaults(fn=cmd_selftest)
     a = p.parse_args(); a.fn(a)
