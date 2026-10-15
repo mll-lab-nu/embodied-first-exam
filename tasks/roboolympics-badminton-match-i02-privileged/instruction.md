@@ -14,15 +14,16 @@ Read `/opt/fullsim/README.md` for the program API, the `truth` fields, the units
 Leave `/app/output/policy/program.py` and any helper or data files in that directory (512 regular files, 32 MiB;
 no links or special files). Define `make_policy(config)` returning an object with `act(view)`; it lives for the whole
 match. `view` holds `state` (the twin's observation fields), `truth` (the full current state), `scores`. Return one
-original action, a list of at most 1, `{"type": "ready"}` during a point's review, or None. No model or
+original action, a list of at most 1, `{"type": "ready"}` during a review, or None. No model or
 API calls during the formal evaluation. Submit executable code, not a recorded trajectory or a claimed score; save a
 valid program early and improve it.
 
 ## Formal evaluation
 A separate verifier without network runs your final program as an unprivileged process against a fresh, unmodified
 match; your program can read a public copy of the simulator for its own predictions, never the referee or the logs.
-There is no formal reset. The original realtime clock runs at S = 20 while your program computes; the review
-after each point freezes the world (at most 300 s). The formal match has 7200 s of wall time.
+There is no formal reset. The original realtime clock runs at S = 20 while your program computes; each
+review (after a point, a goal or another stoppage) freezes the world (at most 300 s). The formal match
+has 7200 s of wall time.
 The trusted journal is replayed twice in fresh processes; success is a complete win by the original referee with
 matching replays. This fixed instance does not measure generalization to other instances.
 

@@ -3,7 +3,8 @@ copied byte for byte into the twin task's simulator, PROTOCOL H.7).
 
 Required: SPORT, SOURCE_TASK, FAMILY, INSTANCES, SLOWDOWN, CUTOFF_S, IMAGE, ORACLE, truth(match).
 Optional (defaults below): FORMAT, SEATS, ACTION_LEVEL, LEVELS, EVERY, MAX_COMMANDS, READY_TIMEOUT_S, MATCH_WALL_S,
-REPLAY_TIMEOUT_S, VERIFIER_TIMEOUT_S, PUBLIC_DROP_FILES, ORACLE_FILES, TRUTH_DOC, NOTES_DOC, RESOURCES, DESCRIPTION.
+REPLAY_TIMEOUT_S, VERIFIER_TIMEOUT_S, PUBLIC_DROP_FILES, ORACLE_FILES, TRUTH_DOC, NOTES_DOC, RESOURCES, DESCRIPTION,
+ROBOT, ORACLE_EVIDENCE, unavailable() (why this host cannot build the sport, e.g. a package only its image has; None).
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ DEFAULTS = {
     "NOTES_DOC": "",
     "RESOURCES": {},
     "DESCRIPTION": "",
+    "unavailable": lambda: None,  # the generic tests skip a sport this host cannot build
 }
 REQUIRED = ("SPORT", "SOURCE_TASK", "FAMILY", "INSTANCES", "SLOWDOWN", "CUTOFF_S", "IMAGE", "ORACLE", "truth")
 

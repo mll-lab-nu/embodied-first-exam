@@ -13,9 +13,9 @@ python -c 'from tools.fullsim.session import Session; s=Session("@SPORT@", level
 `s.world` is the entire mutable Match object: the simulator, the scripted opponent, the referee and the planners.
 `s.spec()` gives the original action interface and the rules as the twin's `game spec` states them. `act(command)`
 handles an action as the live service does (parse, plan, lower, apply); `step(n)` advances `n` control steps and
-stops at a point's review or the end of the match; `ready()` leaves the review; `reset()` rebuilds the whole match
+stops at a review (after a point, a goal, ...) or the end of the match; `ready()` leaves the review; `reset()` rebuilds the whole match
 with the same seed. Private changes and repeated resets are allowed in development; none of them reaches the formal
-match. The sport's code: `sports/@SPORT@/` (`plugin.py`, `sim/`, `sport.toml`).
+match. The sport's code: `sports/@SPORT@/` (`plugin.py`, `sport.toml` and its simulator modules).
 
 ## Submit a persistent program
 
@@ -60,7 +60,7 @@ trusted grading boundary.
 
 The formal evaluation runs in a separate verifier without network: root owns the trusted simulator and the logs;
 your program runs as nobody, with a read-only public copy of the simulator and a writable scratch directory. The
-world keeps running at S = @SLOWDOWN@ while your program computes; the review after each point freezes it (at most
+world keeps running at S = @SLOWDOWN@ while your program computes; each review freezes it (at most
 @READY@ s, else that side loses, as in the twin). Program load 30 s, each exchange 5 s, the formal match
 @MATCH_WALL_S@ s of wall time, 2 GiB of address space, @MATCH_WALL_S@ CPU seconds. No model or API calls in the
 formal evaluation. Success: a complete win by the original referee, confirmed by two fresh replays. A missing,

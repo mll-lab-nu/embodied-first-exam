@@ -67,6 +67,40 @@ def commands_of(cmd, limit):
     return cmds
 
 
+def submit(service, cmds):
+    """The commands of one view, as a player would send them over HTTP: `ready` alone; several actions (one per
+    entity, MAX_COMMANDS) concurrently, so that all of them can take effect at the same control-step boundary (the
+    service keeps one act in flight per seat and entity). Returns (code, reply) per command, in the list's order."""
+
+    def one(cmd):
+        if cmd.get("type") == "ready":
+            return service.ready("A", {"why": "program review", "plan": "continue same policy"})
+        try:
+            return service.act("A", cmd)
+        except Refused as exc:
+            return exc.code, {"error": str(exc)}
+
+    if len(cmds) <= 1:
+        return [one(c) for c in cmds]
+    results = [None] * len(cmds)
+
+    def run(i):
+        try:
+            results[i] = one(cmds[i])
+        except Exception as exc:  # noqa: BLE001 -- re-raised below, in the caller's thread
+            results[i] = exc
+
+    threads = [threading.Thread(target=run, args=(i,), daemon=True) for i in range(len(cmds))]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    for r in results:
+        if isinstance(r, Exception):
+            raise r
+    return results
+
+
 def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None, unsafe_local=False, dev_root=None):
     ad = load(sport)
     slowdown = ad.SLOWDOWN if slowdown is None else slowdown
@@ -176,14 +210,7 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
             if unit != service.m.unit():
                 decisions.write(json.dumps({"seen": st["step"], "dropped": "unit_over"}) + "\n")
                 continue
-            for cmd in cmds:
-                if cmd.get("type") == "ready":
-                    code, reply = service.ready("A", {"why": "program review", "plan": "continue same policy"})
-                else:
-                    try:
-                        code, reply = service.act("A", cmd)
-                    except Refused as exc:
-                        code, reply = exc.code, {"error": str(exc)}
+            for cmd, (code, reply) in zip(cmds, submit(service, cmds)):
                 refusals += int(code != 200)
                 decisions.write(
                     json.dumps(plain({"seen": st["step"], "command": cmd, "code": code, "reply": reply})) + "\n"
