@@ -82,9 +82,15 @@ checked by `ci_checks/check-resources.py`).
   count against the agent. CPU is only a cap. A CPU cap above the host's count means the host's count: the runner
   clamps it in its copy (`scripts/clamp_cpus.py`); memory and pids caps are never clamped.
 - **Monitor**: the `rcb_monitor` sidecar samples every few seconds into its own record (`rcb-monitor/1`), sealed in the
-  first collect hook, and shows current values in `/run/rcb-limits/usage.json`; the verifier recomputes violations from
-  the raw samples with its own copy of the limits. A missing, unsealed or mostly empty record (> 10 % of the agent phase
-  unobserved) is `resource_monitor_missing = 1`.
+  first collect hook, and shows current values in `/run/rcb-limits/usage.json`, with the agent's clock (`elapsed_s`,
+  `time_left_s`, `deadline_utc`: `[agent] timeout_sec` from the environment's start, so never more than the agent has);
+  the verifier recomputes violations from the raw samples with its own copy of the limits. A missing, unsealed or mostly
+  empty record (> 10 % of the agent phase unobserved) is `resource_monitor_missing = 1`. A runner whose container runtime
+  cannot run the monitor (no `pid: host`) runs the same service as `monitor.py beacon` (no pid / cgroup host, no record):
+  `usage.json` then has the clock and `"measured": false`.
+- **Session log**: the monitor copies the agent's `/app/output/rcb_session_log.jsonl` append-only into its record
+  (`session_log/`); before the grader, the verifier step gives the grader that copy when the agent's file was removed or
+  rewritten (`session_log_tampered`, `session_log_from_monitor` in `reward.json`). The log feeds cost fields only.
 - **The switch** `RCB_LIMITS_ENFORCE` (compose default 0, so it does not change the digest): `1` — a confirmed violation
   kills the scope's processes and fails the trial (`reward 0`, `success_before_limits`, `resource_limit_exceeded = 1`),
   never retried; `0` — observe and record only (`limits_violation_observed`, `/logs/verifier/resource_limits.json`);
