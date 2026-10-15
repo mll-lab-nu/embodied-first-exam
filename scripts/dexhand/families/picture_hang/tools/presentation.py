@@ -45,7 +45,7 @@ APPROVED = {  # the approved T21 scene film's presentation settings (its export 
 # Wave 3 (Marvin arms): the robot stands between the old main camera and the frame, so the main and final views look
 # over the robot's right shoulder from the right-front, and the hook close-up looks along the wall from outside the
 # left hand.
-MAIN = {"position": [-0.62, -1.95, 1.62], "target": [0.47, 0, 1.08], "lens": 34}
+MAIN = {"position": [-0.80, -2.20, 1.55], "target": [0.42, 0, 0.86], "lens": 28}
 HOOK_L = {"position": [0.735, 0.52, 1.40], "target": [0.734, 0.255, 1.382], "lens": 50}
 FINAL = {"position": [-0.25, -1.55, 1.50], "target": [0.62, 0, 1.15], "lens": 36}
 WALL = {"rgba": [0.65, 0.68, 0.63, 1], "roughness": 0.82, "bump": {"scale": 700, "strength": 0.1, "distance": 6e-05}}
@@ -78,10 +78,9 @@ def visual_material(name):
 
 
 def camera_for(step, success_step):
-    """Main view; the left hook close-up from the wall gap while the rings go over the saddles; final view."""
-    if 420 <= step < 560:
-        return HOOK_L
-    if step >= 560:
+    """Main view, then the closer final view from the release on. (Wave 3: no hook close-up: with the arm-mounted
+    top grip the hand sits right in front of each hook from every side the camera can take.)"""
+    if step >= 540:
         return FINAL
     return MAIN
 

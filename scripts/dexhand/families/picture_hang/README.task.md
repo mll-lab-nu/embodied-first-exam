@@ -47,6 +47,6 @@ construction as the dual-arm DexHand families, not a separate manufacturer left-
 `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same flanges with their vendor joints, actuators
 and contact geometry unchanged. The robot is the Tianji Marvin dual-arm stand of the accepted pot_shelf_transfer family (two
 7-joint arms, position servos kp 700 N m/rad, kv 48, force limits 108/108/66/66/18/18/18 N m, Tianji meshes pinned in
-the image), standing on a plinth in front of the console (which stands on its two rear legs so that the stand's base plate fits
+the image), standing on a 0.10 m plinth in front of the console (which stands on its two rear legs so that the stand's base plate fits
 under its front half); each hand sits rigidly on its arm's flange. This is a
 simulated bimanual hanging task, not a zero-shot hardware claim.

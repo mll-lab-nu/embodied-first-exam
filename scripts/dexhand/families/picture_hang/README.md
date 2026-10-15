@@ -38,13 +38,12 @@ finger position targets are commanded and the frame moves only through contact, 
 - Wall widened to +-2.5 m (2.5 m tall) and floor enlarged (presentation only; no task contact changes).
 - Robot (wave 3): the shared `arm_rig.mount_marvin` Tianji Marvin stand (two 7-joint arms, kp 700 / kv 48, force limits
   108/108/66/66/18/18/18 N m, the accepted pot_shelf_transfer robot) at base (0.18, 0, 0.20) facing the wall, raised on
-  a 0.10 m visual plinth (exactly the base plate's footprint; its top is the stand's floor, base z - 0.1) so that the
-  hands reach the 1.38 m hooks with the fingers down; both arms work. Sharpa: the genuine right Wave on the right
-  flange, its declared y-mirror on the left flange (positions S p, rotations S R S, hinge axes -S a, mesh scales
-  reflected); Wuji: `hands.replace_wave_hands` mounts the genuine left/right Wuji Hand 2.2. The flange mount bodies are
-  named `l_wrist_stage` / `r_wrist_stage` (hand roots). Start pose: IK of the controller's first hand pose
-  (`tools/arm_author.py --init`). Grasp change for the arm: the Marvin wrist link is 28 mm proud of the palm surface, so
-  a palm pressed on the side rail below the frame's top edge would put the wrist link into the rail (a
+  a 0.10 m plinth (its top is the stand's floor, base_z - 0.1) so that the hands reach the 1.38 m hooks with the fingers down; both arms work. Sharpa: the
+  genuine right Wave on the right flange, its declared y-mirror on the left flange (positions S p, rotations S R S, hinge
+  axes -S a, mesh scales reflected); Wuji: `hands.replace_wave_hands` mounts the genuine left/right Wuji Hand 2.2. The
+  flange mount bodies are named `l_wrist_stage` / `r_wrist_stage` (hand roots). Start pose: IK of the controller's first
+  hand pose (`tools/arm_author.py --init`). Grasp change for the arm: the Marvin wrist link is 28 mm proud of the palm
+  surface, so a palm pressed on the side rail below the frame's top edge would put the wrist link into the rail (a
   `robot_collision`); the palms therefore squeeze the top 9 cm of the side rails (controller `z0` = +0.10 m) and the
   thumb is flexed further (`thumb_fe` 1.0) so that its base stays in front of the ring clips.
 - Arm-link contacts: any contact of a Marvin stand/torso/arm link with anything is the fail-fast `robot_collision`.
@@ -95,5 +94,6 @@ Arm oracle: two fresh replays succeed at control 669 with identical state_sha `9
 task dir); float32 rows succeed; nop, truncations (300, 530, 668) fail; both arms returning to the start pose
 mid-carry (or for only 5 controls) fail `picture_unsupported` at the next control (no drop-and-catch window); 13
 authoring tests pass. Harbor 0.23: oracle 1 / nop 0 in both modes (standard: live = replay). PR film: Blender 4.5.3
-Eevee of the exported native poses (main and final views over the robot's right shoulder, hook close-up from outside
-the left hand). `tools/negatives.py` is the wave-2 floating-stage negative script (kept for provenance).
+Eevee of the exported native poses (a wide main view over the robot's right shoulder that shows the stand on its
+plinth and the rear-leg console, then a closer final view; no hook close-up: with the top grip a hand sits in front of
+each hook from every side a camera can take). `tools/negatives.py` is the wave-2 floating-stage negative script (kept for provenance).
