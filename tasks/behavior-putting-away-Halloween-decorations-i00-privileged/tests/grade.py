@@ -11,7 +11,7 @@ non-deterministic run cannot pass. The frozen scene rebuilt here from tests/inst
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
 
 Whose failure a 0 is (2026-10-10): a file the agent wrote that cannot be graded (not an npz, pickled / object arrays, no
-`task` or `actions` entry, wrong shape, non-finite, more than MAX_STEPS rows) is `bad_trajectory` (the agent's 0,
+`task` or `actions` entry, wrong shape, non-finite, more than MAX_ROWS rows) is `bad_trajectory` (the agent's 0,
 grader_error 0); a replay process that dies, prints no result (`replay_failed`) or runs out of time
 (`replay_timed_out`), a frozen scene that does not rebuild to the recorded one here (`instance_ok` 0: dataset /
 simulator / hardware drift, decided before the first action) and any other error in this script are `grader_error` +
@@ -25,9 +25,18 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # Wall-clock limit of ONE replay process, scaled with the trajectory (2026-10-08; time limit only, the verdict rules are
 # unchanged). Measured on an idle 8-vCPU L40S host (job #3137): Isaac start + scene load 626 s, and a 10,475-step replay
 # had not finished when the old flat 3600 s ran out (< 3.5 control steps/s). Allowance: REPLAY_STARTUP_S for the start plus
-# a worst case of REPLAY_MIN_RATE control steps/s, never below the old 3600 s, at most REPLAY_CAP_S (4 h);
+# a worst case of REPLAY_MIN_RATE control steps/s, never below the old 3600 s, at most REPLAY_CAP_S;
 # task.toml's [verifier] timeout_sec fits two capped replays plus overhead.
-REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE, REPLAY_CAP_S = 3600.0, 1200.0, 2.0, 14400.0
+# 2026-10-14 (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at most
+# MAX_ROWS rows (was the tooling's runaway guard, 200,000, which no replay limit covered), and REPLAY_CAP_S is the time of
+# MAX_ROWS rows at the worst rate. The basis, from the pool's privileged trials (2026-10-09..14, 484 graded): the longest
+# successful trajectory had 25,404 rows (median of 113 successes 4,675), the frozen instances' challenge timeouts reach
+# 39,090 steps; the slowest replay measured was the filmed one of a 7,747-row trajectory, 4,851 s with a 725 s start
+# (1.88 control steps/s; the start took up to 1,115 s). MAX_ROWS 40,000 is above every challenge timeout and 1.6 times the
+# longest success; REPLAY_MIN_RATE 1.5 is 20 % under the slowest measured rate.
+MAX_ROWS = 40_000
+REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 3600.0, 1200.0, 1.5
+REPLAY_CAP_S = 28000.0                               # >= REPLAY_STARTUP_S + MAX_ROWS / REPLAY_MIN_RATE = 27,867 s
 
 
 def replay_timeout(n_steps: int) -> float:
@@ -82,7 +91,7 @@ def main() -> int:
             write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1, "n_actions": 0, "grader_error": 0, "infra_error": 0, **cost}); return 0
         if task != a.family:
             write(False, {"success": 0, "deterministic": 0, "wrong_family": 1, "grader_error": 0, "infra_error": 0, **cost}); return 0
-        if acts.ndim != 2 or acts.shape[1] != ACTION_DIM or acts.shape[0] > MAX_STEPS or not np.all(np.isfinite(acts)):
+        if acts.ndim != 2 or acts.shape[1] != ACTION_DIM or acts.shape[0] > min(MAX_ROWS, MAX_STEPS) or not np.all(np.isfinite(acts)):
             write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, "infra_error": 0, **cost}); return 0
         tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_behavior.py")
         t0 = time.time(); runs = []; limit = replay_timeout(int(acts.shape[0]))

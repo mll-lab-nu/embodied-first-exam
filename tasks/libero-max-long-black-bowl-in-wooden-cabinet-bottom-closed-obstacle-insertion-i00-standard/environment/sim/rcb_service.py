@@ -373,6 +373,11 @@ class Service:
         self.ep_start, self.journal_rows = int(cp["ep_start"]), n
         self.episode = [r.copy() for r in rows[self.ep_start:]]
         self.done, self.reason, self.success = bool(cp["done"]), cp["reason"], bool(cp["success"])
+        if cp["ev"] == "end" and cp["reason"] == "reset":
+            # The process died inside a reset, after the abandoned episode's end and before the new episode began: a
+            # reset lost with its call never happened (as in server_mj.py), so that episode runs on and the reset is
+            # not charged; the agent may reset again (board 0121; before, every call was a 409 until it did).
+            self.done, self.reason, self.success = False, None, False
         self.t0 = next((e["t0"] for e in ev if e["ev"] == "first_request"), None)
         if self.done:
             self.t_end = next((e["ts"] for e in reversed(ev) if e["ev"] == "end"), cp["ts"])

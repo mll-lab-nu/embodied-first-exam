@@ -117,7 +117,10 @@ Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` twice, each in
 (`rcb_ambench.py replay`); success = AM-Bench's check held in both, the end states' hashes agree, and the rebuilt start
 matches `initial_sha`. The verdict is written first; then a third process films the rows with the cameras on
 (`/logs/verifier/replay.mp4`, an illustration: `video_episode_success`, never the reward). Whose failure a 0 is follows
-YAMLab's grader: an unreadable deliverable is `bad_trajectory`, another task's file `wrong_task` (the agent's 0); a replay
+YAMLab's grader: an unreadable deliverable is `bad_trajectory`, another task's file `wrong_task` (the agent's 0); so is
+a row whose quaternion has zero or non-finite length (`bad_quaternion_rows`, checked when the file is read; the replay
+CLI also reports a row it refuses as `bad_trajectory`, a verdict, never a replay without a result; 2026-10-14, board
+0121: such a row used to end the replay process without a result, `replay_failed`, an infra error); a replay
 without a result, a replay time-out or `instance_ok = 0` is `grader_error = infra_error = 1`. A replay process that ends
 without a result (Isaac died; the CLI exits at once on an error instead of hanging) is run once more (`replay_retries`).
 Each process has max(1800 s, 1500 s + runnable rows / 4), the runnable rows being the trajectory cut at the episode length;

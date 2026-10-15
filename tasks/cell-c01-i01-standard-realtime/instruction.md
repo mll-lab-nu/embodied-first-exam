@@ -69,7 +69,7 @@ next chunk before the plan runs out: with `at` = the step where it should take o
 `linear` chunk starts from the command in force just before `at`. A row takes effect at the step it is planned for;
 the sensors show its effect from the next one. A row of a type that is not a motion (an exit, `ask_operator`,
 `report`, `stop`) is made at the step it is planned for, and the arm holds through that step. `stop` drops the plan
-(`r.submit("stop", [[]])`).
+(`r.submit("stop", [[]], cameras=[])`).
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters above, `done`, `reason`,
 `proprio["now"]`, `clipped`, and this benchmark's `results`, `operator`, `messages`), `res.last[camera]` (the last
@@ -88,7 +88,9 @@ to an `ask_operator` comes back in `meta["operator"]` of the first response afte
 image) costs 0.24 s of robot time (12 control steps; two cameras cost twice that): the world, and
 your plan, move on by that much while it is made, so a snapshot is no pause. A request returns pictures of at most 2 cameras while
 the clock runs, a watch (`get_obs(seconds=s)`) at most 2 pictures per second and no depth
-(`spec()["timing"]`); anything more is refused (`ValueError`) and changes nothing. A controller's calls should ask for
+(`spec()["timing"]`); anything more is refused (`ValueError`) and changes nothing. `cameras=None` (the default of
+`get_obs` and `submit`) asks for every camera, more than that limit, so once the clock runs pass `cameras=[...]` or
+`cameras=[]` on every request, `stop` and the exits included. A controller's calls should ask for
 no pictures at all (`cameras=[]`: the fastest call) and read `res.meta["proprio"]["now"]`; look with one camera at a
 time. Before the clock starts pictures cost nothing, and every request may ask for every camera and depth.
 
@@ -168,10 +170,10 @@ r = Robot()
 spec = r.spec()
 res = r.get_obs()                                        # res.last["front"]: the current front image (free, clock paused)
 q = res.meta["proprio"]["now"]                           # the sensor readings, in spec["proprio_layout"] order
-res = r.submit("report", [[2]], note="Starting now.")    # a one-row chunk with its text; the clock starts here
+res = r.submit("report", [[2]], note="Starting now.", cameras=[])   # a one-row chunk with its text; the clock starts here
 res = r.get_obs(cameras=["front"], seconds=2, video_fps=2)   # watch 2 s of robot time: 4 front pictures
 res = r.submit("stop", [[]], cameras=[])                 # drop the plan: the arm holds where it was being sent
-res = r.submit("done", [[]], note="What I did.")         # an exit: dimension 0, one row
+res = r.submit("done", [[]], note="What I did.", cameras=[])   # an exit: dimension 0, one row
 ```
 
 ## Cameras
