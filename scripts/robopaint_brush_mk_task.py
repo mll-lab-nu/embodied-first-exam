@@ -26,7 +26,7 @@
 caoshu wen, lettering liberty, acrylic redfuji, oil cypresses; --template-family takes the code from another family's pair, for a
 family's first pair; --solution-dir replaces the template's solution code); any committed pair of the family serves (the code is
 identical within a family,
-ci_checks/check-robopaint-tooling.sh). A painting's program is read from the template's solution/programs_json/, where a pair's
+scripts/robopaint_strict/ci/advisory-tooling.sh). A painting's program is read from the template's solution/programs_json/, where a pair's
 own entry is its current program: a painting pair is remade with itself as the template.
 
 -> tasks/robopaint-<family>-<target>-i00-privileged/ and ...-i00-standard/ (mode standard, eai-standard/2.2), family

@@ -8,6 +8,29 @@ PROTOCOL section, it is the number the section had then, which is still its numb
 
 ## Versions
 
+**v2.0** (2026-10-14, owner, boards 0124 / 0121). The judge's review of v1.2-rc (board 0124) found the text already
+recommending, but CI still blocking every convention and the trust-boundary rules mixed in with them; a task could
+"adapt a check through a declared value" even for verifier isolation. The owner's answers (Q1–Q11 as recommended):
+- Eight invariants (PROTOCOL Appendix H) bind; no task value overrides them; only the required CI job `invariants`
+  blocks a merge, and it fails on any failure, error or incomplete run. Every other check is advisory (exit 3,
+  annotations, the "Advisories" section of the pull request's overview).
+- The old MUST no longer blocks: v1's rules are conventions, reported as warnings.
+- d5 changed (owner, 10-14): v1's "crash recovery resumes the same episode, never a reset, a simulator crash never the
+  agent's 0" is replaced by H.5, at most one full retry after an infrastructure failure (the runner's rule). The shared
+  layers' in-trial resume stays as their implementation (no task changed).
+- Open network (d6): first proposed as an owner-approved exception, then (owner, 10-14) the task author's own decision,
+  declared `[metadata] network = "open"`; the three prefix lists (`OPEN_EGRESS` in `check-verifier-isolation.sh` and
+  `set_agent_egress.py`, `EXTERNAL_OPEN` in `task_conventions.py`) were removed. RoboOlympics' 113 generated tasks
+  declare it (new digests, same instructions).
+- The official-run configuration (d7) and the seed policy (d9) moved to RUNNING.md, enforced by the runner and the
+  scheduler (batch_eval_live `run_policy.py`); nop / oracle (d10) became a recommendation, and results rank unvalidated
+  tasks apart. Results record each trial's effective configuration and are ranked only within comparable ones.
+- Per-benchmark lists removed from shared CI: `scripts/task_dynamics.toml` and `check-dynamics.py` (each task declares
+  `[metadata] dynamics`), `NO_TWIN` (the README's Twin row is the declaration), the eight benchmarks of
+  `check-standard-texts.sh` and the RoboPaint / ManiGuard leak and tooling checks (now each benchmark's own
+  `scripts/<bench>/ci/{invariant,advisory}-*` hooks).
+- PROTOCOL.md went from 793 to about 200 lines; v1's runner material is below ("v1.2-rc text not carried into v2.0").
+
 **Version: v1.2-rc** (2026-10-10). Changes in this version: the resource monitor sidecar, the docker caps and the
 verifier's limits step are in every task (§2.10; #131, with the review fixes of the same day: an out-of-memory kill is
 the agent's only at its container's own cap, a benchmark-owned service killed for memory is never the agent's 0, a CPU
@@ -303,7 +326,7 @@ RoboOlympics").
 | Item | Level | Basis |
 |---|---|---|
 | `metadata.protocol` names the benchmark's protocol and its version, per mode: RoboOlympics `eai-standard-realtime/1.0` (matches, `standard-realtime`) and `skilleval-api-test/1` (skill tasks, `standard`, `task_type = "policy"`); its wire format is documented in the benchmark's doc and in the instruction, not in [`STANDARD_MODE.md`](STANDARD_MODE.md) | MUST | [CI] (protocol) |
-| Real-time matches: the world runs at 1/S of real speed, S per task (the sport's official slowdown: RoboOlympics table tennis 10, badminton 20, humanoid soccer 5, wheeled soccer 10; `metadata.slowdown`); a command takes effect at the next control step and all agent latency counts; after every point the world may freeze for a bounded review (at most 300 s; a rule of the sport, the agent's `ready` ends it early) while the agent's time budget runs on | MUST | [new] |
+| Real-time matches: the world runs at 1/S of real speed, S per task (the sport's official slowdown: RoboOlympics table tennis 10, badminton 20, humanoid soccer 5, wheeled soccer 10; `metadata.slowdown`); a command takes effect at the next control step and all agent latency counts; after every point the world may freeze for a bounded review (at most 300 s; a rule of the sport, the agent's `ready` ends it early; as implemented, and stated in the instructions since 2026-10-14: a side that has not sent `ready` within the limit, 300 s or 600 s in soccer, loses the match, `ready_timeout`) while the agent's time budget runs on | MUST | [new] |
 | Opponents are scripted, at a fixed level per task (`metadata.opponent_level`); success = the match is valid (the fresh replay repeats the live state, scores and winner) and the agent's side won | MUST | [new] |
 
 - **RoboOlympics** (owner, 2026-10-08; `roboolympics-<sport>-<format>-i<NN>-standard-realtime`, real-time sports
@@ -314,7 +337,7 @@ RoboOlympics").
   - no privileged twin (not an exception since 2026-10-14: a benchmark ships any subset of the modes, §2.15): the
     sports measure play from camera images against an opponent; there is no trajectory deliverable.
   The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
-  stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
+  stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early; as implemented, a missed `ready` within the limit loses the match, `ready_timeout`, stated in the instructions since 2026-10-14).
 - **RoboSafeBench** (requested by the authors 2026-10-14, accepted on review, board 0114; `cell-<slug>-i<NN>-standard-realtime`,
   [`benchmarks/robosafe.md`](benchmarks/robosafe.md), "Standard-realtime tasks"):
   - no privileged twin (not an exception since 2026-10-14: a benchmark ships any subset of the modes, §2.15; here a
@@ -435,3 +458,160 @@ Decided (owner, 2026-10-02):
    privileged mode (no hiding of reward or success checks). Changed for seeds on 2026-10-13 (owner, §2.13): a task has
    a default seed and may allow others, each a frozen instance; the runner draws one per trial; reference solutions
    are per seed.
+
+## v1.2-rc text not carried into v2.0 (2026-10-14)
+
+As PROTOCOL v1.2-rc had them at `4a4014bf58`; their rules now live in RUNNING.md (runner configuration) and PROTOCOL
+Appendix H. Kept here for the section numbers tasks cite.
+
+### v1 §2.10 Resource limits (v1.1.5; judged inside the trial from v1.2)
+
+A trial should not take more than its share of the machine. Every task therefore states **limits**, the most the agent
+phase may use, shown to the agent in `instruction.md`. When enforcement is on, exceeding one is the agent's failure,
+graded like a wrong deliverable. They sit between the minimums of §2.9 and the docker caps. All sizes are GiB.
+
+| Item | Level | Basis |
+|---|---|---|
+| `[metadata.resources.limits]` and `[metadata.resources.caps]` with every field below | Default | [CI] |
+| `scope = "trial"` in privileged mode, `"agent"` in the standard modes (the mode registry's field, §2.16) | Default | [CI] |
+| `instruction.md` has `## Resource limits`, equal to what `task_conventions.py` renders, after `## External material` and before `## Time limit` | Default | [CI] |
+| Relations: memory and GPU memory `min ≤ limit` (scope trial); `max_gpu_memory_gb > 0` only where the limited containers have a GPU; `trial_max_* ≥ min_*` and `≥` the limit (scope trial: equal, unless a benchmark-owned observe-only service exists); the scope's memory caps `≥ 1.2 × max_memory_gb` and `≥ max_memory_gb + 2`; `pids ≥ 8 × max_processes` for the bound services; a cap for every compose service (`rcb_*` helpers aside); every declared cap is the applied one (`caps.main` = `[environment]`, others = the compose file's `cpus` / `mem_limit` / `pids_limit`); scope agent: `max_memory_gb ≤ [environment].memory_mb / 1024`; `min_cpus ≤` the CPU caps of all services together; `verifier_min_memory_gb ≤` the memory caps of the sidecars a collect hook replays in | Default | [CI] |
+| `measured` says what the values rest on; limits sit with a generous margin above measured peaks (e.g. `max(1.5 × peak, peak + 4 GiB)`) | Recommended | [new] |
+| The oracle passes within the limits | Default | from v1.2 (the calibration batch) |
+| Enforcement inside the Harbor trial (below) | Default | from v1.2 |
+| Values uniform within a benchmark and mode (or family) | Recommended | [new] |
+
+`[metadata.resources.limits]`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `scope` | string | `"trial"` = every container the agent drives (privileged: `main` and any service it starts or controls). A service that is the benchmark's own and outside the agent's control (`BENCHMARK_SERVICES` in `scripts/rcb_monitor/inject.py`) is observed and recorded only; `"agent"` = the agent's container only (standard modes: the `sim` sidecar is recorded, never a failure) |
+| `max_gpu_memory_gb` | float | GPU memory of the scope's processes, summed (NVML per process; what a process reserves counts); 0 = no GPU |
+| `max_memory_gb` | float | memory of the scope's containers, summed (cgroup `anon + shmem`; without a cgroup, PSS) |
+| `max_processes` | int | processes (thread groups) in the scope |
+| `max_disk_gb` | float | growth of the files under `disk_paths` in the agent's container since the monitor's first complete measurement (before the harness is installed, so its install counts) |
+| `disk_paths`, `disk_exclude` | list of strings | absolute paths measured / skipped (today `["/app", "/tmp", "/root"]` / `[]`); `/dev/shm` is memory |
+| `sustain_sec`, `window_sec` | float | a violation: above a limit for at least `sustain_sec` in total within any `window_sec` (60 / 120 s); disk: two measurements in a row; gaps never count against the agent |
+| `trial_max_gpu_memory_gb`, `trial_max_memory_gb` | float | expected peak of the whole trial, every container, for schedulers; not a failure condition |
+| `measured` | string | provenance of the limits |
+
+`[metadata.resources.caps]`: one inline table per compose service, `{ cpus, memory_gb, pids }`, the docker caps the
+compose files apply; `main`'s CPU and memory caps are Harbor's `[environment]` values, so `normalize` sets
+`[environment].memory_mb = caps.main.memory_gb × 1024` (the kernel's cap sits above the limit, so that the monitor sees
+a violation before the OOM killer acts). CPU is never a limit, only a cap. An OOM kill by the kernel in a container in
+scope, at that container's own cap, is a violation.
+
+**A CPU cap above the host's CPU count means the host's count.** Docker refuses a container whose `cpus` exceeds the
+machine's, so a runner clamps every CPU cap to the host's CPU count in the copy of the task it runs
+(`scripts/clamp_cpus.py`, applied by `scripts/run_agent_batch.sh`); the task's files keep their values. Memory and pids
+caps are never clamped.
+
+**The switch.** `RCB_LIMITS_ENFORCE`, a run-time environment variable read by the monitor (compose default
+`${RCB_LIMITS_ENFORCE:-0}`, so turning it on does not change the digest):
+- `1` / `true` (hard): once the monitor confirms a violation, it kills the scope's processes and the verifier fails the
+  trial: `reward.txt` = 0, `success = 0`, `success_before_limits` = the grader's verdict, `resource_limit_exceeded = 1`;
+  never retried.
+- `0` / `false` (default): observe and record only; the verifier reports peaks and violations
+  (`limits_violation_observed`, `/logs/verifier/resource_limits.json`) and does not change the verdict, except that a
+  benchmark-owned service killed for memory in an episode that did not succeed is `infra_error` (below). A missing
+  record is only reported (`resource_monitor_missing = 1`).
+- any other value: the monitor kills nothing and records a fatal event; the verifier reports `infra_error = 1`,
+  `resource_switch_error = 1`.
+
+**What fails a trial** (enforcement on) is exactly: a limit exceeded for `sustain_sec` within `window_sec` (disk: two
+measurements in a row), or a kernel OOM kill in the scope at the container's own cap. Nothing another trial does on the
+same host can.
+
+**Out-of-memory kills.** The monitor reads each container's cgroup v2 `memory.events` (`oom_kill`, `oom`) in a thread
+of its own, many times a second, until the record is sealed (the first collect hook), and records each kill with its
+cause: `"cap"` when the container's own `oom` counter rose with it (or within 10 s before), else `"host"`. Then:
+- a `cap` kill in the scope is the violation above (`over_oom = 1`, `resource_oom_kills`);
+- a `host` kill in the scope is never a violation: with enforcement on the trial is not a result (`infra_error = 1`,
+  `resource_host_oom = 1`), with it off it is reported and the verdict stands;
+- a kill in a **benchmark-owned service** (a `sim` sidecar, a scorer) is recorded, never a failure; if the verdict is not
+  a success, the trial is not a result (`infra_error = 1`, `resource_service_oom = 1`) in both settings. A success
+  stands.
+
+**Host protection** (enforcement on only), each an `emergency_kill` event, counted in `resource_emergency_kills`, shown
+in `usage.json`, and never a violation by itself: GPU memory of the scope above 1.5 × `max_gpu_memory_gb` at one sample
+kills the scope's process holding the most GPU memory; where the runtime applies no kernel memory cap, memory above the
+sum of the declared caps kills the scope's largest process.
+
+**Enforcement (v1.2).** Violations are judged by the Harbor trial itself, so every harness applies the same rule; a
+trial a pool kills to protect its host is an operations abort (`killed_by_pool`), not a graded result.
+- docker caps on every compose service;
+- a monitor sidecar `rcb_monitor`, outside the agent's container, samples GPU memory, memory, processes, disk and OOM
+  kills every few seconds into its own record (`rcb-monitor/1`), seals it in the first collect hook, and writes the
+  current values to `/run/rcb-limits/usage.json` in the agent's container;
+- the verifier recomputes violations from the raw samples with its own copy of the limits (`tests/`). A missing,
+  unsealed, fatal or mostly empty record is `resource_monitor_missing = 1` (with enforcement on also `infra_error = 1`).
+
+What the record can say: gaps never count against the agent, and more than 10 % of the agent phase unobserved makes
+the record unusable; a disk walk that cannot finish is a gap whose partial sum is a lower bound; GPU samples NVML cannot
+attribute per process (MIG, vGPU) are `gpu_unmeasured`, never a silent 0, and more than 10 % of them on a task with a
+GPU limit make the record unusable.
+
+The values live in `scripts/task_resources.toml` (`[[limit]]` and `[[cap]]` rules) and are written by `normalize`,
+which also renders the paragraph and a README line; `ci_checks/check-resources.py` checks them.
+
+**Rendered paragraph** (privileged; the standard modes say "Limits for your agent environment, your own container only
+(the simulator in the `sim` service is the benchmark's and does not count)"):
+
+> ## Resource limits
+> Limits for the whole trial, all its processes together (every simulator you start included): at most **24 GiB of GPU
+> memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU
+> memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may
+> be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process
+> killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your
+> container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on
+> and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to
+> protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only
+> slows you down.
+
+(The sentence about 1.5 times the GPU-memory limit is rendered only where the limits include GPU memory.)
+
+### v1 §5. Results, cost, token budget
+| Item | Level | Basis |
+|---|---|---|
+| Report success together with cost: tokens, money, turns, wall clock, simulation steps, calls | Recommended | [current] |
+| Official results use Harbor's native agents (`-a codex`, `-a claude-code`, …), configured through environment variables | Default | [new] |
+| Official runs go through the usage gateway, which forwards model-API calls only and is, with the package registries, the agent container's only egress; the harness offers the model no tool that runs outside the container (§2.11, D11). The runner flags a trial whose `totals.json` has `refused_paths`, `refused_server_tools` or `refused_bodies` | Default | [new] |
+| **Token budget** per trial: input 100M (Harbor `n_input_tokens`, cache included), output 10M (`n_output_tokens`, reasoning included); exceeding either fails the trial; the results metadata records the budget and `over_token_budget` | Default | [new] (enforced while the gateway runs; otherwise open, §7 item 3) |
+| Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | Recommended | [current] |
+| Run id `<harness>-<model>-<effort>` | Default | [new] |
+| Results are not committed: published on the results site and the Hugging Face dataset, keyed by run id | Default | [CI] for task directories |
+| Results reported per mode; the standard modes state the protocol version and reset budget, standard-realtime also S | Default | [new] |
+
+With the usage gateway on (`GATEWAY=1` in `scripts/run_agent_batch.sh`), once a trial's recorded input or output
+reaches its budget the gateway refuses every further model request of that trial (HTTP 400, "token budget exceeded"),
+the agent stops, and `<trial>/gateway/totals.json` records `over_token_budget = 1`. Budgets: `TOKEN_BUDGET_IN` /
+`TOKEN_BUDGET_OUT`, default 100M / 10M. Without the gateway the budget would be applied after the run to Harbor's
+counts; not implemented yet (§7 item 3).
+
+### v1 §7. Migration status
+
+The v1.0 migration (mode names and suffixes, `oracle` fields, `/logs/verifier` cleared first, numeric rewards, one
+README layout, no `results/`, generators ending in `normalize`) was completed on 2026-10-01. The items keep their
+numbers, because tasks and documents cite them; the record of each finished item (what changed in place, when, why) is
+in [`PROTOCOL_HISTORY.md`](PROTOCOL_HISTORY.md).
+
+Open:
+1. ~~Images~~ done (2026-10-02): every base image is `ghcr.io/mll-lab-nu/eai-<name>`, public unless `BUILD_ONLY`.
+2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
+3. The results pipeline publishes to the results site, and applies the token budget after the run for runs without the
+   usage gateway (with it, the budget is enforced during the run, §5).
+4. Solvability: tasks whose `oracle_evidence` is "none known" and the DexToolBench `partial` pairs have no verified
+   positive example; until they get one, results report them separately from the tasks with a verified solution.
+5. ~~Agent egress~~ done (2026-10-10 / 2026-10-11): every task on the allowlist with the honour rule (§2.11).
+6. ~~Resource limits~~ done (2026-10-10, v1.2-rc): limits, caps, the monitor and the verifier step in every task,
+   enforcement off by default (§2.10).
+7. ~~Time cutoffs~~ done (2026-10-11 / 2026-10-12): the closing `## Time limit` in every instruction (§2.12).
+8. ~~The agent's clock~~ done (2026-10-13): every standard service counts `time_left_s` from the agent's first request.
+
+Decided (2026-10-02):
+1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
+   episode return, goal count), stated in its instructions and `docs/benchmarks/<bench>.md`.
+2. Not yet implemented — standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its
+   own sandbox; the sidecar's verdict stays authoritative, and a disagreement is a warning (`replay_mismatch`).
+3. What each benchmark exposes to the agent in privileged mode is its own (no hiding of reward or success checks).
+   Seeds: §2.13.

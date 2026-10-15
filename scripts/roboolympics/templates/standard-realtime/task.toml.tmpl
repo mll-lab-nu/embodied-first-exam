@@ -28,6 +28,7 @@ robot = "@@ROBOT_ID@@"
 family = "@@FAMILY_ID@@"
 category = "@@CATEGORY@@"
 mode = "standard-realtime"
+network = "open"                 # the agent's egress (docs/PROTOCOL.md §2): open, the author's choice
 protocol = "eai-standard/2.3"
 instance_seed = @@SEED@@
 reset_budget = @@RT_RESET_BUDGET@@
@@ -58,8 +59,8 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = @@AGENT_TIMEOUT@@.0
-# Egress: open (Harbor's default). RoboOlympics lets the agent search for and download public tools, robot models and
-# pretrained controllers (owner, 2026-10-11; PROTOCOL §2.11 exception, docs/benchmarks/roboolympics.md). The agent's
+# Egress: open (Harbor's default), as `[metadata] network` declares. RoboOlympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md). The agent's
 # container holds no simulator, no referee and no instance.
 
 [environment]

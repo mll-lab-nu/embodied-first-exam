@@ -287,14 +287,22 @@ finish_job() {  # <job>: the raw logs compacted; no key in any saved file (+reda
   [ -n "$RESULTS" ] && python3 "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
 }
 
-summary() {  # one table over every job of this batch, rewritten after each job (atomically: lanes share it)
-  python3 - "$JOBS" "$batch" > "$JOBS/$batch.summary.md.$$" <<'PY'
+summary() {  # one table per comparable configuration over every job of this batch, rewritten after each job (atomically: lanes share it)
+  python3 - "$JOBS" "$batch" "$R" > "$JOBS/$batch.summary.md.$$" <<'PY'
 import json, pathlib, sys, datetime as dt
-jobs, batch = pathlib.Path(sys.argv[1]), sys.argv[2]
-print(f"# {batch}\n\n| task | mode | success | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |")
-print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+from collections import defaultdict
+jobs, batch, R = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
+sys.path.insert(0, str(R / "scripts"))
+import task_conventions as tc, write_task_results as wtr  # noqa: E402
+from task_names import canonical  # noqa: E402
+# RUNNING.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
+# protocol version, mode, cutoff, reset budget, S, network); unvalidated tasks (task_conventions.validated_of) are listed
+# apart and never ranked; a trial that is not a result (infrastructure, voided) never counts in a success rate.
+HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|")
 f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
-rows = []
+groups = defaultdict(list)          # (validated, config key) -> [(started, row, status)]
+labels = {}
 for trial in jobs.glob(f"{batch}-*/*__*"):
     if not trial.is_dir():
         continue
@@ -312,15 +320,38 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
         wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
     except Exception:
         wall = ""
-    task = (r.get("task_name") or trial.name.split("__")[0]).split("/")[-1]
-    mode = "standard-realtime" if task.endswith("-standard-realtime") else "standard" if task.endswith(("-standard", "-limited")) else "privileged"
+    task = canonical((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
+    if r and (R / "tasks" / task / "task.toml").is_file():
+        status, why, _ = wtr.classify(trial, r, rw)
+        cfg = wtr.trial_config(trial, task, r)
+    else:
+        status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": task.rsplit("-", 1)[-1]})
+    key = (cfg.get("validated") is True, tc.config_key(cfg))
+    labels[key] = tc.config_label(cfg)
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
                                "infra_error", "resumes") if k in rw}
-    rows.append((r.get("started_at") or "~", f"| {task} | {mode} | {rw.get('success', '-')} | {json.dumps(keys)} | "
-                 f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
-                 f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |"))
-for _, row in sorted(rows):
-    print(row)
+    res = "not a result (voided" + (f": {why}" if why else "") + ")" if status == "not_a_result" else status
+    groups[key].append((r.get("started_at") or "~", f"| {task} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
+                        f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
+                        f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |",
+                        status))
+print(f"# {batch}\n\nOne table per comparable configuration (RUNNING.md \"Results\"); success rates count results only "
+      "(a trial that is not a result is voided and never counted).")
+for validated in (True, False):
+    ks = sorted((k for k in groups if k[0] is validated), key=lambda k: tuple(map(str, k[1])))
+    if not ks:
+        continue
+    if not validated:
+        print("\n## Unvalidated tasks (not ranked)\n\nTasks without a validated oracle (PROTOCOL §2.7, `oracle` not `full` "
+              "and no `[metadata] validated = true`), and trials of a task version this checkout does not have.")
+    for k in ks:
+        rows = groups[k]
+        counted = [s for _, _, s in rows if s in ("success", "fail")]
+        rate = f"{sum(s == 'success' for s in counted)} / {len(counted)}" if counted else "-"
+        print(f"\n{'###' if not validated else '##'} {labels[k]}\n\nSuccess (results only): {rate}; "
+              f"{sum(s == 'not_a_result' for _, _, s in rows)} voided.\n\n{HEAD}")
+        for _, row, _ in sorted(rows):
+            print(row)
 PY
   mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
 }
@@ -341,15 +372,13 @@ stamp_task_dirs() {  # <root> <harbor -i args...>: give every file of each task 
   done
 }
 
-OPEN_EGRESS_RE="$(python3 "$R/scripts/set_agent_egress.py" open-prefixes 2>/dev/null || true)"   # e.g. roboolympics-
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
-      if [ -n "$OPEN_EGRESS_RE" ] && [[ "$1" =~ ^($OPEN_EGRESS_RE) ]] \
-         && ! grep -q '^network_mode = "allowlist"' "$R/tasks/$1/task.toml"; then    # open egress by a documented exception (PROTOCOL §2.11; not a task of it that declares the allowlist): the copy keeps it
+      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$R/tasks/$1")" = open ]; then    # the task declares open egress (`[metadata] network = "open"`, PROTOCOL §2): the copy keeps it
         cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; continue
       fi
       cp -a "$R/tasks/$1" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1

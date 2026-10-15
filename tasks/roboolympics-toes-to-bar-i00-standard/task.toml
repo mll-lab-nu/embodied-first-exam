@@ -27,6 +27,7 @@ family = "toes_to_bar"
 category = "parkour-apparatus-balance"
 mode = "standard"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+network = "open"                 # the agent's egress (docs/PROTOCOL.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
@@ -103,8 +104,8 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = 7200.0
-# Egress: open (Harbor's default). RoboOlympics lets the agent search for and download public tools, robot models and
-# pretrained controllers (owner, 2026-10-11; PROTOCOL §2.11 exception, docs/benchmarks/roboolympics.md). The agent's
+# Egress: open (Harbor's default), as `[metadata] network` declares. RoboOlympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md). The agent's
 # container holds no simulator, no referee and no instance.
 
 [environment]

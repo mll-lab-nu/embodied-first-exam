@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# World-frame information in standard-mode texts (PROTOCOL §2.5, D7: decided per benchmark, consistent within it). This
-# check enforces the declaration of eight benchmarks only: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboARC
-# and YAMLab
-# (docs/benchmarks/<bench>.md, "World-frame information"; docs/STANDARD_MODE.md §10, Never provided). Their standard tasks never
-# say WHERE things are in the world: no object poses or positions and no world coordinates of workspace items (table /
-# sheet heights, sheet or well centres, a pixel-to-world formula, a camera's distance to the scene), in anything that
-# describes the task: instruction.md, README.md, the task.toml description. Names, inventories, categories, sizes,
-# colours and a detailed goal are provided; so are the robot (its base pose included), camera calibration and world
-# conventions (BEHAVIOR's "the floor is the plane z = 0" defines its world frame and stays). Only what a pattern can see
-# is checked; a review covers the rest. Every other benchmark decides for itself and is not checked here; privileged
-# tasks are privileged by design.
-# Task dirs: <bench>-...-standard. Usage: check-standard-texts.sh tasks/<task-dir>
+# ADVISORY helper (docs/PROTOCOL.md §5: world-frame information in the texts is decided per benchmark, consistent within
+# it). A benchmark that declares "no world coordinates in the standard tasks' texts" (its docs/benchmarks/<bench>.md,
+# "World-frame information") runs this from its own hook, scripts/<bench>/ci/advisory-world-frame.sh, with its directory
+# prefix; shared CI names no benchmark (board 0124). Such a benchmark's standard tasks never say WHERE things are in the
+# world: no object poses or positions and no world coordinates of workspace items (table / sheet heights, sheet or well
+# centres, a pixel-to-world formula, a camera's distance to the scene), in anything that describes the task:
+# instruction.md, README.md, the task.toml description. Names, inventories, categories, sizes, colours and a detailed goal
+# are provided; so are the robot (its base pose included), camera calibration and world conventions ("the floor is the
+# plane z = 0" defines a world frame and stays). Only what a pattern can see is checked; a review covers the rest.
+# Usage: check-world-frame-texts.sh --prefix <dir prefix> <task dirs...>   (the -standard ones with the prefix are checked)
 set -uo pipefail
-t="${1%/}"; n="$(basename "$t")"
-case "$n" in
-  behavior-*-standard|robolab-*-standard|robowits-*-standard|robopaint-*-standard|maniguard-*-standard|molmospaces-*-standard|roboarc-*-standard|yamlab-*-standard) ;;
-  *) exit 0 ;;
-esac
+[ "${1:-}" = --prefix ] && [ $# -ge 2 ] || { echo "usage: check-world-frame-texts.sh --prefix <dir prefix> <task dirs...>"; exit 2; }
+prefix="$2"; shift 2; rc=0
+for t in "$@"; do
+t="${t%/}"; n="$(basename "$t")"
+case "$n" in "$prefix"*-standard) ;; *) continue ;; esac
 python3 - "$t" <<'PY'
 import os, re, sys
 t = sys.argv[1]; name = os.path.basename(t)
@@ -59,3 +57,6 @@ if bad:
         print(f"  ... {len(bad) - 40} more")
     sys.exit(1)
 PY
+[ $? -eq 0 ] || rc=1
+done
+exit $rc

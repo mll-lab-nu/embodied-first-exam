@@ -89,7 +89,7 @@ User decision 2026-10-13: this release publishes main's declared fields again, w
 ## Standard mode, world frame, network
 
 `eai-standard/2.4` (as the Genesis release); no world coordinates in standard texts (D7,
-`check-standard-texts.sh`); agent egress on the allowlist (PROTOCOL §2.11).
+`scripts/roboarc/ci/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
 
 Every text the agent sees calls the service's frame the world frame, as main's other services call theirs, and defines it in
 words; it is the robot frame: 
@@ -107,5 +107,9 @@ or robot base position either.
 `git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
 (`BENCHMARKS`), `scripts/task_resources.toml`
 (the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
-(`ci_checks/check-tooling-identity.sh` `MODULE`, `check-standard-texts.sh`, `check-generated-tasks.sh`,
+(`ci_checks/check-tooling-identity.sh` `MODULE`, `scripts/roboarc/ci/advisory-world-frame.sh`, `check-generated-tasks.sh`,
 `check-unit-tests.sh`); the cutoff is each task's own `[agent] timeout_sec` (the generator's constant).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.4` (STANDARD_MODE Part 4; it was first served by RoboTangle's standard tasks, whose release called it "2.3"). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 until its next task update; since its MuJoCo release (2026-10-13) the clock counts from the agent's first request like the others.

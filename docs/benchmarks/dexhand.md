@@ -510,3 +510,7 @@ The wrist stage is a positioning mechanism, not an arm. The cube layer is a one-
 Joy-Con are size-adapted rigid meshes, the walnut scans use convex collision hulls without concavities, cheese and
 lettuce are articulated strips, the paper is a reduced shell with uncalibrated material, and the debris pieces are
 rigid. The graders claim only the mechanical outcomes these models represent.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (STANDARD_MODE Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

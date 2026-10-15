@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# PROTOCOL §4: the verifier must run in its own sandbox, never in the container the agent controlled.
-# task.toml: [verifier].environment_mode = "separate"; tests/Dockerfile exists, FROMs a pinned registry image and ships
-# /tests/test.sh; any compose sidecar image is pinned. Agent egress (PROTOCOL §2.11, owner 2026-10-10): every task is on
-# the allowlist, and its hosts are those of scripts/set_agent_egress.py (one list for every task; an empty one breaks the
-# agent's model API). A benchmark is open only if OPEN_EGRESS below names it with its reason (RoboOlympics).
-# PROTOCOL §2.6 adds two rules, because Harbor mounts /logs/verifier read-write into the agent's container and some
+# INVARIANT (docs/PROTOCOL.md Appendix H.1 verifier isolation, H.3 the standard trust boundary's topology, H.4 evidence
+# from a sidecar, H.6 egress): part of the required CI job `invariants` (ci_checks/run_invariants.sh); no task value can
+# turn a rule here off. The verifier must run in its own sandbox, never in the container the agent controlled.
+# task.toml: [verifier].environment_mode = "separate"; tests/Dockerfile exists and ships /tests/test.sh (image pins:
+# ci_checks/check-dockerfile.sh, advisory). Agent egress (H.6): a task is on the allowlist, whose hosts are those of
+# scripts/set_agent_egress.py (one list for every task; an empty one breaks the agent's model API), unless its author
+# declares open egress, `[metadata] network = "open"` (then [agent] sets no network policy, or `public`).
+# Appendix H.1 adds two rules, because Harbor mounts /logs/verifier read-write into the agent's container and some
 # simulators keep a cache of generated code:
 # - tests/test.sh empties /logs/verifier before anything else (a planted reward.json must not survive a grader crash):
 #   `rm -rf /logs/verifier/*`, or `find /logs/verifier -mindepth 1 ... -exec rm ...` (the form that keeps Harbor's
@@ -37,8 +39,18 @@ def fail(m):
 d = tomllib.load(open(t / "task.toml", "rb"))
 if (d.get("verifier") or {}).get("environment_mode") != "separate": fail('[verifier].environment_mode must be "separate"')
 ag = d.get("agent") or {}
-if ag.get("network_mode") == "allowlist" and not ag.get("allowed_hosts"): fail('[agent] allowlist without allowed_hosts (the agent could not reach its model API)')
-elif ag.get("network_mode") == "allowlist":
+# Appendix H.6: the default is the allowlist; open egress is the task author's own declaration, never a list kept here
+net = (d.get("metadata") or {}).get("network", "allowlist")
+if net not in ("allowlist", "open"):
+    fail(f'[metadata] network = {net!r}: "allowlist" (the default) or "open"')
+if net == "open":
+    if ag.get("network_mode", "public") != "public" or "allowed_hosts" in ag:
+        fail('[metadata] network = "open", but [agent] sets another network policy: leave network_mode / allowed_hosts out (or network_mode = "public"), or drop the declaration')
+elif ag.get("network_mode") != "allowlist":
+    fail('[agent].network_mode must be "allowlist" (PROTOCOL Appendix H.6: the model APIs and the package registries, unless the task declares `[metadata] network = "open"`; the generator writes it, scripts/set_agent_egress.py allowlist)')
+elif not ag.get("allowed_hosts"):
+    fail('[agent] allowlist without allowed_hosts (the agent could not reach its model API)')
+else:
     # one allowlist for every task: scripts/set_agent_egress.py HOSTS (a task that lacks a model API's host ends as a 0
     # without having acted; one that adds a host opens what the others close)
     m = re.search(r"(?s)^HOSTS = \[(.*?)\]", (root / "scripts/set_agent_egress.py").read_text(), re.M)
@@ -46,40 +58,15 @@ elif ag.get("network_mode") == "allowlist":
     if not hosts: fail("cannot read HOSTS from scripts/set_agent_egress.py (the allowlist every task must have)")
     elif sorted(ag["allowed_hosts"]) != sorted(hosts):
         fail(f"[agent].allowed_hosts differs from scripts/set_agent_egress.py HOSTS (missing {sorted(set(hosts) - set(ag['allowed_hosts']))}, extra {sorted(set(ag['allowed_hosts']) - set(hosts))})")
-# PROTOCOL §2.11: every task's agent reaches the model APIs and the package registries, nothing else. With open egress (the default of six
-# benchmarks until 2026-10-10) agents downloaded upstream sources, a reference solution, a recorded demonstration and
-# robot models from their own shell. An exception is a directory prefix here with its reason, changed together with the
-# protocol's text; a task that drops its allowlist otherwise fails. A task of an open benchmark may still declare the
-# allowlist (RoboOlympics' exported tasks): then it is held to the allowlist like any other task (checked above).
-OPEN_EGRESS: dict[str, str] = {
-    # owner, 2026-10-11: single-humanoid sports; the agent may search for and download public tools, robot models and
-    # pretrained controllers (PROTOCOL §2.11 exception; scripts/task_conventions.py EXTERNAL_OPEN has the same prefix)
-    "roboolympics-": "open egress: public tools and pretrained controllers are allowed",
-}
 # Harbor lets a step's own policy override [agent] (trial/network_policy.py: `[[steps]]` with `[steps.agent]`): no task has
 # steps, and one that sets a network policy there would open what [agent] closes, and what a run's gateway-only copy narrows
 for st in d.get("steps") or []:
     for role in ("agent", "verifier", "environment"):
         if isinstance(st, dict) and {"network_mode", "allowed_hosts"} & set((st.get(role) or {})):
             fail(f"[[steps]] {st.get('name', '?')}: a step sets its own network policy ([steps.{role}]); the task's [agent] / [verifier] policy must be the only one")
-if t.name.startswith(tuple(OPEN_EGRESS)) and ag.get("network_mode") != "allowlist":
-    if "network_mode" in ag or "allowed_hosts" in ag:
-        fail("[agent] sets a network policy other than the allowlist, but this benchmark's egress is open by its documented exception (PROTOCOL §2.11): leave both keys out, or declare the allowlist")
-elif ag.get("network_mode") != "allowlist":
-    fail('[agent].network_mode must be "allowlist" (PROTOCOL §2.11: the model APIs and the package registries, in every task; the generator writes it, scripts/set_agent_egress.py allowlist)')
 df = t / "tests/Dockerfile"
 if not df.is_file(): fail("tests/Dockerfile missing (separate verifier image)")
-else:
-    froms = re.findall(r"^FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?", df.read_text(), re.M | re.I) or [("", "")]   # every stage, not only the first
-    for k, (frm, _) in enumerate(froms):
-        if frm in [a for _, a in froms[:k] if a]: continue     # an earlier stage of this file
-        if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", frm) and not frm.endswith(":latest") and "$" not in frm): fail(f"tests/Dockerfile FROM {frm!r} must be a pinned registry image")
-    if "test.sh" not in df.read_text(): fail("tests/Dockerfile must COPY test.sh into /tests/")
-for cf in (t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"):
-    if cf.is_file():
-        for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
-            img = img.strip("'\"")
-            if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", img) and not img.endswith(":latest") and "$" not in img): fail(f"compose sidecar image {img!r} must be pinned")
+elif "test.sh" not in df.read_text(): fail("tests/Dockerfile must COPY test.sh into /tests/")
 
 # test.sh clears /logs/verifier first
 CLEAR_LOGS = re.compile(r"^(rm\s+-[rRf]+\s+/logs/verifier/\*(\s|;|&|$)|find\s+/logs/verifier\s+-mindepth\s+1\b.*(-delete|-exec\s+rm))")

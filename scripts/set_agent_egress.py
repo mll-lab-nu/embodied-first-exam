@@ -5,7 +5,7 @@ tasks/ has, PROTOCOL §2.11), or, for a run's own copy of a task, `only <hosts>`
     scripts/set_agent_egress.py allowlist    [task dirs...]     # default: all tasks/*
     scripts/set_agent_egress.py only <host>[,<host>]  <task dirs...>   # a run's copy: exactly these hosts
     scripts/set_agent_egress.py package-hosts                   # prints PACKAGE_HOSTS, comma-separated (for the runner)
-    scripts/set_agent_egress.py open-prefixes                   # prints the open-egress benchmarks' prefixes, |-separated
+    scripts/set_agent_egress.py network <task dir>              # prints the task's declared egress: allowlist or open
     scripts/set_agent_egress.py public       <task dirs...>     # a run's copy with no restriction: Harbor's default, open
 
 HOSTS below is the one list, and the one switch: every task ships with it, ci_checks/check-verifier-isolation.sh requires
@@ -19,6 +19,9 @@ that is where the benchmarks' sources, demonstrations and trained policies are (
 board 0072); registries mostly are not (the PyPI distributions that do carry a solution: PROTOCOL §2.11). To change what agents reach, edit the two lists, run `allowlist` (it rewrites the
 `allowed_hosts` line of every task and leaves the other lines as the generators wrote them), update the generators'
 copies of the list, and `cd tasks && harbor add --scan .`.
+
+A task whose author chose open egress declares it, `[metadata] network = "open"` (PROTOCOL §2, Appendix H.6): `allowlist`
+leaves such a task alone, and a runner does not narrow its copy to the gateway (`network` prints the declaration).
 
 A run with no restriction at all: `public` on a copy of the task directories (never in tasks/: CI requires the list
 there), and run that copy (docs/RUNNING.md).
@@ -48,16 +51,20 @@ assert not PACKAGE_HOSTS or HOSTS[-len(PACKAGE_HOSTS):] == PACKAGE_HOSTS
 COMMENT = "# model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11"
 root = pathlib.Path(__file__).resolve().parents[1]
 mode = sys.argv[1] if len(sys.argv) > 1 else ""
-# Benchmarks whose agents have open egress by a documented exception (PROTOCOL §2.11; the same prefixes:
-# ci_checks/check-verifier-isolation.sh OPEN_EGRESS, scripts/task_conventions.py EXTERNAL_OPEN): `allowlist` leaves
-# their tasks alone, and a runner does not narrow their copies to the gateway (`open-prefixes` prints the list). Only
-# their tasks without an [agent] network policy are open: one that declares the allowlist (RoboOlympics' exported tasks)
-# is kept on it here, and the runner narrows its copy as any other's.
-OPEN_EGRESS = ("roboolympics-",)
+
+
+def network_of(d: pathlib.Path) -> str:
+    """The egress the task declares (`[metadata] network`, default "allowlist"; scripts/task_conventions.py network_of)."""
+    m = re.search(r'(?m)^network\s*=\s*"([^"]*)"', (d / "task.toml").read_text().partition("[metadata]\n")[2].partition("\n[")[0])
+    return m.group(1) if m else "allowlist"
+
+
 if mode == "package-hosts":
     print(",".join(PACKAGE_HOSTS)); sys.exit(0)
-if mode == "open-prefixes":
-    print("|".join(OPEN_EGRESS)); sys.exit(0)
+if mode == "network":
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
+    print(network_of(pathlib.Path(sys.argv[2]))); sys.exit(0)
 if mode not in ("public", "allowlist", "only"):
     sys.exit(__doc__)
 args = sys.argv[2:]
@@ -73,8 +80,7 @@ if mode != "allowlist":      # a run's or an experiment's copy, never the reposi
         sys.exit(f"`{mode}` takes copies of task directories, outside {root / 'tasks'}" + (f": {inside[0]}" if inside else ""))
 dirs = dirs or sorted(p for p in (root / "tasks").iterdir() if (p / "task.toml").is_file())
 if mode == "allowlist":
-    dirs = [d for d in dirs if not d.name.startswith(OPEN_EGRESS)
-            or re.search(r'(?m)^network_mode\s*=\s*"allowlist"', (d / "task.toml").read_text().partition("[agent]\n")[2].partition("\n[")[0])]
+    dirs = [d for d in dirs if network_of(d) != "open"]      # the author's choice of open egress is kept
 done = 0
 for d in dirs:
     p = d / "task.toml"; s = p.read_text()

@@ -4,7 +4,7 @@
 A pull request that touches only one benchmark's tasks, generator, tests, image sources or docs page cannot break
 another benchmark's tasks, so its CI runs the per-task checks on that benchmark's tasks, that benchmark's generator
 check and its unit tests (plus the repo-level checks, which are cheap and always run on everything). Anything else --
-the checks themselves, the workflows, the shared modules (scripts/task_conventions.py, task_dynamics,
+the checks themselves, the workflows, the shared modules (scripts/task_conventions.py, retry_policy,
 eai_standard, rcb_monitor, ...), the shared images, the protocol documents, a path this table does not know -- runs the
 FULL suite. Pushes to main always run the full suite (.github/workflows/static-checks.yml), so nothing that slips past
 a scoped run stays unnoticed for longer than one merge.

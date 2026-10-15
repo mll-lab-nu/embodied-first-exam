@@ -188,7 +188,7 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
+  `scripts/yamlab/ci/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
 - **Pointers to the reference solution.** The reference solution of an instance is the YAMLab teleoperation
@@ -210,3 +210,7 @@ sidecar mount their own `*_trusted` cache volumes; every cache volume is scoped 
 ## Licences
 YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-3-Clause. LeRobot fork: Apache-2.0. Isaac Sim
 5.1 and its wheels: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). Its service states no `max_frames_per_call` yet (calls are bounded by `max_watch_s`, `max_chunk_s` and the frame rate).
