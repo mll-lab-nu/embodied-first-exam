@@ -84,4 +84,3 @@ Separate and place the entire brown claw piece inside the green dashed goal regi
 
 ### Change Log
 - 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): a new design of interlocked_claws: keyhole gates: a redesigned pair of interlocked pieces, brown and teal (new geometry). Its task files start from the Genesis 1.2.1 task `interlocked-claws-medium-i00` (standard mode), with this design's own task text, rules and goal, its own frozen instance and its own reference.
-- 2026-10-14: the sim service (environment/sim/server.py): when the agent phase ends before the service's own clock runs out, the episode ends with reason `agent_phase_ended`; it said `timeout`, also when the agent had ended its own session (failure analysis 2026-10-14, item 13). Verdicts and grading are unchanged.

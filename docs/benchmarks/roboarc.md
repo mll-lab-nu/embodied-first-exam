@@ -57,7 +57,7 @@ layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standa
 logged in `episode.jsonl`, kept over a restart), so the instruction has the common closing sentence and no sentence of its own about the
 service's clock (2026-10-13; the Genesis release's "has run since the service first started" is not carried over). The service still ends the
 episode with reason `timeout` when that count reaches 0; counted from the first request, that is never before the harness's cutoff.
-The plan (2026-10-13, moved from PROTOCOL §2.12 on 2026-10-14): that end becomes report-only at RoboARC's next task update. When the agent phase ends first (the agent ends its session, or the harness's cutoff comes), the collect hook ends the episode with reason `agent_phase_ended` (2026-10-14; it said `timeout` before, also when the agent had stopped by itself).
+The plan (2026-10-13, moved from PROTOCOL §2.12 on 2026-10-14): that end becomes report-only at RoboARC's next task update.
 
 ## Grading replays (privileged: the strict goal within the agent's rows, 2026-10-14)
 
@@ -84,17 +84,31 @@ host (the cloth step on a deterministic GPU solver, the rest on the CPU), so a r
 reaches it within its rows. Requiring the strict goal makes privileged mode ask for what the task text and standard mode
 ask for; stating 92 % as the goal instead would have lowered the goal in privileged mode only.
 
-**Consequences.** Same task names and frozen instances, new digests (30 privileged tasks); the standard twins' grading is
-unchanged. Privileged results graded before this change in these six families are reported separately; of the ones on
-record (GPT-6 Luna, 10-14), the two blanket-flatten successes above become failures, every other privileged success had
+**Consequences.** Same task names and frozen instances. Every privileged task gets a new digest (`tests/grade.py` is one
+file shared by all 94); the verdicts can change only in the 30 tasks of the six families with a hold, since a replay of the
+other families succeeds only within the rows. The standard twins are unchanged. Of the privileged results on record
+(GPT-6 Luna, 10-14), the two blanket-flatten successes above become failures; every other privileged success had
 `strict_goal_reached` 1.
 
+**Re-grading existing results** (nothing is re-run). `scripts/roboarc/regrade.py JOBS_DIR ... [--replay] --out
+regrade.jsonl` reads every RoboARC privileged trial under the Harbor jobs trees and gives its recorded verdict, the old
+rule's and the new rule's:
+- without `--replay`, from the trial's recorded `verifier/reward.json` alone: the new verdict is the recorded success AND
+  `strict_goal_reached` (the grader before this change recorded it next to the verdict). This is exact: the replays are
+  deterministic on the host class they ran on, and the rule only adds that condition;
+- with `--replay`, it also replays the recorded `artifacts/app/output/trajectory.npz` with the current task's own
+  `tests/grade.py` in the task's verifier image (docker, GPU), the verifier's two replays, and reports both verdicts from that
+  run (old = the replays succeed; new = the current `success`); a trial whose recorded success the replay does not reproduce
+  under the old rule is `inconclusive` (re-grade it on the host class it ran on).
+
+Only the 94 tasks of the RoboARC 0.1.0 release are re-graded; a trial of any other task (a later RoboARC task, a Genesis
+`robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: their grading did not change.
+
 **Validation.** 2026-10-14, ws (RTX 4090, `eai-roboarc:0.1.0`, Harbor `-a oracle` / `-a nop`, jobs
-`rav1-{oracle,nop}-<task>`) on task files identical to this version's: the privileged oracle scores 1 with
+`rav1-{oracle,nop}-<task>`) with this version's privileged `tests/`: the privileged oracle scores 1 with
 `strict_goal_reached` 1 on blanket-flatten-01, knot-untying-01, lock-picking-01, orbits-01, rope-threading-01,
 slotted-post-ring-01 (one task of each family with a hold) and interlocked-claws-01 (a family without one), deterministic, no
-infra or grader errors; nop scores 0 on blanket-flatten-01 and slotted-post-ring-01 privileged; interlocked-claws-01 standard:
-oracle 1 (reason `success`, `live_matches_replay` 1), nop 0 with reason `agent_phase_ended`. The rule change itself, by
+infra or grader errors; nop scores 0 on blanket-flatten-01 and slotted-post-ring-01 privileged. The rule change itself, by
 construction (the recorded trials' trajectories are not retrievable): blanket-flatten-01's reference without its last 8 rows
 (a recording that stops 8 control steps before its own success; the replay confirms after 8 steps of hold) is graded 1 by the
 previous `grade.py` (`all_success` 1, `strict_goal_reached` 0) and 0 by this one (`all_success` 1, `success_in_hold_only` 1),

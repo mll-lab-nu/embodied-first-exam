@@ -878,17 +878,23 @@ FIX_STRICT_GOAL = ("- 2026-10-14: the grading rule (tests/grade.py; failure anal
                    "not credited). From 2026-10-05 (R-hold) to this change a replay could also confirm within the hold, with its "
                    "relaxed thresholds, and no strict goal was required: privileged mode has no graded live run, so the hold's "
                    "thresholds were the effective goal. The frozen instance, the reference and the replay are unchanged; results "
-                   "graded before this change are reported separately. Runs: docs/benchmarks/roboarc.md (Grading replays).")
-FIX_AGENT_END = ("- 2026-10-14: the sim service (environment/sim/server.py): when the agent phase ends before the service's own clock "
-                 "runs out, the episode ends with reason `agent_phase_ended`; it said `timeout`, also when the agent had ended its "
-                 "own session (failure analysis 2026-10-14, item 13). Verdicts and grading are unchanged.")
+                   "graded before this change are re-graded from their recorded trajectories, nothing is re-run "
+                   "(scripts/roboarc/regrade.py). Runs: docs/benchmarks/roboarc.md (Grading replays).")
+FIX_STRICT_GOAL_NO_HOLD = ("- 2026-10-14: tests/grade.py, the same file in every privileged task, requires again that one grading replay "
+                           "reach the goal with the instance's own thresholds within the trajectory's rows (failure analysis "
+                           "2026-10-14, item 12; docs/benchmarks/roboarc.md, Grading replays). This family has no grading hold: a "
+                           "replay succeeds only within the rows, so every verdict is unchanged. reward.json gains "
+                           "`success_in_hold_only` (always 0 here), and `strict_replay_required` is 1.")
 
 
 def fix_changes(base: str, mode: str) -> list[str]:
-    """The Change Log entries of fixes after the release (PROTOCOL §2.8: same name and frozen instance, new digest)."""
+    """The Change Log entries of fixes after the release (PROTOCOL §2.8: same name and frozen instance, new digest). The
+    standard twins are unchanged; every privileged task's tests/grade.py changed (the families with a grading hold, whose
+    packages state the strict rule (R_HOLD_STRICT), change their verdicts)."""
     if mode == "standard":
-        return [FIX_AGENT_END]
-    return [FIX_STRICT_GOAL] if R_HOLD_STRICT in (PKG / f"{base}-privileged" / "instruction.md").read_text() else []
+        return []
+    hold = R_HOLD_STRICT in (PKG / f"{base}-privileged" / "instruction.md").read_text()
+    return [FIX_STRICT_GOAL if hold else FIX_STRICT_GOAL_NO_HOLD]
 
 
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
