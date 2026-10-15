@@ -590,7 +590,8 @@ def resume_sha() -> str:
 
 RESUMED = EP.begin(state=E, step=replay_row, state_sha=resume_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
                    start_event={"env": S.env, "seed": S.inst.get("seed"), "cameras": CAMS})
-if RESUMED and E["resets"]:  # Episode.begin looks for an "end" of any episode: only the current one's counts
+if RESUMED:  # Episode.begin looks for an "end" of any episode: only the current one's counts, never a lost reset's
+    # (a crash inside the first reset, too: the abandoned episode runs on, board 0121)
     _ends = [e for e in EP.events() if e.get("ev") == "end" and int(e.get("episode") or 1) == E["resets"] + 1
              and e.get("reason") != "reset" and int(e.get("journal_rows") or 0) <= EP.rows]
     if _ends:

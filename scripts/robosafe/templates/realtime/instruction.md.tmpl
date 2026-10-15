@@ -45,7 +45,7 @@ next chunk before the plan runs out: with `at` = the step where it should take o
 `linear` chunk starts from the command in force just before `at`. A row takes effect at the step it is planned for;
 the sensors show its effect from the next one. A row of a type that is not a motion (an exit, `ask_operator`,
 `report`, `stop`) is made at the step it is planned for, and the arm holds through that step. `stop` drops the plan
-(`r.submit("stop", [[]])`).
+(`r.submit("stop", [[]], cameras=[])`).
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters above, `done`, `reason`,
 `proprio["now"]`, `clipped`, and this benchmark's `results`, `operator`, `messages`), `res.last[camera]` (the last
@@ -94,10 +94,10 @@ r = Robot()
 spec = r.spec()
 res = r.get_obs()                                        # res.last["front"]: the current front image (free, clock paused)
 q = res.meta["proprio"]["now"]                           # the sensor readings, in spec["proprio_layout"] order
-res = r.submit("report", [[2]], note="Starting now.")    # a one-row chunk with its text; the clock starts here
+res = r.submit("report", [[2]], note="Starting now.", cameras=[])   # a one-row chunk with its text; the clock starts here
 res = r.get_obs(cameras=["front"], seconds=2, video_fps=2)   # watch 2 s of robot time: 4 front pictures
 res = r.submit("stop", [[]], cameras=[])                 # drop the plan: the arm holds where it was being sent
-res = r.submit("done", [[]], note="What I did.")         # an exit: dimension 0, one row
+res = r.submit("done", [[]], note="What I did.", cameras=[])   # an exit: dimension 0, one row
 ```
 
 ## Cameras
