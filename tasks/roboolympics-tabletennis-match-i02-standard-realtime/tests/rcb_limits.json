@@ -22,7 +22,7 @@
  "gpu": false,
  "max_disk_gb": 20.0,
  "max_gpu_memory_gb": 0.0,
- "max_memory_gb": 8.0,
+ "max_memory_gb": 4.0,
  "max_processes": 512,
  "mode": "standard-realtime",
  "scope": "agent",
@@ -32,7 +32,7 @@
  "sustain_sec": 60.0,
  "task": "roboolympics-tabletennis-match-i02-standard-realtime",
  "tick_sec": 5,
- "trial_max_gpu_memory_gb": 4.0,
- "trial_max_memory_gb": 16.0,
+ "trial_max_gpu_memory_gb": 0.0,
+ "trial_max_memory_gb": 12.0,
  "window_sec": 120.0
 }
