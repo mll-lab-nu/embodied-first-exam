@@ -14,7 +14,9 @@ client and one episode. **Task (臨帖):** copy the exemplar character **真** i
 - A **practice sheet** lies beside the main sheet: test the brush there as much as you like; it is never scored or counted.
 - Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
-  simulated time; watching with `seconds > 0` also advances it).
+  simulated time; watching with `seconds > 0` also advances it; `meta["control_steps_left"]` counts down to it in every
+  response, and `spec["max_control_steps"]` is the cap). Every response also gives the strokes on the main sheet so far,
+  counted as the grader counts them (`meta["strokes_main_sheet"]`; the cap is `meta["max_strokes_main_sheet"]`).
 - There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
@@ -51,8 +53,10 @@ client and one episode. **Task (臨帖):** copy the exemplar character **真** i
   lies at the 5 mm limit, no shift is applied.
 - The main sheet is scored against the picture: its **inked area** (ink coverage ≥ 0.5) vs the exemplar's ink in the picture:
   **IoU**; **boundary F** (how well the edges of your ink match the edges of the exemplar's ink, precision / recall within 1 mm);
-  **region coverage** (the exemplar's ink is divided into 12 regions; the fraction of each region covered by your ink; the
-  worst one counts); **stray ink**
+  **region coverage** (the exemplar's ink is divided into 12 regions along its strokes: each continuous trail of the
+  exemplar's ink, the path one of its brush contacts takes through crossings and turns, is cut into pieces of at most 30 mm
+  along its length, and no region spans two separate pieces of ink; the regions measure 118 to 492 mm² and
+  each counts alike, the smallest too; the fraction of each region covered by your ink; the worst one counts); **stray ink**
   (ink more than 1 mm away from the exemplar's ink, as a fraction of the exemplar's inked area); the **number of strokes** on the
   main sheet. **Success iff IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80, stray ink ≤ 0.04 and at most
   3 strokes (continuous brush contacts) on the main sheet** (the recorded episode is replayed twice and both replays must agree). The continuous score
@@ -75,8 +79,21 @@ fails the task. Our reference solution writes this exemplar with `path_mm` 534 m
 (rounded down). A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
 under the path limit: both are fine.
 
-**Success iff the picture rule above holds and the run is not colouring in.** The continuous score is the one above, × min(1,
-1610 / `path_mm`) when it is colouring in.
+**The stroke cap counts strokes as they are written, not contacts** (this refines "one continuous contact is one stroke"
+above). A contact is cut into two strokes wherever the brush moves more than 5 mm along the main sheet without
+marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer than
+1590 mm of path counts as one stroke per started 1590 mm (5 times our
+reference solution's longest stroke, 317 mm, rounded up). Pieces joined by a touch too light to ink are
+therefore separate strokes, and one contact held down to write and re-write for a long time counts as several; a stroke
+written with the brush down and lifted at its end is one. **Strokes are sweeps:** at most 10 % of
+`path_mm` may lie in strokes whose path is longer than 12 times the diagonal of their bounding box (taken as at
+least 10 mm): back-and-forth, zigzag, spiral or looping fills inside one stroke fail (our reference solution's
+strokes stay under 5 times).
+
+**Success iff the picture rule above holds, the run is not colouring in, the counted strokes are within the cap and the strokes
+are sweeps.** The continuous score is the one above, × min(1,
+1610 / `path_mm`) when it is colouring in, × (1 − that share) when the strokes are not sweeps, and with the cap's
+scaling taken on the counted strokes.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
@@ -122,7 +139,9 @@ view along the sheets that shows the brush height).
   x away from the base, y to the robot's left); quaternion wxyz — the proprio quaternion at the start points the brush straight
   down. Rows are `dt` apart (`1/20 ≤ dt ≤ 0.5` s, a multiple of 1/20 s): the tip target moves on a straight line from the
   previous row's target at the 20 Hz control rate, one IK solve per control step (no collision checking), at most 0.25 m/s (a
-  faster row is slowed down; `meta["plan"]` reports it and any IK failure). At most 400 rows and 10 s per submit.
+  faster row is slowed down; `meta["plan"]` reports it and any IK failure, and per row
+  `tip_error_mm`, the measured tip's distance from the row's target after the row, and `beyond_joint_limits`, the joints
+  whose IK solution lay outside their limits: they stop at the limit and the tip misses). At most 400 rows and 10 s per submit.
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate` =
   `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).

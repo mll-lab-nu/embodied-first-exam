@@ -58,6 +58,7 @@ open-loop from the same initial state in two fresh processes; it succeeds if bot
 exactly the same state. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
+The Python is `/opt/venv` (made with uv, so it has no `pip` module): install a package with `uv pip install <name>`.
 ```python
 from rcb_brush import Session
 s = Session(instance="/app/instance.json")    # a few seconds; builds the scene in the frozen state

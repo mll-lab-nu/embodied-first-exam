@@ -570,6 +570,23 @@ def oracle_values(family: str, slug: str) -> dict:
     return out
 
 
+def region_areas_mm2(tr: dict) -> list[float]:
+    """The area (mm2 on the sheet) of each region of an exemplar's ink (truth["strokes"]: one closed polygon of straight
+    segments per region, "M x y L x y ... Z" in Make Me a Hanzi em units, the xingshu and caoshu exemplars), by the shoelace
+    formula; boxes as rcb_brush_score.glyph_boxes."""
+    boxes = ([g["box_mm"] for g in tr["glyphs"] for _ in range(int(g["n_strokes"]))] if tr.get("glyphs")
+             else [tr["box_mm"]] * len(tr["strokes"]))
+    out = []
+    for d, (_x0, _y0, size) in zip(tr["strokes"], boxes):
+        if set(re.findall(r"[A-Za-z]", d)) - set("MLZ") or d.count("M") != 1:
+            raise SystemExit("region_areas_mm2: a region that is not one polygon of straight segments")
+        P = [float(x) for x in re.findall(r"-?\d+(?:\.\d+)?", d)]
+        xs, ys = P[0::2], P[1::2]
+        a = 0.5 * abs(sum(xs[i] * ys[i - 1] - xs[i - 1] * ys[i] for i in range(len(xs))))
+        out.append(a * (float(size) / 1024.0) ** 2)
+    return out
+
+
 def derive_values(family: str, slug: str, dst_u: Path, difficulty: str | None, idx: str = "00") -> tuple[dict, str]:
     """The template values of a pair, from its frozen files (tests/instance.json, solution/program.json, solution/calibration.json)
     and the family's catalogue (targets.json): the same values whether the pair was just made or is regenerated (--refresh)."""
@@ -605,6 +622,8 @@ def derive_values(family: str, slug: str, dst_u: Path, difficulty: str | None, i
                   "DPAD": pad(f'"{difficulty}"', 19), "NPAD": pad(str(n), 19), "STRUCTURE": structure, "NCHARS": len(chars)})
         if family in ("xingshu", "caoshu"):
             v["NREG"] = int(tr["n_strokes"])                       # the regions of the exemplar's ink (min_stroke_coverage units)
+            areas = region_areas_mm2(tr)                           # their sizes, said in the texts (failure analysis 2026-10-14, item 8)
+            v["MINREG"], v["MAXREG"] = f"{min(areas):.0f}", f"{max(areas):.0f}"
             src = cat.get("sources") or {}
             v["SOURCES"] = src.get(slug) or src.get("*")
             if not v["SOURCES"]:
