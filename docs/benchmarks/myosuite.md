@@ -101,7 +101,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.
 - **Budget: 3600 s since 2026-10-12** (D8, uniform within the benchmark; owner: stricter cutoffs in 30-minute steps, one number for both modes). Before that 5400 s: Muscle-level control on a CPU-rendered simulator is slow to
   explore, and three of the seven positive examples below took a model 74-86 minutes (baoding, obj_reorient, relocate).
-  The number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction
+  The number lives in each task's own `[agent] timeout_sec`, written by the generator (history in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction
   states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Modes
@@ -151,7 +151,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   the simulator's 1.4 GB under the sidecar's 8 GiB cap), and before, one request within the documented ranges could
   exhaust that memory. The default camera at 10 fps needs 302 images for the longest watch. One gap is left in the shared 2.2 layer (`scripts/eai_standard/
   rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
-- **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5, a per-benchmark exception to "no reset"). MyoSuite's own
+- **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5: the task's own budget; the standard template's default is no reset). MyoSuite's own
   termination ends most standard episodes within one or two seconds of simulated time (measured in #116: a constant
   command held from the frozen instance ends dex_*, baoding, obj_hold, pen_twirl and obj_reorient after 12-71 control
   steps, chase_tag after 42-86), so one episode was one blind attempt at muscle-level control.
@@ -274,7 +274,7 @@ that score 0; apple_lift's first (exploit) trajectory scores 0 under the final r
   state for random action sequences in every family.
 
 ## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`; until 2026-10-14 `scripts/task_dynamics.toml`)
 get a `-standard-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
 every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged
@@ -307,3 +307,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
 `scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there; `shared/realtime/`
 the standard-realtime twin's service);
 `images/myosuite/` (Dockerfile, VERSION).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (STANDARD_MODE Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

@@ -157,10 +157,10 @@ BDDL goals; the BDDL problems are copied from the image. Their predicates are th
   `task_conventions.py --check` and the per-task CI checks pass on the 46 directories.
 
 ## Time budget (D8)
-**Since 2026-10-12: 7200 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 14400 s, and why it was chosen; results are grouped by budget.
+**Since 2026-10-12: 7200 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 14400 s, and why it was chosen; results are grouped by budget.
 
 14400 s (the protocol maximum) for every task of both modes, the same in the whole benchmark. The number lives in
-`scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in its closing `## Time limit` section (PROTOCOL §2.12), and the benchmark's own text says "the time limit (`## Time limit`)".
+each task's own `[agent] timeout_sec`, written by the generator (history in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in its closing `## Time limit` section (PROTOCOL §2.12), and the benchmark's own text says "the time limit (`## Time limit`)".
 Why 14400 s:
 - every Python process pays an Isaac launch and scene load: about 2-3 minutes with a warm Kit cache, and the first launch
   of a trial adds about 4 minutes to compile shaders into the trial's own cache (below);
@@ -178,6 +178,17 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
   20 min for the Isaac start plus a worst case of 2 control steps/s, never less than the old 3600 s, at most 4 h (enough for
   26,400 steps at 2 steps/s, ~46,000 at 3.5). A replay over its limit is a grader error (`grader_error` = 1,
   `replay_timed_out` = 1), as before. `[verifier] timeout_sec` = 30600 s: two capped replays plus 30 min.
+  **Since 2026-10-14** (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at
+  most **40,000 rows** (`MAX_ROWS` in `tests/grade.py`; before, up to the tooling's runaway guard of 200,000, which no
+  replay limit covered), each replay gets `min(28000 s, max(3600 s, 1200 s + steps / 1.5))`, and `[verifier]
+  timeout_sec` = **57800 s** (two 28000 s replays plus 30 min). Basis, from the pool's 484 graded privileged trials
+  (2026-10-09 to 10-14): the longest successful trajectory had 25,404 rows (`setup_a_bar_for_a_cocktail_party`; median of
+  the 113 successes 4,675), the frozen instances' challenge timeouts (`challenge_max_steps`) reach 39,090; the slowest
+  replay measured was the filmed second replay of a 7,747-row `assembling_gift_baskets` trajectory: 4,851 s with a 725 s
+  start, 1.88 control steps/s (its unfilmed first replay: 3.0 steps/s after a 1,115 s start). 40,000 rows is above every
+  challenge timeout and 1.6 times the longest success; 1.5 steps/s is 20 % under the slowest rate measured, and 1200 s
+  covers the slowest start. The instruction states the cap; every success recorded so far is under it. The standard
+  mode is unchanged (its episode is bounded by the agent's wall clock).
 - **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI;
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
   replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
@@ -253,7 +264,7 @@ The pass rules are unchanged; what changed is how a 0 that is not the agent's is
   or ran out of time; `finalize.sh` records each replay's exit code). A reward is written in every case. The layer's
   give-ups keep their meaning: `sim_crashed_on_call` is the agent's 0, `sim_crashed` and `resume_failed` are `infra_error`.
 - **Privileged.** A file the agent wrote that cannot be graded (not an npz, pickled or object arrays, no `task` or
-  `actions` entry, a wrong shape, non-finite values, more than 200,000 rows) is `bad_trajectory` (it was `grader_error`
+  `actions` entry, a wrong shape, non-finite values, more than 200,000 rows; 40,000 since 2026-10-14) is `bad_trajectory` (it was `grader_error`
   for the unreadable ones); a replay process that dies or runs out of time stays `grader_error` and now also sets
   `infra_error` (`replay_failed`, `replay_timed_out`); `instance_ok` = 0 (the frozen scene did not rebuild to the recorded
   one in the verifier, decided before the first action) sets both too (it was a plain 0). The tooling's `replay` CLI skips an extra npz entry it cannot read, and a failure of
@@ -338,7 +349,7 @@ sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
+  `scripts/behavior/ci/advisory-world-frame.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
 ## Licences
@@ -356,3 +367,32 @@ never copied); Isaac Sim 5.1 and Omniverse Kit: NVIDIA proprietary (no redistrib
   system these tasks use is a macro system (diced food, grated cheese: macro physical; dirt, dust, mud, rust, debris: macro
   visual), which needs no GPU dynamics. Whether a replay that creates objects stays bit-exact in a fresh process has not been
   measured yet (no positive example of such a task exists).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `approx` (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly). The record dir is `RCB_DATA=/out` (`/data` is its dataset). Its service states no `max_frames_per_call` yet.
+
+A resume replays at ~14–20 steps/s (a 50k-step, 4 h episode: 45–60 min of downtime, on the agent's wall clock). Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+
+Known issues: while the robot moves, a frame shows the scene 2 control steps before its `frame_step` (renderer latency); its `extrinsic_cv` is the pose it was rendered with, the proprio row the state at `frame_step`. Per-call state hashing on Isaac is new with crash recovery; its PRs re-check `live_matches_replay`.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | OmniGibson 3.9.2, R1Pro |
+| rows streamed at | 30 Hz control (4 substeps) |
+| `joint_position` | 25: base (per-step targets, robot frame) + trunk + arms + grippers |
+| `ee_pose` | 16 (left first, xyzw), cuRobo IK for both end effectors per row |
+| cameras | head + two wrist cameras (224×224, moving) |
+| depth | OmniGibson `depth_linear` |
+| `/kinematics` | numpy model of the articulation (trunk + arms), cuRobo fallback |
+| proprio columns (2.0 → 2.2) | 49 → 121 |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `approx` |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| BEHAVIOR-1K | 6 families (12 trials) | 130–404 s (scene load); cold builds on a loaded lab host 433–519 s | `RCB_STARTUP_TIMEOUT_S` = 1800: each trial starts with a cold Kit cache (its own `*_trusted` volume), about 250 s more |

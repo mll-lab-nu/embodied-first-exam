@@ -75,7 +75,7 @@ Test per task (`make-instance`, then two fresh-process replays of a 120-action t
 
 **The six tasks whose physics does not replay bit for bit** (`fold_clothes`, `fold_clothes_random`, `make_toast_random`,
 `pour_liquid_into_cup`, `pour_liquid_into_cup_random`, `pour_by_language`; instance.json `"determinism": "verdict"` with
-the reason) are **standard only, graded by the live episode** (since 2026-10-11, the PROTOCOL exception for declared
+the reason) are **standard only, graded by the live episode** (since 2026-10-11, PROTOCOL §4.8's live grading for declared
 non-reproducible physics). An open-loop trajectory of them cannot be graded reproducibly: the same file can succeed in one
 fresh replay and fail in the next, so a privileged twin, whose only evidence is replay, would score chance, and the
 replays of a standard episode cannot decide either (the `fold_clothes` trial above succeeded live and was scored 0). In
@@ -173,7 +173,7 @@ Result (2026-10-10, RTX 4090): resumed once, exactly (state hash `224d592a77d3c2
 fresh-process replays, deterministic, no infrastructure error. The driver does not solve the task (success 0 is expected).
 
 ## Time budget (D8)
-The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL
+The number is each task's own `[agent] timeout_sec`, written by the generator ([`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL
 §2.12): 3600 s (one hour) for every task of both modes on 2026-10-11, the owner's decision of that day (5400 s before,
 from #142 on 2026-10-10; no official result was published with 5400 s, and the trials recorded with it are kept apart).
 The cost that had argued for the longer budget is unchanged and is what an agent has to plan around: every Python process
@@ -241,3 +241,7 @@ their own `*_trusted` cache volumes, scoped to the trial's compose project.
 ## Licences
 RoboDojo: MIT. Its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`): Apache-2.0. Isaac Lab fork: BSD-3-Clause. cuRobo
 fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.

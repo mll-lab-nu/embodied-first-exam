@@ -3,7 +3,8 @@
 
 Every task carries its own content digest in `tasks/<task>/DIGEST` (written last by scripts/task_conventions.py
 `normalize`; ci_checks/check-dataset-manifest.sh recomputes it) and its own metadata in `task.toml` (mode, family,
-oracle, the agent's cutoff `[agent] timeout_sec`, resources, dynamics). Nothing in the repository lists the tasks: pull
+oracle, the agent's cutoff `[agent] timeout_sec`, resources, dynamics, and the settings results are grouped by:
+reset budget, slowdown, network, validated). Nothing in the repository lists the tasks: pull
 requests that change different tasks never touch a shared file (as in Terminal-Bench, whose list is its tasks/
 directory). After every merge to `main` the workflow `.github/workflows/task-list.yml` writes the list with `list` and
 pushes it to the branch `task-list` (never to `main`); a release attaches the same files (`.github/workflows/release.yml`).
@@ -67,6 +68,10 @@ def entry(t: Path) -> dict:
             "family": str(md.get("family", "")), "oracle": md.get("oracle", ""), "timeout_sec": tc.cutoff_for(t),
             "dynamics": md.get("dynamics", ""), "protocol": md.get("protocol", ""), "simulator": md.get("simulator", ""),
             "robot": md.get("robot", ""),
+            # the settings results are grouped by (PROTOCOL v2.0 §2, RUNNING.md "Results"): rankings compare only tasks
+            # and results of one configuration, unvalidated tasks apart
+            "reset_budget": tc.reset_budget_of(t), "slowdown": tc.slowdown_of(t), "network": tc.network_of(t),
+            "validated": tc.validated_of(t), "protocol_version": tc.PROTOCOL_VERSION,
             "resources": {k: r[k] for k in ("min_cpus", "min_memory_gb", "min_gpu_memory_gb", "gpu_class") if k in r},
             "digest": f.read_text().strip() if f.is_file() else ""}
 
@@ -87,7 +92,7 @@ def render_md(rows: list[dict], commit: str) -> str:
            f"{len(rows)} task directories. Modes: " + ", ".join(f"{short[m]} = {m}" for m in modes) + ".", "",
            "## Per benchmark", "",
            "| Benchmark | Tasks (" + " / ".join(short[m] for m in modes) + ") | Cutoff (" + " / ".join(short[m] for m in modes)
-           + ") | Oracle (full / partial / none) |", "|---|---|---|---|"]
+           + ") | Oracle (full / partial / none) | Validated | Network (allowlist / open) |", "|---|---|---|---|---|---|"]
     for bench in sorted(by_bench, key=str.lower):
         rs = by_bench[bench]
         n = Counter(r["mode"] for r in rs)
@@ -96,13 +101,30 @@ def render_md(rows: list[dict], commit: str) -> str:
             vals = sorted({r["timeout_sec"] for r in rs if r["mode"] == m}, key=lambda v: (v is None, v or 0))
             cut.append("—" if not vals else " / ".join(_sec(v) for v in vals) + (" (mixed)" if len(vals) > 1 else ""))
         o = Counter(r["oracle"] or "none" for r in rs)
+        net = Counter(r["network"] for r in rs)
         out.append(f"| {bench} | " + " / ".join(str(n[m]) if n[m] else "—" for m in modes) + " | " + " · ".join(cut)
-                   + f" | {o['full']} / {o['partial']} / {o['none']} |")
+                   + f" | {o['full']} / {o['partial']} / {o['none']} | {sum(bool(r['validated']) for r in rs)} of {len(rs)}"
+                   + f" | {net['allowlist']} / {net['open']} |")
+    out += ["", "## Comparable configurations", "",
+            "Results are ranked only within one configuration: protocol version, mode, cutoff, reset budget, slowdown S and "
+            "network (`scripts/task_conventions.py` `config_key`; docs/RUNNING.md \"Results\"). Unvalidated tasks (no "
+            "`oracle = \"full\"` and no `[metadata] validated = true`) are reported in a section of their own, never ranked "
+            "with validated ones. Each task's settings are in `tasks.json`.", "",
+            "| Mode | Cutoff | Resets | S | Network | Validated tasks | Unvalidated tasks |", "|---|---|---|---|---|---|---|"]
+    conf: dict[tuple, list[dict]] = defaultdict(list)
+    for r in rows:
+        conf[(r["mode"], r["timeout_sec"], r["reset_budget"], r["slowdown"], r["network"])].append(r)
+    for (m, c, rb, S, net), rs in sorted(conf.items(), key=lambda kv: (modes.index(kv[0][0]) if kv[0][0] in modes else 99, kv[0][1] or 0,
+                                                                 -1 if kv[0][2] is None else kv[0][2], kv[0][3] or 0, kv[0][4])):
+        v = sum(bool(r["validated"]) for r in rs)
+        out.append(f"| {m} | {_sec(c)} | {'—' if rb is None else rb} | {'—' if S is None else f'{S:g}'} | {net} | {v} | {len(rs) - v} |")
     out += ["", "## Tasks", ""]
     for bench in sorted(by_bench, key=str.lower):
-        out += [f"### {bench}", "", "| Task | Mode | Family | Cutoff | Oracle | Dynamics |", "|---|---|---|---|---|---|"]
+        out += [f"### {bench}", "", "| Task | Mode | Family | Cutoff | Oracle | Validated | Network | Dynamics |",
+                "|---|---|---|---|---|---|---|---|"]
         out += [f"| `{r['name']}` | {r['mode']} | {r['family'] or '—'} | {_sec(r['timeout_sec'])} | {r['oracle'] or '—'} | "
-                f"{r['dynamics'] or '—'} |" for r in sorted(by_bench[bench], key=lambda r: r["name"])]
+                f"{'yes' if r['validated'] else 'no'} | {r['network']} | {r['dynamics'] or '—'} |"
+                for r in sorted(by_bench[bench], key=lambda r: r["name"])]
         out.append("")
     return "\n".join(out)
 

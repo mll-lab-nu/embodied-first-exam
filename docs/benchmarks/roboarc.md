@@ -51,12 +51,13 @@ layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standa
 
 ## Time budget (D8)
 
-10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; `scripts/task_cutoffs.toml`), within the default cap: no exception.
+10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; each task's `[agent] timeout_sec`), within the default cap: no exception.
 (The Genesis release had 21600 s, then 7200 s from 2026-10-12.) The texts say "the time limit (`## Time limit`)". The standard service's clock
 (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S` follows the table) counts from the agent's first request to the service (PROTOCOL §2.12;
 logged in `episode.jsonl`, kept over a restart), so the instruction has the common closing sentence and no sentence of its own about the
 service's clock (2026-10-13; the Genesis release's "has run since the service first started" is not carried over). The service still ends the
 episode with reason `timeout` when that count reaches 0; counted from the first request, that is never before the harness's cutoff.
+The plan (2026-10-13, moved from PROTOCOL §2.12 on 2026-10-14): that end becomes report-only at RoboARC's next task update.
 
 ## Safety readings in standard mode (`meta["safety"]`)
 
@@ -88,7 +89,7 @@ User decision 2026-10-13: this release publishes main's declared fields again, w
 ## Standard mode, world frame, network
 
 `eai-standard/2.4` (as the Genesis release); no world coordinates in standard texts (D7,
-`check-standard-texts.sh`); agent egress on the allowlist (PROTOCOL §2.11).
+`scripts/roboarc/ci/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
 
 Every text the agent sees calls the service's frame the world frame, as main's other services call theirs, and defines it in
 words; it is the robot frame: 
@@ -104,7 +105,11 @@ or robot base position either.
 
 `BENCH` in `scripts/roboarc/mk_tasks.py` and `--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
 `git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
-(`BENCHMARKS`), `scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml`
+(`BENCHMARKS`), `scripts/task_resources.toml`
 (the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
-(`ci_checks/check-tooling-identity.sh` `MODULE`, `check-standard-texts.sh`, `check-generated-tasks.sh`,
-`check-unit-tests.sh`), and the `docs/CUTOFFS.md` render (`python3 scripts/task_cutoffs.py apply "<label>"`).
+(`ci_checks/check-tooling-identity.sh` `MODULE`, `scripts/roboarc/ci/advisory-world-frame.sh`, `check-generated-tasks.sh`,
+`check-unit-tests.sh`); the cutoff is each task's own `[agent] timeout_sec` (the generator's constant).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.4` (STANDARD_MODE Part 4; it was first served by RoboTangle's standard tasks, whose release called it "2.3"). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 until its next task update; since its MuJoCo release (2026-10-13) the clock counts from the agent's first request like the others.

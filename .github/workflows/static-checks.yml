@@ -1,5 +1,6 @@
 name: static-checks
-# Scope (ci_checks/ci_scope.py, docs: CONTRIBUTING.md "Review and merge"): a pull request runs the checks on what it
+# Two tiers (docs/PROTOCOL.md v2.0): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
+# (not required). Scope (ci_checks/ci_scope.py, docs: CONTRIBUTING.md "Review and merge"): a pull request runs the checks on what it
 # can affect -- one benchmark's own paths changed: that benchmark's tasks, generator check and unit tests (plus the cheap
 # repo-level checks on everything); anything shared (ci_checks/, .github/, shared scripts/ modules and tables, shared
 # images, the protocol documents, an unknown path): the full suite. Pushes to main, the nightly run and a manual run
@@ -22,23 +23,85 @@ concurrency:
 # to be increased"). To go back to GitHub's runners, put `ubuntu-latest` in both `runs-on` lines. Do not give these
 # runners the `docker` label: validate-task.yml targets [self-hosted, docker] and runs Harbor trials.
 jobs:
-  checks:
+  # THE required check (docs/PROTOCOL.md Appendix H; board 0124): every check and test that enforces the eight
+  # invariants, nothing else. ci_checks/run_invariants.sh runs with `set -euo pipefail`, an explicit expected count of
+  # commands (parallel.py --expect) and an INVARIANT-PASS line from each: a failure, an error or an incomplete run fails
+  # this job. No continue-on-error anywhere in it. Branch protection's required context: `invariants`.
+  invariants:
     runs-on: [self-hosted, rcb-ci]
-    timeout-minutes: 60
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 2 }   # a pull request's checkout is GitHub's merge commit: HEAD^1 = main, HEAD^2 = the branch
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      # every per-task check (incl. scripts/task_conventions.py --check: README, task.toml, test.sh are what normalize
-      # writes) and the repo-level checks, concurrently on the runner's CPUs; the unit tests run in the job below
-      - name: Static checks (pull request - what it can affect; main - all tasks)
+      - name: Invariants (pull request - what it can affect; main - all tasks)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && git rev-parse -q --verify HEAD^2 >/dev/null; then
+            bash ci_checks/run_invariants.sh --changed HEAD^1
+          else
+            bash ci_checks/run_invariants.sh
+          fi
+  # Every other check (docs/PROTOCOL.md §1-§7 are recommendations): findings are warnings, never a failure of the
+  # workflow (continue-on-error; exit 3 = warnings only), shown as annotations, in the job summary and, on a pull
+  # request, in the "Advisories (not blocking)" section of its sticky overview comment (ci_checks/pr_overview.py;
+  # this job also posts the overview and the labels: new-task, task-fix, shared, cutoff-change).
+  advisories:
+    runs-on: [self-hosted, rcb-ci]
+    timeout-minutes: 60
+    continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Advisory checks (pull request - what it can affect; main - all tasks)
+        continue-on-error: true
+        shell: bash
         env: { RCB_SKIP_UNIT_TESTS: "1" }
         run: |
+          export RCB_ADVISORIES_OUT="$RUNNER_TEMP/advisories.txt"; : > "$RCB_ADVISORIES_OUT"
           if [ "$GITHUB_EVENT_NAME" = pull_request ] && git rev-parse -q --verify HEAD^2 >/dev/null; then
-            bash ci_checks/run_all.sh --changed HEAD^1
+            bash ci_checks/run_all.sh --tier advisory --changed HEAD^1
           else
-            bash ci_checks/run_all.sh
+            bash ci_checks/run_all.sh --tier advisory
+          fi
+      - name: Overview with advisories (pull requests)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          touch "$RUNNER_TEMP/advisories.txt"
+          python3 ci_checks/pr_overview.py --diff-from HEAD^1 --labels "$RUNNER_TEMP/labels.txt" \
+            --advisories "$RUNNER_TEMP/advisories.txt" > "$RUNNER_TEMP/overview.md"
+          cat "$RUNNER_TEMP/overview.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Sticky comment and labels (pull requests)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -eu
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
+          body=$(python3 -c 'import json,sys; print(json.dumps({"body": open(sys.argv[1]).read()}))' "$RUNNER_TEMP/overview.md")
+          id=$(curl -fsS "${auth[@]}" "$api/issues/$PR/comments?per_page=100" \
+               | python3 -c 'import json,sys; print(next((str(c["id"]) for c in json.load(sys.stdin) if c["body"].startswith("<!-- rcb-pr-overview -->")), ""))')
+          if [ -n "$id" ]; then
+            curl -fsS -X PATCH "${auth[@]}" "$api/issues/comments/$id" -d "$body" > /dev/null; echo "updated comment $id"
+          else
+            curl -fsS -X POST "${auth[@]}" "$api/issues/$PR/comments" -d "$body" > /dev/null; echo "posted the overview"
+          fi
+          if [ -s "$RUNNER_TEMP/labels.txt" ]; then
+            labels=$(python3 -c 'import json,sys; print(json.dumps({"labels": open(sys.argv[1]).read().split()}))' "$RUNNER_TEMP/labels.txt")
+            curl -fsS -X POST "${auth[@]}" "$api/issues/$PR/labels" -d "$labels" > /dev/null; echo "labels: $(tr '\n' ' ' < "$RUNNER_TEMP/labels.txt")"
           fi
   # The shared service layers and the benchmarks' service / grader tests on stub simulators (numpy + requests; no
   # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, both tiers. A job of its own, so that the static

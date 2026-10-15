@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# task.toml: name matches folder, required metadata (docs/PROTOCOL.md §2.3, docs/TAXONOMY.md), deliverable dir, agent timeout cap (with per-benchmark exceptions).
+# ADVISORY. task.toml: name matches folder, required metadata (docs/PROTOCOL.md §1, §2, docs/TAXONOMY.md), deliverable
+# dir, agent timeout cap (14400 s for every task), the task's declared scene dynamics (no central table, board 0124).
 t="$1"; python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY'
 import sys, tomllib, pathlib
 t = pathlib.Path(sys.argv[1]); d = tomllib.load(open(t / "task.toml", "rb")); rc = 0
@@ -23,6 +24,8 @@ if suffix not in MODES: fail("directory name must end in " + ", ".join("-" + x f
 if m.get("mode") not in MODES: fail("[metadata].mode must be " + "|".join(MODES))
 elif m["mode"] != suffix: fail(f"[metadata].mode = {m['mode']!r} but the directory ends in -{suffix}")
 if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
+if m.get("dynamics") not in ("static", "dynamic"):
+    fail(f'[metadata].dynamics must be declared, "static" or "dynamic" (PROTOCOL §2), got {m.get("dynamics")!r}')
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
 if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
 else:

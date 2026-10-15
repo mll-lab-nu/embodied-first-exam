@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Unit tests of benchmark and shared tooling, in two tiers.
 #  1. Standard library and a shell only (no numpy, no simulator, no image): the graders and collect hooks that decide a
-#     verdict from files, the usage gateway's raw log. Always run (run_all.sh, the required CI job), except one slow
-#     test that waits for `--all`.
+#     verdict from files, the usage gateway's raw log. Run by run_all.sh and the CI job `unit-tests` (not required; the
+#     tests that enforce PROTOCOL Appendix H also run in the required job `invariants`, run_invariants.sh), except one
+#     slow test that waits for `--all`.
 #  2. numpy + requests (no simulator, no image, no GPU): the shared service layers on stub simulators (the
-#     eai-standard/2.2 and 2.4 selftests: crash recovery, request checks; the rcb_service and realtime layers) and the
+#     eai-standard/2.2 and 2.4 selftests: the layers' in-trial crash recovery, request checks; the rcb_service and realtime layers) and the
 #     benchmarks' service and grader tests. Run when both modules can be imported (the CI job `unit-tests` installs
 #     them), skipped with a note otherwise; `--all` makes a missing module a failure.
 # Not here: tests that need a simulator image or media libraries (scripts/roboolympics/tests/: the
@@ -41,10 +42,11 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: 
 for t in robolab/tests/test_grade_standard.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
-         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py \
+         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py tests/test_retry_policy.py \
          roboolympics/tests/test_skill_sandbox.py; do
   run 300 "$t"
 done
+run 120 account_failure_check.py --selftest   # the runner's lane stop and infra rules (account, usage gateway) on synthetic trials
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
 # grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi

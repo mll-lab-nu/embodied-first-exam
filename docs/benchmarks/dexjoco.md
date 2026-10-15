@@ -13,7 +13,7 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 | tasks | 11 families × 2 modes: `tasks/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
-| agent time budget | 3600 s for every task since 2026-10-12 (owner: stricter cutoffs in 30-minute steps, one number for both modes); 5400 s before (D8: dexterous control of 16 hand joints per arm through a thin interface; the model runs we made used most of it); the number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12) |
+| agent time budget | 3600 s for every task since 2026-10-12 (owner: stricter cutoffs in 30-minute steps, one number for both modes); 5400 s before (D8: dexterous control of 16 hand joints per arm through a thin interface; the model runs we made used most of it); the number lives in each task's own `[agent] timeout_sec`, written by the generator (history in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12) |
 | egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL §2.7) |
 
 ## Tasks
@@ -228,3 +228,7 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
     numerics: a 0 there with `deterministic = 1` may be a false failure, and such a trial would now be
     `infra_error = 1`. A past standard trial that ended with `sim_error = 1` after a non-string `note` or a `null`
     field would now go on (it could score 1).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, STANDARD_MODE §13).

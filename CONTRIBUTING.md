@@ -18,25 +18,25 @@ One benchmark per pull request. A pull request that adds tasks **and** changes s
 Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
 - **solvable** — a positive example the verifier scores 1: an oracle, an upstream expert or policy, a successful
-  model trial, or a hand-built trajectory (tasks without one are human-reviewed and reported separately, PROTOCOL §7);
+  model trial, or a hand-built trajectory (tasks without one are human-reviewed and ranked separately as unvalidated, PROTOCOL §2, §4);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
 - **reproducible** — bit-exact replay of a frozen scene instance, and the hardware it was checked on;
 - **isolatable** — the verifier can recompute the result in its own sandbox from the declared artifacts;
 - **scrubbable** — upstream reference solutions can be removed from everything the agent can reach.
 
-It also states the oracle source (§2.7 of the protocol), the minimum compute per trial (CPU cores, memory, GPU memory
-and GPU class, §2.9), image size, whether the images can be published, and
+It also states the oracle source (PROTOCOL §4), the minimum compute per trial (CPU cores, memory, GPU memory
+and GPU class, §6), image size, whether the images can be published, and
 the expected size of the pull request.
 
 ## Authoring a task
 1. Copy the closest existing pair (`tasks/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks
-   with a script under `scripts/<bench>/`. Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §2.2, §4b) and write
-   the README in the standard layout (§2.1); there is no `results/` directory.
-2. Fill in `task.toml` (PROTOCOL §2.3), `instruction.md` (§2.5, written by a human), the verifier under `tests/`
-   (§2.6, separate sandbox) and `solution/` (§2.7).
-   The agent's time cutoff (PROTOCOL §2.12) is the task's own `[agent] timeout_sec`, which you set in this pull
+   with a script under `scripts/<bench>/`. Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §1, §3) and write
+   the README in the standard layout (§1); there is no `results/` directory.
+2. Fill in `task.toml` (PROTOCOL §1, §2: declare its settings, `dynamics` and `network` included), `instruction.md`
+   (§5, written by a human), the verifier under `tests/` (Appendix H.1, separate sandbox) and `solution/` (H.2).
+   The agent's time cutoff (PROTOCOL §2) is the task's own `[agent] timeout_sec`, which you set in this pull
    request (a generator: a constant in your `scripts/<bench>/`) and state in its Contract: a whole number of seconds,
-   3600 unless you justify another number, at most 14400 (D8), the same for a task's privileged and standard versions,
+   3600 unless you justify another number, at most 14400, the same for a task's privileged and standard versions,
    and one number for all your benchmark's tasks of a mode unless you say why. There is no central table. `normalize`
    writes from it the standard modes' `RCB_WALL_CLOCK_S` and the README row, and ends `instruction.md` with the
    `## Time limit` section, after `## External material` and `## Resource limits` ("You have N seconds to complete this
@@ -45,12 +45,12 @@ the expected size of the pull request.
    particular to your benchmark (a simulator's start-up cost). Your service's `time_s` / `time_left_s` count from the
    agent's first request to it, never from the service's start, and a resumed service keeps that moment
    (STANDARD_MODE.md, "The agent's clock": the shared layers do it for you; a test must show it).
-3. State the minimum compute (PROTOCOL §2.9): CPU cores, memory and GPU memory of the agent phase and the verifier
+3. State the minimum compute (PROTOCOL §6): CPU cores, memory and GPU memory of the agent phase and the verifier
    phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /
    cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
    generator write `[metadata.resources]`); `scripts/task_conventions.py` writes it into `task.toml` and renders the
    README's `## Compute resources`.
-   Add the resource limits and caps too (PROTOCOL §2.10): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
+   Add the resource limits and caps too (PROTOCOL §6, RUNNING.md "Resources"): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
    `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
    expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
    `.caps` and writes the `## Resource limits` paragraph the agent reads into `instruction.md` (just before the closing
@@ -63,11 +63,12 @@ the expected size of the pull request.
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.
 5. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
-   holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (PROTOCOL D11).
+   holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (RUNNING.md "Official runs").
 
 ## Before opening the pull request
 ```bash
-bash ci_checks/run_all.sh tasks/<your tasks>      # must pass
+bash ci_checks/run_invariants.sh tasks/<your tasks>   # must pass (the required CI job `invariants`)
+bash ci_checks/run_all.sh tasks/<your tasks>      # both tiers: fix the advisory findings or say why the task departs
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
@@ -86,7 +87,7 @@ the matching state hashes.
 Allowed (`oracle = "partial"` or `"none"` with `oracle_evidence`), but they need **human review**: the pull request is
 labelled `needs-human-review` and is merged only after a maintainer other than the author approves it. Provide, per
 family, a positive example the verifier scores 1, the `nop` result and a short description of the success predicate.
-The checklist is in PROTOCOL §2.7.
+The checklist is in PROTOCOL §4.
 
 ## Review and merge
 1. Static checks run on every pull request (`.github/workflows/static-checks.yml`), on what the pull request can
@@ -95,16 +96,23 @@ The checklist is in PROTOCOL §2.7.
    share code with it), the per-task checks (incl. each task's `DIGEST`) and `task_conventions.py --check` on that
    benchmark's tasks, its generator's check and its unit tests (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
-   (`task_conventions.py`, `task_dynamics.toml`, `task_resources.toml`, `eai_standard/`,
+   (`task_conventions.py`, `task_resources.toml`, `eai_standard/`,
    `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, `docs/PROTOCOL.md` and the other protocol documents, or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
    run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
-2. A sticky overview comment (`.github/workflows/task-pr-overview.yml`) lists the tasks the pull request adds or
-   changes, the cutoffs it changes and the scope of its checks, and labels it (`new-task`, `task-fix`, `shared`,
+   The checks are in two tiers (PROTOCOL v2.0): the job **`invariants`** (`ci_checks/run_invariants.sh`: the checks
+   that enforce PROTOCOL Appendix H) is the only one that blocks a merge, and it fails on any failure, error or
+   incomplete run; the job **`advisories`** (`ci_checks/run_all.sh --tier advisory`) reports every other finding as a
+   warning (annotations, the job summary). Locally, `bash ci_checks/run_all.sh` runs both: exit 0 clean, 1 an invariant
+   failed, 3 advisory findings only.
+2. A sticky overview comment (posted by the job `advisories`, `ci_checks/pr_overview.py`) lists the tasks the pull
+   request adds or changes, the cutoffs it changes, the scope of its checks and the advisory findings ("Advisories (not
+   blocking)": fix them or say why the task departs), and labels it (`new-task`, `task-fix`, `shared`,
    `cutoff-change`). A maintainer reviews the files and comments `/validate` to run the oracle (where `oracle = "full"`)
    and `nop` on the changed tasks (`.github/workflows/validate-task.yml`, on the GPU runner; the results come back as a
-   comment), and, for new benchmarks, runs an adversarial ("cheat") trial and a model trial.
-3. Merge requires: checks passing, a maintainer approval (CODEOWNERS for shared files), human review where required,
+   comment; not working yet: it needs a dedicated runner with the `docker` label, which is not attached -- until then the
+   reviewer runs oracle and `nop` by hand), and, for new benchmarks, runs an adversarial ("cheat") trial and a model trial.
+3. Merge requires: the required check `invariants` passing (branch protection), a maintainer approval (CODEOWNERS for shared files), human review where required,
    and a branch up to date with `main`.
 4. After merge, the task list is regenerated by `.github/workflows/task-list.yml` and pushed to the branch `task-list`
    (`TASKS.md`, `tasks.json`, `dataset.toml`; nothing in `main` lists the tasks); maintainers publish base images and
@@ -112,21 +120,26 @@ The checklist is in PROTOCOL §2.7.
 
 ## Rules that apply to every contribution
 - A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
-- To change a time cutoff (an owner decision), set the new `[agent] timeout_sec` in the tasks concerned (a generated
+- To change a time cutoff (the task author's decision; owner involvement only where official results must stay
+  comparable), set the new `[agent] timeout_sec` in the tasks concerned (a generated
   benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them
-  and say old -> new, who decided and why in the pull request ([docs/CUTOFFS.md](docs/CUTOFFS.md)). The task keeps its
-  name; results under the earlier cutoff are reported separately (PROTOCOL §2.8, §2.12).
+  and say old -> new and why in the pull request ([docs/CUTOFFS.md](docs/CUTOFFS.md)). The task keeps its name and gets
+  a new digest; results under the earlier cutoff are ranked separately (PROTOCOL §2, H.8).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
-- The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives), in every
-  task (`[agent] network_mode = "allowlist"` with the hosts of `scripts/set_agent_egress.py`; PROTOCOL §2.11): bake
+- The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives) by default
+  (`[agent] network_mode = "allowlist"` with the hosts of `scripts/set_agent_egress.py`; PROTOCOL Appendix H.6); a task
+  whose author chooses open egress declares `[metadata] network = "open"` and writes its own `## External material`
+  paragraph, and its results are ranked apart. Bake
   what the task itself needs at run time into the image or the task directory (an agent may install packages; a task
   must not depend on it). `normalize` writes the `## External material` paragraph, an honour rule, into
   `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
-  PROTOCOL §2.11. Keep provenance (source repository, dataset, demonstration
+  [docs/LEAKAGE.md](docs/LEAKAGE.md) ("Packages on PyPI"). Keep provenance (source repository, dataset, demonstration
   file, expert module) out of every file under `environment/` that the agent reads, and look through a new image for
   recorded episodes and links to them (`ci_checks/check-agent-pointers.py` covers the task's own files only).
 - The agent is root in its container: assume it can modify anything under `/app` and `/opt`. Grading therefore runs in
-  a separate sandbox, and only the declared artifacts cross over.
+  a separate sandbox, and only the declared artifacts cross over (PROTOCOL Appendix H.1). A benchmark-specific check
+  goes into the benchmark's own `scripts/<bench>/ci/` as an `invariant-*` hook (it guards Appendix H: blocking) or an
+  `advisory-*` hook (a convention: a warning); shared `ci_checks/` names no benchmark.
 - No credentials, personal absolute paths, large binaries or agent results in the repository (results go to the results
   site and the Hugging Face dataset).
 - New Python code should be formatted with `ruff format` (line length 120).

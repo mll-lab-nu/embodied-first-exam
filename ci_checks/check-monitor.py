@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""PROTOCOL §2.10 (v1.2): every task with `[metadata.resources.limits]` runs the resource monitor sidecar and the verifier
+"""Two tiers (board 0124). INVARIANT (docs/PROTOCOL.md Appendix H.1; `--tier invariants`, part of the required CI job):
+the monitor sidecar that check-verifier-isolation.sh exempts is held to its own isolation (no network, its code
+read-only, the beacons read-only in every other service, its seal the first sidecar collect hook), and tests/test.sh
+sanitizes /app/output before anything reads the agent's files. ADVISORY (`--tier advisory`): the copies of the monitor's
+code and limits, the verifier step's trap and COPY line, and the monitor's own tests. Default: both.
+
+PROTOCOL v1 §2.10 (v1.2): every task with `[metadata.resources.limits]` runs the resource monitor sidecar and the verifier
 step, wired exactly as scripts/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from the
 generator; this check catches a task the generator never ran on, and hand edits that break the safety properties).
 
-    python3 ci_checks/check-monitor.py [task dirs]      # default: every task; also runs scripts/rcb_monitor/selftest.py
-                                                        # and test_monitor.py
+    python3 ci_checks/check-monitor.py [--tier invariants|advisory|all] [task dirs]   # default: every task, both tiers
+                                                        # (advisory: also runs scripts/rcb_monitor/selftest.py and test_monitor.py)
 """
 import re
 import subprocess
@@ -19,12 +25,13 @@ from rcb_monitor import inject  # noqa: E402
 SRC = ROOT / "scripts" / "rcb_monitor"
 
 
-def check(task: Path) -> list[str]:
+def check(task: Path) -> tuple[list[str], list[str]]:
+    """(invariant errors, advisory errors)."""
     cfg = tomllib.loads((task / "task.toml").read_text())
     lim = ((cfg.get("metadata") or {}).get("resources") or {}).get("limits")
     if not isinstance(lim, dict):
-        return []                                    # check-resources.py requires the limits; nothing to wire without them
-    err = []
+        return [], []                                # check-resources.py requires the limits; nothing to wire without them
+    err, inv = [], []
     comp = task / "environment" / "docker-compose.yaml"
     text = comp.read_text() if comp.is_file() else ""
     for f in inject.CODE:
@@ -40,13 +47,13 @@ def check(task: Path) -> list[str]:
     # the monitor service and its safety properties
     m = re.search(rf"(?ms)^{re.escape(inject.BEGIN)}.*?^{re.escape(inject.END)}$", text)
     if not m:
-        err.append("environment/docker-compose.yaml has no rcb_monitor service")
+        inv.append("environment/docker-compose.yaml has no rcb_monitor service")
     else:
         blk = m.group(0)
         for need in ("    pid: host", "    network_mode: none", "    cap_add: [SYS_PTRACE]", f"    image: {inject.IMAGE}",
                      "      - ./rcb_monitor:/opt/rcb_monitor:ro", "      RCB_LIMITS_ENFORCE: ${RCB_LIMITS_ENFORCE:-0}"):
             if need not in blk:
-                err.append(f"rcb_monitor service: missing `{need.strip()}`")
+                (err if "RCB_LIMITS_ENFORCE" in need or "image:" in need else inv).append(f"rcb_monitor service: missing `{need.strip()}`")
     # every other service mounts its beacon read-only, the right one for the mode
     try:
         lines = text.splitlines(keepends=True)
@@ -60,44 +67,53 @@ def check(task: Path) -> list[str]:
             if not any(want in ln for ln in lines[k0:k1]):
                 err.append(f"service {name}: does not mount `{want}`")
             if any("/run/rcb-limits" in ln and ":ro" not in ln for ln in lines[k0:k1]):
-                err.append(f"service {name}: mounts the beacon writable")
+                inv.append(f"service {name}: mounts the beacon writable")
     except ValueError as e:
-        err.append(f"environment/docker-compose.yaml: {e}")
+        inv.append(f"environment/docker-compose.yaml: {e}")
     s = (task / "task.toml").read_text()
     if inject.ARTIFACT not in s:
         err.append("task.toml: the monitor's record is not an artifact of service rcb_monitor")
     hooks = re.findall(r'(?m)^\[\[verifier\.collect\]\]\nservice = "([^"]+)"', s)
     side = [h for h in hooks if h != "main"]
     if not side or side[0] != "rcb_monitor":
-        err.append("task.toml: the first sidecar [[verifier.collect]] hook must be rcb_monitor's seal")
+        inv.append("task.toml: the first sidecar [[verifier.collect]] hook must be rcb_monitor's seal")
     sh = (task / "tests" / "test.sh").read_text() if (task / "tests" / "test.sh").is_file() else ""
     if inject.TRAP not in sh:
         err.append("tests/test.sh: no verifier-step trap")
-    if inject.GUARD not in sh or inject.TRAP not in sh or not sh.index(inject.TRAP) < sh.index(inject.GUARD):
-        err.append("tests/test.sh: no `rcb_limits.py sanitize /app/output` line after the trap (the agent's files are untrusted input)")
+    if inject.GUARD not in sh:
+        inv.append("tests/test.sh: no `rcb_limits.py sanitize /app/output` line (the agent's files are untrusted input)")
     elif any(re.search(r"grade|/app/output", ln) for ln in sh[:sh.index(inject.GUARD)].splitlines()
              if ln.strip() and not ln.lstrip().startswith("#") and inject.TRAP not in ln):
-        err.append("tests/test.sh: something reads the agent's files before the sanitize line")
+        inv.append("tests/test.sh: something reads the agent's files before the sanitize line")
+    elif inject.TRAP in sh and not sh.index(inject.TRAP) < sh.index(inject.GUARD):
+        err.append("tests/test.sh: the sanitize line comes before the verifier-step trap")
     if "COPY rcb_limits.py rcb_limits.json /tests/" not in ((task / "tests" / "Dockerfile").read_text()
                                                             if (task / "tests" / "Dockerfile").is_file() else ""):
         err.append("tests/Dockerfile: does not COPY rcb_limits.py rcb_limits.json")
-    return err
+    return inv, err
 
 
 def main(argv):
+    tier = "all"
+    if argv[:1] == ["--tier"]:
+        tier, argv = argv[1], argv[2:]
+        if tier not in ("invariants", "advisory", "all"):
+            raise SystemExit("--tier invariants|advisory|all")
     dirs = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] or sorted(p.parent for p in (ROOT / "tasks").glob("*/task.toml"))
     bad = 0
-    for test in ("selftest.py", "test_monitor.py"):      # the violation rule and the verifier step; the monitor's own logic
-        r = subprocess.run([sys.executable, str(SRC / test)], capture_output=True, text=True)
-        if r.returncode != 0:
-            print(f"FAIL scripts/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
-            bad = 1
+    if tier != "invariants":
+        for test in ("selftest.py", "test_monitor.py"):      # the violation rule and the verifier step; the monitor's own logic
+            r = subprocess.run([sys.executable, str(SRC / test)], capture_output=True, text=True)
+            if r.returncode != 0:
+                print(f"FAIL scripts/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
+                bad = 1
     for d in dirs:
-        for e in check(d):
+        inv, adv = check(d)
+        for e in (inv if tier != "advisory" else []) + (adv if tier != "invariants" else []):
             print(f"FAIL {d.name}: {e}")
             bad = 1
     if not bad:
-        print(f"check-monitor: {len(dirs)} tasks ok")
+        print(f"check-monitor ({tier}): {len(dirs)} tasks ok")
     return bad
 
 

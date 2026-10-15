@@ -61,8 +61,9 @@ allowed = [301]
 oracle = []
 
 [verifier]
-timeout_sec = 30600.0             # two fresh-process replays, each capped at 4 h by tests/grade.py (1200 s start + 2 steps/s,
-                                  # floor 3600 s), + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start, < 3.5 steps/s
+timeout_sec = 57800.0             # two fresh-process replays, each capped at 28000 s by tests/grade.py (1200 s start + 1.5
+                                  # steps/s for at most 40,000 rows, floor 3600 s), + 30 min; slowest replay measured: 1.88
+                                  # steps/s (filmed, 2026-10-09), Isaac start up to 1,115 s (docs/benchmarks/behavior.md)
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.

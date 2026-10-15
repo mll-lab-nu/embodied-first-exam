@@ -113,9 +113,9 @@ it: the second point.
   container has no simulator image, and the verifier's image is not the agent's.
 
 ## Time budget (D8)
-**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
 
-The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
+The number is each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2.12; history in [`../CUTOFFS.md`](../CUTOFFS.md)), and
 every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
 2026-10-11: 5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
 launch and scene build, so an agent's iterations cost more than in the other simulators; with 3600 s most failures in
@@ -194,7 +194,7 @@ registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 wit
   recording, replay and rendering. Task-level skills (grasp, place, navigate) are never added to the agent's tooling;
   reference solutions keep theirs under `solution/`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
+  `scripts/robolab/ci/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
 ## Standard mode (eai-standard/2.2)
@@ -231,3 +231,34 @@ sees it and still ends the episode with a 500.
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA
 proprietary software (no redistribution), hence BUILD_ONLY.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `exact` (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact).
+
+Its service states no `max_frames_per_call` yet.
+
+A resume replays at ~20 steps/s. Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+
+Known issue: per-call state hashing on Isaac is new with crash recovery; its PRs re-check `live_matches_replay`.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | Isaac Lab 2.3 |
+| rows streamed at | 15 Hz control (8 substeps) |
+| `joint_position` | 8: 7 joints + binary gripper (switched) |
+| `ee_pose` | 8, closed-loop differential IK, fingertip-centre frame |
+| cameras | `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static), `wrist_cam` |
+| depth | Isaac `distance_to_image_plane` |
+| `/kinematics` | numpy model of the USD joints (7) |
+| proprio columns (2.0 → 2.2) | 16 → 32 |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `exact` |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| RoboLab | 13 families (20 trials) | 98–217 s | default enough |

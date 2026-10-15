@@ -151,9 +151,9 @@ resumed the same episode after 49 s of downtime, the oracle continued from the r
 as usual: success 1, live = replay 1 = replay 2, `resumes = 1`, `sim_startups = 2`, no infra error.
 
 ## Time budget (D8)
-**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
 
-The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
+The number is each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2.12; history in [`../CUTOFFS.md`](../CUTOFFS.md)), and
 every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
 2026-10-11: 5400 s for every task of both modes, as RoboLab: every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build
 (more on a loaded host), and these are long two-arm episodes (the reference demonstrations run 10-28 s of robot time).
@@ -188,7 +188,7 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
+  `scripts/yamlab/ci/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
 - **Pointers to the reference solution.** The reference solution of an instance is the YAMLab teleoperation
@@ -210,3 +210,7 @@ sidecar mount their own `*_trusted` cache volumes; every cache volume is scoped 
 ## Licences
 YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-3-Clause. LeRobot fork: Apache-2.0. Isaac Sim
 5.1 and its wheels: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). Its service states no `max_frames_per_call` yet (calls are bounded by `max_watch_s`, `max_chunk_s` and the frame rate).

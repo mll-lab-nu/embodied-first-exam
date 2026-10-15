@@ -14,7 +14,8 @@ tests/instance.json must also match the recorded one (`instance_ok`: the exact s
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
 - the agent's: no file (`missing_trajectory`), another task's trajectory (`wrong_task`), a file that is not a
   trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, pickled or object arrays, the wrong shape, NaN/inf,
-  more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic;
+  more than MAX_STEPS rows, a row whose quaternion has zero or non-finite length: `bad_quaternion_rows`; also when the
+  replay CLI itself reports `bad_trajectory`), or a replay that does not complete the task or is not deterministic;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching
   the recorded instance (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
@@ -39,7 +40,7 @@ def replay_timeout(n_steps: int) -> float:
     return max(REPLAY_FLOOR_S, REPLAY_STARTUP_S + n_steps / REPLAY_MIN_RATE)
 
 
-def load_trajectory(path: str, family: str, action_dim: int, max_steps: int):
+def load_trajectory(path: str, family: str, action_dim: int, max_steps: int, bad_quaternion_rows=None):
     """(actions, None), or (None, reward fields) when the file is not a gradable trajectory of this task. Everything
     here is the agent's deliverable: a file that cannot be read is the agent's 0 (`bad_trajectory`), not a grader error."""
     try:
@@ -57,6 +58,10 @@ def load_trajectory(path: str, family: str, action_dim: int, max_steps: int):
         return None, {"bad_trajectory": 1}
     if acts.ndim != 2 or acts.shape[1] != action_dim or acts.shape[0] > max_steps or not np.all(np.isfinite(acts)):
         return None, {"bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0}
+    nq = bad_quaternion_rows(acts) if bad_quaternion_rows is not None else 0
+    if nq:                                                 # AM-Bench's controller cannot use a zero-length quaternion
+        print(f"[grade] {nq} row(s) with a zero-length or non-finite quaternion", file=sys.stderr, flush=True)
+        return None, {"bad_trajectory": 1, "bad_quaternion_rows": nq, "n_actions": int(acts.shape[0])}
     return acts, None
 
 
@@ -99,9 +104,9 @@ def main() -> int:
         write(False, {**ZERO, "missing_trajectory": 1, **cost}); return 0
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # the verifier's own copy of the tooling
-        from rcb_ambench import MAX_STEPS, ACTION_DIM
+        from rcb_ambench import MAX_STEPS, ACTION_DIM, bad_quaternion_rows
         inst = json.load(open(a.instance)); env_id = inst["env_id"]
-        acts, bad = load_trajectory(a.traj, env_id, ACTION_DIM, MAX_STEPS)
+        acts, bad = load_trajectory(a.traj, env_id, ACTION_DIM, MAX_STEPS, bad_quaternion_rows)
         if bad is not None:
             write(False, {**ZERO, **bad, **cost}); return 0
         tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_ambench.py")
@@ -128,10 +133,13 @@ def main() -> int:
                         if isinstance(v, dict): run = v
                 print(f"[grade] replay {i + 1}: {json.dumps(run)[:800]}", file=sys.stderr, flush=True)
                 attempts.append(attempt)
-                if "replays" in run or attempt == 2:
+                if "replays" in run or run.get("bad_trajectory") or attempt == 2:
                     break
                 print(f"[grade] replay {i + 1} gave no result ({run.get('error')}): running it once more", file=sys.stderr, flush=True)
             runs.append(run)
+        if any(r.get("bad_trajectory") for r in runs):   # the replay CLI refused the rows: the agent's input, a verdict
+            print(f"[grade] the replay refused the trajectory: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
+            write(False, {**ZERO, "bad_trajectory": 1, "n_actions": int(len(acts)), **cost}); return 0
         outs = [(r.get("replays") or [{}])[0] for r in runs]
         if any("error" in r or not o for r, o in zip(runs, outs)):
             print(f"[grade] a replay process gave no result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)

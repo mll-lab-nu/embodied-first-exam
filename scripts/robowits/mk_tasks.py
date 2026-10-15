@@ -581,7 +581,7 @@ environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dock
 network_mode = "no-network"       # the replay needs no download: assets in the image, Genesis' caches seeded from instance.json
 
 [agent]
-timeout_sec = {float(CUTOFF["privileged"])}             # RoboWits budget (scripts/task_cutoffs.toml; why: docs/benchmarks/robowits.md)
+timeout_sec = {float(CUTOFF["privileged"])}             # RoboWits budget (why: docs/benchmarks/robowits.md)
 {AGENT_EGRESS}
 
 [environment]
@@ -646,7 +646,7 @@ command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout
 timeout_sec = {ct}                # service up (a resume replays the journal first), the grading replay, then the video
 
 [agent]
-timeout_sec = {float(CUTOFF["standard"])}             # RoboWits budget (scripts/task_cutoffs.toml; why: docs/benchmarks/robowits.md)
+timeout_sec = {float(CUTOFF["standard"])}             # RoboWits budget (why: docs/benchmarks/robowits.md)
 {AGENT_EGRESS}
 
 [environment]

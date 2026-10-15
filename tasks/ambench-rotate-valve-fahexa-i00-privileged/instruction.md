@@ -26,7 +26,8 @@ open-loop from the same initial state in two fresh processes and scored 1 if the
 end in the same state, else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
 as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
 The file holds `task` and `actions`, a (T, 8) float array of at most **8,000 rows** (one per control step); anything else
-(another shape, NaN, more rows, a file that is not such an npz) scores 0.
+(another shape, NaN, more rows, a row whose quaternion `qw qx qy qz` has zero length, a file that is not such an npz)
+scores 0.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

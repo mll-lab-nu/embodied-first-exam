@@ -153,7 +153,7 @@ control steps with the same state hash (`exact`, 12.9 s of journal replay, 31.8 
 episode was graded as usual (success, `live_matches_replay`, `resumes` = 1).
 
 ## Time budget (D8)
-3600 s for every task of both modes (`scripts/task_cutoffs.toml`; the benchmark's own text names no number). A scene
+3600 s for every task of both modes (each task's `[agent] timeout_sec`; the benchmark's own text names no number). A scene
 builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the agent's own work, not the simulator's.
 
 ## Standard mode (eai-standard/2.2)
@@ -169,7 +169,7 @@ The episode's only step bound is the task's own horizon (`max_control_steps` = 2
 simulated time), a failure of the task, stated in `/spec` (`episode`), both instructions and the README.
 
 ## Standard-realtime (eai-standard/2.3, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 E3, board 0112): the dynamic families (PROTOCOL §2.14; `scripts/task_dynamics.toml`
+The owner, 2026-10-14 (board 0107 E3, board 0112): the dynamic families (PROTOCOL §2: `[metadata] dynamics`, declared by each task; until 2026-10-14 `scripts/task_dynamics.toml`
 makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as static: nothing in them moves by itself) get a
 `-standard-realtime` twin. Defaults of the standard twins are unchanged (owner E3).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged (`rcb_realtime.py`,
@@ -221,7 +221,7 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   know them otherwise, since nothing in the scene marks them. Standard mode never gives where objects or fixtures are,
   their physical parameters (mass, friction, restitution, launch velocities), the seed, or goal values derived from the
   seeded variation; the privileged instruction and tooling give all of them. Panda Dynamic Scenes is therefore not among
-  the benchmarks `ci_checks/check-standard-texts.sh` checks for "no world coordinates".
+  the benchmarks whose own `scripts/<bench>/ci/advisory-world-frame.sh` checks for "no world coordinates".
 - **Pointers to the reference solution.** None reaches the agent: the image holds the environment package only (its
   command-line front end, which drives the benchmark's validation tooling, is left out, and comments that named that
   tooling are reworded: `scripts/pandadyn/sync_env.py`, which refuses a copy with such text); `instance.json` names no
@@ -255,3 +255,7 @@ an NVIDIA GPU (`gpu_class = "any"`); physics runs on one CPU core. Measured over
 ## Licences
 ManiSkill 3 (and its Panda model): Apache-2.0. SAPIEN: MIT. Ruckig (community version): MIT. PyTorch: BSD-3-Clause.
 The Panda Dynamic Scenes environment package: MLL Lab, released with this repository under its licence.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2`. Resume class `exact` (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).

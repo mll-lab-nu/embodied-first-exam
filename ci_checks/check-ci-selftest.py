@@ -8,7 +8,11 @@ volume (review of 2026-10-10, M5). This script copies a few real tasks into a te
 way a rule exists for, and requires that the rule's check fails with the rule's message -- and that the unbroken copy
 passes. A mutation that passes is a blind rule: fix the check, not this list.
 
-    python3 ci_checks/check-ci-selftest.py        # repo-level; run_all.sh calls it once. Standard library only.
+    python3 ci_checks/check-ci-selftest.py [--tier invariants|advisory|all]    # default: all. Standard library only.
+
+Two tiers (board 0124). `--tier invariants` (the required CI job `invariants`, ci_checks/run_invariants.sh): the
+mutations of the rules that enforce docs/PROTOCOL.md Appendix H; each must FAIL its check. `--tier advisory` (the job
+`advisories`): the mutations of the advisory rules; each must still be reported (a finding, not blocking).
 """
 from __future__ import annotations
 
@@ -26,8 +30,18 @@ POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
 SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
-DYNAMICS = [sys.executable, str(ROOT / "ci_checks/check-dynamics.py")]
 REALTIME = [sys.executable, str(ROOT / "ci_checks/check-realtime.py")]
+TWINS = [sys.executable, str(ROOT / "ci_checks/check-twins.py")]              # repo-level-ish: reads the twin next to it
+INSTANCE = ["bash", str(ROOT / "ci_checks/check-instance-copies.sh")]
+STDIMG = ["bash", str(ROOT / "ci_checks/check-standard-agent-image.sh")]
+MONITOR = [sys.executable, str(ROOT / "ci_checks/check-monitor.py"), "--tier", "invariants"]
+DIGESTS = ["bash", str(ROOT / "ci_checks/check-dataset-manifest.sh")]
+DOCKERFILE = ["bash", str(ROOT / "ci_checks/check-dockerfile.sh")]
+FIELDS = ["bash", str(ROOT / "ci_checks/check-task-fields.sh")]
+RP_LEAK = ["bash", str(ROOT / "scripts/robopaint_strict/ci/invariant-leak.sh")]
+# the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
+INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK)
+WITH_NEIGHBOURS = (IDENTITY, TWINS)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -38,7 +52,8 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "roboolympics-sprint-i00-standard"                      # open egress by a documented exception (PROTOCOL §2.11)
+OPEN = "roboolympics-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
+RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (scripts/*/ci/invariant-*)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -151,12 +166,13 @@ MUTATIONS = [
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("... a task of a benchmark that was open until 2026-10-10",
      TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
-    ("a task of an open-egress benchmark sets a network policy of its own other than the allowlist",
-     OPEN, TOML, sub(r'^\[agent\]\n', '[agent]\nallowed_hosts = ["pypi.org"]\n'), ISOLATION,
-     "sets a network policy other than the allowlist"),
-    ("... or declares the allowlist with other hosts (it is then held to the one host list, as every task)",
+    ("a task that declares open egress but sets an allowlist of its own in [agent]",
      OPEN, TOML, sub(r'^\[agent\]\n', '[agent]\nnetwork_mode = "allowlist"\nallowed_hosts = ["pypi.org"]\n'), ISOLATION,
-     "differs from scripts/set_agent_egress.py HOSTS"),
+     "sets another network policy"),
+    ("a task without an allowlist that does not declare open egress (the default is the allowlist)",
+     OPEN, TOML, sub(r'^network = "open".*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
+    ("a network declaration that is neither the allowlist nor open",
+     OPEN, TOML, sub(r'^network = "open"', 'network = "any"'), ISOLATION, "[metadata] network = 'any'"),
     ("the instruction no longer states the external-material rule",
      STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
     ("the frozen instance the agent reads names where its scene came from",
@@ -273,8 +289,8 @@ MUTATIONS = [
      STD, COMPOSE, sub(r"(?s)^  main:\n.*?(?=^  sim:)", "  main:\n      networks: [default]\n      depends_on: [sim]\n"), ISOLATION, "at an unexpected indentation"),
     ("the kernel's OOM killer switched off for a container", STD, COMPOSE, in_service("sim", "    oom_kill_disable: true"), ISOLATION, "`oom_kill_disable` is not allowed"),
     # ---- pinned images in every stage and file; the verifier's log directory emptied, not a look-alike of it
-    ("a second, unpinned stage in the verifier's Dockerfile", STD, TEST_DF, append("FROM python:latest\nCOPY --from=0 /tests /tests\n"), ISOLATION, "must be a pinned registry image"),
-    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/eai-behavior):\S+", r"\1:${TAG:-latest}"), ISOLATION, "must be pinned"),
+    ("a second, unpinned stage in the verifier's Dockerfile", STD, TEST_DF, append("FROM python:latest\nCOPY --from=0 /tests /tests\n"), DOCKERFILE, "must be a pinned registry image"),
+    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/eai-behavior):\S+", r"\1:${TAG:-latest}"), DOCKERFILE, "must be pinned"),
     ("tests/test.sh removes only a look-alike of the verifier's logs",
      STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
     # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
@@ -306,15 +322,37 @@ MUTATIONS = [
      TWIN_P, TOML, sub(r"^allowed = \[(.*)\]$", r"allowed = [\1, 12345]"), SEEDS, "has no frozen instance"),
     ("another seed's instance in the agent's build context",
      TWIN_P, "+environment/seeds/7/instance.json", append("{}"), SEEDS, "a `seeds` directory where the agent's image"),
-    # PROTOCOL §2.14: scene dynamics, from the one table
-    ("a task.toml that contradicts the dynamics table",
-     TWIN_P, TOML, sub(r'^dynamics = "static"', 'dynamics = "dynamic"'), DYNAMICS, "the table says"),
+    # PROTOCOL §2: scene dynamics, the task's own declaration (no table)
     ("a task.toml without dynamics",
-     TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), DYNAMICS, "[metadata] dynamics is missing"),
-    # PROTOCOL §4b: a standard-realtime task states its slowdown S
+     TWIN_P, TOML, sub(r'^dynamics = .*\n', ""), FIELDS, "[metadata].dynamics must be declared"),
+    # ---- Appendix H.7: twins share cutoff, seeds and frozen instance; H.3: no simulator in the agent's image; H.1: the
+    # monitor's own isolation and the sanitize step; H.8: DIGEST; H.2: a benchmark's own leak hook
+    ("a standard task whose cutoff is not its privileged twin's", STD, TOML,
+     sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>1234.0"), TWINS, "the twins have the same cutoff"),
+    ("a standard task whose allowed seeds are not its privileged twin's", STD, TOML,
+     sub(r"^allowed = \[(.*)\]$", r"allowed = [\1, 12345]"), TWINS, "differ from its privileged twin's"),
+    ("the verifier's frozen instance is not the one the task runs from", PRIV, "tests/instance.json",
+     sub(r"^\{", '{"x": 1, ', count=1, flags=0), INSTANCE, "differ, or one is missing"),
+    ("a standard task's agent image takes the sidecar's code", STD, "environment/Dockerfile",
+     append("COPY sim/ /opt/sim/\n"), STDIMG, "name files outside sim/ only"),
+    ("the monitor sidecar gets a network", STD, COMPOSE, sub(r"^    network_mode: none\n", ""), MONITOR,
+     "missing `network_mode: none`"),
+    ("tests/test.sh no longer sanitizes /app/output before the grader", STD, TEST_SH,
+     sub(r"^.*rcb_limits\.py sanitize /app/output.*\n", ""), MONITOR, "no `rcb_limits.py sanitize /app/output` line"),
+    ("a task file changed without its DIGEST", PRIV, "README.md", append("\nedited\n"), DIGESTS,
+     "a DIGEST that is not the digest of the task's current files"),
+    ("a RoboPaint agent image gets a file derived from the target", RP, "+environment/target_strokes.json", append("{}"),
+     RP_LEAK, "not an allowed agent-side file"),
+    # PROTOCOL §4b: a standard-realtime task declares its slowdown S and its reset budget, and they agree
     ("a standard-realtime task.toml whose slowdown is not its service's",
      "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r"^slowdown = [0-9.]+", "slowdown = 2"), REALTIME,
-     "but its service's RCB_SLOWDOWN default is 1"),
+     "but its service's default is 1"),
+    ("a standard-realtime service whose reset budget is not the one its instruction states",
+     "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"RCB_RESET_BUDGET:-50\}", "RCB_RESET_BUDGET:-7}"),
+     REALTIME, "instruction.md states 50 resets, but the task's reset budget is 7"),
+    ("a standard-realtime service that declares no reset budget",
+     "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
+     "must declare its reset budget"),
 ]
 
 
@@ -326,7 +364,7 @@ def run(cmd: list[str], task: Path) -> tuple[int, str]:
 def twin_cutoffs(tmp: Path) -> int:
     """The cutoff is each task's own (PROTOCOL §2.12): normalize renders a changed `[agent] timeout_sec` into the
     instruction's closing section, the README row and the sim service's wall clock, check-cutoffs.py accepts the task on
-    its own, and refuses it next to its privileged twin, whose number differs (`same_cutoff_as`, §2.15). Returns the
+    its own, and check-twins.py refuses it next to its privileged twin, whose number differs (`same_cutoff_as`, §2.15). Returns the
     number of failures."""
     import tomllib
     bad = 0
@@ -353,32 +391,36 @@ def twin_cutoffs(tmp: Path) -> int:
     rc, out = run(CUTOFFS, t)
     expect(rc == 0, "check-cutoffs.py on the normalized task alone", out)
     shutil.copytree(ROOT / "tasks" / PRIV, work / PRIV)
-    r = subprocess.run(CUTOFFS + [str(t)], capture_output=True, text=True)
+    r = subprocess.run(TWINS + [str(t)], capture_output=True, text=True)
     out = r.stdout + r.stderr
-    expect(r.returncode != 0 and "the twins have the same cutoff" in out, "check-cutoffs.py must refuse twins with two cutoffs", out)
+    expect(r.returncode != 0 and "the twins have the same cutoff" in out, "check-twins.py must refuse twins with two cutoffs", out)
     if not bad:
         print(f"check-ci-selftest: a task's own cutoff ({sec} s) rendered by normalize and accepted alone, refused next to its "
               "privileged twin")
     return bad
 
 
-def main() -> int:
+def main(argv: list[str]) -> int:
+    tier = argv[1] if argv[:1] == ["--tier"] and len(argv) > 1 else "all"
+    if tier not in ("invariants", "advisory", "all"):
+        raise SystemExit("--tier invariants|advisory|all")
+    sel = [m for m in MUTATIONS if tier == "all" or (any(m[4] is c for c in INVARIANT_CMDS) == (tier == "invariants"))]
     bad = 0
     with tempfile.TemporaryDirectory(prefix="rcb-ci-selftest-") as tmp:
         clean = {}
-        for name in sorted({m[1] for m in MUTATIONS}):
+        for name in sorted({m[1] for m in sel}):
             src = ROOT / "tasks" / name
             if not (src / "task.toml").is_file():
                 print(f"FAIL check-ci-selftest: the task {name} this self-test mutates is gone (pick another one in MUTATIONS)")
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS, SEEDS, DYNAMICS):
+            for cmd in sorted({id(m[4]): m[4] for m in sel if m[1] == name and m[4] not in WITH_NEIGHBOURS and m[4] is not DIGESTS}.values()):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
                     bad += 1
-        for k, (what, name, rel, mutate, cmd, expect) in enumerate(MUTATIONS):
+        for k, (what, name, rel, mutate, cmd, expect) in enumerate(sel):
             t = Path(tmp) / f"m{k}" / name                      # the directory keeps the task's name (its mode is in it)
             shutil.copytree(clean[name], t)
             try:
@@ -394,22 +436,23 @@ def main() -> int:
                 print(f"FAIL check-ci-selftest [{what}]: the mutation no longer applies to {name} ({e}): update MUTATIONS")
                 bad += 1
                 continue
-            if cmd is IDENTITY:        # a repo-level rule: the broken copy among every other task (links to the real ones)
+            if any(cmd is c for c in WITH_NEIGHBOURS):   # the broken copy among every other task (links to the real ones)
                 for other in (ROOT / "tasks").iterdir():
                     if other.name != name and (other / "task.toml").is_file():
                         (t.parent / other.name).symlink_to(other)
-                rc, out = run(cmd, t.parent)
+                rc, out = run(cmd, t.parent if cmd is IDENTITY else t)
             else:
                 rc, out = run(cmd, t)
             if rc == 0 or expect not in out:
                 bad += 1
                 print(f"FAIL check-ci-selftest [{what}]: {Path(cmd[-1]).name} "
                       + ("PASSED the broken task: the rule is blind" if rc == 0 else f"failed, but not with `{expect}`:\n{out[-600:]}"))
-        bad += twin_cutoffs(Path(tmp))
+        if tier != "advisory":
+            bad += twin_cutoffs(Path(tmp))
     if not bad:
-        print(f"check-ci-selftest: {len(MUTATIONS)} mutations of real tasks, each caught by its rule")
+        print(f"check-ci-selftest ({tier}): {len(sel)} mutations of real tasks, each caught by its rule")
     return 1 if bad else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

@@ -1,7 +1,7 @@
 # Agent time cutoffs
 
 Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[agent] timeout_sec` in the task's own
-`task.toml`. At the cutoff the agent is stopped and the trial is graded as it stands ([PROTOCOL.md](PROTOCOL.md) §2.12).
+`task.toml`. At the cutoff the agent is stopped and the trial is graded as it stands ([PROTOCOL.md](PROTOCOL.md) §2).
 
 **Each task sets its own** (since 2026-10-14, owner, board 0120; as in Terminal-Bench): the author decides the number in
 the pull request that adds or changes the task, and states it in the pull request's Contract. A benchmark rendered by a
@@ -11,10 +11,10 @@ mode, are in the task list generated after every merge to `main`.
 
 Rules, checked per task by `ci_checks/check-cutoffs.py` (on a pull request: the tasks of the benchmarks it touches):
 
-- a whole number of seconds, **at most 14400** (PROTOCOL D8; no benchmark is excepted); 3600 unless the pull request
+- a whole number of seconds, **at most 14400** (PROTOCOL §2; no benchmark is excepted); 3600 unless the pull request
   justifies another number;
 - **twins have the same cutoff**: a task's privileged and standard versions (the mode registry's `same_cutoff_as`,
-  PROTOCOL §2.15, §2.16; owner, 2026-10-12);
+  PROTOCOL Appendix H.7; owner, 2026-10-12);
 - the instruction's closing `## Time limit` section states the task's own number (below), and nothing else in the
   instruction states the limit as a duration; the README's `Agent time budget` row and, in the standard modes, the sim
   service's `RCB_WALL_CLOCK_S` say the same number;
@@ -42,7 +42,7 @@ What a benchmark adds about its own time (a simulator's start-up, what its servi
 
 ## Changing a cutoff
 
-A change of a cutoff is an owner decision (PROTOCOL §2.12). Its pull request:
+A change of a cutoff is the task author's decision (PROTOCOL v2.0 §2; until 2026-10-14 an owner decision). Its pull request:
 
 1. sets the new `[agent] timeout_sec` in each task concerned (a generated benchmark: its generator's constant, then
    re-run the generator), for the privileged and the standard version alike;
@@ -60,7 +60,7 @@ A change of a cutoff changes the task in place: the scene, the frozen instance, 
 - **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboARC's service still ends the episode itself when its own count reaches 0; since its MuJoCo release (2026-10-13) that count starts at the first request, so it is never before Harbor's timeout (to become report-only at RoboARC's next task update: `docs/benchmarks/roboarc.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
 - **RoboOlympics' exported matches**: the cutoff has to stay above a match's wall time at its slowdown plus the frozen reviews between points (wheeled soccer: 2.9 h at S = 10; badminton: 1.3 to 1.6 h at S = 20).
-- **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.
+- **Not derived from it**: the token budget (RUNNING.md "Official runs"), the resource limits (RUNNING.md "Resources"), reset budgets, step caps, verifier timeouts.
 
 ## History (2026-10-11 to 2026-10-14)
 

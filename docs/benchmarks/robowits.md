@@ -104,13 +104,13 @@ which was graded on ws (AMD, with `instance_exact = 1`).
   gets a service, and `reward.json` has `infra_error = 1`, `instance_mismatch = 1`.
 
 ## Time budget (D8)
-**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 5400 s, and why it was chosen; results are grouped by budget.
 
 5400 s for every task of both modes, longer than the 3600 s default: the families are bimanual physical puzzles that
 take several attempts (a failed push or a dropped object is reset in privileged mode and must be recovered in standard
 mode), every Python process pays about a minute of scene build before its first step, and a standard-mode crash resume
 replays the episode on the agent's clock. Results are reported with this budget. The number lives in
-`scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
+each task's own `[agent] timeout_sec`, written by the generator (history in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Grading and determinism
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier
@@ -205,7 +205,7 @@ The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at
   moves, IK moves without collision checking, gripper, hold). Task-level skills (grasp, place, navigate) are never added
   to it; reference solutions keep theirs under `solution/`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`): no object poses or positions, no world coordinates of workspace items. Their success
+  `scripts/robowits/ci/advisory-world-frame.sh`): no object poses or positions, no world coordinates of workspace items. Their success
   criterion is stated in words and distances relative to the objects and the table top; the corners of the predicate's
   table-bounds rectangle and the goal line's coordinate are withheld. Given: object names, sizes and colours, the robot
   (its base pose included), the cameras' calibration, the world frame's convention. Privileged tasks give the privileged
@@ -238,3 +238,35 @@ licensed to whoever downloads them, never in the image or the repository (`image
 - During the standard service's in-process grading replay, a late `/status` reports the replay's counter.
 - The predicates are RoboWits' own and some are looser than their task text (the criterion sections say where); the
   review checks each family's predicate (PROTOCOL §2.7).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `exact` on Genesis' CPU backend; `approx` on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`).
+
+`max_frames_per_call` = 1500, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. The service refuses the episode at its start when the frozen instance does not rebuild; its collect hook waits with `--wait-key video_done`.
+
+A resume replays the episode so far without rendering at ~700 steps/s (CPU). Grading: in-process (Genesis' CPU backend repeats exactly); the GPU-backend families report determinism, not require it.
+
+Known issue: during the in-process grading replay, `/status` and a late `/observe` report the replay's counter and scene; the episode is over by then and the grade is unaffected.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | Genesis 0.4.7 |
+| rows streamed at | 30 Hz control (4 substeps) |
+| `joint_position` | 16: per arm 7 joints + gripper width (m) |
+| `ee_pose` | 16 (right first), IK per row, gripper-tip frame |
+| cameras | `ego` (static), `wrist_right`, `wrist_left` |
+| depth | Genesis rasterizer |
+| `/kinematics` | pinocchio on the URDF (14 arm joints) |
+| proprio columns (2.0 → 2.2) | 30 → 80 |
+| grading replays | in-process (exact) |
+| resume class (STANDARD_MODE §13.1) | `exact` (CPU backend), `approx` (GPU backend) |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| RoboWits, CPU backend | 29 families (94 trials) | 47–234 s (median ~60 s) | default 900 s is enough |
+| RoboWits, particle families | separate_marbles_and_sand, stabilize_bottle | 39–56 min on the CPU backend; ~140 s on the GPU backend | they run on the GPU backend; a CPU-backend build needs `RCB_STARTUP_TIMEOUT_S` ≥ 7200 |

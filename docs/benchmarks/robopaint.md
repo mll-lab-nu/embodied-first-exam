@@ -135,9 +135,9 @@ The internal goal was IoU ≥ 0.92, boundary F ≥ 0.90, every region ≥ 0.90 a
   - The oracle label is `partial` on all 86 tasks (see Oracle evidence).
   - The generator writes each task's `oracle_evidence` from `scripts/robopaint_strict/rules.json`.
 - CI:
-  - `ci_checks/check-robopaint-tooling.sh` keeps every copy of the shared files, `rcb_brush_strict.py` included,
+  - `scripts/robopaint_strict/ci/advisory-tooling.sh` keeps every copy of the shared files, `rcb_brush_strict.py` included,
     byte-identical within a family and across the families;
-  - `ci_checks/check-robopaint-leak.sh` admits the rule keys in the agent's copy of the instance.
+  - `scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the instance.
 
 ## Oracle evidence
 A task is labelled `oracle = "full"` only if a recorded oracle run scored 1 on byte-identical grader, frozen instance,
@@ -338,9 +338,9 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.
 
 ## Time budget (D8)
-**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; `scripts/task_cutoffs.toml` history). The text below describes the budget before that, 7200 s, and why it was chosen; results are grouped by budget.
+**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 7200 s, and why it was chosen; results are grouped by budget.
 
-7200 s for every task of both modes, longer than the default 3600 s. The number lives in `scripts/task_cutoffs.toml`
+7200 s for every task of both modes, longer than the default 3600 s. The number is each task's own `[agent] timeout_sec`, written by the generator
 (shown in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in its closing `## Time limit` section (PROTOCOL §2.12), and the templates' own text says "the time limit (`## Time limit`)". Why longer than the default:
 - The agent first has to learn the brush's mark from test strokes on the practice sheet: width against press depth, the
   drag of the tuft, the paint's blending. The privileged mode gives the exact sheet but no brush model.
@@ -352,7 +352,7 @@ Lettering ran at 5400 s before protocol v1.0 and now has 7200 s like the rest. R
 
 ## The target is only a picture
 `target.png` (RGB) in both modes. Its source (glyph outlines, pen paths, the exemplar's paint coverage) stays in the
-graders' copy of the instance. Nothing derived from it is in the agent's container (`ci_checks/check-robopaint-leak.sh`).
+graders' copy of the instance. Nothing derived from it is in the agent's container (`scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2)).
 
 ## Scoring
 Success needs the picture rule and the process rules; `final_reward` is the continuous score.
@@ -585,7 +585,7 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
 | — | `rcb_brush_strict.py` (the process rules, graders' side only): `tests/` and `environment/scorer/` (privileged), `environment/sim/` (standard) |
 
 Every copy of the tooling is byte-identical within a family and across the six families
-(`ci_checks/check-robopaint-tooling.sh`). The 2.2 layer is byte-identical to `scripts/eai_standard/`
+(`scripts/robopaint_strict/ci/advisory-tooling.sh`). The 2.2 layer is byte-identical to `scripts/eai_standard/`
 (`ci_checks/check-tooling-identity.sh`).
 
 ## Declarations
@@ -593,7 +593,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (STANDARD_MODE.md §10, `check-standard-texts.sh`).
+  no well positions, no pixel-to-world formula (STANDARD_MODE.md §10, `scripts/robopaint_strict/ci/advisory-world-frame.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 
@@ -626,3 +626,32 @@ No task directory holds results (PROTOCOL §5); they are published on the result
 - Spline-FRIDA (code and weights): GPL-3.0. Only the line family used it; it stays in the image with its source.
 - libmypaint: ISC (patched). mypaint-brushes: CC0-1.0.
 - The calligraphy exemplars: as stated in each task's `NOTICE-exemplar.md`.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `exact` (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); the adapter's `persist` keys include the last tip target.
+
+`max_frames_per_call` = 640, per-frame depth counted as four images.
+
+Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | ManiSkill 3.0.1 / SAPIEN 3.0.3 |
+| rows streamed at | 20 Hz control (5 substeps) |
+| `joint_position` | 7 joints |
+| `ee_pose` | 7, brush-tip targets `dt` apart, IK per control step |
+| cameras | `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam` (static) |
+| depth | SAPIEN depth buffer (geometry only: ink and paint never show) |
+| `/kinematics` | SAPIEN's pinocchio (7) |
+| proprio columns (2.0 → 2.2) | 14 → 28 |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `exact` |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| RoboPaint | brush families, 285 standard trials on ws, ws3 and lab (up to 50 at once) | episode start at most 126 s after Harbor's environment setup began (median ~30 s); the Session build alone at most 106 s | `RCB_STARTUP_TIMEOUT_S` = 600 (≥ 4× the slowest start) |

@@ -22,8 +22,9 @@ What it does:
   memory cap from it, and the cap sits above the limit so that the monitor sees a violation before the OOM killer).
 - `instruction.md` ends with `## External material` (§2.11: the same text in every task) and `## Resource limits`, rendered
   from `[metadata.resources.limits]` (§2.10).
-- `[metadata] dynamics` (§2.14: `dynamic` when something in the scene other than the robot does work by a force other
-  than the robot's and gravity, else `static`) from `scripts/task_dynamics.toml`, the one table.
+- `[metadata] dynamics` (`dynamic` when something in the scene other than the robot does work by a force other than the
+  robot's and gravity, else `static`) is the task's own declaration: kept as written; a re-render that lost it gets the
+  committed task's line back (normalize_dynamics).
 - from the agent's time cutoff (§2.12), the task's own `[agent] timeout_sec` (set by its author or generator; no
   table): the standard modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, the README's "Agent time budget"
   row and the last section of `instruction.md`, `## Time limit` ("You have N seconds to complete this task. Do not
@@ -82,30 +83,19 @@ BENCHMARKS = [  # (directory prefix, label)
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
 ]
-# Modes (PROTOCOL §2.15, owner 2026-10-14): a benchmark ships any subset of the three modes. A standard or
-# standard-realtime task without a privileged twin is expected when its benchmark has no privileged mode (no privileged
-# task under tasks/, bench_has_mode); in a benchmark that has one, the task is listed here with the reason
-# its README's Twin row gives (ci_checks/check-instance-copies.sh fails a missing twin that is neither). RoboDojo's six
-# tasks whose physics does not replay bit for bit (PROTOCOL §4.8, owner 2026-10-11): standard only, graded by the live
-# episode.
-# RoboOlympics' exported tasks (PROTOCOL §4c, owner 2026-10-14; scripts/roboolympics/exported.toml): its own service and
-# grader, matches and skill tasks with no trajectory deliverable, in a benchmark that has a privileged mode.
-_RO_EXPORTED = "— (none: a task RoboOlympics exports with its own service, PROTOCOL §4c)"
-NO_TWIN = {**{n: _RO_EXPORTED for n in (
-               "roboolympics-badminton-actskill-i00-standard",
-               "roboolympics-badminton-match-i01-standard-realtime",
-               "roboolympics-badminton-match-i02-standard-realtime",
-               "roboolympics-soccer-match-i00-standard-realtime",
-               "roboolympics-soccerssl-match-i00-standard-realtime",
-               "roboolympics-tabletennis-hitskill-i00-standard",
-               "roboolympics-tabletennis-match-i01-standard-realtime",
-               "roboolympics-tabletennis-match-i02-standard-realtime")},
-           "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
-           "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
-           "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
-           "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
-           "robodojo-pour-liquid-into-cup-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
-           "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
+# Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
+# task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
+# no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
+# RoboOlympics' exported tasks (PROTOCOL v1 §4c; scripts/roboolympics/exported.toml) have a cutoff note of their own
+# (CUTOFF_NOTE_TASK below):
+RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
+                     "roboolympics-badminton-match-i01-standard-realtime",
+                     "roboolympics-badminton-match-i02-standard-realtime",
+                     "roboolympics-soccer-match-i00-standard-realtime",
+                     "roboolympics-soccerssl-match-i00-standard-realtime",
+                     "roboolympics-tabletennis-hitskill-i00-standard",
+                     "roboolympics-tabletennis-match-i01-standard-realtime",
+                     "roboolympics-tabletennis-match-i02-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
@@ -143,8 +133,8 @@ DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budg
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
 # PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
-# PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` in task.toml (same list: ci_checks/check-dynamics.py)
-DYNAMICS_FILE = Path(__file__).resolve().parent / "task_dynamics.toml"
+# PROTOCOL §2 (v1 §2.14): scene dynamics, `[metadata] dynamics` in task.toml, the task's own declaration (board 0124:
+# no central table)
 DYNAMICS = ("static", "dynamic")
 # PROTOCOL §4b: a standard-realtime task states its slowdown S, `[metadata] slowdown` in task.toml, written from its sim
 # service's `RCB_SLOWDOWN` default (environment/docker-compose.yaml); its reset budget is the `RCB_RESET_BUDGET` default
@@ -181,20 +171,15 @@ EXTERNAL_TEXT = (
     "for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, "
     "or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and "
     "the package registries (PyPI, Debian / Ubuntu archives) only.")
-# Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
-# the agent's egress is open and finding existing tools and controllers is part of the task. It covers the benchmark's
-# tasks that set no [agent] network policy; one of its tasks that declares the allowlist (RoboOlympics' exported tasks,
-# scripts/roboolympics/exported.toml) is an allowlist task like any other and gets EXTERNAL_TEXT. RoboOlympics (owner,
-# 2026-10-11, as RoboFunOlympics): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
-EXTERNAL_OPEN = {
-    "roboolympics-": (
-        "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
-        "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
-        "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
-        "You may read anything installed in your container, this benchmark's own source code included. The one thing "
-        "not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This "
-        "is an honour rule; trials are reviewed."),
-}
+# Open network (PROTOCOL §2, Appendix H.6; owner 2026-10-14, board 0124): the task author's choice, declared as
+# `[metadata] network = "open"` in task.toml. Such a task carries its own `## External material` paragraph (the author
+# says what may be used); normalize keeps it, and writes EXTERNAL_TEXT_OPEN where it has none.
+EXTERNAL_TEXT_OPEN = (
+    "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
+    "robot models and pretrained controllers: finding existing work and adapting it to this task is encouraged. Say in "
+    "your notes what you used. You may read anything installed in your container, this benchmark's own source code "
+    "included. The one thing not to look up is a ready-made solution to this exact task, such as this benchmark's "
+    "reference solutions. This is an honour rule; trials are reviewed.")
 
 # PROTOCOL §2.12 (owner, 2026-10-11 / 12 / 14; boards 0080, 0120): the agent's time cutoff. Each task sets its own, in
 # `[agent] timeout_sec` of its task.toml (its author decides it in the pull request that adds or changes the task; a
@@ -236,6 +221,13 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
+# RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
+# RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
+CUTOFF_NOTE_TASK = {n: (
+    "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
+    "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
+    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+    for n in RO_EXPORTED_TASKS}
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
@@ -551,22 +543,22 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
-def declares_allowlist(task: Path) -> bool:
-    """The task's [agent] puts the agent on the allowlist (`network_mode = "allowlist"`; PROTOCOL §2.11)."""
-    try:
-        return tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("network_mode") == "allowlist"
-    except (OSError, ValueError):
-        return False
+def external_paragraph(text: str) -> str | None:
+    """The body of an instruction's `## External material` section (without the heading and a stricter-rules addition),
+    or None."""
+    m = re.search(rf"(?ms)^{re.escape(EXTERNAL_HEADING)}[ \t]*\n(.*?)(?=^## |\Z)", text or "")
+    if not m:
+        return None
+    body = m.group(1).split("\n\nAdditional rules for this task (stricter than the above): ")[0].strip()
+    return body or None
 
 
 def render_external(task: "Path | str" = "") -> str:
-    """instruction.md's `## External material` (PROTOCOL §2.11): the same words in every task, except the benchmarks of
-    EXTERNAL_OPEN, whose agents may download tools and controllers (only their tasks without an allowlist: given a
-    task directory, one that declares the allowlist gets the common words)."""
-    name = task.name if isinstance(task, Path) else task
-    if isinstance(task, Path) and declares_allowlist(task):
-        name = ""
-    text = next((v for p, v in EXTERNAL_OPEN.items() if name and name.startswith(p)), EXTERNAL_TEXT)
+    """instruction.md's `## External material` (PROTOCOL §5): the same words in every allowlist task (EXTERNAL_TEXT); a
+    task that declares `[metadata] network = "open"` keeps its own paragraph (EXTERNAL_TEXT_OPEN when it has none)."""
+    text = EXTERNAL_TEXT
+    if isinstance(task, Path) and network_of(task) == "open":
+        text = external_paragraph(read_text(task / "instruction.md") or "") or EXTERNAL_TEXT_OPEN
     # owner 2026-10-14: the words above are the baseline every task carries; a task may add STRICTER requirements of
     # its own on top (never looser), as `[metadata.honour] stricter = "..."` in its task.toml, rendered after them
     stricter = ""
@@ -612,25 +604,30 @@ def bench_has_mode(bench: str, mode: str) -> bool:
 
 
 def no_twin_reason(task: Path) -> str | None:
-    """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §2.15), as its
-    README's Twin row says it; None for a privileged task and for one that must have its twin. Whether the twin exists
-    is not looked at: the answer is the same before and after a generator has rendered it."""
+    """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §3), as its
+    README's Twin row says it; None for a privileged task and for one that names its twin. The reason is the task's own
+    declaration: its README's Twin row ("— (none: ...)"), kept by every render (the committed task's row when a
+    generator renders into a scratch directory); a benchmark without a privileged mode gets the generic reason. Whether
+    the twin exists is not looked at: the answer is the same before and after a generator has rendered it."""
     twin = MODE_REGISTRY[mode_of(task)]["twin"]
     if twin is None:
         return None
-    for prefix, why in NO_TWIN.items():
-        if task.name.startswith(prefix):
-            return why
+    committed = Path(__file__).resolve().parents[1] / "tasks" / task.name / "README.md"
+    for f in (task / "README.md", committed):
+        m = re.search(r"(?m)^\| Twin \| (— \(none:[^\n]*?\)) \|\s*$", read_text(f) or "")
+        if m:
+            return m.group(1)
     bench = bench_of(task)
     if bench and not bench_has_mode(bench, twin):
         return f"— (none: {bench} has no {twin} mode, PROTOCOL §2.15)"
     return None
 
 
-def render_cutoff(sec: int, mode: str, bench: str = "") -> str:
+def render_cutoff(sec: int, mode: str, bench: str = "", name: str = "") -> str:
     """instruction.md's last section (PROTOCOL §2.12): the heading, the cutoff sentence, then what the cutoff means in
-    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note)."""
-    note = CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
+    the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note;
+    `name`, the task directory's name: a task exported with its own service, CUTOFF_NOTE_TASK)."""
+    note = CUTOFF_NOTE_TASK.get(name) or CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
     return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
 
 
@@ -723,7 +720,7 @@ def normalize_instruction(task: Path) -> None:
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
     if sec is not None:
-        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task))
+        s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task), task.name)
     write_if_changed(p, s)
 
 
@@ -1006,39 +1003,41 @@ def normalize_seeds(task: Path) -> None:
     write_if_changed(p, s)
 
 
-def dynamics_table() -> tuple[dict, dict]:
-    """scripts/task_dynamics.toml: ({benchmark: entry}, {benchmark: {family: entry}}), entry = {dynamics, why}."""
-    t = tomllib.loads(DYNAMICS_FILE.read_text()) if DYNAMICS_FILE.is_file() else {}
-    return t.get("benchmark", {}), t.get("family", {})
-
-
-def dynamics_for(task: Path) -> str | None:
-    """The task's `dynamics` (PROTOCOL §2.14): its family's entry in scripts/task_dynamics.toml, else its benchmark's.
-    None: the table has no row for the benchmark (ci_checks/check-dynamics.py fails such a task)."""
-    rows, fams = dynamics_table()
-    bench = bench_of(task)
-    e = fams.get(bench, {}).get(family_of(task)) or rows.get(bench)
-    if e is None:
-        return None
-    if e.get("dynamics") not in DYNAMICS:
-        raise RuntimeError(f"{task.name}: scripts/task_dynamics.toml gives dynamics {e.get('dynamics')!r}, not one of {DYNAMICS}")
-    return e["dynamics"]
+def committed_line(task: Path, key: str) -> str | None:
+    """The `key = ...` line of the committed task of the same name (a generator renders a task into a scratch directory,
+    or over the task in tasks/: what the task declared is kept): the repository's tasks/<name>/task.toml when that is
+    another file and has the line, else the version committed at HEAD. None when neither has it."""
+    rx = re.compile(rf"(?m)^{re.escape(key)} = .*\n")
+    root = Path(__file__).resolve().parents[1]
+    p = root / "tasks" / task.name / "task.toml"
+    if p.is_file() and p.resolve() != (task / "task.toml").resolve():
+        m = rx.search(read_text(p) or "")
+        if m:
+            return m.group(0)
+    try:
+        import subprocess
+        r = subprocess.run(["git", "-C", str(root), "show", f"HEAD:tasks/{task.name}/task.toml"], capture_output=True,
+                           text=True, timeout=30)
+        m = rx.search(r.stdout) if r.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        m = None
+    return m.group(0) if m else None
 
 
 def normalize_dynamics(task: Path) -> None:
-    """Writes `dynamics = "..."` (PROTOCOL §2.14) right after `mode` in `[metadata]`, replacing an earlier line, when
-    scripts/task_dynamics.toml has a row for the task's benchmark."""
-    d = dynamics_for(task)
-    if d is None:
-        return
+    """`[metadata] dynamics` (static / dynamic; PROTOCOL §2) is the task's own declaration and is kept as written. A
+    task.toml without it (a generator's fresh render) gets the committed task's line back, right after `mode`; a new task
+    declares it itself (ci_checks/check-task-fields.sh warns when it is missing)."""
     p = task / "task.toml"
-    s = re.sub(r'(?m)^dynamics = .*\n', "", p.read_text())
-    line = f'dynamics = "{d}"'
-    line += " " * max(1, 34 - len(line)) + "# scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml\n"
+    s = p.read_text()
+    if re.search(r"(?m)^dynamics = ", s):
+        return
+    line = committed_line(task, "dynamics")
+    if line is None:
+        return
     s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
-    if n != 1:
-        raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
-    write_if_changed(p, s)
+    if n == 1:
+        write_if_changed(p, s)
 
 
 def realtime_of(task: Path) -> tuple[float, int | None] | None:
@@ -1080,6 +1079,98 @@ def normalize_slowdown(task: Path) -> None:
         if n != 1:
             raise RuntimeError(f"{task.name}: task.toml has no `mode` line in [metadata]")
     write_if_changed(p, s)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# PROTOCOL v2.0 §2 (owner, 2026-10-14, board 0124): the settings a task declares, and the effective configuration of a
+# trial, recorded with every result so that results are ranked only within one comparable configuration (RUNNING.md
+# "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
+# policy (batch_eval_live) read these.
+PROTOCOL_VERSION = "2.0"                         # docs/PROTOCOL.md
+NETWORKS = ("allowlist", "open")                 # `[metadata] network` (PROTOCOL §2, Appendix H.6); absent = allowlist
+RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
+
+
+def metadata_of(task: Path) -> dict:
+    try:
+        return tomllib.loads((task / "task.toml").read_text()).get("metadata", {}) or {}
+    except (OSError, tomllib.TOMLDecodeError):
+        return {}
+
+
+def network_of(task: Path) -> str:
+    """The agent's egress the task declares: `[metadata] network`, "allowlist" (the default: the model APIs and the
+    package registries) or "open" (the author's choice, PROTOCOL Appendix H.6). Anything else is returned as written
+    (ci_checks/check-verifier-isolation.sh fails it)."""
+    return str(metadata_of(task).get("network", "allowlist"))
+
+
+def reset_budget_of(task: Path) -> int | None:
+    """The reset budget N a standard-mode task declares (its sim service's `RCB_RESET_BUDGET` default, else
+    `[metadata] reset_budget`, else 0: no reset); None for a mode without a sim service (privileged: resets are free)."""
+    if not MODE_REGISTRY[mode_of(task)]["sidecar"]:
+        return None
+    m = RESET_DECL_RE.search(read_text(task / "environment/docker-compose.yaml") or "")
+    if m:
+        return int(m.group(1) or m.group(2))
+    v = metadata_of(task).get("reset_budget")
+    return int(v) if isinstance(v, int) and not isinstance(v, bool) else 0
+
+
+def slowdown_of(task: Path) -> float | None:
+    """A standard-realtime task's slowdown S (its service's default, else `[metadata] slowdown`); None otherwise."""
+    rt = realtime_of(task)
+    if rt is not None:
+        return rt[0]
+    v = metadata_of(task).get("slowdown") if mode_of(task) == "standard-realtime" else None
+    return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def validated_of(task: Path) -> bool:
+    """Whether the task counts as validated for rankings (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated`
+    where the task declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution
+    scores 1 and `nop` 0). Unvalidated tasks are reported in a section of their own, never ranked with validated ones."""
+    md = metadata_of(task)
+    if isinstance(md.get("validated"), bool):
+        return md["validated"]
+    return md.get("oracle") == "full"
+
+
+def effective_config(task: Path, seed: int | None = None, env: dict | None = None) -> dict:
+    """The configuration a trial of `task` runs under: what the task declares, with the run-time overrides a runner
+    passes in `env` (RCB_RESET_BUDGET, RCB_SLOWDOWN) and the seed it chose (None: the default seed). Recorded with each
+    result (`config.json`); `config_key` groups comparable ones."""
+    env = env or {}
+    md = metadata_of(task)
+    mode = mode_of(task)
+    resets, S = reset_budget_of(task), slowdown_of(task)
+    if resets is not None and str(env.get("RCB_RESET_BUDGET", "")).isdigit():
+        resets = int(env["RCB_RESET_BUDGET"])
+    if S is not None and env.get("RCB_SLOWDOWN"):
+        try:
+            S = float(env["RCB_SLOWDOWN"])
+        except ValueError:
+            pass
+    dg = read_text(task / DIGEST_FILE)
+    return {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
+            "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
+            "validated": validated_of(task), "oracle": md.get("oracle", ""), "service_protocol": md.get("protocol", ""),
+            "digest": (dg or "").strip()}
+
+
+CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown", "network")
+
+
+def config_key(cfg: dict) -> tuple:
+    """What two results must share to be ranked together (the seed is drawn per trial and is not part of it; the
+    `validated` flag separates the sections). Missing fields of a legacy record are "legacy"."""
+    return tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
+
+
+def config_label(cfg: dict) -> str:
+    k = dict(zip(CONFIG_KEYS, config_key(cfg)))
+    return (f"protocol {k['protocol_version']}, {k['mode']}, cutoff {k['cutoff_s']} s, resets {k['reset_budget']}, "
+            f"S {k['slowdown']}, network {k['network']}")
 
 
 def normalize(task: Path) -> None:

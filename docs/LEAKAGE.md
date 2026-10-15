@@ -7,7 +7,7 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 > The first is a set we control. The second is everything the container can reach.
 
 Since 2026-10-14 the honour rule allows the agent to read anything installed in its container, the simulator's and
-the benchmark's own source included (owner, board 0107 E4; PROTOCOL §2.11); it forbids only searching the web for, or
+the benchmark's own source included (owner, board 0107 E4; PROTOCOL §5); it forbids only searching the web for, or
 downloading, a ready-made solution. Reading the image is therefore not a violation in any trial: whatever the image
 ships is fair game, and the only protection of the answer is that the image does not hold it. Everything below is
 about making that true.
@@ -125,3 +125,31 @@ every standard task, `ci_checks/check-standard-agent-image.sh` keeps `environmen
 The test: *an engineer reading only this should be able to build a reasonable objective and optimise it,
 and should not be able to skip the robot and solve for the number.* If a task proves unsolvable because
 the statement is too vague, fix the statement — do not give the grader back.
+
+## 5. Packages on PyPI that carry a solution
+
+The agent may install packages (PROTOCOL §5), and a registry is not free of answers: some distributions ship a
+benchmark's scripted experts, trained policies or task sources. Nothing blocks them (what cannot be forbidden is let
+go); a reviewer or a runner that sees one of these names in a trial's `pip install` (directly or as a dependency) looks
+at what the trial did with it. Read from the archives' file lists on 2026-10-11, by name search of the index; a
+redistribution under an unrelated name would be missed. A new benchmark whose solution is one `pip install` away adds
+its row here (moved from PROTOCOL §2.11 on 2026-10-14).
+
+| Benchmark | Distribution | What it ships |
+|---|---|---|
+| RoboTwin 2.0 | `rlinf-robotwin-runtime` | the upstream task files with `play_once` (the reference solution the image scrubs) and `check_success`, 51 tasks |
+| MetaWorld+ | `metaworld` | the scripted policy of every environment (the reference solutions), the environments and their assets |
+| MyoSuite | `myosuite` (2.x), `myo-sim`, `robohive` | trained baseline policies of key-turn, obj-hold, pen-twirl, pose and reach (2.12: `agents/baslines_NPG`), every environment's source and models |
+| MuJoCo Playground | `playground` (0.0.4: a trained Go1 joystick policy; every version: the task sources), `envpool` + `envpool-assets*` (the environments compiled, Menagerie's robot meshes) | the Go1 reference; a local copy of the hidden simulator in standard mode |
+| MolmoSpaces | `molmo-spaces` | the planner policies the image stubs (`policy/solvers`), the tasks' `judge_success` |
+| RoboPaint | `kanjivg` | ordered stroke paths of the kaishu characters (a Japanese textbook typeface, not the exemplars' glyphs) |
+| KinDER | `kindergarden` | the upstream package: environments, models, goal checks (standard mode; the privileged image already has it) |
+| BEHAVIOR-1K | `bddl` | every activity's formal initial and goal conditions |
+| RoboCasa, RoboCasa365, RoboCasa-GR1 | `praxis-robocasa`, `rlinf-robocasa365`, `rpent-robocasa365`, `praxis-robocasa-gr1` | task sources with `_check_success`; no kitchen assets |
+| LIBERO-MAX | `libero`, `hf-libero`, `rlinf-libero`, `rpent-libero`, `praxis-libero`, `libero-infinity`, `rlinf-liberopro`, `rpent-liberopro`, `rlinf-liberoplus` | LIBERO's goal definitions and initial states; no meshes, no demonstrations, not LIBERO-MAX's events |
+
+Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
+ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics (formerly RoboFunOlympics), BiGym,
+YAMLab, Panda Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`),
+DexHand (not published at all: its scenes and tooling are this repository's `scripts/dexhand/` and `images/dexhand/`),
+AM-Bench; Isaac Sim does not install from pypi.org.

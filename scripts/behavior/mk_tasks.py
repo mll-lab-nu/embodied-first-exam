@@ -121,12 +121,13 @@ SIDECAR = (
 # The README Change Log (PROTOCOL §2.8: published tasks fixed in place), per mode, oldest first.
 FALL = ("OmniGibson's own Falling rule (the base tilted more than 41.4° from upright, or more than 3 cm below the floor) "
         "has held for 10 s of simulated time")                 # the tooling's FALL_* (docs/benchmarks/behavior.md, Falls)
-REPLAY_LIMIT = "min(4 h, max(3600 s, 1200 s + steps / 2))"      # tests/grade.py replay_timeout(), per fresh-process replay
+REPLAY_LIMIT = "min(28000 s, max(3600 s, 1200 s + steps / 1.5))"   # tests/grade.py replay_timeout(), per fresh-process replay
+REPLAY_LIMIT_0 = "min(4 h, max(3600 s, 1200 s + steps / 2))"     # the same until 2026-10-14 (the Change Log's older entries)
 MEASURED = ("measured on an 8-vCPU L40S host (job #3137): the Isaac start took 626 s and a 10,475-step replay ran slower than "
             "3.5 control steps/s")
 CHANGES = {
     "privileged": [
-        f"2026-10-08: verifier time limits only. `tests/grade.py` gives each of the two fresh-process replays {REPLAY_LIMIT} "
+        f"2026-10-08: verifier time limits only. `tests/grade.py` gives each of the two fresh-process replays {REPLAY_LIMIT_0} "
         f"instead of a flat 3600 s, and `[verifier] timeout_sec` is 30600 s (was 5400 s), {MEASURED}, so long trajectories "
         "hit the old limit as a grader error. The scene, frozen instance and pass rule are unchanged, so the task keeps its "
         "name; a trial graded before this date with `grader_error` = 1 can be regraded.",
@@ -154,10 +155,17 @@ CHANGES = {
         "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), "
         "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
         "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
-        "this date were obtained with open egress."],
+        "this date were obtained with open egress.",
+        f"2026-10-14 (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at most "
+        f"40,000 rows (was 200,000, the tooling's runaway guard, which the 4 h replay limit could not cover on a slow host), "
+        f"each replay gets {REPLAY_LIMIT} (was {REPLAY_LIMIT_0}) and `[verifier] timeout_sec` is 57800 s (was 30600 s). "
+        "Basis: the longest successful privileged trajectory of the pool's trials had 25,404 rows, the frozen instances' "
+        "challenge timeouts reach 39,090 steps, and the slowest replay measured ran 1.88 control steps/s with a start of up "
+        "to 1,115 s (docs/benchmarks/behavior.md, Verifier time). The instruction states the cap. Every successful trajectory "
+        "recorded so far is under it, so the scene, the instance and the pass rule are unchanged and the task keeps its name."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
-        f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "
+        f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT_0}) "
         f"plus 30 min; {MEASURED}. The replays still have no limit of their own. The scene, frozen instance and pass rule are "
         "unchanged, so the task keeps its name.",
         f"2026-10-09: a fall ends the episode as a failure (owner decision): once {FALL}, the service ends the episode with "
@@ -355,10 +363,11 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("Image", f"`{IMAGE}` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`)"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in"),
             ("GPU", "an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`)"),
-            ("Budget", "the agent's time (the `Agent time budget` row; the number lives in `scripts/task_cutoffs.toml`): every "
+            ("Budget", "the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every "
                        "Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)"),
-            ("Verifier time", f"each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 30600 s (two capped replays + 30 min)")]
+            ("Verifier time", f"at most 40,000 rows accepted; each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 57800 s "
+                              "(two capped replays + 30 min)")]
     return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e),
                   details(rows) + change_log("privileged"), review_pr(e))
 
@@ -388,7 +397,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
-            ("Budget", "the agent's time is the `Agent time budget` row (the number lives in `scripts/task_cutoffs.toml`; docs/benchmarks/behavior.md)"),
+            ("Budget", "the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; docs/benchmarks/behavior.md)"),
             ("Collect hook time", "37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))

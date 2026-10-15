@@ -16,8 +16,7 @@ every task):
   - the README's "Agent time budget" row has the number;
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3);
-  - its twins agree: a mode whose entry in the mode registry names `same_cutoff_as` (standard: privileged; owner,
-    2026-10-12) has that mode's number wherever the task of the same base exists in both (PROTOCOL §2.15, §2.16).
+ADVISORY (the required CI job runs the twins' equal cutoffs, an invariant, in ci_checks/check-twins.py).
 
     python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task
 Fix: set `[agent] timeout_sec` in task.toml (or the generator's constant, then regenerate) and run
@@ -101,21 +100,6 @@ def number_errors(task: Path) -> list[str]:
     return []
 
 
-def twin_pairs(task: Path) -> list[tuple[Path, Path]]:
-    """(task, its twin) for every mode pair the registry ties together (`same_cutoff_as`), in either direction, where the
-    twin exists; sorted so that a pair reached from both sides is the same tuple."""
-    mode, base = tc.mode_of(task), tc.base_of(task)
-    out = []
-    for m, d in tc.MODE_REGISTRY.items():
-        o = d["same_cutoff_as"]
-        if not o or mode not in (m, o):
-            continue
-        other = task.with_name(f"{base}-{o if mode == m else m}")
-        if (other / "task.toml").is_file():
-            out.append(tuple(sorted((task, other))))
-    return out
-
-
 def check_task(task: Path) -> list[str]:
     try:
         mode = tc.mode_of(task)
@@ -127,7 +111,7 @@ def check_task(task: Path) -> list[str]:
     sec = tc.cutoff_for(task)
     bench = tc.bench_of(task)
     ins = (task / "instruction.md").read_text(encoding="utf-8") if (task / "instruction.md").is_file() else ""
-    want = tc.render_cutoff(sec, mode, bench)
+    want = tc.render_cutoff(sec, mode, bench, task.name)
     if not ins.startswith("# "):
         errs.append("instruction.md does not start with its `# ` title line")
     if not ins.endswith("\n\n" + want):
@@ -159,20 +143,6 @@ def check_task(task: Path) -> list[str]:
     return errs
 
 
-def twin_errors(tasks: list[Path]) -> list[str]:
-    errs, seen = [], set()
-    for t in tasks:
-        for a, b in twin_pairs(t):
-            if (a, b) in seen:
-                continue
-            seen.add((a, b))
-            sa, sb = tc.cutoff_for(a), tc.cutoff_for(b)
-            if sa is not None and sb is not None and sa != sb:
-                errs.append(f"{a.name} has a cutoff of {sa} s and {b.name} {sb} s; the twins have the same cutoff "
-                            "(PROTOCOL §2.12, §2.15, §2.16; mode registry `same_cutoff_as`)")
-    return errs
-
-
 def main(argv: list[str]) -> int:
     every = sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
     tasks = [Path(a).resolve() for a in argv if (Path(a) / "task.toml").is_file()] if argv else every
@@ -181,12 +151,9 @@ def main(argv: list[str]) -> int:
         for e in check_task(t):
             rc = 1
             print(f"FAIL {t}: {e}")
-    for e in twin_errors(tasks):
-        rc = 1
-        print(f"FAIL {e}")
     if rc == 0:
         print(f"check-cutoffs: {len(tasks)} tasks state their own cutoff (task.toml, instruction.md, README, sim service; "
-              "twins equal)")
+              "the twins: check-twins.py)")
     return rc
 
 

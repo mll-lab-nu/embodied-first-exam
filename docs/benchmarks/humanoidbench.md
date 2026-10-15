@@ -62,15 +62,15 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
-| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's exception, PROTOCOL §4.5; the mode's default is 0) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
+| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §4.5; the realtime template's default is 10) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
 
 ### Standard mode's reset budget: 50
 
 HumanoidBench's standard configuration grants **50 resets** (`RCB_RESET_BUDGET` defaults to 50 in every
 `-standard` task's `environment/docker-compose.yaml`, so `spec()["budget"]["reset"]` is 50), by the owner's decision
 of 2026-10-07. Without one, the agent gets a single blind attempt: the H1 falls within 1-3 s of robot time under a
-first guess, and in standard mode there is no simulator to practise in. This is a per-benchmark exception to PROTOCOL
-D1's default of 0 (§4.5); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
+first guess, and in standard mode there is no simulator to practise in. This is HumanoidBench's own choice of budget
+(PROTOCOL §4.5: each task declares its budget; the standard template's default is 0); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
 `eai-standard/2.1` service shared with KinDER and VLABench; `scripts/humanoidbench/shared/standard/`):
 
 - `POST /reset` (`r.reset()`) abandons the running episode, or follows one that has ended (`failed`: a fall or the
@@ -98,7 +98,7 @@ recorded before this change (budget 0) are a different configuration from today'
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
 chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTOCOL §4b, protocol v1.1;
 `tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50, HumanoidBench's exception to the mode's default of 0, PROTOCOL §4.5), wall clock (the benchmark's row of `scripts/task_cutoffs.toml`, shown in [`../CUTOFFS.md`](../CUTOFFS.md) and stated by the closing `## Time limit` section of every instruction, PROTOCOL §2.12; 3600 s on 2026-10-11) and client, on a
+instance, sensors, success rule, reset budget (50, HumanoidBench's choice, PROTOCOL §4.5), wall clock (each task's own `[agent] timeout_sec`, history in [`../CUTOFFS.md`](../CUTOFFS.md) and stated by the closing `## Time limit` section of every instruction, PROTOCOL §2.12; 3600 s on 2026-10-11) and client, on a
 clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
 wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STANDARD_MODE.md "Standard-realtime mode"):
 
@@ -212,3 +212,13 @@ HumanoidBench standard-mode run recorded before that date -- are reported separa
 protocol v1.0 are marked as such. Standard-realtime results (`-standard-realtime`) are their own mode and are never pooled with
 standard ones; they state the reset budget and `slowdown`. Official runs use `slowdown` 1 (the default); results
 with `RCB_SLOWDOWN` ≠ 1 are reported separately from them (PROTOCOL §4b).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+**KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
+shared service (`scripts/{kinder,humanoidbench}/shared/standard/rcb_service.py`, identical in both) with a per-benchmark
+simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
+PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step
+counters are `rows` and `control_steps`. No world coordinates are given (odometry and camera poses are in the robot's
+starting frame). A request body over 64 MB gets 413 before it is decoded. The service implements the optional reset
+capability (`RCB_RESET_BUDGET`).

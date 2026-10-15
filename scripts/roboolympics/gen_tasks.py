@@ -29,10 +29,10 @@ HERE = ROOT / "scripts/roboolympics"
 SHARED = HERE / "shared"
 REGISTRY = "ghcr.io/mll-lab-nu"
 PREFIX = "roboolympics"
-RESET_BUDGET = 50        # standard mode's attempts (PROTOCOL §4.5 per-benchmark default; owner, 2026-10-12)
+RESET_BUDGET = 50        # standard mode's attempts (RoboOlympics' own choice, PROTOCOL §4.5; owner, 2026-10-12)
 RT_RESET_BUDGET = 10     # standard-realtime: PROTOCOL §4b's default (owner, 2026-10-14: every realtime task, 10 resets)
 # The standard-realtime twins (PROTOCOL §4b; owner, 2026-10-14, board 0112): the families whose scene is dynamic
-# (scripts/task_dynamics.toml), served by the standard twin's server.py behind the shared realtime layer
+# (DYNAMIC_FAMILIES below), served by the standard twin's server.py behind the shared realtime layer
 # (shared/realtime/rcb_realtime.py, HumanoidBench's, unchanged). Per family: the real-time factor RTF of that service
 # with its clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 episodes; ws-1, 4 CPUs, board 0112, 2026-10-14)
 # and the slowdown S it gives (PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF), which is 1 for RTF >= 1.5).
@@ -149,13 +149,38 @@ def rulebook_block(inst: dict) -> str:
 
 
 
+# Scene dynamics (PROTOCOL §2: each task declares `[metadata] dynamics`; board 0124 retired the central table): the
+# families whose scene is dynamic, with the reason, served with a standard-realtime twin. Every other family is static:
+# a humanoid (floating base) at a venue whose ball / implement is at rest until the robot touches it.
+DYNAMIC_FAMILIES = {
+    "catch": "A launcher 40 m away fires the baseball at t = 1 s (21 m/s).",
+    "catch-and-shoot": "A machine throws the chest pass at a fixed time.",
+    "header": "The cross is launched toward the robot at launch_time_s.",
+    "juggle-three": "The venue throws the first ball at launch_time_s.",
+    "paddle-bounce": "The venue releases the ball at drop_time_s (a clock-timed release; gravity then does the work).",
+    "penalty-kick": "A goalkeeper dummy on a slide is driven by the referee toward the ball after the kick.",
+    "table-tennis-return": "The ball is served toward the robot at serve_time_s with spin.",
+    "tennis-return": "The ball is served toward the robot at serve_time_s with spin.",
+    "trap-ball": "The ball is launched toward the robot at launch_time_s.",
+    "volley-shot": "The cross is launched toward the robot at launch_time_s.",
+    "volleyball-bump": "The ball is launched toward the robot at launch_time_s.",
+    "volleyball-set": "The ball is launched toward the robot at launch_time_s.",
+    "volleyball-spike": "The set ball is launched at launch_time_s.",
+}
+# The agent's egress (PROTOCOL §2, Appendix H.6): open, this benchmark's own choice (owner, 2026-10-11), declared in
+# every generated task.toml as `[metadata] network = "open"`; its `## External material` paragraph is this one.
+EXTERNAL = (
+    "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
+    "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
+    "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
+    "You may read anything installed in your container, this benchmark's own source code included. The one thing "
+    "not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This "
+    "is an honour rule; trials are reviewed.")
+
+
 def dynamic_families() -> dict[str, str]:
-    """{family: why} of the families scripts/task_dynamics.toml marks dynamic (their `[metadata] family` is fam_id)."""
-    import tomllib
-    t = tomllib.loads((ROOT / "scripts/task_dynamics.toml").read_text())
-    row = t["benchmark"][BENCHMARK]
-    return {f.replace("_", "-"): e["why"] for f, e in t.get("family", {}).get(BENCHMARK, {}).items()
-            if e["dynamics"] == "dynamic" and row["dynamics"] != "dynamic"}
+    """{family: why} of the families whose scene is dynamic (DYNAMIC_FAMILIES)."""
+    return dict(DYNAMIC_FAMILIES)
 
 
 def task_dir(fam: str, mode: str) -> str:
@@ -324,6 +349,7 @@ def values(fam: str, spec: dict, inst: dict, version: str) -> dict:
             "at the control steps where they ran there (`submit(..., at=step)`; the first, at step 0, starts the clock); "
             "it uses no privileged information at run time. " + spec["evidence"]) if full else (
             f"None (as `{task_dir(fam, 'privileged')}`)."),
+        "EXTERNAL": EXTERNAL,
         "REVIEW": "" if full else ("No oracle; human review " + (f"in PR #{review}" if review else
                                    "in the pull request that adds the benchmark") + " (PROTOCOL §2.7)."),
     }

@@ -66,10 +66,10 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 | privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in two fresh processes; both succeed with equal final hashes |
 | standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | `finalize.sh` replays the recorded rows twice; success = live ∧ replay ∧ deterministic |
 
-Standard mode's texts name objects and the goal only (D7, `ci_checks/check-standard-texts.sh`); the robot's pose and
+Standard mode's texts name objects and the goal only (D7, `scripts/molmospaces/ci/advisory-world-frame.sh`); the robot's pose and
 camera calibration come from the service, object poses never. Both graders check that each replay starts in the
 instance's t = 0 state (else `grader_error`, with `infra_error`); a third replay renders `replay.mp4` after the verdict. Crash recovery:
-resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: the agent's cutoff of `scripts/task_cutoffs.toml` (the one table, [`../CUTOFFS.md`](../CUTOFFS.md); 3600 s on
+resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2.12, [`../CUTOFFS.md`](../CUTOFFS.md); 3600 s on
 2026-10-11), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
 
 Tests without a simulator: `scripts/molmospaces/tests/test_ms.py` (run as a script; numpy): both graders, `finalize.sh` with
@@ -107,3 +107,32 @@ harbor run -p tasks/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
 Agent, provider and effort settings: docs/RUNNING.md. Results are not kept in this repository (PROTOCOL D3): runs, videos and per-run READMEs are on
 the results site.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `exact` (MuJoCo, CPU physics).
+
+Its service states no `max_frames_per_call` yet.
+
+Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | molmo-spaces 0.2.9, MuJoCo 3.5.0 |
+| rows streamed at | Franka 15.15 Hz (33 substeps); RB-Y1 5 Hz (navigation, 100) or 10 Hz (door, 50) |
+| `joint_position` | Franka 8: 7 joints + Robotiq command (0–255); RB-Y1 25: base x, y, θ (world) + torso 6 + arms 14 + two gripper forces |
+| `ee_pose` | not offered (`not_yet`) |
+| cameras | Franka: wrist and shoulder (moving), three randomised static; RB-Y1: head + two wrist cameras (moving) |
+| depth | MuJoCo depth buffer |
+| `/kinematics` | upstream's `MlSpacesKinematics` on the robot's MuJoCo model (Franka 7, RB-Y1 23 with the base) |
+| proprio columns (2.0 → 2.2) | 2.2 only: 29 (Franka), 85 (RB-Y1) |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `exact` |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| MolmoSpaces | 8 families (213 trials), on a lab host (RTX 4090, 32 cores) | episode start 8–52 s after Harbor's environment setup began (median 11 s; navigate-to 33–52 s) | `RCB_STARTUP_TIMEOUT_S` = 300 |
