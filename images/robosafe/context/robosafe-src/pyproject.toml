@@ -12,7 +12,7 @@ license = { text = "Apache-2.0" }
 dependencies = ["numpy>=1.26,<3"]
 
 [project.optional-dependencies]
-sim = ["mujoco==3.8.1", "numpy==2.2.6"]   # as in the image (eai-robosafe:0.5.1: numpy 2.2.6, MuJoCo 3.8.1)
+sim = ["mujoco==3.8.1", "numpy==2.2.6", "onnxruntime==1.28.0"]   # as in the image (eai-robosafe:0.5.2: numpy 2.2.6, MuJoCo 3.8.1); onnxruntime: the walking G1's controller (GR00T-WBC, `robosafe/sim/wbc.py`)
 dev = ["pytest>=8", "pillow>=10"]
 
 [tool.setuptools.dynamic]

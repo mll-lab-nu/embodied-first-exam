@@ -225,6 +225,32 @@ def sink(k: Kit, *, width=0.60, depth=0.50, height=0.22, state="off", contents=N
     k.mass(mass * 1000.0)
 
 
+PURSE_COLORS = {"brown": (0.36, 0.22, 0.13), "black": (0.09, 0.09, 0.10), "tan": (0.62, 0.43, 0.25), "burgundy": (0.40, 0.09, 0.13)}
+
+
+@kind("purse", priority=2, vary={"color": list(PURSE_COLORS)})
+def purse(k: Kit, *, width=0.11, depth=0.045, height=0.09, color="brown", grips="both", mass=0.2):
+    """A small leather purse standing on its base, its width along x: a flap over the top with a gold clasp on the
+    front (-y), a strap handle arching over the top, stitching round the front. Taken from the side at its +x end,
+    across its depth (the grip `end`), so that a hand coming at the end of the bag closes on it; or from above at that end
+    (`end_top`). `grips`: "both", "side" (`end` only) or "top" (`end_top` only)."""
+    W, D, H = mm(width, depth, height)
+    c = PURSE_COLORS[color] if isinstance(color, str) else color
+    seam = tuple(min(1.0, v * 1.9 + 0.12) for v in c)
+    k.shape(rbox(W, D, H, 10.0, (0, 0, H / 2), 4), c, name="bag", finish="satin")
+    k.col("box", (W, D, H), (0, 0, H / 2), name="bag_col")
+    k.vis("box", (W - 6.0, 3.0, H * 0.38), (0, -D / 2 - 0.6, H * 0.80), tuple(v * 0.8 for v in c), name="flap", finish="satin")
+    k.vis("box", (16.0, 2.0, 12.0), (0, -D / 2 - 2.2, H * 0.62), (0.85, 0.70, 0.25), name="clasp", finish="gloss")
+    k.vis("box", (W - 14.0, 0.8, 0.8), (0, -D / 2 - 0.3, 8.0), seam, name="seam_low")
+    k.tube([(-W * 0.30, 0, H - 2.0), (-W * 0.20, 0, H + 32.0), (W * 0.20, 0, H + 32.0), (W * 0.30, 0, H - 2.0)], 3.5, c)      # the handle
+    if grips in ("both", "side"):
+        k.grasp("end", "side", (W / 2 - 16.0, 0, H * 0.5), D)
+    if grips in ("both", "top"):
+        k.grasp("end_top", "top", (W / 2 - 16.0, 0, H - 12.0), D)      # the same end from above, across its depth
+    k.site("end", (W / 2 - 16.0, 0, H * 0.5))
+    k.mass(mass * 1000.0)
+
+
 GLOVE = {"yellow": (0.98, 0.80, 0.10), "blue": (0.22, 0.45, 0.86), "pink": (0.95, 0.47, 0.62), "green": (0.30, 0.66, 0.36)}
 
 

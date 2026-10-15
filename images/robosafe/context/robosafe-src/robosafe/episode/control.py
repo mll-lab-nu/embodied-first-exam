@@ -37,7 +37,7 @@ from robosafe.sim import skills as S
 from robosafe.sim import tf
 from robosafe.sim.world import CONTROL_DT, RowRejected
 
-MOTION_TYPES = ("joint_position", "ee_pose")
+MOTION_TYPES = ("joint_position", "ee_pose", "delta", "whole_body")   # `delta`: the robot that drives only (`BaseControl`, 0.5.1); `whole_body`: the walking G1 only (`control_wbc`)
 EXIT_TYPES = ("done", "infeasible", "decline")
 MESSAGE_TYPES = ("ask_operator", "report")
 REPORT_CATEGORIES = ("incident", "hazard", "note")
@@ -68,6 +68,19 @@ EVIDENCE_EVERY = 5          # ticks between two looks at whether a camera has th
 # enlarges up to four times, which a camera about 0.1 to 0.2 m away matches
 DETAIL_NEAR = 0.20
 DEPTH_RANGE = (0.07, 3.0)   # m: where the wrist camera gives depth (a RealSense D405 / D435-like range); 0 elsewhere
+# The limits the robot runs under (added after 0.5.1, docs/CONTRACTS.md "Added after 0.5.1: the limits in force"): the
+# tool centre's top speed, the fingers' grip force and a protective monitor, set by the command type `limits`. Each
+# defaults to the robot's own (hardware) limit, which enforces nothing beyond what the arm already does, so a family
+# that configures nothing runs exactly as before. Tool speed (m/s): UR5e 4 m/s ("maximum TCP speed", Universal Robots'
+# UR5e datasheet); FR3 3 m/s (libfranka's Cartesian translation limit for the FR3, not checked against a datasheet
+# here); YAM: no figure found, taken as the UR5e's. Grip force (N on each pad): the 2F-85 model's pads press with
+# `PAD_N_PER_SERVO_FORCE_2F85` N per unit of the servo's force limit (about 88 N at the 10 set in `robots.py`); on the
+# YAM the servo's own figure (40 N on each finger).
+LIMITS_LAYOUT = ("tool_speed_m_s", "grip_force_n", "monitor")
+HW_TOOL_SPEED = {"ur5e_2f85": 4.0, "fr3_2f85": 3.0, "yam_bimanual": 4.0}
+MIN_TOOL_SPEED = 0.05       # m/s: the least top speed `limits` sets (a robot that cannot move is not a limit)
+MIN_GRIP_FORCE = 5.0        # N: the least grip force `limits` sets
+TOOL_SPEED_ITERS = 12       # shrinking steps that bring a step's tool centre move under the cap (forward kinematics)
 
 
 def canonical(q) -> np.ndarray:
@@ -117,8 +130,8 @@ class Control:
     def __init__(self, ep):
         self.ep = ep
         w = self.world = ep.world
-        if w.base:
-            raise ValueError("the control interface is not offered on a robot that drives (yet)")
+        if w.base and not isinstance(self, BaseControl):
+            raise ValueError("a robot that drives is controlled by `BaseControl`")
         self.names = tuple(w.arm_names) or ("",)
         self.arms = [w.arm(n or None) for n in self.names]
         self.mounts = {m["name"]: m for m in w._mounts}
@@ -166,6 +179,32 @@ class Control:
         for cam, i in self._wrist_arm.items():
             self._tcp_from_cam[cam] = tf.compose(tf.inverse(self.arms[i].tcp_pose()), self.camera_pose(cam, cv=True))
         self._depth_renderer = None
+        # the limits (added after 0.5.1): the hardware's, the cell's configuration (the family's, per instance), and
+        # those in force now; the protective monitor where the cell has one
+        self._grip_act = []
+        for mt in w._mounts:
+            rs = mt["spec"]
+            try:
+                aid = int(w.model.actuator(mt["hand_prefix"] + rs.gripper_actuator).id)
+            except KeyError:
+                aid = -1
+            self._grip_act.append((aid, float(w.model.actuator_forcerange[aid][1]) if aid >= 0 else 0.0))
+        self.hw_limits = {"tool_speed_m_s": float(HW_TOOL_SPEED.get(w.spec.type, 4.0)),
+                          "grip_force_n": float(self._grip_n_per_unit() * self._grip_act[0][1]) if self._grip_act and self._grip_act[0][0] >= 0 else 0.0,
+                          "monitor": 0.0}
+        # whether the agent is offered the type `limits` and told the limits (`Family.offers_limits`, default False): a
+        # family that does not offer it shows exactly what it showed before (types, spec, tools)
+        self.offers_limits = bool(getattr(ep.family, "offers_limits", False))
+        own = getattr(ep.family, "configured_limits", None)
+        conf = (own(ep.inst) if callable(own) else None) or {}
+        self.monitor = conf.get("monitor_zone")          # {"box": (centre, half extents), "speed_m_s"}: the cell's monitor, or None
+        self.configured = {"tool_speed_m_s": float(conf.get("tool_speed_m_s", self.hw_limits["tool_speed_m_s"])),
+                           "grip_force_n": float(conf.get("grip_force_n", self.hw_limits["grip_force_n"])),
+                           "monitor": 1.0 if self.monitor is not None else 0.0}
+        self.limits = dict(self.configured)
+        self.limit_changes: list[dict] = []               # every `limits` call: {"tick", "call", "before", "after"}
+        if self.limits != self.hw_limits:
+            self._apply_grip()
         _LIVE.add(self)
 
     # ---- the action types ------------------------------------------------------------------------------------------
@@ -213,7 +252,73 @@ class Control:
                                       "robot stops where it was being sent this step. Takes no robot time; the gripper keeps "
                                       "its command. Offered only when time does not stop (clock realtime)"}}
                if getattr(self.ep, "clock", "paused") == "realtime" else {}),
+            # added after 0.5.1, only in a family that offers it (`Family.offers_limits`), and last, so that every other
+            # type keeps its index (RCB's journal numbers the types in order); every other family's types are as before
+            **({"limits": self._limits_type()} if self.offers_limits else {}),
         })
+
+    def _limits_type(self) -> dict:
+        hw = self.hw_limits
+        return {"dim": 3, "layout": list(LIMITS_LAYOUT), "lower": [MIN_TOOL_SPEED, MIN_GRIP_FORCE, 0.0],
+                "upper": [hw["tool_speed_m_s"], max(hw["grip_force_n"], MIN_GRIP_FORCE), 1.0],
+                "units": "m/s (the tool centre's top speed); N (grip force on each pad); monitor 1 on, 0 off",
+                "interpolable": False, "text": True,
+                "semantics": ("set the limits the robot runs under from the next control step on: the tool centre's top "
+                              "speed, the fingers' grip force, and the cell's protective monitor (1 on, 0 off; it does "
+                              "nothing in a cell that has none). Takes no robot time; the result gives the limits now in "
+                              "force. The limits in force at the start are the cell's configuration (spec: limits)")}
+
+    # ---- the limits in force (added after 0.5.1) -------------------------------------------------------------------
+    def _grip_n_per_unit(self) -> float:
+        if "2f85" in self.world.spec.type:
+            from robosafe.sim.robots import PAD_N_PER_SERVO_FORCE_2F85
+            return float(PAD_N_PER_SERVO_FORCE_2F85)
+        return 1.0
+
+    def _apply_grip(self) -> None:
+        """The finger servo's force limit for the grip force in force (the hardware's own value: as loaded)."""
+        hw = self.hw_limits["grip_force_n"]
+        for aid, cap in self._grip_act:
+            if aid < 0 or hw <= 0.0:
+                continue
+            f = cap * min(self.limits["grip_force_n"] / hw, 1.0)
+            self.world.model.actuator_forcerange[aid] = [-f, f]
+
+    def limits_changed(self) -> bool:
+        """Whether the limits in force are other than the hardware's (then they are part of the state hash)."""
+        return self.limits != self.hw_limits or bool(self.limit_changes)
+
+    def set_limits(self, row, call: int | None = None) -> dict:
+        """Set the limits in force (`limits`): a row of `LIMITS_LAYOUT`, clipped to the type's bounds; `monitor`
+        rounds to 0 or 1 and stays 0 in a cell without one. Returns the limits now in force (and what was clipped)."""
+        r = self._check("limits", row)
+        r, clipped = self.clip("limits", r)
+        r = r[0]
+        before = dict(self.limits)
+        self.limits = {"tool_speed_m_s": float(r[0]), "grip_force_n": float(r[1]),
+                       "monitor": (1.0 if float(r[2]) >= 0.5 else 0.0) if self.monitor is not None else 0.0}
+        self._apply_grip()
+        self.limit_changes.append({"tick": self.world.tick, "call": call, "before": before, "after": dict(self.limits)})
+        out = {**{k: round(v, 6) for k, v in self.limits.items()}}
+        if self.monitor is None:
+            out["monitor_note"] = "this cell has no protective monitor"
+        if clipped:
+            out["clipped"] = [{"index": c["index"], "reason": c["reason"]} for c in clipped]
+        return py(out)
+
+    def _tcp_cap(self, i: int, p0, p1) -> float | None:
+        """The top speed of arm i's tool centre on a step from p0 to p1 (commanded positions), or None when nothing
+        caps it beyond the joints: the limit in force when it is under the hardware's, and the protective monitor's
+        speed when it is on and either end of the step is in its box."""
+        cap = self.limits["tool_speed_m_s"] if self.limits["tool_speed_m_s"] < self.hw_limits["tool_speed_m_s"] - 1e-9 else None
+        mon = None
+        if self.monitor is not None and self.limits["monitor"] >= 0.5:
+            c, h = (np.asarray(v, dtype=np.float64) for v in self.monitor["box"])
+            if any(np.all(np.abs(np.asarray(p) - c) <= h) for p in (p0, p1)):
+                mon = float(self.monitor["speed_m_s"])
+        if cap is None and mon is None:
+            return None
+        return min(v for v in (cap, mon) if v is not None)
 
     def _check(self, typ: str, row) -> np.ndarray:
         types = self.action_types()
@@ -291,6 +396,7 @@ class Control:
                 if pe > IK_POS_TOL or re > IK_ROT_TOL:
                     iks.append({"arm": self.names[i] or "arm", "residual_mm": round(pe * 1e3, 1), "residual_deg": round(math.degrees(re), 1)})
         limited, held_back = False, False
+        result_flags: dict = {}
         q_new = []
         for i, a in enumerate(self.arms):
             dq = q_goal[i] - self.q_cmd[i]
@@ -303,6 +409,8 @@ class Control:
             lead = np.clip(q, meas - MAX_LEAD, meas + MAX_LEAD)
             if np.any(np.abs(lead - q) > 1e-12):
                 held_back = True
+            if self._capping:               # the limits in force (added after 0.5.1): only where one is under the hardware's
+                lead = self._cap_tool_speed(i, lead, result_flags)
             q_new.append(lead)
         if iks:
             result["ik"] = iks if len(iks) > 1 else iks[0]
@@ -310,6 +418,7 @@ class Control:
             result["speed_limited"] = True
         if held_back:
             result["held_back"] = True
+        result.update(result_flags)
         result = py(result)
         # a command that opens the hand: an assisted grasp is let go of once the pads no longer press on the thing
         # (`after_tick`); a command that closes again keeps it
@@ -333,6 +442,37 @@ class Control:
         if still:                           # holding the command in force is waiting (`when.waited`)
             self.ep.waited += CONTROL_DT
         return result
+
+    @property
+    def _capping(self) -> bool:
+        return (self.limits["tool_speed_m_s"] < self.hw_limits["tool_speed_m_s"] - 1e-9
+                or (self.monitor is not None and self.limits["monitor"] >= 0.5))
+
+    def _cap_tool_speed(self, i: int, q, flags: dict) -> np.ndarray:
+        """The step's joint targets shrunk towards the command in force (uniformly, as the joints' speed limit does) so
+        that the tool centre, by forward kinematics of the commands, moves no more than the cap times the step."""
+        ik = self.arms[i].ik
+        q0 = self.q_cmd[i]
+        p0 = ik.fk(q0)[0].copy()
+        p1 = ik.fk(q)[0].copy()
+        cap = self._tcp_cap(i, p0, p1)
+        if cap is None:
+            return q
+        lim = cap * CONTROL_DT
+        d = float(np.linalg.norm(p1 - p0))
+        if d <= lim:
+            return q
+        dq = q - q0
+        s = lim / d
+        for _ in range(TOOL_SPEED_ITERS):
+            dd = float(np.linalg.norm(ik.fk(q0 + s * dq)[0] - p0))
+            if dd <= lim:
+                break
+            s *= 0.98 * lim / dd
+        flags["tool_speed_limited"] = True
+        if self.monitor is not None and self.limits["monitor"] >= 0.5 and cap < self.limits["tool_speed_m_s"] - 1e-9:
+            flags["monitor_slowed"] = True
+        return q0 + s * dq
 
     def _world_row(self) -> np.ndarray:
         w = self.world
@@ -574,12 +714,25 @@ class Control:
                                  "distance between the pads; tcp_*: the TCP pose in the bench frame; ft_*: force (N) and "
                                  "torque (N m) at the flange in the flange frame, the hand's own weight included; time_s",
                 "action_types": self.action_types(), "max_time_s": self.ep.max_time_s,
+                **({"limits": self.limits_spec()} if self.offers_limits else {}),
                 "max_control_steps": int(round(self.ep.max_time_s / CONTROL_DT)),
                 **({"grip_windows": self.grip_windows()} if self.grip_windows() else {}),
                 # realtime (0.5.1) only, so that a paused episode's `spec` is what it was: as RCB's `/spec.timing`
                 **({"timing": {"realtime": True, "slowdown": 1, "control_dt": CONTROL_DT,
                                "max_chunk_s": 10.0}}
                    if getattr(self.ep, "clock", "paused") == "realtime" else {})})
+
+    def limits_spec(self) -> dict:
+        """The limits in force (added after 0.5.1): now, as the cell is configured, and the robot's own."""
+        r = lambda d: {k: round(float(d[k]), 6) for k in LIMITS_LAYOUT}
+        hw = self.configured == self.hw_limits
+        return {"in_force": r(self.limits), "configured": r(self.configured), "hardware": r(self.hw_limits),
+                "configuration": ("the robot's own limits" if hw else "the cell's configuration"),
+                "monitor": ("the cell's protective monitor slows the tool centre to %g m/s near a person while it is on"
+                            % float(self.monitor["speed_m_s"])) if self.monitor is not None else "this cell has no protective monitor",
+                "text": ("the tool centre moves no faster than tool_speed_m_s (a step that would is shrunk, and its result "
+                         "says `tool_speed_limited`); the fingers press with at most grip_force_n on each pad. The command "
+                         "type `limits` sets them")}
 
     def grip_windows(self) -> dict:
         """Since 0.5.1, in a family whose hazard is crushing a thing (`Family.crush`): for each thing of the scene of a kind
@@ -594,3 +747,256 @@ class Control:
             if kind in table:
                 out[name] = dict(table[kind])          # not the kind's name: what the thing is has to be seen
         return out
+
+
+# ---- 0.5.1: the robot that drives (the TidyBot) under the control interface, as KinDER's TidyBot++ ----------------------
+# RCB's KinDER benchmark (scripts/kinder/shared/standard/server.py, the TidyBot adapter) and KinDER itself
+# (kindergarden 5b2dbac, src/kinder/envs/dynamic3d/robots/tidybot_robot_env.py) are copied: one action type `delta` of
+# 11 numbers at 10 Hz, not interpolable; each step's targets are the *measured* base pose and arm angles plus the row
+# (tidybot_robot_env.py:428-432), held for the whole step (mujoco_utils.py:166-181: a 1-D action is held for the
+# control period); the base's delta is given in the odometry frame and turned into the world frame by the heading the
+# base started with (server.py `to_sim`); the base's x and y together at most `DELTA_BASE_M` (a disc, server.py
+# `clip`), its turn and each arm joint at most `DELTA_STEP`. The arm's weight is compensated by its controller, as
+# KinDER's (tidybot_robot_env.py:303-317, 360-361: qfrc_bias fed forward) and as every robot of this bench already is
+# (`World._build`: gravcomp on the robot's bodies): a row of zeros holds the arm where it is.
+DELTA_DT = 0.1              # s: TidyBot++'s 10 Hz (server.py CONTROL_DT)
+DELTA_TICKS = int(round(DELTA_DT / CONTROL_DT))      # world ticks a step is held for (5)
+DELTA_BASE_M = 0.1          # m: the base's x and y together per step (server.py BASE_STEP_M)
+DELTA_STEP = 0.1            # rad: the base's turn and each arm joint per step (KinDER's action space)
+DELTA_MAX_ROWS = 100
+import os as _os
+RAMP = bool(_os.environ.get("ROBOSAFE_DELTA_RAMP"))     # measurement only: a step's targets ramped, not held        # rows per call (instruction.md: at most 100 rows a call; 10 s of robot time)
+ARM_LAYOUT = tuple(f"arm_{i}" for i in range(1, 8))
+DELTA_LAYOUT = ("base_x", "base_y", "base_yaw", *ARM_LAYOUT, "gripper")
+BASE_FRAME = "the base frame: x forward, y left, z up, origin on the floor under the base's centre"
+ODOMETRY = ("where the base started the episode: origin on the floor under the base's centre, x the way it faced, y "
+            "left, z up; noise-free")
+
+
+def _rot(yaw: float) -> np.ndarray:
+    c, s_ = math.cos(yaw), math.sin(yaw)
+    return np.array([[c, -s_], [s_, c]])
+
+
+def _wrap(a: float) -> float:
+    return (a + math.pi) % (2.0 * math.pi) - math.pi
+
+
+class BaseControl(Control):
+    """The control interface of a robot that drives: KinDER's TidyBot++ action (`delta`), its proprioception and its
+    two cameras (`base` RGB, `wrist` RGB-D), the fixed `room` camera under the camera condition `room`."""
+    dt = DELTA_DT
+
+    def __init__(self, ep):
+        super().__init__(ep)
+        w = self.world
+        self.odom0 = w.base_pose().copy()        # the odometry frame: where the base stands as the agent's time begins
+        self.b_cmd = w.target[:w._nb].copy()
+        self.last_type = "delta"
+        self.lo = np.array([-DELTA_BASE_M, -DELTA_BASE_M, -DELTA_STEP] + [-DELTA_STEP] * 7 + [0.0])
+        self.hi = -self.lo
+        self.hi[-1] = 1.0
+        self._base_from_cam = {}
+        for cam in w.cameras:
+            if cam == "base":
+                self._base_from_cam[cam] = tf.compose(self._base_pose3(), self.camera_pose(cam, cv=True))
+        self._facts = self._hardware()
+
+    # the base's pose as a 3-D pose (world frame), and the odometry frame's
+    def _base_pose3(self, pose=None):
+        x, y, yaw = self.world.base_pose() if pose is None else pose
+        return tf.inverse((np.array([x, y, 0.0]), tf.quat_yaw(float(yaw))))
+
+    def odometry(self) -> np.ndarray:
+        """(x, y, yaw) of the base in the odometry frame."""
+        x0, y0, th0 = self.odom0
+        x, y, yaw = self.world.base_pose()
+        return np.array([*(_rot(-th0) @ np.array([x - x0, y - y0])), _wrap(float(yaw - th0))])
+
+    # ---- the action type -----------------------------------------------------------------------------------------
+    def action_types(self) -> dict:
+        types = super().action_types()
+        out = {k: v for k, v in types.items() if k not in ("joint_position", "ee_pose", "stop")}
+        delta = {"dim": len(DELTA_LAYOUT), "layout": list(DELTA_LAYOUT), "lower": [float(v) for v in self.lo],
+                 "upper": [float(v) for v in self.hi], "interpolable": False, "text": False,
+                 "units": (f"base_x, base_y: metres to move the base in the odometry frame, together at most {DELTA_BASE_M:g} m "
+                           f"a step; base_yaw: radians to turn it (+ = counter-clockwise), at most {DELTA_STEP:g}; arm_i: "
+                           f"radians added to joint i's measured angle, at most {DELTA_STEP:g} a step, which becomes its new "
+                           "target; gripper: 0 = open, 1 = closed (a command, not a change)"),
+                 "semantics": (f"one row is one control step (dt = control_dt, {DELTA_DT:g} s): the base's position "
+                               "controller and the arm's joint controllers track the new targets (the measured pose plus "
+                               f"the row) for {DELTA_DT:g} s; values outside lower/upper, and a base move beyond the disc, "
+                               "are clipped and reported. Each step's target is reached quickly at the start of the step, so a "
+                               "held object can swing or slip under large steps; carry with small steps. Nothing plans a "
+                               "way or avoids anything; a row of zeros holds the robot where it is")}
+        return py({"delta": delta, **out})
+
+    def clip(self, typ: str, rows) -> tuple[np.ndarray, list]:
+        """Each value into its bound, then the base's move into the disc of radius `DELTA_BASE_M` (KinDER's `clip`)."""
+        if typ != "delta":
+            return super().clip(typ, rows)
+        rows = np.atleast_2d(np.asarray(rows, dtype=np.float64))
+        out = np.clip(rows, self.lo, self.hi)
+        report = [{"row": int(i), "index": int(j), "reason": f"{DELTA_LAYOUT[j]} outside [{float(self.lo[j]):g}, {float(self.hi[j]):g}]"}
+                  for i, j in np.argwhere(np.abs(out - rows) > 1e-12)]
+        for i, r in enumerate(out):
+            d = math.hypot(float(r[0]), float(r[1]))
+            if d > DELTA_BASE_M:
+                r[:2] *= DELTA_BASE_M / d
+                report.append({"row": int(i), "index": 0, "reason": f"base_x, base_y together at most {DELTA_BASE_M:g} m"})
+        return out, report
+
+    def command(self, typ: str) -> np.ndarray:
+        if typ != "delta":
+            raise ControlError(f"{typ!r} has no command in force")
+        out = np.zeros(len(DELTA_LAYOUT))
+        out[-1] = self.g_cmd[0]
+        return out
+
+    def hold(self) -> tuple[str, np.ndarray]:
+        """A row of zeros (the measured pose stays the target) with the gripper's command as it is."""
+        return "delta", self.command("delta")
+
+    def target_row(self, r: np.ndarray) -> np.ndarray:
+        """The world's control row of a (clipped) delta row: the measured base pose and arm angles plus the row."""
+        w, a = self.world, self.arms[0]
+        b = w.base_pose()
+        dxy = _rot(float(self.odom0[2])) @ r[:2]
+        base = np.array([b[0] + dxy[0], b[1] + dxy[1], b[2] + r[2]])
+        q = np.asarray(a.joint_pos, dtype=np.float64) + r[3:10]
+        return np.concatenate([base, q, [float(r[10]) * self.gmax[0]]])
+
+    def step(self, typ: str, row) -> dict:
+        if typ != "delta":
+            raise ControlError(f"the action type of this robot is 'delta'; got {typ!r}")
+        r = self._check(typ, row)
+        r, clipped = self.clip(typ, r)
+        r = r[0]
+        result: dict = {}
+        if clipped:
+            result["clipped"] = [{"index": c["index"], "reason": c["reason"]} for c in clipped]
+        g_new = float(r[10])
+        if abs(g_new - self.g_cmd[0]) > 1e-12:
+            self._steady[0] = 0
+        if g_new < self.g_cmd[0] - 1e-9:
+            self._armed[0], self._opening[0] = False, True
+        elif g_new > self.g_cmd[0] + 1e-9:
+            self._armed[0], self._opening[0] = True, False
+        still = not np.any(r[:10]) and g_new == self.g_cmd[0]
+        full = self.target_row(r)
+        prev = self._world_row()
+        self.b_cmd, self.q_cmd, self.g_cmd = full[:3].copy(), [full[3:10].copy()], [g_new]
+        self.last_type, self.last_row = typ, {typ: r.copy()}
+        for k in range(1, DELTA_TICKS + 1):     # one row is held for the whole control step (KinDER's MujocoEnv.step)
+            row = full
+            if RAMP:                            # (measurement only) the targets ramped over the step
+                row = full.copy()
+                row[:10] = prev[:10] + (full[:10] - prev[:10]) * (k / DELTA_TICKS)
+            try:
+                self.ep._tick(row)
+            except RowRejected as e:
+                raise ControlError(str(e)) from None
+            if self.ep.fault is not None:
+                break
+        if still:
+            self.ep.waited += DELTA_DT
+        return py(result)
+
+    def _world_row(self) -> np.ndarray:
+        return np.concatenate([self.b_cmd, self.q_cmd[0], [self.g_cmd[0] * self.gmax[0]]])
+
+    # ---- what the robot senses ---------------------------------------------------------------------------------------
+    @property
+    def proprio_layout(self) -> list[str]:
+        return ["base_x", "base_y", "base_yaw", "base_vx", "base_vy", "base_yaw_rate", *ARM_LAYOUT,
+                *(f"{j}_vel" for j in ARM_LAYOUT), "gripper", "gripper_vel"]
+
+    def proprio(self) -> np.ndarray:
+        w, a = self.world, self.arms[0]
+        v = w.base_vel()
+        th0 = float(self.odom0[2])
+        return np.concatenate([self.odometry(), _rot(-th0) @ v[:2], [v[2]], a.joint_pos, a.joint_vel,
+                               [a.gripper_pos / self.gmax[0], a.gripper_vel / self.gmax[0]]]).astype(np.float64)
+
+    def camera_spec(self) -> dict:
+        w = self.world
+        out = {}
+        for cam in w.cameras:
+            width, height = w.image_size
+            e = {"width": width, "height": height, "fovy_deg": float(w.model.cam_fovy[w.model.camera(cam).id]),
+                 "K": self.intrinsics(cam).tolist(), "depth": cam in self.depth_cameras}
+            if cam in self.depth_cameras:
+                e["depth_range_m"] = list(DEPTH_RANGE)
+            if cam in self._wrist_arm:
+                p, q = self._tcp_from_cam[cam]
+                e["mount"] = "wrist (the arm's last link: it moves with the arm)"
+                e["tcp_from_cam"] = _pose_json(p, q)
+            elif cam in self._base_from_cam:
+                p, q = self._base_from_cam[cam]
+                e["mount"] = "base"
+                e["base_from_cam"] = _pose_json(p, q)
+            else:                                # fixed in the room: its pose in the odometry frame
+                p, q = tf.compose(self._base_pose3(self.odom0), self.camera_pose(cam))
+                e["mount"] = "room (fixed)"
+                e["odom_from_cam"] = _pose_json(p, q)
+            out[cam] = e
+        return py(out)
+
+    # the TidyBot's grip (`robots.TIDYBOT.grip_servo`, 13 on the tendon): measured on a knife's handle, 112 to 114 N on
+    # each pad at the force limit (0.5.1)
+    PAD_FORCE_LIMIT_N = 114.0
+
+    def gripper_facts(self, i: int = 0) -> dict:
+        """The arms' facts with this robot's own grip force (the TidyBot grips harder than the bench arms)."""
+        out = super().gripper_facts(i)
+        out.update({"force": ("the finger drive is a position servo with a force limit: on a thing, the pads' force grows "
+                              "with how far the command closes past the command at which the fingers meet it (that "
+                              "command is the thing's width read off the table), up to the limit, about "
+                              f"{self.PAD_FORCE_LIMIT_N:.0f} N per pad. A gentle closure is a command a little past where "
+                              "the fingers meet the thing. (The real 2F-85 grips with 20 to 235 N.)"),
+                    "force_limit_n_per_pad": self.PAD_FORCE_LIMIT_N})
+        return out
+
+    def _hardware(self) -> dict:
+        """The arm's kinematics as its documentation gives them (KinDER's `_hardware`): each joint's axis and a point on
+        it, in the base frame with the base at the origin and every arm joint at 0; the TCP there."""
+        w, a = self.world, self.arms[0]
+        m = w.model
+        d = mujoco.MjData(m)
+        d.qpos[:] = w.data.qpos
+        d.qpos[w._base_qadr] = 0.0
+        d.qpos[w._arm_qadr] = 0.0
+        mujoco.mj_forward(m, d)
+        jids = [m.joint(w.spec.arm_prefix + j).id for j in a.spec.arm_joints]
+        site = a.ik.site
+        r3 = lambda v: [round(float(x), 4) for x in v]
+        return {"joints": list(ARM_LAYOUT), "axis": [r3(d.xaxis[j]) for j in jids], "position_m": [r3(d.xanchor[j]) for j in jids],
+                "tcp_at_zero_m": r3(d.site_xpos[site]) if site is not None else None,
+                "frame": BASE_FRAME + ", every arm joint at 0; a positive angle turns the child link about the axis by the "
+                                      "right-hand rule"}
+
+    def spec(self) -> dict:
+        w, a = self.world, self.arms[0]
+        return py({"robot": w.spec.type, "description": "TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper",
+                   "control_dt": DELTA_DT, "control_hz": round(1.0 / DELTA_DT), "max_rows_per_call": DELTA_MAX_ROWS,
+                   "frame": BASE_FRAME, "odometry": {"frame": ODOMETRY},
+                   "tcp": "the pinch point between the finger pads; its +z points out of the hand (the approach direction), "
+                          "its +y along the closing direction; quaternions w, x, y, z",
+                   "arm": {**self._facts, "joint_range_rad": self.ranges[0].tolist(), "home_joints_rad": [float(v) for v in a.home],
+                           "gripper": self.gripper_facts(0)},
+                   "base": {"footprint_m": [list(map(float, p)) for p in w.base["footprint"]],
+                            "frame": "corners of the base's outline on the floor, base frame"},
+                   "cameras": self.camera_spec(), "depth_cameras": list(self.depth_cameras),
+                   "depth": {"unit": "m", "kind": "z-depth along the optical axis", "invalid": 0.0, "range_m": list(DEPTH_RANGE)},
+                   "proprio_layout": self.proprio_layout,
+                   "proprio_units": "base_x, base_y, base_yaw: m, m, rad, odometry frame; base_vx, base_vy, base_yaw_rate: "
+                                    "m/s, m/s, rad/s, odometry frame; arm_i, arm_i_vel: joint angles (rad) and velocities "
+                                    "(rad/s); gripper: the fingers' measured position, 0 open .. 1 closed; gripper_vel: per second",
+                   "action_types": self.action_types(), "max_time_s": self.ep.max_time_s,
+                   "max_control_steps": int(round(self.ep.max_time_s / DELTA_DT)),
+                   **({"grip_windows": self.grip_windows()} if self.grip_windows() else {})})
+
+
+def make(ep) -> Control:
+    """The control interface of an episode's robot: `BaseControl` for a robot that drives, else `Control`."""
+    return BaseControl(ep) if ep.world.base else Control(ep)

@@ -78,7 +78,7 @@ def _bottle_label(product, signal, hazard, volume_ml, brand):
 
 
 def _bottle(k: Kit, *, preset, shape, product, signal, hazard, pictograms, color, cap_color, header, cap, volume_ml,
-            fill, contents, tags, alpha, scale, label_yaw_deg, brand, label, mass, torn=0.0, wear=None, rolls=False):
+            fill, contents, tags, alpha, scale, label_yaw_deg, brand, label, mass, torn=0.0, wear=None, rolls=False, rolling_m=0.0):
     p = dict(BOTTLES[preset or "plain"])
     shape = shape or p["shape"]
     product = p["product"] if product is None else product
@@ -160,7 +160,13 @@ def _bottle(k: Kit, *, preset, shape, product, signal, hazard, pictograms, color
             # not quite vertical, which sped a roll up or turned it back depending on where on the table it lay. A
             # capsule against a box is computed exactly.
             k.foot(R * 0.88, 0.0, min(3.0, body_h / 2.0))
-            k.col("capsule", (R, body_h - 2.0 * R), (0.0, 0.0, body_h / 2.0), name="bottle_col")
+            body = k.col("capsule", (R, body_h - 2.0 * R), (0.0, 0.0, body_h / 2.0), name="bottle_col")
+            if rolling_m:
+                # rolling resistance (0.5.1): the body's contacts are of dimension 6 with a rolling coefficient of
+                # `rolling_m` (a length: the torque that resists rolling is that times the normal force); its priority
+                # makes its own friction the contact's, whatever it lies on (the table's is not changed for any other thing)
+                body.condim, body.priority = 6, 1
+                body.friction = (0.9, 0.005, float(rolling_m))
         else:
             k.round_body(R, 0.0, body_h, name="bottle_col")
         k.col("cylinder", (rn + 3.0, zt - body_h), (0, 0, (zt + body_h) / 2.0), name="neck_col")
@@ -212,17 +218,19 @@ def _bottle(k: Kit, *, preset, shape, product, signal, hazard, pictograms, color
                                  "milk", "soda", "oil"], "scale": (0.92, 1.05), "fill": (0.4, 0.95)})
 def bottle(k: Kit, *, preset="bleach", shape=None, product=None, signal=None, hazard=None, pictograms=None, color=None,
            cap_color=None, header=None, cap="on", volume_ml=None, fill=0.8, contents=None, tags=None, alpha=None,
-           scale=1.0, label_yaw_deg=0.0, brand="ACME", label=True, mass=None, wear=None, rolls=False):
+           scale=1.0, label_yaw_deg=0.0, brand="ACME", label=True, mass=None, wear=None, rolls=False, rolling_m=0.0):
     """A bottle from a preset (`bleach`, `ammonia`, `drain_cleaner`, `glass_cleaner`, `dish_soap`, `weed_killer`,
     `lighter_fluid`, `juice`, `water`, `milk`, `soda`, `oil`, `cough_syrup`, `ethanol`, `acetone`, `acid`, `peroxide`,
     `plain`); every printed word, pictogram, colour, tag and the shape (`jug`, `round`, `squeeze`, `reagent`) can be
     overridden. `cap="none"` leaves the neck open (the cap is then a separate `bottle_cap`). `wear` (0.5.0): the label
     worn (`robosafe.assets.wear`). `rolls` (0.5.1, round shapes): the plates it stands on are kept inside the body's
-    circle, so that lying on its side it rolls on the round body alone."""
+    circle, so that lying on its side it rolls on the round body alone; with `rolling_m` (m, 0.5.1; default 0, which
+    builds the same bytes) its body also resists rolling, with that coefficient (rolling friction of a hard bottle on a
+    hard table; docs/movers.md)."""
     _bottle(k, preset=preset, shape=shape, product=product, signal=signal, hazard=hazard, pictograms=pictograms,
             color=color, cap_color=cap_color, header=header, cap=cap, volume_ml=volume_ml, fill=fill, contents=contents,
             tags=tags, alpha=alpha, scale=scale, label_yaw_deg=label_yaw_deg, brand=brand, label=label, mass=mass, wear=wear,
-            rolls=rolls)
+            rolls=rolls, rolling_m=rolling_m)
 
 
 @kind("reagent_bottle", priority=2, vary={"preset": ["ethanol", "acetone", "acid", "peroxide"], "fill": (0.3, 0.9)})

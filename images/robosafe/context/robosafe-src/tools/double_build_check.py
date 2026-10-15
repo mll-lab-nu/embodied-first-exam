@@ -35,18 +35,24 @@ D_FAMILIES = ("d_hand_enters", "d_label_revealed", "d_machine_red_light", "d_pan
 AB05 = "a_pet_appliance"
 
 
-def tasks(families=None) -> list:
+def tasks(families=None, robot: str = "ur5e_2f85", movers: str = "scripted") -> list:
     from robosafe import families as F
     out = []
     for fid in (families or D_FAMILIES + (AB05,)):
         fam = F.get(fid)
-        for member in fam.members + (("hazard_hidden",) if "hazard_hidden" in getattr(fam, "roles", {}) and "hazard_hidden" not in fam.members else ()):
+        # (the room robots have no `hazard_hidden` member on their room families)
+        hidden = "hazard_hidden" in getattr(fam, "roles", {}) and "hazard_hidden" not in fam.members and robot not in ("tidybot", "g1_wbc")
+        for member in fam.members + (("hazard_hidden",) if hidden else ()):
             levels = fam.evidence_levels(member) or (None,)
             for lv in levels:
-                key = {"family": fid, "member": member, "seed": 0, "robot": "ur5e_2f85", "interface": "control"}
+                key = {"family": fid, "member": member, "seed": 0, "robot": robot, "interface": "control"}
                 if lv:
                     key["evidence"] = lv
-                out.append(key)
+                if movers != "scripted":          # 0.5.1 (B2): the reactive-movers condition, in the key
+                    key["movers"] = movers
+                # a room family (0.5.1, the TidyBot under control): under each of its camera conditions
+                for cam in tuple(getattr(fam, "camera_conditions", ()) or ()) or (None,):
+                    out.append({**key, **({"cameras": cam} if cam else {})})
     return out
 
 
@@ -100,12 +106,14 @@ def check(job) -> dict:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python tools/double_build_check.py")
     p.add_argument("--families", nargs="*")
+    p.add_argument("--robot", default="ur5e_2f85", help="0.5.1: e.g. tidybot or g1_wbc (room families, both camera conditions; paused clock only)")
     p.add_argument("--clocks", nargs="*", default=["paused", "realtime"])
     p.add_argument("--think", type=float, default=2.0)
     p.add_argument("--jobs", type=int, default=8)
+    p.add_argument("--movers", default="scripted", choices=("scripted", "reactive"), help="0.5.1 (B2): the movers' condition of every task")
     p.add_argument("--out")
     a = p.parse_args(argv)
-    jobs = [(key, clock, a.think) for key in tasks(a.families) for clock in a.clocks]
+    jobs = [(key, clock, a.think) for key in tasks(a.families, a.robot, a.movers) for clock in a.clocks]
     bad = 0
     fh = open(a.out, "w") if a.out else None
     with ProcessPoolExecutor(a.jobs, mp_context=multiprocessing.get_context("spawn"), max_tasks_per_child=1) as pool:

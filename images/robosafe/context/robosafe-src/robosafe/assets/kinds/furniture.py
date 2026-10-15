@@ -43,7 +43,7 @@ def drawer_unit(k: Kit, *, width=0.40, depth=0.45, height=0.22, color="light_gre
     k.mass(mass * 1000.0)
 
 
-def _cabinet(k: Kit, W, D, H, color, text, pictograms, style, shelves, mass, door_color=None, legs=0.0):
+def _cabinet(k: Kit, W, D, H, color, text, pictograms, style, shelves, mass, door_color=None, legs=0.0, button=False):
     t = 16.0
     if legs:
         for sx in (-1, 1):
@@ -68,6 +68,13 @@ def _cabinet(k: Kit, W, D, H, color, text, pictograms, style, shelves, mass, doo
         lines = (text.split(" ", 1) if len(text) > 9 else [text]) if isinstance(text, str) else list(text)
         k.label_flat([x for x in lines if x], pictograms, size=(W * 0.62, min(H * 0.34, W * 0.5)), pos=(W * 0.45, -18.0, (H - 4.0) * 0.70),
                      style=style, body=leaf)
+    if button:
+        # (after 0.5.1, c_door_on_hand) a powered door: a blue button on the top, printed DOOR, opens and shuts it, as
+        # the door buttons of the appliances do (the hand cannot swing the door); without `button` nothing here is built
+        bx, by = W / 2 - 30.0, -D / 2 + 40.0
+        k.button("open", (bx, by, legs + H), axis=(0, 0, 1), size=(26.0, 18.0), color="blue")
+        k.label_flat(["DOOR"], size=(44.0, 14.0), pos=(bx - 46.0, by, legs + H), normal=(0.0, 0.0, 1.0), up=(0.0, 1.0, 0.0),
+                     style={"base": "paper", "bg": "white", "pad": 0.04}, name="open_label")
     k.tag("storage")
     k.mass(mass * 1000.0)
 
@@ -75,11 +82,13 @@ def _cabinet(k: Kit, W, D, H, color, text, pictograms, style, shelves, mass, doo
 @kind("cabinet", priority=2, fixed=True, vary={"text": ["CLEANING SUPPLIES", "MEDICINE", "FIRST AID", "TOOLS", "SNACKS"],
                                               "color": ["white", "light_grey", "wood"]})
 def cabinet(k: Kit, *, width=0.50, depth=0.35, height=0.70, color="white", text="CLEANING SUPPLIES", pictograms=(),
-            label_style="plain", shelves=1, mass=14.0):
+            label_style="plain", shelves=1, mass=14.0, button=False):
     """A cabinet with one door (joint `door`, hinged on the left, driven by the actuator of the same name) that carries
-    a printed label, and shelves inside (zones `shelf_0` ..., sites `level_0` ...)."""
+    a printed label, and shelves inside (zones `shelf_0` ..., sites `level_0` ...). `button` (after 0.5.1; default
+    False, which builds the same model as before): a blue button `open` on the top, printed DOOR, that opens and shuts
+    the door."""
     W, D, H = mm(width, depth, height)
-    _cabinet(k, W, D, H, color, text, pictograms, label_style, shelves, mass)
+    _cabinet(k, W, D, H, color, text, pictograms, label_style, shelves, mass, button=button)
 
 
 @kind("shelf", priority=2, fixed=True, vary={"color": ["wood", "white", "light_grey"], "width": (0.5, 0.8)})

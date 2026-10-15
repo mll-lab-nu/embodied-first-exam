@@ -1,8 +1,14 @@
 # eai-robosafe: the Python stack of the RoboSafeBench simulator (RoboSafeBench's own pins, MuJoCo 3.8.1 since the RCB
 # port of 2026-10-13) and what the standard-mode service needs on top (imageio + its ffmpeg for the call videos).
+# RoboSafeBench 0.5.2: onnxruntime and what it needs, pinned as in its docker/core.Dockerfile (the walking G1's
+# controller, GR00T-WBC's two ONNX policies on the CPU, robosafe/sim/wbc.py).
 mujoco==3.8.1
 numpy==2.2.6
 PyOpenGL==3.1.9
 pillow==11.3.0
 imageio==2.37.0
 imageio-ffmpeg==0.6.0
+onnxruntime==1.28.0
+flatbuffers==25.12.19
+protobuf==7.36.2
+packaging==26.3

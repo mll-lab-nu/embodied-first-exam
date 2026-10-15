@@ -41,7 +41,7 @@
 "RoboLab" = { dynamics = "static", why = "Fixed Franka + Robotiq at a table; objects move only by the robot or gravity." }
 "RoboOlympics" = { dynamics = "static", why = "A humanoid (floating base) at a venue whose ball / implement is at rest until the robot touches it; only the robot and gravity do work (formerly RoboFunOlympics; renamed 2026-10-14)." }
 "RoboPaint" = { dynamics = "static", why = "Fixed Franka painting or writing; paint deposits only where the robot's brush touches." }
-"RoboSafeBench" = { dynamics = "static", why = "A fixed arm (UR5e, Franka FR3) or two fixed YAM arms at a work table; in most families things move only by the robot or gravity; a lamp changing colour, smoke or a puddle appearing at once and messages or notes are state or visual changes only; the families with scripted movers are listed below." }
+"RoboSafeBench" = { dynamics = "static", why = "A fixed arm (UR5e, Franka FR3) or two fixed YAM arms at a work table; in most families things move only by the robot or gravity; a lamp changing colour, smoke or a puddle appearing at once and messages or notes are state or visual changes only; the families with scripted movers are listed below. RoboSafeBench 0.5.2: the TidyBot (a driving base with an arm) in a flat, whose people stand or sit still in all but one room family." }
 "RoboTwin 2.0" = { dynamics = "static", why = "Dual-arm aloha-agilex at a table; objects move only by the robot or gravity (RoboTwin's envs set no object velocities)." }
 "RoboWits" = { dynamics = "static", why = "Fixed bimanual Marvin at a table; objects move only by the robot or gravity (a domino chain falls under gravity after the robot's push)." }
 "VLABench" = { dynamics = "static", why = "Fixed Franka at a table; objects move only by the robot or gravity." }
@@ -95,6 +95,8 @@
 
 [family."RoboSafeBench"]
 "a05" = { dynamics = "dynamic", why = "a_pet_appliance: the cat (a scripted mocap body) walks out of the microwave by itself (Episode.animate, after a wait with the door open)." }
+"b09" = { dynamics = "dynamic", why = "c_door_on_hand: a powered cabinet door closes on a person's hand by its servo (an actuated body; RoboSafeBench 0.5.2)." }
+"b10" = { dynamics = "dynamic", why = "c_drawer_on_hand: a powered drawer closes on a person's hand by its slide servo (an actuated body; RoboSafeBench 0.5.2)." }
 "c01" = { dynamics = "dynamic", why = "d_hand_enters: a person's hand (scripted mocap body) comes in over the tray mid-task and later withdraws." }
 "c05" = { dynamics = "dynamic", why = "d_spill_toward_strip: a scripted push tips a bottle over and the spilled water (a scripted body) runs towards a power strip." }
 "c06" = { dynamics = "dynamic", why = "d_arm_shares_table: a second, scripted arm swings over the shared tray (a mover)." }
@@ -105,4 +107,5 @@
 "c11" = { dynamics = "dynamic", why = "d_conveyor_starts: a conveyor belt starts and carries parts by itself (joint mover)." }
 "c12" = { dynamics = "dynamic", why = "d_door_on_arm: a person's arm (scripted mocap body) reaches into the microwave while its door is to be shut (mover)." }
 "c13" = { dynamics = "dynamic", why = "d_pot_boils_over: froth and running soup are scripted bodies that move by themselves at 3 mm/s towards a live strip (movers)." }
+"c14" = { dynamics = "dynamic", why = "d_room_child_crossing: a child (a dog on other seeds; a scripted body) sets off across the room as the robot gets under way (RoboSafeBench 0.5.2, on the TidyBot)." }
 "e02" = { dynamics = "dynamic", why = "f_broke_and_tell: a scripted push knocks a glass off the shelf's edge as the jar is lifted; physics does the fall." }
