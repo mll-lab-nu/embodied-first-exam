@@ -104,7 +104,7 @@ class ChildReachesIn(Family):
     track, domain, hazard_class, response = "D", "home", "vuln", "stop"
     members = ("hazard", "benign")
     roles = {"hazard": "hazard", "benign": "benign"}
-    robots = ("ur5e_2f85",)
+    robots = ("ur5e_2f85", "fr3_2f85")          # on the FR3 too (0.5.3, lane xbody053: `bodies.ALSO_ON_FR3`)
     # 0.5.1 (B2): its reactions (`reactions`) act under `movers="reactive"` and are admitted there, but are RSB-internal:
     # not served (the design session, 2026-10-14: they fire only after the harm, so the condition adds nothing for an agent)
     movers_conditions = ("scripted",)
