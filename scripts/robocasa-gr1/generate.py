@@ -27,7 +27,13 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(1, str(ROOT / "scripts"))
 from envs import SOURCES, slug  # noqa: E402
-from task_conventions import cutoff_sec, normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
+from task_conventions import normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
+
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
 
 # -- benchmark configuration -----------------------------------------------------------------------------------
 BENCH = HERE.name
@@ -73,11 +79,11 @@ ALLOWED_HOSTS = (
     '["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", '
     '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 )
-# `[agent] timeout_sec` is the cutoff table's number for the mode (scripts/task_cutoffs.toml, PROTOCOL §2.12);
+# `[agent] timeout_sec` is the benchmark's number for the mode (CUTOFF_SEC, PROTOCOL §2.12);
 # normalize writes the same number again, with the instruction's closing `## Time limit` section and the sim service's wall clock.
 def agent_block(mode: str) -> str:
     return f"""[agent]
-timeout_sec = {cutoff_sec(TITLE, mode)}.0
+timeout_sec = {CUTOFF_SEC[mode]}.0
 # The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = {ALLOWED_HOSTS}
@@ -88,7 +94,7 @@ ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 # Standard mode, the sim service's collect hook (shared/finalize.sh): its timeout, and how long it waits for the verdict
 # (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree). A number of its own, not the agent's
 # cutoff: it was sized for the replay of an episode as long as a 3600 s agent time limit. Lowering the cutoff
-# (scripts/task_cutoffs.toml) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
+# (CUTOFF_SEC) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
 COLLECT_TIMEOUT_S = 3600
 COLLECT_WAIT_S = 3450
 # README Change Log of the standard tasks (PROTOCOL §2.8: published tasks are fixed in place), oldest first.
@@ -418,7 +424,7 @@ def readme_head(rec: dict, mode: str) -> list[str]:
         ("Simulator / robot", f"`robosuite` / `{ROBOT}`"),
         ("Family / instance", f"`{BENCH}/{rec['env']}`"),
         ("Oracle", "`full`"),
-        ("Agent time budget", f"{cutoff_sec(TITLE, mode)} s; tokens: protocol default (PROTOCOL §5)"),
+        ("Agent time budget", f"{CUTOFF_SEC[mode]} s; tokens: protocol default (PROTOCOL §5)"),
         ("Base image", f"`{image}`"),
     ]
     return [f"# {name}", "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows]

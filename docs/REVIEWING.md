@@ -51,14 +51,14 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (batch_eval_live, the results
   site) told the new suffix? A new mode is an owner-visible protocol change: one pull request of its own, shared files
   only, merged before the benchmark that uses it.
-- Time cutoff (PROTOCOL §2.12): is the benchmark's number in `scripts/task_cutoffs.toml`, under the benchmark's label of
-  `scripts/task_conventions.py` `BENCHMARKS` (a new benchmark: the label first, in its shared-files pull request; the
-  row with its tasks) (3600 s unless the pull
-  request justifies more, never above the cap without an owner decision; an exception for a family or a task is an owner decision too), and does `instruction.md` end with the
-  rendered `## Time limit` section and state the limit nowhere else? Does the benchmark's own text say what the cutoff costs
-  here (simulator start-up, what the service's `time_left_s` counts from, a service that ends the episode itself)? A
-  pull request that changes a cutoff: an owner decision, a `[[history]]` entry, `scripts/task_cutoffs.py apply` run
-  (the task directories, their `DIGEST` files and `docs/CUTOFFS.md` changed with the table), nothing else changed.
+- Time cutoff (PROTOCOL §2.12): does every task set its own `[agent] timeout_sec` (a generated benchmark: the
+  generator's constant), 3600 s unless the pull request justifies another number, at most 14400 s, the same for a task's
+  privileged and standard versions and, unless the pull request says why, for all the benchmark's tasks of a mode (the
+  pull request's overview lists the numbers)? Does `instruction.md` end with the rendered `## Time limit` section and
+  state the limit nowhere else? Does the benchmark's own text say what the cutoff costs here (simulator start-up, what
+  the service's `time_left_s` counts from, a service that ends the episode itself)? A pull request that changes the
+  cutoff of existing tasks (label `cutoff-change`): an owner decision, approved by the owner on the pull request, old ->
+  new and why in its description, the tasks normalized (their `DIGEST` files changed with them), nothing else changed.
 - Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
   `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
   machine with exactly these values?

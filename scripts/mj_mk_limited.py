@@ -11,7 +11,7 @@ grades the sidecar's final.json (a fresh replay of the recorded episode).
 Run it on the tasks whose standard twin serves server_mj.py (DexToolBench, Playground ALOHA and Panda); the Playground
 quadrupeds are written by scripts/mujoco-playground/generate.py, so `--all` skips them."""
 import json, pathlib, re, shutil, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import bench_of, cutoff_sec, normalize, strip_cutoff  # noqa: E402
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import cutoff_for, normalize, strip_cutoff  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-standard"
@@ -293,7 +293,7 @@ command = "{COLLECT}"
 timeout_sec = 900
 
 [agent]
-timeout_sec = {cutoff_sec(bench_of(dst), "standard")}.0
+timeout_sec = {cutoff_for(src)}.0
 {ALLOW}
 
 [environment]

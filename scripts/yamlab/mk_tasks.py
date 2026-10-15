@@ -76,6 +76,13 @@ def normalizer():
     return normalize
 
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = 3600   # the same in both modes (PROTOCOL §2.15)
+
+
 def fill(text: str, values: dict) -> str:
     for k, v in values.items():
         text = text.replace(f"@@{k}@@", v)
@@ -143,7 +150,7 @@ def plan_instance(fam: str, i: int, R: dict, version: str) -> dict[str, dict[str
     image = f"{REGISTRY}/eai-yamlab:{version}"
     names = list(I["assets"])
     assets_text = " and ".join(f"`{n}` = `{I['assets'][n]}`" for n in names)
-    common = {"FAMILY": fam, "PRIV": f"{base(fam, i)}-privileged", "STD": f"{base(fam, i)}-standard", "INST": f"i{i:02d}",
+    common = {"AGENT_TIMEOUT_S": str(CUTOFF_SEC), "FAMILY": fam, "PRIV": f"{base(fam, i)}-privileged", "STD": f"{base(fam, i)}-standard", "INST": f"i{i:02d}",
               "ENV": F["env"], "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(), "ASSETS_TEXT": assets_text,
               "ASSETS_SHORT": " + ".join(I["assets"][n].split("/")[1] for n in names), "SOURCE": f"{R['file']} demo_{R['demo']}",
               "GOAL_TOML": toml_str(F["goal_toml"]), "ORACLE_SHA": R["oracle_sha"]}

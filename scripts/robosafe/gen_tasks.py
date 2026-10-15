@@ -33,7 +33,12 @@ HERE = ROOT / "scripts/robosafe"
 SHARED = HERE / "shared"
 REGISTRY = "ghcr.io/mll-lab-nu"
 PREFIX = "cell"            # task dirs cell-<slug>-i<NN>-standard: neutral, since an agent can read its task name
-BENCHMARK = "RoboSafeBench"   # this benchmark's row of scripts/task_cutoffs.toml (the label of task_conventions.BENCHMARKS)
+BENCHMARK = "RoboSafeBench"   # the label of task_conventions.BENCHMARKS
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"standard": 3600, "standard-realtime": 3600}
 SIM_FILES = ("server.py", "rcb_service.py", "rcb1.py", "rcb_rsb.py", "replay.py")
 CLIENT = dict(
     line.split("=", 1)
@@ -63,11 +68,9 @@ DIFFICULTY = {
 
 
 def agent_timeout() -> int:
-    """The agent's time limit (PROTOCOL §2.12): the cutoff table's. normalize writes it into task.toml,
-    RCB_WALL_CLOCK_S and the closing `## Time limit`; the templates never state it as a number."""
-    sys.path.insert(0, str(ROOT / "scripts"))
-    from task_conventions import cutoff_sec
-    return int(cutoff_sec(BENCHMARK, "standard"))
+    """The agent's time limit (PROTOCOL §2.12), CUTOFF_SEC's; normalize writes RCB_WALL_CLOCK_S and the closing
+    `## Time limit` from task.toml; the templates never state it as a number."""
+    return CUTOFF_SEC["standard"]
 
 
 def allowed_hosts() -> str:

@@ -28,15 +28,16 @@ ROOT = HERE.parent.parent
 SHARED = HERE / "shared"
 LAYER = ROOT / "scripts" / "eai_standard"
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import cutoff_sec, normalize  # noqa: E402
+from task_conventions import normalize  # noqa: E402
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-dexjoco:" + (ROOT / "images" / "dexjoco" / "VERSION").read_text().strip()
 CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
-# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why longer than the default:
-# dexterous control of a 16-DoF hand per arm, docs/benchmarks/dexjoco.md). No copy of the number here: normalize writes it
-# into task.toml, the instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
-CUTOFF = {m: cutoff_sec("DexJoCo", m) for m in ("privileged", "standard")}
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF = {"privileged": 3600, "standard": 3600}
 # Privileged hand-in cap (rows of trajectory.npz), read from the tooling: its one source.
 MAX_ROWS = int(re.search(r"^MAX_TRAJECTORY_ROWS = ([\d_]+)", (SHARED / "rcb_dexjoco.py").read_text(), re.M).group(1))
 # Privileged verifier: two replays of at most MAX_ROWS rows in one fresh process, then the video. The slowest family

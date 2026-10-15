@@ -24,7 +24,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions; the cutoff table)
+from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -34,10 +34,11 @@ IMAGE = f"ghcr.io/mll-lab-nu/eai-myosuite:{VERSION}"
 _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitlines() if "=" in ln and ln[0] != "#")
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Chi Gui"
-# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why not the default:
-# docs/benchmarks/myosuite.md). No copy of the number here: normalize writes it into task.toml, the instruction's first
-# paragraphs, the README row and the sim service's wall clock.
-CUTOFF = {m: cutoff_sec("MyoSuite", m) for m in ("privileged", "standard", "standard-realtime")}
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF = {"privileged": 3600, "standard": 3600, "standard-realtime": 3600}
 # The standard service's bound on the images of one call, quoted from the source: the texts state the enforced value.
 MAX_FRAMES = int(re.search(r"^MAX_FRAMES = (\d+)", (SHARED / "standard" / "server.py").read_text(), re.M).group(1))
 RESET_BUDGET = 10  # standard mode's default reset budget (owner, 2026-10-09; PROTOCOL §4.5, docs/benchmarks/myosuite.md)

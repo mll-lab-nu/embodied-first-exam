@@ -56,8 +56,7 @@ def task_dir(slug: str, nn: str) -> str:
 
 
 def agent_timeout() -> int:
-    from task_conventions import cutoff_sec
-    return int(cutoff_sec(G.BENCHMARK, MODE))
+    return G.CUTOFF_SEC[MODE]   # scripts/robosafe/gen_tasks.py: the benchmark's numbers per mode (PROTOCOL §2.12)
 
 
 def arms_rt(robot: str) -> dict:

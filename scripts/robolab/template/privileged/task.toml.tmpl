@@ -25,7 +25,7 @@ timeout_sec = 29100.0             # two fresh-process replays at tests/grade.py'
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
-timeout_sec = 5400.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md): every Python process pays ~2 min of Isaac Sim launch + scene build
+timeout_sec = @@AGENT_TIMEOUT_S@@.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md): every Python process pays ~2 min of Isaac Sim launch + scene build
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = [@@ALLOWED_HOSTS@@]
 
