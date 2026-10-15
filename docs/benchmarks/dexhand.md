@@ -187,6 +187,20 @@ into the ignored `images/dexhand/assets/` and checks every file against `asset-m
 directory carries its own runtime copy. No asset, policy or demonstration is downloaded at run time, and the image
 holds no reference trajectory.
 
+**Arm rig (wave 3, 2026-10-15).** `scripts/dexhand/shared/arm_rig.py` (`mount_marvin`) replaces a family's floating
+wrist stage by the Tianji Marvin stand of `pot_shelf_transfer` / `sweep_dustpan`: the same two seven-joint arms
+(kinematics, inertias, meshes, joint limits, damping, armature, contact excludes, position servos kp 700 / kv 48 with
+force limits 108/108/66/66/18/18/18 N m) with a hand on each flange (robot id `marvin-bimanual-sharpa-wave`;
+`DEXHAND_HAND=wuji` swaps both hands for the Wuji Hand 2.2). A family that uses it lists `arm_rig.py` in `family.json`
+`runtime.shared`, which copies it into its task directories. One row holds the 14 arm joint targets (left arm J1-J7,
+then right arm J1-J7), then the left hand's and the right hand's finger targets (Sharpa 14 + 22 + 22 = 58, Wuji 14 +
+20 + 20 = 54), the layout of `pot_shelf_transfer`. Both arms and both hands are always present: a one-hand task keeps
+the other arm parked (`arm_rig.PARK`, hanging beside the torso, its hand idle). The stand stands on the scene's floor
+without passing through furniture; each family's section names its stand pose. `scripts/dexhand/shared/arm_ik.py`
+(damped-least-squares IK, forward kinematics of the old wrist stage, closed-loop tracking) is authoring only: the
+families' `tools/` use it to turn their wrist-stage episodes into arm rows; it is never copied into a task, and every
+packaged oracle replays open loop.
+
 ## World-frame facts in instructions (D7)
 
 DexHand instructions state the frozen static layout of each scene in world coordinates (metres, z up): the locked
