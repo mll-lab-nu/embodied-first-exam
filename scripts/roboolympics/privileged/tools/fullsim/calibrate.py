@@ -52,6 +52,7 @@ def one(job):
         {"spec": s.spec(), "setting": "calibrate-step", "max_commands": s.ad.MAX_COMMANDS}
     )
     refused = calls = 0
+    no_ready = False
     while s.match.phase().state != FINISHED and s.match.k < max_steps:
         phase = s.match.phase().state
         st = s.state()
@@ -78,7 +79,9 @@ def one(job):
                 refused += 1
         if s.match.phase().state == UNIT_OVER:
             if phase == UNIT_OVER and not cmds:
-                s.ready()  # a program that never sends ready would stall the in-process match
+                # the formal match would forfeit this side after READY_TIMEOUT_S; here it ends as unfinished
+                no_ready = True
+                break
             continue
         s.step(every)
     sc = s.match.scores()
@@ -98,6 +101,7 @@ def one(job):
         "state_sha": s.match.state_digest(),
         "calls": calls,
         "refused": refused,
+        "no_ready": no_ready,
         "wall_s": round(time.monotonic() - t0, 2),
     }
 

@@ -69,6 +69,14 @@ def commands_of(cmd, limit):
     return cmds
 
 
+def brief(reply):
+    """A reply as decisions.jsonl keeps it: without the full world state (`now`, with the truth) the service attaches,
+    only its step (a whole soccer match would otherwise write ~150 MB)."""
+    if isinstance(reply, dict) and isinstance(reply.get("now"), dict):
+        return {**{k: v for k, v in reply.items() if k != "now"}, "now_step": reply["now"].get("step")}
+    return reply
+
+
 def submit(service, cmds):
     """The commands of one view, as a player would send them over HTTP: `ready` alone; several actions (one per
     entity, MAX_COMMANDS) concurrently, so that all of them can take effect at the same control-step boundary (the
@@ -215,7 +223,7 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
             for cmd, (code, reply) in zip(cmds, submit(service, cmds)):
                 refusals += int(code != 200)
                 decisions.write(
-                    json.dumps(plain({"seen": st["step"], "command": cmd, "code": code, "reply": reply})) + "\n"
+                    json.dumps(plain({"seen": st["step"], "command": cmd, "code": code, "reply": brief(reply)})) + "\n"
                 )
             next_at = service.m.k + ad.EVERY
         decisions.close()
