@@ -9,6 +9,11 @@ benchmark verifier images.
     python3 /tests/rcb_limits.py verify      # test.sh runs it on exit (trap), after the grader
     python3 /tests/rcb_limits.py sanitize /app/output    # test.sh runs it before the grader (see sanitize())
 
+The session log (robot_coding_bench #233): sanitize() also compares the agent's /app/output/rcb_session_log.jsonl with
+the monitor's append-only copy of it (session_log/ in the record) and, when the agent's file is missing or is not what
+was written (removed, truncated, rewritten), gives the grader the copy instead (session_log_source()); verify() adds
+session_log_tampered (0/1) and session_log_from_monitor (0/1) to reward.json. Only the graders' cost fields read the log.
+
 The verifier step reads the monitor's sealed record (/var/rcb-monitor/, collected from the rcb_monitor sidecar, a
 channel the agent cannot write), recomputes every violation from the raw samples with its own copy of the limits
 (/tests/rcb_limits.json), and adds to /logs/verifier/reward.json:
@@ -287,6 +292,11 @@ def verify(argv=()):
            "resource_host_oom_kills": oom["host"], "resource_service_oom_kills": oom["service"]}
     for v in viol:
         add["over_" + v["metric"]] = 1
+    sl = read_json(os.path.join(log, SESSION_LOG_STATUS))       # sanitize()'s session-log comparison (#233)
+    if isinstance(sl, dict):
+        add["session_log_tampered"] = int(bool(sl.get("tampered")))
+        add["session_log_from_monitor"] = int(bool(sl.get("from_monitor")))
+        detail["session_log"] = sl
     failed = void = False             # void: this step says "not a result" (infra_error=1) and takes the success away
     if switch_error:
         # nobody knows whether enforcement was asked for: not a result in either mode
@@ -426,9 +436,78 @@ def sanitize(roots=("/app/output",), max_log=MAX_SESSION_LOG):
                 done.append(f"cut {log} to {max_log} bytes")
         except OSError:
             pass
+        try:
+            msg = session_log_source(log, max_log)
+            if msg:
+                done.append(msg)
+        except Exception as e:                       # never keep the grader from running
+            done.append(f"session log: not compared with the monitor's copy ({type(e).__name__}: {e})")
     for d in done:
         print("verifier input: " + d, file=sys.stderr)
     return done
+
+
+SESSION_LOG_STATUS = "session_log.json"   # in /logs/verifier: what session_log_source() did, read back by verify()
+
+
+def session_log_source(log, max_log=MAX_SESSION_LOG, record=None):
+    """The session log the grader reads (#233). The monitor copies what the agent's tooling appends to it, append-only,
+    into its record (session_log/<segment>.jsonl; a new segment each time the file was truncated, replaced or
+    rewritten). The agent's file stays when it is the copy plus at most what was appended after the last tick; else
+    (removed, truncated, rewritten, or the copy has segments) the grader gets the copy: the segments' lines in order,
+    in a later segment a line an earlier one already gave left out (a rewrite copies the file again). No copy (no monitor on the runner, or no log
+    written): nothing changes, nothing is written. Else writes /logs/verifier/session_log.json; returns a line for the
+    log, or None."""
+    record = record or os.environ.get("RCB_MONITOR_RECORD", RECORD)
+    d = os.path.join(record, "session_log")
+    segs = sorted((int(n.split(".")[0]) for n in (os.listdir(d) if os.path.isdir(d) else ())
+                   if n.endswith(".jsonl") and n.split(".")[0].isdigit()))
+    events = [e for e in read_jsonl(os.path.join(record, "events.jsonl")) if isinstance(e, dict)]
+    tamper = [e for e in events if e.get("event") in ("session_log_rewritten", "session_log_removed")]
+    status = {"from_monitor": 0, "tampered": int(bool(tamper)), "monitor_copy": bool(segs), "events": tamper[:20]}
+    msg = None
+    if segs:
+        copies = []
+        for n in segs:
+            with open(os.path.join(d, "%d.jsonl" % n), "rb") as f:
+                copies.append(f.read(max_log))
+        agent = None
+        if os.path.isfile(log) and not os.path.islink(log):
+            with open(log, "rb") as f:
+                agent = f.read(max_log)
+        if len(segs) == 1 and not tamper and agent is not None and agent.startswith(copies[0]):
+            pass                                     # the agent's file is what was written (and maybe a last tick more)
+        else:
+            given, out = {}, []                      # line -> most times one earlier segment had it
+            for c in copies:
+                again, lines, here = dict(given), c.splitlines(True), {}
+                for line in lines:
+                    here[line] = here.get(line, 0) + 1
+                    if again.get(line):
+                        again[line] -= 1             # the rewrite's copy of a line given before
+                        continue
+                    out.append(line)
+                for line, k in here.items():
+                    given[line] = max(given.get(line, 0), k)
+            data = b"".join(out)[:max_log]
+            if os.path.lexists(log):
+                os.unlink(log)
+            with open(log, "wb") as f:
+                f.write(data)
+            status.update(from_monitor=1, tampered=1, agent_bytes=None if agent is None else len(agent),
+                          copy_bytes=len(data))
+            msg = (f"replaced {log} with the monitor's copy ({len(data)} bytes; the agent's file was "
+                   + ("missing" if agent is None else f"{len(agent)} bytes, not what was written") + ")")
+    if not segs and not tamper:
+        return None                                  # no copy (no monitor, or no log written): nothing to say
+    logs = os.environ.get("RCB_VERIFIER_LOGS", "/logs/verifier")
+    try:
+        os.makedirs(logs, exist_ok=True)
+        with open(os.path.join(logs, SESSION_LOG_STATUS), "w") as f:
+            json.dump(status, f, indent=1)
+    except OSError:
+        pass
+    return msg
 
 
 def run_step(argv=()):

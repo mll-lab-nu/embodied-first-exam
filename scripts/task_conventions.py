@@ -197,18 +197,33 @@ CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text 
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
 # owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
-_CUTOFF_CLOCK = (" Your session started when you received this task: run `date` now, and again before you decide that time "
-                 "is short; work out the time left from those readings, never from a guess.")
+# robot_coding_bench #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
+# monitor now shows the clock itself (scripts/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
+# never overstates the time left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
+_CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
+                 "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
+                 "little before your session started, so it never gives you more time than you have: read it (or run "
+                 "`date`) before you decide that time is short, never guess.")
+# robot_coding_bench #237 (10-15): agents that keep a simulator open as an interactive REPL sent each command with
+# Codex's write_stdin(yield_time_ms=30000); Codex 0.160.1 returns from a write to a still-running process only when the
+# yield is over (196 of 196 such calls in one Luna RoboARC trial took 30.0 s; ~98 min of a 3 h budget), and has no
+# config knob to cap it (background_terminal_max_timeout caps only empty polls). Harness-neutral advice, same text for
+# every agent; no duration in it (ci_checks/check-cutoffs.py).
+_CUTOFF_WAITS = (" Waiting counts too: a tool call that sends input to a process that keeps running (an interactive "
+                 "interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for "
+                 "example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short "
+                 "wait and poll again if the output is not complete, or run one-shot scripts that exit when they are "
+                 "done.")
 CUTOFF_NOTE = {
     "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
                    "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
                    "graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better "
-                   "one." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
+                   "one." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
     "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
                  "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
                  "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
                  "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
-                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
+                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §2.12)"
@@ -219,14 +234,14 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service "
     "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 # RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
 # RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
 CUTOFF_NOTE_TASK = {n: (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
     "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
-    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
     for n in RO_EXPORTED_TASKS}
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
