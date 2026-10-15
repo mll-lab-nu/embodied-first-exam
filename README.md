@@ -141,7 +141,8 @@ harbor view jobs
 - **Network policy and external material.** Every task restricts the agent's egress to the model APIs and the package
   registries (PyPI, the Debian / Ubuntu apt archives; `[agent] network_mode = "allowlist"`, one host list in
   `scripts/set_agent_egress.py`), and every instruction states the same honour rule (`## External material`): the agent
-  may install the packages it needs and is asked not to look up or download a solution to the task (PROTOCOL §2.11).
+  may install the packages it needs and read whatever is installed in its container (the benchmark's own source
+  included), and is asked not to search the web for, or download, a ready-made solution to the task (PROTOCOL §2.11).
   GitHub, Hugging Face and the general web, where the benchmarks' sources, demonstrations and policies are, stay
   closed. Official runs go through the usage gateway, which forwards model-API calls only; the harness's web search,
   account connectors and other provider-side tools are off (they run at the model provider, past any allowlist).

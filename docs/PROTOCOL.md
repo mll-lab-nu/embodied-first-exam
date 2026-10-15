@@ -441,19 +441,27 @@ only (the simulator in the `sim` service is the benchmark's and does not count)"
 
 (The sentence about 1.5 times the GPU-memory limit is rendered only where the limits include GPU memory.)
 
-### 2.11 External material and the network (2026-10-10, relaxed 2026-10-11)
-An agent solves a task itself. It may install the packages it needs; it should not look the task's solution up. This is
+### 2.11 External material and the network (2026-10-10, relaxed 2026-10-11 and 2026-10-14)
+**Baseline and stricter task rules (owner, 2026-10-14).** The `## External material` words below are the baseline every
+task carries. A task MAY add stricter requirements of its own on top of them, never looser ones: `[metadata.honour]
+stricter = "..."` in its `task.toml`, which `normalize` renders right after the baseline as "Additional rules for this
+task (stricter than the above): ...". Benchmark-level openings that predate this (the open-network RoboOlympics
+families) stay as documented below.
+An agent solves a task itself. It may install the packages it needs and read whatever is installed in its container; it should not look the task's solution up. This is
 an honour rule (owner, 2026-10-11: "a soft constraint, a gentlemen's agreement"), backed by a network that reaches the
 model API and the package registries and not GitHub, Hugging Face or the general web, where most of the benchmarks'
 sources, demonstrations and trained policies are published (a few are on PyPI too: the table below). History: until 2026-10-10 six benchmarks left the agent's egress open and three instructions
 stated a rule; trials downloaded upstream sources, a reference solution, a recorded demonstration, robot models and
 pretrained policies, from their own shell or through tools of the model's account. #150 closed the egress to the model
 APIs and forbade every download and install, with "a result obtained with external material is void"; the owner found
-that too strict: installing a package or trying a tool is part of what a model can do.
+that too strict: installing a package or trying a tool is part of what a model can do. On 2026-10-14 (owner, board 0107
+E4) reading the installed environment, the simulator's and the benchmark's own source included, became explicitly
+allowed: the rule forbids only searching the web for, or downloading, a ready-made solution. What the image ships is
+therefore fair game, which is why it must hold no answer (§2.7, [LEAKAGE.md](LEAKAGE.md)).
 
 | Item | Level | Basis |
 |---|---|---|
-| The agent may install packages (pip, apt) and use them. It does not look up or download a solution to the task: the benchmark's own source code, published or reference solutions, recorded demonstrations, policies trained for the task | honour rule | stated in every instruction; not enforced beyond the network below |
+| The agent may install packages (pip, apt) and use them, and may read anything installed in its container, the simulator's and the benchmark's own source code included (since 2026-10-14; before, the benchmark's source was on the list below). It does not search the web for, or download, a ready-made solution to the task: published or reference solutions, recorded demonstrations, policies trained for the task | honour rule | stated in every instruction; not enforced beyond the network below |
 | A trial that fetched a solution is flagged and the owner decides, case by case; there is no automatic rule that voids it. Installing a general-purpose package is never a violation, and neither is a tool call or request that was refused (an attempt: flagged for a look, nothing more) | MUST (how results are judged) | [new] |
 | `[agent] network_mode = "allowlist"` in every task, `allowed_hosts` = `scripts/set_agent_egress.py` `HOSTS`, the same list in every task: the model APIs' hosts and the package registries (`PACKAGE_HOSTS`: PyPI and the Debian / Ubuntu apt archives the images' distributions use). GitHub, Hugging Face and the general web are not on it | MUST | [CI] |
 | The list is the one switch: what agents reach changes by editing it there (and a run without any restriction is `set_agent_egress.py public` on a copy of the tasks, docs/RUNNING.md) | MUST | [new] |
@@ -465,8 +473,9 @@ that too strict: installing a package or trying a tool is part of what a model c
 The paragraph in every `instruction.md`:
 
 > ## External material
-> You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution
-> to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or
+> You may install packages you need (pip, apt), and you may read anything installed in your container, the
+> simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web
+> for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or
 > policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the
 > package registries (PyPI, Debian / Ubuntu archives) only.
 
@@ -509,7 +518,8 @@ material` paragraph, `allowlist` maintains it and the runner narrows its copy to
   [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)): the agent may search for, download and use public
   tools, robot models and pretrained controllers (a published Unitree G1 walking, jumping or whole-body policy), and
   is encouraged to: finding existing work and adapting it to the robot is part of what these tasks measure. The honour
-  rule that remains is not to look up the benchmark's own source and reference solutions. Nothing an agent can reach
+  rule that remains is not to look up a ready-made solution to the task, such as the benchmark's reference solutions
+  (reading the benchmark's installed source is allowed, as everywhere since 2026-10-14). Nothing an agent can reach
   in the task or its image holds a solution, as everywhere (§2.7). An official run still goes through the usage gateway
   for the model API, and the runner leaves the rest of the egress open for these tasks. With open egress the gateway
   is no longer the only road to a model provider (the provider key is in the agent's container): its token accounting
