@@ -18,7 +18,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `sweep_dustpan` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 2000 Hz, one 0.5 ms step | 132,521 rows (+ 16,000 hold rows) |
 | `pot_shelf_transfer` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 500 Hz, one 2 ms step | 8,850 rows |
 | `remote_battery_swap` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 2,416 rows |
-| `coffee_stir` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,265 rows |
+| `coffee_stir` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,882 rows |
 | `jar_lid_open` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,159 rows |
 | `grinder_crank` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 1,096 rows |
 | `pancake_serve` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 874 rows |
@@ -423,19 +423,19 @@ Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansio
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`), or, since wave 3
 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`book_page_turn`, `grinder_crank`,
-`picture_hang` with both arms; `bicycle_pump_stroke`, `envelope_letter_insert`, `jar_lid_open`, `paper_staple`,
-`remote_battery_swap` with the right arm, the left one parked) completes each one with motor targets only. Mechanisms
-are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches); nothing is welded
-to a hand, scripted or pushed, and object state is written only at reset. A medium that is not simulated (coffee,
-batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator state (revolutions,
-strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first violating physics
-substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held terminal window.
-Each instruction states the exact predicate and every threshold; each family's authoring `README.md` lists its modelling
-choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded
-physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as `solution/wuji/` (see
-Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically feasible (pre-closed or pre-placed
-parts, enlarged parts and widened clearances reverted); each section names what was restored and what remains, with the
-reason.
+`picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`, `envelope_letter_insert`, `jar_lid_open`,
+`paper_staple`, `remote_battery_swap` with the right arm, the left one parked) completes each one with motor targets
+only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches);
+nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium that is not
+simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator
+state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first
+violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held
+terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
+lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
+"full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
+`solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically feasible
+(pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each section names what was restored
+and what remains, with the reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -461,17 +461,26 @@ rows on the arm (success at 2,266); no Wuji solution.
 
 ### Stir milk into coffee (`coffee_stir`, T11)
 
-A 300 g mug (inner radius 50 mm, 100 mm tall) stands on the worktop (top z = 0.75 m), filled with coffee to 64 mm; a 35 g
-teaspoon (181.7 mm, 24 x 46 mm bowl) leans in it. The coffee is a visual surface only: mixing is measured as stirring.
-**Success**, in order: (1) the spoon in the hand (thumb and another finger touching it) with the bowl submerged (centre
-and both bowl ends below the surface, above the floor, within 50 mm of the axis); (2) while submerged, at least 8 mm off
-the axis and in the hand, the bowl centre's unwrapped angle about the mug axis accumulates three revolutions (1080
-degrees net; increments above 45 degrees per control are ignored, and the count restarts when the bowl leaves the
-coffee); (3) the spoon released, bowl still submerged and touching the mug, spoon and mug at rest (<= 0.02 m/s,
-<= 0.5 rad/s) for 50 controls (1 s). **Immediate failure**, after every 2 ms substep: mug tilt above 10 degrees, slide
-above 20 mm or lift above 5 mm; the spoon on the worktop or floor, or touching neither hand nor mug while falling faster
-than 0.2 m/s; a spoon point below the worktop top; leaving the workspace box; a fingertip in the coffee; unstable
-physics; 3,000 controls. Oracle: 1,265 Sharpa rows (success at 1,165); no Wuji solution.
+Wave 3: the right Tianji Marvin arm and hand (stand at the world origin facing +x, its plate on the floor z = -0.1 m;
+the left arm parked). A 300 g mug (inner radius 50 mm, 100 mm tall) stands on the worktop (top z = 0.75 m), filled with
+coffee to 64 mm (milk already poured). As in the approved source film, the episode starts with the 35 g teaspoon (181.7
+mm, 24 x 46 mm bowl) held upright, bowl down, in a thumb-index pinch of the right hand just above the rim (a physical
+contact grasp made at reset, no weld; with Wuji, which has no start grasp yet, the spoon leans in the mug). The coffee
+is a visual surface only: mixing is measured as stirring. **Success**, in order: (1) the spoon in the hand (thumb and
+another finger touching it) with the bowl submerged (centre and both bowl ends below the surface, above the mug floor,
+within 50 mm of the axis); (2) while submerged, at least 8 mm off the axis and in the hand, the bowl centre's unwrapped
+angle about the mug axis accumulates six revolutions (the source's six turns; steps above 0.785 rad per control are
+ignored, and the count restarts when the bowl leaves the coffee); (3) the spoon laid on the worktop as in the film's
+end: released, touching the worktop and not the mug, bowl and handle end at least 0.10 m from the mug axis, within 15
+degrees of horizontal, spoon and mug at rest (<= 0.02 m/s, <= 0.5 rad/s) for 50 controls (1 s). **Immediate failure**,
+after every 2 ms substep: mug tilt above 10 degrees, slide above 20 mm or lift above 5 mm; the spoon on the floor, or on
+the worktop before the six turns; touching neither hand, mug nor worktop while falling faster than 0.2 m/s; a spoon
+point more than 3 mm below the worktop top; leaving the workspace box; a fingertip in the coffee; an arm link, the stand
+or the parked hand touching the mug, spoon or worktop; unstable physics; 3,000 controls. Wave 3 restored the film's
+start, its six turns and its end (the spoon laid down; the wave-2 task started with the spoon leaning in the mug,
+stirred three turns and left it there). Not restored: picking the spoon up from the worktop (a 5.4 mm shaft lying flat
+cannot be pinched by the 16-19 mm fingertip pads; the film itself starts with the spoon held). Oracle: 1,882 Sharpa rows
+on the arm (success at 1,802); no Wuji solution.
 
 ### Jam jar lid (`jar_lid_open`, T14)
 
@@ -611,12 +620,12 @@ consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: the
 than 0.10 rad; the guard back on the worktop, a leg or the floor after it was lifted 5 cm; the guard touching nothing
 while falling faster than 0.2 m/s; the guard striking the fan base, stem, neck, motor housing, feet or buttons; its
 centre of mass below the worktop or outside the workspace box; unstable physics; 6,000 controls. Rigid cages and clips;
-the source's 45 mg snap leaf is the elastic detent. Wave 3 (2026-10-15): the pre-closed lower clips are gone (realism
-restored); kept are the raised 22 mm hub cap in place of the source's 6 mm badge (a fingertip resting on the spokes
-reaches only the badge's top corner: every tried lift needed the fingertip capsules 8 mm inside the 0.5 mm spokes) and
-the floating wrist stage (with the fan 0.45 m behind the worktop edge, the Marvin arm reaches neither the clip pushes
-nor the upright-guard poses, whose wrist angles exceed J6/J7). Oracle: 2,665 Sharpa rows (success at 2,485); no Wuji
-solution.
+the source's 45 mg snap leaf is the elastic detent; the lower clips keep a 1.3 mm deeper lip than the source's so that
+the hung guard cannot tip forward. Wave 3 (2026-10-15): the pre-closed lower clips are gone (realism restored); kept are
+the raised 22 mm hub cap in place of the source's 6 mm badge (a fingertip resting on the spokes reaches only the badge's
+top corner: every tried lift needed the fingertip capsules 8 mm inside the 0.5 mm spokes) and the floating wrist stage
+(with the fan 0.45 m behind the worktop edge, the Marvin arm reaches neither the clip pushes nor the upright-guard
+poses, whose wrist angles exceed J6/J7). Oracle: 2,665 Sharpa rows (success at 2,485); no Wuji solution.
 
 ### Stool cross brace (`stool_brace_insert`, T27)
 
@@ -680,21 +689,21 @@ Wave 3: the right Tianji Marvin arm (arm rig above) and its hand do the task, th
 check at reset and over the oracle). A desk (top z = 0.78 m), a free NOVUS B2-style stapler at the source pose (a
 passive spring-returned head hinge with the source's press force, about 10 N to start the stroke and 25 N at the bottom
 stop 8 cm in front of the hinge, a bottom stop at 0.1701 rad and a paper insertion stop behind the anvil) and three
-rigid A5 sheets (0.5 mm, 2.5 g) that start as a misaligned staircase (4 and 8 mm toward +x) with the bottom sheet's
-corner resting on the anvil mouth. **Success**, in order: (1) every corner of sheets 1 and 2 within 2.0 mm of sheet 0's,
-stacked and in contact; (2) the staple point inside every sheet 3-30 mm from both edges of a corner and 0-6 mm below
-every sheet; (3) the head within 0.01 rad of its bottom stop with the driver blade on the top sheet; (4) head back up
-(<= 0.02 rad), no hand contact with sheets or stapler, sheets slower than 0.02 m/s, for 50 consecutive controls (1 s).
-**Immediate failure**, after every 2 ms substep: a sheet centre below z = 0.77925 m or a corner below 0.765 m; a sheet
-centre off the desk or outside the workspace box; a sheet or the stapler on the floor or a desk leg; a contact-free
-sheet or stapler falling faster than 0.2 m/s; the stapler moved more than 3 cm or tilted more than 0.26 rad; an arm link
-or the stand touching the desk, the stapler or a sheet; unstable physics; 6,000 controls. Wave 3 restored the stapler's
-source pose and press spring. Not restored, with evidence in the family README: the source's flat start (the 8 mm
-fingertip capsules meet a 0.5 mm sheet edge above the desk at a slant, press the sheets down and ride over them, so the
-sheets start propped on the anvil mouth) and the paper stop (not part of the real B2, but without a counter-face the
-misaligned stack cannot be squared). The sheets are rigid plates and no staple is formed. Oracle: 942 Sharpa rows on the
-arm (success at 742); the wave-2 Wuji solution is not packaged (on the arm the Wuji fingers fold under the 25 N press;
-Wuji selectable, no success).
+rigid A5 sheets (0.5 mm, 2.5 g; the source's are 0.10 mm) that start as a misaligned staircase (4 and 8 mm toward +x)
+with the bottom sheet's corner resting on the anvil mouth. **Success**, in order: (1) every corner of sheets 1 and 2
+within 2.0 mm of sheet 0's, stacked and in contact; (2) the staple point inside every sheet 3-30 mm from both edges of a
+corner and 0-6 mm below every sheet; (3) the head within 0.01 rad of its bottom stop with the driver blade on the top
+sheet; (4) head back up (<= 0.02 rad), no hand contact with sheets or stapler, sheets slower than 0.02 m/s, for 50
+consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: a sheet centre below z = 0.77925 m or a
+corner below 0.765 m; a sheet centre off the desk or outside the workspace box; a sheet or the stapler on the floor or a
+desk leg; a contact-free sheet or stapler falling faster than 0.2 m/s; the stapler moved more than 3 cm or tilted more
+than 0.26 rad; an arm link or the stand touching the desk, the stapler or a sheet; unstable physics; 6,000 controls.
+Wave 3 restored the stapler's source pose and press spring. Not restored, with evidence in the family README: the
+source's flat start (the 8 mm fingertip capsules meet a 0.5 mm sheet edge above the desk at a slant, press the sheets
+down and ride over them, so the sheets start propped on the anvil mouth) and the paper stop (not part of the real B2,
+but without a counter-face the misaligned stack cannot be squared). The sheets are rigid plates and no staple is formed.
+Oracle: 942 Sharpa rows on the arm (success at 742); the wave-2 Wuji solution is not packaged (on the arm the Wuji
+fingers fold under the 25 N press; Wuji selectable, no success).
 
 ### Ring binder page loading (`binder_page_load`, T37)
 
@@ -858,7 +867,7 @@ trial):
 | `remote_battery_swap` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.61 | standard nop 0 (hand_wuji 1; no Wuji solution) |
 | `coffee_stir` | 1 / 0 | 1 / 0 | 2 min | 0.45 / 0.61 | standard nop 0 (no Wuji solution) |
 | `jar_lid_open` | 1 / 0 | 1 / 0 | 2 min | 0.42 / 0.70 | Wuji oracle 1 in both modes; standard nop 0 |
-| `grinder_crank` | 1 / 0 | 1 / 0 | 4 min | 0.64 / 0.84 | Wuji privileged oracle 1; Wuji standard nop 0 |
+| `grinder_crank` | 1 / 0 | 1 / 0 | 11 min | 3.47 / 2.40 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `pancake_serve` | 1 / 0 | 1 / 0 | 5 min | 0.43 / 0.58 | Wuji nop 0 in both modes (Wuji solution packaged) |
 | `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 4 min | 0.40 / 0.52 | standard nop 0 (no Wuji solution) |
 | `drying_rack_unfold` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.59 | Wuji nop 0 (no Wuji solution) |

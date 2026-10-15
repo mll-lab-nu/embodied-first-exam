@@ -1,25 +1,27 @@
 # DexHand: Stir milk into a mug of coffee with a teaspoon
 
-Mix the milk into the coffee: stir the coffee with the teaspoon, then leave the spoon resting in the mug. The 300 g mug (inner radius 50 mm, 100 mm tall, 8 mm floor) stands upright on the stone worktop (top at z = 0.75 m) with its axis at x = 0.48 m, y = 0.015 m; the coffee, milk already poured, fills it to 64 mm above the mug base (z = 0.814 m). The coffee is not simulated as a fluid: mixing is measured as stirring. The 35 g stainless teaspoon (181.7 mm long, 24 x 46 mm bowl) starts leaning in the mug with its bowl on the mug floor and its handle on the rim. Three stages must be completed in order. (1) In the coffee: while the spoon is in the hand (the thumb and at least one other finger touch it), the bowl is submerged, i.e. the bowl centre and both bowl ends (23 mm either side of the centre along the spoon axis) lie below the coffee surface and above the mug floor (mug frame z between 0.004 and 0.064 m) and within 50 mm of the mug axis. (2) Stir: while the bowl stays submerged, at least 8 mm from the mug axis, and the spoon is in the hand (thumb and at least one other finger touching it; a single finger pushing the spoon does not count), the unwrapped angle of the bowl centre about the mug's vertical axis (world frame) must accumulate three full revolutions (1080 degrees net in one direction). Increments larger than 45 degrees per control are not counted, and the count restarts from zero whenever the bowl leaves the coffee before the three revolutions are complete. (3) Rest: the spoon is released (no hand contact) with its bowl still submerged in the mug, the spoon touching the mug, spoon and mug linear speeds at most 0.02 m/s and angular speeds at most 0.5 rad/s, continuously for 50 controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the mug tilts more than 10 degrees, slides more than 20 mm horizontally from its start or is lifted more than 5 mm above its start height; when the spoon touches the worktop or the floor (dropped or carried out of the mug) or the mug touches the floor; when the spoon touches neither the hand nor the mug while its centre of mass falls faster than 0.2 m/s (a dropped spoon fails at that physics substep; there is no window to catch it again); when a spoon reference point (bowl centre, bowl ends, handle end) falls below the worktop top or the mug base falls below it; when the bowl centre or handle end leaves the workspace box x in [0, 0.96] m, y in [-0.48, 0.48] m, z in [0.70, 1.60] m; when a fingertip enters the coffee (inside the mug radius and below the coffee surface); or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The episode allows at most 3000 controls at 50 Hz (60 s); reaching that limit without success is a failure.
+Mix the milk into the coffee: stir it six times with the teaspoon, then lay the spoon on the worktop beside the mug. The 300 g mug (inner radius 50 mm, 100 mm tall, 8 mm floor) stands upright on the stone worktop (top at z = 0.75 m) with its axis at x = 0.48 m, y = 0.015 m; the coffee, milk already poured, fills it to 64 mm above the mug base (z = 0.814 m). The episode starts as the approved source film does: the right hand holds the 35 g teaspoon upright, bowl down, in a thumb-index pinch near the top of its handle, with the bowl centre about 0.12 m above the mug base just over the rim. With the Wuji hand selected (no Wuji start grasp exists yet), the spoon instead starts leaning in the mug (bowl on the mug floor, handle on the rim) and the open Wuji hand hangs about 0.25 m above the mug; the stages are the same. Success requires three stages in order. (1) Submerged in hand: the thumb and at least one other finger touch the spoon, and the bowl centre, bowl tip and bowl neck (23 mm either side of the centre along the spoon) are all between 4 mm and 64 mm above the mug base and within 50 mm of the mug axis. (2) Stirred: the bowl centre revolves at least six full turns about the mug's vertical axis (world frame; net signed angle). The angle accumulates only while the stage-1 condition holds and the bowl centre is at least 8 mm from the axis; a step of more than 0.785 rad in one control is ignored, and the count restarts from zero whenever the bowl leaves the coffee before six turns are complete. (3) Laid down: no part of the hand touches the spoon, the spoon touches the worktop and not the mug, its bowl centre and handle end are both at least 0.10 m from the mug axis horizontally, its axis is within 15 degrees of horizontal, and spoon and mug are still (linear speed at most 0.02 m/s, angular speed at most 0.5 rad/s), for 50 consecutive controls (1 s). The episode ends with success at that moment. The coffee is not simulated: it exerts no force, and the mixing is judged only by these bowl revolutions below its surface. The episode ends immediately with failure, checked after every 2 ms physics substep, when the mug tilts more than 10 degrees, slides more than 20 mm or is lifted more than 5 mm; when the spoon touches the floor, or touches the worktop before the six turns are complete; when the spoon touches neither the hand, the mug nor the worktop while its centre of mass falls faster than 0.2 m/s (a dropped spoon cannot be caught again); when the mug touches the floor; when a spoon reference point (bowl centre, tip, neck or handle end) is more than 3 mm below the worktop top or the mug base more than 5 mm below it; when the bowl centre or the handle end leaves the workspace box x in [0, 0.96] m, y in [-0.48, 0.48] m, z in [0.70, 1.60] m; when a fingertip enters the coffee (inside the mug radius below the coffee surface); when an arm link, the stand or the parked left hand touches the mug, the spoon or the worktop; or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
-grasping, stirring and releasing require physical contact. The controller runs at 50 Hz, with ten 2 ms physics
-substeps.
+You control the right arm and right hand of a Tianji Marvin dual-arm stand (two 7-joint arms, a dexterous hand on each
+wrist; the stand sits at the world origin facing +x, its plate on the floor at z = -0.1 m). The left arm starts parked,
+hanging beside the torso, and should stay there. Every arm and finger joint is a position servo in the physics engine
+under native force bounds (arm servos: stiffness 700 N m/rad, damping 48 N m s/rad, no gravity compensation, so a held
+target sags under the arm's weight unless your targets account for it); stirring and laying the spoon down require
+physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
 ## Scene
 The mug, the coffee and the teaspoon are the approved T11 kitchen scene: a cream glazed mug with a rounded handle
-(pointing +x) on a stone worktop, a stainless teaspoon leaning in it (bowl on the mug floor near the +y wall, handle on
-the -y rim, top end at about x = 0.48 m, y = -0.087 m, z = 0.905 m). The hand starts open about 0.3 m above the mug
-with its fingers pointing down and its palm facing +y. The coffee is a visual surface only: it exerts no force, and
-the stirring is judged only from the bowl's revolutions below that surface. Mug and spoon are free rigid bodies that
-move only through contact and gravity. Cameras: `overview` (front right of the mug, wide), `closeup` (front right,
-close) and `top` (looking down the mug axis).
+(pointing +x) on a stone worktop (top at z = 0.75 m, front edge at x = 0.25 m), axis at x = 0.48 m, y = 0.015 m. The
+episode starts like the source film: the right hand holds the teaspoon upright, bowl down, in a thumb-index pinch near
+the top of its handle, the bowl just above the mug (`task.json` `spoon_pos`, position and quaternion WXYZ, is the
+settled start pose). The coffee is a visual surface only: it exerts no force, and the stirring is judged only from the
+bowl's revolutions below that surface. Mug and spoon are free rigid bodies that move only through contact and gravity.
+Cameras: `overview` (front right of the mug, wide), `closeup` (front right, close) and `top` (looking down the mug axis).
 
 ## Hands
 Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; the six wrist targets are world coordinates of the hand mount (metres) and serial XYZ joint angles (radians).
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`28` for `sharpa`, `26` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
+Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for sharpa, 20 per hand for wuji); the left arm stays parked and only the right arm and hand perform the task.
+The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`58` for `sharpa`, `54` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
 
 ## Episodes and resets
 You have **20 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset
@@ -59,14 +61,16 @@ r.fk(q)                       # robot-link forward kinematics; no physics is ste
 r.status()
 res.save("/app/runs/001")
 ```
-`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets `wrist_x, wrist_y,
-wrist_z` (metres) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger targets in radians.
-`D` is 28 for `sharpa` (22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 26 for `wuji`
-(20 Wuji Hand 2.2 finger joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`,
-`r_wuji_r_LFJ0..3`). Actuator targets are clipped to the published joint limits and clipping is reported. `dt` must be
-a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`;
-linear interpolation starts from the previous target. The robot has no scalar gripper opening. Quaternions in measured
-poses use WXYZ; world z is up, the worktop top is at z = 0.75 m and the mug axis at x = 0.48 m, y = 0.015 m.
+`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the 14 Marvin arm joint targets
+(left arm `SHOULDER_PITCH_L_J1` ... `WRIST_ROLL_L_J7`, then the right arm `..._R_J1` ... `..._R_J7`, radians), then the
+left hand's finger targets and then the right hand's, in radians. `D` is 58 for `sharpa` (22 Sharpa Wave finger joints
+per hand, `left_thumb_CMC_FE` ... `left_pinky_DIP`, then `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 54 for `wuji`
+(20 Wuji Hand 2.2 finger joints per hand, `l_wuji_l_THJ0..3` ... `l_wuji_l_LFJ0..3`, then `r_wuji_r_...`). The left arm
+starts parked and should stay there; arm servos have no gravity compensation. Actuator targets are clipped to the
+published joint limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk
+covers at most 10 s. Hold interpolation holds each row for `dt`; linear interpolation starts from the previous target.
+The robot has no scalar gripper opening. Quaternions in measured poses use WXYZ; world z is up, the worktop top is at
+z = 0.75 m and the mug axis at x = 0.48 m, y = 0.015 m; the robot stand is at the world origin facing +x.
 Cameras are overview, closeup and top, at 640 x 480.
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
 images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the

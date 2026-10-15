@@ -4,15 +4,15 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/dexhand-coffee-stir-i00-standard"
-description = "With a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a wrist stage, pick up the teaspoon that leans in a mug of coffee, stir at least three full revolutions with the bowl in the coffee, and leave the spoon resting in the mug; a knocked mug or dropped spoon fails the episode at once."
+description = "With a dexterous hand on the right arm of a Tianji Marvin dual-arm stand (Sharpa Wave by default, or Wuji Hand 2.2), take the teaspoon that the hand holds upright above a mug of coffee (the approved T11 film's first frame), stir six full revolutions with its bowl in the coffee, lift it out and lay it on the worktop beside the mug, then let go; a knocked mug or a dropped spoon fails the episode at once."
 authors = [{ name = "Embodied Exam contributors" }]
-keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "stirring", "kitchen", "thin-object-grasp"]
+keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "stirring", "kitchen", "thin-object-grasp", "arm"]
 
 [metadata]
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
-robot = "sharpa-wave-floating"
+robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "coffee_stir"
@@ -20,6 +20,7 @@ mode = "standard"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
+oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (1,882 controls; success after 1,802, then 80 unexecuted hold rows of slack). Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed. The standard oracle submits the same rows through the public client."
 expert_time_estimate_hours = 3.0
 difficulty = "hard"
 release_status = "provisional"

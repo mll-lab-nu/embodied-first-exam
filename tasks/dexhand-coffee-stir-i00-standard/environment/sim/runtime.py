@@ -13,7 +13,7 @@ import mujoco
 import numpy as np
 
 from checker import STAGES, Checker
-from scene import build, hands
+from scene import arm_rig, build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "coffee_stir"
@@ -32,7 +32,7 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.robot = arm_rig.ROBOT_ID
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
@@ -41,21 +41,25 @@ class Session:
         )
         if self.initial_targets.shape != (self.action_dim,):
             raise ValueError(f"initial_targets[{self.hand}] must have {self.action_dim} values")
+        self.initial_qpos = np.asarray(self.config["initial_qpos"][self.hand], dtype=float)
+        if self.initial_qpos.shape != (self.model.nq,):
+            raise ValueError(f"initial_qpos[{self.hand}] must have {self.model.nq} values")
         self.control_dt = self.config["control_dt"]
         self.substeps = round(self.control_dt / self.config["physics_dt"])
         self.max_control_steps = int(self.config["max_steps"])
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.tcp_body = self.model.body(int(self.model.jnt_bodyid[self.model.actuator_trnid[5, 0]])).name
+        self.tcp_body = "wrist_stage"  # the right hand's flange mount on the Marvin arm
         self.checker = Checker(self.model, self.config)
         self.renderer = None
         self.reset()
 
     # ------------------------------------------------------------------ episode
     def reset(self):
+        """Exact frozen reset: the settled start state (spoon lying on the worktop, arms at their start pose)."""
         mujoco.mj_resetData(self.model, self.data)
-        self.data.qpos[self.qadr] = self.initial_targets
+        self.data.qpos[:] = self.initial_qpos
         self.data.ctrl[:] = self.initial_targets
         mujoco.mj_forward(self.model, self.data)
         self.steps = 0

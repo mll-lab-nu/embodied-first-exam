@@ -1,4 +1,4 @@
-"""T11 coffee cup, coffee surface and teaspoon on a stone worktop, with a genuine hand on a six-axis wrist stage.
+"""T11 coffee cup, coffee surface and teaspoon on a stone worktop, with a genuine hand on the Tianji Marvin arm.
 
 Geometry follows the approved T11 scene (source: scene_expansion/repairs/coffee_tripod, refined presentation
 meshes in ``assets/``): cup 57 mm outer / 50 mm inner radius, 100 mm tall, 8 mm internal floor, rounded U handle
@@ -129,8 +129,27 @@ def add_spoon(world, assets, config):
     return spoon
 
 
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = HERE.parent.parent / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
+
+
 def add_rig(root, folder, hand_id, config):
-    """The assemble_hamburger six-axis wrist stage, with this scene's ranges (world coordinates of the mount)."""
+    """The Tianji Marvin dual-arm stand (``arm_rig.mount_marvin``): the right arm and hand do the task, the left
+    arm hangs parked beside the torso. The right hand's flange mount keeps the old name ``wrist_stage``."""
     option = root.find("option")
     option.set("timestep", str(config["physics_dt"]))
     option.set("gravity", "0 0 -9.81")
@@ -140,59 +159,25 @@ def add_rig(root, folder, hand_id, config):
     node(option, "flag", multiccd="enable")
     for key in root.findall("keyframe"):
         root.remove(key)
-    world, actuator = root.find("worldbody"), root.find("actuator")
-    hand = world.find("body")
-    world.remove(hand)
-    wrist = node(world, "body", name="wrist_stage")
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    hand.set("quat", "0 0.7071067811865476 0 0.7071067811865476")
-    wrist.append(hand)
-    ranges = config["wrist_range"]
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        lo, hi = ranges[i]
-        wrist.insert(
-            i,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range=f"{lo} {hi}",
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
+    actuator, world = root.find("actuator"), root.find("worldbody")
+    # The wave-2 Sharpa tweaks, applied to the right Wave before mounting (the rig mirrors it for the left hand).
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
             bias[2] = -0.9
             a.set("biasprm", " ".join(map(str, bias)))
-    for g in hand.iter("geom"):
+    for g in world.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        # Swap the Wave body under the unchanged wrist stage for the genuine Wuji Hand 2.2 model; the vendor's
-        # joints, actuators, gains and contact geometry are kept as published. Wrist actuators stay first.
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
-    return wrist
+    sibling = Path(os.environ.get("WUJI_ASSET_DIR") or folder.parent / "wuji_v2_2")
+    marvin = config["marvin"]
+    return arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                                mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                                wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
 
 
 def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen scene with the selected genuine hand on the six-axis wrist stage."""
+    """Compose the frozen scene with the selected genuine hands on the Marvin dual-arm stand (right arm active)."""
     hand_id = hands.canonical(hand)
     verify_assets()
     folder = asset_dir or os.environ.get("DEXHAND_ASSET_DIR")
@@ -216,13 +201,17 @@ def build(config, asset_dir=None, hand="sharpa"):
     node(assets, "material", name="coffee", rgba=(0.24, 0.13, 0.06, 1), specular=0.6, shininess=0.8, reflectance=0.08)
     node(assets, "material", name="cabinet", rgba=(0.93, 0.92, 0.89, 1), specular=0.1)
     table_z = config["table_z"]
-    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.1), rgba=(0.55, 0.52, 0.48, 1), **MATTE)
-    node(world, "geom", name="worktop", type="box", size=(0.70, 0.46, 0.018), pos=(0.30, 0, table_z - 0.018),
-         material="stone_material", **MATTE)
-    for x in (-0.36, 0.96):
+    floor_z = config["floor_z"]  # the Marvin stand's platform rests on the floor (ARM_RIG: base_z - 0.1)
+    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.1), pos=(0, 0, floor_z), rgba=(0.55, 0.52, 0.48, 1),
+         **MATTE)
+    wt = config["worktop"]
+    node(world, "geom", name="worktop", type="box", size=(wt["half"][0], wt["half"][1], 0.018),
+         pos=(wt["center"][0], wt["center"][1], table_z - 0.018), material="stone_material", **MATTE)
+    for x in (wt["center"][0] - wt["half"][0] + 0.04, wt["center"][0] + wt["half"][0] - 0.04):
         for y in (-0.42, 0.42):
-            node(world, "geom", name=f"table_leg_{x}_{y}", type="box", size=(0.02, 0.02, (table_z - 0.036) / 2),
-                 pos=(x, y, (table_z - 0.036) / 2), rgba=(0.30, 0.27, 0.24, 1), contype=0, conaffinity=0, group=1)
+            node(world, "geom", name=f"table_leg_{x}_{y}", type="box", size=(0.02, 0.02, (table_z - 0.036 - floor_z) / 2),
+                 pos=(x, y, (table_z - 0.036 + floor_z) / 2), rgba=(0.30, 0.27, 0.24, 1), contype=0, conaffinity=0,
+                 group=1)
     # Backsplash / cabinet set dressing (visual only, far from the workspace).
     node(world, "geom", name="backsplash", type="box", size=(1.4, 0.01, 0.40), pos=(0.30, 0.47, table_z + 0.40),
          material="cabinet", contype=0, conaffinity=0, group=1)

@@ -190,7 +190,7 @@ def main():
 
     # T11 set dressing; the task worktop top stays at z = 0.750 m.
     # One continuous stone counter (top at the task worktop height); a single slab avoids coplanar seams.
-    box("Worktop and kitchen counter, stone finish", (0.65, 0.1525, 0.732), (2.5, 1.415, 0.036), stone, 0.002)
+    box("Worktop and kitchen counter, stone finish", (1.075, 0.1525, 0.732), (1.65, 1.415, 0.036), stone, 0.002)
     box("Kitchen cabinetry background", (0.85, 0.64, 0.36), (1.7, 0.43, 0.71), sage, 0.003)
     box("Backsplash wall", (0.75, 0.87, 1.0), (4, 0.018, 2), grout)
     for iz in range(4):
@@ -199,7 +199,7 @@ def main():
                 (0.232, 0.012, 0.107), tile, 0.001)
     box("Oak shelf in background", (0.81, 0.76, 1.20), (1.50, 0.20, 0.028), oak, 0.002)
 
-    cache, hand_objects = {}, []
+    cache, hand_objects, arm_materials = {}, [], {}
     for record in payload["hand_geoms"]:
         mid = str(record["mesh"])
         if mid not in cache:
@@ -214,7 +214,14 @@ def main():
         obj = bpy.data.objects.new(record["name"], cache[mid])
         bpy.context.collection.objects.link(obj)
         obj.data.materials.clear()
-        obj.data.materials.append(rubber if record["material"] == "green" else shell)
+        if record.get("robot_link"):
+            # Marvin arm/stand meshes: the factory rgba with the accepted arm-film finish (ARM_RIG.md section 9).
+            key = tuple(record["rgba"][:3])
+            if key not in arm_materials:
+                arm_materials[key] = material("Marvin %.2f %.2f %.2f" % key, key, 0.29, 0.15)
+            obj.data.materials.append(arm_materials[key])
+        else:
+            obj.data.materials.append(rubber if record["material"] == "green" else shell)
         hand_objects.append(obj)
 
     def light(name, pos, target, energy, size, color, shape="DISK", size_y=None):
@@ -247,18 +254,25 @@ def main():
     # Camera: the T11 film's wide and near views (wide while reaching and releasing, near while stirring).
     wide_pos, wide_target, wide_lens = Vector((1.03, -0.68, 1.30)), Vector((0.47, 0.0, 0.95)), 36
     near_pos, near_target, near_lens = Vector((0.86, -0.50, 1.18)), Vector((0.48, 0.01, 0.90)), 44
+    end_pos, end_target, end_lens = Vector((1.18, -0.30, 1.10)), Vector((0.54, -0.16, 0.80)), 34
     steps = [f["step"] for f in frames]
     total = max(steps[-1], 1)
 
     def camera_at(step):
         t = step / total
-        w = smooth((t - 0.22) / 0.12) * (1 - smooth((t - 0.72) / 0.12))
+        # Near view while the bowl is in the coffee (stirring), wide view for the start, the carry and the laying down.
+        w = smooth((t - 0.12) / 0.08) * (1 - smooth((t - 0.55) / 0.08))
         pos = wide_pos.lerp(near_pos, w)
         target = wide_target.lerp(near_target, w)
+        lens = wide_lens + (near_lens - wide_lens) * w
+        # End: a view along the worktop from the +x side that shows the spoon laid down beside the mug.
+        e = smooth((t - 0.62) / 0.10)
+        pos, target = pos.lerp(end_pos, e), target.lerp(end_target, e)
+        lens = lens + (end_lens - lens) * e
         cam.location = pos
         cam.rotation_euler = (target - pos).to_track_quat("-Z", "Y").to_euler()
-        cam_data.lens = wide_lens + (near_lens - wide_lens) * w
-        cam_data.dof.focus_distance = (pos - Vector((0.48, 0.015, 0.86))).length
+        cam_data.lens = lens
+        cam_data.dof.focus_distance = (pos - target).length
 
     if args.still:
         indices = [i if i >= 0 else n + i for i in args.still]

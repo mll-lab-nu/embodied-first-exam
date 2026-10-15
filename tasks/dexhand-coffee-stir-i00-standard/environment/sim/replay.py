@@ -15,7 +15,7 @@ from scene import hands
 
 TASK = "coffee_stir"
 # Six wrist-stage targets followed by the selected hand's native finger actuators.
-WIDTHS = {"sharpa": 28, "wuji": 26}
+WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
 MAX_BYTES = 64_000_000
 

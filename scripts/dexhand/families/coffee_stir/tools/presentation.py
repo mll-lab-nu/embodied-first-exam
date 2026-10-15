@@ -41,17 +41,23 @@ def export(trajectory, directory, stride=4, fps=25):
     sources = {name: sha(FAMILY / name) for name in PHYSICS_SOURCES}
     session = Session(hand="sharpa")
     m = session.model
+    # Every visible robot mesh: the Marvin stand, both arms and both hands (visual geoms only).
+    from scene import arm_rig
+    robot = set(arm_rig.robot_body_ids(m)) | set(arm_rig.hand_body_ids(m, "left")) | set(
+        arm_rig.hand_body_ids(m, "right"))
     hand_geoms = [
         g for g in range(m.ngeom)
-        if session.checker.hand_geom[g] and m.geom_group[g] <= 2 and m.geom_rgba[g, 3] > 0 and int(m.geom_type[g]) == 7
-        and m.geom_contype[g] == 0
+        if int(m.geom_bodyid[g]) in robot and m.geom_group[g] <= 2 and m.geom_rgba[g, 3] > 0
+        and int(m.geom_type[g]) == 7 and m.geom_contype[g] == 0
     ]
     arrays, geoms, meshes = {}, [], {}
     for gid in hand_geoms:
         mesh = int(m.geom_dataid[gid])
         mid = int(m.geom_matid[gid])
         geoms.append({"id": gid, "name": m.geom(gid).name or f"geom_{gid}", "mesh": mesh,
-                      "material": m.material(mid).name if mid >= 0 else ""})
+                      "material": m.material(mid).name if mid >= 0 else "",
+                      "rgba": [round(float(x), 4) for x in m.geom_rgba[gid]],
+                      "robot_link": int(m.geom_bodyid[gid]) in arm_rig.robot_body_ids(m)})
         if str(mesh) not in meshes:
             va, vn = int(m.mesh_vertadr[mesh]), int(m.mesh_vertnum[mesh])
             fa, fn = int(m.mesh_faceadr[mesh]), int(m.mesh_facenum[mesh])
@@ -186,9 +192,10 @@ def encode(directory, output, crf=21):
             pic = Image.open(frame_dir / f"{index:06d}.png").convert("RGB")
             draw = ImageDraw.Draw(pic)
             f = payload["frames"][index]["features"]
-            status = "PASS" if f["success"] else f"stirring {min(f['revolutions'], 3.0):.1f} / 3 turns"
-            draw.rounded_rectangle((20, 18, 560, 88), radius=10, fill=(30, 33, 30))
-            draw.text((34, 26), "Mix coffee and milk  ·  Sharpa Wave", font=font, fill=(242, 238, 228))
+            status = ("PASS: spoon laid down" if f["success"] else
+                      f"stirring {min(f['revolutions'], 6.0):.1f} / 6 turns" if f["stage"] < 2 else "6 / 6 turns, laying the spoon down")
+            draw.rounded_rectangle((20, 18, 640, 88), radius=10, fill=(30, 33, 30))
+            draw.text((34, 26), "Mix coffee and milk  ·  Marvin arm + Sharpa Wave", font=font, fill=(242, 238, 228))
             draw.text((34, 56), f"physics replay, {speed:g}x  ·  {status}  ·  coffee not simulated", font=small,
                       fill=(214, 196, 160))
             writer.append_data(np.asarray(pic))

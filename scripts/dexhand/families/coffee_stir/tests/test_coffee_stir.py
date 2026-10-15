@@ -30,7 +30,7 @@ for path in (str(SHARED), str(FAMILY), str(FAMILY / "tools")):
     if path in sys.path:
         sys.path.remove(path)
     sys.path.insert(0, path)
-for name in ("runtime", "replay", "hands", "scene", "checker", "demo", "knock"):
+for name in ("runtime", "replay", "hands", "scene", "checker", "arm_rig"):
     sys.modules.pop(name, None)
 
 import hands  # noqa: E402  (shared copy, as in a generated task)
@@ -38,8 +38,9 @@ from runtime import Session  # noqa: E402
 
 TASK = "coffee_stir"
 ORACLE = FAMILY / "solution/trajectory.npz"
-SUCCESS_AT = 1165
+SUCCESS_AT = 1802
 MAX_ROWS = 3000
+KNOCK_REASONS = ("cup_moved", "cup_tipped", "cup_lifted", "arm_contact", "spoon_dropped", "spoon_left_workspace")
 
 
 def oracle_rows() -> np.ndarray:
@@ -101,7 +102,7 @@ class OracleTests(unittest.TestCase):
         self.assertEqual(self.final["stage"], 3)
         self.assertEqual(self.first_success, SUCCESS_AT)
         self.assertGreaterEqual(len(self.rows) - self.first_success, 50)
-        self.assertGreaterEqual(self.final["revolutions"], 3.0)
+        self.assertGreaterEqual(self.final["revolutions"], 6.0)
         self.assertLess(self.stage2_at, self.first_success)
 
     def test_success_is_terminal(self):
@@ -124,7 +125,7 @@ class OracleTests(unittest.TestCase):
 
     def test_truncated_episodes_fail(self):
         s = Session()
-        for rows, stage in ((self.rows[:600], 1), (self.rows[:900], 2), (self.rows[: SUCCESS_AT - 1], 2)):
+        for rows, stage in ((self.rows[:600], 1), (self.rows[:900], 1), (self.rows[: SUCCESS_AT - 1], 2)):
             st = s.replay(rows)
             self.assertFalse(st["success"])
             self.assertFalse(st["failed"])
@@ -157,38 +158,45 @@ class NegativeTests(unittest.TestCase):
         self.assertEqual(st["reason"], "episode_budget")
         self.assertEqual(st["stage"], 0)
         self.assertLess(np.linalg.norm(s.data.xpos[s.model.body("cup").id] - cup0), 1e-3)
-        self.assertLess(np.linalg.norm(s.data.xpos[s.model.body("spoon").id] - spoon0), 1e-3)
         s.close()
 
-    def test_knock_fails_fast_and_permanently(self):
-        import knock
+    def _modified(self, names_deltas, start_row):
+        s = Session()
+        rows = oracle_rows()
+        lo, hi = s.model.actuator_ctrlrange.T
+        for name, delta in names_deltas:
+            j = s.actuator_names.index(name)
+            ramp = delta if np.isscalar(delta) else delta
+            rows[start_row:, j] = np.clip(rows[start_row:, j] + ramp, lo[j], hi[j])
+        return s, rows
 
-        s, rows = knock.knock_rows()
-        st = s.status()
+    def test_knock_fails_fast_and_permanently(self):
+        """While stirring, the right elbow bends 0.3 rad further: the spoon and hand shove the mug (cup_moved)."""
+        s = Session()
+        rows = oracle_rows()
+        j = s.actuator_names.index("ELBOW_PITCH_R_J3_target")
+        ramp = np.clip((np.arange(len(rows)) - 300) / 40.0, 0, 1) * 0.3
+        lo, hi = s.model.actuator_ctrlrange.T
+        rows[:, j] = np.clip(rows[:, j] + ramp, lo[j], hi[j])
+        st = s.replay(rows)
+        self.assertFalse(st["success"])
+        self.assertTrue(st["failed"])
         self.assertEqual(st["reason"], "cup_moved")
         failed_at = st["steps"]
-        self.assertLess(failed_at, len(rows) + 1)
-        # Later rows (here: the whole oracle) cannot undo the failure.
         for row in oracle_rows()[:50]:
             s.step(row)
         self.assertEqual(s.status()["steps"], failed_at)
-        self.assertEqual(s.status()["reason"], "cup_moved")
         s.close()
 
-    def test_drop_and_midair_release_fail_fast(self):
-        import demo
-
-        args = dict(out=None, grasp_offset=[0] * 6, approach=0.04, squeeze=1.0, tilt=0.15, bowl_z=0.037, radius=0.018,
-                    turns=5.0, rows_per_turn=110, closed_loop=1, extra_hold=60, mode="pendulum", upright_rows=80,
-                    settle_rows=50, start_angle=0.0, rest_bowl_z=0.026, lean=[0.0, -0.045, -0.02],
-                    retreat=[-0.06, -0.02, 0.10], kp=0.0, kd=0.0, kz=0.2)
-        for variant in ("drop", "midair"):
-            s, c = demo.run_pendulum(argparse.Namespace(**args, variant=variant))
-            st = s.status()
-            self.assertEqual(st["reason"], "spoon_dropped", variant)
-            self.assertEqual(st["stage"], 2, variant)  # stirring was complete; the drop still fails the episode
-            self.assertIn("unsupported_fall_speed_m_s", st["failure_detail"], variant)
-            s.close()
+    def test_release_while_carrying_fails_fast(self):
+        """Opening thumb and index while the spoon is carried beside the mug: dropped at the first falling substep."""
+        s, rows = self._modified((("right_thumb_CMC_FE", -0.8), ("right_index_MCP_FE", -0.8),
+                                  ("right_index_PIP", -1.0)), 1300)
+        st = s.replay(rows)
+        self.assertEqual(st["reason"], "spoon_dropped")
+        self.assertEqual(st["stage"], 2)  # stirring was complete; the drop still fails the episode
+        self.assertIn("unsupported_fall_speed_m_s", st["failure_detail"])
+        s.close()
 
     def test_spoon_dropped_on_worktop_fails(self):
         """A spoon released above the worktop fails while falling, at the first unsupported falling substep."""
@@ -227,18 +235,18 @@ class TrustBoundaryTests(unittest.TestCase):
                 "unknown hand": save(folder / "b.npz", hold, hand=np.array("shadow")),
                 "other task": save(folder / "c.npz", hold, task=np.array("assemble_hamburger")),
                 "wrong actuator order": save(folder / "d.npz", hold, actuator_names=np.array(s.actuator_names[::-1])),
-                "wuji rows labelled sharpa": save(folder / "e.npz", np.zeros((20, 26))),
-                "27 columns": save(folder / "f.npz", np.zeros((20, 27))),
-                "non-finite": save(folder / "g.npz", np.where(np.arange(28) == 3, np.nan, hold)),
-                "infinite": save(folder / "g2.npz", np.where(np.arange(28) == 8, np.inf, hold)),
-                "out of range": save(folder / "h.npz", hold + np.r_[np.zeros(6), 10.0 * np.ones(22)]),
+                "wuji rows labelled sharpa": save(folder / "e.npz", np.zeros((20, 54))),
+                "57 columns": save(folder / "f.npz", np.zeros((20, 57))),
+                "non-finite": save(folder / "g.npz", np.where(np.arange(58) == 3, np.nan, hold)),
+                "infinite": save(folder / "g2.npz", np.where(np.arange(58) == 8, np.inf, hold)),
+                "out of range": save(folder / "h.npz", hold + np.r_[np.zeros(14), 10.0 * np.ones(44)]),
                 "too many rows": save(folder / "i.npz", np.repeat(hold[:1], MAX_ROWS + 1, 0)),
                 "object array": folder / "j.npz",
                 "hand array": save(folder / "k.npz", hold, hand=np.array(["sharpa", "wuji"])),
-                "empty": save(folder / "o.npz", np.zeros((0, 28))),
+                "empty": save(folder / "o.npz", np.zeros((0, 58))),
             }
             with open(cases["object array"], "wb") as stream:
-                np.savez(stream, actions=np.array([[None] * 28], dtype=object))
+                np.savez(stream, actions=np.array([[None] * 58], dtype=object))
             cases["not a zip"] = folder / "l.npz"
             cases["not a zip"].write_bytes(b"PK\x03\x04" + os.urandom(2000))
             truncated = save(folder / "m.npz", hold, hand=np.array("sharpa"))
@@ -268,7 +276,7 @@ class TrustBoundaryTests(unittest.TestCase):
     def test_step_validates_rows(self):
         s = Session()
         with self.assertRaises(ValueError):
-            s.step(np.zeros(26))
+            s.step(np.zeros(54))
         bad = s.hold_action()
         bad[0] = 5.0
         with self.assertRaises(ValueError):
@@ -293,15 +301,17 @@ class HandTests(unittest.TestCase):
 
     def test_wuji_scene_same_wrist_and_objects(self):
         sharpa, wuji = Session(), Session(hand="wuji")
-        self.assertEqual(wuji.action_dim, 26)
-        self.assertEqual(wuji.actuator_names[:6], sharpa.actuator_names[:6])
-        self.assertTrue(all(name.startswith("r_wuji_") for name in wuji.actuator_names[6:]))
-        self.assertTrue(np.array_equal(wuji.model.actuator_ctrlrange[:6], sharpa.model.actuator_ctrlrange[:6]))
-        self.assertTrue(np.array_equal(wuji.model.actuator_gainprm[:6], sharpa.model.actuator_gainprm[:6]))
-        self.assertTrue(np.array_equal(wuji.hold_action()[:6], sharpa.hold_action()[:6]))
-        for body in ("cup", "spoon"):
-            self.assertTrue(np.array_equal(wuji.data.xpos[wuji.model.body(body).id],
-                                           sharpa.data.xpos[sharpa.model.body(body).id]))
+        self.assertEqual((sharpa.action_dim, wuji.action_dim), (58, 54))
+        self.assertEqual(wuji.actuator_names[:14], sharpa.actuator_names[:14])
+        self.assertTrue(all(name.startswith(("l_wuji_", "r_wuji_")) for name in wuji.actuator_names[14:]))
+        self.assertTrue(np.array_equal(wuji.model.actuator_ctrlrange[:14], sharpa.model.actuator_ctrlrange[:14]))
+        self.assertTrue(np.array_equal(wuji.model.actuator_gainprm[:14], sharpa.model.actuator_gainprm[:14]))
+        # Sharpa starts holding the spoon above the mug (the source film's start, a settled contact grasp); with Wuji
+        # the spoon starts leaning in the mug and the open hand hangs above it (task text).
+        self.assertIn("thumb", sharpa.features()["spoon_fingers"])
+        self.assertGreater(sharpa.data.site_xpos[sharpa.model.site("bowl_center").id][2], 0.85)
+        self.assertEqual(wuji.features()["hand_spoon_contacts"], 0)
+        self.assertGreater(wuji.features()["spoon_cup_contacts"], 0)
         self.assertEqual(len(wuji.checker.fingertip_sites), 5)
         self.assertEqual(wuji.substeps, sharpa.substeps)
 
@@ -311,8 +321,8 @@ class HandTests(unittest.TestCase):
         hold = s.hold_action()
         lo, hi = s.model.actuator_ctrlrange.T
         rows = np.repeat(hold[None], 150, 0)
-        rows[:, 6:] = np.clip(hold[6:] + 0.3 * np.sin(np.linspace(0, 6, 150))[:, None] * rng.uniform(-1, 1, 20),
-                              lo[6:], hi[6:])
+        rows[:, 14:34] = np.clip(hold[14:34] + 0.3 * np.sin(np.linspace(0, 6, 150))[:, None] * rng.uniform(-1, 1, 20),
+                                 lo[14:34], hi[14:34])  # the parked left hand's fingers only
         with tempfile.TemporaryDirectory() as folder:
             folder = Path(folder)
             s.save_trajectory(rows, folder / "wuji.npz")
