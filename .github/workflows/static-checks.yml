@@ -44,14 +44,6 @@ jobs:
           else
             bash ci_checks/run_invariants.sh
           fi
-  # Transitional (board 0124): the context `checks` that branch protection required before v2.0 passes exactly when
-  # `invariants` passes. Remove it once branch protection requires `invariants` instead.
-  checks:
-    needs: invariants
-    runs-on: [self-hosted, rcb-ci]
-    timeout-minutes: 5
-    steps:
-      - run: echo "invariants passed (the required check is now the job invariants)"
   # Every other check (docs/PROTOCOL.md §1-§7 are recommendations): findings are warnings, never a failure of the
   # workflow (continue-on-error; exit 3 = warnings only), shown as annotations, in the job summary and, on a pull
   # request, in the "Advisories (not blocking)" section of its sticky overview comment (ci_checks/pr_overview.py;
