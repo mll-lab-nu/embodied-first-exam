@@ -249,6 +249,10 @@ measure. What follows:
 - The prefix `roboolympics-` is in `ci_checks/check-verifier-isolation.sh` `OPEN_EGRESS`, `scripts/task_conventions.py`
   `EXTERNAL_OPEN` and `scripts/set_agent_egress.py` `OPEN_EGRESS`; `scripts/run_agent_batch.sh` does not narrow these
   tasks' copies to the usage gateway (the model API still goes through it).
+- With open egress the gateway is not the only road to a model provider (the provider key is in the agent's
+  container): its token accounting and its budget (PROTOCOL §5) bind only what the harness itself sends, so these runs'
+  usage is reported as harness-reported, and a trial that called a model API directly is flagged in review (moved from
+  PROTOCOL §2.11 on 2026-10-14).
 - Results are not comparable with a closed-network run of the same tasks and are reported as open-network results.
 - Nothing an agent can reach holds a solution: the image holds the robot library and the two built-in policies; the
   reference controllers are under `solution/` only; RoboOlympics' repository and this one are private.

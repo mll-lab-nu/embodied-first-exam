@@ -17,7 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-standard"
 SERVER = ROOT / "images/mujoco/limited/server_mj.py"
 IMAGE = "ghcr.io/mll-lab-nu/eai-mujoco:0.1.2"
-# DexToolBench standard's reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
+# DexToolBench standard's reset budget (RCB_RESET_BUDGET's default; DexToolBench's own choice, PROTOCOL §4.5; owner
 # 2026-10-13, board 0099): 20. With one episode the first grasp decided the trial: all 21 of GPT-6 Astra's standard trials
 # knocked the tool off the table at some point, and a tool on the floor cannot be recovered. RCB_RESET_BUDGET=0 still runs
 # one episode. The Playground ALOHA / Panda twins (same service) keep 0: their final state is graded, nothing ends early.
