@@ -22,10 +22,9 @@ import argparse, json, os, pathlib, sys, tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robodojo"
 OVERRIDES = json.loads((HERE / "instance_overrides.json").read_text())   # per-task determinism class, physics, change log
-# The agent's time limit is not this generator's: scripts/task_cutoffs.toml is the one table (docs/PROTOCOL.md §2.12), and
-# scripts/task_conventions.py (normalize) writes `[agent] timeout_sec`, the instruction's closing `## Time limit` section,
-# the README row and the standard service's RCB_WALL_CLOCK_S from it (ci_checks/check-cutoffs.py compares). What is
-# rendered here takes the number from the same table (agent_timeout) and the instruction's own text names none: CUTOFF
+# The agent's time limit is CUTOFF_SEC below, written into `[agent] timeout_sec` (docs/PROTOCOL.md §2.12), from which
+# scripts/task_conventions.py (normalize) writes the instruction's closing `## Time limit` section, the README row and the
+# standard service's RCB_WALL_CLOCK_S (ci_checks/check-cutoffs.py compares). The instruction's own text names none: CUTOFF
 # is what RoboDojo adds to the closing `## Time limit` section, placed right after the task's introduction.
 CUTOFF = {
     "privileged": """`/app/output/trajectory.npz` must be written before the time limit (`## Time limit`) is up: save a working
@@ -118,11 +117,15 @@ def normalizer():
     return normalize
 
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
+
+
 def agent_timeout(mode: str) -> int:
-    """The agent's cutoff of a mode in seconds, from the one table (scripts/task_cutoffs.toml)."""
-    sys.path.insert(0, str(ROOT / "scripts"))
-    from task_conventions import cutoff_sec
-    return cutoff_sec("RoboDojo", mode)
+    return CUTOFF_SEC[mode]
 
 
 def fill(text: str, values: dict) -> str:

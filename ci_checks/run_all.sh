@@ -76,9 +76,10 @@ add bash ci_checks/check-standard-client.sh                 # standard agent + v
 # PROTOCOL §2.9 (v1.1.4): [metadata.resources] (minimum compute) in every task.toml, consistent with the GPU reservations and
 # caps, and the README's Compute resources section rendered from it
 add python3 ci_checks/check-resources.py"$pargs"
-# PROTOCOL §2.12: the agent's time cutoff. One table (scripts/task_cutoffs.toml); task.toml, the closing `## Time limit` section of
-# instruction.md, the README row and the standard modes' sim service all say its number, and nothing else states the limit
-add python3 ci_checks/check-cutoffs.py"$pargs"
+# PROTOCOL §2.12: the agent's time cutoff, each task's own `[agent] timeout_sec` (no table): at most 14400 s, the closing
+# `## Time limit` section of instruction.md, the README row and the standard modes' sim service say it, nothing else states
+# the limit, and twins (`same_cutoff_as`) have the same number. Per task: a scoped run checks its benchmarks' tasks only
+add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
 # PROTOCOL §2.14: scene dynamics, `[metadata] dynamics` from the one table (scripts/task_dynamics.toml)
 add python3 ci_checks/check-dynamics.py"$pargs"

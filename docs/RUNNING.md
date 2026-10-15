@@ -99,7 +99,7 @@ installed, each under a timeout of its own, not from the container's start; a st
 the environment, and what it has not finished starting by then is waited out inside the agent's time), stops the agent
 at the cutoff with
 `AgentTimeoutError`, and then collects the artifacts and runs the verifier as after any other end, so the trial is
-graded as it stands. The number comes from one table, `scripts/task_cutoffs.toml` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
+graded as it stands. The number is the task's own `[agent] timeout_sec` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
 §2.12), and the task's instruction states it in its last section, `## Time limit`. Harbor hands `instruction.md` to the
 agent as it is and `scripts/run_agent_batch.sh` adds nothing to it, so that section is the last thing the agent reads. Official runs pass no multiplier or override for it: never
 `--timeout-multiplier`, `--agent-timeout-multiplier` or an agent `override_timeout_sec` (a result is only comparable

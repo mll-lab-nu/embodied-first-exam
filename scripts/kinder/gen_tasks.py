@@ -36,8 +36,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 TASKS_DIR = ROOT / "tasks"
-sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0 conventions)
-BENCHMARK = "KinDER"   # this benchmark's row of scripts/task_cutoffs.toml (the label of task_conventions.BENCHMARKS)
+sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
 # standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
 # 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
@@ -246,9 +250,9 @@ def context(t: dict, d: dict, f: dict) -> dict:
         "action_layout": action_layout(f, standard=False),
         "standard_action_layout": action_layout(f, standard=True),
         "expert_hours": t["expert_hours"], "standard_expert_hours": 2 * t["expert_hours"],
-        # the agent's time limit: the cutoff table's (scripts/task_cutoffs.toml, PROTOCOL §2.12), never stated as a number
-        # in a template: normalize writes it, and the texts say "the time limit (`## Time limit`)"
-        "agent_timeout": float(cutoff_sec(BENCHMARK, "privileged")),
+        # the agent's time limit: CUTOFF_SEC's (PROTOCOL §2.12), never stated as a number in a template: normalize renders
+        # the closing section from task.toml, and the texts say "the time limit (`## Time limit`)"
+        "agent_timeout": float(CUTOFF_SEC["privileged"]),
         "verifier_timeout": float(d["verifier_timeout_sec"]), "image_hw": "×".join(map(str, std["image_hw"])),
         "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",
         **oracle_fields(t, d, "privileged"),
@@ -266,7 +270,7 @@ def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dic
                          "robot_time": f" ({ctx['robot_seconds']} s of robot time)" if ctx["view"] == "task_view" else "",
                          "chunk_rows": 100,   # max_chunk_s (10 s) / control_dt (0.1 s)
                          "blocked_note": " or at a step the robot refuses (`meta[\"blocked\"]`)" if kinematic else "",
-                         "agent_timeout": float(cutoff_sec(BENCHMARK, "standard")),
+                         "agent_timeout": float(CUTOFF_SEC["standard"]),
                          **oracle_fields(t, d, "standard")}
 
 

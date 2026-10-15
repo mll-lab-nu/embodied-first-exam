@@ -69,11 +69,15 @@ def normalizer():
     return normalize
 
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600, "standard-realtime": 3600}
+
+
 def agent_timeout(mode: str) -> int:
-    """The agent's cutoff of a mode in seconds, from the one table (scripts/task_cutoffs.toml)."""
-    sys.path.insert(0, str(ROOT / "scripts"))
-    from task_conventions import cutoff_sec
-    return cutoff_sec("Panda Dynamic Scenes", mode)
+    return CUTOFF_SEC[mode]
 
 
 def fill(text: str, values: dict) -> str:
