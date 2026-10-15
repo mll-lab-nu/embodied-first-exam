@@ -215,7 +215,6 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
         "policy_error": int(error is not None),
         "calls": calls,
         "refused": refusals,
-        "sport": ad.SPORT,
         "level": level,
         "seed": seed,
         "slowdown": slowdown,
@@ -223,6 +222,7 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
         "isolation_checked": int(not unsafe_local),
     }
     diagnostics = {
+        "sport": ad.SPORT,  # reward.json holds numbers only (Harbor parses every value)
         "reason": reason,
         "error": error,
         "frozen_commit": FROZEN,
