@@ -19,7 +19,12 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in two fresh processes and scored 1 if RoboLab's success predicate
 holds in both replays (the predicate is checked after every control step and the first step where it holds ends the
-episode: later rows are never executed) and both end in the same state, else 0. Also leave the script that produced it at
+episode: later rows are never executed) and both end in the same state, else 0. After the last row the replay holds that
+row's command for 30 more control steps (2 s) while the predicate is still checked, so a release in the last rows
+completes (`s.replay` does the same); a trajectory that ends with an object in the gripper goes on holding it. "The
+gripper" in the predicate (`require_gripper_detached`, `gripper_detached`, `in_contact(..., "gripper")`) is both Robotiq
+fingers: an object touching either finger is held (RoboLab's DROID setup watched the left inner finger alone; this
+task's tooling sets `contact_gripper` to both, with RoboLab's own alias group). Also leave the script that produced it at
 `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as you improve it: whatever is in
 `/app/output/` when the time is up is graded. The file holds `task` and `actions`, a (T, 8) float array of at most
 **100,000 rows** (one per control step, 1.9 h of robot time); anything else (another shape, NaN, more rows, a file that is
@@ -73,9 +78,12 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   orientation for a vertical approach whose finger-closing direction is rotated by `yaw` (rad, about z) from the reset
   pose; at yaw 0 the fingers close along `p["get_finger_closing_dir"]()` (world y at the reset pose), and
   `p["yaw_for_closing_dir"]([dx, dy])` gives the yaw for any horizontal closing direction. The Robotiq opens to 8.5 cm.
-- One `Session` per process (Isaac Sim launches once, ~70 s; the scene ~30 s more). Physics is PhysX on the **CPU**
-  (a live run, the first `s.replay()` in a process and a fresh-process replay of the same actions end in the same state;
-  later in-process replays can differ in the last digits), rendering on the GPU; ~15 control steps/s. Do not call `s.close()` before writing every output.
+- One `Session` per process (Isaac Sim launches once, ~70 s; the scene ~30 s more). Physics is PhysX on the **CPU**,
+  rendering on the GPU; ~15 control steps/s. The first episode of a process (a live run before any `s.reset()`, or the
+  first `s.replay()`) ends in the same state as the grader's fresh-process replay of the same actions. After `s.reset()`
+  the state is restored but not every PhysX internal: a live run recorded after a reset, and later in-process replays,
+  can end differently (in recorded trials a success after a few resets failed the fresh replay), so record the final
+  trajectory from the first episode of a fresh process and check it with the CLI replay below, which runs in one. Do not call `s.close()` before writing every output.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
