@@ -46,7 +46,7 @@ timeout_sec = 10800               # = finalize.sh's HOOK_BUDGET_S (keep them equ
                                   # finalize.sh ends a replay that would pass this deadline and records it (replay_error, infra_error)
 
 [agent]
-timeout_sec = @@AGENT_TIMEOUT_S@@.0              # the agent's cutoff: scripts/task_cutoffs.toml, the one table (written by normalize, PROTOCOL §2.12), as the service's RCB_WALL_CLOCK_S
+timeout_sec = @@AGENT_TIMEOUT_S@@.0              # the agent's cutoff, this task's own (PROTOCOL §2.12), as the service's RCB_WALL_CLOCK_S
 # RoboDojo's training demonstrations and policy checkpoints are public (Hugging Face), so the agent reaches the model APIs and the package registries,
 # nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

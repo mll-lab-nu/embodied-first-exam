@@ -7,7 +7,9 @@
 - scripts/clamp_cpus.py clamps every CPU cap of a task copy to the host's count (PROTOCOL §2.10) and nothing else, and
   refuses the repository's own tasks;
 - scripts/run_agent_batch.sh runs a task whose cap is above HOST_CPUS from a clamped copy (a stand-in `harbor` on PATH
-  records what it was given), runs a task without such a cap from tasks/ as before, and leaves tasks/ unchanged."""
+  records what it was given), runs a task without such a cap from tasks/ as before, and leaves tasks/ unchanged;
+- (board 0121 M4) a trial whose last model calls failed at the usage gateway, or whose job the gateway died in, is not a
+  result; with GATEWAY=1 the runner restarts a dead gateway before the next job."""
 import json
 import os
 import re
@@ -32,10 +34,12 @@ def check(cond, what):
         print("FAIL", what)
 
 
-def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None) -> str:
+def result_line(td: Path, result: dict, reward=None, gateway=None, codex=None, down=False) -> str:
     jobs = td / "jobs"; job = f"j{len(list(jobs.glob('*'))) if jobs.exists() else 0}"
     trial = jobs / job / f"{TASK}__abc"
     trial.mkdir(parents=True)
+    if down:                                   # run_agent_batch.sh found the usage gateway dead after the job
+        (jobs / job / "gateway_down.json").write_text("{}")
     (trial / "result.json").write_text(json.dumps({"task_name": TASK, **result}))
     if reward is not None:
         (trial / "verifier").mkdir()
@@ -81,11 +85,24 @@ def test_results():
             ("over the budget without a reward", {}, None, {"over_token_budget": True}, None, "over the token budget"),
             ("over the budget, infra_error", {}, {"success": 0, "infra_error": 1}, {"over_token_budget": True}, None, "not a result"),
         ]
+        # board 0121 M4: the model API unreachable through the usage gateway at the end of the trial: not the agent's 0
+        gw = lambda n, last="unreachable: ConnectionRefusedError": {"requests": 3, "input": 10, "output": 2, "upstream_failures": n + 1,
+                                                                    "failures_in_a_row": n, "last_upstream_failure": last}
+        cases += [
+            ("the gateway's upstream unreachable at the end", {}, {"success": 0}, gw(6), None, "not a result"),
+            ("a stream broken off at the end, at the cutoff", timeout, {"success": 0}, gw(1, "stream broken off: TimeoutError"), None,
+             "not a result"),
+            ("gateway failures the agent got past", {}, {"success": 0}, gw(0), None, "**0**"),
+            ("a success after gateway failures", {}, {"success": 1}, gw(2), None, "**1 (success)**"),
+            ("over the budget with gateway failures", {}, {"success": 0}, {**gw(4), "over_token_budget": 1}, None, "over the token budget"),
+        ]
         for name, result, reward, gateway, codex, want in cases:
             line = result_line(td, result, reward, gateway, codex)
             check(want in line, f"write_task_results: {name}: {line}")
             if want != "not a result":
                 check("not a result" not in line, f"write_task_results: {name} is a result: {line}")
+        line = result_line(td, {}, {"success": 0}, down=True)
+        check("not a result" in line and "gateway was down" in line, f"write_task_results: the gateway down after the job: {line}")
         line = result_line(td, {"exception_info": {"exception_type": "EnvironmentStartTimeoutError"}})
         check("EnvironmentStartTimeoutError" in line and "no reward.json" in line, f"the reason names Harbor's exception: {line}")
 
@@ -179,11 +196,51 @@ def test_batch_runner():
             check(caps(ROOT / "tasks" / t) == c, f"tasks/{t} was changed")
 
 
+KILLER_HARBOR = r'''#!/usr/bin/env python3
+import glob, os, signal, sys
+a = sys.argv[1:]
+jobs, job = a[a.index("-o") + 1], a[a.index("--job-name") + 1]
+os.makedirs(os.path.join(jobs, job), exist_ok=True)
+logs = sorted(glob.glob(os.path.join(jobs, ".gateway", "gateway-*.log")), key=os.path.getmtime)
+with open(os.environ["FAKE_HARBOR_OUT"], "a") as f:
+    f.write(job + " " + " ".join(os.path.basename(l) for l in logs) + "\n")
+if not os.path.exists(os.environ["FAKE_HARBOR_OUT"] + ".killed"):     # the first job: the gateway dies under it
+    open(os.environ["FAKE_HARBOR_OUT"] + ".killed", "w").close()
+    os.kill(int(os.path.basename(logs[-1])[len("gateway-"):-len(".log")]), signal.SIGKILL)
+'''
+
+
+def test_gateway_restart():
+    """Board 0121 M4: GATEWAY=1, the gateway killed during the first job: that job gets gateway_down.json (its trials are
+    not results), the runner restarts the gateway on its port before the next job, and the next job runs."""
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "bin").mkdir()
+        (td / "bin/harbor").write_text(KILLER_HARBOR); (td / "bin/harbor").chmod(0o755)
+        rec = td / "harbor.txt"
+        env = {**os.environ, "PATH": f"{td / 'bin'}:{os.environ['PATH']}", "FAKE_HARBOR_OUT": str(rec), "JOBS": str(td / "jobs"),
+               "RESULTS": "", "LOG_MIRROR": "0", "MEM_GUARD": "0", "GATEWAY": "1", "GATEWAY_BIND": "127.0.0.1",
+               "GATEWAY_EGRESS": "task", "WEB_SEARCH": "allowed", "MODES": "standard", "HOST_CPUS": "64"}
+        r = subprocess.run(["bash", str(ROOT / "scripts/run_agent_batch.sh"), "gwtest", SMALL, "robotwin_2_0_place_a2b_left"],
+                           env=env, capture_output=True, text=True, timeout=300)
+        check(r.returncode == 0, f"run_agent_batch.sh (gateway) exited {r.returncode}: {r.stderr[-800:]}")
+        runs = rec.read_text().splitlines() if rec.exists() else []
+        check(len(runs) == 2, f"harbor ran {len(runs)} times: {runs}")
+        log = (td / "jobs/gwtest.log").read_text()
+        check("restarting it on port" in log and "usage gateway restarted" in log, f"no gateway restart in the log: {log[-1500:]}")
+        check((td / f"jobs/gwtest-standard-{SMALL}/gateway_down.json").exists(), "the job the gateway died in has no gateway_down.json")
+        check(not (td / "jobs/gwtest-standard-robotwin_2_0_place_a2b_left/gateway_down.json").exists(),
+              "the job after the restart has a gateway_down.json")
+        pids = {l.split()[-1] for l in runs}
+        check(len(pids) == 2, f"the second job did not run behind a new gateway: {runs}")
+
+
 if __name__ == "__main__":
     test_results()
     test_clamp()
     test_batch_runner()
+    test_gateway_restart()
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
-    print("ok: write_task_results not-a-result cases, clamp_cpus, run_agent_batch.sh clamped copies")
+    print("ok: write_task_results not-a-result cases, clamp_cpus, run_agent_batch.sh clamped copies and gateway restart")
