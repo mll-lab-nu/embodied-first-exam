@@ -420,12 +420,7 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 ## Wave-2 household scene families
 
 Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
-household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
-tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
-`vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each
-flange (`book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`,
-`envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the left one parked)
-completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
+household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`, `vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`, `envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the left one parked) completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
 springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written
 only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity
 the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules
@@ -433,9 +428,9 @@ above apply: fail-fast at the first violating physics substep (unless the sectio
 partial credit, and a released or held terminal window. Each instruction states the exact predicate and every threshold;
 each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its authoring tests. All
 run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success,
-where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever
-that was physically feasible (pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each
-section names what was restored and what remains, with the reason.
+where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored source-scene details
+(pre-closed or pre-placed parts, enlarged parts and widened clearances reverted) in the families whose sections say so,
+each naming what was restored and what remains, with the reason; the other families keep their wave-2 version.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -456,8 +451,8 @@ remote or the tray slid more than 0.03 m or tilted more than 15 degrees; the gra
 cell touching the table again after it was lifted; a cell without hand contact falling faster than 0.886 m/s, or a cell
 touching nothing falling faster than 0.5 m/s (no grace period); unstable physics; 6,000 controls. Wave 3 restored the
 source size (the shell was widened 1.25 times) and the door latch (the door was held by friction only). Remaining
-deviation: the compartment's compressible - spring is replaced by fixed terminals with 3 mm play. Oracle: 2,416 Sharpa
-rows on the arm (success at 2,266); no Wuji solution.
+deviation: the compartment's compressible - spring (80 N/m in the source) is replaced by fixed terminals with 3 mm play;
+a spring version was not attempted. Oracle: 2,416 Sharpa rows on the arm (success at 2,266); no Wuji solution.
 
 ### Stir milk into coffee (`coffee_stir`, T11)
 
@@ -499,9 +494,10 @@ faster than 0.3 m/s (or falling faster than 1.0 m/s at any time); floor contact 
 lid leaving the thread upward outside the ramp gaps; unstable physics; 3,000 controls. The lid is lightly closed (no
 vacuum, seal adhesion or preload); the jam is part of the jar's rigid mass. Not restored, with evidence in the family
 README: a second hand holding the jar (on the 67 mm body just above the worktop the holding palm could not be placed:
-forearm and wrist against the worktop, J6/J7 limits; the best grips held only 0.06-1.02 N m) and a seal breakaway torque
-of 1-2 N m (without a holding hand, one hand would turn the whole jar, which stands on about 0.13 N m of friction).
-Oracle: 1,159 Sharpa rows on the arm (success at 1,009); Wuji: `solution/wuji/` (1,242 rows, success at 1,097).
+forearm and wrist against the worktop, J6/J7 limits; in exploratory runs, whose numbers were not archived, the best
+grips held only about 0.06-1.02 N m) and a seal breakaway torque of about 1-2 N m (without a holding hand, one hand
+would turn the whole jar, which stands on about 0.13 N m of friction). Oracle: 1,159 Sharpa rows on the arm (success at
+1,009); Wuji: `solution/wuji/` (1,242 rows, success at 1,097).
 
 ### Manual coffee grinder (`grinder_crank`, T15)
 
@@ -881,7 +877,7 @@ trial):
 | `stool_brace_insert` | 1 / 0 | 1 / 0 | 17 min | 0.45 / 0.65 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `ram_module_install` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.58 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `boot_sole_brush` | 1 / 0 | 1 / 0 | 3 min | 0.55 / 0.75 | Wuji oracle 1 in both modes; standard nop 0 |
-| `paper_staple` | 1 / 0 | 1 / 0 | 2 min | 0.40 / 0.82 | Wuji oracle 1 in both modes; standard nop 0 |
+| `paper_staple` | 1 / 0 | 1 / 0 | 6 min | 3.40 / 2.48 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `binder_page_load` | 1 / 0 | 1 / 0 | 6 min | 0.44 / 0.67 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `envelope_letter_insert` | 1 / 0 | 1 / 0 | 19 min | 3.40 / 2.38 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `book_page_turn` | 1 / 0 | 1 / 0 | 5 min | 3.47 / 2.48 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
