@@ -22,7 +22,6 @@ from runtime import Session  # noqa: E402
 from scene import hands  # noqa: E402
 
 ORACLE = FAMILY / "solution/trajectory.npz"
-ORACLE_WUJI = FAMILY / "solution/wuji/trajectory.npz"
 SLOW = pytest.mark.skipif(os.environ.get("PANCAKE_FAST") == "1", reason="full-episode replay")
 
 
@@ -34,7 +33,7 @@ def replay_cli(tmp_path, traj, *extra):
 
 
 def oracle_rows(path=ORACLE):
-    return hands.read_trajectory(path, widths={"sharpa": 28, "wuji": 26}, max_rows=3000)[0]
+    return hands.read_trajectory(path, widths={"sharpa": 58, "wuji": 54}, max_rows=3000)[0]
 
 
 @SLOW
@@ -43,12 +42,6 @@ def test_oracle_succeeds_twice_with_identical_hash(tmp_path):
     second = replay_cli(tmp_path, ORACLE)
     assert first["success"] and second["success"] and first["state_sha"] == second["state_sha"]
     assert first["n_actions"] - first["steps"] >= 50  # slack rows after success
-
-
-@SLOW
-def test_wuji_oracle_succeeds(tmp_path):
-    result = replay_cli(tmp_path, ORACLE_WUJI)
-    assert result["success"] and result["hand"] == "wuji"
 
 
 @SLOW
@@ -63,12 +56,12 @@ def test_nop_fails(hand):
     s = Session(hand=hand)
     status = s.replay(np.tile(s.hold_action(), (400, 1)))
     assert not status["success"] and status["stage"] == 0
-    assert status["hand_holds_spatula"]  # the frozen grasp holds the turner
+    assert not status["hand_holds_spatula"]  # the turner rests on the counter until it is picked up
 
 
 @SLOW
 def test_truncated_oracle_is_partial():
-    status = Session().replay(oracle_rows()[:650])
+    status = Session().replay(oracle_rows()[:950])
     assert not status["success"] and status["stage"] == 2
 
 
@@ -84,18 +77,18 @@ def test_one_row_short_of_the_hold_fails():
 def test_drop_fails_fast_and_later_rows_cannot_undo_it():
     rows = oracle_rows()
     s = Session()
-    for row in rows[:470]:  # lifted on the blade
+    for row in rows[:770]:  # lifted on the blade
         s.step(row)
     assert s.checker.stage >= 1
-    tipped = rows[469].copy()
-    tipped[3] -= 0.9  # roll the wrist hard: the pancake slides off
+    tipped = rows[769].copy()
+    tipped[13] -= 0.9  # roll the right wrist (WRIST_ROLL_R_J7) hard: the pancake slides off
     for _ in range(80):
         s.step(tipped)
         if s.done:
             break
     assert s.failure in ("pancake_dropped", "pancake_touched_by_hand")
     steps = s.steps
-    s.step(rows[500])
+    s.step(rows[800])
     assert s.steps == steps and not s.success
 
 
@@ -115,7 +108,7 @@ def test_state_sha_ignores_instruction_text():
 def test_wrong_width_and_hand_label_rejected(tmp_path):
     rows = oracle_rows()[:10]
     bad = tmp_path / "bad.npz"
-    hands.write_trajectory(bad, rows, hand="wuji", task="pancake_serve")  # 28-wide rows labelled wuji
+    hands.write_trajectory(bad, rows, hand="wuji", task="pancake_serve")  # 58-wide rows labelled wuji
     result = replay_cli(tmp_path, bad)
     assert result["bad_trajectory"] == 1 and not result["success"]
 
@@ -127,7 +120,7 @@ def test_nan_and_out_of_range_rejected(tmp_path):
     np.savez(bad, actions=rows)
     assert replay_cli(tmp_path, bad)["bad_trajectory"] == 1
     rows = oracle_rows()[:10].copy()
-    rows[2, 0] = 5.0  # wrist_x beyond its range
+    rows[2, 7] = 5.0  # right shoulder pitch beyond its range
     hands.write_trajectory(bad, rows, hand="sharpa", task="pancake_serve")
     assert replay_cli(tmp_path, bad)["bad_trajectory"] == 1
 

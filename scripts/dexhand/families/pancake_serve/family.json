@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 28,
-    "wuji": 26
+    "sharpa": 58,
+    "wuji": 54
   },
-  "robot": "sharpa-wave-floating",
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 3000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -36,13 +38,15 @@
   },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/trajectory.npz replays a physical Sharpa Wave serving trajectory in both modes (874 rows; the episode ends at success after 724 controls; standard: the same rows submitted through the public client). It passes two fresh-process replays with identical state hashes, also succeeds with float32-rounded rows, and the Harbor oracle scored 1 in both modes.",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory on the Marvin arm rig (1,167 controls; the turner is picked up from the counter, the replay ends at success after 1,017 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows.",
     "expert_time_estimate_hours": 4.0,
     "keywords": [
-      "tool-use",
-      "spatula",
+      "arm",
+      "flexible-tool",
       "food-transfer",
-      "flexible-tool"
+      "pick-up",
+      "spatula",
+      "tool-use"
     ]
   },
   "control_hz": 50,
@@ -54,6 +58,6 @@
     "video_sec": 900
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage (world-frame x, y, z slides in metres, then serial X, Y, Z hinges in radians), with the same joint ranges, gains and start targets; the reset grasp of the turner is hand-specific."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
   }
 }

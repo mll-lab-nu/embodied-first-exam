@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 28,
-    "wuji": 26
+    "sharpa": 58,
+    "wuji": 54
   },
-  "robot": "sharpa-wave-floating",
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 3000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -36,7 +38,7 @@
   },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/trajectory.npz: the 1,329-row Sharpa Wave authoring witness (success at control 1,178, then hold rows); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, 8/8 successes under 1e-4 m / 1e-3 rad row noise. Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (standard: the same rows through rcb_client, live = replay).",
+    "oracle_evidence": "solution/trajectory.npz: the 1,688-row Sharpa Wave witness on the Marvin right arm (success at control 1,538, then 150 hold rows), authored by tracking the wave-2 floating-hand episode's hand-root poses with arm inverse kinematics (closed loop, joint integral; the brush-transfer segment re-timed 3x slower); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, and no arm, stand or parked-hand contact occurs in any physics substep.",
     "expert_time_estimate_hours": 3.0,
     "keywords": [
       "tool_use",
@@ -56,6 +58,6 @@
     "video_sec": 900
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; with all six wrist targets at zero the palm faces down with the fingers pointing +y."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
   }
 }

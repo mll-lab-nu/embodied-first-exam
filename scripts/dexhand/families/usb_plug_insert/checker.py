@@ -2,13 +2,16 @@
 
 Everything is computed from the MuJoCo state (body poses, velocities and active contacts); nothing the agent supplies
 is read. Stages are ordered: (1) the plug is grasped and lifted, (2) the plug is seated in the target port, (3) the
-plug is released and stays seated for the terminal hold window. Fail-fast conditions end the episode at once.
+plug is released and stays seated for the terminal hold window. Fail-fast conditions end the episode at once, among
+them ``robot_collision``: any active contact of a Marvin arm link, the stand/torso or the parked left hand with anything.
 """
 
 from __future__ import annotations
 
 import numpy as np
 import mujoco
+
+from scene import robot_parts
 
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
@@ -34,7 +37,8 @@ class Checker:
         self.ports = np.array([[x, usb["hub"]["mouth_y"], 0.0] for x in usb["hub"]["ports_x"]])
         self.depth_full = float(usb["port_depth"])
         self.target = int(config["target_port"])
-        # Body ownership: hand (under the wrist stage), plug (plug, cable, far end), hub, world.
+        # Body ownership: hand (the working right hand under the flange mount ``wrist_stage``), robot (the Marvin
+        # stand, torso, both arms and the parked left hand), plug (plug, cable, far end), hub, world.
         self.owner = np.full(m.nbody, "world", dtype=object)
         stage = m.body("wrist_stage").id
         for b in range(1, m.nbody):
@@ -45,10 +49,15 @@ class Checker:
                     break
                 parent = int(m.body_parentid[parent])
             self.owner[b] = {stage: "hand", self.hub: "hub", self.plug: "plug"}.get(parent, "world")
+        _, others = robot_parts(m)
+        for b in others:
+            self.owner[b] = "robot"
         self.finger = [finger_of(m.body(b).name) if self.owner[b] == "hand" else None for b in range(m.nbody)]
         # Geoms of the rigid plug body itself (shell, housing, strain relief): the graspable connector.
         self.plug_rigid_geom = np.asarray(m.geom_bodyid == self.plug)
         self.geom_owner = np.asarray([self.owner[int(m.geom_bodyid[g])] for g in range(m.ngeom)], dtype=object)
+        # Geoms of the arm links, stand, torso and parked hand: any contact of one of them is a robot collision.
+        self.robot_geom = np.asarray(self.geom_owner == "robot")
         self.counter = m.geom("counter").id
         self.floor = m.geom("floor").id
         ws = config["workspace"]
@@ -110,9 +119,26 @@ class Checker:
         return fingers_on_plug, plug_touch, hub_hand, cable_hand
 
     # ------------------------------------------------------------------ fail fast
+    def robot_collision(self, data):
+        """The first active contact of an arm link / the stand / the torso / the parked hand with anything (the task
+        objects, the desk, the floor, the working hand or another robot part), else None."""
+        n = data.ncon
+        if not n:
+            return None
+        g1, g2 = data.contact.geom1[:n], data.contact.geom2[:n]
+        hit = (self.robot_geom[g1] | self.robot_geom[g2]) & (data.contact.efc_address[:n] >= 0)
+        if not hit.any():
+            return None
+        i = int(np.flatnonzero(hit)[0])
+        name = lambda g: self.m.geom(int(g)).name or self.m.body(int(self.m.geom_bodyid[int(g)])).name  # noqa: E731
+        return {"geom1": name(g1[i]), "geom2": name(g2[i])}
+
     def substep_violation(self, data):
         hub, plug, far = data.xpos[self.hub], data.xpos[self.plug], data.xpos[self.far]
         c = self.c
+        robot = self.robot_collision(data)
+        if robot:
+            return "robot_collision", robot
         if plug[2] < self.top - c["below_top_margin_m"]:
             return "plug_below_counter_top", {"plug_z": float(plug[2])}
         if hub[2] < self.top:

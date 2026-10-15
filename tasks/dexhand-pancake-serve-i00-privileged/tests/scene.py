@@ -213,6 +213,24 @@ def add_wrist_stage(world, actuator, hand_body, ranges):
                                       forcerange="-80 80" if i < 3 else "-10 10"))
 
 
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        for parent in HERE.parents:
+            path = parent / "shared/arm_rig.py"
+            if path.is_file():
+                spec = importlib.util.spec_from_file_location("arm_rig", path)
+                module = importlib.util.module_from_spec(spec)
+                sys.modules["arm_rig"] = module
+                spec.loader.exec_module(module)
+                return module
+        raise
+
+
 def _repo_hand_dir():
     """The repository's prepared Sharpa assets when this file sits in the repository layout; None in a task dir."""
     parents = HERE.parents
@@ -241,8 +259,10 @@ def build(config, asset_dir=None, hand="sharpa"):
         root.remove(key)
     assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
     hand_body = world.find("body")
-    world.remove(hand_body)
-    add_wrist_stage(world, actuator, hand_body, config["wrist_ranges"])
+    marvin = config.get("rig") == "marvin"
+    if not marvin:
+        world.remove(hand_body)
+        add_wrist_stage(world, actuator, hand_body, config["wrist_ranges"])
     for a in actuator:
         if a.tag == "general":
             # The vendor's velocity bias term is +0.9 (energy injecting); make it dissipative as in the
@@ -250,17 +270,30 @@ def build(config, asset_dir=None, hand="sharpa"):
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
             bias[2] = -0.9
             a.set("biasprm", " ".join(map(str, bias)))
-    if hand_id != "sharpa":
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    sibling = folder.parent / "wuji_v2_2"
+    wuji_folder = sibling if (sibling / "mjcf/right.xml").is_file() else None
+    if marvin:
+        # Tianji Marvin stand at the origin facing +x; the right arm serves, the left arm stays parked. The mount
+        # body on the right flange keeps the name "wrist_stage" (the checker's hand-root lookup).
+        rig = config["marvin"]
+        _arm_rig_module().mount_marvin(root, rig["base_pos"], rig["base_yaw"], hand=hand_id, active=("right",),
+                                       mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                                       wuji_folder=wuji_folder)
+    elif hand_id != "sharpa":
+        hands.replace_wave_hands(root, hand_id, folder=wuji_folder)
     add_materials(assets)
     node(world, "geom", name="floor", type="plane", pos=(0, 0, -0.1), size=(3, 3, 0.05), rgba=(0.55, 0.56, 0.55, 1),
          friction=(1, 0.005, 0.0001))
     node(world, "geom", name="counter_top", type="box", pos=(0.68, -0.10, COUNTER_Z - 0.025),
          size=(0.45, 0.55, 0.025), material="oak", friction=(FRICTION["counter"][0], 0.002, 0.0001))
     height = (COUNTER_Z - 0.025 + 0.1) / 2
-    node(world, "geom", name="counter_cabinet", type="box", pos=(0.70, -0.10, height - 0.1),
-         size=(0.42, 0.52, height), material="cabinet", contype=0, conaffinity=0, group=2)
+    x0, x1 = 0.28, 1.12
+    if marvin:
+        # The stand's base plate reaches 0.75 m in front of the base: the cabinet starts behind it (the near part of
+        # the counter top is cantilevered), so no robot geom overlaps furniture.
+        x0 = max(x0, float(config["marvin"]["base_pos"][0]) + 0.77)
+    node(world, "geom", name="counter_cabinet", type="box", pos=((x0 + x1) / 2, -0.10, height - 0.1),
+         size=((x1 - x0) / 2, 0.52, height), material="cabinet", contype=0, conaffinity=0, group=2)
     make_pan(assets, world)
     make_turner(assets, world)
     make_plate(assets, world)

@@ -21,8 +21,9 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-WIDE = {"position": (0.28, -0.80, 1.16), "target": (0.72, -0.035, 0.77), "lens": 34}
-CLOSE = {"position": (0.47, -0.37, 0.84), "target": (0.652, -0.118, 0.712), "lens": 44}
+# Arm films: a wide shot from the robot's left-front quarter (robot, desk, hub and plug), then the port close-up.
+WIDE = {"position": (0.05, -1.05, 1.45), "target": (0.72, -0.22, 0.85), "lens": 30}
+CLOSE = {"position": (0.20, -0.75, 0.95), "target": (0.66, -0.15, 0.72), "lens": 40}
 
 
 def main():
@@ -119,6 +120,7 @@ def main():
     rubber = material("Studio forest elastomer", (0.22, 0.29, 0.25), 0, 0.65)
     satin = {"scale": 3200, "strength": 0.08, "distance": 1.2e-05}
     objects, audit = [], []
+    arm_materials = {}
     for record in payload["geoms"]:
         name, kind, size = record["name"], record["kind"], record["size"]
         if kind == 7:
@@ -167,8 +169,15 @@ def main():
             raise ValueError(f"Unsupported geometry {kind}")
         obj.name = name
         bevel = 0.0
-        if record["owner"] == "hand":
+        if record["owner"] == "hand" or (record["owner"] == "robot" and name.startswith("left_")):
             chosen = rubber if record["material"] == "green" else shell
+        elif record["owner"] == "robot":
+            # Tianji Marvin stand/arms: the native factory rgba per sub-mesh (accepted arm films: roughness 0.29,
+            # metallic 0.15).
+            key = tuple(round(float(v), 3) for v in record["rgba"][:3])
+            if key not in arm_materials:
+                arm_materials[key] = material("Marvin " + "/".join(map(str, key)), record["rgba"], 0.15, 0.29)
+            chosen = arm_materials[key]
         elif name == "counter":
             chosen, bevel = counter, 0.002
         elif name.startswith("leg_"):

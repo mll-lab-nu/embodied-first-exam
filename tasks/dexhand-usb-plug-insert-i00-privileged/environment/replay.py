@@ -12,8 +12,8 @@ import numpy as np
 from runtime import TASK, Session
 from scene import hands
 
-# Six wrist-stage targets followed by the selected hand's native finger actuators.
-WIDTHS = {"sharpa": 28, "wuji": 26}
+# 14 Marvin arm targets (left J1-J7, right J1-J7), then the left and the right hand's native finger actuators.
+WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 

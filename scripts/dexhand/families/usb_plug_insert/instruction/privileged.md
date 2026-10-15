@@ -2,13 +2,21 @@
 
 {{TASK_TEXT}}
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three world-axis prismatic joints, then
-three serial revolute joints in a fixed rotated gimbal frame; no arm). The stage and the fingers are position actuated
-in the physics engine under native force bounds; grasping, carrying, inserting and releasing require physical contact.
-The controller runs at 50 Hz, with ten 2 ms physics substeps.
+You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
+hand on each wrist. The robot stands on the floor in front of the desk, right of the hub (base centre at x = 0.93,
+y = -0.52 on the floor at z = -0.20, facing the desk at yaw 135 deg, i.e. toward world (-1, +1)/sqrt(2); shoulders
+at z = 1.021 m, 1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by the right
+arm and hand alone. Every arm and finger joint is a position servo inside the physics engine under native force
+bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held target sags
+under the arm's weight unless your targets account for it). Grasping, carrying, inserting and releasing require
+physical contact. Only the working right hand may touch the desk and the task objects: any contact of an arm link, the
+stand or torso, or the parked left hand with anything fails the episode at once (`robot_collision`). The controller
+runs at 50 Hz, with ten 2 ms physics substeps.
 
 ## Scene
-- Desk: top at z = 0.70 m, front edge at y = -0.114 m (world frame, z up, metres and radians).
+- Desk: top at z = 0.70 m (0.90 m above the floor at z = -0.20), front edge at y = -0.114 m (world frame, z up,
+  metres and radians); its two front legs stand back under the top (x 0.32, y 0.00 and x 1.08, y 0.46), clear of
+  the robot's base plate.
 - Hub: the original four-port USB hub (103 x 30 x 10 mm, 21.8 g) rests free on the desk on rubber pads, its port face
   flush with the desk's front edge and facing -y; it is not fixed or held. Ports 1-4 are at hub-local
   x = -27, -7, +13, +33 mm; port 4 (the target) is the rightmost seen from the front. Its own upstream cable is drawn
@@ -24,20 +32,23 @@ The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
 {{HANDS}}
 ## Action layout
-Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
-`wrist_x, wrist_y, wrist_z` (metres, world frame position of the hand mount) and `wrist_rx, wrist_ry, wrist_rz`
-(radians, serial X-Y-Z hinges whose zero orientation is the gimbal frame `wrist_gimbal`, not a quaternion). The finger
-targets follow in native actuator order, in radians:
+Each row is one 50 Hz control and holds a position target for every actuator, in radians:
 
-- `sharpa`: 28 values, the six wrist targets and 22 Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`.
-- `wuji`: 26 values, the same six wrist targets and 20 Wuji Hand 2.2 finger targets `r_wuji_r_THJ0..3`,
-  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`.
+- `sharpa` (58 values): 0-6 the left arm `SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4,
+  WRIST_PITCH_L_J5, WRIST_YAW_L_J6, WRIST_ROLL_L_J7` (actuators `<joint>_target`; keep them at the parked start
+  values), 7-13 the same right-arm joints (`..._R_J1` to `..._R_J7`), 14-35 the 22 left Sharpa Wave finger targets
+  `left_thumb_CMC_FE` ... `left_pinky_DIP`, 36-57 the 22 right Sharpa Wave finger targets `right_thumb_CMC_FE` ...
+  `right_pinky_DIP`.
+- `wuji` (54 values): 0-13 the same arm targets, 14-33 the 20 left Wuji Hand 2.2 finger targets `l_wuji_l_THJ0..3`,
+  `l_wuji_l_FFJ0..3`, `l_wuji_l_MFJ0..3`, `l_wuji_l_RFJ0..3`, `l_wuji_l_LFJ0..3`, 34-53 the 20 right ones
+  (`r_wuji_r_...`, same order).
 
-Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from the same wrist targets; the frozen
-finger start pose of each hand is in `task.json` (`initial_targets`).
+Every target must lie within `s.model.actuator_ctrlrange`. The frozen start targets of each hand are in `task.json`
+(`initial_targets`); the right hand's frame is the body `wrist_stage` on the right flange (fingers along its +z, palm
+normal +x, thumb +y), which forward kinematics of the arm joints places in the world.
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or `(T, 26)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most {{MAX_ROWS}} rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical

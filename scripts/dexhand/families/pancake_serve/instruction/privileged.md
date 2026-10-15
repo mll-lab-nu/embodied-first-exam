@@ -2,10 +2,14 @@
 
 {{TASK_TEXT}}
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
-the turner is held only by finger and palm contact, and the pancake moves only through contact with the turner, the
-pan and the plate. The controller runs at {{CONTROL_HZ}} Hz, with twenty 1 ms physics substeps per control.
+The robot is a fixed Tianji Marvin stand at the world origin facing +x, with two 7-joint arms and a dexterous hand
+on each wrist (robot id `marvin-bimanual-sharpa-wave`); the right arm and hand do the task and the left arm stays
+parked beside the torso. Every arm and finger joint is a position servo in the physics engine under native force
+bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held target
+sags by about 1 cm at the hand under load unless your targets account for it). The turner is held only by finger and
+palm contact, and the pancake moves only through contact with the turner, the pan and the plate. The controller runs
+at {{CONTROL_HZ}} Hz, with twenty 1 ms physics substeps per control. World frame: metres and radians, +z up, +x
+forward from the robot stand, +y to the robot's left.
 
 ## Scene and modelling
 The scene reproduces a 22 cm non-stick frying pan (0.90 kg, free on the counter), an OXO flexible kitchen turner
@@ -14,27 +18,28 @@ an oak counter whose top is at z = 0.85 m. Declared simplifications: the pancake
 bending, tearing, heat or fluid); the turner's thin steel-core blade is three rigid strips joined by passive spring
 hinges (+-0.35 rad); concave pan and plate interiors use convex sector contact shapes. Pair friction coefficients are
 estimates: pancake-pan 0.45, pancake-blade 0.20, blade-pan 0.20, pancake-plate 0.60, hand-turner grip 1.2, objects on
-the counter 0.7. The episode starts with the turner already held in a settled power grasp: the frozen reset places
-the hand, turner, pan, plate and pancake in a state that was reached by closing the fingers on the handle and letting
-the whole scene settle under physics; the turner is held only by contact (there is no weld or attachment), so opening
-the fingers drops it. Physics runs at 1 ms steps, twenty per 50 Hz control.
+the counter 0.7. The turner is not in a hand at the start: as in the source scene it rests on the counter in
+front of the plate, at about (0.76, -0.30, 0.878) m with its handle toward -y (handle end and blade base on the counter,
+the handle 16 to 30 mm above it); pick it up first. It is held only by contact (there is no weld or attachment).
+Physics runs at 1 ms steps, twenty per 50 Hz control.
 
 {{HANDS}}
 ## Action layout
-Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
-`wrist_x, wrist_y, wrist_z` (metres, world frame) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints, not a
-quaternion). The finger targets follow in native actuator order, in radians:
+Each row is one 50 Hz control with a position target for every actuator, in model order (`s.actuator_names`):
 
-- `sharpa`: 28 values, the six wrist targets and 22 Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`.
-- `wuji`: 26 values, the same six wrist targets and 20 Wuji Hand 2.2 finger targets `r_wuji_r_THJ0..3`,
-  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`.
+- columns 0-6: left arm `SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4, WRIST_PITCH_L_J5,
+  WRIST_YAW_L_J6, WRIST_ROLL_L_J7` (each name + `_target`); columns 7-13: the right arm `..._R_J1` to `..._R_J7`;
+- `sharpa` (58 values): columns 14-35 the left Sharpa Wave fingers `left_thumb_CMC_FE` ... `left_pinky_DIP`, columns
+  36-57 the right Sharpa Wave fingers `right_thumb_CMC_FE` ... `right_pinky_DIP`;
+- `wuji` (54 values): columns 14-33 the left Wuji Hand 2.2 fingers (`l_wuji_*`, vendor order), columns 34-53 the
+  right Wuji fingers (`r_wuji_*`).
 
-Every target must lie within `s.model.actuator_ctrlrange`. Each hand starts from a frozen settled grasp of the turner
-(`task.json` `initial_qpos` and `initial_targets` per hand); `s.hold_action()` at reset returns the start targets.
-Opening the fingers releases the turner.
+Every target must lie within `s.model.actuator_ctrlrange`. Both hands start open, the right arm holding its hand
+above the counter and the left arm parked (`task.json` `initial_qpos` and `initial_targets` per hand, a settled
+state); `s.hold_action()` at reset returns the start targets and keeps that pose.
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or `(T, 26)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most {{MAX_ROWS}} rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical

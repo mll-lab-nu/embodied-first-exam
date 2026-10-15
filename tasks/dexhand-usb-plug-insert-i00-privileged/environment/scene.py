@@ -6,7 +6,10 @@ documented in README.md: each port is an open rectangular cavity with generous c
 0.55 mm per side in height, against 0.1 mm in the real connector); the plug shell collides as one solid box, while the
 receptacle tongue, the plug's polarized insert and all gold contacts are visual only (polarity is part of the success
 predicate instead); retention leaf springs are omitted; the hub's own upstream cable is a visual, rigidly attached
-to the hub and lying on the counter; the plug's 0.5 m cable is a passive 20-link ball-joint rod.
+to the hub and lying on the counter; the plug's 0.5 m cable is a passive 20-link ball-joint rod. The hand is carried by
+the right arm of the Tianji Marvin robot (``arm_rig``; left arm parked) standing on the floor in front of the desk;
+the floor sits 0.10 m lower than in the source (desk top unchanged) and the desk's two visual front legs stand back
+under the top (``counter_legs_xy``) so that no robot geom overlaps them.
 """
 
 from __future__ import annotations
@@ -40,6 +43,24 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = Path(__file__).resolve().parents[2] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
 ASSETS = Path(__file__).with_name("assets")
 
 
@@ -253,11 +274,13 @@ def add_room(root, world, assets, cfg):
          friction=(0.8, 0.005, 0.0001))
     part(world, "counter", "box", "counter_top", size=(hx, hy, 0.025), pos=(cx, cy, top - 0.025),
          friction=(0.4, 0.005, 0.0001))
-    for x in (cx - hx + 0.04, cx + hx - 0.04):
-        for y in (cy - hy + 0.06, cy + hy - 0.06):
-            leg_half = (top - 0.05 - cfg["floor_z"]) / 2
-            part(world, f"leg_{x:.2f}_{y:.2f}", "box", "leg_material", collide=False, size=(0.022, 0.022, leg_half),
-                 pos=(x, y, cfg["floor_z"] + leg_half))
+    # Legs (visual only): the source corners, or ``counter_legs_xy`` when the robot's stand plate needs the room.
+    legs = cfg.get("counter_legs_xy") or [(x, y) for x in (cx - hx + 0.04, cx + hx - 0.04)
+                                          for y in (cy - hy + 0.06, cy + hy - 0.06)]
+    for x, y in legs:
+        leg_half = (top - 0.05 - cfg["floor_z"]) / 2
+        part(world, f"leg_{x:.2f}_{y:.2f}", "box", "leg_material", collide=False, size=(0.022, 0.022, leg_half),
+             pos=(x, y, cfg["floor_z"] + leg_half))
     node(world, "light", name="key", pos=(0.7, -0.7, 1.9), dir=(0, 0.35, -1), diffuse=(0.8, 0.8, 0.8), castshadow="true")
     node(world, "light", name="fill", pos=(0.2, 0.9, 1.7), dir=(0.2, -0.3, -1), diffuse=(0.5, 0.5, 0.5),
          castshadow="false")
@@ -265,8 +288,15 @@ def add_room(root, world, assets, cfg):
         node(world, "camera", name=camera["name"], pos=camera["pos"], xyaxes=camera["xyaxes"], fovy=camera["fovy"])
 
 
+def robot_parts(model):
+    """(hand bodies of the working right hand, every other robot body: stand, torso, both arms, parked left hand)."""
+    right = set(arm_rig.hand_body_ids(model, "right"))
+    other = set(arm_rig.robot_body_ids(model)) | set(arm_rig.hand_body_ids(model, "left"))
+    return right, other
+
+
 def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen scene with the selected genuine hand on the six-axis wrist stage."""
+    """Compose the frozen scene with the selected genuine hand on the Marvin right arm (left arm parked)."""
     hand_id = hands.canonical(hand)
     folder = Path(
         asset_dir
@@ -288,43 +318,7 @@ def build(config, asset_dir=None, hand="sharpa"):
         root.remove(key)
     assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
     hand_body = world.find("body")
-    world.remove(hand_body)
-    # Six-axis wrist stage: world-axis slides (wrist_stage), then serial X-Y-Z hinges in a gimbal frame rotated by
-    # wrist_stage.quat so that the task's hand orientations stay mid-range (|angle| < 1 rad, far from the serial-XYZ
-    # singularity at ry = +-pi/2).
-    wrist = node(world, "body", name="wrist_stage")
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    gimbal = node(wrist, "body", name="wrist_gimbal", quat=config["wrist_stage"]["quat"])
-    node(gimbal, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    hand_body.set("quat", "0 0.7071067811865476 0 0.7071067811865476")
-    gimbal.append(hand_body)
-    stage = config["wrist_stage"]
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        (wrist if i < 3 else gimbal).insert(
-            i % 3,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range=vec(stage["range"][i]),
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
+    # The family's Sharpa tweaks, applied before mounting so the mirrored (parked) left Wave gets them too.
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -333,11 +327,14 @@ def build(config, asset_dir=None, hand="sharpa"):
     for g in hand_body.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        # Swap the Wave body under the unchanged wrist stage for the genuine Wuji Hand 2.2 model; the vendor's
-        # joints, actuators, gains and contact geometry are kept as published. Wrist actuators stay first.
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    # Tianji Marvin stand with two 7-DoF arms: the right arm carries the working hand under the fixed body
+    # ``wrist_stage`` (the checker's hand root), the left arm is parked with its hand (arm_rig.PARK). With
+    # hand="wuji" both Waves are swapped for the genuine Wuji Hand 2.2 (vendor joints, gains and contacts).
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                         mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                         wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
     add_room(root, world, assets, config)
     add_hub(world, config)
     add_plug(world, config)

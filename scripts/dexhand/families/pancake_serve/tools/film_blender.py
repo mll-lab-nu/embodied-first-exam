@@ -102,8 +102,15 @@ def main():
     rubber = material("Studio forest elastomer", (0.22, 0.29, 0.25), 0.0, 0.65)
     joints = material("Satin joint housings", (0.55, 0.58, 0.60), 0.6, 0.35)
 
+    robot_materials = {}
+
     def pick(record):
         name = record["name"]
+        if record["owner"] == "robot":
+            key = tuple(round(c, 3) for c in record["rgba"][:3])
+            if key not in robot_materials:
+                robot_materials[key] = material("Marvin " + str(key), key, 0.15, 0.35)
+            return robot_materials[key]
         if record["owner"] == "hand":
             if record["material"] == "green" or "elastomer" in name:
                 return rubber
@@ -193,10 +200,10 @@ def main():
     camera = bpy.data.objects.new("Presentation camera", data)
     scene.collection.objects.link(camera)
     scene.camera = camera
-    camera.location = (1.16, -1.10, 1.66)
-    look = Vector((0.57, -0.08, 0.95))
+    camera.location = (1.16, -1.10, 1.66)  # T16 film camera; slightly wider to include the Marvin arm
+    look = Vector((0.52, -0.08, 0.98))
     camera.rotation_euler = (look - camera.location).to_track_quat("-Z", "Y").to_euler()
-    data.lens, data.clip_start, data.clip_end = 44, 0.01, 30
+    data.lens, data.clip_start, data.clip_end = 36, 0.01, 30
     indices = list(range(0, len(payload["frames"]), args.frame_step))
     if indices[-1] != len(payload["frames"]) - 1:
         indices.append(len(payload["frames"]) - 1)

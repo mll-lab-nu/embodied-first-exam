@@ -46,7 +46,8 @@ class Session:
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.marvin = self.config.get("rig") == "marvin"
+        self.robot = "marvin-bimanual-sharpa-wave" if self.marvin else self.hand_info["robot"] + "-floating"
         self.tcp_body = "wrist_stage"
         self.checker = Checker(self.model, self.config)
         self.renderer = None
@@ -183,7 +184,7 @@ class Session:
         digest.update(self.checker.predicate_state().astype("<i8").tobytes())
         digest.update(str(self.checker.failure).encode())
         # Physics/verdict parameters and this hand's frozen reset only; editing texts never changes the hash.
-        params = {key: self.config[key] for key in Checker.HASHED_KEYS}
+        params = {key: self.config[key] for key in Checker.HASHED_KEYS if key in self.config}
         params["initial_qpos"] = self.config["initial_qpos"][self.hand]
         params["initial_targets"] = self.config["initial_targets"][self.hand]
         digest.update(json.dumps(params, sort_keys=True).encode())

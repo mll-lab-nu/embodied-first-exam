@@ -1,8 +1,8 @@
-"""Privileged session of ``boot_sole_brush``: one dexterous hand on a six-axis wrist stage brushes six clods off the
-sole of a boot that stands sole-up on a rack peg; the clods must fall into the collection tray.
+"""Privileged session of ``boot_sole_brush``: a dexterous hand on the right arm of the Tianji Marvin robot brushes six
+clods off the sole of a boot that stands sole-up on a rack peg; the clods must fall into the collection tray.
 
-Only actuator targets act on the simulator (6 wrist-stage targets + the hand's finger targets, 50 Hz, 10 physics
-substeps of 2 ms). The boot, clods and brush are free bodies moved by contact and gravity only. The predicate
+Only actuator targets act on the simulator (14 arm joint targets + both hands' finger targets, 50 Hz, 10 physics
+substeps of 2 ms; the left arm stays parked). The boot, clods and brush are free bodies moved by contact and gravity only. The predicate
 (``checker.py``) is evaluated from simulator state after every physics substep (fail-fast) and every control (stages).
 """
 
@@ -19,11 +19,11 @@ import mujoco
 import numpy as np
 
 from checker import STAGES, BrushChecker
-from scene import build, hands
+from scene import arm_rig, build, hands, robot_parts
 
 HERE = Path(__file__).resolve().parent
 TASK_ID = "boot_sole_brush"
-ACTION_DIM = {"sharpa": 28, "wuji": 26}
+ACTION_DIM = {"sharpa": 58, "wuji": 54}  # 14 Marvin arm targets + left and right hand finger targets
 # task.json keys that describe the task in words or place cameras; they never enter the physics or the predicate.
 PROSE_KEYS = {"schema_version", "title", "category", "difficulty", "description", "instruction", "mechanism", "modeling",
               "release_status", "cameras"}
@@ -66,8 +66,9 @@ class Session:
         self.control_dt = float(self.config["control_dt"])
         self.substeps = int(round(self.control_dt / self.config["physics_dt"]))
         self.max_control_steps = int(self.config["max_steps"])
-        self.robot = ("sharpa-wave" if self.hand == "sharpa" else "wuji-hand-2.2") + "-floating"
+        self.robot = arm_rig.ROBOT_ID
         self.tcp_body = "wrist_stage"
+        self.layout = arm_rig.layout(m)
         self.checker = BrushChecker(m, self.data, self.config)
         self.renderer = None
         self.reset()
@@ -75,11 +76,8 @@ class Session:
     def _structure_check(self):
         """Robot-only actuation; boot, brush and clods are free bodies; no welds, mocap or gravity tricks."""
         m = self.model
-        robot = set()
-        base = m.body("wrist_stage").id
-        for b in range(m.nbody):
-            if b == base or int(m.body_parentid[b]) in robot:
-                robot.add(b)
+        right, rest = robot_parts(m)
+        robot = right | rest
         problems = []
         for i in range(m.nu):
             j = int(m.actuator_trnid[i, 0])

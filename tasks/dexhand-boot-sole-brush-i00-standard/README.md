@@ -5,33 +5,34 @@
 | Benchmark | DexHand |
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `dexhand-boot-sole-brush-i00-privileged` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
+| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `boot_sole_brush` |
-| Oracle | `full` — solution/trajectory.npz: the 1,329-row Sharpa Wave authoring witness (success at control 1,178, then hold rows); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, 8/8 successes under 1e-4 m / 1e-3 rad row noise. Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (standard: the same rows through rcb_client, live = replay). solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,336 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
+| Oracle | `full` — solution/trajectory.npz: the 1,688-row Sharpa Wave witness on the Marvin right arm (success at control 1,538, then 150 hold rows), authored by tracking the wave-2 floating-hand episode's hand-root poses with arm inverse kinematics (closed loop, joint integral; the brush-transfer segment re-timed 3x slower); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, and no arm, stand or parked-hand contact occurs in any physics substep. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-Brush all six soil clods off the upward-facing sole of the boot into the collection tray. The boot stands sole-up on a fixed boot-rack peg inside the tray (its sole plane is at z = 1.292 m); six small dry soil clods are lodged in its tread, held there by gravity and friction only (no glue or cohesive bond is simulated, so a clod moves as soon as something pushes it). The shoe brush lies bristles-down on the counter: pick it up with the hand and sweep the sole with the bristles. Success requires, in order: (1) the brush's bristle field touches the boot while the hand touches the brush and the brush does not touch the counter, for at least 10 controls in total; (2) every clod has been touched by the brush's bristle field (contact with the wooden back does not count) while it was still up on the boot (clod centre at most 0.01 m below the sole plane), and every clod centre lies inside the tray walls (x in [0.366, 0.694] m, y in [-0.184, 0.384] m) below the wall top (z < 0.931 m); (3) then, for 50 consecutive controls (1 s), all six clods stay in the tray with linear speed at most 0.05 m/s while the brush touches neither the boot nor any clod and is withdrawn (bristle-field centre at least 0.04 m above the sole plane, or at least 0.18 m horizontally from the sole centre). The episode ends with success at that moment; fewer than six clods never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the boot moves more than 0.03 m or tilts more than 0.35 rad from its reset pose; when a clod touches the counter or the floor, falls below the counter top (z < 0.886 m) or leaves the workspace box x in [0.25, 1.2] m, y in [-0.45, 0.45] m, z in [0.886, 1.8] m; when any part of the hand touches a clod (clods must be brushed, not picked); when the brush touches the floor, the tray or the rack, falls below the counter top, leaves the workspace box, or is released in the air (it touches nothing but clods while its centre of mass sinks faster than 0.2 m/s); or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed: no welds, teleports, scripted object motion or applied object forces. The boot, brush and clods are free rigid bodies; the brush's 32 bristle tufts touch the world through one compliant bristle-pad contact proxy (individual fibre bending is not simulated) and the clods are rigid (no fracture or adhesion). The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+Brush all six soil clods off the upward-facing sole of the boot into the collection tray. The boot stands sole-up on a fixed boot-rack peg inside the tray (its sole plane is at z = 1.292 m); six small dry soil clods are lodged in its tread, held there by gravity and friction only (no glue or cohesive bond is simulated, so a clod moves as soon as something pushes it). The shoe brush lies bristles-down on the counter: pick it up with the robot's right hand and sweep the sole with the bristles. Success requires, in order: (1) the brush's bristle field touches the boot while the hand touches the brush and the brush does not touch the counter, for at least 10 controls in total; (2) every clod has been touched by the brush's bristle field (contact with the wooden back does not count) while it was still up on the boot (clod centre at most 0.01 m below the sole plane), and every clod centre lies inside the tray walls (x in [0.366, 0.694] m, y in [-0.184, 0.384] m) below the wall top (z < 0.931 m); (3) then, for 50 consecutive controls (1 s), all six clods stay in the tray with linear speed at most 0.05 m/s while the brush touches neither the boot nor any clod and is withdrawn (bristle-field centre at least 0.04 m above the sole plane, or at least 0.18 m horizontally from the sole centre). The episode ends with success at that moment; fewer than six clods never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the boot moves more than 0.03 m or tilts more than 0.35 rad from its reset pose; when a clod touches the counter or the floor, falls below the counter top (z < 0.886 m) or leaves the workspace box x in [0.25, 1.2] m, y in [-0.45, 0.45] m, z in [0.886, 1.8] m; when any part of the right hand touches a clod (clods must be brushed, not picked); when the brush touches the floor, the tray or the rack, falls below the counter top, leaves the workspace box, or is released in the air (it touches nothing but clods while its centre of mass sinks faster than 0.2 m/s); when any part of the robot other than its right hand (the stand, the torso, a link of either arm, the parked left hand) touches anything, including the robot itself; or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed: no welds, teleports, scripted object motion or applied object forces. The boot, brush and clods are free rigid bodies; the brush's 32 bristle tufts touch the world through one compliant bristle-pad contact proxy (individual fibre bending is not simulated) and the clods are rigid (no fracture or adhesion). The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
 
 ## Difficulty
-The hand must pick up a 14 cm shoe brush from the counter with a stable contact grasp, carry it to a boot that stands
-sole-up 0.4 m above the tray, and sweep the sole so that every one of six small loose clods is pushed over the sole
+The robot's right hand, on a 7-joint arm without gravity compensation, must pick up a 14 cm shoe brush from the
+counter with a stable contact grasp, carry it to a boot that stands sole-up 0.4 m above the tray (the brushing hand
+works above the robot's shoulder height, near the edge of the arm's reach), and sweep the sole so that every one of six small loose clods is pushed over the sole
 edge and falls into the tray, without touching a clod with the hand, without letting go of the brush in the air and
 without knocking the boot off its peg. The clods weigh 1 g and are irregular; the sole has a central groove, an arch
 and raised lugs, and the fingers that hold the brush hang close to the sole, so strokes have to be planned so that no
 finger meets a clod. Pressing too hard or sweeping too fast flings clods past the tray, which fails the episode at
-once. Partial cleaning never counts.
+once, and so does any contact of the arms, the stand or the parked left hand. Partial cleaning never counts.
 
 ## Reference solution
-`solution/trajectory.npz` holds the Sharpa Wave authoring witness (1,329 rows, success at control 1,178, followed by
-hold rows): a top-down pinch of the brush back (thumb on the near long face, three fingers on the far face), lift,
-four centre-out strokes over the forefoot and the heel, withdrawal and a 1 s hold. Privileged mode replays these rows;
-standard mode submits the same rows through `rcb_client` (float64, hold interpolation, 50 Hz). The authoring
-controller (`scripts/dexhand/families/boot_sole_brush/tools/author_oracle.py`) computes robot kinematics and motor
-targets only; it never drives an object pose or applies an object force, and it is not copied into the task.
-
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (1,336 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
+`solution/trajectory.npz` holds the Sharpa Wave authoring witness on the Marvin right arm (1,688 rows of 58 motor
+targets, success at control 1,538, followed by hold rows): a top-down pinch of the brush back (thumb on the near long
+face, three fingers on the far face), lift, four centre-out strokes over the forefoot and the heel, withdrawal and a
+1 s hold, with the left arm parked throughout. Privileged mode replays these rows; standard mode submits the same rows
+through `rcb_client` (float64, hold interpolation, 50 Hz). The authoring tools
+(`scripts/dexhand/families/boot_sole_brush/tools/arm_port.py`, which tracks the hand poses of an earlier floating-hand
+witness with arm inverse kinematics) compute robot kinematics and motor targets only; they never drive an object pose
+or apply an object force, and they are not copied into the task.
 
 ## Verification
 standard mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
@@ -39,7 +40,8 @@ twice in fresh processes. Both replays must succeed and have identical final sta
 hash must also equal the live final hash. A replay ends at the first success or the first failure. Failures are
 fail-fast, checked after every 2 ms physics substep, and permanent: a displaced boot, a clod touching the counter or
 floor or leaving the workspace, a hand-clod contact, a brush that touches the floor, tray or rack or is released in the
-air, unstable physics, or the 3,000-control budget. A no-op fails. Human review and full agent-trial calibration remain
+air, any contact of a robot part other than the right hand (stand, torso, arm links, the parked left hand), unstable
+physics, or the 3,000-control budget. A no-op fails. Human review and full agent-trial calibration remain
 pending; report this task as provisional.
 
 ## Compute resources
@@ -69,8 +71,10 @@ fixed boot-rack peg instead of being lifted, turned and set down by the hand, an
 bristle field touches the world through one compliant pad proxy (individual fibres do not bend); the tray is a 45 mm
 deep basin with a soft, damped rubber liner. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
 `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model (`hand2/hand2_2`) to
-wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted on the same wrist
-stage with its vendor joints, actuators and contact geometry unchanged.
+wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted on the same arm
+flanges with its vendor joints, actuators and contact geometry unchanged. The robot is the Tianji Marvin two-arm rig
+of `pot_shelf_transfer` (`arm_rig.py`; meshes checked against the image's Tianji manifest), standing on the floor
+beside the counter.
 
 ### Change Log
 - 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.

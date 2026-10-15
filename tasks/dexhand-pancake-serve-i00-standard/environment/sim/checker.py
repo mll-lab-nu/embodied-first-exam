@@ -48,7 +48,7 @@ class Checker:
                 if name in ("pancake", "pan", "plate", "turner"):
                     owner[b] = name
                     break
-                if name == "wrist_stage":
+                if name in ("wrist_stage", "base_link"):  # the hand, or (Marvin rig) the stand, arms, other hand
                     owner[b] = "hand"
                     break
                 parent = int(m.body_parentid[parent])
@@ -87,7 +87,7 @@ class Checker:
         self.success_step = None
 
     # Instance parameters that define physics, reset and verdict (never instruction prose): state_sha hashes these.
-    HASHED_KEYS = ("physics_dt", "control_dt", "max_steps", "counter_z", "pancake_radius_m", "plate_radius_m",
+    HASHED_KEYS = ("rig", "marvin", "physics_dt", "control_dt", "max_steps", "counter_z", "pancake_radius_m", "plate_radius_m",
                    "turner_bands", "turner_widths", "lift_m", "carry_tilt_deg", "on_blade_controls", "carry_radius_m",
                    "serve_radius_m", "serve_tilt_deg", "rest_linear_m_s", "rest_angular_rad_s", "withdraw_clearance_m",
                    "hold_controls", "support_shift_m", "support_tilt_deg", "drop_speed_m_s", "workspace",

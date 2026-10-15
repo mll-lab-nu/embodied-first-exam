@@ -24,8 +24,8 @@ from PIL import Image
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
 
-from runtime import Session  # noqa: E402
-from scene import hands  # noqa: E402
+from runtime import ACTION_DIM, Session  # noqa: E402
+from scene import hands, robot_parts  # noqa: E402
 
 PHYSICS_SOURCES = ("task.json", "runtime.py", "scene.py", "checker.py", "replay.py")
 
@@ -48,6 +48,8 @@ def geometry(session, out):
     for b in range(m.nbody):
         if b == hand_root or int(m.body_parentid[b]) in hand_bodies:
             hand_bodies.add(b)
+    _, robot_rest = robot_parts(m)
+    arm_bodies = robot_rest - hand_bodies
     arrays, materials, meshes, geoms, ids = {}, [], {}, [], []
     for i in range(m.nmat):
         record = {"name": m.mat(i).name, "rgba": m.mat_rgba[i].tolist(), "metallic": float(m.mat_metallic[i]),
@@ -72,10 +74,15 @@ def geometry(session, out):
         kind = int(m.geom_type[i])
         mesh = int(m.geom_dataid[i]) if kind == 7 else None
         name = m.geom(i).name or f"geom_{i}"
+        if "_collision" in name and (name.startswith("l_wuji") or name.startswith("r_wuji")):
+            continue  # Wuji collision proxies (either hand, incl. the parked left one) are not drawn
         record = {"id": i, "name": name, "body": m.body(int(m.geom_bodyid[i])).name,
                   "is_hand": int(m.geom_bodyid[i]) in hand_bodies, "kind": kind, "size": m.geom_size[i].tolist(),
                   "material": mid, "rgba": rgba, "mesh": mesh}
-        if name == "brush_back":
+        if int(m.geom_bodyid[i]) in arm_bodies and not m.geom(i).name:
+            # Tianji Marvin visual meshes: native factory rgba per sub-mesh, satin finish (pot_transfer film look).
+            record["visual_material"] = {"rgba": rgba, "roughness": 0.29, "metallic": 0.15}
+        elif name == "brush_back":
             record["visual_material"] = {"rgba": [0.72, 0.52, 0.29, 1], "roughness": 0.43,
                                          "bump": {"scale": 750, "strength": 0.16, "distance": 0.00012}}
             record["authored_cad"] = True
@@ -116,11 +123,12 @@ def geometry(session, out):
 
 
 def camera_path(step, success_step):
-    """Wide shot for the pickup, close-up on the sole while brushing, pulled back over the tray for the result."""
-    wide_p, wide_t = np.array([1.38, -1.42, 2.02]), np.array([0.60, -0.07, 1.06])
-    close_p, close_t = np.array([0.98, -0.48, 1.72]), np.array([0.53, 0.08, 1.30])
-    end_p, end_t = np.array([1.42, -1.40, 2.22]), np.array([0.57, 0.04, 1.16])
-    zoom_in = ease((step - 290) / 60)
+    """Wide shot of the robot and the counter from its right-front quarter for the pickup, close-up on the sole while
+    brushing, pulled back for the result (the robot stands at the counter's -y edge, facing +y)."""
+    wide_p, wide_t = np.array([2.15, 0.85, 2.15]), np.array([0.42, -0.25, 1.06])
+    close_p, close_t = np.array([1.40, 0.72, 1.98]), np.array([0.50, 0.0, 1.28])
+    end_p, end_t = np.array([2.15, 0.85, 2.2]), np.array([0.44, -0.18, 1.08])
+    zoom_in = ease((step - 760) / 80)
     zoom_out = ease((step - (success_step - 70)) / 60)
     p = wide_p + (close_p - wide_p) * zoom_in
     t = wide_t + (close_t - wide_t) * zoom_in
@@ -132,7 +140,7 @@ def phase_of(step, status):
         return "all six clods in the tray, brush withdrawn: success"
     if step < 160:
         return "reach and pinch the brush on the counter"
-    if step < 340 and status["stage"] == 0:
+    if step < 700 and status["stage"] == 0:
         return "lift the brush and carry it over the boot sole"
     if status["stage"] >= 2:
         return "withdraw the brush and hold"
@@ -145,7 +153,7 @@ def export(trajectory, out, stride, hand):
         shutil.rmtree(out)
     out.mkdir(parents=True)
     sources = {name: sha(HERE / name) for name in PHYSICS_SOURCES}
-    actions, recorded, _ = hands.read_trajectory(trajectory, widths={"sharpa": 28, "wuji": 26}, max_rows=3000)
+    actions, recorded, _ = hands.read_trajectory(trajectory, widths=ACTION_DIM, max_rows=3000)
     session = Session(hand=recorded)
     arrays, materials, geoms, meshes, ids = geometry(session, out)
     d = session.data
@@ -193,10 +201,11 @@ def export(trajectory, out, stride, hand):
         "geoms": geoms, "meshes": meshes, "materials": materials, "files": files,
         "physics_control_steps_per_video_frame": stride,
         "playback_speed": stride * session.control_dt * 25,
-        "physics_claims": ["Only the hand's motor targets act; boot, brush and clods move by contact and gravity."],
+        "physics_claims": ["Only the robot's motor targets (Marvin arm joints and fingers) act; boot, brush and clods move by "
+                           "contact and gravity."],
         "config": {
-            "display_title": title, "hand_label": session.hand_info["model"],
-            "camera": {"position": cam_p[0].tolist(), "target": cam_t[0].tolist(), "lens": 48},
+            "display_title": title, "hand_label": "Tianji Marvin arm + " + session.hand_info["model"],
+            "camera": {"position": cam_p[0].tolist(), "target": cam_t[0].tolist(), "lens": 40},
             "exposure": -0.3, "visual_bevel_m": 0.001, "light_target": [0.55, 0.05, 1.13],
             "lights": [
                 {"name": "Large warm softbox", "offset": [-0.65, -0.65, 0.95], "energy": 160, "size": 1.15,

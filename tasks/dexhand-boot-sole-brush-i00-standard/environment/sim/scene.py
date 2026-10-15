@@ -10,7 +10,8 @@ Objects (all passive, contact and gravity only):
 - ``brush``: free 84 g shoe brush (beech back, 32 tufts). The bristle field touches the world through one compliant
   bristle pad (box); the 32 tufts are drawn with their fine fibres but individual fibre bending is not simulated.
 - ``tray`` (floor + four walls) on the counter, the fixed ``rack`` (base + peg) inside the tray.
-The hand hangs from a six-axis wrist stage (three slides, three hinges), as in ``assemble_hamburger``.
+The hand is mounted on the right arm of the Tianji Marvin bimanual robot (``arm_rig.py``: stand, torso, two 7-DoF arms,
+both hands; the left arm stays parked); the stand stands on the floor in front of the counter's -y side.
 """
 
 from __future__ import annotations
@@ -44,6 +45,24 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = HERE.parents[1] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
 
 
 def _fmt(x):
@@ -103,8 +122,38 @@ def clod_vertices(i):
     return mesh * rng.uniform(0.83, 1.13, mesh.shape)
 
 
+def add_marvin_rig(root, config, hand_id, folder):
+    """The Tianji Marvin stand with two 7-DoF arms (``arm_rig``): the right arm carries the working hand under the
+    fixed mount body ``wrist_stage`` (the checker's hand root), the left arm hangs parked with its hand
+    (``arm_rig.PARK``). The stand stands on the floor (``base_z = floor + 0.1``) beside the counter."""
+    world, actuator = root.find("worldbody"), root.find("actuator")
+    hand_body = world.find("body")
+    # The family's Sharpa tweaks, applied before mounting so the mirrored (parked) left Wave gets them too.
+    for a in actuator:
+        if a.tag == "general":
+            bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
+            bias[2] = -0.9
+            a.set("biasprm", " ".join(map(str, bias)))
+    for g in hand_body.iter("geom"):
+        if "fingertip_collision" in g.get("name", ""):
+            g.set("friction", "1.5 .005 .0001")
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    return arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                                mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                                wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
+
+def robot_parts(model):
+    """(right hand bodies, other robot bodies): the working hand is the ``wrist_stage`` mount subtree; the stand,
+    torso, both arms (links + flanges) and the parked left hand are the rest of the robot."""
+    right = set(arm_rig.hand_body_ids(model, "right"))
+    rest = set(arm_rig.robot_body_ids(model)) | set(arm_rig.hand_body_ids(model, "left"))
+    return right, rest - right
+
+
 def build(config, hand="sharpa", asset_dir=None):
-    """Return ``(model, xml)`` for the frozen scene with the selected hand on the six-axis wrist stage."""
+    """Return ``(model, xml)`` for the frozen scene with the selected hand on the Marvin arm rig."""
     hand_id = hands.canonical(hand)
     folder = Path(asset_dir or hands.sharpa_dir())
     if not (folder / "right_hand.xml").is_file():
@@ -124,54 +173,10 @@ def build(config, hand="sharpa", asset_dir=None):
     node(option, "flag", multiccd="enable")
     for key in root.findall("keyframe"):
         root.remove(key)
-    asset, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
+    asset, world = root.find("asset"), root.find("worldbody")
 
-    # ------------------------------------------------------------------ hand on the six-axis wrist stage
-    hand_body = world.find("body")
-    world.remove(hand_body)
-    wrist = node(world, "body", name="wrist_stage", pos=config["wrist_base"])
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    # Mount: with all six wrist targets at zero the palm faces down (-z), the fingers point +y, the thumb is on -x.
-    hand_body.set("quat", "0.5 -0.5 0.5 0.5")
-    wrist.append(hand_body)
-    slide_range = config["wrist_slide_range"]
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        wrist.insert(
-            i,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range=_fmt(slide_range[i]) if i < 3 else "-3.14 3.14",
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
-    for a in actuator:
-        if a.tag == "general":
-            bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
-            bias[2] = -0.9
-            a.set("biasprm", " ".join(map(str, bias)))
-    for g in hand_body.iter("geom"):
-        if "fingertip_collision" in g.get("name", ""):
-            g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    # ------------------------------------------------------------------ hand on the Marvin arm rig
+    add_marvin_rig(root, config, hand_id, folder)
 
     # ------------------------------------------------------------------ room, counter, tray, rack
     table_z = config["table_z"]

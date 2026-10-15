@@ -2,10 +2,14 @@
 
 {{TASK_TEXT}}
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds;
-the turner is held only by finger and palm contact, and the pancake moves only through contact with the turner, the
-pan and the plate. The controller runs at {{CONTROL_HZ}} Hz, with twenty 1 ms physics substeps per control.
+The robot is a fixed Tianji Marvin stand at the world origin facing +x, with two 7-joint arms and a dexterous hand
+on each wrist (robot id `marvin-bimanual-sharpa-wave`); the right arm and hand do the task and the left arm stays
+parked beside the torso. Every arm and finger joint is a position servo in the physics engine under native force
+bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held target
+sags by about 1 cm at the hand under load unless your targets account for it). The turner is held only by finger and
+palm contact, and the pancake moves only through contact with the turner, the pan and the plate. The controller runs
+at {{CONTROL_HZ}} Hz, with twenty 1 ms physics substeps per control. World frame: metres and radians, +z up, +x
+forward from the robot stand, +y to the robot's left.
 
 ## Scene and modelling
 The scene reproduces a 22 cm non-stick frying pan (0.90 kg, free on the counter), an OXO flexible kitchen turner
@@ -14,10 +18,10 @@ an oak counter whose top is at z = 0.85 m. Declared simplifications: the pancake
 bending, tearing, heat or fluid); the turner's thin steel-core blade is three rigid strips joined by passive spring
 hinges (+-0.35 rad); concave pan and plate interiors use convex sector contact shapes. Pair friction coefficients are
 estimates: pancake-pan 0.45, pancake-blade 0.20, blade-pan 0.20, pancake-plate 0.60, hand-turner grip 1.2, objects on
-the counter 0.7. The episode starts with the turner already held in a settled power grasp: the frozen reset places
-the hand, turner, pan, plate and pancake in a state that was reached by closing the fingers on the handle and letting
-the whole scene settle under physics; the turner is held only by contact (there is no weld or attachment), so opening
-the fingers drops it. Physics runs at 1 ms steps, twenty per 50 Hz control.
+the counter 0.7. The turner is not in a hand at the start: as in the source scene it rests on the counter in
+front of the plate, at about (0.76, -0.30, 0.878) m with its handle toward -y (handle end and blade base on the counter,
+the handle 16 to 30 mm above it); pick it up first. It is held only by contact (there is no weld or attachment).
+Physics runs at 1 ms steps, twenty per 50 Hz control.
 
 {{HANDS}}
 {{RESETS}}
@@ -44,12 +48,11 @@ r.fk(q)                       # robot-link forward kinematics; no physics is ste
 r.status()
 res.save("/app/runs/001")
 ```
-`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets `wrist_x, wrist_y,
-wrist_z` (metres) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger targets in radians.
-`D` is 28 for `sharpa` (22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 26 for `wuji`
-(20 Wuji Hand 2.2 finger joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`,
-`r_wuji_r_LFJ0..3`). The episode starts with the turner in a settled grasp; holding the start finger targets keeps
-it. Actuator targets are clipped to the published joint limits and clipping is reported. `dt` must be a multiple of
+`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order, radians: columns 0-6 the left arm
+`SHOULDER_PITCH_L_J1` ... `WRIST_ROLL_L_J7`, 7-13 the right arm `..._R_J1` ... `..._R_J7`, then the left hand's and
+the right hand's finger targets. `D` is 58 for `sharpa` (22 Sharpa Wave finger joints per hand) and 54 for `wuji`
+(20 Wuji Hand 2.2 finger joints per hand). The episode starts with both hands open and the turner resting on the counter; holding the start
+targets keeps that pose. Actuator targets are clipped to the published joint limits and clipping is reported. `dt` must be a multiple of
 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`; linear
 interpolation starts from the previous target. The robot has no scalar gripper opening. Quaternions in measured poses
 use WXYZ; world z is up and the counter top is at z = 0.85 m. Cameras are overview, closeup and side, at 640 x 480.

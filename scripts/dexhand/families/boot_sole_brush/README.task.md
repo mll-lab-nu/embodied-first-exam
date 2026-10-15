@@ -2,21 +2,24 @@
 {{TASK_TEXT}}
 
 ## Difficulty
-The hand must pick up a 14 cm shoe brush from the counter with a stable contact grasp, carry it to a boot that stands
-sole-up 0.4 m above the tray, and sweep the sole so that every one of six small loose clods is pushed over the sole
+The robot's right hand, on a 7-joint arm without gravity compensation, must pick up a 14 cm shoe brush from the
+counter with a stable contact grasp, carry it to a boot that stands sole-up 0.4 m above the tray (the brushing hand
+works above the robot's shoulder height, near the edge of the arm's reach), and sweep the sole so that every one of six small loose clods is pushed over the sole
 edge and falls into the tray, without touching a clod with the hand, without letting go of the brush in the air and
 without knocking the boot off its peg. The clods weigh 1 g and are irregular; the sole has a central groove, an arch
 and raised lugs, and the fingers that hold the brush hang close to the sole, so strokes have to be planned so that no
 finger meets a clod. Pressing too hard or sweeping too fast flings clods past the tray, which fails the episode at
-once. Partial cleaning never counts.
+once, and so does any contact of the arms, the stand or the parked left hand. Partial cleaning never counts.
 
 ## Reference solution
-`solution/trajectory.npz` holds the Sharpa Wave authoring witness (1,329 rows, success at control 1,178, followed by
-hold rows): a top-down pinch of the brush back (thumb on the near long face, three fingers on the far face), lift,
-four centre-out strokes over the forefoot and the heel, withdrawal and a 1 s hold. Privileged mode replays these rows;
-standard mode submits the same rows through `rcb_client` (float64, hold interpolation, 50 Hz). The authoring
-controller (`scripts/dexhand/families/boot_sole_brush/tools/author_oracle.py`) computes robot kinematics and motor
-targets only; it never drives an object pose or applies an object force, and it is not copied into the task.
+`solution/trajectory.npz` holds the Sharpa Wave authoring witness on the Marvin right arm (1,688 rows of 58 motor
+targets, success at control 1,538, followed by hold rows): a top-down pinch of the brush back (thumb on the near long
+face, three fingers on the far face), lift, four centre-out strokes over the forefoot and the heel, withdrawal and a
+1 s hold, with the left arm parked throughout. Privileged mode replays these rows; standard mode submits the same rows
+through `rcb_client` (float64, hold interpolation, 50 Hz). The authoring tools
+(`scripts/dexhand/families/boot_sole_brush/tools/arm_port.py`, which tracks the hand poses of an earlier floating-hand
+witness with arm inverse kinematics) compute robot kinematics and motor targets only; they never drive an object pose
+or apply an object force, and they are not copied into the task.
 
 ## Verification
 {{MODE}} mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
@@ -24,7 +27,8 @@ twice in fresh processes. Both replays must succeed and have identical final sta
 hash must also equal the live final hash. A replay ends at the first success or the first failure. Failures are
 fail-fast, checked after every 2 ms physics substep, and permanent: a displaced boot, a clod touching the counter or
 floor or leaving the workspace, a hand-clod contact, a brush that touches the floor, tray or rack or is released in the
-air, unstable physics, or the 3,000-control budget. A no-op fails. Human review and full agent-trial calibration remain
+air, any contact of a robot part other than the right hand (stand, torso, arm links, the parked left hand), unstable
+physics, or the 3,000-control budget. A no-op fails. Human review and full agent-trial calibration remain
 pending; report this task as provisional.
 
 ## Details
@@ -39,5 +43,7 @@ fixed boot-rack peg instead of being lifted, turned and set down by the hand, an
 bristle field touches the world through one compliant pad proxy (individual fibres do not bend); the tray is a 45 mm
 deep basin with a soft, damped rubber liner. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
 `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model (`hand2/hand2_2`) to
-wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted on the same wrist
-stage with its vendor joints, actuators and contact geometry unchanged.
+wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted on the same arm
+flanges with its vendor joints, actuators and contact geometry unchanged. The robot is the Tianji Marvin two-arm rig
+of `pot_shelf_transfer` (`arm_rig.py`; meshes checked against the image's Tianji manifest), standing on the floor
+beside the counter.

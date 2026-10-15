@@ -4,7 +4,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/dexhand-boot-sole-brush-i00-standard"
-description = "A rubber boot stands sole-up on a boot-rack peg in a collection tray with six dry soil clods lodged in its tread; pick up the shoe brush from the counter with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2), brush every clod off the sole into the tray and withdraw the brush; a clod outside the tray, a clod touched by the hand, a dropped brush or a displaced boot fails the episode at once."
+description = "A rubber boot stands sole-up on a boot-rack peg in a collection tray with six dry soil clods lodged in its tread; pick up the shoe brush from the counter with the right hand of a Tianji Marvin two-arm robot (Sharpa Wave by default, or Wuji Hand 2.2), brush every clod off the sole into the tray and withdraw the brush; a clod outside the tray, a clod touched by the hand, a dropped brush, a displaced boot or any arm/stand contact fails the episode at once."
 authors = [{ name = "Embodied Exam contributors" }]
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "brushing", "cleaning", "debris", "contact-rich", "free-objects"]
 
@@ -12,7 +12,7 @@ keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
-robot = "sharpa-wave-floating"
+robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "boot_sole_brush"
@@ -20,7 +20,7 @@ mode = "standard"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
-oracle_evidence = "solution/trajectory.npz: the 1,329-row Sharpa Wave authoring witness (success at control 1,178, then hold rows); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, 8/8 successes under 1e-4 m / 1e-3 rad row noise. Harbor 0.23 oracle reward 1 in both modes on 2026-10-14 (standard: the same rows through rcb_client, live = replay). solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,336 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
+oracle_evidence = "solution/trajectory.npz: the 1,688-row Sharpa Wave witness on the Marvin right arm (success at control 1,538, then 150 hold rows), authored by tracking the wave-2 floating-hand episode's hand-root poses with arm inverse kinematics (closed loop, joint integral; the brush-transfer segment re-timed 3x slower); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, and no arm, stand or parked-hand contact occurs in any physics substep."
 expert_time_estimate_hours = 3.0
 difficulty = "hard"
 release_status = "provisional"

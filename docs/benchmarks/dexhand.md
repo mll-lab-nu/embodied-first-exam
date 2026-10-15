@@ -21,15 +21,15 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `coffee_stir` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,882 rows |
 | `jar_lid_open` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,159 rows |
 | `grinder_crank` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 1,096 rows |
-| `pancake_serve` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 874 rows |
+| `pancake_serve` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 20 x 1 ms | 1,167 rows |
 | `vacuum_bin_reseat` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 20 x 1 ms | 1,331 rows |
 | `drying_rack_unfold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,415 rows |
 | `picture_hang` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 869 rows |
-| `usb_plug_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,134 rows |
+| `usb_plug_insert` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,595 rows |
 | `fan_guard_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,665 rows |
 | `stool_brace_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,006 rows |
 | `ram_module_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,529 rows |
-| `boot_sole_brush` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,329 rows |
+| `boot_sole_brush` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 1,688 rows |
 | `paper_staple` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 942 rows |
 | `binder_page_load` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,095 rows |
 | `envelope_letter_insert` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 2,446 rows |
@@ -43,7 +43,7 @@ family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted i
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and four of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and two of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Thirteen families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Eleven families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -139,8 +139,6 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `paper_half_fold` | 620 x 26 | control 554 | `families/paper_half_fold/tools/wuji_gen.py` (fingertip pads under the overhang, rigid rotation about the fold line, press, lift) |
 | `pot_shelf_transfer` | 8,266 x 54 | step 8,266 | `families/pot_shelf_transfer/tools/wuji_gen.py` (the Sharpa authoring controller's phases with a Wuji power-grip posture) |
 | `jar_lid_open` | 1,242 x 54 | control 1,097 | `families/jar_lid_open/tools/arm_port.py author --hand wuji` (the old Wuji hand path tracked by the arm, slowed for the Wuji servos; README) |
-| `pancake_serve` | 875 x 26 | control 725 | `families/pancake_serve/tools/demo.py --params '{"hand": "wuji"}'` (the same closed-loop turner-pose servo as Sharpa, with the Wuji frozen power grasp from `tools/make_reset.py`) |
-| `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
 | `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
 
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
@@ -422,19 +420,19 @@ household scenes that were kinematic demonstrations (object motion prescribed, m
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
 `vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each
 flange (`batter_whisk`, `book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`,
-`coffee_stir`, `envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the
-left one parked) completes each one with motor targets only. Mechanisms are passive joints with limits, damping,
-friction loss and springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and
-object state is written only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is
-summarised by a quantity the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says
-so. The three rules above apply: fail-fast at the first violating physics substep (unless the section says otherwise),
-ordered stages, no partial credit, and a released or held terminal window. Each instruction states the exact predicate
-and every threshold; each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its
-authoring tests. All run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji
-selectable; a Wuji success, where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored
-source-scene details (pre-closed or pre-placed parts, enlarged parts and widened clearances reverted) in the families
-whose sections say so, each naming what was restored and what remains, with the reason; the other families keep their
-wave-2 version.
+`boot_sole_brush`, `coffee_stir`, `envelope_letter_insert`, `jar_lid_open`, `pancake_serve`, `paper_staple`,
+`remote_battery_swap`, `usb_plug_insert` with the right arm, the left one parked) completes each one with motor targets
+only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches);
+nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium that is not
+simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator
+state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first
+violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held
+terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
+lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
+"full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
+`solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored source-scene details (pre-closed or pre-placed parts,
+enlarged parts and widened clearances reverted) in the families whose sections say so, each naming what was restored and
+what remains, with the reason; the other families keep their wave-2 version.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -526,17 +524,21 @@ selectable, no success).
 
 ### Pancake serving (`pancake_serve`, T16)
 
-The hand starts holding an OXO flexible turner (a three-strip passive blade) in a frozen, settled contact grasp; a
-rigid 60 g pancake lies in a free 22 cm pan and a free ceramic plate stands beside it. Physics step 1 ms, 20 per
-control. **Success**, in order: (1) the pancake on the blade only, lifted at least 15 mm, tilt at most 30 degrees, for
-10 controls; (2) carried on the blade over the plate (centre within 58 mm); (3) resting on the plate only, centre
-within 58 mm, tilt at most 20 degrees, still (0.02 m/s, 0.3 rad/s), the turner withdrawn (no contact, blade at least
-80 mm from the centre), for 50 controls (1 s). **Immediate failure**, after every 1 ms substep: the pancake on the
-counter or floor, or in free fall faster than 0.35 m/s; a hand touching the pancake; the turner on the floor or
-falling out of the hand; pan or plate moved more than 30 mm or tilted more than 15 degrees; a body below the counter
-top or outside the workspace; unstable physics; 3,000 controls. Rigid pancake, declared pair frictions (pancake-pan
-0.45, blade 0.20, plate 0.60). Oracle: 874 Sharpa rows (success at 724); Wuji: `solution/wuji/` (875 rows, success
-at 725).
+Wave 3: the right Tianji Marvin arm and hand (stand at the world origin facing +x, the left arm parked); layout change:
+the cabinet under the counter starts behind the stand's base plate. The OXO flexible turner (a three-strip passive
+blade) starts resting on the counter in front of the plate, as in the source, and is picked up first (wave 2: pre-held
+in a frozen grasp); a rigid 60 g pancake lies in a free 22 cm pan and a free ceramic plate stands beside it. Physics
+step 1 ms, 20 per control. **Success**, in order: (1) the pancake on the blade only, lifted at least 15 mm, tilt at most
+30 degrees, for 10 controls; (2) carried on the blade over the plate (centre within 58 mm); (3) resting on the plate
+only, centre within 58 mm, tilt at most 20 degrees, still (0.02 m/s, 0.3 rad/s), the turner withdrawn (no contact, blade
+at least 80 mm from the centre), for 50 controls (1 s). **Immediate failure**, after every 1 ms substep: the pancake on
+the counter or floor, or in free fall faster than 0.35 m/s; a hand touching the pancake; the turner on the floor or
+falling out of the hand; pan or plate moved more than 30 mm or tilted more than 15 degrees; a body below the counter top
+or outside the workspace; unstable physics; 3,000 controls. Rigid pancake, declared pair frictions (pancake-pan 0.45,
+blade 0.20, plate 0.60). Any robot part touching the pancake fails at once (hand contact means any hand, arm link or the
+stand). Not restored: the other hand holding the pan (one attempt failed; the source's 8-degree tilt and 4 cm lift of
+the pan were not attempted). Oracle: 1,167 Sharpa rows on the arm (success at 1,017); the wave-2 Wuji solution is not
+packaged (Wuji selectable, no success).
 
 ### Vacuum dust-bin reseat (`vacuum_bin_reseat`, T19)
 
@@ -598,19 +600,25 @@ no success).
 
 ### USB plug into a hub port (`usb_plug_insert`, T24)
 
-A free four-port USB hub rests on the desk (top z = 0.70 m) with its ports facing the front edge; a USB-A plug with a
-0.5 m cable lies on its side. **Success**, in order: (1) grasped and lifted: the thumb and another finger touch the
-rigid plug, the plug touches nothing else, its shell tip at z >= 0.73 m; (2) seated in port 4 (the rightmost): in the
-port frame the shell tip at least 10.8 mm deep in the 12 mm cavity (90 %), within 0.6 mm of the axis sideways and
-0.5 mm vertically, plug axis within 5 degrees of the port axis and its top face within 20 degrees of the hub's top
-face (polarity); (3) released: still seated in port 4, no hand contact on plug, cable or hub, plug slower than
-0.01 m/s, for 50 consecutive controls (1 s). A plug in another port never counts. **Immediate failure**: the hub moved
-more than 20 mm or tilted more than 20 degrees; the plug below z = 0.685 m; plug or hub outside the workspace box; the
-cable's far end more than 5 cm below the desk top; after stage 1, a dropped plug (at the first control without hand
-contact on plug or cable, not engaged 3 mm deep in a port, and falling faster than 0.2 m/s or lying on the desk or
-floor); unstable physics; 3,000 controls. Ports are open cavities with generous clearance (0.25 mm per side across,
-0.15 mm in height); tongue and contacts are visual and there are no retention springs. Oracle: 1,134 Sharpa rows
-(success at 1,014); no Wuji solution.
+Wave 3 (the arm on the old scene): the right Tianji Marvin arm and hand (stand at base (0.93, -0.52, -0.10) on the floor
+z = -0.20 m, yaw 135 degrees, the left arm parked); layout change: the floor is 0.10 m lower than in the source, so the
+0.70 m desk top stands 0.90 m above it, and the desk's two front legs are set back under the top to clear the base
+plate; an arm link, the stand, the torso or the parked hand touching anything fails at once (`robot_collision`). A free
+four-port USB hub rests on the desk (top z = 0.70 m) with its ports facing the front edge; a USB-A plug with a 0.5 m
+cable lies on its side. **Success**, in order: (1) grasped and lifted: the thumb and another finger touch the rigid
+plug, the plug touches nothing else, its shell tip at z >= 0.73 m; (2) seated in port 4 (the rightmost): in the port
+frame the shell tip at least 10.8 mm deep in the 12 mm cavity (90 %), within 0.6 mm of the axis sideways and 0.5 mm
+vertically, plug axis within 5 degrees of the port axis and its top face within 20 degrees of the hub's top face
+(polarity); (3) released: still seated in port 4, no hand contact on plug, cable or hub, plug slower than 0.01 m/s, for
+50 consecutive controls (1 s). A plug in another port never counts. **Immediate failure**: the hub moved more than 20 mm
+or tilted more than 20 degrees; the plug below z = 0.685 m; plug or hub outside the workspace box; the cable's far end
+more than 5 cm below the desk top; after stage 1, a dropped plug (at the first control without hand contact on plug or
+cable, not engaged 3 mm deep in a port, and falling faster than 0.2 m/s or lying on the desk or floor); unstable
+physics; 3,000 controls. Ports are open cavities with generous clearance (0.25 mm per side across, 0.15 mm in height);
+tongue and contacts are visual and there are no retention springs. Not restored: a bimanual held-hub version with the
+source clearances, polarity tongue and retention springs aligned the plug to <= 0.09 mm, but every insertion dropped the
+hub or the plug, so the shipped one-hand scene keeps the wave-2 simplifications. Oracle: 1,595 Sharpa rows on the arm
+(success at 1,475; the standard verifier allows 1,800 s for the 12-minute trial); no Wuji solution.
 
 ### Desk-fan front guard (`fan_guard_install`, T26)
 
@@ -674,18 +682,23 @@ at 1,379); no Wuji solution.
 
 ### Boot sole brushing (`boot_sole_brush`, T29)
 
-A rubber boot (Poly Haven, CC0) stands sole-up on a fixed boot-rack peg in a collection tray; six loose 1 g soil clods
-lie lodged in its tread (gravity and friction only; the source scene's cohesive bond is not simulated); a shoe brush
-lies bristles-down on the counter. **Success**, in order: (1) the brush's bristle pad touches the boot while the hand
-holds the brush off the counter, at least 10 controls in total; (2) every clod touched by the bristle pad (not the
-wooden back) while near the sole, and every clod inside the tray walls; (3) for 50 consecutive controls (1 s) all
-clods in the tray at <= 0.05 m/s while the brush touches neither boot nor clods and is withdrawn. **Immediate
-failure**, after every 2 ms substep: the boot moved more than 0.03 m or tilted more than 0.35 rad; a clod touching the
-counter or floor, below the counter top or outside the workspace box; any hand geometry touching a clod; the brush
-touching floor, tray or rack, below the counter top, outside the box, or released in the air (no contact but clods
-while falling faster than 0.2 m/s); unstable physics; 3,000 controls. The bristle field touches the world through one
-compliant pad (fibres do not bend). Oracle: 1,329 Sharpa rows (success at 1,178); Wuji: `solution/wuji/` (1,336 rows,
-success at 1,186).
+Wave 3 (the arm on the old scene): the right Tianji Marvin arm and hand (stand at base (0.147, -0.591, 0.10) on the
+floor z = 0 beside the counter's -y edge, facing +y; the left arm parked); any robot part other than the right hand
+touching anything fails at once. A rubber boot (Poly Haven, CC0) stands sole-up on a fixed boot-rack peg in a collection
+tray; six loose 1 g soil clods lie lodged in its tread (gravity and friction only; the source scene's cohesive bond is
+not simulated); a shoe brush lies bristles-down on the counter. **Success**, in order: (1) the brush's bristle pad
+touches the boot while the hand holds the brush off the counter, at least 10 controls in total; (2) every clod touched
+by the bristle pad (not the wooden back) while near the sole, and every clod inside the tray walls; (3) for 50
+consecutive controls (1 s) all clods in the tray at <= 0.05 m/s while the brush touches neither boot nor clods and is
+withdrawn. **Immediate failure**, after every 2 ms substep: the boot moved more than 0.03 m or tilted more than 0.35
+rad; a clod touching the counter or floor, below the counter top or outside the workspace box; any hand geometry
+touching a clod; the brush touching floor, tray or rack, below the counter top, outside the box, or released in the air
+(no contact but clods while falling faster than 0.2 m/s); unstable physics; 3,000 controls. The bristle field touches
+the world through one compliant pad (fibres do not bend). Not restored (attempted, with evidence in the family README):
+the left hand holding the boot at the source height, and the source clod positions with its 32 hinged tufts; in every
+attempt the fingertip-pinched brush rolled about the thumb-finger axis under the stroke loads and was lost after 3-12
+strokes. Oracle: 1,688 Sharpa rows on the arm (success at 1,538); the wave-2 Wuji solution is not packaged (Wuji
+selectable, no success).
 
 ### Paper stapling (`paper_staple`, T36)
 

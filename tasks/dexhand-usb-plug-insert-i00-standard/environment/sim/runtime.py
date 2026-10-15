@@ -1,4 +1,5 @@
-"""Actuator-only USB plug insertion episode with a strict, state-derived verdict (FAMILY_PLUGIN.md section 4)."""
+"""Actuator-only USB plug insertion episode (genuine hand on the Tianji Marvin right arm) with a strict,
+state-derived verdict (FAMILY_PLUGIN.md section 4)."""
 
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ import mujoco
 import numpy as np
 
 from checker import Checker
-from scene import USB, build, hands
+from scene import USB, arm_rig, build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "usb_plug_insert"
@@ -31,7 +32,7 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.robot = arm_rig.ROBOT_ID
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
@@ -44,7 +45,8 @@ class Session:
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.tcp_body = "right_hand_C_MC"  # the hand mount (same body name for both hands)
+        self.tcp_body = "wrist_stage"  # the right flange's hand mount (same body name for both hands)
+        self.layout = arm_rig.layout(self.model)
         self.checker = Checker(self.model, self.config, USB)
         self.renderer = None
         self.reset()

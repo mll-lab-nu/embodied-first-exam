@@ -2,6 +2,9 @@
 
 Fail-fast (checked after every 2 ms physics substep; the first one is permanent):
   unstable_physics          MuJoCo reports a bad qpos/qvel/qacc
+  robot_collision           any part of the robot other than the working right hand (the stand, the torso, an arm
+                            link or flange of either arm, the parked left hand) touches anything (furniture, boot,
+                            brush, clods, the floor, or the robot itself)
   boot_displaced            boot origin > 0.03 m from its reset position, or boot axis tilted > 0.35 rad from reset
   debris_outside_tray       a clod touches the counter or the floor, falls below the counter top, or leaves the box
   hand_touched_debris       any hand geometry touches a clod (debris must be brushed, not picked)
@@ -23,6 +26,8 @@ from __future__ import annotations
 
 import mujoco
 import numpy as np
+
+from scene import robot_parts
 
 UNSTABLE = (mujoco.mjtWarning.mjWARN_BADQPOS, mujoco.mjtWarning.mjWARN_BADQVEL, mujoco.mjtWarning.mjWARN_BADQACC)
 STAGES = ("brush_on_sole", "debris_in_tray", "withdrawn_hold")
@@ -48,6 +53,8 @@ class BrushChecker:
         self.brush = m.body("brush").id
         self.clods = np.array([m.body(f"clod_{i}").id for i in range(len(config["clods"]))])
         hand_bodies = _descendants(m, m.body("wrist_stage").id)
+        _, robot_rest = robot_parts(m)
+        self.robot_g = np.isin(gbody, sorted(robot_rest - hand_bodies))
         brush_bodies = _descendants(m, self.brush)
         self.hand_g = np.isin(gbody, list(hand_bodies))
         self.brush_g = np.isin(gbody, list(brush_bodies))
@@ -155,6 +162,12 @@ class BrushChecker:
             return self._fail("brush_dropped", control, substep, where="below_or_outside")
         g1, g2 = self.contacts()
         if g1.size:
+            # The arm, the stand and the parked hand must never touch anything: only the working hand acts.
+            hit = self.robot_g[g1] | self.robot_g[g2]
+            if hit.any():
+                k = int(np.flatnonzero(hit)[0])
+                return self._fail("robot_collision", control, substep,
+                                  geoms=[self._geom_label(int(g1[k])), self._geom_label(int(g2[k]))])
             c1, c2 = self.clod_g[g1], self.clod_g[g2]
             # clod on counter / floor
             hit = ((c1 >= 0) & self.ground_g[g2]) | ((c2 >= 0) & self.ground_g[g1])
@@ -197,6 +210,9 @@ class BrushChecker:
                 if up[c2[k]]:
                     self.brushed[c2[k]] = True
         return False
+
+    def _geom_label(self, g):
+        return self.m.geom(g).name or f"{self.m.body(int(self.m.geom_bodyid[g])).name}#geom{g}"
 
     def _fail(self, reason, control, substep, **detail):
         self.failure = reason

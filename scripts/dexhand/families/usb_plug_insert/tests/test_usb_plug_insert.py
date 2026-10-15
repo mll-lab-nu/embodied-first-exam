@@ -36,12 +36,14 @@ from runtime import Session  # noqa: E402
 
 TASK = "usb_plug_insert"
 ORACLE = FAMILY / "solution/trajectory.npz"
-SUCCESS_STEP = 1014
-ORACLE_SHA = "5d0414a6931cf7c9bdb337e39b83abb92aaf875ec2640ed756a2c9da80e806f6"
+SUCCESS_STEP = 1475
+RIGHT = slice(36, 58)  # right-hand finger columns of a Sharpa row (after 14 arm and 22 left-hand targets)
+KNOCK = 1060           # after the insertion (stage 2 reached at about control 1,040)
+ORACLE_SHA = "c18aa345626c7752fdbcea593086867c0cc2b06c7320996c1c709af4695d265c"
 
 
 def oracle_rows() -> np.ndarray:
-    return hands.read_trajectory(ORACLE, widths={"sharpa": 28, "wuji": 26}, max_rows=3000, task=TASK)[0]
+    return hands.read_trajectory(ORACLE, widths={"sharpa": 58, "wuji": 54}, max_rows=3000, task=TASK)[0]
 
 
 def run_replay(traj: Path, *extra: str) -> tuple[dict, int]:
@@ -102,7 +104,7 @@ class NegativeTest(unittest.TestCase):
         self.assertEqual(status["stage"], 0)
 
     def test_truncated_before_release_fails(self):
-        status = self.replay_in_process(self.rows[:900])  # inserted (stage 2), release/hold incomplete
+        status = self.replay_in_process(self.rows[:1100])  # inserted (stage 2), release/hold incomplete
         self.assertFalse(status["success"])
         self.assertEqual(status["stage"], 2)
 
@@ -113,24 +115,24 @@ class NegativeTest(unittest.TestCase):
 
     def test_drop_fails_fast_at_the_drop(self):
         rows = np.concatenate([self.rows[:330], np.repeat(self.rows[329:330], 200, axis=0)])
-        rows[330:, 6:] = np.asarray(Session(TASK).initial_targets[6:])  # open the hand mid-transport
+        rows[330:, RIGHT] = np.asarray(Session(TASK).initial_targets[RIGHT])  # open the hand mid-transport
         status = self.replay_in_process(rows)
         self.assertEqual(status["reason"], "plug_dropped")
         self.assertLessEqual(status["steps"], 335)
 
     def test_drop_then_resume_oracle_cannot_recover(self):
         rows = np.concatenate([self.rows[:330], np.repeat(self.rows[329:330], 20, axis=0), self.rows[330:]])
-        rows[330:350, 6:] = np.asarray(Session(TASK).initial_targets[6:])
+        rows[330:350, RIGHT] = np.asarray(Session(TASK).initial_targets[RIGHT])
         status = self.replay_in_process(rows)
         self.assertFalse(status["success"])
         self.assertTrue(status["failed"])
 
     def test_hub_knock_fails_fast(self):
-        rows = np.concatenate([self.rows[:785], np.repeat(self.rows[784:785], 150, axis=0)])
-        rows[785:, 0] -= np.r_[np.linspace(0, 0.10, 100), np.full(50, 0.10)]  # drag the seated plug sideways
+        rows = np.concatenate([self.rows[:KNOCK], np.repeat(self.rows[KNOCK - 1:KNOCK], 150, axis=0)])
+        rows[KNOCK:, 7] += np.r_[np.linspace(0, 0.25, 100), np.full(50, 0.25)]  # right shoulder J1 drags the seated plug
         status = self.replay_in_process(rows)
-        self.assertEqual(status["reason"], "hub_displaced")
-        self.assertLess(status["steps"], 830)
+        self.assertIn(status["reason"], ("hub_displaced", "hub_tipped"))
+        self.assertLess(status["steps"], KNOCK + 150)
 
     def test_post_success_rows_are_not_executed(self):
         rows = np.concatenate([self.rows[:SUCCESS_STEP], np.repeat(self.rows[:1], 200, axis=0)])
@@ -146,7 +148,7 @@ class TrustBoundaryTest(unittest.TestCase):
             nan = rows.copy()
             nan[3, 7] = np.nan
             wrong = Path(folder) / "wrong_width.npz"
-            np.savez_compressed(wrong, actions=rows[:, :27], hand=np.array("sharpa"))
+            np.savez_compressed(wrong, actions=rows[:, :57], hand=np.array("sharpa"))
             nan_path = Path(folder) / "nan.npz"
             np.savez_compressed(nan_path, actions=nan, hand=np.array("sharpa"))
             label = Path(folder) / "sharpa_rows_as_wuji.npz"
@@ -181,9 +183,9 @@ class TrustBoundaryTest(unittest.TestCase):
 class HandTest(unittest.TestCase):
     def test_wuji_loads_with_same_stage_and_nop_is_deterministic_failure(self):
         sharpa, wuji = Session(TASK), Session(TASK, hand="wuji")
-        self.assertEqual((sharpa.action_dim, wuji.action_dim), (28, 26))
-        self.assertEqual(sharpa.actuator_names[:6], wuji.actuator_names[:6])
-        np.testing.assert_array_equal(sharpa.model.actuator_ctrlrange[:6], wuji.model.actuator_ctrlrange[:6])
+        self.assertEqual((sharpa.action_dim, wuji.action_dim), (58, 54))
+        self.assertEqual(sharpa.actuator_names[:14], wuji.actuator_names[:14])
+        np.testing.assert_array_equal(sharpa.model.actuator_ctrlrange[:14], wuji.model.actuator_ctrlrange[:14])
         rows = np.repeat(wuji.initial_targets[None], 150, axis=0)
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "wuji_nop.npz"

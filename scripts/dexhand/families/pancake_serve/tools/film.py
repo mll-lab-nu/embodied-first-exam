@@ -35,7 +35,12 @@ def export(trajectory, directory, stride=4):
     actions, hand, _ = load_trajectory(trajectory)
     session = Session(hand=hand)
     m = session.model
-    owner = session.checker.body_owner
+    owner = session.checker.body_owner.copy()
+    if getattr(session, "marvin", False):  # Marvin stand and arm links render in their own colours
+        from scene import _arm_rig_module
+
+        for b in _arm_rig_module().robot_body_ids(m):
+            owner[b] = "robot"
     arrays, geoms, meshes, ids = {}, [], {}, []
     for gid in range(m.ngeom):
         if m.geom_group[gid] > 2 or m.geom_rgba[gid, 3] == 0:
@@ -110,10 +115,11 @@ def encode(directory, frames_dir, output, speed_note=None):
             record = payload["frames"][index]
             pic = Image.open(path).convert("RGB")
             draw = ImageDraw.Draw(pic)
-            status = "PASS" if record["success"] else (stages[record["stage"] - 1] if record["stage"] else "approach")
-            draw.rounded_rectangle((20, 18, 520, 84), radius=10, fill=(244, 241, 232))
-            draw.text((34, 26), f"Serve a pancake with a spatula  ·  {payload['hand_model']}", font=font,
-                      fill=(45, 52, 44))
+            idle = "picking up the turner" if record["step"] <= 300 else "approach"
+            status = "PASS" if record["success"] else (stages[record["stage"] - 1] if record["stage"] else idle)
+            draw.rounded_rectangle((20, 18, 640, 84), radius=10, fill=(244, 241, 232))
+            draw.text((34, 26), f"Serve a pancake with a spatula  ·  Tianji Marvin arm + {payload['hand_model']}",
+                      font=font, fill=(45, 52, 44))
             draw.text((34, 56), f"{status}  ·  physics replay, {speed_note or '1x'}  ·  t = "
                       f"{record['step'] * payload['control_dt']:.1f} s", font=small, fill=(91, 110, 69))
             frame = np.asarray(pic)

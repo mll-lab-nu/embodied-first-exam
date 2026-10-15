@@ -43,7 +43,7 @@ def export(trajectory, directory, stride=4):
     arrays, geoms, meshes, ids = {}, {}, {}, []
     for gid in range(m.ngeom):
         name = m.geom(gid).name or f"geom_{gid}"
-        if m.geom_group[gid] > 2 or m.geom_rgba[gid, 3] == 0 or (name.startswith("r_wuji_") and "_collision" in name):
+        if m.geom_group[gid] > 2 or m.geom_rgba[gid, 3] == 0 or (name.startswith(("r_wuji_", "l_wuji_")) and "_collision" in name):
             continue
         mid = int(m.geom_matid[gid])
         mesh = int(m.geom_dataid[gid]) if int(m.geom_type[gid]) == 7 else None

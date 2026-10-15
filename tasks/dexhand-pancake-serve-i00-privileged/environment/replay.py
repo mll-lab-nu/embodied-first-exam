@@ -11,7 +11,7 @@ import numpy as np
 
 TASK = "pancake_serve"
 # Six wrist-stage targets followed by the selected hand's native finger actuators.
-WIDTHS = {"sharpa": 28, "wuji": 26}
+WIDTHS = {"sharpa": 58, "wuji": 54}  # Marvin rig: 14 arm targets, then left and right hand fingers
 MAX_ROWS = 3000
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 

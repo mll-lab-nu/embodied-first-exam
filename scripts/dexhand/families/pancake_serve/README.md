@@ -60,3 +60,28 @@ Film: `python tools/film.py export --trajectory solution/trajectory.npz --export
 Negative variants: `tools/demo.py --params '{"variant": "drop", "slack_rows": 0}'` (pancake rolled off the blade
 over the counter: `pancake_dropped`) and `'{"variant": "knock", "slack_rows": 0}'` (pan shoved through its handle:
 `pan_displaced`).
+
+## Wave 3 (2026-10-15): Marvin arm rig
+
+The hand now sits on the right arm of the Tianji Marvin stand (`scripts/dexhand/shared/arm_rig.py`, robot
+`marvin-bimanual-sharpa-wave`, stand at the origin facing +x, `base_z = floor_z + 0.1`; the left arm is parked). The
+mount body on the right flange is named `wrist_stage`, so the checker's hand lookup is unchanged; arm links and the stand
+count as robot ("hand") for every contact rule. The decorative cabinet under the counter starts behind the stand's base
+plate (x >= 0.77 m); no robot geom overlaps furniture (exact `mj_geomDistance` check) and over the oracle no arm link or
+the stand touches anything (per-substep contact audit). Rows: 14 arm targets (left J1-J7, right J1-J7), then the left
+and the right hand's fingers (58 Sharpa / 54 Wuji).
+
+- `tools/make_reset_arm.py --legacy <wave-2 task.json> --hand <h> --write`: the wave-2 settled grasp transferred to the
+  arm (same hand-root pose by IK, same fingers and object poses), settled 1.5 s with a closed-loop arm correction,
+  frozen with its final targets.
+- `tools/demo_arm.py`: the wave-2 turner-pose servo (`tools/demo.py`) with the hand pose converted to right-arm joint
+  targets by IK + joint integral (`shared/arm_ik.py`), rows rounded to float32 before they are executed (lossless
+  float32 round trip).
+- Realism (wave 3): the turner starts at rest on the counter at the T16 source pose (0.76, -0.30, 0.878), quat
+  (0.9895, 0.1443, 0, 0), handle end and blade base on the counter (`tools/pickup_arm.py make-reset --hand <h> --write`:
+  turner placed there, hand opened, scene settled 1.5 s with the arm held by a closed-loop correction, frozen).
+  `tools/pickup_arm.py author --out solution/trajectory.npz`: palm-down power grasp of the handle 30 mm from the root
+  toward the neck (index toward the blade, fingers +x; handle 35 mm under the proximal finger segments), squeeze,
+  lift 10 cm, then the demo_arm serve. Sharpa: success at control 1,017, 1,167 rows. No Wuji oracle is packaged.
+- Not done (time): the other hand supporting and tilting the pan (~8 deg, 4 cm lift in the source trajectory); the
+  left arm stays parked.

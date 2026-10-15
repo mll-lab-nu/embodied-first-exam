@@ -10,11 +10,15 @@ pancake off the plate. Any drop onto the counter, direct hand contact with the f
 the episode as a failure at once.
 
 ## Reference solution
-`solution/trajectory.npz` replays a physical Sharpa Wave serving trajectory (874 rows; the replay ends at success
-after 724 controls, the remaining rows hold the hand still). It was recorded from an authoring controller
-(`scripts/dexhand/families/pancake_serve/tools/demo.py`) that servos the wrist stage from the measured turner pose and
-records plain actuator targets; it never sets an object pose or applies an object force, and it is never copied into
-the agent's environment or image.
+`solution/trajectory.npz` replays a physical serving trajectory of the Sharpa Wave on the right Marvin arm (1,167 rows;
+the replay ends at success after 1,017 controls, the remaining rows hold the robot still). It was recorded from an
+authoring controller (`scripts/dexhand/families/pancake_serve/tools/pickup_arm.py` with `tools/demo_arm.py`): the open
+right hand comes down palm-first over the resting turner's handle near its neck, closes a power grasp and lifts the
+turner, then the hand pose is computed every control from the measured turner pose so that the blade follows scripted
+waypoints (nudge the pancake off the near wall, slide under it, scoop, lift, carry, lower into the plate, tilt and
+withdraw), converted to arm joint targets by damped least-squares IK with a joint integral; it records plain actuator
+targets, never sets an object pose or applies an object force, and is never copied into the agent's environment or
+image.
 
 ## Verification
 {{MODE}} mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
@@ -37,7 +41,10 @@ the source; pan and plate interiors use convex sector contacts. Pair frictions a
 0.45, pancake-blade 0.20, blade-pan 0.20, pancake-plate 0.60, grip 1.2). The pancake is rigid: no deformation,
 tearing, heat or fluid model. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
 `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to
-wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same wrist
-stage. The turner starts in a settled contact grasp that was authored by closing the fingers and letting the scene
-integrate freely; there is no weld. This is a tool-use feasibility task on a floating wrist stage, not a full-arm
-or zero-shot claim.
+wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same
+flanges. The robot is the Tianji Marvin stand of `pot_shelf_transfer` (two 7-DoF position-servo arms, no gravity
+compensation) at the world origin facing +x; the right arm serves, the left arm is parked (`arm_rig.py`). The turner
+starts at rest on the counter at the source's pose (settled under physics) and must be picked up; there is no weld.
+Not reproduced from the source: the other hand supporting and tilting the pan (about 8 degrees and 4 cm in the source
+film); here the pan stands free and the left arm stays parked. This is a physical tool-use task for an arm-mounted
+dexterous hand, not a zero-shot claim.
