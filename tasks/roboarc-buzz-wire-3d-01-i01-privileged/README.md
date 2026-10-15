@@ -85,3 +85,4 @@ Guide the metal loop along the entire wire from start to finish without touching
 
 ### Change Log
 - 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): the scene, goal and rules of the Genesis 1.2.1 task `buzz-wire-3d-very-easy-i00` (privileged mode), ported to MuJoCo: its own frozen instance and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the render bridge next to the tooling (Nyx frames).
+- 2026-10-14: tests/grade.py, the same file in every privileged task, requires again that one grading replay reach the goal with the instance's own thresholds within the trajectory's rows (failure analysis 2026-10-14, item 12; docs/benchmarks/roboarc.md, Grading replays). This family has no grading hold: a replay succeeds only within the rows, so every verdict is unchanged. reward.json gains `success_in_hold_only` (always 0 here), and `strict_replay_required` is 1.
