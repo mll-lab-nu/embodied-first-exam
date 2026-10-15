@@ -2,31 +2,35 @@
 
 {{TASK_TEXT}}
 
-You control two dexterous hands of the same model, each mounted on its own six-DoF wrist positioning stage (three
-prismatic and three serial revolute joints, no arm): a right hand and a left hand. The stages and the fingers are
-position actuated in the physics engine under native force bounds; holding the grinder and turning the crank require
-physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
+You control a fixed dual-arm robot (Tianji Marvin: two 7-joint arms on a stand) with a dexterous hand of the same model on each
+wrist: a right hand and a left hand. The arm joints and the fingers are position actuated in the physics engine under
+native force bounds; holding the grinder and turning the crank require physical contact. The controller runs at 50 Hz,
+with ten 2 ms physics substeps. The stand faces +x behind the counter on the floor (z = -0.1 m), its base origin at
+(-0.085, 0, 0) m (shoulders 1.121 m above it, at y = +-0.2215 m); any contact of an arm, torso or stand link with
+anything ends the episode (`robot_collision`).
 
 {{HANDS}}
 ## Action layout
-Each row is one 50 Hz control. The first twelve entries are the wrist-stage targets, identical for both hand models:
-`right_wrist_x, right_wrist_y, right_wrist_z, right_wrist_rx, right_wrist_ry, right_wrist_rz`, then the same six for
-`left_wrist_*`. `x, y, z` are metres in the world frame (the stage body sits at the world origin, so these are the world
-position of the hand's wrist root); `rx, ry, rz` are radians of serial XYZ joints, not a quaternion. The finger targets
-follow in native actuator order, in radians, right hand first:
+Each row is one 50 Hz control: the 14 Marvin arm joint targets (radians) `SHOULDER_PITCH_L_J1_target,
+SHOULDER_ROLL_L_J2_target, ELBOW_PITCH_L_J3_target, ELBOW_YAW_L_J4_target, WRIST_PITCH_L_J5_target,
+WRIST_YAW_L_J6_target, WRIST_ROLL_L_J7_target`, then the same seven for the right arm (`..._R_J1_target` ...
+`..._R_J7_target`), then the finger targets in native actuator order, in radians, left hand first:
 
-- `sharpa`: 56 values, the twelve wrist targets, 22 right Sharpa Wave finger targets `right_thumb_CMC_FE` ...
-  `right_pinky_DIP`, then 22 left targets `left_thumb_CMC_FE` ... `left_pinky_DIP`. The left Sharpa Wave is the right
-  model reflected in y.
-- `wuji`: 52 values, the same twelve wrist targets, 20 right Wuji Hand 2.2 targets `r_wuji_r_THJ0..3`,
-  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`, then the manufacturer's left hand
-  `l_wuji_l_THJ0..3` ... `l_wuji_l_LFJ0..3`.
+- `sharpa`: 58 values, the 14 arm targets, 22 left Sharpa Wave finger targets `left_thumb_CMC_FE` ... `left_pinky_DIP`,
+  then 22 right targets `right_thumb_CMC_FE` ... `right_pinky_DIP`. The left Sharpa Wave is the right model reflected
+  in y.
+- `wuji`: 54 values, the same 14 arm targets, 20 left Wuji Hand 2.2 targets `l_wuji_l_THJ0..3`, `l_wuji_l_FFJ0..3`,
+  `l_wuji_l_MFJ0..3`, `l_wuji_l_RFJ0..3`, `l_wuji_l_LFJ0..3`, then the manufacturer's right hand `r_wuji_r_THJ0..3` ...
+  `r_wuji_r_LFJ0..3`.
 
-Every target must lie within `s.model.actuator_ctrlrange`. Both hand models start from the same wrist targets; the
-frozen start pose of each model is in `task.json` (`initial_targets`).
+Arm servos: kp 700 N m/rad, kv 48 N m s/rad, force limits 108 / 108 / 66 / 66 / 18 / 18 / 18 N m (J1 ... J7), no
+gravity compensation. Each hand sits rigidly on its arm's flange (bodies `right_wrist_stage` / `left_wrist_stage`:
+fingers along the flange +z, palm normal +x, thumb +y for the right hand). No IK primitive is supplied. Every target
+must lie within `s.model.actuator_ctrlrange`; the frozen start pose (arm joints; open fingers) is in `task.json`
+(`initial_targets`).
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 56)` for `sharpa` or `(T, 52)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most {{MAX_ROWS}} rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical

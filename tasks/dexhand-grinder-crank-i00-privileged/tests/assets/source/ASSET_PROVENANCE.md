@@ -1,7 +1,7 @@
 # Asset provenance and read-only reuse
 
 The original task folder `scripts/scene_expansion/tasks/coffee_grinder/` and its
-entire `artifacts/scene-expansion-50/evidence/coffee_grinder/` tree remain read-only.
+entire scene-expansion evidence tree (outside the repository) remain read-only.
 The previous top-level T15 report is preserved in this replacement evidence.
 `legacy-source-preservation.json` records SHA-256 hashes of all 27 original
 source/asset files, excluding Python bytecode. Frozen Robotiq manifests, native
@@ -35,7 +35,7 @@ not imported. No Robotiq body or actuator is present in the new native model.
 
 Inspected visual references include the original grinder's
 `presentation-v3/presentation-preview.png` and the genuine Sharpa/Tianji
-`artifacts/everyday-dexterity-2026-10-13/delivery-v2/sweeping/fancy-preview.png`.
+preview of the accepted sweeping delivery (outside the repository).
 The exact native failure movies and checkpoint still use verified native
 states; no render pose offsets, invented motion or successful result is shown.
 

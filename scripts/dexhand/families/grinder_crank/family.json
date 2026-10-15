@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 56,
-    "wuji": 52
+    "sharpa": 58,
+    "wuji": 54
   },
-  "robot": "sharpa-wave-floating-bimanual",
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 3000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -32,10 +34,11 @@
   "readme": "README.task.md",
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/trajectory.npz replays the validated two-hand Sharpa Wave authoring trajectory (854 controls, success after 754, 100 hold rows of slack) produced by a closed-loop scripted controller that only chooses motor targets; it passes two fresh-process replays with identical state hashes and also succeeds with float32-rounded rows. The standard oracle submits the same rows as float64 through the public client.",
+    "oracle_evidence": "solution/trajectory.npz: 1,096 Sharpa Wave rows on the Marvin dual-arm robot (success after 996 controls, 100 rows of slack), recorded from the authoring controller tools/author.py through tools/arm_author.py (IK to arm joint targets; motor targets only). Two fresh-process replays end with identical state hashes; float32-rounded rows also succeed. Wave-3 port of the 2026-10-14 floating-stage oracle.",
     "expert_time_estimate_hours": 3.0,
     "keywords": [
       "bimanual",
+      "dual-arm",
       "tool-mechanism",
       "crank",
       "counterhold",
@@ -51,7 +54,7 @@
     "video_sec": 600
   },
   "notes": {
-    "layout": "Two hands of the chosen model are used: each row starts with the right wrist stage (6 targets) and the left wrist stage (6 targets), then the right hand's finger targets and the left hand's finger targets (22 per hand for `sharpa`, 20 per hand for `wuji`). The left Sharpa Wave is the right model reflected in y; the left Wuji Hand 2.2 is the manufacturer's left model."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7, radians), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`: the genuine right Sharpa Wave on the right flange and its declared mirror image on the left flange; 20 per hand for `wuji`). The left hand counterholds the grinder, the right hand turns the crank."
   },
   "solution": {
     "privileged": "solution/trajectory.npz",

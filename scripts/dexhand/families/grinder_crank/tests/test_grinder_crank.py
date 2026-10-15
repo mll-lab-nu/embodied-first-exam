@@ -51,7 +51,7 @@ def test_nop_fails():
 def test_truncated_before_hold_fails():
     s = Session()
     r = rows()
-    st = s.replay(r[: 620])
+    st = s.replay(r[: 860])  # 720 deg reached, hands released, the 50-control hold not complete yet
     assert st["stage"] == 1 and not st["success"]
 
 
@@ -76,7 +76,7 @@ def test_wrong_width_and_forged_members(tmp_path):
 
 def test_wuji_composes_and_nop_fails():
     s = Session(hand="wuji")
-    assert s.action_dim == 52 and s.actuator_names[12].startswith("r_wuji_") and s.actuator_names[-1].startswith("l_wuji_")
+    assert s.action_dim == 54 and s.actuator_names[14].startswith("l_wuji_") and s.actuator_names[-1].startswith("r_wuji_")
     rows = np.tile(s.initial_targets, (200, 1))
     st = s.replay(rows)
     assert not st["success"] and not st["failed"]
@@ -106,24 +106,22 @@ def _layout(session):
 
 @pytest.mark.skipif(not ORACLE.exists(), reason="oracle rows not built")
 def test_knock_over_fails_fast_at_the_step():
+    """Mid-crank, swing the pinching right arm to its parked pose: the grinder is dragged and the episode fails at
+    once."""
+    from scene import arm_rig
+
     s = Session()
-    ix = _layout(s)
     r = rows()[:700].copy()
     start = r[-1].copy()
+    park = np.asarray(arm_rig.PARK["right"])
     seq = []
-    for k in range(1, 41):  # bring the right hand down beside the hopper, then sweep it through the grinder
+    for k in range(1, 41):
         row = start.copy()
-        u = k / 40
-        row[ix["right_wrist_x_act"]] += u * (0.36 - start[ix["right_wrist_x_act"]])
-        row[ix["right_wrist_y_act"]] += u * (-0.16 - start[ix["right_wrist_y_act"]])
-        row[ix["right_wrist_z_act"]] += u * (0.93 - start[ix["right_wrist_z_act"]])
-        seq.append(row)
-    for k in range(1, 61):
-        row = seq[-1].copy()
-        row[ix["right_wrist_y_act"]] = -0.16 + k * 0.006
+        row[7:14] = start[7:14] + (k / 40) * (park - start[7:14])
         seq.append(row)
     st = s.replay(np.vstack([r, np.asarray(seq), np.tile(seq[-1], (100, 1))]))
-    assert st["failed"] and st["reason"] in ("grinder_slid", "grinder_tipped") and st["steps"] < 860
+    assert st["failed"] and st["reason"] in ("grinder_slid", "grinder_tipped", "grinder_lifted", "grinder_spun",
+                                             "robot_collision") and st["steps"] < 760
     # the failure is permanent: later rows are not executed
     assert s.step(seq[-1])["steps"] == st["steps"]
 
@@ -132,7 +130,7 @@ def test_knock_over_fails_fast_at_the_step():
 def test_counterhold_released_mid_crank_fails():
     s = Session()
     r = rows().copy()
-    left = [i for i, n in enumerate(s.actuator_names) if n.startswith("left_") and "wrist" not in n]
+    left = [i for i, n in enumerate(s.actuator_names) if n.startswith("left_")]  # left-hand finger targets
     for i in range(420, len(r)):
         r[i, left] = max(0.0, 1 - (i - 420) / 20) * rows()[420, left]
     st = s.replay(np.clip(r, s.lo, s.hi))

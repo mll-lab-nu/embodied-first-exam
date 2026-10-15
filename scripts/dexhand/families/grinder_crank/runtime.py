@@ -20,7 +20,7 @@ CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "grinder_crank"
 # Targets may exceed a bound by float32 rounding (the public client sends float32); they are clipped to the bound.
 BOUND_TOL = 1e-6
-PHYSICS_KEYS = ("physics_dt", "control_dt", "max_steps", "counter", "grinder", "wrist_stage", "initial_targets",
+PHYSICS_KEYS = ("physics_dt", "control_dt", "max_steps", "counter", "grinder", "robot_base", "initial_targets",
                 "checker")
 
 
@@ -37,13 +37,16 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating-bimanual"
+        self.robot = {"sharpa": "marvin-bimanual-sharpa-wave", "wuji": "marvin-bimanual-wuji-hand-2.2"}[self.hand]
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
-        self.initial_targets = np.asarray(self.config["initial_targets"][self.hand], dtype=float)
-        if self.initial_targets.shape != (self.action_dim,):
-            raise ValueError(f"initial_targets[{self.hand}] must have {self.action_dim} values")
+        names = [self.model.actuator(i).name for i in range(self.model.nu)]
+        # Start: the arm pose of task.json (named targets); every finger target 0 (open hands), clipped to its range.
+        targets = np.zeros(self.action_dim)
+        for name, value in self.config["initial_targets"][self.hand].items():
+            targets[names.index(name)] = value
+        self.initial_targets = np.clip(targets, *self.model.actuator_ctrlrange.T)
         self.control_dt = float(self.config["control_dt"])
         self.substeps = round(self.control_dt / self.config["physics_dt"])
         self.max_control_steps = int(self.config["max_steps"])

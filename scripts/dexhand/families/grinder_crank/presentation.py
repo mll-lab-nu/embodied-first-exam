@@ -165,7 +165,7 @@ def encode(directory, output, title="Operate a manual coffee grinder"):
     fps = manifest["video_fps"]
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
     small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
-    hand = {"sharpa": "two Sharpa Wave hands", "wuji": "two Wuji Hand 2.2"}[payload["hand"]]
+    hand = {"sharpa": "Marvin arms + two Sharpa Wave hands", "wuji": "Marvin arms + two Wuji Hand 2.2"}[payload["hand"]]
     speed = payload["stride"] * payload["control_dt"] * fps
     pic = None
     with imageio.get_writer(output, fps=fps, codec="libx264", macro_block_size=1, pixelformat="yuv420p",

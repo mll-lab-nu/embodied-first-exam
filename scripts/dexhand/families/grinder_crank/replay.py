@@ -15,7 +15,7 @@ from scene import hands
 
 TASK = "grinder_crank"
 # Two six-axis wrist stages (12 targets) followed by both hands' native finger actuators (right, then left).
-WIDTHS = {"sharpa": 56, "wuji": 52}
+WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
 MAX_BYTES = 64_000_000  # the archive file and its expanded members
 
@@ -83,7 +83,7 @@ def overlay(frame, f, phase, hand="Sharpa Wave"):
         label = "FAIL: " + f["failure"]
     draw.rectangle((0, 0, frame.shape[1], round(96 * scale)), fill=(23, 29, 35))
     phase = str(phase).replace("\n", " ").replace("\r", " ")[:64]
-    draw.text((round(18 * scale), round(10 * scale)), f"{hand} x2 | manual coffee grinder | {label} | {phase}",
+    draw.text((round(18 * scale), round(10 * scale)), f"Marvin + {hand} x2 | manual coffee grinder | {label} | {phase}",
               font=font, fill="white")
     draw.text(
         (round(18 * scale), round(39 * scale)),

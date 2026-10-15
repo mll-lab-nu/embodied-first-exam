@@ -20,12 +20,21 @@ and crank angle were prescribed. This family makes it a physical two-hand task.
 - Why two hands: with the source load the free-standing 0.40 kg mill tips over when the knob is pushed with 0.5 N
   (measured with an authoring probe script, not kept in the repository), and the base friction torque
   cannot resist the 0.08 N m crank friction. A person counterholds the body with the other hand; so does this task.
-- Rig: two hands of the selected model on two six-axis wrist stages (same joints/gains/ranges as `assemble_hamburger`,
-  slide ranges x [0, 0.9], y [-0.5, 0.5], z [0.70, 1.40] m, so slide targets are world coordinates of the wrist root).
-  Sharpa: the genuine right Wave and the declared y-reflection of it as the left hand (the convention of the accepted
-  bimanual families). Wuji: `hands.replace_wave_hands` swaps both for the genuine right and left Wuji Hand 2.2 (mount
-  checked: flexing an index MCP moves the fingertip the same way as the Wave's, both sides). Actuator order: right
-  wrist (6), left wrist (6), right fingers, left fingers. Widths 56 / 52.
+- Robot (wave 3; wave 2 used two six-axis wrist stages): the shared `arm_rig.mount_marvin` Tianji Marvin stand (two
+  7-joint arms, kp 700 / kv 48, force limits 108/108/66/66/18/18/18 N m, the accepted pot_shelf_transfer robot) at base
+  (-0.085, 0, 0) facing +x behind the counter, both arms active: the stand stands on the floor (floor_z = -0.1 = base_z -
+  0.1, the rig convention) and its 0.79 m base plate ends 1 cm before the counter's front legs (x = 0.318 m). The base was
+  chosen by per-pose multi-seed IK over the old episode's hand poses (every pose reachable, < 1 mm); an earlier
+  placement (-0.05, 0, -0.15) also worked but sank the plate 15 cm into the floor and touched the front legs (exact
+  stand/furniture check). Sharpa:
+  the genuine right Wave on the right flange and its declared y-mirror on the left (arm_rig, as before); Wuji:
+  `hands.replace_wave_hands`. Flange mount bodies `right_wrist_stage` / `left_wrist_stage` (hand roots; checker
+  lookups unchanged). Any contact of an arm/stand link with anything is the fail-fast `robot_collision`. Actuator order:
+  left arm (7), right arm (7), left fingers, right fingers (58 / 54).
+- Counterhold rotated for the arm: the wave-2 left grasp approached the cup from the far side (+x+y) and is out of the
+  left arm's reach (150-230 mm); the arm oracle uses the same grasp rotated by 90 deg about the cup's vertical axis
+  (`tools/author.py` `l_rot`; the cup is rotationally symmetric), i.e. from the robot's left side. The rotated grasp
+  also succeeds on the old floating rig (authoring check).
 - Grinding is summarised by the crank angle (no beans or grounds).
 
 ## Verdict (`checker.py`)
@@ -36,22 +45,19 @@ linear speed <= 0.02 m/s, angular speed <= 0.2 rad/s, crank speed <= 0.5 rad/s f
 after every substep: tilt > 10 deg, base slide > 2 cm, lift > 2 cm, base below the counter top - 5 mm, body yaw > 45 deg,
 crank < -90 deg (net counter-clockwise), bad qpos/qvel/qacc; budget 3000 controls.
 
-## Oracle (phase A)
+## Oracle (wave 3, arms)
 
-`tools/make_oracle.py` regenerates `solution/trajectory.npz` deterministically: `tools/author.py` is a closed-loop
-scripted controller (reads simulator state only to choose motor targets): left hand preshapes, approaches the cup from
-+x+y and wraps it (thumb on the +x side, fingers around -x/-y); right hand pinches the knob bulb from above (thumb vs
-index/middle) and its wrist follows the knob circle clockwise with a bounded lead; then the pinch opens, the right hand
-lifts, the left fingers open, and the left hand withdraws along +x then +y. Parameters (`tools/oracle_params.json`)
-came from CEM searches (`tools/search_pinch.py`: pinch geometry scored by crank progress; `tools/search_episode.py`:
-left grasp + crank rate scored on the full episode). 100 hold rows are appended after success (slack).
-`tools/negatives.py` builds the negative/robustness variants.
-
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` (1,005 rows, success after 905) comes from the same controller with Wuji
-parameters (`tools/oracle_params_wuji.json`, from `tools/search_wuji.py` run in the modes left -> pinch -> full;
-`tools/rig.py` aliases the Sharpa-style finger keys to the Wuji actuators); regenerate with
-`tools/make_oracle.py --hand wuji --out solution/wuji/trajectory.npz`. Both trajectories replay deterministically in
-fresh processes and succeed with float32-rounded rows.
+`tools/arm_author.py` records `solution/trajectory.npz`: it runs the wave-2 closed-loop scripted controller
+`tools/author.py` (reads simulator state only to choose targets; parameters `tools/oracle_params.json` from the wave-2
+CEM searches `tools/search_pinch.py` / `tools/search_episode.py`) with the left grasp rotated by 90 deg (`l_rot`) through
+`tools/arm_port.py` `StageProxy`: every old wrist-stage command becomes a hand-root pose by kinematics of the old
+floating scene (`tools/floating_scene.py` + `tools/floating_task.json`, authoring-only copies), then Marvin damped-least-
+squares IK with a gravity feed-forward gives the 14 arm joint targets; finger targets are copied by name. The left hand
+preshapes, approaches the cup from the robot's left and wraps it; the right hand pinches the knob bulb from above and
+its wrist follows the knob circle clockwise with a bounded lead; then the pinch opens, the right hand lifts, the left
+fingers open, and the left hand withdraws. 100 hold rows are appended after success (slack). The wave-2 floating-stage
+scripts (`tools/make_oracle.py`, `tools/negatives.py`, `tools/search_*.py`) are kept for provenance only; there is no
+Wuji oracle on the arms (optional; the wave-2 `solution/wuji` was removed).
 
 `state_sha` hashes the integration state, the verdict state, the step count, the hand and only the physics/predicate
 keys of `task.json` (`runtime.PHYSICS_KEYS`), so text edits never change evidence hashes. Speeds in the hold
@@ -68,10 +74,8 @@ assets are found next to it) and MuJoCo 3.4.0:
 
 ```bash
 python replay.py --task grinder_crank --traj solution/trajectory.npz --out r1.json        # twice: identical state_sha
-python replay.py --task grinder_crank --traj solution/wuji/trajectory.npz --out w1.json   # Wuji Hand 2.2
-python tools/make_oracle.py                         # regenerates solution/trajectory.npz byte for byte
-python tools/make_oracle.py --hand wuji --out solution/wuji/trajectory.npz
-python tools/negatives.py OUT_DIR                   # nop, truncations, knock-over, counterhold release, reversed, 1.5 turns
+python tools/arm_author.py --init                   # IK start pose of both arms -> task.json initial_targets
+python tools/arm_author.py --out solution/trajectory.npz   # the arm oracle: 1,096 rows, success at 996
 python -m pytest -q tests/test_grinder_crank.py     # authoring tests
 python presentation.py export --trajectory solution/trajectory.npz --export FILM --stride 4
 python presentation.py verify --trajectory solution/trajectory.npz --export FILM

@@ -3,19 +3,20 @@
 
 ## Difficulty
 The grinder is a light, narrow, free-standing body: driving the friction-loaded crank without a counterhold tips it
-over or spins it, so the two hands must cooperate. One hand has to hold the body without pushing it over or off its
+over or spins it, so the robot's two hands must cooperate (no arm link may touch anything). One hand has to hold the body without pushing it over or off its
 spot; the other has to keep a pinch on a small knob that orbits at 80 mm radius and on a free spin bearing, through
 two full turns in the right direction. Both hands must then let go without dragging the grinder, which must stand at
 rest by itself for a full second. Any tip, slide, lift, body spin or crank reversal ends the episode at once.
 
 ## Reference solution
-`solution/trajectory.npz` replays the validated two-hand Sharpa Wave authoring trajectory: 854 controls, the episode
-ends at success after 754 (100 hold rows of slack). In privileged mode the oracle hands these rows in; in standard mode
-it submits the same rows as float64 through `rcb_client`. The left hand wraps the grinder's receptacle (thumb in
-front, fingers around the back), the right hand pinches the knob from above and its wrist follows the knob circle
-clockwise for 2.07 turns, then both hands let go and withdraw. The rows come from a closed-loop scripted authoring
-controller that reads simulator state only to choose motor targets; it never drives an object pose or applies an
-object force, and it is never copied into the agent's environment or image.
+`solution/trajectory.npz` replays the validated two-hand Sharpa Wave trajectory on the dual-arm robot: 1,096 controls,
+the episode ends at success after 996 (100 hold rows of slack). In privileged mode the oracle hands these rows in; in
+standard mode it submits the same rows as float64 through `rcb_client`. The left hand wraps the grinder's receptacle
+from the robot's left side, the right hand pinches the knob from above and its wrist follows the knob circle clockwise
+for 2.06 turns, then both hands let go and withdraw. The rows come from a closed-loop scripted authoring controller
+that reads simulator state only to choose hand poses and finger targets, converted into the 14 arm joint targets by
+inverse kinematics; it never drives an object pose or applies an object force, and it is never copied into the
+agent's environment or image.
 
 ## Verification
 {{MODE}} mode. The verifier rebuilds the frozen scene with the recorded hand model (`hand` member of the trajectory
@@ -24,7 +25,7 @@ targets twice in fresh processes. Both replays must succeed and have identical f
 standard mode the replay hash must also equal the live final hash. A replay ends at the first success or the first
 failure. Failures are fail-fast and permanent: grinder tilt above 10 degrees, base slide above 2 cm, lift above 2 cm,
 base below the counter top, body rotation above 45 degrees about its axis, crank more than 90 degrees net
-counter-clockwise, unstable physics, or the 3,000-control budget. The frozen thresholds come from the task, never from
+counter-clockwise, any arm/torso/stand link contact, unstable physics, or the 3,000-control budget. The frozen thresholds come from the task, never from
 an agent archive. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as
 provisional.
 
@@ -38,5 +39,7 @@ fracture or grounds are simulated and progress is the crank angle. The Sharpa Wa
 Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the left Sharpa Wave is the declared
 reflection of the right model in y (as in the accepted bimanual families). The Wuji Hand 2.2 models (`hand2/hand2_2`,
 left and right) are pinned to wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT)
-and mounted on the same wrist stages with their vendor joints, actuators and contact geometry unchanged. This is a
-two-hand operation on floating wrist stages, not a full-arm or zero-shot claim.
+and mounted on the same flanges with their vendor joints, actuators and contact geometry unchanged. The robot is the
+Tianji Marvin dual-arm stand of the accepted pot_shelf_transfer family (two 7-joint arms, position servos kp 700 N m/rad,
+kv 48, force limits 108/108/66/66/18/18/18 N m, Tianji meshes pinned in the image) behind the counter; each hand sits
+rigidly on its arm's flange. This is a simulated two-hand operation, not a zero-shot hardware claim.

@@ -20,7 +20,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `remote_battery_swap` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,250 rows |
 | `coffee_stir` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,265 rows |
 | `jar_lid_open` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 825 rows |
-| `grinder_crank` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 854 rows |
+| `grinder_crank` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 1,096 rows |
 | `pancake_serve` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 874 rows |
 | `vacuum_bin_reseat` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 1,019 rows |
 | `drying_rack_unfold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,415 rows |
@@ -43,7 +43,7 @@ family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted i
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and ten of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and nine of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Nineteen families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Eighteen families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -139,7 +139,6 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `paper_half_fold` | 620 x 26 | control 554 | `families/paper_half_fold/tools/wuji_gen.py` (fingertip pads under the overhang, rigid rotation about the fold line, press, lift) |
 | `pot_shelf_transfer` | 8,266 x 54 | step 8,266 | `families/pot_shelf_transfer/tools/wuji_gen.py` (the Sharpa authoring controller's phases with a Wuji power-grip posture) |
 | `jar_lid_open` | 905 x 26 | control 755 | `families/jar_lid_open/demo.py --hand wuji` (fingertip targets inside the skirt as grip force, two regrasp strokes: the Wuji servos are too weak for the Sharpa's single wrist turn) |
-| `grinder_crank` | 1,005 x 52 | control 905 | `families/grinder_crank/tools/search_wuji.py` + `tools/make_oracle.py --hand wuji` (the Sharpa scripted controller; CEM over the left grasp, knob pinch and crank rate) |
 | `pancake_serve` | 875 x 26 | control 725 | `families/pancake_serve/tools/demo.py --params '{"hand": "wuji"}'` (the same closed-loop turner-pose servo as Sharpa, with the Wuji frozen power grasp from `tools/make_reset.py`) |
 | `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
 | `paper_staple` | 1,125 x 26 | control 925 | `families/paper_staple/demo.py --hand wuji` (the Sharpa controller with a narrower Wuji abduction spread) |
@@ -425,8 +424,8 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 
 Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
-tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`grinder_crank`, `tray_glass_carry`),
-or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`picture_hang`
+tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`), or, since wave 3
+(2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`grinder_crank`, `picture_hang`
 with both arms) completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction
 loss and springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state
 is written only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a
@@ -488,18 +487,23 @@ Sharpa rows (success at 675); Wuji: `solution/wuji/` (905 rows, success at 755).
 
 ### Manual coffee grinder (`grinder_crank`, T15)
 
-A HARIO-style hand mill (0.40 kg: body, crank and knob; 174 mm tall, 26 mm base radius) stands free on the counter
-(top z = 0.70 m). Its crank turns on a passive hinge about the mill axis with grinding resistance (0.08 N m dry
-friction, 0.012 N m s/rad damping); the knob spins on a free bearing at 80 mm crank radius. The mill is light and
-narrow: it tips over if the crank is driven without holding the body, so two hands on two six-DoF wrist stages
-(56 / 52 controls) hold it and crank it. **Success**, in order: the unwrapped crank angle relative to the body reaches
-720 degrees net clockwise (seen from above); then, with that still true, no hand touches the mill, its base rests on
-the counter, its axis is within 10 degrees of vertical and it is still (<= 0.02 m/s, <= 0.2 rad/s, crank
-<= 0.5 rad/s) for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: tilt above 10
-degrees; the base moved more than 2 cm horizontally or lifted more than 2 cm, or below the counter top; the body
-turned more than 45 degrees about its axis; the crank more than 90 degrees net counter-clockwise; unstable physics;
-3,000 controls. Grinding is summarised by the crank angle (no beans or grounds). Oracle: 854 Sharpa rows (success at
-754); Wuji: `solution/wuji/` (1,005 rows, success at 905).
+A HARIO-style hand mill (0.40 kg: body, crank and knob; 174 mm tall, 26 mm base radius) stands free on the counter (top
+z = 0.70 m). Its crank turns on a passive hinge about the mill axis with grinding resistance (0.08 N m dry friction,
+0.012 N m s/rad damping); the knob spins on a free bearing at 80 mm crank radius. The mill is light and narrow: it tips
+over if the crank is driven without holding the body, so two hands hold it and crank it: wave 3 puts them on both Tianji
+Marvin arms (arm rig above; 58 / 54 controls), the left hand holding the cup and the right one cranking. The stand faces
++x behind the counter at base (-0.085, 0, 0) on the source floor (z = -0.1 m), its base plate 1 cm clear of the
+counter's front legs (exact check: no robot geom overlaps furniture at reset or over the oracle); the wave-2 counterhold
+is turned 90 degrees about the cup axis so the left hand grips from the robot's side (the same grasp on the rotationally
+symmetric cup). **Success**, in order: the unwrapped crank angle relative to the body reaches 720 degrees net clockwise
+(seen from above); then, with that still true, no hand touches the mill, its base rests on the counter, its axis is
+within 10 degrees of vertical and it is still (<= 0.02 m/s, <= 0.2 rad/s, crank <= 0.5 rad/s) for 50 consecutive
+controls (1 s). **Immediate failure**, after every 2 ms substep: tilt above 10 degrees; the base moved more than 2 cm
+horizontally or lifted more than 2 cm, or below the counter top; the body turned more than 45 degrees about its axis;
+the crank more than 90 degrees net counter-clockwise; an arm, torso or stand link touching anything (`robot_collision`);
+unstable physics; 3,000 controls. Grinding is summarised by the crank angle (no beans or grounds). Oracle: 1,096 Sharpa
+rows on the arms (success at 996); the wave-2 Wuji solution belonged to the wrist stages and is not packaged (Wuji
+selectable, no success).
 
 ### Pancake serving (`pancake_serve`, T16)
 
@@ -802,7 +806,8 @@ a service restart. Rows above the repository's 2 MB file limit are stored as `tr
 solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference solutions, above).
 
 **Harbor results** (Harbor 0.23, `eai-dexhand:0.2.0` built from this branch, CPU only, `RCB_LIMITS_ENFORCE=0`,
-2026-10-14; the pull request lists every trial):
+2026-10-14; rows marked wave 3: the 2026-10-15 integration smoke of the changed families; the pull request lists every
+trial):
 
 | Family | privileged oracle / nop | standard oracle / nop | standard oracle wall | peak GiB: privileged verifier / standard sim | Wuji |
 |---|---|---|---|---|---|
@@ -823,14 +828,14 @@ solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference s
 | `pancake_serve` | 1 / 0 | 1 / 0 | 5 min | 0.43 / 0.58 | Wuji nop 0 in both modes (Wuji solution packaged) |
 | `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 4 min | 0.40 / 0.52 | standard nop 0 (no Wuji solution) |
 | `drying_rack_unfold` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.59 | Wuji nop 0 (no Wuji solution) |
-| `picture_hang` | 1 / 0 | 1 / 0 | 2 min | 0.59 / 0.60 | Wuji oracle 1 in both modes; standard nop 0 |
+| `picture_hang` | 1 / 0 | 1 / 0 | 7 min | 3.40 / 2.13 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `usb_plug_insert` | 1 / 0 | 1 / 0 | 6 min | 0.45 / 0.96 | Wuji nop 0 in both modes (no Wuji solution) |
-| `fan_guard_install` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.70 | standard nop 0 (hand_wuji 1; no Wuji solution) |
-| `stool_brace_insert` | 1 / 0 | 1 / 0 | 10 min | 0.45 / 0.64 | standard nop 0 (no Wuji solution) |
-| `ram_module_install` | 1 / 0 | 1 / 0 | 2 min | 0.41 / 0.58 | Wuji nop 0 in both modes (no Wuji solution) |
+| `fan_guard_install` | 1 / 0 | 1 / 0 | 6 min | 0.45 / 0.71 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
+| `stool_brace_insert` | 1 / 0 | 1 / 0 | 17 min | 0.45 / 0.65 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
+| `ram_module_install` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.58 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `boot_sole_brush` | 1 / 0 | 1 / 0 | 3 min | 0.55 / 0.75 | Wuji oracle 1 in both modes; standard nop 0 |
 | `paper_staple` | 1 / 0 | 1 / 0 | 2 min | 0.40 / 0.82 | Wuji oracle 1 in both modes; standard nop 0 |
-| `binder_page_load` | 1 / 0 | 1 / 0 | 4 min | 0.44 / 0.67 | standard nop 0 (no Wuji solution) |
+| `binder_page_load` | 1 / 0 | 1 / 0 | 6 min | 0.44 / 0.67 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `envelope_letter_insert` | 1 / 0 | 1 / 0 | 5 min | 0.42 / 0.72 | Wuji privileged oracle 1; standard Wuji nop 0 |
 | `book_page_turn` | 1 / 0 | 1 / 0 | 2 min | 0.52 / 0.74 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `tray_glass_carry` | 1 / 0 | 1 / 0 | 3 min | 0.61 / 0.84 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |

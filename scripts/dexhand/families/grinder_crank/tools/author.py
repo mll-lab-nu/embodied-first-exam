@@ -56,6 +56,11 @@ DEFAULTS = dict(
     crank_max_steps=3000,
     search_only=False,
     direction=1,
+    # wave 3: rotate the whole left counterhold (grasp pose, approach path and withdrawal) about the cup's vertical axis
+    # by this angle (rad, +z); the cup is rotationally symmetric, so the grasp is the same physical grasp elsewhere on
+    # the cup (lets the Marvin left arm reach it from the robot's side).
+    l_rot=0.0,
+    l_withdraw=((0.06, 0.005, 0.0), (0.07, 0.13, 0.03)),
 )
 
 
@@ -64,6 +69,16 @@ class Author:
         self.p = {**DEFAULTS, **params}
         if self.p["l_angles"] is None:
             self.p["l_angles"] = tuple(stage_angles((0, -1, 0), (1, 0, 0)))
+        if self.p["l_rot"]:
+            from scipy.spatial.transform import Rotation
+
+            Rz = Rotation.from_euler("z", self.p["l_rot"])
+            centre = np.array([0.45, 0.0, 0.0])  # grinder base centre (task.json grinder.base_position), vertical axis
+            g = np.asarray(self.p["l_grasp"], float)
+            self.p["l_grasp"] = tuple(centre + Rz.apply(g - centre) * [1, 1, 0] + [0, 0, g[2]])
+            self.p["l_angles"] = tuple((Rz * Rotation.from_euler("XYZ", self.p["l_angles"])).as_euler("XYZ"))
+            self.p["l_path"] = tuple(tuple(Rz.apply(np.asarray(o, float))) for o in self.p["l_path"])
+            self.p["l_withdraw"] = tuple(tuple(Rz.apply(np.asarray(o, float))) for o in self.p["l_withdraw"])
         self.s = Session(hand=hand)
         self.L = Layout(self.s)
         self.rows, self.phases = [], []
@@ -185,8 +200,9 @@ class Author:
         lh = [self.current(f"left_wrist_{a}_act") for a in "xyz"]
         fingers_open = {f"{f}_{j}": 0.0 for f in ("index", "middle", "ring", "pinky") for j in ("MCP_FE", "PIP", "DIP")}
         st = self.move("left", lh, p["l_angles"], 20, "left release", finger_to=fingers_open)
-        st = self.move("left", (lh[0] + 0.06, lh[1] + 0.005, lh[2]), p["l_angles"], 25, "left withdraw")
-        st = self.move("left", (lh[0] + 0.07, lh[1] + 0.13, lh[2] + 0.03), p["l_angles"], 35, "left withdraw")
+        w1, w2 = (np.asarray(lh) + np.asarray(o) for o in p["l_withdraw"])
+        st = self.move("left", tuple(w1), p["l_angles"], 25, "left withdraw")
+        st = self.move("left", tuple(w2), p["l_angles"], 35, "left withdraw")
         n = 0
         while not st["done"] and n < 200:
             st = self.emit({}, "hold")

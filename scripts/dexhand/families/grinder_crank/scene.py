@@ -1,4 +1,4 @@
-"""HARIO-style manual coffee grinder on a counter, composed with a genuine dexterous hand on a wrist stage.
+"""HARIO-style manual coffee grinder on a counter, composed with a Tianji Marvin dual-arm robot and two dexterous hands.
 
 The grinder geometry, materials, masses and passive crank/knob joints come from the unchanged scene source
 ``assets/source/hario_mechanism.py`` (sha256 in ``assets/manifest.json``). Task-level overrides (grinding load,
@@ -41,6 +41,25 @@ def _hands_module():
 hands = _hands_module()
 
 
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = HERE.parents[1] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
+HAND_MOUNTS = {"right": "right_wrist_stage", "left": "left_wrist_stage"}  # flange mount bodies (hand roots)
+
+
 def _mechanism_module():
     path = ASSETS / "source/hario_mechanism.py"
     manifest = json.loads((ASSETS / "manifest.json").read_text())
@@ -56,7 +75,6 @@ def _mechanism_module():
 
 mechanism = _mechanism_module()
 
-WRIST_AXES = ("x", "y", "z", "rx", "ry", "rz")
 
 
 def node(parent, tag, **attributes):
@@ -113,104 +131,14 @@ def add_grinder(root, config):
     return mill, world
 
 
-STAGE_MOUNT_QUAT = "0 0.7071067811865476 0 0.7071067811865476"
-
-
-def _numbers(text):
-    return np.array([float(x) for x in text.split()])
-
-
-def _text(values):
-    return " ".join(f"{float(x):.17g}" for x in values)
-
-
-def _reflect(element):
-    """Mirror local frames in y (S = diag(1, -1, 1)): positions S p, rotations S R S, hinge axes det(S) S a."""
-    for item in element.iter():
-        if "pos" in item.attrib:
-            item.set("pos", _text(_numbers(item.attrib["pos"]) * (1, -1, 1)))
-        if "quat" in item.attrib:
-            item.set("quat", _text(_numbers(item.attrib["quat"]) * (1, -1, 1, -1)))
-        if "axis" in item.attrib:
-            item.set("axis", _text(_numbers(item.attrib["axis"]) * (-1, 1, -1)))
-        if "fromto" in item.attrib:
-            item.set("fromto", _text(_numbers(item.attrib["fromto"]) * (1, -1, 1, 1, -1, 1)))
-        if "fullinertia" in item.attrib:
-            item.set("fullinertia", _text(_numbers(item.attrib["fullinertia"]) * (1, 1, 1, -1, 1, -1)))
-        if "xyaxes" in item.attrib:
-            raise ValueError("The Wave asset is expected to use quaternion frames")
-
-
-def mirrored_left_wave(folder: Path):
-    """The declared left Sharpa Wave: the genuine right model reflected in y (the convention of the accepted
-    bimanual families). Returns (hand body, mesh assets, contact excludes, actuators) with ``left_`` names."""
-    hand = ET.parse(folder / "right_hand.xml").getroot()
-    names = {item.attrib["name"] for item in hand.iter() if "name" in item.attrib and item.tag != "material"}
-    mapping = {name: "left_" + name.removeprefix("right_") for name in names}
-    refs = {"name", "mesh", "joint", "body1", "body2", "geom1", "geom2", "site"}
-    meshdir = (folder / hand.find("compiler").get("meshdir", "")).resolve()
-    for item in hand.iter():
-        for attr in refs & item.attrib.keys():
-            if item.attrib[attr] in mapping:
-                item.set(attr, mapping[item.attrib[attr]])
-        if item.tag == "mesh" and "file" in item.attrib:
-            item.set("file", str(meshdir / item.attrib["file"]))
-            item.set("scale", _text(_numbers(item.attrib.get("scale", "1 1 1")) * (1, -1, 1)))
-    body = hand.find("worldbody/body")
-    _reflect(body)
-    meshes = list(hand.find("asset").findall("mesh"))
-    excludes = list(hand.find("contact"))
-    actuators = list(hand.find("actuator"))
-    return body, meshes, excludes, actuators
-
-
-def add_wrist_stage(world, config, hand_body, prefix):
-    """A six-axis wrist stage (three slides in world x/y/z, then serial x/y/z hinges) carrying ``hand_body``.
-
-    Slide joint values equal the world position of the hand root (the stage body sits at the world origin)."""
-    stage = config["wrist_stage"]
-    wrist = node(world, "body", name=prefix + "_stage")
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    hand_body.set("quat", STAGE_MOUNT_QUAT)
-    hand_body.set("pos", "0 0 0")
-    actuators = []
-    for i, axis_name in enumerate(WRIST_AXES):
-        axis = [int(i % 3 == j) for j in range(3)]
-        lo, hi = stage[prefix]["range"][axis_name]
-        node(
-            wrist,
-            "joint",
-            name=f"{prefix}_{axis_name}",
-            type="slide" if i < 3 else "hinge",
-            axis=" ".join(map(str, axis)),
-            range=f"{lo!r} {hi!r}",
-            damping="15" if i < 3 else "1",
-            armature=".02",
-        )
-        actuators.append(
-            ET.Element(
-                "position",
-                name=f"{prefix}_{axis_name}_act",
-                joint=f"{prefix}_{axis_name}",
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            )
-        )
-    wrist.append(hand_body)
-    return wrist, actuators
-
-
 def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen grinder scene with two hands of the selected model on two six-axis wrist stages.
+    """Compose the frozen grinder scene with the Marvin robot and two hands of the selected model.
 
-    Actuator order: right wrist stage (6), left wrist stage (6), right-hand fingers, left-hand fingers."""
+    Actuator order: left arm (7), right arm (7), left-hand fingers, right-hand fingers (``arm_rig`` layout)."""
     hand_id = hands.canonical(hand)
     folder = sharpa_folder(asset_dir)
-    root = ET.parse(folder / "right_hand.xml").getroot()
-    root.set("model", hands.info(hand_id)["model"] + " manual coffee grinder")
-    root.find("compiler").set("meshdir", str((folder / "assets/right").resolve()))
+    root = arm_rig.sharpa_root(folder)
+    root.set("model", "Marvin + " + hands.info(hand_id)["model"] + " manual coffee grinder")
     root.find("compiler").set("inertiafromgeom", "auto")
     option = root.find("option")
     option.set("timestep", repr(float(config["physics_dt"])))
@@ -221,19 +149,9 @@ def build(config, asset_dir=None, hand="sharpa"):
     option.set("impratio", "10")
     # Several contact points for convex-convex pairs (the grinder's base disk resting on the counter box).
     node(option, "flag", multiccd="enable")
-    for key in root.findall("keyframe"):
-        root.remove(key)
     assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
-    right_body = world.find("body")
-    world.remove(right_body)
-    left_body, left_meshes, left_excludes, left_actuators = mirrored_left_wave(folder)
-    assets.extend(left_meshes)
-    root.find("contact").extend(left_excludes)
-    actuator.extend(left_actuators)
-    _, right_stage = add_wrist_stage(world, config, right_body, "right_wrist")
-    _, left_stage = add_wrist_stage(world, config, left_body, "left_wrist")
-    for i, element in enumerate(right_stage + left_stage):
-        actuator.insert(i, element)
+    # The family's Sharpa tweaks on the right Wave before mounting (arm_rig mirrors it for the left flange):
+    # dissipative finger velocity feedback and fingertip friction 1.5.
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -241,16 +159,14 @@ def build(config, asset_dir=None, hand="sharpa"):
                 bias.append(0.0)
             bias[2] = -0.9
             a.set("biasprm", " ".join(map(str, bias)))
-    for body in (right_body, left_body):
-        for g in body.iter("geom"):
-            if "fingertip_collision" in g.get("name", ""):
-                g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        # Swap each Wave body under its unchanged wrist stage for the genuine Wuji Hand 2.2 model of that side;
-        # the vendor's joints, actuators, gains and contact geometry are kept as published. Wrist actuators stay
-        # first, then the right hand's and the left hand's Wuji actuators (model order).
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    for g in world.iter("geom"):
+        if "fingertip_collision" in g.get("name", ""):
+            g.set("friction", "1.5 .005 .0001")
+    robot = config["robot_base"]
+    sibling = folder.parent / "wuji_v2_2"
+    arm_rig.mount_marvin(root, base_pos=robot["pos"], base_yaw=robot["yaw"], hand=hand_id, active=("left", "right"),
+                         sharpa_folder=folder, mount_names=HAND_MOUNTS,
+                         wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
     # ---- room, counter and lights (source scene layout: counter top z = 0.70 m, grinder at x = 0.45 m)
     node(assets, "texture", name="sky", type="skybox", builtin="gradient", rgb1=(0.63, 0.68, 0.67),
          rgb2=(0.85, 0.84, 0.79), width=512, height=512)

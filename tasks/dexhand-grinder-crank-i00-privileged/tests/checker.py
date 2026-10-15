@@ -50,11 +50,15 @@ class Checker:
                 if p in stages:
                     owner = stages[p]
                     break
+                if model.body(p).name == "base_link":  # Marvin stand, torso and arm links (above the hand mounts)
+                    owner = "robot"
+                    break
                 p = int(model.body_parentid[p])
             self.body_owner.append(owner)
         self.geom_owner = [self.body_owner[int(model.geom_bodyid[g])] for g in range(model.ngeom)]
         self.grinder_geom = np.array([o == "grinder" for o in self.geom_owner])
         self.hand_geom = np.array([o in ("right", "left") for o in self.geom_owner])
+        self.robot_geom = np.array([o == "robot" for o in self.geom_owner])
         self.base_geom = model.geom("mill_base").id
         self.counter_geom = model.geom("counter").id
         self.required = 2 * math.pi * float(self.cfg["required_turns"])
@@ -146,6 +150,17 @@ class Checker:
         self.max_cw_rad = max(self.max_cw_rad, cw)
         self.min_cw_rad = min(self.min_cw_rad, cw)
         detail = {"control": control, "substep": substep}
+        n = data.ncon
+        if n:
+            g = data.contact.geom[:n]
+            hit = self.robot_geom[g[:, 0]] | self.robot_geom[g[:, 1]]
+            if hit.any():
+                # Only the hands may touch anything: an arm, torso or stand link touching the grinder, the counter,
+                # the floor or the other hand is a robot collision.
+                i = int(np.flatnonzero(hit)[0])
+                names = [self.model.geom(int(x)).name or self.model.body(int(self.model.geom_bodyid[x])).name
+                         for x in g[i]]
+                return self._fail("robot_collision", {**detail, "geoms": names})
         if z < self.counter_top - c["below_counter_tolerance_m"]:
             return self._fail("grinder_below_counter", {**detail, "base_z_m": z})
         if tilt > c["max_tilt_deg"]:
