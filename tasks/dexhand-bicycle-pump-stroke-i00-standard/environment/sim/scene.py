@@ -4,7 +4,7 @@ Static props (bench, wheel, Schrader valve, locked pump head and hose) are froze
 (``assets/t50_scene.json``, copied from the scene-v4 export with sha256 manifest). The pump itself is a free rigid
 body standing on its foot; its piston rod and T handle slide on a passive joint (200 mm travel) whose stiffness,
 damping and seal friction model the compressed-air spring of the chamber. The hand (Sharpa Wave by default, or the
-genuine Wuji Hand 2.2) hangs from the same six-axis wrist stage for both hands.
+genuine Wuji Hand 2.2) is carried by the right arm of a Tianji Marvin robot standing at the bench (left arm parked).
 """
 
 from __future__ import annotations
@@ -36,11 +36,42 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = Path(__file__).resolve().parents[2] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
 ASSETS = Path(__file__).resolve().with_name("assets")
 # Source masses (scene_expansion bicycle_pump/mechanism.py): barrel 65 g, bottom housing 17 g, upper cap 5 g,
 # folding foot 10 g, piston rod 10 g, T handle 18 g.
 PUMP_MASS = {"barrel": 0.065, "bottom_housing": 0.017, "upper_cap": 0.005, "foot_pad": 0.010}
 PISTON_MASS = {"piston_rod": 0.010, "t_handle": 0.018}
+# Pump head (TRK-RP04) and its thumb lock, from the T50 source model and trajectory: at the film's frame 50 the head
+# is locked on the Schrader stem; disconnected (frame 0) it sits HEAD_TRAVEL further out along the stem axis (17.5 mm:
+# 8 mm gap + 9.5 mm core engagement); the thumb lock turns LEVER_CLOSED rad about +y (world) from up (open, frame 0)
+# to lying toward the hub (closed, frame 50).
+STEM_AXIS = np.array([0.98055149865641, 0.0, 0.1962619639223775])   # Schrader stem axis (out of the rim, toward the hub)
+HEAD_TRAVEL = 0.0175
+LEVER_CLOSED = 1.65
+LEVER_PIVOT_LOCKED = np.array([0.52940, -0.129, 0.74372])           # thumb-lock hinge at the film's locked pose
+HEAD_GEOMS = ("continuous_hollow_head", "continuous_collar", "hose_neck", "core_pusher")
+LEVER_GEOMS = ("lock_lever", "lock_eccentric")
+HEAD_HOSE = ("hose_geom_8", "hose_geom_9", "hose_geom_10", "hose_geom_11")   # hose end that follows the head
+HEAD_MASS, LEVER_MASS = 0.022, 0.003
+BACK_LEGS, BACK_LEG_SHIFT = "bench_leg_0.37_", 0.08
 
 
 def node(parent, tag, **attributes):
@@ -80,42 +111,11 @@ def contact_geom(parent, name, kind, size, **attributes):
 
 
 def add_hand_rig(root, config, hand_id, folder):
-    """The six-axis wrist stage (same joints, ranges and gains for both hands) with the Sharpa Wave mounted."""
+    """The Tianji Marvin stand with two 7-DoF arms; the right arm carries the working hand under the fixed body
+    ``wrist_stage`` (the checker's hand root), the left arm is parked with its hand (``arm_rig.PARK``)."""
     world, actuator = root.find("worldbody"), root.find("actuator")
     hand = world.find("body")
-    world.remove(hand)
-    wrist = node(world, "body", name="wrist_stage", pos=config["stage_origin"])
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    # Zero wrist rotation = palm facing down (-z), fingers pointing +y, thumb toward -x.
-    hand.set("quat", "0.5 -0.5 0.5 0.5")
-    wrist.append(hand)
-    ranges = config["wrist_range"]
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        wrist.insert(
-            i,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range=" ".join(str(v) for v in ranges[i]),
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
+    # The family's Sharpa tweaks, applied before mounting so the mirrored left Wave gets them too.
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -124,11 +124,17 @@ def add_hand_rig(root, config, hand_id, folder):
     for g in hand.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        # Swap the Wave body under the unchanged wrist stage for the genuine Wuji Hand 2.2 model; the vendor's
-        # joints, actuators, gains and contact geometry are kept as published. Wrist actuators stay first.
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    return arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                                mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                                wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+
+
+def robot_body_ids(model):
+    """Every robot body (both hands, both arms, the stand): a contact of any of them with the pump is robot contact."""
+    return (set(arm_rig.hand_body_ids(model, "left")) | set(arm_rig.hand_body_ids(model, "right"))
+            | set(arm_rig.robot_body_ids(model)))
 
 
 def add_static_props(root, assets, source):
@@ -141,15 +147,17 @@ def add_static_props(root, assets, source):
     def solid(name):
         if name.startswith("hose_geom_"):
             return int(name.rsplit("_", 1)[1]) >= 2
-        return name.startswith("spoke_") or name in (
-            "hub", "axle", "valve_stem", "core_tip", "continuous_hollow_head", "continuous_collar", "hose_neck",
-            "lock_lever", "lock_eccentric")
+        return name.startswith("spoke_") or name in ("hub", "axle", "valve_stem", "core_tip")
 
+    head_items = []
     for item in source["geoms"]:
         body = item["body"]
         if body in ("pump_barrel", "piston"):
             continue
         name = item["name"]
+        if name in HEAD_GEOMS + LEVER_GEOMS + HEAD_HOSE:
+            head_items.append(item)
+            continue
         mat = material(assets, "mat_" + name, item)
         attributes = dict(pos=item["pos"], quat=item["quat"], material=mat)
         if item["type"] == "mesh":
@@ -160,6 +168,10 @@ def add_static_props(root, assets, source):
             attributes["mesh"] = mesh
         else:
             attributes["size"] = item["size"]
+        if name.startswith(BACK_LEGS):
+            # The two back bench legs stand 8 cm further under the bench top than in the source, clear of the robot
+            # stand's floor platform (which reaches x = 0.393 m); the bench top itself is unchanged.
+            attributes["pos"] = [item["pos"][0] + BACK_LEG_SHIFT, *item["pos"][1:]]
         if body == "world" and name != "floor":
             # Bench top and legs: support geometry.
             contact_geom(world, name, item["type"], attributes.pop("size"), friction=(0.8, 0.005, 0.0001), **attributes)
@@ -191,6 +203,71 @@ def add_static_props(root, assets, source):
         b = center + rotation @ np.array([0.2285 * np.cos(t1), 0.2285 * np.sin(t1), 0])
         contact_geom(world, f"tire_contact_{i}", "capsule", (0.0285,), fromto=np.r_[a, b], group=3,
                      rgba=(0.1, 0.1, 0.1, 0), friction=(0.9, 0.005, 0.0001))
+    return head_items
+
+
+def _quat_mul(a, b):
+    w1, x1, y1, z1 = a
+    w2, x2, y2, z2 = b
+    return np.array([w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2, w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+                     w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2, w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2])
+
+
+def add_head(root, assets, head_items):
+    """The pump head on a passive slide along the Schrader stem axis (the hose guides it; no lateral play) with the
+    thumb lock on a passive hinge. Reset = the source's disconnected state: head 17.5 mm out, lever up (open)."""
+    world = root.find("worldbody")
+    offset = STEM_AXIS * HEAD_TRAVEL
+    head = node(world, "body", name="pump_head", pos=(0, 0, 0))
+    node(head, "joint", name="head_slide", type="slide", axis=STEM_AXIS, pos=LEVER_PIVOT_LOCKED + offset,
+         range=(-HEAD_TRAVEL, 0.0), limited="true", frictionloss=2.0, damping=5.0, armature=0.01,
+         solreflimit=(0.004, 1), solreffriction=(0.004, 1), solimpfriction=(0.99, 0.999, 0.001))
+    node(head, "inertial", pos=LEVER_PIVOT_LOCKED + offset - 0.008 * STEM_AXIS, mass=HEAD_MASS,
+         diaginertia=(3e-6, 3e-6, 3e-6))
+    pivot = LEVER_PIVOT_LOCKED + offset
+    lever = node(head, "body", name="thumb_lock", pos=pivot)
+    node(lever, "joint", name="lever_angle", type="hinge", axis=(0, 1, 0), pos=(0, 0, 0), range=(0.0, LEVER_CLOSED),
+         limited="true", frictionloss=0.004, damping=0.002, armature=0.0001, solreflimit=(0.004, 1),
+         solreffriction=(0.004, 1), solimpfriction=(0.99, 0.999, 0.001))
+    node(lever, "inertial", pos=(0, 0, 0.008), mass=LEVER_MASS, diaginertia=(2e-7, 2e-7, 5e-8))
+    c, s_ = np.cos(-LEVER_CLOSED / 2), np.sin(-LEVER_CLOSED / 2)
+    q_open = np.array([c, 0.0, s_, 0.0])           # rotation by -LEVER_CLOSED about +y (closed -> open)
+    rot_open = np.array([[np.cos(-LEVER_CLOSED), 0, np.sin(-LEVER_CLOSED)], [0, 1, 0],
+                         [-np.sin(-LEVER_CLOSED), 0, np.cos(-LEVER_CLOSED)]])
+    for item in head_items:
+        name = item["name"]
+        mat = material(assets, "mat_" + name, item)
+        pos, quat = np.asarray(item["pos"], float), np.asarray(item["quat"], float)
+        attributes = dict(material=mat)
+        if item["type"] == "mesh":
+            mesh = Path(item["mesh"]).stem
+            node(assets, "mesh", name=mesh, file=str((ASSETS / item["mesh"]).resolve()), inertia="shell")
+            attributes["mesh"] = mesh
+        else:
+            attributes["size"] = item["size"]
+        if name in LEVER_GEOMS:
+            parent = lever
+            pos = rot_open @ (pos - LEVER_PIVOT_LOCKED)
+            quat = _quat_mul(q_open, quat)
+        else:
+            parent = head
+            pos = pos + offset
+        if name in HEAD_HOSE or name == "core_pusher":
+            node(parent, "geom", name=name, type=item["type"], pos=pos, quat=quat, contype=0, conaffinity=0, group=2,
+                 mass=0, **attributes)
+        elif "size" in attributes:
+            contact_geom(parent, name, item["type"], attributes.pop("size"), pos=pos, quat=quat, mass=0,
+                         friction=(1.0, 0.005, 0.0001), **attributes)
+        else:
+            contact_geom(parent, name, item["type"], None, pos=pos, quat=quat, mass=0, friction=(1.0, 0.005, 0.0001),
+                         **attributes).attrib.pop("size")
+    contact = root.find("contact")
+    if contact is None:
+        contact = ET.SubElement(root, "contact")
+    # The head is guided along the stem axis by its slide; it never collides with the static wheel, valve or hose.
+    for body in ("pump_head", "thumb_lock"):
+        ET.SubElement(contact, "exclude", body1="world", body2=body)
+    return head
 
 
 def add_pump(root, assets, source, config):
@@ -240,7 +317,7 @@ def add_pump(root, assets, source, config):
 
 
 def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen scene with the selected genuine hand on the same six-axis wrist stage."""
+    """Compose the frozen scene with the selected genuine hand on the Marvin right arm."""
     hand_id = hands.canonical(hand)
     folder = Path(
         asset_dir
@@ -263,7 +340,8 @@ def build(config, asset_dir=None, hand="sharpa"):
     add_hand_rig(root, config, hand_id, folder)
     node(assets, "texture", name="studio_sky", type="skybox", builtin="gradient", width=256, height=256,
          rgb1=(0.66, 0.69, 0.68), rgb2=(0.80, 0.80, 0.77))
-    add_static_props(root, assets, source)
+    head_items = add_static_props(root, assets, source)
+    add_head(root, assets, head_items)
     add_pump(root, assets, source, config)
     world = root.find("worldbody")
     target = np.asarray(source["camera"]["target"])

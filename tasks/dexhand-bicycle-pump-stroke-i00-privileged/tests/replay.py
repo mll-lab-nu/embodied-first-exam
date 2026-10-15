@@ -21,8 +21,8 @@ import numpy as np
 from runtime import TASK, Session
 from scene import hands
 
-WIDTHS = {"sharpa": 28, "wuji": 26}  # six wrist-stage targets + the selected hand's native finger actuators
-MAX_ROWS = 3000
+WIDTHS = {"sharpa": 58, "wuji": 54}  # 14 Marvin arm targets + the left and the right hand's finger actuators
+MAX_ROWS = 5000
 
 
 def load(path, trusted: bool, hand_arg: str | None):

@@ -13,12 +13,12 @@ import mujoco
 import numpy as np
 
 from checker import STAGE_NAMES, PumpChecker
-from scene import build, hands
+from scene import arm_rig, build, hands
 
 TASK = "bicycle_pump_stroke"
 CONFIG_PATH = Path(__file__).with_name("task.json")
 # task.json keys that define the physics, the reset and the predicate (never instruction prose, titles or cameras).
-HASHED_CONFIG_KEYS = ("physics_dt", "control_dt", "max_steps", "table_z", "stage_origin", "wrist_range", "pump",
+HASHED_CONFIG_KEYS = ("physics_dt", "control_dt", "max_steps", "table_z", "rig", "marvin", "pump", "connect",
                       "strokes", "release", "fail_fast", "initial_targets")
 
 
@@ -34,7 +34,7 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.robot = arm_rig.ROBOT_ID
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
@@ -45,6 +45,7 @@ class Session:
         self.substeps = round(self.control_dt / self.config["physics_dt"])
         self.max_control_steps = int(self.config["max_steps"])
         self.tcp_body = "wrist_stage"
+        self.layout = arm_rig.layout(self.model)
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
@@ -164,8 +165,8 @@ class Session:
             "actions": len(self.actions),
             "checker": {k: (v.copy() if isinstance(v, np.ndarray) else (list(v) if isinstance(v, list) else v))
                         for k, v in vars(c).items()
-                        if k in ("base0", "strokes", "armed", "max_depth", "stroke_log", "hold", "stage", "failure",
-                                 "failure_detail", "success")},
+                        if k in ("base0", "connected", "connect_control", "strokes", "armed", "max_depth",
+                                 "stroke_log", "hold", "stage", "failure", "failure_detail", "success")},
         }
 
     def restore(self, snap):
@@ -183,7 +184,7 @@ class Session:
         mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_INTEGRATION)
         digest = hashlib.sha256(state.astype("<f8").tobytes())
         c = self.checker
-        predicate = {"strokes": c.strokes, "armed": c.armed, "hold": c.hold, "stage": c.stage,
+        predicate = {"connected": c.connected, "strokes": c.strokes, "armed": c.armed, "hold": c.hold, "stage": c.stage,
                      "failure": c.failure, "success": c.success, "steps": self.steps}
         digest.update(json.dumps(predicate, sort_keys=True).encode())
         # Only the physics/predicate parameters of the frozen instance: editing texts never changes evidence hashes.

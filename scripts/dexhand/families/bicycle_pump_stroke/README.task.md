@@ -3,18 +3,27 @@
 
 ## Difficulty
 The pump is free-standing, light (125 g) and narrow-footed (28 mm wide foot), with its T handle 0.45 m above the
-bench: every downstroke needs about 45 N along the pump axis, and pushing off-axis levers it over. Six full-depth
-strokes are required (partial strokes never count), then the hand must let go with the handle back at the top and the
-pump standing still. Any tip, slide or lift of the pump ends the episode as a failure at once.
+bench: every downstroke needs about 45 N along the pump axis, and pushing off-axis levers it over. The hand sits on the
+right arm of a Tianji Marvin robot whose 7 joints are position servos without gravity compensation, so the arm sags
+under the handle's push unless its targets account for it. First the disconnected hose head has to be pushed 17.5 mm
+onto the Schrader stem and its small thumb lock (a 24 mm lever between the spokes) swung down 1.65 rad to lock it;
+only then do strokes count. 28 full-depth strokes are required (the source scene's count; partial strokes never
+count), then the hand must let go with the handle back at the top and the pump standing
+still. Any tip, slide or lift of the pump, or the head pulled off or unlocked after connecting, ends the episode as a
+failure at once.
 
 ## Reference solution
-`solution/trajectory.npz` replays the validated Sharpa Wave authoring trajectory: 902 controls; the sixth stroke is
-counted at control 708 and the released hold completes at control 802, where the replay ends with success (the last
-100 rows hold the final targets as slack). In privileged mode `solve.sh` hands these rows in; in standard mode it
-submits the same rows as float64 through the public client in 250-row chunks. The authoring controller that produced
-them (`scripts/dexhand/families/bicycle_pump_stroke/tools/controller.py`: palm over the pump foot, fingers wrapped over
-the T-handle grip, six eased strokes to about 0.19 m depth, release and withdraw) computes motor targets only; it never
-drives an object pose or applies an object force, and it is never copied into the agent's environment or image.
+`solution/trajectory.npz` replays the validated Sharpa Wave episode on the arm: 3,581 controls; the head is connected
+at control 312, the 28th stroke is counted at control 3,337 and the released hold completes at control 3,431, where the replay ends with success (the last
+150 rows hold the final targets as slack). In privileged mode `solve.sh` hands these rows in; in standard mode it
+submits the same rows as float64 through the public client in 250-row chunks. The rows are arm-joint and finger
+targets recorded from a closed-loop authoring controller (index finger pointed down beside the upright lever: push
+the head onto the stem through the lever, then hook over the lever and swing it down along its arc; then fingers
+wrapped over the T-handle grip, 28 eased strokes to about 0.19 m depth, release and withdraw; arm inverse kinematics
+toward the planned hand path, the pumping part following the earlier floating-stage witness with one stroke cycle
+repeated). With `wuji`, `solution/wuji/` holds a 3,561-row Wuji Hand 2.2 episode (head
+connected at control 316, success after 3,411). The authoring tools compute motor targets only; they never drive an object pose or apply an object
+force, and they are never copied into the agent's environment or image.
 
 ## Verification
 {{MODE}} mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
@@ -22,7 +31,8 @@ in privileged mode; the hand of the trusted service episode in standard mode) an
 twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
 mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent: the pump tipping over 15 degrees, sliding more than 3 cm, lifting more than
-2 cm, falling below the bench top or touching the floor, unstable physics, or the 3,000-control budget. The frozen
+2 cm, falling below the bench top or touching the floor, the head pulled back more than 2 mm or the lock opened below
+1.2 rad after connecting, unstable physics, or the 5,000-control budget. The frozen
 thresholds come from the task, never from an agent archive. A no-op fails. Human review and full agent-trial
 calibration remain pending; report this task as provisional.
 
@@ -33,9 +43,15 @@ manifest in `assets/`): Topeak MINI MORPH pump geometry and masses, the 32-spoke
 its smooth tire shell, the Schrader valve and the locked TRK-RP04 head with its hose. Modelling scope: the pump is a
 free rigid body on its foot; the piston chamber is a linear air spring on a passive slide (200 N/m, reference 0.23 m:
 6 N at the top, 46 N at the bottom of the stroke), 15 N s/m damping and 1 N seal friction; tire pressure is a checker
-quantity (380 Pa per counted stroke from a partly inflated 207.8 kPa start; the source scene needed 28 strokes from
-200 kPa). The head is pre-locked on the valve and the wheel, valve, head and hose are static props (the two hose
-segments at the pump outlet are visual only). The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
+quantity (380 Pa per counted stroke from the source's 200.0 kPa start, so the source's 28 strokes reach 210.64 kPa;
+the source gas model ends at 210.62 kPa). The head starts disconnected as in the source (frame 0: 17.5 mm out, lever
+up); it moves on a passive slide along the stem axis (the hose guides it; 2 N friction; the seat is the slide's end
+stop) and its thumb lock on a passive hinge (0.004 N m friction, 0 to 1.65 rad); the cam's clamping force and the
+grommet seal are not simulated (connected = seated and lever closed); the source's final unlock and disconnect are not
+part of this task. The wheel, valve and hose are static props (the last four hose segments move with the head and the
+two at the pump outlet are visual only). The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
 `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to
 wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same
-wrist stage with its vendor joints, actuators and contact geometry unchanged.
+arm flanges with its vendor joints, actuators and contact geometry unchanged. The robot is the Tianji Marvin stand
+with two 7-DoF arms (the pot_shelf_transfer rig: position servos kp 700, kv 48, no gravity compensation) at the world
+origin of the T50 frame, a hand on each flange, the left arm parked.

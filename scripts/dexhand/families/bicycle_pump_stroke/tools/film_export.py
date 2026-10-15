@@ -22,12 +22,12 @@ import numpy as np
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
 from runtime import TASK, Session  # noqa: E402
-from scene import hands  # noqa: E402
+from scene import arm_rig, hands  # noqa: E402
 
 PHYSICS_SOURCES = ("task.json", "runtime.py", "scene.py", "checker.py", "replay.py")
-STAGE_NAMES = ["Six full piston strokes", "Tire pressure target reached", "Handle released at the top: 1 s hold",
-               "Complete: tire at target pressure, pump released"]
-WIDTHS = {"sharpa": 28, "wuji": 26}
+STAGE_NAMES = ["Head pushed onto the valve and locked", "28 full piston strokes", "Tire pressure target reached",
+               "Handle released at the top: 1 s hold", "Complete: tire at target pressure, pump released"]
+WIDTHS = {"sharpa": 58, "wuji": 54}
 
 
 def sha(path):
@@ -36,13 +36,13 @@ def sha(path):
 
 def visible(model, gid):
     return model.geom_group[gid] <= 2 and model.geom_rgba[gid, 3] > 0 and not (
-        (model.geom(gid).name or "").startswith("r_wuji_") and "_collision" in (model.geom(gid).name or ""))
+        (model.geom(gid).name or "").startswith(("r_wuji_", "l_wuji_")) and "_collision" in (model.geom(gid).name or ""))
 
 
 def export(trajectory, directory, source_scene, stride=3, hold_s=1.5, fps=25):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    actions, hand, _ = hands.read_trajectory(trajectory, widths=WIDTHS, max_rows=3000, task=TASK)
+    actions, hand, _ = hands.read_trajectory(trajectory, widths=WIDTHS, max_rows=5000, task=TASK)
     source = json.loads(Path(source_scene).read_text())
     presentation = {g["name"]: g.get("visual_material") for g in source["geoms"] if g.get("visual_material")}
     session = Session(hand=hand)
@@ -50,11 +50,14 @@ def export(trajectory, directory, source_scene, stride=3, hold_s=1.5, fps=25):
     materials = [{"name": m.material(i).name, "rgba": m.mat_rgba[i].tolist(), "metallic": -1.0, "roughness": -1.0}
                  for i in range(m.nmat)]
     arrays, geoms, meshes, ids = {}, [], {}, []
+    arm_bodies = set(arm_rig.robot_body_ids(m))     # Marvin stand + arm links (drawn with their factory finish)
     for gid in range(m.ngeom):
         if not visible(m, gid):
             continue
         name = m.geom(gid).name or f"geom_{gid}"
         owner = session.owner.get(int(m.geom_bodyid[gid]), "world")
+        if int(m.geom_bodyid[gid]) in arm_bodies:
+            owner = "arm"
         mesh = int(m.geom_dataid[gid]) if int(m.geom_type[gid]) == 7 else None
         record = {
             "id": gid,
@@ -67,7 +70,10 @@ def export(trajectory, directory, source_scene, stride=3, hold_s=1.5, fps=25):
             "rgba": (m.mat_rgba[m.geom_matid[gid]] if m.geom_matid[gid] >= 0 else m.geom_rgba[gid]).tolist(),
             "is_hand": owner == "hand",
         }
-        if owner != "hand":
+        if owner == "arm":
+            record["material"] = -1
+            record["visual_material"] = {"rgba": record["rgba"], "metallic": 0.15, "roughness": 0.29}
+        elif owner != "hand":
             look = presentation.get(name)
             if look is None and name == "rim":
                 look = presentation.get("rim_piece_0")
@@ -103,7 +109,8 @@ def export(trajectory, directory, source_scene, stride=3, hold_s=1.5, fps=25):
             "status": {"stage": int(f["stage"]), "success": bool(f["success"]), "done": bool(f["done"]),
                        "failed": bool(f["failed"]), "reason": f["reason"], "strokes": int(f["strokes"]),
                        "tire_gauge_pa": float(f["tire_gauge_pa"]), "piston_depth_m": float(f["piston_depth_m"]),
-                       "released_hold_steps": int(f["released_hold_steps"])},
+                       "released_hold_steps": int(f["released_hold_steps"]),
+                       "head_connected": bool(f["head_connected"])},
         })
         positions.append(session.data.geom_xpos[ids].copy())
         rotations.append(session.data.geom_xmat[ids].reshape(-1, 3, 3).copy())
@@ -164,7 +171,7 @@ def verify(trajectory, directory):
     for name, expected in payload["files"].items():
         assert sha(directory / name) == expected, name
     poses = np.load(directory / "poses.npz")
-    actions, hand, _ = hands.read_trajectory(trajectory, widths=WIDTHS, max_rows=3000, task=TASK)
+    actions, hand, _ = hands.read_trajectory(trajectory, widths=WIDTHS, max_rows=5000, task=TASK)
     session = Session(hand=hand)
     ids = [g["id"] for g in payload["geoms"]]
     live = [k for k, f in enumerate(payload["frames"]) if not f.get("held")]

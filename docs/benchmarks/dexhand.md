@@ -36,7 +36,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `book_page_turn` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 650 rows |
 | `tray_glass_carry` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 1,072 rows |
 | `batter_whisk` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,048 rows |
-| `bicycle_pump_stroke` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 902 rows |
+| `bicycle_pump_stroke` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 3,581 rows |
 
 The default hand is a right (on the arms and the two-stage rigs: a left and a right) **Sharpa Wave** with 22 actuated finger joints; every
 family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted in its place, selected per
@@ -146,7 +146,7 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `book_page_turn` | 650 x 26 | control 347 | `families/book_page_turn/author.py` (the Sharpa controller with per-hand overrides, `HAND_DEFAULTS`) |
 | `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
 | `batter_whisk` | 1,540 x 26 | control 1,440 | `families/batter_whisk/tools/author_oracle.py --hand wuji` (the Sharpa authoring controller with the Wuji frozen power grasp from `tools/make_reset.py`) |
-| `bicycle_pump_stroke` | 867 x 26 | control 766 | `families/bicycle_pump_stroke/tools/make_oracles.py` (the closed-loop stroke controller `tools/controller.py` with per-hand palm offsets and pressing heights) |
+| `bicycle_pump_stroke` | 3,561 x 54 | control 3,411 | `families/bicycle_pump_stroke/tools/arm_port.py author --hand wuji` (the Sharpa arm port with Wuji push, swing and press offsets; README) |
 
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
 start cannot be held by the Wuji geometry; only hand joints (and, where physically necessary, the held objects' start
@@ -426,17 +426,18 @@ Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansio
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`), or, since wave 3
 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`grinder_crank`, `picture_hang`
-with both arms) completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction
-loss and springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state
-is written only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a
-quantity the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three
-rules above apply: fail-fast at the first violating physics substep (unless the section says otherwise), ordered stages,
-no partial credit, and a released or held terminal window. Each instruction states the exact predicate and every
-threshold; each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its authoring
-tests. All run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a
-Wuji success, where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source
-scene wherever that was physically feasible (pre-closed or pre-placed parts, enlarged parts and widened clearances
-reverted); each section names what was restored and what remains, with the reason.
+with both arms; `bicycle_pump_stroke` with the right arm, the left one parked) completes each one with motor targets
+only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches);
+nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium that is not
+simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator
+state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first
+violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held
+terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
+lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
+"full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
+`solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically feasible
+(pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each section names what was restored
+and what remains, with the reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -762,17 +763,25 @@ omitted. Oracle: 1,048 Sharpa rows (success at 948); Wuji: `solution/wuji/` (1,5
 
 ### Portable bicycle pump (`bicycle_pump_stroke`, T50)
 
-A free-standing Topeak Mini Morph-type pump (125 g, 70 x 28 mm foot, T handle 0.45 m above the bench) stands next to a
-406 wheel; its hose head is already locked on the wheel's Schrader valve (wheel, valve, head and hose are static
-props). The piston and T handle slide 0.20 m on a passive joint whose linear air spring returns the handle (6 N at
-the top, 46 N at the bottom; 15 N s/m damping, 1 N seal friction). A stroke counts when the handle reaches a depth of
-at least 0.18 m and then returns to at most 0.04 m; tire pressure is a checker quantity (207.8 kPa + 380 Pa per counted
-stroke; air is not simulated). **Success**, in order: six counted strokes, pressure at least 210.0 kPa, then the handle
-released at the top (depth <= 0.01 m, no hand contact with the pump, pump tilt <= 0.0873 rad, pump and handle speeds
-<= 0.02 m/s) for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: pump tilt above
-0.2618 rad, base moved more than 0.03 m horizontally or lifted more than 0.02 m, the pump's centre of mass below the
-bench top or a pump part on the floor, unstable physics. Oracle: 902 Sharpa rows (success at 802); Wuji:
-`solution/wuji/` (867 rows, success at 766).
+Wave 3: the right Tianji Marvin arm (arm rig above; stand at the world origin facing +x on the source floor z = -0.1 m,
+the left arm parked) and its hand do the task. A free-standing Topeak Mini Morph-type pump (T handle 0.45 m above the
+bench, 0.20 m piston travel) stands on its folding foot next to a 406 wheel lying on the bench. As in the source, the
+hose head (TRK-RP04 type) starts disconnected: 17.5 mm out from its seat on the valve stem's axis, thumb lock open; the
+head is a passive slide along the stem (2 N friction, seat end stop) and the thumb lock a passive hinge (0 to 1.65 rad).
+The piston slides on a passive joint whose linear air spring returns the handle (6 N at the top, 46 N at the bottom;
+viscous damping, 1 N seal friction). A stroke counts only while the head is connected, when the handle reaches a depth
+of at least 0.18 m and then returns to at most 0.04 m; tire pressure is a checker quantity (200.0 kPa + 380 Pa per
+counted stroke, the source gas model's mean rise; air is not simulated). **Success**, in order: (1) head connected
+(seated within 0.5 mm with the thumb lock within 0.15 rad of closed; latches); (2) 28 counted strokes; (3) pressure at
+least 210.6 kPa (the source's value after its 28 strokes); (4) the handle released at the top (depth <= 0.01 m, no robot
+contact with the pump, pump tilt <= 0.0873 rad, pump and handle speeds <= 0.02 m/s) for 50 consecutive controls (1 s).
+**Immediate failure**, after every 2 ms substep: pump tilt above 0.2618 rad, base moved more than 0.03 m horizontally or
+lifted more than 0.02 m, the pump's centre of mass below the bench top or a pump part on the floor, the connected head
+pulled back more than 2 mm or its lock opened below 1.2 rad, unstable physics; 5,000 controls. Wave 3 restored the
+source's disconnected head (it was pre-locked on the valve) and its 28-stroke pressure model (was six strokes from 207.8
+kPa); the source's optional steadying second hand is not used (one arm-mounted hand keeps the free pump upright through
+all strokes). Oracle: 3,581 Sharpa rows on the arm (success at 3,431); Wuji: `solution/wuji/` (3,561 rows, success at
+3,411).
 
 ## Modes and grading
 

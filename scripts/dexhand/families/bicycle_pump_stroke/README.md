@@ -1,21 +1,21 @@
 # bicycle_pump_stroke (authoring notes)
 
 DexHand family built from scene-expansion scene T50 "Inflate a tire with a portable bicycle pump" (a kinematic demo:
-prescribed head insertion, 28 prescribed piston cycles, no hands). Here a dexterous hand pumps the pump physically.
+prescribed head insertion, 28 prescribed piston cycles, no hands). Here a dexterous hand on the right arm of a Tianji
+Marvin robot connects the hose head to the valve (push on, close the thumb lock) and pumps physically, 28 strokes
+from the source's 200.0 kPa.
 
 ## Files
 | file | role |
 |---|---|
-| `scene.py` | MJCF: hand on the six-axis wrist stage (palm-down mount), bench/wheel/valve/head/hose (static, film pose), free pump with passive piston |
+| `scene.py` | MJCF: the Marvin rig (`shared/arm_rig.py`; hand on the right flange under `wrist_stage`, left arm parked), bench/wheel/valve/head/hose (static, film pose), free pump with passive piston |
 | `checker.py` | stroke counter, pressure, ordered stages, terminal hold, fail-fast (state only) |
 | `runtime.py` | `Session` (FAMILY_PLUGIN section 4, plus `validate`, `snapshot`/`restore` for search) |
 | `replay.py` | fresh-process replay CLI (section 5), optional `--video` |
 | `task.json` | frozen instance: thresholds, pump parameters, cameras, per-hand start targets |
 | `assets/` | `t50_scene.json` (geoms, colours, poses at film frame 50), meshes (smooth tire, rim, head shells), `manifest.json` (sha256) |
 | `tools/extract_source.py` | one-off copy of the approved scene-v4 export into `assets/` |
-| `tools/controller.py` | authoring controller (closed loop on the pump pose, recorded as open-loop rows) |
-| `tools/make_oracles.py` | deterministic regeneration of `solution/trajectory.npz` (Sharpa) and `solution/wuji/trajectory.npz` |
-| `tools/negatives.py` | negative cases replayed in fresh processes |
+| `tools/arm_port.py` | authoring: records the wave-2 floating-stage witness's hand poses, sets the arm start pose, repeats one stroke cycle to 28 strokes and tracks the hand path with the arm (`shared/arm_ik.py`); writes `solution/trajectory.npz` and `solution/wuji/trajectory.npz` |
 | `tools/film_export.py` | native pose export of a replay for the Blender film (`verify` re-checks every sample bit for bit) |
 | `tools/studio_film.py` | Blender 4.5.3 studio film, copied from the approved T50 film renderer (materials, lights, camera) |
 | `tests/test_bicycle_pump_stroke.py` | authoring tests (positive, nop, truncation, knock fail-fast, snapshot, forged/ambiguous members, width, NaN, range, hand label, Wuji) |
@@ -27,11 +27,24 @@ prescribed head insertion, 28 prescribed piston cycles, no hands). Here a dexter
 - Piston: slide `piston_extension` (0 = down, 0.20 m = up), linear air spring 200 N/m with reference 0.23 m (6 N at the
   top, 46 N at the bottom; the source's isothermal chamber reaches a 52 N plateau at 2.1 bar), damping 15 N s/m,
   seal friction 1 N (source value). The spring returns the handle; the inlet refill is not simulated.
-- Pressure: checker quantity, 380 Pa per counted stroke (source: 200.0 -> 210.6 kPa in 28 strokes); start at
-  207.8 kPa so 6 strokes reach the source's 210 kPa target (5 do not).
-- Head pre-locked on the Schrader valve (the source's connection/locking stages are not part of this task); wheel,
-  valve, head and hose are static world geometry at the approved film pose; hose segments 0-1 at the pump outlet are
-  visual only so the free pump never leans on a static hose. Rim/tire contact uses hidden capsule rings; the visual rim
+- Pressure: checker quantity, 380 Pa per counted stroke (source: 200.0 -> 210.6 kPa in 28 strokes); start at the
+  source's 200.0 kPa, so the source's 28 strokes reach 210.64 kPa and the 210.6 kPa target (27 do not).
+- Robot (wave 3): the Tianji Marvin stand at the world origin of the T50 frame (the source scene was built for it),
+  facing +x; two 7-DoF arms (pot_shelf_transfer's robot: kp 700, kv 48, no gravity compensation); the right flange
+  carries the working hand under the fixed body `wrist_stage`, the left arm is parked with its hand open. Every
+  robot body (both hands, arm links, stand) counts as the hand for the release condition. The wave-2 Sharpa tweaks
+  (fingertip friction 1.5, finger velocity feedback -0.9) are applied before mounting, so both Waves carry them.
+- Head (wave 3): starts disconnected as in the source's frame 0 (17.5 mm out along the stem axis = 8 mm gap + 9.5 mm
+  core engagement; thumb lock up). Body `pump_head` on the passive slide `head_slide` along the stem axis (the hose
+  guides it: no lateral play; 2 N friction with a stiff friction constraint so it does not creep; seat = end stop at
+  -17.5 mm) carrying the source's head, collar and hose-neck geometry; the thumb lock `thumb_lock` on the passive hinge
+  `lever_angle` (source axis: world y at the lever's foot; 0 = up/open, 1.65 rad = closed; 0.004 N m friction).
+  Connected (latched) = seated within 0.5 mm and the lever within 0.15 rad of closed; strokes are armed and counted
+  only while connected; afterwards a head pulled back > 2 mm or a lever opened below 1.2 rad is `head_disconnected`.
+  The cam's clamping force and the grommet/core seal are not simulated. Head and lever never collide with the static
+  wheel/valve/hose (they move on their guided joints); the last four hose segments ride with the head (display
+  only). Wheel, valve and hose are static world geometry at the approved film pose; hose segments 0-1 at the pump
+  outlet are visual only so the free pump never leans on a static hose. Rim/tire contact uses hidden capsule rings; the visual rim
   and smooth tire are the film's meshes.
 
 ## Provenance
@@ -48,14 +61,14 @@ goal and makes the pumping physical.
 - L2: `pump_speed_m_s` is `mj_objectVelocity(mjOBJ_BODY)`, i.e. the centre-of-mass velocity (checked against a finite
   difference of `xipos`: < 0.4 mm/s apart); nothing is added to it.
 - L3: `state_sha` hashes the integration state, the predicate state, the hand and only the physics/predicate keys of
-  `task.json` (`HASHED_CONFIG_KEYS` in runtime.py), never instruction prose, titles or cameras. Evidence hashes:
-  Sharpa oracle `0c9d801c...`, Wuji oracle `5e5ed684...`.
+  `task.json` (`HASHED_CONFIG_KEYS` in runtime.py), never instruction prose, titles or cameras.
 
 ## Simplifications (disclosed in the instruction)
-- The head starts locked on the Schrader valve; connecting/unlocking are not part of the task.
-- Air is not simulated: tire pressure is a checker quantity, 207.8 kPa + 380 Pa per counted stroke; 6 strokes instead of
-  the source's 28 (partly inflated start). The piston's air is a linear spring (it returns the handle).
-- Wheel, valve, head and hose are static props.
+- The head starts disconnected and must be connected and locked; the source's final unlock/disconnect is not part of
+  the task. The head is guided along the stem axis (no lateral misalignment).
+- Air is not simulated: tire pressure is a checker quantity, 200.0 kPa + 380 Pa per counted stroke (the source's 28
+  strokes). The piston's air is a linear spring (it returns the handle).
+- Wheel, valve and hose are static props.
 
 ## Evidence
 The authoring evidence (status, replays, Harbor trials, films) is kept outside the repository with the wave-2 worker
@@ -63,9 +76,12 @@ records.
 
 ```bash
 export DEXHAND_ASSET_DIR=<robot_coding_bench>/images/dexhand/assets/hand WUJI_ASSET_DIR=<...>/assets/wuji_v2_2
-python tools/make_oracles.py --out solution                       # deterministic; same sha256 as committed
+python tools/arm_port.py poses --hand sharpa --old <wave-2 bicycle_pump_stroke folder> --out <dir>/poses_sharpa.npz
+python tools/arm_port.py ready --hand sharpa --poses <dir>/poses_sharpa.npz     # initial_targets in task.json
+python tools/arm_port.py author --hand sharpa --poses <dir>/poses_sharpa.npz --out solution/trajectory.npz
+python tools/arm_port.py author --hand wuji --poses <dir>/poses_wuji.npz --push-extra 0.012 --swing-over 0.3 \
+    --press-depth 0.008 --out solution/wuji/trajectory.npz   # (after `ready --hand wuji`)
 python replay.py --task bicycle_pump_stroke --traj solution/trajectory.npz --out <dir>/r.json   # twice: same state_sha
-python tools/negatives.py --oracle solution/trajectory.npz --params "$(python -c 'import sys,json; sys.path.insert(0,"tools"); import make_oracles as m; print(json.dumps(m.PARAMS["sharpa"]))')" --out <dir>/neg
 python -m pytest -q tests/test_bicycle_pump_stroke.py
 # film (GPU): native pose export, exact re-check, Blender render + captions
 python tools/film_export.py export --trajectory solution/trajectory.npz --export <film dir> \

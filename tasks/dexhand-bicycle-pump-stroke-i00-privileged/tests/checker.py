@@ -7,7 +7,11 @@ Everything here reads MuJoCo state (qpos/qvel/xpos/xmat/contacts) and never writ
 * A stroke is counted (checked after every physics substep) when the handle reaches ``d >= 0.9 * travel`` and later
   returns to ``d <= 0.2 * travel``. Partial strokes never count and are not failures.
 * Tire gauge pressure is a checker quantity: ``p = p0 + strokes * dp`` (air is not simulated).
-* Stages, in order: (1) ``required`` strokes; (2) ``p >= target``; (3) released at the top: handle depth
+* Connection: the pump head is pushed onto the Schrader stem (head slide within 0.5 mm of its 17.5 mm seat) and its
+  thumb lock closed (lever within 0.15 rad of 1.65 rad); this latches. Strokes are armed and counted only while the
+  head is connected; once connected, a head pulled back more than 2 mm from its seat or a lever opened below 1.2 rad
+  fails the episode (``head_disconnected``).
+* Stages, in order: (1) connected; (2) ``required`` strokes; (3) ``p >= target``; (4) released at the top: handle depth
   ``<= 0.05 * travel``, no hand contact with any pump geom, pump tilt <= 5 deg, pump speed <= 0.02 m/s, handle speed
   <= 0.02 m/s, held for ``hold_steps`` consecutive controls (1 s). Success ends the episode.
 * Fail-fast (after every physics substep, permanent): pump tilt > 15 deg (``pump_tipped``), pump base moved > 3 cm
@@ -22,7 +26,7 @@ from __future__ import annotations
 import mujoco
 import numpy as np
 
-STAGE_NAMES = ("strokes", "pressure", "released_hold")
+STAGE_NAMES = ("connected", "strokes", "pressure", "released_hold")
 
 
 class PumpChecker:
@@ -34,6 +38,13 @@ class PumpChecker:
         joint = model.joint("piston_extension")
         self.piston_q = int(joint.qposadr[0])
         self.piston_v = int(joint.dofadr[0])
+        self.head_q = int(model.joint("head_slide").qposadr[0])
+        self.lever_q = int(model.joint("lever_angle").qposadr[0])
+        connect = config["connect"]
+        self.seat_q = -float(connect["head_travel_m"]) + float(connect["seat_tolerance_m"])
+        self.lock_q = float(connect["lever_closed_rad"]) - float(connect["lock_tolerance_rad"])
+        self.unseat_q = -float(connect["head_travel_m"]) + float(connect["unseat_m"])
+        self.unlock_q = float(connect["unlock_rad"])
         self.travel = float(config["pump"]["travel_m"])
         strokes = config["strokes"]
         self.required = int(strokes["required"])
@@ -46,11 +57,14 @@ class PumpChecker:
         self.release_depth = release["max_depth_fraction"] * self.travel
         fail = config["fail_fast"]
         self.table_z = float(config["table_z"])
-        # Body ownership: pump (pump + piston), hand (everything under the wrist stage).
-        self.owner = {}
+        # Body ownership: pump (pump + piston), hand (every robot body: both hands, both arms, the stand).
+        from scene import robot_body_ids
+
+        robot = robot_body_ids(model)
+        self.owner = {b: "hand" for b in robot}
         for bid in range(1, model.nbody):
             parent = bid
-            while parent:
+            while parent and bid not in robot:
                 name = model.body(parent).name
                 if name == "pump":
                     self.owner[bid] = "pump"
@@ -71,6 +85,8 @@ class PumpChecker:
     # ------------------------------------------------------------------ episode state
     def reset(self, data):
         self.base0 = data.xpos[self.pump_body].copy()
+        self.connected = False
+        self.connect_control = None
         self.strokes = 0
         self.armed = False
         self.max_depth = 0.0
@@ -95,14 +111,25 @@ class PumpChecker:
         """Update the stroke counter and check every fail-fast invariant after one physics substep."""
         if self.failure or self.success:
             return
+        head, lever = float(data.qpos[self.head_q]), float(data.qpos[self.lever_q])
+        if not self.connected and head <= self.seat_q and lever >= self.lock_q:
+            self.connected = True
+            self.connect_control = control
         depth = self.depth(data)
         self.max_depth = max(self.max_depth, depth)
-        if depth >= self.down_depth:
+        # Strokes inflate the tire only through a connected head: a stroke is armed and counted while connected.
+        if not self.connected:
+            self.armed = False
+        elif depth >= self.down_depth:
             self.armed = True
         elif self.armed and depth <= self.return_depth:
             self.armed = False
             self.strokes += 1
             self.stroke_log.append(control)
+        if self.connected and (head > self.unseat_q or lever < self.unlock_q):
+            self.failure = "head_disconnected"
+            self.failure_detail = {"control": control, "substep": substep, "head_slide_m": head, "lever_rad": lever}
+            return
         violation = self.violation(data)
         if violation:
             self.failure, detail = violation
@@ -151,6 +178,10 @@ class PumpChecker:
         mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY, self.pump_body, velocity, 0)
         base = data.xpos[self.pump_body]
         return {
+            "head_connected": self.connected,
+            "head_slide_m": float(data.qpos[self.head_q]),
+            "lever_angle_rad": float(data.qpos[self.lever_q]),
+            "connect_control": self.connect_control,
             "strokes": self.strokes,
             "required_strokes": self.required,
             "stroke_armed": self.armed,
@@ -179,12 +210,14 @@ class PumpChecker:
             return f
         release = self.config["release"]
         stage = 0
-        if self.strokes >= self.required:
+        if self.connected:
             stage = 1
-            if self.pressure >= self.target:
+            if self.strokes >= self.required:
                 stage = 2
+                if self.pressure >= self.target:
+                    stage = 3
         released = (
-            stage == 2
+            stage == 3
             and f["piston_depth_m"] <= self.release_depth
             and f["hand_pump_contacts"] == 0
             and f["pump_tilt_rad"] <= release["max_tilt_rad"]
@@ -193,7 +226,7 @@ class PumpChecker:
         )
         self.hold = self.hold + 1 if released else 0
         if self.hold >= release["hold_steps"]:
-            stage = 3
+            stage = 4
             self.success = True
         self.stage = stage
         f.update(stage=stage, released_hold_steps=self.hold, success=self.success)

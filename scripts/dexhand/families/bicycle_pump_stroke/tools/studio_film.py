@@ -600,7 +600,7 @@ def encode(args):
         verdict = "SUCCESS" if status["success"] else ("FAIL: " + status["reason"] if status.get("failed") else "IN PROGRESS")
         title = payload.get("config", {}).get("display_title", payload["title"])
         detail = (f"{payload['hand_model']} · physics replay, {payload['playback_speed']:g}x · {verdict} | "
-                  f"strokes {status['strokes']}/6 · tire {status['tire_gauge_pa'] / 1000:.2f} kPa gauge (checker)")
+                  f"strokes {status['strokes']}/28 · tire {status['tire_gauge_pa'] / 1000:.2f} kPa gauge (checker)")
         width = (
             max(draw.textlength(title, font=font), draw.textlength(detail, font=small))
             + 28 * scale
@@ -617,13 +617,15 @@ def encode(args):
             fill=(61, 104, 75) if status["success"] else (90, 94, 88),
         )
         if status["success"]:
-            footer = "Complete: six strokes counted, handle released at the top, pump upright and still for 1 s"
-        elif status["stage"] >= 1:
-            footer = "Six strokes counted: release the handle at the top and hold still"
-        elif status["strokes"] == 0 and status["piston_depth_m"] < 0.01 and frame["step"] < 120:
-            footer = "Start: pump free on its foot, head locked on the valve, handle up"
+            footer = "Complete: head locked, 28 strokes counted, handle released at the top, pump upright and still for 1 s"
+        elif status["stage"] >= 2:
+            footer = "28 strokes counted: release the handle at the top and hold still"
+        elif not status.get("head_connected"):
+            footer = "Connect: push the hose head onto the Schrader valve and close its thumb lock"
+        elif status["strokes"] == 0 and status["piston_depth_m"] < 0.01:
+            footer = "Head locked on the valve: now pump"
         else:
-            footer = f"Pumping: full strokes (>= 90 % down, back to <= 20 %), {status['strokes']} of 6 counted"
+            footer = f"Pumping: full strokes (>= 90 % down, back to <= 20 %), {status['strokes']} of 28 counted"
         footer += " | actuator-only MuJoCo replay"
         footer_width = draw.textlength(footer, font=small) + 20 * scale
         bottom = args.height - 18 * scale

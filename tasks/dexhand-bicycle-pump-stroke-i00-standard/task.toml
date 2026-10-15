@@ -4,15 +4,15 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/dexhand-bicycle-pump-stroke-i00-standard"
-description = "Pump a portable bicycle pump with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2): six full strokes of the passive air-spring piston raise the connected tire to 210 kPa, then release the handle at the top; tipping or shifting the free-standing pump fails the episode at once."
+description = "Connect and use a portable bicycle pump with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2): push the disconnected hose head onto the Schrader valve and close its thumb lock, then 28 full strokes of the passive air-spring piston raise the tire from 200.0 to 210.6 kPa, then release the handle at the top; tipping or shifting the free-standing pump or pulling the head off fails the episode at once."
 authors = [{ name = "Embodied Exam contributors" }]
-keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "bicycle-pump", "passive-mechanism", "repetitive-strokes", "free-standing-object"]
+keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "bicycle-pump", "valve-connection", "thumb-lock", "passive-mechanism", "repetitive-strokes", "free-standing-object"]
 
 [metadata]
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
-robot = "sharpa-wave-floating"
+robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "bicycle_pump_stroke"
@@ -20,7 +20,7 @@ mode = "standard"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
-oracle_evidence = "solution/ replays the validated Sharpa Wave authoring trajectory (902 controls, success after 802; six counted strokes, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (867 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
+oracle_evidence = "solution/ replays the validated Sharpa Wave episode on the Marvin right arm (3,581 controls, success after 3,431: hose head pushed onto the valve and locked at control 312, 28 counted strokes, 210.64 kPa, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (3,561 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
 expert_time_estimate_hours = 2.0
 difficulty = "medium"
 release_status = "provisional"
@@ -66,7 +66,7 @@ allowed = [0]
 oracle = [0]
 
 [verifier]
-timeout_sec = 600.0
+timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -79,7 +79,7 @@ timeout_sec = 120
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
-timeout_sec = 1500
+timeout_sec = 3000
 
 [agent]
 timeout_sec = 3600.0

@@ -15,12 +15,12 @@ sys.path.insert(0, str(HERE))
 from runtime import TASK, Session  # noqa: E402
 from scene import hands  # noqa: E402
 
-WIDTHS = {"sharpa": 28, "wuji": 26}
+WIDTHS = {"sharpa": 58, "wuji": 54}
 
 
 def oracle(hand="sharpa"):
     path = HERE / "solution" / ("trajectory.npz" if hand == "sharpa" else f"{hand}/trajectory.npz")
-    return hands.read_trajectory(path, widths=WIDTHS, max_rows=3000, task=TASK)[0]
+    return hands.read_trajectory(path, widths=WIDTHS, max_rows=5000, task=TASK)[0]
 
 
 def replay_cli(tmp_path, rows, hand="sharpa", **extra):
@@ -39,7 +39,7 @@ def replay_cli(tmp_path, rows, hand="sharpa", **extra):
 def test_oracle_succeeds_with_slack_and_float32(hand):
     rows = oracle(hand)
     status = Session(hand=hand).replay(rows)
-    assert status["success"] and status["strokes"] >= 6 and status["stage"] == 3
+    assert status["success"] and status["strokes"] >= 28 and status["stage"] == 4 and status["head_connected"]
     assert len(rows) - status["steps"] >= 50
     assert Session(hand=hand).replay(rows.astype(np.float32).astype(np.float64))["success"]
 
@@ -52,11 +52,12 @@ def test_nop_fails_and_is_deterministic(hand):
     assert not sa["success"] and sa["strokes"] == 0 and a.state_sha() == b.state_sha()
 
 
-def test_truncation_and_five_strokes_fail():
+def test_truncation_and_27_strokes_fail():
     rows = oracle()
     full = Session().replay(rows)
-    sixth = full["stroke_controls"][5]
-    assert not Session().replay(rows[: sixth - 5])["success"]
+    last = full["stroke_controls"][27]
+    short = Session().replay(rows[: last - 5])
+    assert not short["success"] and short["strokes"] == 27
     assert not Session().replay(rows[: full["steps"] - 1])["success"]
 
 
@@ -67,21 +68,11 @@ def test_knock_fails_fast_and_cannot_be_undone():
     s.reset()
     for row in rows[: third + 10]:
         s.step(row)
-    row = s.hold_action()
-    row[6:] = 0.0
-    origin = np.asarray(s.config["stage_origin"])
-    for z in np.linspace(row[2], 1.25 - origin[2], 30):
-        row[2] = z
-        s.step(row)
-    for x in np.linspace(row[0], 0.30 - origin[0], 30):
-        row[0] = x
-        s.step(row)
-    for z in np.linspace(row[2], 1.05 - origin[2], 30):
-        row[2] = z
-        s.step(row)
-    for x in np.linspace(row[0], row[0] + 0.3, 60):
-        row[0] = x
-        s.step(row)
+    row = rows[third + 9].copy()
+    for i in range(1, 151):  # the right shoulder rolls sideways while the hand still grips the handle
+        knock = row.copy()
+        knock[8] += 0.4 * min(1.0, i / 60)
+        s.step(knock)
     assert s.status()["reason"] in ("pump_tipped", "pump_displaced", "pump_lifted")
     for r in rows[third + 10:]:
         s.step(r)
@@ -150,11 +141,12 @@ def test_ambiguous_member_is_rejected(tmp_path):
 
 def test_wuji_scene_matches_sharpa_scene_except_the_hand():
     sharpa, wuji = Session(), Session(hand="wuji")
-    assert sharpa.action_dim == 28 and wuji.action_dim == 26
-    assert sharpa.actuator_names[:6] == wuji.actuator_names[:6]
+    assert sharpa.action_dim == 58 and wuji.action_dim == 54
+    assert sharpa.actuator_names[:14] == wuji.actuator_names[:14]
+    assert sharpa.robot == wuji.robot == "marvin-bimanual-sharpa-wave"
     for name in ("pump", "piston"):
         assert np.allclose(sharpa.data.xpos[sharpa.model.body(name).id], wuji.data.xpos[wuji.model.body(name).id])
-    assert np.allclose(sharpa.model.actuator_ctrlrange[:6], wuji.model.actuator_ctrlrange[:6])
+    assert np.allclose(sharpa.model.actuator_ctrlrange[:14], wuji.model.actuator_ctrlrange[:14])
 
 
 @pytest.mark.parametrize("shift, rotation, expected", [
@@ -179,3 +171,38 @@ def test_fail_fast_thresholds_on_a_scratch_state(shift, rotation, expected):
     mujoco.mj_forward(s.model, data)
     violation = s.checker.violation(data)
     assert (violation[0] if violation else None) == expected
+
+
+def test_strokes_count_only_through_a_connected_head():
+    """Checker logic on a scratch copy of the reset state (never inside an episode): strokes before the head is seated
+    and locked do not count; a connected head pulled off or unlocked fails the episode."""
+    import mujoco
+
+    s = Session()
+    c = s.checker
+    data = mujoco.MjData(s.model)
+    data.qpos[:] = s.data.qpos
+    piston = s.model.jnt_qposadr[s.model.joint("piston_extension").id]
+    head = s.model.jnt_qposadr[s.model.joint("head_slide").id]
+    lever = s.model.jnt_qposadr[s.model.joint("lever_angle").id]
+
+    def stroke(step):
+        for q in (0.0, 0.2):            # handle fully down (depth 0.20 m), then back up (depth 0)
+            data.qpos[piston] = q
+            mujoco.mj_forward(s.model, data)
+            c.substep(data, step, 0)
+
+    mujoco.mj_forward(s.model, data)
+    c.reset(data)
+    stroke(0)
+    assert c.strokes == 0 and not c.connected
+    data.qpos[head] = -0.0175           # seated but still unlocked
+    stroke(1)
+    assert c.strokes == 0 and not c.connected
+    data.qpos[lever] = 1.65             # locked: connected from now on
+    stroke(2)
+    assert c.connected and c.strokes == 1
+    data.qpos[lever] = 1.0              # opened again
+    mujoco.mj_forward(s.model, data)
+    c.substep(data, 3, 0)
+    assert c.failure == "head_disconnected"

@@ -3,27 +3,62 @@
   "id": "bicycle_pump_stroke",
   "task": "task.json",
   "runtime": {
-    "files": ["runtime.py", "replay.py", "scene.py", "checker.py", "task.json"],
-    "dirs": ["assets"],
-    "shared": []
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": [
+      "arm_rig.py"
+    ]
   },
-  "hands": ["sharpa", "wuji"],
-  "action_dim": {"sharpa": 28, "wuji": 26},
-  "robot": "sharpa-wave-floating",
-  "max_rows": 3000,
-  "instruction": {"privileged": "instruction/privileged.md", "standard": "instruction/standard.md"},
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
+  "max_rows": 5000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
   "readme": "README.task.md",
-  "solution": {"privileged": "solution/trajectory.npz", "standard": "solution/trajectory.npz"},
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory (902 controls, success after 802; six counted strokes, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed.",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave episode on the Marvin right arm (3,581 controls, success after 3,431: hose head pushed onto the valve and locked at control 312, 28 counted strokes, 210.64 kPa, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed.",
     "expert_time_estimate_hours": 2.0,
-    "keywords": ["tool-use", "bicycle-pump", "passive-mechanism", "repetitive-strokes", "free-standing-object"]
+    "keywords": [
+      "tool-use",
+      "bicycle-pump",
+      "valve-connection",
+      "thumb-lock",
+      "passive-mechanism",
+      "repetitive-strokes",
+      "free-standing-object"
+    ]
   },
   "control_hz": 50,
-  "timeouts": {"verifier_privileged_sec": 900, "verifier_standard_sec": 600, "collect_sec": 1500,
-               "replay_sec": 300, "video_sec": 600},
+  "timeouts": {
+    "verifier_privileged_sec": 1500,
+    "verifier_standard_sec": 1800,
+    "collect_sec": 3000,
+    "replay_sec": 900,
+    "video_sec": 1200
+  },
   "notes": {
-    "layout": "Both hands hang palm-down from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; the stage origin is at world (0.6, 0.0, 0.7) and all-zero wrist angles point the palm down with the fingers toward world +y."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
   }
 }
