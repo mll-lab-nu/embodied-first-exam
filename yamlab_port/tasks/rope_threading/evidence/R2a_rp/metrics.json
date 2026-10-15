@@ -1,0 +1,23 @@
+{
+ "success": true,
+ "first_success_step": 7233,
+ "steps": 7233,
+ "sim_time_s": 241.0999999999036,
+ "wall_time_s": 319.06088757514954,
+ "rope_state_sha16": "a6d7bc53ec2c50d3",
+ "final": {
+  "step": 7233,
+  "success": true,
+  "threaded": true,
+  "quiet": true,
+  "crossing_sequence": [
+   "R1-",
+   "R2+",
+   "R3+"
+  ],
+  "maximum_speed_m_s": 0.0004664129143674406,
+  "strict_threaded": false,
+  "strict_quiet": true
+ },
+ "cameras": false
+}

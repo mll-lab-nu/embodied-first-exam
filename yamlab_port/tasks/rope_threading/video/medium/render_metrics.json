@@ -1,0 +1,11 @@
+{
+ "task": "RopeThreading-Medium-v0",
+ "states": "render/mdump/states_full.npz",
+ "frames": 3617,
+ "max_pose_readback_err_m": 7.748603820800781e-07,
+ "wall_s": 247.45445036888123,
+ "cameras": [
+  "top",
+  "rings"
+ ]
+}

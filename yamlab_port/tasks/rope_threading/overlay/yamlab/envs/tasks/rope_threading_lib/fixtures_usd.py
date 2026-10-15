@@ -87,7 +87,7 @@ def write_fixtures_usd(path, scene, yaw_deg, *, friction=0.3, contact_offset=0.0
         collider(st.GetPrim())
         bc = ring["base_center"]
         bx = UsdGeom.Cube.Define(stage, f"/Fixtures/{name}_base")
-        yaw = np.radians(yaw_deg)
+        yaw = np.radians(ring.get("base_yaw_deg", yaw_deg))
         place(bx, bc, (np.cos(yaw / 2), 0.0, 0.0, np.sin(yaw / 2)))
         bx.CreateSizeAttr(1.0)
         bx.AddScaleOp().Set(Gf.Vec3f(*map(float, BASE_SIZE_OLD)))

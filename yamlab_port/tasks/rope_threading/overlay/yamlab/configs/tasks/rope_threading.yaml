@@ -32,3 +32,10 @@ success:
 modes:
   evaluation:
     sim: {device: cpu, num_envs: 1}
+
+# Medium: three rings take ~4 min at the oracle's pace (the old task has no time limit); user-approved 2026-10-13.
+# Easy keeps the YAMLab default (180 s).
+variants:
+  RopeThreading-Medium-v0:
+    sim:
+      episode_length_s: 300.0

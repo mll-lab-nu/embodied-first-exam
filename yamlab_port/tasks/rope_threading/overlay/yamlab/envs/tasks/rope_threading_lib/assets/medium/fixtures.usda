@@ -1,0 +1,3593 @@
+#usda 1.0
+(
+    defaultPrim = "Fixtures"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Fixtures"
+{
+    def "Looks"
+    {
+        def Material "fixture_phys" (
+            prepend apiSchemas = ["PhysicsMaterialAPI", "PhysxMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.3
+            float physics:restitution = 0
+            float physics:staticFriction = 0.3
+            uniform token physxMaterial:frictionCombineMode = "average"
+        }
+    }
+
+    def Xform "R1"
+    {
+        def Capsule "seg_00" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127435
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7115826194528714, 0, -0.7018127121859273, -0.03330304350690333)
+            double3 xformOp:translate = (0.6699973061126119, -0.2776711452276718, 1.0855726427623587)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_01" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112691
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7204084401525229, 0, -0.6865386736414094, -0.0983683330737233)
+            double3 xformOp:translate = (0.6701837986892849, -0.27836714499905013, 1.0928885298379636)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_02" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112652
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7290020226794298, 0, -0.6653145142377089, -0.16097406025177238)
+            double3 xformOp:translate = (0.6705549878171705, -0.2797524416835363, 1.1000985624726471)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_03" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127045
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.737290143077913, 0, -0.6385166504820101, -0.22068015764310342)
+            double3 xformOp:translate = (0.6711072987420543, -0.28181369411677837, 1.1071333041107332)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_04" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911265
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7452044689245864, 0, -0.6065377562939203, -0.27709610189384154)
+            double3 xformOp:translate = (0.6718354124078061, -0.28453105131104917, 1.1139250063446657)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_05" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112871
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7526817326522134, 0, -0.569781736948704, -0.32987722196505165)
+            double3 xformOp:translate = (0.6727323166817971, -0.28787834363110926, 1.1204082613692101)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_06" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112529
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7596638484082849, 0, -0.5286598362970595, -0.37872102517272593)
+            double3 xformOp:translate = (0.6737893738855711, -0.2918233348221003, 1.126520631894372)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_07" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7660979857118626, 0, -0.4835876997290783, -0.4233636887582181)
+            double3 xformOp:translate = (0.6749964039804095, -0.29632803246230166, 1.1322032524506322)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_08" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911278
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7719366109765773, 0, -0.43498322614692114, -0.4635768130577854)
+            double3 xformOp:translate = (0.6763417826066691, -0.3013490538509198, 1.1374013962955982)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_09" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112629
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7771375059527652, 0, -0.3832650592266174, -0.4991644931458299)
+            double3 xformOp:translate = (0.6778125530327204, -0.3068380438072129, 1.1420650024624481)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_10" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112818
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7816637703633809, 0, -0.32885158791115743, -0.5299607374415714)
+            double3 xformOp:translate = (0.6793945509353555, -0.31274214035731474, 1.146149157874409)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_11" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112617
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7854838144828644, 0, -0.27216034598481864, -0.5558272422784554)
+            double3 xformOp:translate = (0.6810725408099642, -0.3190044838239404, 1.1496145298822367)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_12" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112742
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7885713461293852, 0, -0.21360771922909574, -0.576651518986496)
+            double3 xformOp:translate = (0.6828303626967712, -0.325564764416161, 1.1524277450591311)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_13" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127114
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7909053554855371, 0, -0.1536088851959356, -0.5923453629878082)
+            double3 xformOp:translate = (0.6846510878100835, -0.33235980304565943, 1.154561710605079)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_14" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112672
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7924701003025063, 0, -0.09257792464306823, -0.6028436513685103)
+            double3 xformOp:translate = (0.6865171815717505, -0.33932415977588753, 1.1559958752653285)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_15" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127375
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7932550933425401, 0, -0.030928055009797336, -0.6081034552602287)
+            double3 xformOp:translate = (0.6884106724787364, -0.3463907640444286, 1.1567164272502075)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_16" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112684
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7932550933425407, 0, 0.030928055009797537, -0.6081034552602279)
+            double3 xformOp:translate = (0.6903133251785196, -0.3534915605891778, 1.1567164272502075)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_17" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7924701003025059, 0, 0.09257792464306763, -0.602843651368511)
+            double3 xformOp:translate = (0.6922068160855056, -0.36055816485771885, 1.1559958752653285)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_18" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127114
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7909053554855371, 0, 0.1536088851959356, -0.5923453629878082)
+            double3 xformOp:translate = (0.6940729098471725, -0.367522521587947, 1.154561710605079)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_19" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112742
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7885713461293852, 0, 0.21360771922909574, -0.576651518986496)
+            double3 xformOp:translate = (0.6958936349604848, -0.37431756021744544, 1.1524277450591311)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_20" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112617
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7854838144828644, 0, 0.27216034598481864, -0.5558272422784554)
+            double3 xformOp:translate = (0.6976514568472919, -0.380877840809666, 1.1496145298822367)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_21" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112634
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7816637703633779, 0, 0.3288515879111476, -0.5299607374415818)
+            double3 xformOp:translate = (0.6993294467219004, -0.38714018427629165, 1.146149157874409)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_22" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112784
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7771375059527686, 0, 0.38326505922662707, -0.4991644931458171)
+            double3 xformOp:translate = (0.7009114446245357, -0.3930442808263935, 1.1420650024624481)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_23" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911278
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7719366109765773, 0, 0.43498322614692114, -0.4635768130577854)
+            double3 xformOp:translate = (0.702382215050587, -0.39853327078268663, 1.1374013962955982)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_24" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112717
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7660979857118625, 0, 0.48358769972907606, -0.42336368875822106)
+            double3 xformOp:translate = (0.7037275936768466, -0.4035542921713048, 1.1322032524506322)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_25" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112529
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7596638484082849, 0, 0.5286598362970595, -0.37872102517272593)
+            double3 xformOp:translate = (0.7049346237716849, -0.4080589898115061, 1.126520631894372)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_26" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112844
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7526817326522135, 0, 0.569781736948706, -0.3298772219650478)
+            double3 xformOp:translate = (0.705991680975459, -0.41200398100249713, 1.1204082613692101)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_27" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112673
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7452044689245862, 0, 0.6065377562939183, -0.27709610189384576)
+            double3 xformOp:translate = (0.70688858524945, -0.4153512733225573, 1.1139250063446657)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_28" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127045
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.737290143077913, 0, 0.6385166504820101, -0.22068015764310342)
+            double3 xformOp:translate = (0.7076166989152017, -0.4180686305168281, 1.1071333041107332)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_29" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112652
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7290020226794298, 0, 0.6653145142377089, -0.16097406025177238)
+            double3 xformOp:translate = (0.7081690098400856, -0.42012988295007014, 1.1000985624726471)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_30" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112683
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7204084401525231, 0, 0.6865386736414102, -0.09836833307371819)
+            double3 xformOp:translate = (0.7085401989679712, -0.42151517963455626, 1.0928885298379636)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_31" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112746
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7115826194528714, 0, 0.7018127121859271, -0.03330304350690861)
+            double3 xformOp:translate = (0.7087266915446442, -0.4222111794059346, 1.0855726427623587)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_32" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127435
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7026024307477096, -0, 0.7107828072429627, 0.03372870046745489)
+            double3 xformOp:translate = (0.7087266915446442, -0.42221117940593467, 1.0782213572376416)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_33" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112691
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6935500554084101, -0, 0.7131255359660266, 0.10217774021849717)
+            double3 xformOp:translate = (0.7085401989679712, -0.4215151796345563, 1.0709054701620366)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_34" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112652
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6845115418525096, -0, 0.708557265936909, 0.17143672290006146)
+            double3 xformOp:translate = (0.7081690098400856, -0.42012988295007014, 1.063695437527353)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_35" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127045
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6755762317608209, -0, 0.6968451678125079, 0.24083929740847343)
+            double3 xformOp:translate = (0.7076166989152017, -0.4180686305168281, 1.056660695889267)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_36" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911265
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6668360364398621, -0, 0.6778197665723839, 0.30966120930612845)
+            double3 xformOp:translate = (0.70688858524945, -0.4153512733225573, 1.0498689936553345)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_37" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112681
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6583845451798367, -0, 0.6513887790045111, 0.3771239176389531)
+            double3 xformOp:translate = (0.705991680975459, -0.4120039810024972, 1.04338573863079)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_38" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112707
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6503159519968092, -0, 0.6175517677325774, 0.4424013751660956)
+            double3 xformOp:translate = (0.7049346237716849, -0.4080589898115061, 1.0372733681056285)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_39" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6427237947114036, -0, 0.5764148857190377, 0.50463056113684)
+            double3 xformOp:translate = (0.7037275936768466, -0.4035542921713048, 1.031590747549368)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_40" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911278
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6356995112739953, -0, 0.528204712239879, 0.5629262059396332)
+            double3 xformOp:translate = (0.702382215050587, -0.39853327078268663, 1.026392603704402)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_41" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112629
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6293308325845126, -0, 0.473279929767646, 0.6163998793296575)
+            double3 xformOp:translate = (0.7009114446245357, -0.39304428082639353, 1.021728997537552)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_42" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112818
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6237000481812582, -0, 0.41213941356297035, 0.6641832229789211)
+            double3 xformOp:translate = (0.6993294467219006, -0.3871401842762917, 1.0176448421255913)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_43" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112568
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6188821997645823, -0, 0.345425263154203, 0.7054546125651183)
+            double3 xformOp:translate = (0.6976514568472919, -0.3808778408096661, 1.0141794701177635)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_44" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112792
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.614943275484569, -0, 0.27391945470642276, 0.739467984614375)
+            double3 xformOp:translate = (0.6958936349604848, -0.37431756021744544, 1.011366254940869)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_45" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112659
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6119384925499419, -0, 0.19853317192939, 0.765582040658844)
+            double3 xformOp:translate = (0.6940729098471725, -0.36752252158794707, 1.0092322893949213)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_46" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112778
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.609910764068431, -0, 0.12028847751153583, 0.7832876496226782)
+            double3 xformOp:translate = (0.6922068160855056, -0.3605581648577189, 1.0077981247346717)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_47" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112684
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6088894455368046, -0, 0.04029276142579683, 0.7922311130538655)
+            double3 xformOp:translate = (0.6903133251785196, -0.3534915605891778, 1.0070775727497927)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_48" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112684
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6088894455368046, 0, -0.04029276142579683, 0.7922311130538655)
+            double3 xformOp:translate = (0.6884106724787364, -0.34639076404442865, 1.0070775727497927)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_49" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6099107640684304, 0, -0.12028847751153685, 0.7832876496226785)
+            double3 xformOp:translate = (0.6865171815717505, -0.3393241597758876, 1.0077981247346717)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_50" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112659
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6119384925499419, 0, -0.19853317192939, 0.765582040658844)
+            double3 xformOp:translate = (0.6846510878100835, -0.3323598030456595, 1.0092322893949213)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_51" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112792
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.614943275484569, 0, -0.27391945470642276, 0.739467984614375)
+            double3 xformOp:translate = (0.6828303626967712, -0.32556476441616106, 1.011366254940869)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_52" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112617
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6188821997645828, 0, -0.34542526315420047, 0.7054546125651192)
+            double3 xformOp:translate = (0.6810725408099642, -0.3190044838239404, 1.0141794701177635)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_53" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112634
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.623700048181262, 0, -0.41213941356295397, 0.6641832229789276)
+            double3 xformOp:translate = (0.6793945509353556, -0.3127421403573148, 1.0176448421255913)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_54" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112827
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6293308325845088, 0, -0.47327992976766003, 0.6163998793296505)
+            double3 xformOp:translate = (0.6778125530327204, -0.3068380438072129, 1.021728997537552)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_55" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112591
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6356995112739934, 0, -0.5282047122398704, 0.5629262059396434)
+            double3 xformOp:translate = (0.6763417826066691, -0.3013490538509198, 1.026392603704402)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_56" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6427237947114036, 0, -0.5764148857190377, 0.50463056113684)
+            double3 xformOp:translate = (0.6749964039804095, -0.29632803246230166, 1.0315907475493677)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_57" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911274
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6503159519968096, 0, -0.6175517677325745, 0.44240137516609934)
+            double3 xformOp:translate = (0.6737893738855711, -0.2918233348221004, 1.037273368105628)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_58" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112844
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6583845451798379, 0, -0.6513887790045184, 0.3771239176389384)
+            double3 xformOp:translate = (0.6727323166817971, -0.2878783436311093, 1.04338573863079)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_59" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911265
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6668360364398621, 0, -0.6778197665723839, 0.30966120930612845)
+            double3 xformOp:translate = (0.6718354124078061, -0.2845310513110492, 1.0498689936553345)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_60" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112722
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.675576231760821, 0, -0.6968451678125062, 0.2408392974084784)
+            double3 xformOp:translate = (0.6711072987420543, -0.2818136941167784, 1.056660695889267)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_61" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112652
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6845115418525096, 0, -0.708557265936909, 0.17143672290006146)
+            double3 xformOp:translate = (0.6705549878171705, -0.2797524416835363, 1.063695437527353)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_62" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112691
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6935500554084101, 0, -0.7131255359660266, 0.10217774021849717)
+            double3 xformOp:translate = (0.6701837986892849, -0.27836714499905013, 1.0709054701620366)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_63" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127435
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.2, 0.7, 0.8)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7026024307477096, 0, -0.7107828072429627, 0.03372870046745489)
+            double3 xformOp:translate = (0.6699973061126119, -0.2776711452276718, 1.0782213572376416)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+    }
+
+    def Capsule "R1_stand" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        uniform token axis = "Z"
+        double height = 0.3219999999999999
+        rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        float physxCollision:contactOffset = 0.002
+        float physxCollision:restOffset = 0
+        color3f[] primvars:displayColor = [(0.6, 0.6, 0.6)]
+        double radius = 0.005
+        quatd xformOp:orient = (1, 0, 0, 0)
+        double3 xformOp:translate = (0.7087734272113171, -0.42238559928848335, 0.920897)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+    }
+
+    def Cube "R1_base" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        float physxCollision:contactOffset = 0.002
+        float physxCollision:restOffset = 0
+        color3f[] primvars:displayColor = [(0.45, 0.48, 0.5)]
+        double size = 1
+        quatd xformOp:orient = (0.9914448613738104, 0, 0, 0.13052619222005157)
+        float3 xformOp:scale = (0.05, 0.08, 0.008)
+        double3 xformOp:translate = (0.7087734272113171, -0.42238559928848335, 0.753997)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def Xform "R2"
+    {
+        def Capsule "seg_00" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112746
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7236697222728052, 0, -0.6900906763573643, 0.008774478345546023)
+            double3 xformOp:translate = (0.48452355184133944, -0.260924069688891, 1.0645726427623585)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_01" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7555563363443134, 0, -0.6546014257195011, 0.02513157488012175)
+            double3 xformOp:translate = (0.4852195516127178, -0.2607375771122179, 1.0718885298379632)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_02" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112655
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.785716498186504, 0, -0.6172908774560881, 0.04001945885478908)
+            double3 xformOp:translate = (0.4866048482972039, -0.2603663879843323, 1.0790985624726472)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_03" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112722
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8140671378965887, 0, -0.5782963230869443, 0.053554250073889524)
+            double3 xformOp:translate = (0.48866610073044603, -0.2598140770594484, 1.0861333041107333)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_04" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112644
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8405315303145228, 0, -0.5377485915282526, 0.06582703742769425)
+            double3 xformOp:translate = (0.4913834579247168, -0.2590859633936967, 1.0929250063446658)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_05" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112653
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8650390505585037, 0, -0.495774502576784, 0.07690958070087775)
+            double3 xformOp:translate = (0.49473075024477686, -0.2581890591197057, 1.0994082613692098)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_06" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112707
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8875250258194622, 0, -0.45249852573961846, 0.0868585790099907)
+            double3 xformOp:translate = (0.498675741435768, -0.2571320019159317, 1.1055206318943718)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_07" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112726
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9079306521872784, 0, -0.408043898270173, 0.09571890044951423)
+            double3 xformOp:translate = (0.5031804390759693, -0.2559249718210934, 1.1112032524506321)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_08" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911273
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9262029550801206, 0, -0.3625333687198917, 0.1035260477631556)
+            double3 xformOp:translate = (0.5082014604645875, -0.2545795931948338, 1.116401396295598)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_09" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112773
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9422947783276308, 0, -0.3160896771335614, 0.11030805385864675)
+            double3 xformOp:translate = (0.5136904504208806, -0.25310882276878255, 1.1210650024624482)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_10" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127375
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9561647913268636, 0, -0.26883584757382595, 0.11608694537336194)
+            double3 xformOp:translate = (0.5195945469709824, -0.2515268248661473, 1.1251491578744088)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_11" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112587
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9677775066916829, 0, -0.22089534550758896, 0.1208798737371631)
+            double3 xformOp:translate = (0.525856890437608, -0.24984883499153865, 1.1286145298822365)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_12" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112779
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9771033029187535, 0, -0.17239213724172744, 0.12469998573573299)
+            double3 xformOp:translate = (0.5324171710298287, -0.24809101310473158, 1.131427745059131)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_13" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112615
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9841184480966102, 0, -0.12345067830666613, 0.1275570858147189)
+            double3 xformOp:translate = (0.539212209659327, -0.2462702879914192, 1.133561710605079)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_14" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112778
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9888051217842336, 0, -0.07419585074084807, 0.12945812784877075)
+            double3 xformOp:translate = (0.5461765663895551, -0.24440419422975235, 1.1349958752653286)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_15" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112677
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9911514330133282, 0, -0.02475286454372739, 0.13040756317217875)
+            double3 xformOp:translate = (0.5532431706580963, -0.24251070332276642, 1.1357164272502074)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_16" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911267
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9911514330133284, -0, 0.024752864543727406, 0.13040756317217697)
+            double3 xformOp:translate = (0.5603439672028454, -0.24060805062298318, 1.1357164272502074)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_17" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112786
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9888051217842334, -0, 0.07419585074084803, 0.12945812784877256)
+            double3 xformOp:translate = (0.5674105714713865, -0.23871455971599725, 1.1349958752653286)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_18" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112615
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9841184480966102, -0, 0.12345067830666613, 0.1275570858147189)
+            double3 xformOp:translate = (0.5743749282016146, -0.2368484659543304, 1.133561710605079)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_19" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112779
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9771033029187535, -0, 0.17239213724172744, 0.12469998573573299)
+            double3 xformOp:translate = (0.581169966831113, -0.23502774084101802, 1.131427745059131)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_20" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112594
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9677775066916827, -0, 0.2208953455075888, 0.12087987373716497)
+            double3 xformOp:translate = (0.5877302474233337, -0.23326991895421093, 1.1286145298822365)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_21" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9561647913268639, -0, 0.2688358475738264, 0.11608694537335816)
+            double3 xformOp:translate = (0.5939925908899593, -0.23159192907960227, 1.1251491578744088)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_22" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112773
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9422947783276308, -0, 0.3160896771335614, 0.11030805385864675)
+            double3 xformOp:translate = (0.5998966874400611, -0.2300099311769671, 1.1210650024624482)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_23" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911274
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9262029550801203, -0, 0.3625333687198913, 0.10352604776315956)
+            double3 xformOp:translate = (0.6053856773963542, -0.22853916075091582, 1.116401396295598)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_24" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112721
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9079306521872785, -0, 0.40804389827017323, 0.09571890044951221)
+            double3 xformOp:translate = (0.6104066987849723, -0.22719378212465619, 1.1112032524506321)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_25" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112739
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8875250258194636, -0, 0.4524985257396158, 0.08685857900999017)
+            double3 xformOp:translate = (0.6149113964251738, -0.22598675202981788, 1.1055206318943718)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_26" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112622
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.865039050558502, -0, 0.49577450257678696, 0.076909580700876)
+            double3 xformOp:translate = (0.6188563876161648, -0.2249296948260439, 1.0994082613692098)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_27" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112646
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8405315303145227, -0, 0.5377485915282525, 0.06582703742769647)
+            double3 xformOp:translate = (0.6222036799362248, -0.22403279055205294, 1.0929250063446658)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_28" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127244
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8140671378965886, -0, 0.5782963230869445, 0.05355425007389185)
+            double3 xformOp:translate = (0.6249210371304956, -0.22330467688630118, 1.0861333041107333)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_29" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112653
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.785716498186504, -0, 0.6172908774560883, 0.04001945885478669)
+            double3 xformOp:translate = (0.6269822895637378, -0.22275236596141723, 1.0790985624726472)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_30" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7555563363443134, -0, 0.6546014257195011, 0.02513157488012175)
+            double3 xformOp:translate = (0.6283675862482239, -0.22238117683353167, 1.0718885298379632)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_31" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112747
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7236697222728052, -0, 0.6900906763573643, 0.008774478345548628)
+            double3 xformOp:translate = (0.6290635860196022, -0.22219468425685862, 1.0645726427623585)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_32" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112747
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6901464576925691, 0, 0.7236112314077059, -0.009200691007879512)
+            double3 xformOp:translate = (0.6290635860196022, -0.22219468425685862, 1.0572213572376414)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_33" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6550836760368548, 0, 0.7550001214723676, -0.02898609954359371)
+            double3 xformOp:translate = (0.6283675862482239, -0.22238117683353167, 1.0499054701620367)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_34" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112653
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6185867639042543, 0, 0.7840704892165192, -0.05083191381632734)
+            double3 xformOp:translate = (0.6269822895637378, -0.22275236596141723, 1.0426954375273527)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_35" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127244
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5807707766381299, 0, 0.810598693199815, -0.07506706059181732)
+            double3 xformOp:translate = (0.6249210371304956, -0.22330467688630118, 1.0356606958892667)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_36" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112646
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5417626293379111, 0, 0.834303848373788, -0.10212904602296322)
+            double3 xformOp:translate = (0.6222036799362248, -0.22403279055205294, 1.0288689936553341)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_37" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112622
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.501704535567345, 0, 0.8548144866084635, -0.13260751289223266)
+            double3 xformOp:translate = (0.6188563876161648, -0.2249296948260439, 1.0223857386307902)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_38" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112735
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.46075951270067156, 0, 0.8716125325039581, -0.16730888989493733)
+            double3 xformOp:translate = (0.6149113964251738, -0.22598675202981788, 1.0162733681056282)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_39" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112726
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.4191204251987531, 0, 0.8839358341979943, -0.207353587386166)
+            double3 xformOp:translate = (0.6104066987849723, -0.22719378212465619, 1.0105907475493678)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_40" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911274
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.37702531214873714, 0, 0.8906019479430829, -0.2543227955161186)
+            double3 xformOp:translate = (0.6053856773963542, -0.22853916075091582, 1.0053926037044019)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_41" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112706
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.3347843346640905, 0, 0.8896761927199116, -0.3104766035805674)
+            double3 xformOp:translate = (0.5998966874400611, -0.2300099311769671, 1.000728997537552)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_42" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.29282911710903137, 0, 0.8778203978974487, -0.3790546889412002)
+            double3 xformOp:translate = (0.5939925908899593, -0.23159192907960227, 0.9966448421255912)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_43" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112683
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.25180686555698845, 0, 0.8489742574821216, -0.46458154568498006)
+            double3 xformOp:translate = (0.5877302474233337, -0.2332699189542109, 0.9931794701177634)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_44" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112748
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.2127654469721546, 0, 0.7916930549261278, -0.572671783272473)
+            double3 xformOp:translate = (0.581169966831113, -0.23502774084101802, 0.9903662549408689)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_45" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112615
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.17751304210091023, 0, 0.6844009235251969, -0.7071665261888023)
+            double3 xformOp:translate = (0.5743749282016146, -0.2368484659543304, 0.988232289394921)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_46" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127695
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.14921270432931055, 0, 0.4916822435291129, -0.8578951802317761)
+            double3 xformOp:translate = (0.5674105714713865, -0.23871455971599725, 0.9867981247346715)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_47" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112675
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.13273596662406867, 0, 0.18483187178040364, -0.973765034460843)
+            double3 xformOp:translate = (0.5603439672028454, -0.24060805062298318, 0.9860775727497926)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_48" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112675
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.13273596662406867, 0, -0.18483187178040364, -0.973765034460843)
+            double3 xformOp:translate = (0.5532431706580963, -0.24251070332276642, 0.9860775727497926)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_49" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127695
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.14921270432931055, 0, -0.4916822435291129, -0.8578951802317761)
+            double3 xformOp:translate = (0.5461765663895551, -0.24440419422975235, 0.9867981247346715)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_50" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112615
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.17751304210091023, 0, -0.6844009235251969, -0.7071665261888023)
+            double3 xformOp:translate = (0.539212209659327, -0.2462702879914192, 0.988232289394921)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_51" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112742
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.21276544697215352, 0, -0.7916930549261322, -0.5726717832724674)
+            double3 xformOp:translate = (0.5324171710298287, -0.24809101310473158, 0.9903662549408689)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_52" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112683
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.25180686555698845, 0, -0.8489742574821216, -0.46458154568498006)
+            double3 xformOp:translate = (0.525856890437608, -0.24984883499153865, 0.9931794701177634)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_53" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.29282911710903137, 0, -0.8778203978974487, -0.3790546889412002)
+            double3 xformOp:translate = (0.5195945469709824, -0.2515268248661473, 0.9966448421255912)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_54" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112718
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.3347843346640912, 0, -0.8896761927199077, -0.3104766035805773)
+            double3 xformOp:translate = (0.5136904504208806, -0.2531088227687825, 1.000728997537552)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_55" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491125805
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.37702531214872664, 0, -0.8906019479430867, -0.2543227955161211)
+            double3 xformOp:translate = (0.5082014604645875, -0.2545795931948338, 1.0053926037044016)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_56" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112726
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.4191204251987531, 0, -0.8839358341979943, -0.207353587386166)
+            double3 xformOp:translate = (0.5031804390759693, -0.2559249718210934, 1.0105907475493676)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_57" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112886
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.46075951270068216, 0, -0.8716125325039532, -0.16730888989493417)
+            double3 xformOp:translate = (0.498675741435768, -0.2571320019159317, 1.0162733681056282)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_58" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112653
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5017045355673423, 0, -0.8548144866084643, -0.13260751289223657)
+            double3 xformOp:translate = (0.49473075024477686, -0.2581890591197057, 1.0223857386307902)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_59" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112644
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.541762629337911, 0, -0.8343038483737885, -0.10212904602295979)
+            double3 xformOp:translate = (0.4913834579247168, -0.2590859633936967, 1.0288689936553341)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_60" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112722
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5807707766381298, 0, -0.8105986931998154, -0.0750670605918141)
+            double3 xformOp:translate = (0.48866610073044603, -0.2598140770594484, 1.0356606958892667)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_61" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112655
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6185867639042543, 0, -0.7840704892165191, -0.05083191381633037)
+            double3 xformOp:translate = (0.4866048482972039, -0.2603663879843323, 1.0426954375273527)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_62" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6550836760368548, 0, -0.7550001214723676, -0.02898609954359371)
+            double3 xformOp:translate = (0.4852195516127178, -0.2607375771122179, 1.0499054701620367)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_63" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112746
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.35, 0.8, 0.4)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6901464576925691, 0, -0.7236112314077059, -0.009200691007876781)
+            double3 xformOp:translate = (0.48452355184133944, -0.260924069688891, 1.0572213572376414)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+    }
+
+    def Capsule "R2_stand" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        uniform token axis = "Z"
+        double height = 0.301
+        rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        float physxCollision:contactOffset = 0.002
+        float physxCollision:restOffset = 0
+        color3f[] primvars:displayColor = [(0.6, 0.6, 0.6)]
+        double radius = 0.005
+        quatd xformOp:orient = (1, 0, 0, 0)
+        double3 xformOp:translate = (0.629238005902151, -0.22214794859018575, 0.910397)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+    }
+
+    def Cube "R2_base" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        float physxCollision:contactOffset = 0.002
+        float physxCollision:restOffset = 0
+        color3f[] primvars:displayColor = [(0.45, 0.48, 0.5)]
+        double size = 1
+        quatd xformOp:orient = (0.9914448613738104, 0, 0, 0.13052619222005157)
+        float3 xformOp:scale = (0.05, 0.08, 0.008)
+        double3 xformOp:translate = (0.629238005902151, -0.22214794859018575, 0.753997)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def Xform "R3"
+    {
+        def Capsule "seg_00" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911278
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7176543260039068, 0, -0.6601649729029986, -0.22170808943261752)
+            double3 xformOp:translate = (0.527121528804452, 0.0378384715308117, 1.0343840206402382)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_01" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112646
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7509078032570605, 0, -0.624853783861281, -0.21376440256014398)
+            double3 xformOp:translate = (0.527702173046841, 0.035485967561552714, 1.0413244800057497)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_02" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127244
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7823568848598239, 0, -0.5881282559213652, -0.20499477871235017)
+            double3 xformOp:translate = (0.5289971535474451, 0.033124121300959264, 1.0481645170385652)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_03" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112659
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8119252723057411, 0, -0.5500672866047364, -0.19545672768812822)
+            double3 xformOp:translate = (0.5309939989361354, 0.03077567861963736, 1.0548382584429146)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_04" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911268
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8395413028503088, 0, -0.5107547881417968, -0.18520244922417844)
+            double3 xformOp:translate = (0.5336734785002322, 0.0284632563043975, 1.0612814324408353)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_05" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491128094
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8651380985501385, 0, -0.4702791078804643, -0.1742803234108932)
+            double3 xformOp:translate = (0.5370097873867803, 0.026209124246234068, 1.0674319877445306)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_06" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112567
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.888653710096593, 0, -0.42873253380110854, -0.16273597632988743)
+            double3 xformOp:translate = (0.5409707951173903, 0.024034990969101094, 1.0732306911441905)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_07" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112817
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9100312532238815, 0, -0.3862108596791365, -0.1506130473155431)
+            double3 xformOp:translate = (0.5455183550223097, 0.02196179456495952, 1.0786216979561818)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_08" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112662
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9292190361045528, 0, -0.3428129925374656, -0.13795374256769324)
+            double3 xformOp:translate = (0.5506086716137049, 0.02000950104850566, 1.0835530898378816)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_09" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112638
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9461706765635571, 0, -0.29864059044278324, -0.12479923297539323)
+            double3 xformOp:translate = (0.5561927223601506, 0.018196912073535167, 1.0879773747896957)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_10" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112774
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9608452082297759, 0, -0.25379772237673537, -0.11118993631736673)
+            double3 xformOp:translate = (0.5622167298004057, 0.01654148386273893, 1.0918519445289783)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_11" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911262
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9732071749470801, 0, -0.20839054446118063, -0.09716571211438786)
+            double3 xformOp:translate = (0.5686226794497635, 0.015059159094736032, 1.0951394848310847)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_12" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112726
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9832267129171139, 0, -0.16252698861267692, -0.08276598926311451)
+            double3 xformOp:translate = (0.575348878511252, 0.013764213367363477, 1.097808334885753)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_13" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112781
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9908796201610601, 0, -0.11631646099355979, -0.06802984088917882)
+            double3 xformOp:translate = (0.582330550010995, 0.012669117715865211, 1.0998327922080153)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_14" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911262
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9961474129790752, 0, -0.06986954858157196, -0.05299601679469171)
+            double3 xformOp:translate = (0.5895004566358798, 0.01178441851000534, 1.1011933601671773)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_15" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112744
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9990173691627667, 0, -0.023297732902933337, -0.03770294090237169)
+            double3 xformOp:translate = (0.5967895482656392, 0.01111863588676207, 1.10187693575003)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_16" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112666
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.999482557781989, 0, 0.0232868894518741, -0.022188678852722445)
+            double3 xformOp:translate = (0.604127626963256, 0.01067818169675104, 1.10187693575003)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_17" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9975418554268557, 0, 0.0697718794323324, -0.006490879141241136)
+            double3 xformOp:translate = (0.61144402301947, 0.010467297754598813, 1.1011933601671773)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_18" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127505
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.993199948841289, -0, 0.11604472072540886, 0.00935331029223367)
+            double3 xformOp:translate = (0.6186682755407111, 0.010488014987949197, 1.0998327922080153)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_19" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491126655
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9864673239378644, -0, 0.1619930766039508, 0.02530734943163675)
+            double3 xformOp:translate = (0.6257308110260216, 0.01074013387851984, 1.097808334885753)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_20" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112658
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9773602412368305, -0, 0.20750503704151085, 0.04133543820846361)
+            double3 xformOp:translate = (0.6325636133979033, 0.01122122638357234, 1.0951394848310847)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_21" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112791
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9659006978265989, -0, 0.2524693542038367, 0.057402675251132594)
+            double3 xformOp:translate = (0.6391008790343253, 0.011926659319291126, 1.0918519445289783)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_22" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112575
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9521163760008011, -0, 0.2967756638064096, 0.07347524701126262)
+            double3 xformOp:translate = (0.645279650493576, 0.012849638980876361, 1.0879773747896957)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_23" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112714
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9360405787899782, -0, 0.3403146890293656, 0.08952065286496105)
+            double3 xformOp:translate = (0.6510404228288427, 0.01398127656963497, 1.0835530898378816)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_24" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112803
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.9177121526781786, -0, 0.3829784226097402, 0.10550797430592)
+            double3 xformOp:translate = (0.6563277166533781, 0.015310673796971177, 1.0786216979561818)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_25" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112593
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8971753978795451, -0, 0.42466028125820177, 0.12140819972878625)
+            double3 xformOp:translate = (0.6610906124373235, 0.016825027840863288, 1.0732306911441905)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_26" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491128155
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8744799666547743, -0, 0.4652552244689422, 0.13719462097261353)
+            double3 xformOp:translate = (0.6652832408906154, 0.018509754644038486, 1.0674319877445306)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_27" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112661
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8496807502823543, -0, 0.5046598268009552, 0.15284332439738857)
+            double3 xformOp:translate = (0.6688652247093251, 0.020348629366416845, 1.0612814324408353)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_28" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112665
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.8228377554789327, -0, 0.5427722883268512, 0.16833380879319998)
+            double3 xformOp:translate = (0.6718020674311667, 0.022323942639190693, 1.0548382584429146)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_29" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112713
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7940159713142295, -0, 0.5794923613930526, 0.18364977643608577)
+            double3 xformOp:translate = (0.6740654856552875, 0.024416671115727134, 1.0481645170385652)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_30" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491126585
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.7632852280257355, -0, 0.6147211618515898, 0.1987801646279941)
+            double3 xformOp:translate = (0.6756336814268786, 0.026606660676795374, 1.0413244800057497)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_31" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112779
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.730720049676149, -0, 0.648360817374672, 0.21372051725216648)
+            double3 xformOp:translate = (0.676491552163397, 0.028872820525752258, 1.0343840206402382)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_32" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911278
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6963995034230556, -0, 0.6803138806839129, 0.2284748462761632)
+            double3 xformOp:translate = (0.6766308361006899, 0.03119332630444334, 1.0274099793597617)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_33" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112649
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6604070494836164, -0, 0.7104823950062584, 0.24305821397047075)
+            double3 xformOp:translate = (0.6760501918583008, 0.03354583027370233, 1.0204695199942502)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_34" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112719
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6228303980317853, -0, 0.738766430885088, 0.25750039977614836)
+            double3 xformOp:translate = (0.6747552113576967, 0.035907676534295774, 1.0136294829614347)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_35" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112659
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5837613829222076, -0, 0.7650617949878104, 0.27185124178267295)
+            double3 xformOp:translate = (0.6727583659690064, 0.03825611921561767, 1.0069557415570853)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_36" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112778
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.543295868572925, -0, 0.7892563979916274, 0.286188639573399)
+            double3 xformOp:translate = (0.6700788864049096, 0.04056854153085754, 1.0005125675591644)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_37" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112626
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5015337181456943, -0, 0.8112243672944133, 0.3006309289988877)
+            double3 xformOp:translate = (0.6667425775183615, 0.04282267358902097, 0.9943620122554692)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_38" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112651
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.45857887383912865, -0, 0.8308161987748384, 0.31535671916381375)
+            double3 xformOp:translate = (0.6627815697877515, 0.04499680686615394, 0.9885633088558097)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_39" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112741
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.41453964606026356, -0, 0.8478415900209932, 0.3306380499502526)
+            double3 xformOp:translate = (0.6582340098828321, 0.047070003270295514, 0.9831723020438181)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_40" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491126585
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.3695294074101893, -0, 0.8620379111970985, 0.3468986259961511)
+            double3 xformOp:translate = (0.653143693291437, 0.04902229678674937, 0.9782409101621184)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_41" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112766
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.32366811831143916, -0, 0.8730083487453957, 0.3648223844688948)
+            double3 xformOp:translate = (0.6475596425449912, 0.050834885761719864, 0.9738166252103042)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_42" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112667
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.27708570122233367, -0, 0.8800898939553433, 0.3855713847471049)
+            double3 xformOp:translate = (0.6415356351047361, 0.052490313972516106, 0.9699420554710216)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_43" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112709
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.22992997767043943, -0, 0.8820388498947599, 0.4112659390768954)
+            double3 xformOp:translate = (0.6351296854553783, 0.053972638740519004, 0.9666545151689153)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_44" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112726
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.18238758457254498, -0, 0.8761609357812323, 0.44618021426857135)
+            double3 xformOp:translate = (0.6284034863938898, 0.05526758446789155, 0.9639856651142468)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_45" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112649
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.1347500588106449, -0, 0.8553288340284346, 0.5002549423344923)
+            double3 xformOp:translate = (0.6214218148941468, 0.05636268011938982, 0.9619612077919844)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_46" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911284
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.08769453583374213, -0, 0.7936682645484362, 0.6019969719471834)
+            double3 xformOp:translate = (0.614251908269262, 0.0572473793252497, 0.9606006398328225)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_47" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112634
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.044320380313172106, -0, 0.5251498219934817, 0.8498549101753252)
+            double3 xformOp:translate = (0.6069628166395025, 0.05791316194849297, 0.9599170642499699)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_48" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112666
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.032165458019015734, 0, -0.723597339058125, 0.689472460812198)
+            double3 xformOp:translate = (0.5996247379418859, 0.058353616138504, 0.9599170642499699)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_49" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112725
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.07007315228777826, 0, -0.993253019069434, 0.09240234541346203)
+            double3 xformOp:translate = (0.5923083418856718, 0.05856450008065622, 0.9606006398328225)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_50" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112726
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.1164210531719211, 0, -0.9899894181301607, -0.07979404970702031)
+            double3 xformOp:translate = (0.5850840893644307, 0.05854378284730584, 0.9619612077919844)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_51" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491126655
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.16395797877160012, 0, -0.9746453205340492, -0.15226385112104693)
+            double3 xformOp:translate = (0.5780215538791202, 0.0582916639567352, 0.9639856651142468)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_52" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112748
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.21158203810694806, 0, -0.9585273630753496, -0.19094065933249316)
+            double3 xformOp:translate = (0.5711887515072385, 0.057810571451682696, 0.9666545151689153)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_53" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112587
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.25891280759762525, 0, -0.9418627362161633, -0.21414654839459146)
+            double3 xformOp:translate = (0.5646514858708165, 0.05710513851596391, 0.9699420554710216)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_54" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112819
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.3057358444001938, 0, -0.9242127630240333, -0.22881512649381933)
+            double3 xformOp:translate = (0.5584727144115658, 0.056182158854378675, 0.9738166252103042)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_55" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.0073601511491127
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.3518920784253741, 0, -0.9052444713027028, -0.23812688281116054)
+            double3 xformOp:translate = (0.5527119420762991, 0.055050521265620066, 0.9782409101621183)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_56" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112645
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.3972460255644805, 0, -0.8847513380229426, -0.24374303075131512)
+            double3 xformOp:translate = (0.5474246482517637, 0.05372112403828387, 0.9831723020438181)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_57" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112766
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.4416744337627969, 0, -0.8626144682082456, -0.24661705901684605)
+            double3 xformOp:translate = (0.5426617524678183, 0.052206769994391757, 0.9885633088558096)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_58" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112633
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.48506163311424483, 0, -0.8387725299307058, -0.24733753276481296)
+            double3 xformOp:translate = (0.5384691240145264, 0.05052204319121655, 0.9943620122554692)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_59" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112755
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5272974706933634, 0, -0.8132027254175064, -0.2462898795604916)
+            double3 xformOp:translate = (0.5348871401958167, 0.048683168468838196, 1.0005125675591644)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_60" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112666
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.5682763660037184, 0, -0.7859090368366787, -0.24373952830850365)
+            double3 xformOp:translate = (0.5319502974739752, 0.04670785519606435, 1.0069557415570853)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_61" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112713
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6078968969306562, 0, -0.7569148527059658, -0.23987761140878763)
+            double3 xformOp:translate = (0.5296868792498544, 0.0446151267195279, 1.0136294829614347)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_62" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.00736015114911266
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6460616539291749, 0, -0.7262582128850089, -0.23484749847373743)
+            double3 xformOp:translate = (0.5281186834782632, 0.042425137158459664, 1.0204695199942502)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        def Capsule "seg_63" (
+            prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+        )
+        {
+            uniform token axis = "X"
+            double height = 0.007360151149112774
+            rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+                bindMaterialAs = "weakerThanDescendants"
+            )
+            float physxCollision:contactOffset = 0.002
+            float physxCollision:restOffset = 0
+            color3f[] primvars:displayColor = [(0.85, 0.35, 0.3)]
+            double radius = 0.006
+            quatd xformOp:orient = (0.6826772363286229, 0, -0.6939886427559577, -0.22876091170577484)
+            double3 xformOp:translate = (0.5272608127417449, 0.04015897730950278, 1.0274099793597617)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+    }
+
+    def Capsule "R3_stand" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        uniform token axis = "Z"
+        double height = 0.27099999999999996
+        rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        float physxCollision:contactOffset = 0.002
+        float physxCollision:restOffset = 0
+        color3f[] primvars:displayColor = [(0.6, 0.6, 0.6)]
+        double radius = 0.005
+        quatd xformOp:orient = (1, 0, 0, 0)
+        double3 xformOp:translate = (0.5270111826935808, 0.03900952786163586, 0.895397)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+    }
+
+    def Cube "R3_base" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding:physics = </Fixtures/Looks/fixture_phys> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        float physxCollision:contactOffset = 0.002
+        float physxCollision:restOffset = 0
+        color3f[] primvars:displayColor = [(0.45, 0.48, 0.5)]
+        double size = 1
+        quatd xformOp:orient = (0.9914448613738104, 0, 0, 0.13052619222005157)
+        float3 xformOp:scale = (0.05, 0.08, 0.008)
+        double3 xformOp:translate = (0.5270111826935808, 0.03900952786163586, 0.753997)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+}
+

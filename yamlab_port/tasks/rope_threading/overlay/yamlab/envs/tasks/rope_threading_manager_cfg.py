@@ -24,7 +24,7 @@ from yamlab.envs.yam_bimanual_scene import YamBimanualSceneCfg
 from .yam_bimanual_env_cfg import YamBimanualEnvCfg, BaseEventsCfg
 from .rope_threading_lib import rope_params as RP
 
-ASSET_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rope_threading_lib", "assets")
+ASSET_ROOT = os.environ.get("RT_ASSET_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "rope_threading_lib", "assets")
 TIERS = {"RopeThreading-Easy-v0": "easy", "RopeThreading-Medium-v0": "medium"}
 
 

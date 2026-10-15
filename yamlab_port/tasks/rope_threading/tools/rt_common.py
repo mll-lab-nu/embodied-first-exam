@@ -196,7 +196,7 @@ class Runner:
                         return self.run_q(s, qs)
             raise
 
-    def reachable(self, s, T_goal, margin=0.05, grip_open=True):
+    def reachable(self, s, T_goal, margin=0.05, grip_open=True, clear=0.01):
         from reach_map import seeds_for
         Tb = K.world_to_base(T_goal, s)
         q0 = self.cur[0, SL[s]].numpy().astype(float)
@@ -206,7 +206,7 @@ class Runner:
             if ok:
                 c = PN.arm_clearance(s, q, self.fix, other=(o, self.cur[0, SL[o]].numpy().astype(float),
                                                             float(self.cur[0, GI[o]]) < -0.02), grip_open=grip_open)
-                if min(c.values()) >= self.min_clear + 0.01:
+                if min(c.values()) >= self.min_clear + clear:
                     return True
         return False
 

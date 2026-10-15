@@ -13,6 +13,7 @@ Frames: old table frame (mm, origin = tabletop centre, +Z up) -> YAMLab world (m
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -29,8 +30,23 @@ STAND_RADIUS = 0.005       # stand = capsule r 5 mm (old generator: trimesh caps
 # old +Y -> world -X (the rings come toward the arms, the rope's U bulges away from them).
 RELAYOUT = {
     "easy": dict(yaw_deg=90.0, t_xy=(0.58, 0.0)),
-    "medium": dict(yaw_deg=90.0, t_xy=(0.58, 0.0)),
+    # medium (deviation D9, approved 2026-10-12): the old scene fits the table in no rotation, so the ring assembly and
+    # the rope start are placed rigidly each. Values from tools/medium_layout_search.py --reverse (+ --refine): the
+    # oracle feeds the start tip (R3 first); every stroke, both ready poses and the start tip's drag path are
+    # reachable (checked as Runner.goto plans them: home -> ready -> first pinch); the rope start (the easy pose shifted
+    # 5 cm to -y) keeps all stand bases inside its U, >= 63 mm clear. (t x 0.58 was tried: the right arm's drags then
+    # leave too little overhang for the ledge grasp.)
+    # 2026-10-13: fixed by the user (attempts B yaw 0 and C yaw 345 are in STATUS.md); R3 is fed, received, pulled and
+    # kept, the R3 -> R2 transfer is open (STATUS.md "Medium attempt A").
+    # 2026-10-14 (deviations D11 + D12, approved by the user): ring group yaw 15 at t (0.612, -0.351), rope start
+    # mirrored (rope_mirror_deg) at rope_t (0.54, -0.0703); the oracle threads this layout (STATUS.md "Medium, D12").
+    "medium": dict(yaw_deg=15.0, t_xy=(0.612, -0.351), rope_yaw_deg=90.0, rope_t_xy=(0.54, -0.0703), rope_mirror_deg=90.0),
 }
+
+# Exploration only: RT_RELAYOUT (JSON) updates RELAYOUT["medium"] (e.g. {"ring_adjust": {"R2": [0, 0, -20]}}); RT_ASSET_DIR
+# (read by rope_threading_manager_cfg) points the env at the matching assets built with the same variable.
+if os.environ.get("RT_RELAYOUT"):
+    RELAYOUT["medium"].update(json.loads(os.environ["RT_RELAYOUT"]))
 
 # Terminal thresholds. RELEASE = the release profile contact_relaxed_v16 of the released robotangle-r2 instances the
 # STL package comes from (release_profile.py: max speed 1 cm/s, allowance 1 mm, round_ring profile): the task's
@@ -88,8 +104,17 @@ def scene(tier: str) -> dict:
         R = r["aperture_diameter_mm"] / 2000.0 + TUBE_RADIUS
         stand = parts[name + "_stand"]["pose"]["table"]["position_mm"]
         base = parts[name + "_base"]["pose"]["table"]["position_mm"]
-        rings.append(dict(name=name, center=c, normal=n, radius=R, tube=TUBE_RADIUS,
-                          stand_center=to_world(tier, stand)[0], base_center=to_world(tier, base)[0]))
+        ring = dict(name=name, center=c, normal=n, radius=R, tube=TUBE_RADIUS,
+                    stand_center=to_world(tier, stand)[0], base_center=to_world(tier, base)[0])
+        adj = RELAYOUT[tier].get("ring_adjust", {}).get(name)
+        if adj:     # (dx, dy, rot_deg): ring, stand and base move together, rotated about the ring's vertical axis
+            dx, dy, rot = adj; Rm = rot2(rot)
+            for k in ("stand_center", "base_center"):
+                ring[k] = ring[k].copy(); ring[k][:2] = c[:2] + Rm @ (ring[k][:2] - c[:2]) + (dx, dy)
+            ring["normal"] = ring["normal"].copy(); ring["normal"][:2] = Rm @ ring["normal"][:2]
+            ring["center"] = c.copy(); ring["center"][:2] += (dx, dy)
+            ring["base_yaw_deg"] = RELAYOUT[tier]["yaw_deg"] + rot
+        rings.append(ring)
     order = [(e[:-1], 1 if e[-1] == "+" else -1) for e in rope["route"]["order"]]
     return dict(rings=rings, order=order, rope_length=rope["length_mm"] / 1000.0,
                 rope_radius=rope["diameter_mm"] / 2000.0, material=rope["sim_material"])
@@ -109,14 +134,19 @@ def stand_length(stand_center_world_z: float) -> float:
 def start_centerline_world(tier: str) -> np.ndarray:
     """Rope start in world. A tier may give the rope start its own rigid placement (`rope_yaw_deg`, `rope_t_xy`:
     world_xy = Rz(rope_yaw) old_xy + rope_t), when the old scene does not fit the YAM tabletop (medium); the rope
-    shape is unchanged."""
+    shape is unchanged. `rope_mirror_deg` (deviation D11) first reflects the old xy across the line through the origin
+    at that angle (the U's symmetry axis): same shape, point order and predicate, mirrored left <-> right."""
     p = np.loadtxt(SRC / tier / "rope_start_centerline.csv", delimiter=",", skiprows=2)
     cfg = RELAYOUT[tier]
     if "rope_yaw_deg" not in cfg:
         return to_world(tier, p)
     q = p / 1000.0
     out = np.empty_like(q)
-    out[:, :2] = q[:, :2] @ rot2(cfg["rope_yaw_deg"]).T + np.asarray(cfg["rope_t_xy"])
+    xy = q[:, :2]
+    if "rope_mirror_deg" in cfg:
+        a2 = np.radians(2.0 * cfg["rope_mirror_deg"])
+        xy = xy @ np.array([[np.cos(a2), np.sin(a2)], [np.sin(a2), -np.cos(a2)]]).T
+    out[:, :2] = xy @ rot2(cfg["rope_yaw_deg"]).T + np.asarray(cfg["rope_t_xy"])
     out[:, 2] = TABLE_SUPPORT_Z + q[:, 2]
     return out
 

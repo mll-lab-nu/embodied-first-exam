@@ -1,0 +1,356 @@
+{
+ "success": true,
+ "first_success_step": 7233,
+ "steps": 7233,
+ "sim_time_s": 241.0999999999036,
+ "wall_time_s": 1118.3004670143127,
+ "rope_state_sha16": "a6d7bc53ec2c50d3",
+ "final": {
+  "step": 7233,
+  "success": true,
+  "goal_now": false,
+  "hold": 0,
+  "threaded": true,
+  "quiet": true,
+  "intact": true,
+  "crossing_sequence": [
+   "R1-",
+   "R2+",
+   "R3+"
+  ],
+  "thickness_clear": true,
+  "ambiguous": false,
+  "maximum_speed_m_s": 0.0004664129143674406,
+  "max_joint_gap_m": 1.6936659673344279e-07,
+  "strict_threaded": false,
+  "strict_quiet": true,
+  "strict_crossing_sequence": [
+   "R1-",
+   "R2+",
+   "R3+"
+  ]
+ },
+ "variant": "oracle",
+ "args": {
+  "task": "RopeThreading-Medium-v0",
+  "out": "runs/R2a",
+  "variant": "oracle",
+  "stop_after": "",
+  "env_mode": "evaluation",
+  "finish": "hold",
+  "save_ckpt": true,
+  "resume": "",
+  "grasp_from_tip": 0.24,
+  "grip_close": -0.0015,
+  "pitch": 30.0,
+  "speed": 0.05,
+  "feed_start": [
+   0.24,
+   0.2,
+   0.24
+  ],
+  "feed_stop": [
+   0.07,
+   0.07,
+   0.07
+  ],
+  "pull_xyz": [
+   [
+    0.58,
+    -0.1,
+    1.0
+   ],
+   [
+    0.635,
+    -0.532,
+    1.0
+   ]
+  ],
+  "drop_xyz": [
+   [
+    0.58,
+    -0.12,
+    0.9
+   ],
+   [
+    0.5,
+    -0.4,
+    0.95
+   ]
+  ],
+  "orient_vias": [],
+  "chain": [
+   "LR",
+   "RR",
+   "R"
+  ],
+  "flip": 1,
+  "ledge_align": 0,
+  "reseat": 0,
+  "reseat_at": null,
+  "reseat_roll": 0.0,
+  "feed_cone": 25.0,
+  "repush": [
+   0,
+   0
+  ],
+  "repush_from": 0.18,
+  "repush_to": 0.04,
+  "feed_tip": "start",
+  "feed_slant": null,
+  "recv_skew": 0.0,
+  "recv_margin": 0.05,
+  "recv_clear": 0.01,
+  "recv_env_clear": 0.01,
+  "pick_arm": "left",
+  "turn_open": 0,
+  "hold_before": 0.04,
+  "hold_past": 0.13,
+  "hold_aim": 0,
+  "hold_regrip": 0.0,
+  "hold_tipz": 0.0,
+  "pinch_tilt": 0.0,
+  "hold_cross": 0.0,
+  "hold_yaw": 0,
+  "hold_droop": 0.12,
+  "turn_hold": 0,
+  "turn_pinch": 0.12,
+  "turn_regrip": 0.14,
+  "turn_step": 45.0,
+  "turn_drag": 0.06,
+  "min_clear": null,
+  "recv_off": 0.07,
+  "recv_depth": 0.012,
+  "recv_min_from_tip": 0.055,
+  "feed_extra": 0.025,
+  "handover": [
+   0,
+   0
+  ],
+  "lay": [
+   null,
+   [
+    0.51,
+    -0.42,
+    18,
+    0.17
+   ]
+  ],
+  "lay_lift": 0.12,
+  "lay_drag": 0.1,
+  "lay_tilt": 0.0,
+  "pull1": 0.33,
+  "regrip_from_tip": [
+   0.19,
+   0.17,
+   0.15
+  ],
+  "drop_settle_s": 1.5,
+  "finish_wps": [
+   [
+    0.36,
+    -0.02,
+    0.98
+   ],
+   [
+    0.36,
+    0.08,
+    0.86
+   ],
+   [
+    0.38,
+    0.2,
+    0.79
+   ]
+  ],
+  "feed2_stage_y": -0.12,
+  "drag1_from_tip": 0.15,
+  "drag_x": 0.48,
+  "drag1_y": 0.5,
+  "overhang": 0.31,
+  "reorient_x": 0.55,
+  "reorient_y": 0.45,
+  "reorient_z": 0.85,
+  "flip_x": 0.622,
+  "flip_y": 0.345,
+  "flip_sense": 1.0,
+  "handover_xyz": [
+   0.4,
+   0.25,
+   0.83
+  ],
+  "support_from_tip": [
+   0.03
+  ],
+  "regrip_left_off": 0.08,
+  "settle_max_s": 20.0,
+  "nop_steps": 300,
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cuda:0",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "stages": {
+  "ledge_grasp": {
+   "step": 2114,
+   "crossings": [],
+   "from_tip": 0.24,
+   "held_offset": "[1.18776616e-02 2.33881885e-04 5.96475533e-05]",
+   "slip_after_lift_m": 0.0007469412965490882,
+   "tip": "[0.50449921 0.73427735 0.56443407]"
+  },
+  "pick": {
+   "step": 3217,
+   "crossings": [],
+   "zsign": 1,
+   "finger": -0.004883648827672005,
+   "held_offset_deep": "[1.18776616e-02 2.33881885e-04 5.96475533e-05]",
+   "held_offset_after_reorient": "[ 0.01500737  0.00029815 -0.00369326]",
+   "approach": "[ 8.66025608e-01  1.36109194e-06 -4.99999647e-01]",
+   "rope_axis": "[-0.15204329 -0.95264362 -0.26334954]",
+   "tip": "[0.75258122 0.21472972 0.86867202]"
+  },
+  "orient1": {
+   "step": 3443,
+   "crossings": [],
+   "approach": "[ 0.9356034  -0.34164708 -0.08901435]",
+   "zsign": 1.0,
+   "chord_in_tcp": "[ 0.78746754 -0.09795539  0.60852249]",
+   "held_offset": "[ 0.0152197   0.00025382 -0.00392165]",
+   "tip": "[0.73706553 0.08298189 0.99923957]"
+  },
+  "feed1": {
+   "step": 3710,
+   "crossings": [
+    "R3+"
+   ],
+   "ring": "R3",
+   "aim_residual_deg": 1.4228390348440354,
+   "push_fraction": 1.0,
+   "push_extra_m": 0.025,
+   "tip_past_m": 0.19062671184581026,
+   "tip_radial_m": 0.004744891974756459,
+   "slip_m": 0.0003405805952730606
+  },
+  "recv1": {
+   "step": 4103,
+   "crossings": [
+    "R3+"
+   ],
+   "s_from_tip": 0.12334126668762774,
+   "held_offset": "[ 9.45902457e-03  7.77379974e-05 -3.00141529e-04]"
+  },
+  "pull1": {
+   "step": 4166,
+   "crossings": [
+    "R3+"
+   ],
+   "slip_m": 2.4446105401941547e-06,
+   "tip": "[ 0.59593503 -0.21304158  0.95480782]",
+   "past_m": 0.25883093124544515
+  },
+  "drop1": {
+   "step": 4334,
+   "crossings": [
+    "R3+"
+   ],
+   "tip": "[ 0.5899155  -0.20102112  0.80710903]",
+   "past_m": 0.2944964583050158
+  },
+  "regrip1": {
+   "step": 4674,
+   "crossings": [
+    "R3+"
+   ],
+   "from_tip": 0.19,
+   "held_offset": "[0.01178274 0.00015949 0.00222109]",
+   "tip": "[ 0.61849308 -0.1247285   0.81114772]"
+  },
+  "orient2": {
+   "step": 5008,
+   "crossings": [
+    "R3+"
+   ],
+   "approach": "[ 0.97072822 -0.24009892 -0.00626272]",
+   "zsign": -1.0,
+   "chord_in_tcp": "[ 0.68619198 -0.03448979 -0.72660238]",
+   "held_offset": "[ 1.16807379e-02 -5.71209033e-06  2.16909737e-03]",
+   "tip": "[ 0.55887555 -0.22616122  1.0235878 ]"
+  },
+  "feed2": {
+   "step": 5213,
+   "crossings": [
+    "R2+",
+    "R3+"
+   ],
+   "ring": "R2",
+   "aim_residual_deg": 3.8395145489218785,
+   "push_fraction": 1.0,
+   "push_extra_m": 0.025,
+   "tip_past_m": 0.1429827445756719,
+   "tip_radial_m": 0.003984555962387036,
+   "slip_m": 0.000888861788629387
+  },
+  "clamp2": {
+   "step": 5559,
+   "crossings": [
+    "R2+",
+    "R3+"
+   ],
+   "ring": "R3",
+   "before_m": 0.07,
+   "tip": "[ 0.59067497 -0.38035784  1.05705455]"
+  },
+  "recv2": {
+   "step": 5991,
+   "crossings": [
+    "R2+",
+    "R3+"
+   ],
+   "s_from_tip": 0.0714474592975445,
+   "held_offset": "[0.01299169 0.00020989 0.00012685]"
+  },
+  "lay2": {
+   "step": 6606,
+   "crossings": [
+    "R2+",
+    "R3+"
+   ],
+   "from_tip": 0.17,
+   "lay_off_u_deg": 47.83480706538985,
+   "finger": -0.004918629769235849,
+   "held_offset": "[ 0.03111057  0.00032017 -0.0082962 ]",
+   "chord_deg": 58.587257436171015,
+   "tip": "[ 0.62146403 -0.36424246  0.77497182]"
+  },
+  "orient3": {
+   "step": 7024,
+   "crossings": [
+    "R2+",
+    "R3+"
+   ],
+   "approach": "[ 0.92520567 -0.1995414  -0.32276572]",
+   "zsign": 1.0,
+   "chord_in_tcp": "[0.8420375  0.13977831 0.52099411]",
+   "held_offset": "[ 0.03123514  0.00029936 -0.00837453]",
+   "tip": "[ 0.60982167 -0.34414212  1.05698861]"
+  },
+  "episode_end": {
+   "terminated": true,
+   "truncated": false,
+   "step": 7233
+  }
+ }
+}

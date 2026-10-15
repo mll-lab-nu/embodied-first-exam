@@ -1,6 +1,8 @@
 # rope_threading -> YAMLab: STATUS
 
-Updated 2026-10-12 ~18:30 vast time, FINAL hand-over state (agent: rope_threading task agent). Nothing of this agent
+Updated 2026-10-14 ~19:00 local (orbits3 00:00 UTC): medium DONE on the D12 layout (deliverable mor1, see "Medium, D12
+layout"); medium runs on orbits3 `/data/pingyue/yamlab/runs/rope/` (`work/runs/<run>`, `work/render/`).
+Easy: 2026-10-12 ~18:30 vast time, FINAL hand-over state (agent: rope_threading task agent). Nothing of this agent
 is running on vast. Local source of truth: this folder. vast:
 `/workspace/yamlab_port/runs/rope_threading/` (`yamlab/` = our copy + overlay, `task/` = mirror of this folder,
 `work/` = logs and runs).
@@ -10,7 +12,7 @@ is running on vast. Local source of truth: this folder. vast:
 | tier | task + goal check | rope model | oracle (from reset, mode=evaluation) | replay | nop / naive | metrics |
 |---|---|---|---|---|---|---|
 | easy | DONE: `RopeThreading-Easy-v0`, release-profile predicate (strict logged) | D6 capsule chain, stiffness validated | SUCCESS: or3, success at control step 4963 (165.4 s sim, 475 s wall) | open-loop replay x2 SUCCESS at step 4963, bit-identical to the oracle and to each other on vast (rope_state_sha16 20fa2e63d0ea5887) | nop2 FAILS (180 s, not threaded); naive2 (no R2 feed) FAILS (sequence R1- only, quiet); naive1 (tip beside R1) FAILS (no crossing) | metrics.json per run |
-| medium | registered (`RopeThreading-Medium-v0`), assets NOT built, no layout chosen | same | NOT STARTED (re-layout study only, see "Medium" below) | - | - | - |
+| medium | DONE: `RopeThreading-Medium-v0` on the D12 layout (code default since 2026-10-14; deviations D9-D12, D10 = 300 s limit), same predicate | same | SUCCESS: mor1, success at control step 7233 (241.1 s sim of 300 s, 1157 s wall on orbits3), crossings [R1-, R2+, R3+] | open-loop replay x2 (mrp1, mrp2) SUCCESS at step 7233, bit-identical to the oracle and to each other (rope_state_sha16 a6d7bc53ec2c50d3) | mnop1 FAILS (300 s time-out, no crossing); mnaive1 (tip beside R3, the first ring fed) FAILS (no crossing; run ends at the receive, grasp blocked); mnaive2 (naive_nolast: R1 never fed) FAILS (sequence [R2+, R3+], quiet) | metrics.json per run; video `video/medium/` |
 
 Evidence (vast `work/runs/`, copies of small files in `evidence/`):
 - or3 (deliverable oracle): actions.npy (4963 x 14), states.npz (rope link poses, both TCPs, joints, actions per step),
@@ -18,7 +20,10 @@ Evidence (vast `work/runs/`, copies of small files in `evidence/`):
 - rp1, rp2: replays of or3/actions.npy (metrics.json, states.npz). nop2, naive1, naive2: from-reset negatives.
 - or1/or2: hold-finish runs (earlier, strict predicate as success); or4: release finish run to its end (diagnostic,
   env mode "replay", no terminations).
-- Video: not rendered (vast has no RTX). Lead: run `tools/replay.py --actions or3/actions.npy --enable_cameras` on ws.
+- Video: `video/easy/` (the lead's state-playback render of or3 on ws).
+- medium (orbits3 `work/runs/`, copies in `evidence/`): mor1 (deliverable: actions.npy 7233 x 14, metrics.json, goal-log tail),
+  mrp1, mrp2 (replays: metrics.json), mnop1, mnaive1, mnaive2 (negatives: actions, metrics, goal-log tail). R2a / R2a_rp: the
+  development run mor1 reproduces (same actions byte for byte). Video `video/medium/{top,rings}.mp4` (state playback of mor1).
 
 ## Re-layout (old table frame mm -> YAM world m)
 
@@ -82,6 +87,145 @@ profile, as intended by its allowance).
   task has none and the oracle hangs the rope end over the table edge).
 - D7 YAMLab's recorder writes /tmp/isaaclab/logs/dataset.hdf5 for every process; two concurrent runs fail on its
   h5 lock, so the task cfg points the (unused, EXPORT_NONE) recorder at a per-process dir.
+- D9 (medium only; approved by the user 2026-10-12 via the YAMLab coordinator) the ring assembly and the rope start
+  are placed rigidly EACH. Reason: the old medium scene (three rings + stand bases + rope start) needs >= 0.623 m of
+  table depth in any rotation; the YAM table collider has 0.595 m (x 0.3025..0.8975). Transform
+  (`threading_geom.RELAYOUT["medium"]`): rings, stands, bases `world_xy = Rz(yaw_deg) old_xy + t_xy`; rope start
+  `world_xy = Rz(rope_yaw_deg) old_xy + rope_t_xy` (z as easy). Ring geometry, heights above the table, relative ring
+  poses, order and direction are unchanged; the rope shape is unchanged and unthreaded; relative to the rings the
+  rope start is turned 90 deg (its 0.70 m wide U only fits along the table width). First values (2026-10-12 21:50, superseded by D11/D12 below; from
+  `tools/medium_layout_search.py --reverse` + `--refine`): rings yaw 195, t (0.54, 0.12); rope yaw 90, t (0.58, -0.05)
+  = the easy rope start shifted 5 cm to -y, all stand bases inside its U, >= 63 mm clear (t x 0.58 was tried 10-13: the right arm then drags too little overhang for the ledge grasp). The first proposal (yaw 0,
+  t (0.44, -0.08), `medium_layout_v1.png`) failed in Isaac: the R3 stand stood 0.2 m in front of the left shoulder
+  (no collision-free ready pose) and the end's pick region lay under R3. Figure: `evidence/medium_layout/medium_layout_v2.png`.
+- D10 (medium only; approved by the user 2026-10-13 via the YAMLab coordinator) episode length 300 s instead of
+  YAMLab's default 180 s (`configs/tasks/rope_threading.yaml` `variants:`; easy keeps 180 s). The old task has no time
+  limit; three rings take ~4 min at the oracle's pace (md49 was truncated at 180 s during the second ring's re-grasp).
+- D11 (medium only; proposed by the user 2026-10-14 ("why can the rope start not be on the left"), approved via the
+  YAMLab coordinator; implemented with D12, code default since 2026-10-14) the rope start is mirrored across the U's
+  symmetry axis (the U still bulges away from the robot; the material start, the fed end, lies on the left next to R3, the
+  end on the right). Rope shape, material order and the success predicate are unchanged (the predicate uses point order and
+  ring normals, not handedness); a mirror is not a rigid motion, so it relaxes D9's "rope shape unchanged". Evaluation:
+  `evidence/medium_layout/yaw15_mirror_eval.md`.
+- D12 (medium only; approved by the user 2026-10-14 via the YAMLab coordinator: ring-group translation, with margin) the yaw 15
+  ring group of D11 moves from t (0.532, -0.241) to t (0.612, -0.351) (yaw 15 and the mirrored rope start kept); the rope t is
+  re-chosen: (0.54, -0.03) in the mirrored convention (RT_RELAYOUT rope_t_xy (0.54, -0.0703)), the valid placement (>= 3 cm from
+  bases/posts, left pick and the pick's first drag feasible) nearest the D11 rope. Reason: at the D11 t, R3 is too close to the left
+  shoulder (easy's flip/roll/push moved rigidly onto R3: IK 33/38; the oracle's settle onto the R3 feed frame fails, M1-M3). Choice
+  (`tools/layout_eval_shift.py`, 2 cm grid x 0.532-0.652, y -0.271..-0.391): every check passes at t and its 8 neighbours; margin
+  +x >= 4 cm (grid end), -x 6 cm, +y 6 cm, -y >= 4 cm; weakest step R1 feed (right arm, 2 poses, the most anywhere). Backup t
+  (0.592, -0.351). Code default since 2026-10-14: `threading_geom.RELAYOUT["medium"]` = dict(yaw_deg=15, t_xy=(0.612, -0.351),
+  rope_yaw_deg=90, rope_t_xy=(0.54, -0.0703), rope_mirror_deg=90), `assets/medium/` = the build with these values (orbits3
+  `assets_s612`, byte-identical); RT_RELAYOUT / RT_ASSET_DIR remain for exploration only. Evidence: `evidence/medium_layout/yaw15_shift_eval.md`.
+
+## Medium, D12 layout: DONE (2026-10-14, orbits3; deliverable mor1)
+
+Deliverable (final code, code-default layout, no RT_* variables; mode evaluation, one continuous run from env.reset()):
+`run.sh 7200 task/tools/oracle.py --task RopeThreading-Medium-v0 --out runs/mor1 --feed_tip start --pick_arm left --flip 1
+--ledge_align 0 --reseat 0 --finish hold --repush 0 0 --chain LR,RR,R --grasp_from_tip 0.24 --overhang 0.31 --recv_env_clear 0.01
+--flip_x 0.622 --flip_y 0.345 --pull_xyz [[0.58,-0.1,1.0],[0.635,-0.532,1.0]] --drop_xyz [[0.58,-0.12,0.9],[0.5,-0.4,0.95]]
+--lay [null,[0.51,-0.42,18,0.17]] --lay_drag 0.10` (the recorded args of mor1 and R2a differ only in --out and the development flag
+--save_ckpt).
+- mor1: success at control step 7233 (241.1 s of the 300 s limit, wall 1157 s), rope_state_sha16 a6d7bc53ec2c50d3; at the latch
+  threaded, crossings [R1-, R2+, R3+], quiet (max FD speed 0.47 mm/s), intact (max joint gap 1.7e-7 m); strict_threaded false
+  (rope on a rim, D2), strict_quiet true. actions.npy is byte-identical to R2a's, metrics `final` and all stage logs equal:
+  the pinch-closed check added after R2a (`check_closed`, reads the finger only, never steps the sim) changes no action.
+- Replays (`replay.py --actions mor1/actions.npy`): mrp1, mrp2 success at step 7233, rope_state_sha16 a6d7bc53ec2c50d3 (both).
+- Negatives (same arguments + --variant): mnop1 (`--variant nop --nop_steps 9000`) holds the start pose and is truncated at
+  step 9001 (300.0 s): no crossing, success false. mnaive1 (`naive`: the first feed passes the tip 13 cm beside R3, the first ring
+  fed) ends the feed 0.19 m past R3's plane, 0.19 m off-axis, no crossing; the right's receive grasp is then blocked (jaw stopped at
+  62 mm, `grasp_right_blocked`, step 4004) and the run stops: success false, sequence []. mnaive2 (`naive_nolast`: the oracle up to
+  the receive past R2, then 20 s still) never feeds R1: sequence [R2+, R3+], quiet (1.5 mm/s), threaded false, success false
+  (stops at step 6591).
+- Video (state playback, `setup/render_states.py`, same pipeline as easy): dump of the actions on orbits3 (R2a/actions.npy, byte-identical to
+  mor1's; no cameras; success at the same step 7233, the terminal step is not recorded: 7232 states), render on orbits3's RTX 4090 (libGLU.so.1 + libOpenGL.so.0
+  copied to `/data/pingyue/yamlab/deps/lib`, LD_LIBRARY_PATH), every 2nd state at 15 fps (real time), 3617 frames, pose readback
+  error 7.7e-7 m. `video/medium/top.mp4` (top camera), `video/medium/rings.mp4` (render-only camera from the far-left corner,
+  eye (0.90, 0.35, 1.35) -> (0.62, -0.17, 1.02), fov 55 deg: all three rings and the route).
+
+Development run R2a (the same actions; launched with `shift_run.sh s612`, i.e. the D12 layout via RT_RELAYOUT / RT_ASSET_DIR):
+
+`shift_run.sh s612 R2a --chain LR,RR,R --grasp_from_tip 0.24 --overhang 0.31 --recv_env_clear 0.01 --flip_x 0.622 --flip_y 0.345
+--pull_xyz [[0.58,-0.1,1.0],[0.635,-0.532,1.0]] --drop_xyz [[0.58,-0.12,0.9],[0.5,-0.4,0.95]] --lay [null,[0.51,-0.42,18,0.17]]
+--lay_drag 0.10` (mode evaluation, finish hold): success at control step 7233 (241.1 s of the 300 s limit, wall 1118 s),
+rope_state_sha16 a6d7bc53ec2c50d3; crossings [R1-, R2+, R3+], quiet 15 steps (max FD speed 0.5 mm/s), tip 0.122 m past R1 (16 mm
+off-axis). Up to recv2 (step 5991) the run is step-identical to X6a. Actions: `work/runs/R2a/actions.npy` (7233 x 14; copy +
+metrics in `evidence/R2a/`). Open-loop replay (`replay.py`, R2a_rp): success at 7233, same rope_state_sha16.
+- R1 stage (`oracle.lay_regrip`, new `--lay`): the right, holding the end 0.071 m from the tip after receiving R2, carries it to the
+  table under R1's feed line and drags it 0.10 m along R1's horizontal feed direction yawed 18 deg, lets go, pinches the rope 0.17 m
+  from the tip top-down (z_tcp toward the tip) and lifts; to_feed_frame then turns in place about the grip onto an R1 feed frame
+  (chord correction 58.6 deg, direction d1, approach (0.93, -0.20, -0.32)); after a lay it also requires the whole push to be a
+  feasible line (`stroke_ok`; L2r's frame 10 deg off d1 left the workspace mid-push and fed only 0.5 of the stroke). Stage times:
+  lay 20.5 s, orient 13.9 s, feed + latch 7.0 s.
+- Why not the others (offline `tools/r1_screen.py` on the X6a states, Runner criteria): the left reaches no rope point between R2
+  and the right hand (0/68 poses at every 0.03 m from 0.10 to 0.40 m from the tip); the rope hanging from R2 after a drop gives 2-3
+  reachable grasps per distance and none turns onto a feed frame, neither in place nor by a joint-space route (direct or via pose).
+- Dev runs from X6a/ckpt_recv2: L1r (lay at 0.15 m, 0.20 m drag) threads R1 (tip 0.048 m past) but never goes quiet: the drag pulled
+  the tail through R3 until the material end hung 2 cm above the table and chattered (FD 1.2-5 cm/s for 20 s); L2r (0.17 m, 0.20 m
+  drag) succeeds but marginally (push 0.5, tip 0.013 m past, 15 cm of tail left behind R3); L3r (= R2a's settings) succeeds with
+  tip 0.123 m past and the tail still on the table. The 0.10 m drag pulls ~0.3 m less rope through R3 than the 0.20 m drag.
+- Figure: `evidence/medium_layout/r1_lay_R2a.png`; run table: `evidence/medium_layout/yaw15_shift_eval.md`.
+
+## Medium attempt A (2026-10-12/13): yaw 195, reverse route — stopped at the R3 -> R2 transfer
+
+Layout `RELAYOUT["medium"] = dict(yaw_deg=195.0, t_xy=(0.54, 0.12), rope_yaw_deg=90.0, rope_t_xy=(0.58, -0.05))`;
+oracle `--feed_tip start --chain RL RL L --flip 1 --reseat 1 --ledge_align 1 --feed_extra 0.025 --recv_min_from_tip 0.055
+--handover 1 0 --regrip_from_tip 0.19 0.17 0.15 --feed_start 0.24 0.20 0.24 --feed_stop 0.07 0.07 0.07` (md26/md27 on orbits3).
+Reached: right picks the start tip at the right edge, table re-seat, flip, R3 fed (R3+, tip 12.9 cm past), left receives,
+pulls 0.22 m, drops (the rope stays threaded). Blocked: R2 can only be fed by the right while the left received R3;
+drop + regrip (md26/27/34/35/39), in-air handover (md31, IK scan of 108 left positions), staging near R2's feed line
+(md32/33/36-38) all fail; rotating the rings +-15/30 deg or pushing them 2-8 cm out does not help (IK); 90 % of the left's
+failures are collisions with R1's ring/stand. Evidence: `evidence/medium_layout/blocker_R3_to_R2_transfer.png`,
+`stuck_md26_R3done_*.png`, `stuck_md31_handover_*.png`. Physics found on the way: the rope pivots ~23 deg in the YAM jaws at the
+ledge grasp (fingertip-only contact) and its free end curls with the rest shape (~1.5 deg/cm, rest = initial U).
+
+## Medium attempt B (2026-10-13): yaw 0, t (0.40, -0.16), forward route — stopped at R1
+
+Chosen because each ring's receiver feeds the next ring there (no transfer). With the rope start at t (0.58, -0.01) the
+left's first pinch lay under R3 (md40); at t (0.58, 0.03) the pick passes (md42: drags, ledge grasp, table re-seat to
+6.9 deg), but no rotation onto an R1 feed frame exists: the left's only R1 feed in the reach search is 21 deg off the ring
+normal and the oracle feeds on-axis. The layout refine now checks the pick exactly as oracle.pinch / Runner.reachable
+(seeded from the ready q, the other arm at its ready q): it reproduces md1-md4 and md40 (fail) and md5 (pass).
+
+## Medium attempt C (2026-10-13): yaw 345, t (0.42, -0.08), rope t (0.58, 0.09), forward route — stopped at R1
+
+From the re-screen of the approved D9 types (no transfer, or a feasible one; feeds within 25 deg of the ring normal):
+only yaw 0 (attempt B) and this layout pass ready + pick. Chain LR, RL, L (as easy).
+- md43/md44: the pick passes; R1 orient fails. The pick ends with the left top-down at the edge of its workspace (tip
+  toward +y); in-place rotation, lifting > 6 cm or moving inward > 5 cm has no IK. The held chord is 38 deg off
+  the gripper axis after the lift (13 deg while the free end is pressed flat). No feed frame with the held chord within
+  25 deg of R1's normal is reachable (0 of 888).
+- Oracle-only changes added (tier defaults for medium): `--reseat_at` (press at (0.65, 0.45), tip yawed to 90 deg),
+  `--reseat_roll` -90 (roll about the rope axis after the press: jaw axis vertical), `--feed_cone` 25 (ring-1 feed
+  directions up to 25 deg off d_1), and a joint-space route through `--orient_vias` [0.60, 0.10, 1.25] already in the
+  feed orientation (offline transition search over press point x yaw x roll x route: 32 of 768 candidates pass).
+- md45: the route reaches the R1 feed start (feed direction 10 deg off the normal), but the held chord is 51 deg off
+  the gripper axis (15.7 deg pressed); aim corrections of 49 / 25 / 12 deg are unreachable; the tip stops 3.6 cm before R1.
+- Probes (orbits3 copy only, reverted): squeeze +44 % from the ledge grasp on (md48): 17.5 -> 51.9 deg; rope
+  torsional contact patch 4 mm (md47): 8.6 -> 47.7 deg. Neither changes the angle.
+- Mechanism (measured afterwards from the states): the pinch holds the rope's angle rigidly; it is set when the ledge
+  grasp closes on the overhang, which already bends down there (md43: 53 deg at closing, 37-40 deg after the press
+  and slide; md45: 29-32 deg in the gripper frame while the joint route turns the gripper by > 100 deg). The chord adds
+  the free end's curl (rest shape) and sag. In-air grasps (receive) align to <= 7 deg (md34). Gravity does not turn
+  the rope in the pinch; the earlier reading of md43 (13 -> 38 deg = a turn in the pinch) was wrong.
+- Options figure sent (evidence/medium_layout/deviation_options_grasp_pivot.png); the user rejected the grasp assist
+  and fixed the layout at yaw 195 (next section).
+
+## Medium, fixed layout (user, 2026-10-13): yaw 195, t (0.54, 0.12), rope t (0.58, -0.05)
+
+Code and assets are back at attempt A's layout and oracle defaults; every figure uses tools/plot_layout.draw_state (top
+view, robot at the bottom, R1 left, R3 right). Current blocker: evidence/medium_layout/current_blocker_yaw195.png (md34:
+R3 done, the left holds the end past R3; R2 needs the right). Action-only methods asked by the user, offline:
+- (i) jaw axis vertical: feed frames reachable (start + end grip, within 25 deg): R3 right 34, R2 right 2 / left 4
+  (16 deg off), R1 left 36. The right's R3 feed already has the jaw axis near vertical (z -0.95): the 21 deg (pinch) /
+  36 deg (chord) offset there is horizontal, from the ledge grasp; the rope does not sag in the pinch (chord 2-4 deg
+  above the gripper axis).
+- (ii) pre-compensation at R3 (md26): 25-50 % of the 36 deg plus an off-axis feed direction brings the chord within
+  6 deg of the normal (reachable); the full 36 deg is out of reach (start pose out of the workspace, or wrist joints 4/5
+  80-90 deg past their limits). R2 does not need it (in-air grasps <= 7 deg).
+- (iii) closer grasp + short pushes: concerns the R3 push (which passes); not the R2 blocker.
+The R2 blocker is the left -> right transfer. The left can feed R2 itself (4 frames, 16 deg off), so a path without an
+arm-to-arm transfer is evaluated next; option 3 (rings placed one by one) + an action is the fallback.
 
 ## Oracle progress (easy)
 
@@ -138,7 +282,7 @@ moves. The released end state passes the release predicate but not the strict on
 - Reach: the right arm can support the rope only near the end tip, with the left pinch carried to about
   (0.52, 0.18-0.25, 0.86-0.90) (`probes/handover_search2.py`).
 
-## Medium (R1-, R2+, R3+): what was done, what is missing
+## Medium (R1-, R2+, R3+): first reach study (2026-10-12; superseded by the sections above)
 
 - The old medium scene does NOT fit the YAMLab tabletop collider (x 0.3025..0.8975 = 0.595 m deep, y +-0.65) in any
   rotation: the footprint of rope start + stand bases needs >= 0.623 m of depth (best yaw 45 deg; yaw 0: 0.708 x
@@ -162,8 +306,8 @@ moves. The released end state passes the release predicate but not the strict on
 
 ## Blockers
 
-None for easy. Medium needs a new layout (see State). Notes for the lead:
+None for easy or medium. Notes for the lead:
 - The goal latches before the release part of the default finish, because the rope is already threaded and still
   while the right holds it (the old task's session also ends on the first success tick). The release finish itself
   ends in a state that passes the release predicate but not the strict one (or4).
-- `tools/resume.py` + `--save_ckpt` (stage snapshots) are development helpers only; all deliverables run from reset.
+- `--save_ckpt` / `--resume` (stage snapshots) are development helpers only; all deliverables run from reset.
