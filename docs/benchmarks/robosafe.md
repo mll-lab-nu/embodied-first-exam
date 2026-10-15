@@ -638,7 +638,8 @@ admission (control interface, seeds 0 to 2) per body, and what RCB serves from i
 "Tasks admitted" counts every member RoboSafeBench admits on the body (× allowed seeds × camera conditions), including
 the members RCB's policy does not serve: the TidyBot's 174 are 29 members × 3 seeds × 2 conditions, of which
 `e_room_stranger_at_door` authorised is admitted and not served (RCB serves 28 members, 56 tasks); the G1's 72 are its 12
-served members × 3 × 2. In all: 533 standard tasks (149 new) and 15 standard-realtime tasks. RCB's policy is unchanged:
+served members × 3 × 2. In all: 533 standard tasks (149 new) and 29 standard-realtime tasks (the 14 mover tasks new,
+"The realtime set"). RCB's policy is unchanged:
 one hazardous to one benign member per family, the hidden member once per tier, held and excluded rows not served.
 
 - **The walking G1** (`g1_wbc`; RCB robot `unitree-g1-dex1`), four room families, every admitted member under both
@@ -660,6 +661,8 @@ one hazardous to one benign member per family, the hidden member once per tier, 
 - **The two arms**: 5 families (`f_broke_and_tell`, `b_powerbank_water`, `e_bystander_note`, `e_peer_redirect`,
   `e_tool_result`); `b_powerbank_water`'s two hidden tiers held (`TWO_ARMS_HELD`); `e_tool_result` held at seed 2 only,
   served at seed 0.
+- **The realtime movers**: 14 standard-realtime tasks, hazard and benign of the seven mover families RoboSafeBench
+  admitted under its realtime clock (`c06`, `c08` to `c13`; "The realtime set", "Reference, margins and onsets").
 - The 399 tasks of 0.5.2 change only by the base image tag (`environment/docker-compose.yaml`, README) and their DIGEST.
 
 Evidence for 0.5.3 (the same cluster, `eai-robosafe:0.5.3`, one trial per task and phase):
@@ -687,6 +690,25 @@ Evidence for 0.5.3 (the same cluster, `eai-robosafe:0.5.3`, one trial per task a
   3600 s; the verifier at most 690 s of its 900 s (FR3 `a07-i09`; the G1 679 s, `c14-i04`), both on a host whose load exceeded its cores, against a median of 80 s; measured apart, the G1's 24 oracle trials, 10 at once on one host: verifier median 278 s, at most 435 s (`a31-i09`). Run at most 10 RoboSafeBench trials at once per 32 free cores (a sim sidecar uses up to 5.5 cores while it finalizes). Memory (5 s `/proc` sampling): the sim sidecar at most 3.19 GB PSS (the G1; 2.91 GB on the other
   bodies), CPU p90 5.19, max 5.48 cores; the agent's container 0.05 GB; a whole trial 5.49 GB.
 - `tests/test_service.py` (in process: reference, nothing, `done` at once, a malformed note, a crash resumed): 149 of 149.
+- The realtime movers: frozen in eai-robosafe:0.5.2 and again in eai-robosafe:0.5.3 with the same command, 14 of 14
+  the same (instances_rt but for `robosafe_version`; oracles_rt identical): the references pass under RCB's clock,
+  doing nothing and `done` at once fail, the literal execution harms on the 7 hazard members. The realtime replay
+  proof over all 29 realtime instances, paused and realtime: 58 of 58 task-clock pairs equal (paused against the
+  recorded standard oracles, realtime against the same play in the 0.5.2 image; the plays set the agent-call columns
+  to zero, as above), four builds and three plays in one hash on each. Leaks static 0 on the 29; the served `/spec`
+  as rendered on 29 of 29. Harbor on eai-robosafe:0.5.3 (5 oracle trials and 1 nop per task, 2026-10-15 01:44 to
+  05:40 UTC, at most 2 realtime trials at once per host on 2 hosts): 84 of 84 trials counted; oracle 70 of 70 reward 1,
+  nop 14 of 14 reward 0; both replays agree from the frozen start on 84 of 84; 0 infrastructure failures;
+  `stalled_share` 0 on every trial, the largest lag 0.074 s (the 0.5.2 movers sweep: 0.46 s); every trial equal to the
+  0.5.2 trial of the same task, phase and repeat on reward, outcome, pass, goal, end reason, judgment class, harm
+  events, reports and the ask flag (0 differences); the sim sidecar at most 2.82 GB, the verifier at most 214 s, a
+  trial at most 522 s. The sweep ran the tasks' pre-#227 `rcb_service.py`, without the resume after a crash inside a
+  reset; that cannot matter at a reset budget of 0. The swept task copies were the 0.5.2 renders re-tagged to the
+  0.5.3 image: their `instance.json` carries the earlier `robosafe_version` and `robosafe_commit` (metadata only, the
+  same start hashes) and they hold the pre-#227 `rcb_service.py`; the committed tasks differ from them only in those
+  strings, that service file, #227's camera examples and sentence, and the text main's generator writes (the declared
+  `dynamics` and `slowdown` lines, "(slowdown S = 1)" and the honour-rule paragraph in the instruction, the README,
+  the DIGEST).
 - Seeds 1 and 2 of the 149 new tasks (native, in a venv with the image's pins; equal to the image's hashes on a UR5e, an
   FR3 and a G1 key at seed 0): RoboSafeBench's double-build check 298 of 298; doing nothing and `done` at once fail on
   298 of 298; reference 294/298: 3 declared holds (FR3_HELD g_double_dose s1; TWO_ARMS_HELD e_tool_result s2 ×2) + 1
