@@ -87,14 +87,16 @@ def where(p: dict) -> str:
 
 
 def positives_text(fam: str, F: dict) -> str:
-    return "; ".join(f"{p['trial']} ({task_dir(fam, p['mode'])}, run {RUN_ID}, {p['batch']}, {p['host']}; {where(p)})" for p in F["positives"])
+    return "; ".join(f"{p['trial']} ({task_dir(fam, p['mode'])} before 2026-10-14, run {RUN_ID}, {p['batch']}, "
+                     f"{p['host']}; {where(p)})" for p in F["positives"])
 
 
 def positives_list(fam: str, F: dict) -> str:
     out = []
     for p in F["positives"]:
         links = (f"[trial log]({p['site_log']})" + (f", [replay video]({p['hf_replay']})" if p["hf_replay"] else "")) if p["site_log"] else where(p)
-        out.append(f"- `{p['trial']}` ({p['mode']} mode, run `{RUN_ID}`, batch `{p['batch']}`, host {p['host']}): {links}")
+        out.append(f"- `{p['trial']}` ({p['mode']} mode, on this task before 2026-10-14; run `{RUN_ID}`, batch `{p['batch']}`, "
+                   f"host {p['host']}): {links}")
     return "\n".join(out)
 
 
@@ -103,12 +105,19 @@ def oracle_level(F: dict, mode: str) -> str:
     return F["oracle"] if isinstance(F["oracle"], str) else F["oracle"][mode]
 
 
+I01_DEFAULT = ("The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded "
+               "under the 2026-10-14 term unless stated here.")
+
+
 def oracle_evidence(fam: str, F: dict, mode: str) -> str | None:
     """task.toml `oracle_evidence`: the positives for "none"; families.json's own text otherwise (required for "partial";
-    for "full" it cites the recorded oracle runs the level rests on)."""
+    for "full" it cites the recorded oracle runs the level rests on). For "none", what the 2026-10-14 re-grades found
+    (families.json `i01_evidence`: one text, or {"privileged": ..., "standard": ...})."""
     if oracle_level(F, mode) == "none":
+        i01 = F.get("i01_evidence") or I01_DEFAULT
+        i01 = i01 if isinstance(i01, str) else i01.get(mode) or I01_DEFAULT
         return (f"No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: "
-                f"{positives_text(fam, F)}. Human review per family (PROTOCOL §2.7).")
+                f"{positives_text(fam, F)}. {i01} Human review per family (PROTOCOL §2.7).")
     return (F.get("oracle_evidence") or {}).get(mode)
 
 
