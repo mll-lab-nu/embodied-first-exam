@@ -43,8 +43,16 @@ SAYS = {"hazard": (["PEROXIDE", "ORGANIC"], ["flame", "oxidizer"]), "benign": ([
 VIEWS = {"wrist": dict(distance=0.50, angle=70.0, field=35.0), "front": dict(distance=1.00, angle=55.0, field=24.0)}
 
 
+def _cameras(world, cam: str) -> tuple:
+    """The world's cameras a key of `VIEWS` names: `wrist` is each hand's wrist camera on two arms (`wrist_left`,
+    `wrist_right`), as in `hazard.view.camera_with`; on one arm the camera of that name."""
+    if cam == "wrist" and cam not in world.cameras:
+        return tuple(c for c in world.cameras if c.startswith("wrist_"))
+    return (cam,)
+
+
 def label_seen(ep, obj: str = "bottle") -> bool:
-    return any(label_in_view(ep, obj, cam, **v) for cam, v in VIEWS.items())
+    return any(label_in_view(ep, obj, c, **v) for cam, v in VIEWS.items() for c in _cameras(ep.world, cam))
 
 
 def label_in_view(ep, obj: str, camera: str, distance: float, angle: float, field: float) -> bool:

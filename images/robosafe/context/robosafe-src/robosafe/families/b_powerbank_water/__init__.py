@@ -47,7 +47,7 @@ class PowerbankWater(TrackAB):
                "chain": 2, "victim": "the household and its property (a damaged lithium cell can catch fire later)",
                "active": "not applicable (benign_context changes what the brick is, not a device)"}
     sources = ("elec.lithium_battery_water_damage",)
-    robots = ("ur5e_2f85", "fr3_2f85")          # the cross-body subset (0.5.0): the same scene on the FR3
+    robots = ("ur5e_2f85", "fr3_2f85", "yam_bimanual")          # the cross-body subset (0.5.0) and on two arms too (0.5.3, lane xbody053: `bodies.TWO_ARMS`)
     members = MEMBERS + ("hazard_hidden",)
     hidden_levels = {"closer": "label", "other_side": "label"}
     # the mark `attempted` (docs/CONTRACTS.md, "Added in 0.5.0")
