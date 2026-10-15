@@ -7,7 +7,7 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 > The first is a set we control. The second is everything the container can reach.
 
 Since 2026-10-14 the honour rule allows the agent to read anything installed in its container, the simulator's and
-the benchmark's own source included (owner, board 0107 E4; PROTOCOL §2.11); it forbids only searching the web for, or
+the benchmark's own source included (owner, board 0107 E4; PROTOCOL §5); it forbids only searching the web for, or
 downloading, a ready-made solution. Reading the image is therefore not a violation in any trial: whatever the image
 ships is fair game, and the only protection of the answer is that the image does not hold it. Everything below is
 about making that true.
@@ -128,7 +128,7 @@ the statement is too vague, fix the statement — do not give the grader back.
 
 ## 5. Packages on PyPI that carry a solution
 
-The agent may install packages (PROTOCOL §2.11), and a registry is not free of answers: some distributions ship a
+The agent may install packages (PROTOCOL §5), and a registry is not free of answers: some distributions ship a
 benchmark's scripted experts, trained policies or task sources. Nothing blocks them (what cannot be forbidden is let
 go); a reviewer or a runner that sees one of these names in a trial's `pip install` (directly or as a dependency) looks
 at what the trial did with it. Read from the archives' file lists on 2026-10-11, by name search of the index; a

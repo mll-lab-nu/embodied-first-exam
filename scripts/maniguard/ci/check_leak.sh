@@ -7,7 +7,7 @@
 #  2. nothing the agent reads (instruction.md, environment/ text files) names the demonstrations, the generator or the
 #     grasp annotations;
 #  3. the frozen instance is exactly ManiGuard-Bench's two files plus our instance.json and NOTICE.
-# Usage: check-maniguard-leak.sh tasks/<task-dir>
+# Usage: check_leak.sh tasks/<task-dir>   (moved from ci_checks/check-maniguard-leak.sh, board 0124; run by invariant-leak.sh)
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"
 case "$n" in maniguard-*) ;; *) exit 0 ;; esac

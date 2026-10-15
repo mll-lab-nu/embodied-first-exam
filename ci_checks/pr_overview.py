@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""A pull request's overview: what it changes, for the sticky comment and the labels (.github/workflows/task-pr-overview.yml).
+"""A pull request's overview: what it changes, for the sticky comment and the labels (the job `advisories` of .github/workflows/static-checks.yml).
 
 As Terminal-Bench's task-pr-overview: the changed tasks with their mode, oracle, cutoff and minimum compute, a table of
-the cutoffs it changes (old -> new; PROTOCOL §2.12: an owner decision), the cutoffs per benchmark and mode after it
+the cutoffs it changes (old -> new; PROTOCOL §2: the task author's decision, stated in the pull request), the cutoffs per benchmark and mode after it
 (several numbers in one benchmark and mode are marked: a pull request says why), twins whose cutoffs differ, and the
-scope its static checks run on (ci_checks/ci_scope.py). Labels:
+scope its static checks run on (ci_checks/ci_scope.py), and the advisory checks' findings ("Advisories (not blocking)",
+from the file the CI job `advisories` writes: --advisories FILE). Labels:
   new-task       a task directory is added           task-fix   an existing task directory changes (or is removed)
   shared         a path outside the benchmarks' own   cutoff-change   an existing task's `[agent] timeout_sec` changes
 
-    python3 ci_checks/pr_overview.py --diff-from REV [--labels FILE]   # markdown on stdout; labels one per line in FILE
+    python3 ci_checks/pr_overview.py --diff-from REV [--labels FILE] [--advisories FILE]   # markdown on stdout; labels
+                                                                      # one per line in FILE
 Standard library only.
 """
 from __future__ import annotations
@@ -47,6 +49,7 @@ def cutoff(d: dict | None):
 def main(argv: list[str]) -> int:
     rev = argv[argv.index("--diff-from") + 1] if "--diff-from" in argv else "origin/main"
     labels_file = Path(argv[argv.index("--labels") + 1]) if "--labels" in argv else None
+    adv_file = Path(argv[argv.index("--advisories") + 1]) if "--advisories" in argv else None
     paths = sorted({p for p in git("diff", "--name-only", "--no-renames", rev, "HEAD").splitlines() if p})
     names = sorted({p.split("/")[1] for p in paths if p.startswith("tasks/") and p.count("/") >= 2})
     added, changed, removed = [], [], []
@@ -77,7 +80,7 @@ def main(argv: list[str]) -> int:
         for n, a, b in moves:
             t = ROOT / "tasks" / n
             groups[(tc.bench_of(t), tc.mode_of(t), a, b)].append(n)
-        out += ["", "### Cutoff changes (PROTOCOL §2.12: an owner decision; say old -> new, who decided and why above)", "",
+        out += ["", "### Cutoff changes (PROTOCOL §2: the task author's decision; say old -> new and why above)", "",
                 "| Benchmark | Mode | Old | New | Tasks |", "|---|---|---|---|---|"]
         out += [f"| {bench} | {mode} | {a} s | {b} s | {len(ns)} (`{ns[0]}`{', ...' if len(ns) > 1 else ''}) |"
                 for (bench, mode, a, b), ns in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1]))]
@@ -110,7 +113,7 @@ def main(argv: list[str]) -> int:
         for (bench, mode), v in sorted(vals.items()):
             vs = sorted(v, key=lambda x: (x is None, x or 0))
             out.append(f"| {bench} | {mode} | {' / '.join(f'{x} s' for x in vs)}"
-                       + (" **(several numbers: the pull request says why, PROTOCOL §2.12)**" if len(vs) > 1 else "") + " |")
+                       + (" **(several numbers: the pull request says why, PROTOCOL §2)**" if len(vs) > 1 else "") + " |")
         twins = []
         for t in every:
             for m, dd in tc.MODE_REGISTRY.items():
@@ -120,7 +123,16 @@ def main(argv: list[str]) -> int:
                     if (other / "task.toml").is_file() and tc.cutoff_for(other) != tc.cutoff_for(t):
                         twins.append(f"`{t.name}` {tc.cutoff_for(t)} s, `{other.name}` {tc.cutoff_for(other)} s")
         if twins:
-            out += ["", "**Twins with different cutoffs** (CI fails; PROTOCOL §2.15): " + "; ".join(twins[:10])]
+            out += ["", "**Twins with different cutoffs** (the required job `invariants` fails; PROTOCOL Appendix H.7): " + "; ".join(twins[:10])]
+    if adv_file is not None:
+        lines = [ln for ln in (adv_file.read_text(errors="replace").splitlines() if adv_file.is_file() else []) if ln.strip()]
+        out += ["", "### Advisories (not blocking)", ""]
+        if not lines:
+            out.append("None: every advisory check passed (the required job `invariants` decides the merge).")
+        else:
+            out.append(f"{len(lines)} finding(s) of the advisory checks (PROTOCOL §1-§7 are recommendations; only Appendix H "
+                       "blocks). Fix them or say in the pull request why the task departs:")
+            out += ["", "```"] + [ln[:300] for ln in lines[:60]] + (["... %d more" % (len(lines) - 60)] if len(lines) > 60 else []) + ["```"]
     out += ["", "Maintainers: comment `/validate` to run the oracle (where `oracle = \"full\"`) and `nop` on the changed tasks."]
     print("\n".join(out))
     if labels_file:

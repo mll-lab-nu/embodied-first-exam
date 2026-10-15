@@ -349,7 +349,7 @@ sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
+  `scripts/behavior/ci/advisory-world-frame.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
 ## Licences
@@ -367,3 +367,32 @@ never copied); Isaac Sim 5.1 and Omniverse Kit: NVIDIA proprietary (no redistrib
   system these tasks use is a macro system (diced food, grated cheese: macro physical; dirt, dust, mud, rust, debris: macro
   visual), which needs no GPU dynamics. Whether a replay that creates objects stays bit-exact in a fresh process has not been
   measured yet (no positive example of such a task exists).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `approx` (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly). The record dir is `RCB_DATA=/out` (`/data` is its dataset). Its service states no `max_frames_per_call` yet.
+
+A resume replays at ~14–20 steps/s (a 50k-step, 4 h episode: 45–60 min of downtime, on the agent's wall clock). Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+
+Known issues: while the robot moves, a frame shows the scene 2 control steps before its `frame_step` (renderer latency); its `extrinsic_cv` is the pose it was rendered with, the proprio row the state at `frame_step`. Per-call state hashing on Isaac is new with crash recovery; its PRs re-check `live_matches_replay`.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | OmniGibson 3.9.2, R1Pro |
+| rows streamed at | 30 Hz control (4 substeps) |
+| `joint_position` | 25: base (per-step targets, robot frame) + trunk + arms + grippers |
+| `ee_pose` | 16 (left first, xyzw), cuRobo IK for both end effectors per row |
+| cameras | head + two wrist cameras (224×224, moving) |
+| depth | OmniGibson `depth_linear` |
+| `/kinematics` | numpy model of the articulation (trunk + arms), cuRobo fallback |
+| proprio columns (2.0 → 2.2) | 49 → 121 |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `approx` |
+
+Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+
+| benchmark | measured | build | note |
+|---|---|---|---|
+| BEHAVIOR-1K | 6 families (12 trials) | 130–404 s (scene load); cold builds on a loaded lab host 433–519 s | `RCB_STARTUP_TIMEOUT_S` = 1800: each trial starts with a cold Kit cache (its own `*_trusted` volume), about 250 s more |

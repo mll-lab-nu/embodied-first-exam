@@ -6,7 +6,7 @@
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
 #      finalize.sh, run.sh, rcb1.py);
 #    - the graders, tests/grade.py (one version per mode).
-#    A change to one of them is rolled out to every task of the benchmark at once. Same approach as check-robopaint-tooling.sh.
+#    A change to one of them is rolled out to every task of the benchmark at once. Same approach as scripts/robopaint_strict/ci/advisory-tooling.sh.
 #    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, Panda Dynamic Scenes): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +

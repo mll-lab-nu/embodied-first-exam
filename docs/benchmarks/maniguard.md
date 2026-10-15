@@ -290,7 +290,7 @@ the frozen state in-process (approximate: PhysX keeps solver state) and then ref
 spatial states read (AABB, Inside, OnTop): PhysX writes them only for bodies awake in a step, so a sleeping body put back
 by `load_state` kept its old pose (measured: a jar reset out of a drawer still counted as inside it); reset wakes every
 object, takes one physics step and loads the state again. Every copy of the tooling and of the standard sidecar files is byte-identical
-across the benchmark (`check-tooling-identity.sh`); `check-maniguard-leak.sh` keeps the agent side to the tooling and the
+across the benchmark (`check-tooling-identity.sh`); `scripts/maniguard/ci/invariant-leak.sh` (PROTOCOL Appendix H.2) keeps the agent side to the tooling and the
 frozen instance and checks that nothing the agent reads names ManiGuard's demonstrations, data generator or grasp annotations.
 
 ## Declarations
@@ -298,7 +298,7 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
   IK then a joint-space line, no collision checking), `ee_pose`, state, cameras, recording, replay. No grasp, place, close
   or carry skills.
 - **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE.md §10,
-  `check-standard-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
+  `scripts/maniguard/ci/advisory-world-frame.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
   grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs and the package registries by default in
@@ -351,3 +351,22 @@ image built from this recipe with the same locks:
   its resume class stays `approx`.
 - Another host: whether it rebuilds the frozen instances exactly (`instance_exact`).
 - A cold start compiles with up to 32 torch inductor workers and peaks at about 13 GiB of RAM (about 4 GB of VRAM).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Resume class `approx` (OmniGibson 3.7.2; not measured yet). Its service states no `max_frames_per_call` yet.
+
+Per-simulator notes (former STANDARD_MODE §16):
+
+| | |
+|---|---|
+| simulator | OmniGibson 3.7.2, Franka long-finger |
+| rows streamed at | 20 Hz control (6 substeps) |
+| `joint_position` | 8: 7 joints + binary gripper (+1 / -1, switched) |
+| `ee_pose` | 8 (xyzw), numpy IK per row, fingertip-centre frame |
+| cameras | `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static), `wrist` |
+| depth | OmniGibson `depth_linear` |
+| `/kinematics` | numpy model of the articulation (7 arm joints), world frame |
+| proprio columns (2.0 → 2.2) | — → 43 (no 2.0 version) |
+| grading replays | two fresh processes |
+| resume class (STANDARD_MODE §13.1) | `approx` (until measured) |
