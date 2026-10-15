@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate the AM-Bench tasks: tasks/ambench-<task>-fahexa-iNN-<mode> for every frozen instance in scripts/ambench/instances.json
-and every mode its `modes` lists (for now `privileged`; a standard twin needs template/standard/; docs/benchmarks/ambench.md).
+and every mode its `modes` lists (a task's own `modes` overrides the file's: a task graded by its live episode, instance.json
+"determinism": "verdict", is standard-only, PROTOCOL §4.8; docs/benchmarks/ambench.md).
 
     python3 scripts/ambench/mk_tasks.py              # (re)write every AM-Bench task dir; `git diff tasks/` stays empty
     python3 scripts/ambench/mk_tasks.py --check      # write nothing; exit 1 if a task dir differs from the generator's
@@ -30,6 +31,16 @@ MODES = ("privileged", "standard")
 COORD = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*(?:,\s*-?\d+(?:\.\d+)?\s*)?\)")
 
 
+VERIFY_REPLAY = ("`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the "
+                 "sidecar's collect hook. The live service runs the same camera-free physics as the replays (its cameras are drawn "
+                 "by a separate render process), so the live episode and the replays are one computation.")
+VERIFY_VERDICT = ("Graded by the live episode (PROTOCOL §4.8): GPU PhysX does not replay this task bit for bit (measured: the "
+                  "same rows, from identical states and identical controller outputs, resolve the first gripper contact "
+                  "differently in fresh processes), so `success` = the live episode's success; the collect hook's two fresh-process "
+                  "replays are still run and reported (`replay_success`, `deterministic`) but never decide (`graded_by_live` = 1). "
+                  "The task is standard-only: an open-loop trajectory of it cannot be graded reproducibly.")
+
+
 def toml_str(s: str) -> str:
     return s.replace("\\", "\\\\").replace('"', '\\"')
 
@@ -48,7 +59,7 @@ def normalizer():
 # timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
 # the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
 # regenerate.
-CUTOFF_SEC = {"privileged": 3600}
+CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
 
 
 def agent_timeout(mode: str) -> int:
@@ -91,9 +102,49 @@ def plan_instance(task: str, R: dict, version: str, modes) -> dict[str, dict[str
               "ENV_ID": I["env_id"], "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(), "SEED": str(int(I["seed"])),
               "FAMILY": f"{task}_fahexa", "GOAL_TOML": toml_str("Task: " + D["summary"]), "SUMMARY": D["summary"], "SCENE": D["scene"],
               "GOALS": goals, "SUCCESS": D["success"], "EPISODE_S": num(ep), "EPISODE_ROWS": str(int(round(ep * 120)) - 1),
+              # tests/grade.py's per-process limit, max(1800, 1500 + rows / 4) s, four times: two replays, one rerun, the film
+              "VERIFIER_TIMEOUT_S": str(int(-(-4 * max(1800.0, 1500.0 + (round(ep * 120) - 1) / 4.0) // 100) * 100)),
               "FAILURES": fails, "README_GOAL": D["summary"], "DIFFICULTY": D["difficulty_note"], "N_ORACLE": str(R["oracle_rows"]),
-              "ORACLE_SIM_S": num(round(R["oracle_rows"] / 120, 3)), "ORACLE_SHA": R["oracle_final_sha"][:16],
-              "INITIAL_SHA_SHORT": I["initial_sha"][:16], "FROZEN": f"{task}-i{i:02d}", "STANDARD_NOTES": D["standard_notes"]}
+              "ORACLE_SIM_S": num(round(R["oracle_rows"] / 120, 3)), "ORACLE_SHA": (R.get("oracle_final_sha") or "")[:16],
+              "INITIAL_SHA_SHORT": I["initial_sha"][:16], "FROZEN": f"{task}-i{i:02d}", "STANDARD_NOTES": D["standard_notes"],
+              "VERIFY": VERIFY_VERDICT if I.get("determinism") == "verdict" else VERIFY_REPLAY}
+    # A task whose physics does not replay bit for bit (instance.json "determinism": "verdict") is standard-only: no
+    # privileged twin to point at, the live episode decides (PROTOCOL §4.8), and the oracle's rows are the reference rows
+    # recorded on the frozen instance (scripts/ambench/instances.json: their end states differ between fresh processes).
+    twin = "privileged" in modes
+    if (I.get("determinism") == "verdict") == twin:
+        raise RuntimeError(f"{task}: a task graded by its live episode (\"determinism\": \"verdict\") is standard-only, and only it")
+    priv = f"`{common['PRIV']}`"
+    ends = R.get("oracle_end_states") or {}
+    common.update({
+        "STD_INTRO": (f"Standard-mode twin of {priv} (the same frozen instance: " if twin else
+                      "Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop trajectory "
+                      "of it cannot be graded reproducibly; the frozen instance: "),
+        "TWIN_ROW": (priv if twin else
+                     "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"),
+        "STD_COMPARE": (" Compare against the privileged task to measure the cost of losing\nresets and privileged state." if twin else ""),
+        "STD_DIFFICULTY": (f"That of {priv} (its README), without resets, object poses or the success signal: {D['standard_notes']}" if twin else
+                           f"{D['difficulty_note']} Here without resets, object poses or the success signal: {D['standard_notes']}"),
+        "REF_ROWS": "the privileged oracle's rows" if twin else "the reference rows",
+        "ORACLE_END": (f"the live\nepisode and both replays end in the privileged oracle's end state (hash `{common['ORACLE_SHA']}`)." if twin else
+                       f"the reference rows succeed in every fresh process measured but do not end in the same state "
+                       f"({len(ends)} different end states in {sum(ends.values())} replays): only the outcome is reproducible, which is "
+                       f"why the live episode decides."),
+        "RESUME_CLASS": ("`approx` (GPU PhysX replays the journal to the checkpointed state almost always; a rare race can "
+                         "leave the last bits different, so a resume's deviation is recorded, `resume_state_mismatch`, and the "
+                         "episode continues; the verdict comes from fresh replays of the whole trajectory)" if twin else
+                         "`approx` (the physics does not replay bit for bit: a resume's deviation from the "
+                         "checkpointed state is recorded, `resume_state_mismatch`, and the live state after it is graded)"),
+        "RESUME_STATE": ("the state after the last call it completed (to the last bits: a rare GPU race\n  can leave those "
+                         "different)" if twin else
+                         "the state after the last call it completed (as closely as this task's physics\n  allows: it does not "
+                         "replay bit for bit)"),
+        "TOML_INSTANCE": ("on the same frozen instance as the privileged task." if twin else
+                          "on its frozen instance; standard only, no privileged twin."),
+        "TOML_GRADING": ("the sim service records the episode as a trajectory and grades it." if twin else
+                         "the sim service records the episode and grades it as it happened live (the physics does not replay "
+                         "bit for bit; the replays are recorded only)."),
+    })
     texts = {"task_text": f"{D['title']}: {D['summary']} Success: {D['success']}" + (f" Goal geometry: {D['goal_fixed']}" if D.get("goal_fixed") else ""),
              "episode": (f"one episode, no reset: it ends at the first control step where AM-Bench's success check holds, when the task's "
                          f"episode length of {num(ep)} s of simulated time runs out (AM-Bench's time-out, at control step {int(round(ep * 120)) - 1}), when your time is up, "
@@ -101,7 +152,8 @@ def plan_instance(task: str, R: dict, version: str, modes) -> dict[str, dict[str
     out: dict[str, dict[str, tuple[bytes, int]]] = {}
     for mode in modes:
         common["AGENT_TIMEOUT_S"] = str(agent_timeout(mode))
-        extra = {"SCENE_PRIVILEGED": D["scene_privileged"]} if mode == "privileged" else {}
+        extra = ({"SCENE_PRIVILEGED": D["scene_privileged"]} if mode == "privileged" else
+                 {"SUCCESS": D["success_standard"]} if "success_standard" in D else {})   # no privileged API names there
         files: dict[str, tuple[bytes, int]] = {}
         tdir = HERE / "template" / mode
         for p in sorted(tdir.rglob("*")):
@@ -130,7 +182,7 @@ def plan_instance(task: str, R: dict, version: str, modes) -> dict[str, dict[str
             req = CLIENT.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
             files["environment/client-requirements.txt"] = ((LAYER / req).read_bytes(), 0o644)
             files["solution/oracle_qpos.npy"] = (oracle_b, 0o644)
-            files["solution/oracle_meta.json"] = (json.dumps({"K": 1, "interpolate": "hold", "source": "the privileged oracle's rows"}, indent=1).encode() + b"\n", 0o644)
+            files["solution/oracle_meta.json"] = (json.dumps({"K": 1, "interpolate": "hold", "source": common["REF_ROWS"]}, indent=1).encode() + b"\n", 0o644)
         out[f"{base(task, i)}-{mode}"] = files
     return out
 
@@ -186,7 +238,8 @@ def main() -> int:
     normalize = normalizer()
     diffs, made = [], set()
     for task in sorted(reg["tasks"]):
-        for name, files in normalized(plan_instance(task, reg["tasks"][task], version, modes), normalize).items():
+        tmodes = tuple(reg["tasks"][task].get("modes", modes))     # a task graded by verdict (PROTOCOL §4.8) is standard-only
+        for name, files in normalized(plan_instance(task, reg["tasks"][task], version, tmodes), normalize).items():
             made.add(name); diffs += sync(ROOT / "tasks" / name, files, a.check)
     for t in sorted((ROOT / "tasks").glob("ambench-*")):
         if t.is_dir() and t.name not in made:
