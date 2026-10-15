@@ -6,7 +6,7 @@ standard task's instance under RoboSafeBench's realtime clock (docs/benchmarks/r
 
     python3 scripts/robosafe/gen_realtime.py render     # (re)write every realtime task dir; `git diff tasks/` stays empty
     python3 scripts/robosafe/gen_realtime.py check      # write nothing; exit 1 if a task dir differs
-Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 3 (no simulator).
+Every task's DIGEST is written by the normalize step (PROTOCOL §2.8). Needs only Python 3 (no simulator).
 
 Inputs, all in the repository, besides what gen_tasks.py reads:
   scripts/robosafe/instances_rt/<slug>-iNN.json  the instance under the realtime clock (make_rt_instances.py, in the image)

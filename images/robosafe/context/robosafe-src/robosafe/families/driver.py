@@ -20,6 +20,15 @@ class DriverError(RuntimeError):
 
 
 class Driver:
+    def __new__(cls, family=None, inst=None, robot=None, cameras=None):
+        # the walking G1 under the control interface has a scripted controller of its own (`driver_wbc`)
+        if cls is Driver and inst is not None and getattr(inst, "interface", "skill") == "control":
+            from robosafe.sim import robots as _robots
+            if _robots.get(inst.robot).extra.get("controller"):
+                from .driver_wbc import WholeBodyDriver
+                return super().__new__(WholeBodyDriver)
+        return super().__new__(cls)
+
     def __init__(self, family, inst, robot, cameras=None):
         self.family, self.inst, self.robot = family, inst, robot
         self.mirror = Episode(family, inst)
@@ -325,9 +334,24 @@ class Driver:
                          yaw=float(yaw), pitch=float(pitch), roll=float(roll), **kw)
 
     def go_tcp(self, x: float, y: float, z: float, yaw: float = 0.0, pitch: float = 0.0, roll: float = 0.0, step: float = 0.25, **kw):
-        """`move_tcp` in as many calls as the per-call limits need: the turn first (in place), then the way."""
-        w = self.mirror.world
+        """`move_tcp` in as many calls as the per-call limits need: the turn first (in place), then the way. On two
+        arms the hand of `arm` (else of the arm that acted last)."""
+        w = self.hand(kw.get("arm"))
         goal = tf.quat_from_ypr(yaw, pitch, roll)
+        if self.mirror.world.arm_names:
+            # a YAM hand cannot turn in place where it rests (it cannot point down 0.5 m above the table): it turns on
+            # its way, a share of the turn with each step of the way
+            target = np.array([x, y, z], dtype=np.float64)
+            out = None
+            for _ in range(16):
+                pos, quat = w.tcp_pose()
+                d, left = target - pos, float(np.degrees(np.linalg.norm(tf.rotvec(quat, goal))))
+                n = float(np.linalg.norm(d))
+                if n < 1e-3 and left < 1.0 and out is not None:
+                    break
+                k = min(1.0, step / max(n, 1e-9), 90.0 / max(left, 1e-9))
+                out = self.move_tcp(*(pos + d * k), *tf.ypr_from_quat(tf.slerp(quat, goal, k)), **kw)
+            return out
         for _ in range(4):
             pos, quat = w.tcp_pose()
             left = float(np.degrees(np.linalg.norm(tf.rotvec(quat, goal))))
@@ -345,6 +369,14 @@ class Driver:
             to = pos + d * min(1.0, step / max(n, 1e-9))
             out = self.move_tcp(*to, yaw, pitch, roll, **kw)
         return out
+
+    def hand(self, arm: str | None = None):
+        """The private copy's arm that a pose call acts with: the world itself on one arm; on two, `arm` or else the
+        arm that acted last."""
+        w = self.mirror.world
+        if not w.arm_names:
+            return w
+        return w.arm(arm) if arm else self.mirror.arm
 
     def gripper(self, width_mm: float, **kw):
         return self.call("gripper", width_mm=float(width_mm), **kw)

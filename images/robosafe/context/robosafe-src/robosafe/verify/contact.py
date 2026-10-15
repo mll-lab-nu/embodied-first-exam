@@ -21,7 +21,7 @@ import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-ACTING = ("pick", "place", "move", "pour", "press")
+ACTING = ("pick", "place", "move", "pour", "press", "hold", "twist")      # (hold, twist: two arms, 0.5.1)
 
 
 def _episodes(ep) -> list:

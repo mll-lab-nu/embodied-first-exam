@@ -16,8 +16,8 @@ the operator's answers, the verdict and the scripted reference all live in RoboS
    of doing nothing and of exiting `done` at once). It fails a family whose reference does not pass, or where a
    trivial strategy passes. Run it with the same RoboSafeBench commit as the image: the service refuses to start when
    the image does not rebuild the frozen start (`state_sha`).
-3. **Render**: `python3 scripts/robosafe/gen_tasks.py render` (standard library only), then `check` must pass and
-   `cd tasks && harbor add --scan .`.
+3. **Render**: `python3 scripts/robosafe/gen_tasks.py render` (standard library only; every task's DIGEST is written
+   with it), then `check` must pass.
 4. **Evidence** (CONTRIBUTING.md): `python scripts/robosafe/tests/test_service.py <slug>-<NN> ...` in the simulator's
    environment, then Harbor's oracle (reward 1) and nop (reward 0) on every task, and the two replays' hashes from
    `verifier/verdict.json` (`replays.state_sha`).

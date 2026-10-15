@@ -28,12 +28,14 @@ def _coil_mesh(r_out: float, turns: int, z: float, thick: float = 7.0) -> M.Mesh
 @kind("hot_plate", vary={"width": (0.22, 0.26), "color": ["dark_grey", "white", "black", "silver"],
                          "style": ["coil", "coil", "plate"]})
 def hot_plate(k: Kit, *, width=0.24, depth=0.26, height=0.075, style="coil", color="dark_grey", state="off",
-              cord=True, warning_label=True, mass=1.6, glow=True, button="front"):
+              cord=True, warning_label=True, mass=1.6, glow=True, button="front", lamp_mm=None):
     """A single burner: a coil (or a flat laboratory plate) on a low housing, a power button and a lamp at the front.
     Looks `on` (the coil glows, lamp lit) and `off`. Zone `surface`: the hot surface and 12 mm above it.
     `glow=False` (since 0.5.0): the surface looks the same on and off, as a ceramic plate does, and only the lamp
     tells; the lamp then has a site, `lamp`. `button="top"` (since 0.5.0): the power button sits on top of the housing at
-    its front left corner, pressed from above (the default is on the front face)."""
+    its front left corner, pressed from above (the default is on the front face). `lamp_mm` (after 0.5.1): the lamp's
+    diameter in millimetres (default: 7, or 12 with `glow=False`); `hot_plate(glow=False, lamp_mm=5)` is an indicator
+    LED that the fixed cameras show as a pixel or two (`c_burner_left_on`, `hazard_hidden` `closer`)."""
     if button not in ("front", "top"):
         raise ValueError("button: front or top")
     W, D, H = mm(width, depth, height)
@@ -69,7 +71,8 @@ def hot_plate(k: Kit, *, width=0.24, depth=0.26, height=0.075, style="coil", col
     else:
         k.button("power", (-W / 2 + 24.0, -D / 2, H / 2 + 2.0), size=(20.0, 16.0), color="red")
     # (with `glow=False` the lamp is all that tells, and it is drawn larger: 12 mm across instead of 7)
-    k.lamp("lamp", (-W / 2 + 47.0, -D / 2 - 0.5, H / 2 + 2.0), radius=3.5 if glow else 6.0, on=(1.0, 0.25, 0.1), off=(0.30, 0.07, 0.05))
+    k.lamp("lamp", (-W / 2 + 47.0, -D / 2 - 0.5, H / 2 + 2.0), radius=(3.5 if glow else 6.0) if lamp_mm is None else float(lamp_mm) / 2.0,
+           on=(1.0, 0.25, 0.1), off=(0.30, 0.07, 0.05))
     if not glow:
         k.site("lamp", (-W / 2 + 47.0, -D / 2 - 2.0, H / 2 + 2.0))
     k.vis("cylinder", (13.0, 12.0), (W / 2 - 30.0, -D / 2 - 6.0, H / 2 + 2.0), "black", quat=qx(90), name="dial", finish="satin")

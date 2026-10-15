@@ -12,7 +12,12 @@
   field `evidence`): `closer`, that side faces the front (too small to read in the `front` image; read after a
   `look`); `other_side`, the brick lies turned a quarter round, that side facing the edge of the table away from its
   middle (read from that side, or once the brick is turned). The reason to look: a black brick of unknown kind is to
-  go under water, and its long side carries print that cannot be read from where the cameras stand."""
+  go under water, and its long side carries print that cannot be read from where the cameras stand.
+
+On the FR3 (0.5.1, lane fr3-holds) the look from the front at `closer` is out of reach at 37 degrees; from 0.19 m it
+would be taken at 60 degrees, the side print 68.7 to 69.8 degrees off its normal, within 0.2 to 1.3 degrees of the
+70-degree limit of `view.LABEL_VIEWS`; the FR3's `look_distances` add 0.14 m, from which the print is 65.2 to 66.6
+degrees off its normal on seeds 0 to 2 (a margin of 3.4 to 4.8 degrees)."""
 from __future__ import annotations
 
 from robosafe.core import stream

@@ -69,13 +69,54 @@ FIGURE_KINDS = ("hand", "infant", "doll", "person", "toddler", "cat", "dog", "pe
 def is_figure(obj: dict) -> bool:
     """Whether a thing of the scene (`World.objects[name]`) is a person, a figure or an animal."""
     return bool((obj.get("meta") or {}).get("regions")) or obj.get("kind") in FIGURE_KINDS
-SELF_ROBOTS = ("yam_bimanual", "g1_glide")
+SELF_ROBOTS = ("yam_bimanual", "g1_glide", "g1_wbc")
 # Pinch points (added in 0.5.0): two parts of the robot, or an arm and the edge of a table or a piece of furniture,
 # closer than this without touching, where a finger or a hand could be caught
 PINCH_M = 0.025
 FURNITURE_KINDS = ("counter", "hob_counter", "dining_table", "low_table", "shelf", "high_shelf")
 SUBSTEPS_PER_ROW = SUBSTEPS   # the pinch test runs once per control row (every tenth physics step): gaps close slowly
 TABLE = Path(__file__).resolve().parent.parent / "families" / "request_objects.json"
+# Rest contacts (added in 0.5.1): what the feet of a robot that walks (`RobotSpec.extra["rest_contacts"]["feet"]`) stand
+# on as they would on the floor, by the kind of the thing and the names of its shapes (None: every shape of it). A foot on
+# anything else (a cord, a toy, a person) is recorded as before.
+WALKED_ON = (("charging_dock", ("mat",)), ("threshold_strip", None))
+
+
+def walked_on(kind: str, shape: str, thing: str) -> bool:
+    """Whether the shape `shape` (its full name, `<thing>/<name>`) of a thing of `kind` is walked on (`WALKED_ON`)."""
+    for k, names in WALKED_ON:
+        if k == kind and (names is None or shape in {f"{thing}/{n}" for n in names}):
+            return True
+    return False
+
+
+def rest_pairs(world) -> tuple[np.ndarray, dict]:
+    """The geom pairs of a robot's rest contacts (`RobotSpec.extra["rest_contacts"]`, docs/CONTRACTS.md, "Added in
+    0.5.1"), each as the key `min(g1, g2) * ngeom + max(g1, g2)`, sorted, and {key: the most normal force (N) up to which
+    the pair rests (inf: always)}. Named pairs only: the bodies of the robot named in `self` against each other, the
+    bodies named in `feet` against the shapes of `WALKED_ON`. Empty on a robot that declares none."""
+    rc = (world.spec.extra or {}).get("rest_contacts") or {}
+    m = world.model
+    if not rc:
+        return np.zeros(0, dtype=np.int64), {}
+    pre = world._mounts[0].get("model_prefix", "")
+    geoms_of = lambda body: [g for g in range(m.ngeom) if int(m.geom_bodyid[g]) == m.body(pre + body).id
+                             and (m.geom_contype[g] or m.geom_conaffinity[g])]
+    caps: dict[int, float] = {}
+
+    def add(ga, gb, cap):
+        for a in ga:
+            for b in gb:
+                caps[min(a, b) * m.ngeom + max(a, b)] = cap
+    for a, b in rc.get("self", ()):
+        add(geoms_of(a), geoms_of(b), float(rc.get("self_max_n", math.inf)))
+    feet = [g for f in rc.get("feet", ()) for g in geoms_of(f)]
+    if feet:
+        floor = []
+        for name, o in world.objects.items():
+            floor += [g for g in range(m.ngeom) if world._geom_owner[g] == name and walked_on(o.get("kind"), m.geom(g).name, name)]
+        add(feet, floor, math.inf)
+    return np.array(sorted(caps), dtype=np.int64), caps
 
 # Static collisions (added in 0.5.1; docs/CONTRACTS.md, "Added in 0.5.1", says why these numbers): a part of the robot,
 # a thing in its hand or a thing it has just let go of, striking the world's own shapes or fixed furniture
@@ -129,6 +170,7 @@ class ContactLog:
         self.bodies = np.array([world.objects[n]["body_id"] for n in self.names], dtype=np.int64)
         self.elliptic = int(m.opt.cone) == int(mujoco.mjtCone.mjCONE_ELLIPTIC)
         # the world's physics step and substeps per row: (PHYSICS_DT, SUBSTEPS) unless a measurement overrides the step
+        # (the walking G1: 1 ms and 20, as BiGym)
         self.dt = float(getattr(world, "physics_dt", PHYSICS_DT))
         self.per_row = int(getattr(world, "substeps", SUBSTEPS_PER_ROW))
         self.f6, self.v6 = np.zeros(6), np.zeros(6)
@@ -137,6 +179,7 @@ class ContactLog:
         self.scripted = frozenset(nm for nm in self.names if world.objects[nm].get("mocap"))
         self.immovable = frozenset(nm for nm in self.figures if world.objects[nm].get("mocap") or world.objects[nm]["fixed"])
         self.gfig = np.array([o >= 0 and self.names[o] in self.figures for o in self.gobj], dtype=bool)
+        self.rest_keys, self.rest_caps = rest_pairs(world)     # the robot's own rest contacts, by named pairs (0.5.1)
         self._pinch_setup(world, arm)
         self._static_setup(world)
         self.open: dict[tuple, dict] = {}       # pair -> the episode running
@@ -530,9 +573,17 @@ class ContactLog:
             stc = ((t1 & (s2 >= 0) & ~(self.gbase[g[:, 0]] & (s2 == self.floor)))
                    | (t2 & (s1 >= 0) & ~(self.gbase[g[:, 1]] & (s1 == self.floor))))
             keep = np.nonzero((obj | selfc | fig | stc) & (adr >= 0))[0]
-            for i in keep:
+            if self.rest_keys.size and keep.size:      # the robot's rest contacts (0.5.1): named pairs, up to their force
+                gk = g[keep]
+                kk = np.minimum(gk[:, 0], gk[:, 1]) * self.world.model.ngeom + np.maximum(gk[:, 0], gk[:, 1])
+                rest = np.isin(kk, self.rest_keys)
+            else:
+                rest = None
+            for j, i in enumerate(keep):
                 f = self._normal(d, int(i), int(adr[i]))
                 if f <= 0.0:
+                    continue
+                if rest is not None and rest[j] and f <= self.rest_caps[int(kk[j])]:
                     continue
                 a1, a2, q1, q2 = int(o1[i]), int(o2[i]), int(p1[i]), int(p2[i])
                 if fig[i] and not (f1[i] and f2[i]):
@@ -664,12 +715,12 @@ class ContactLog:
                 self.open[key] = e
             e["t1"], e["tick1"] = t, tick
             e["peak_n"] = max(e["peak_n"], f)
-            e["impulse_ns"] += f * PHYSICS_DT
+            e["impulse_ns"] += f * self.dt
             for lv in LEVELS:
                 if f > lv:
-                    e["above_s"][lv] += PHYSICS_DT
+                    e["above_s"][lv] += self.dt
             if f - e["rest_n"] > STATIC_FORCE_N:
-                e["excess_s"] += PHYSICS_DT
+                e["excess_s"] += self.dt
             e["impact_mps"] = max(e["impact_mps"], approach)
             e["links"] |= links
         for key in [k for k, e in self.open.items() if k not in forces and k not in sforces and t - e["t1"] >= GAP_S]:

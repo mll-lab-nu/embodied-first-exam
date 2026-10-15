@@ -98,6 +98,10 @@ DEFAULT_SCENE = {
     # pairs [a, b]: `fasten(a, b)` can fix the free object a onto b (a cap screwed onto a bottle, a blade stuck in a
     # melon, a plug seated in a socket); a may be paired with several b
     "fasteners": [],
+    # pairs [cap, bottle] (0.5.0): besides the weld of `fasteners` (which the pair must also be listed in), the cap can
+    # be held on the bottle's axis and left free to turn about it (`hinge`): a screw cap that a hand turns while the
+    # other hand holds the bottle still (`robosafe.hazard.state.ScrewCap` decides when)
+    "screws": [],
 }
 
 
@@ -215,6 +219,10 @@ def room_walls(room: dict) -> list[dict]:
     return boxes
 
 
+def _wrap_angle(a: float) -> float:
+    return (float(a) + math.pi) % (2.0 * math.pi) - math.pi
+
+
 def static_owner(name: str) -> str:
     """Who a shape of the world itself belongs to, by its name: `table` (its legs too), `floor`, `pedestal`, `wall`."""
     return "wall" if name.startswith("wall_") else name.split("_leg")[0]
@@ -259,6 +267,10 @@ def normalise_scene(scene: dict | None) -> dict:
     s["avoid"] = bool(scene.get("avoid", True))
     s["sensors"] = copy.deepcopy(list(scene.get("sensors", [])))
     s["fasteners"] = [[str(a), str(b)] for a, b in scene.get("fasteners", [])]
+    s["screws"] = [[str(a), str(b)] for a, b in scene.get("screws", [])]
+    for pair in s["screws"]:
+        if pair not in s["fasteners"]:
+            s["fasteners"].append(list(pair))
     s["gravity"] = float(scene.get("gravity", s["gravity"]))
     if not 0.0 <= s["gravity"] <= 100.0:
         raise ValueError("gravity is a downward acceleration in m/s^2, between 0 and 100")
@@ -345,7 +357,16 @@ def _subtree(m: "mujoco.MjModel", root: int) -> list:
 def row_size(scene: dict) -> int:
     """How many numbers a control row of this (normalised) scene's robot has: the joint targets of every arm, then one
     gripper target per arm."""
-    return sum(m["spec"].n + 1 for m in _mounts(scene)) + len(_robots.get(scene["robot"]["type"]).base.get("joints", ()))
+    spec = _robots.get(scene["robot"]["type"])
+    if spec.extra.get("controller") == "groot_wbc":     # the walking G1: a `whole_body` command (`WHOLE_BODY_LAYOUT`)
+        return len(WHOLE_BODY_HEAD) + sum(m["spec"].n + 1 for m in _mounts(scene))
+    return sum(m["spec"].n + 1 for m in _mounts(scene)) + len(spec.base.get("joints", ()))
+
+
+# The walking G1's control row, BiGym 2.0's command at 50 Hz (`robosafe.sim.wbc`): the walking velocity ahead and to
+# the left (m/s), the pelvis height (m), the turning rate (rad/s, + to the left), the torso pitch (rad, + leans
+# forward), the 14 arm joint targets (left arm first, rad) and the two grippers (0 open .. 1 closed).
+WHOLE_BODY_HEAD = ("vx", "vy", "height", "wz", "pitch")
 
 
 _LIVE: "weakref.WeakSet" = weakref.WeakSet()
@@ -390,11 +411,18 @@ class World:
         # given `arm()`, a view with a row of the arm alone, as on a robot with several arms.
         self.base = dict(self.spec.base) if self.spec.base else None
         self._nb = len(self.base["joints"]) if self.base else 0
-        self.row_size = sum(m["spec"].n + 1 for m in self._mounts) + self._nb
+        self.row_size = row_size(self.scene)
         self.room = self.scene.get("room")
         self.wrist_camera = "wrist" if not self.arm_names else f"wrist_{self.arm_names[0]}"
         fixed = ("front", "top") if self.room is None else (("room",) if self.room["cameras"] == "room" else ())
-        self.cameras = fixed + (("head",) if self.base else ()) + (("wrist",) if not self.arm_names else tuple(f"wrist_{a}" for a in self.arm_names))
+        # 0.5.1, the TidyBot under the control interface (`scene["robot"]["onboard"] == "own"`): the robot's own two
+        # cameras as its model has them (TidyBot++: `base` on the base, `wrist` on the Gen3's bracelet link, KinDER's
+        # robot_base and robot_wrist), no mast and no camera of ours
+        self.own_cameras = bool(self.base) and self.scene["robot"].get("onboard") == "own"
+        if self.own_cameras:
+            self.cameras = fixed + ("base", "wrist")
+        else:
+            self.cameras = fixed + (("head",) if self.base else ()) + (("wrist",) if not self.arm_names else tuple(f"wrist_{a}" for a in self.arm_names))
         self.acting = self._mounts[0]["name"]      # the arm that was last given a row of its own (see `Arm.step`)
         self._held_by: dict[str, str | None] = {m["name"]: None for m in self._mounts}
         self._arms: dict[str, "Arm"] = {}
@@ -413,6 +441,9 @@ class World:
         self.max_target_lead = max_target_lead
         self.objects: dict[str, dict] = {}
         self.model = self._build()
+        # physics steps per control row: ten of 2 ms; the walking G1's physics has steps of 1 ms, twenty to a row
+        self.physics_dt = float(self.model.opt.timestep)
+        self.substeps = int(round(CONTROL_DT / self.physics_dt))
         self.data = mujoco.MjData(self.model)
         self._scratch = mujoco.MjData(self.model)
         self._scratch_tick = -1
@@ -460,10 +491,78 @@ class World:
             self.target = np.concatenate([self.data.qpos[self._base_qadr], self.home, [0.0]])
         else:
             self.target = np.concatenate([self.home, [0.0]])
-        self._apply(self.target)
+        self.wbc = None                                 # the walking G1's controller (`wbc.Controller`)
+        self.fell_at: int | None = None                 # the tick at which the walking G1 was first found fallen
+        if self.spec.extra.get("controller") == "groot_wbc":
+            self._start_whole_body()
+        else:
+            self._apply(self.target)
         for spec in self.scene["sensors"]:
             self.add_sensor(spec)
         _LIVE.add(self)
+
+    # ---- the walking G1 (`robots.G1_WBC`, docs/MOTION.md 14) -----------------------------------------------------------
+    def _start_whole_body(self) -> None:
+        """BiGym 2.0's reset of the G1 where the scene puts it: the pelvis 0.74 m up, the legs at the controller's
+        default angles, the arms at the home posture, the fingers open; then `wbc.WARMUP_STEPS` control steps of
+        standing still (BiGym's warm-up), which are not rows of the record. The clock starts at zero after them."""
+        from . import wbc as _wbc
+        from .bodies import g1_wbc as _g1
+        m, d = self.model, self.data
+        pre = self._mounts[0]["model_prefix"]
+        self.wbc = _wbc.Controller(m, pre)
+        self._wbc_arm_ctrl = np.array([m.actuator(pre + j).id for j in _g1.ARM_JOINTS], dtype=np.int64)
+        self._wbc_fingers = {s_: [(m.actuator(pre + j).id, int(m.jnt_qposadr[m.joint(pre + j).id])) for j in _g1.FINGER_JOINTS[s_]]
+                             for s_ in _g1.SIDES}
+        self._finger_slew: dict[int, float] = {}
+        import collections
+        self._walk_track = collections.deque(maxlen=self.WALK_WINDOW + 1)     # (tick, base pose): the mean speed
+        z = int(m.jnt_qposadr[m.joint(pre + "pelvis_z").id])
+        d.qpos[z] = _wbc.INIT_PELVIS_Z + 0.01
+        mujoco.mj_forward(m, d)
+        d.qpos[z] = _wbc.INIT_PELVIS_Z
+        for i, j in enumerate(_g1.LOWER_JOINTS):
+            d.qpos[int(m.jnt_qposadr[m.joint(pre + j).id])] = float(_wbc.DEFAULT_ANGLES[i])
+            d.ctrl[m.actuator(pre + j).id] = float(_wbc.DEFAULT_ANGLES[i])
+        mujoco.mj_forward(m, d)
+        home = np.concatenate([np.array(mt["home"], dtype=np.float64) for mt in self._mounts])
+        self.target = np.concatenate([[0.0, 0.0, _wbc.INIT_PELVIS_Z, 0.0, 0.0], home, [0.0, 0.0]])
+        for _ in range(_wbc.WARMUP_STEPS):
+            self._whole_body_step(self.target)
+        d.time = 0.0
+        self.tick = 0
+        self._walk_track.clear()
+        self._walk_track.append((0, d.qpos[self._base_qadr].copy()))
+
+    def _whole_body_step(self, row: np.ndarray) -> None:
+        """One control step of the walking G1 (BiGym's order): the command latched, the policy run on the state as it
+        is, the 15 targets of the legs and the waist, the 14 of the arms and the fingers' slew-limited targets applied,
+        twenty physics steps, a forward pass."""
+        from .bodies import g1_wbc as _g1
+        m, d = self.model, self.data
+        r = np.asarray(row, dtype=np.float64).astype(np.float32)
+        self.wbc.set_command(float(r[0]), float(r[1]), float(r[3]), float(r[2]), float(r[4]))
+        d.ctrl[self.wbc.lower_act] = self.wbc.step(d)
+        d.ctrl[self._wbc_arm_ctrl] = r[5:19]
+        for k, side in enumerate(_g1.SIDES):
+            want = _g1.finger_target(float(r[19 + k]))
+            for act, qa in self._wbc_fingers[side]:
+                cur = self._finger_slew.get(act, float(d.qpos[qa]))
+                t = cur + float(np.clip(want - cur, -_g1.FINGER_SLEW, _g1.FINGER_SLEW))
+                self._finger_slew[act] = t
+                lo, hi = m.actuator_ctrlrange[act]
+                d.ctrl[act] = float(np.clip(t, lo, hi))
+        sensors = self._sensor_list
+        for _ in range(self.substeps):
+            mujoco.mj_step(m, d)
+            if sensors:
+                t = d.time - self.physics_dt
+                for sensor in sensors:
+                    sensor.sample(d, t)
+        mujoco.mj_forward(m, d)
+        if self.fell_at is None and self.wbc.fallen(d):
+            self.fell_at = self.tick + 1
+        self._walk_track.append((self.tick + 1, d.qpos[self._base_qadr].copy()))
 
     # ---- construction ----------------------------------------------------------------------------------------------
     def _build(self) -> mujoco.MjModel:
@@ -485,6 +584,10 @@ class World:
         s.option.iterations = 100
         s.option.tolerance = 1e-8
         s.option.gravity = [0.0, 0.0, -float(sc["gravity"])]
+        if self.spec.extra.get("physics") == "bigym_g1":        # the walking G1: the physics its controller was measured on
+            from .bodies import g1_wbc as _g1_wbc
+            _g1_wbc.apply_options(s)
+            s.option.gravity = [0.0, 0.0, -float(sc["gravity"])]
         s.visual.global_.offwidth = 1280
         s.visual.global_.offheight = 960
         s.visual.headlight.ambient = [0.28, 0.28, 0.28]
@@ -548,11 +651,13 @@ class World:
                 j.range, j.limited = [float(lo), float(hi)], mujoco.mjtLimited.mjLIMITED_TRUE
             for jname, inertia in rs.extra.get("armature", {}).items():      # rotor inertia the model leaves out
                 arm.joint(jname).armature = float(inertia)
-            if rs.base:
+            if rs.base and rs.base["actuators"]:
                 for aname, cap in zip(rs.base["actuators"], rs.base["force"]):
                     act = arm.actuator(aname)
                     act.forcerange, act.forcelimited = [-float(cap), float(cap)], mujoco.mjtLimited.mjLIMITED_TRUE
-                head = rs.base.get("head")
+                for aname, kv in zip(rs.base["actuators"], rs.base.get("kv", ())):     # a base servo's damping, where the spec says
+                    arm.actuator(aname).biasprm[2] = -float(kv)
+                head = rs.base.get("head") if not self.own_cameras else None
                 if head and head.get("mast"):   # the mast the head camera sits on (the model has neither)
                     hx, hy, hz = (float(v) for v in head["pos"])
                     arm.body(rs.base["body"]).add_geom(name="mast", type=mujoco.mjtGeom.mjGEOM_CAPSULE, size=[float(head["mast"]), 0, 0],
@@ -572,7 +677,7 @@ class World:
             if rs.hand_file:
                 grip = mujoco.MjSpec.from_file(str(root / rs.hand_file))
                 s.attach(grip, site=s.site(mt["arm_prefix"] + rs.attach_site), prefix=mt["hand_prefix"])
-            for b in s.bodies:
+            for b in s.bodies if rs.extra.get("gravcomp", True) else ():
                 if b.name.startswith((mt["model_prefix"], mt["hand_prefix"])):
                     b.gravcomp = 1.0          # the controller compensates the robot's own weight, as the real one does
         for mt in self._mounts:                 # every hand: how its finger pads meet what they hold (`robots.PAD_CONTACT`)
@@ -613,10 +718,17 @@ class World:
         elif "room" not in sc["cameras"]:
             c = room["camera"]
             wb.add_camera(name="room", pos=c["pos"], quat=_look_at(c["pos"], c["target"]), fovy=float(c.get("fovy", 72.0)))
-        for mt in self._mounts:
+        if self.spec.extra.get("cameras") == "bigym_g1":      # the walking G1: BiGym's three cameras, under the bench's names
+            from .bodies import g1_wbc as _g1_wbc
+            _g1_wbc.add_cameras(s, self._mounts[0]["model_prefix"])
+        for mt in self._mounts if self.spec.extra.get("cameras") != "bigym_g1" else ():
             rs, tag = mt["spec"], ("_" + mt["name"] if mt["name"] else "")
             hand = s.body(mt["hand_prefix"] + rs.hand_body)
             cam = rs.wrist_camera
+            if self.own_cameras:                # the model's own cameras under the names the agent knows them by
+                for own in ("base", "wrist"):
+                    s.camera(mt["model_prefix"] + own).name = own
+                continue
             hand.add_camera(name="wrist" + tag, pos=cam["pos"], quat=_look_at(cam["pos"], cam["target"], up=tuple(cam["up"])), fovy=cam["fovy"])
             head = rs.base.get("head") if rs.base and mt is self._mounts[0] else None
             if head:                            # on the mast (or on the body's own head), looking ahead and a little down
@@ -632,10 +744,13 @@ class World:
         # props
         placed: dict[str, tf.Pose] = {}
         built: dict[str, _props.Prop] = {}
+        scene_params = (self.spec.extra or {}).get("scene_params") or {}
         for o in sc["objects"]:
             params = o.get("params")
             if o["kind"] == "asset":                    # {"kind": "asset", "id": "beaker_250"}
                 params = {"id": o["id"], **(params or {})}
+            if o["kind"] in scene_params:               # what a body needs of a kind in its scenes (0.5.1; the G1's mats)
+                params = {**(params or {}), **scene_params[o["kind"]]}
             prop = _props.build(o["kind"], params)
             if "at" in o:
                 parent, site = o["at"].split("/", 1)
@@ -677,6 +792,11 @@ class World:
             eq = s.add_equality(name=f"fasten/{a}/{b}", type=mujoco.mjtEq.mjEQ_WELD, objtype=mujoco.mjtObj.mjOBJ_BODY,
                                 name1=self.objects[b]["body"], name2=self.objects[a]["body"], active=False)
             eq.solref = [0.004, 1.0]
+        for a, b in sc.get("screws", []):          # two points of the cap's axis held on the bottle's axis: a hinge
+            for k in range(2):
+                eq = s.add_equality(name=f"screw/{a}/{b}/{k}", type=mujoco.mjtEq.mjEQ_CONNECT, objtype=mujoco.mjtObj.mjOBJ_BODY,
+                                    name1=self.objects[b]["body"], name2=self.objects[a]["body"], active=False)
+                eq.solref = [0.004, 1.0]
         return s.compile()
 
     def _index(self) -> None:
@@ -737,6 +857,8 @@ class World:
         self._fasteners: dict[str, dict[str, int]] = {}       # a -> {b: the weld that holds a onto b}
         for a, b in self.scene["fasteners"]:
             self._fasteners.setdefault(a, {})[b] = m.equality(f"fasten/{a}/{b}").id
+        self.hinged: dict[str, str] = {}      # cap -> bottle while the cap is held on the bottle's axis, free to turn
+        self._hinges = {(a, b): [m.equality(f"screw/{a}/{b}/{k}").id for k in range(2)] for a, b in self.scene.get("screws", [])}
         # Shapes of one object that pass through another (`let_through`). Contacts are filtered by bit masks: every
         # object that something may pass through gets a bit of its own, which its shapes carry as their type and
         # every other shape carries in its affinity, except a shape that is being let through.
@@ -757,7 +879,7 @@ class World:
             jid = [m.joint(ap + j).id for j in self.base["joints"]]
             self._base_qadr = np.array([m.jnt_qposadr[j] for j in jid])
             self._base_dadr = np.array([m.jnt_dofadr[j] for j in jid])
-            self._base_ctrl = np.array([m.actuator(ap + a).id for a in self.base["actuators"]])
+            self._base_ctrl = np.array([m.actuator(ap + a).id for a in self.base["actuators"]], dtype=np.int64)
             self._base_body = m.body(ap + self.base["body"]).id
 
     # ---- control ---------------------------------------------------------------------------------------------------
@@ -780,8 +902,31 @@ class World:
         else:
             self.data.ctrl[self._grip_ctrl] = min(max(float(row[-1]), 0.0), gmax) * (self.spec.gripper_ctrl_max / gmax)
 
+    def whole_body_layout(self) -> list:
+        """The names of a row of the walking G1, in order."""
+        out = list(WHOLE_BODY_HEAD)
+        for mt in self._mounts:
+            out += [f"{mt['name']}_{j}" for j in mt["spec"].arm_joints]
+        return out + [f"{mt['name']}_gripper" for mt in self._mounts]
+
+    def whole_body_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        """Lower and upper bounds of a row of the walking G1 (BiGym's): the twist +-1, the height 0.4 .. 1.0 m, the
+        pitch -0.2 .. 0.8 rad, each arm joint its range, the grippers 0 .. 1."""
+        from . import wbc as _wbc
+        lo = [-_wbc.VEL_CLIP, -_wbc.VEL_CLIP, _wbc.HEIGHT_RANGE[0], -_wbc.WZ_CLIP, _wbc.PITCH_RANGE[0]]
+        hi = [_wbc.VEL_CLIP, _wbc.VEL_CLIP, _wbc.HEIGHT_RANGE[1], _wbc.WZ_CLIP, _wbc.PITCH_RANGE[1]]
+        rng = np.concatenate([self._ix[a]["arm_range"] for a in self.arm_names])
+        return (np.array(lo + list(rng[:, 0]) + [0.0] * len(self.arm_names)), np.array(hi + list(rng[:, 1]) + [1.0] * len(self.arm_names)))
+
     def check_row(self, row) -> np.ndarray:
         row = np.array(row, dtype=np.float64)
+        if self.wbc is not None:                # the walking G1: a `whole_body` command (`WBC_LOWER` .. `WBC_UPPER`)
+            if row.shape != (self.row_size,):
+                raise RowRejected(f"a control row of the walking G1 has {self.row_size} numbers, got shape {row.shape}")
+            if not np.all(np.isfinite(row)):
+                raise RowRejected("control row is not finite")
+            lo, hi = self.whole_body_bounds()
+            return np.clip(row, lo, hi)
         k = max(len(self.arm_names), 1)
         if row.shape != (self.row_size,):
             raise RowRejected(f"a control row has {self.row_size} numbers ({'%d base targets, ' % self._nb if self._nb else ''}{self.row_size - k - self._nb} arm joint targets, {k} gripper target{'s' if k > 1 else ''}), got shape {row.shape}")
@@ -799,17 +944,20 @@ class World:
         row = self.check_row(row)
         self._rows.append(row)
         self.target = row
-        self._apply(row)
         m, d = self.model, self.data
-        sensors = self._sensor_list
-        if self.grasp == "contact" and any(self._held_by.values()):
-            self._payload()
-        for _ in range(self.substeps):
-            mujoco.mj_step(m, d)
-            if sensors:
-                t = d.time - self.physics_dt          # positions and contacts in `d` are those of the state stepped from
-                for sensor in sensors:
-                    sensor.sample(d, t)
+        if self.wbc is not None:
+            self._whole_body_step(row)
+        else:
+            self._apply(row)
+            sensors = self._sensor_list
+            if self.grasp == "contact" and any(self._held_by.values()):
+                self._payload()
+            for _ in range(self.substeps):
+                mujoco.mj_step(m, d)
+                if sensors:
+                    t = d.time - self.physics_dt          # positions and contacts in `d` are those of the state stepped from
+                    for sensor in sensors:
+                        sensor.sample(d, t)
         self.tick += 1
         if d.warning[mujoco.mjtWarning.mjWARN_BADQACC].number > 0 or not np.all(np.isfinite(d.qpos)):
             raise SimulationUnstable(f"physics diverged at tick {self.tick} (t = {d.time:.3f} s)")
@@ -912,8 +1060,14 @@ class World:
             state["untouched"] = [[a, int(v)] for a, v in sorted(self._untouched.items())]
             state["held_at"] = [[a, self._held_at[a]] for a in sorted(self._held_at) if self._held_by.get(a)]
             state["qfrc_applied"] = d.qfrc_applied
+        if self.hinged:                         # absent while no cap turns on a bottle's axis (0.5.0)
+            state["hinge"] = [self.model.eq_data[i] for a in sorted(self.hinged) for i in self._hinges[(a, self.hinged[a])]]
         if self._through:                       # absent while nothing passes through anything
             state["through"] = [[a, b, list(g)] for (a, b), g in sorted(self._through.items())]
+        if getattr(self, "wbc", None) is not None:      # the walking G1: its controller's state and the fingers' slew
+            state["wbc"] = self.wbc.state_arrays()
+            state["finger_slew"] = [[k, v] for k, v in sorted(self._finger_slew.items())]
+            state["fell_at"] = self.fell_at
         return digest(state)
 
     # ---- grasp assist, scripted bodies, appearances ------------------------------------------------------------------
@@ -931,6 +1085,10 @@ class World:
     def held_by(self) -> dict:
         """{arm: the object its hand holds, or None}; the one arm of a one-arm robot is called ""."""
         return dict(self._held_by)
+
+    def held_by_arm(self, name: str | None) -> str | None:
+        """Which hand holds this object ("" on a one-arm robot), or None."""
+        return next((a for a, n in self._held_by.items() if n is not None and n == name), None)
 
     def holds(self, name: str | None) -> bool:
         """Whether a hand of the robot holds this object (the grasp assist's weld)."""
@@ -1052,6 +1210,35 @@ class World:
             del self.fastened[a]
             self._scratch_tick = -1
             self._ops.append([self.tick, "unfasten", a])
+
+    HINGE_AXIS = 0.04       # m: the second point of a cap's axis that a hinge holds on the bottle's axis
+
+    def hinge(self, a: str, b: str, on: bool = True) -> None:
+        """Hold cap `a` on the axis of bottle `b` (a pair of the scene's `screws`) and leave it free to turn about it
+        (`on=False`: no longer). Two points of the cap's axis (its origin and `HINGE_AXIS` above it, along its own +z)
+        are held where they are now in the bottle's frame. The weld of `fasten` is the caller's business. Part of the
+        state; only the hazard layer calls this."""
+        ids = self._hinges[(a, b)]
+        if not on:
+            if self.hinged.get(a) == b:
+                for i in ids:
+                    self.data.eq_active[i] = 0
+                del self.hinged[a]
+                self._scratch_tick = -1
+                self._ops.append([self.tick, "hinge", a, b, False])
+            return
+        s = self._sync()
+        pa, pb = self.objects[a]["body_id"], self.objects[b]["body_id"]
+        inv = tf.inverse((s.xpos[pb], s.xquat[pb]))
+        for k, i in enumerate(ids):
+            local = np.array([0.0, 0.0, self.HINGE_AXIS * k])
+            world_pt = tf.compose((s.xpos[pa], s.xquat[pa]), (local, np.array([1.0, 0.0, 0.0, 0.0])))[0]
+            self.model.eq_data[i, 0:3] = tf.compose(inv, (world_pt, np.array([1.0, 0.0, 0.0, 0.0])))[0]     # on the bottle
+            self.model.eq_data[i, 3:6] = local                                                              # on the cap
+            self.data.eq_active[i] = 1
+        self.hinged[a] = b
+        self._scratch_tick = -1
+        self._ops.append([self.tick, "hinge", a, b, True])
 
     def let_through(self, a: str, geoms, b: str, on: bool = True) -> None:
         """Let the named collision shapes of object `a` pass through object `b` (`on=False`: no longer): the blade of
@@ -1335,10 +1522,18 @@ class World:
             raise ValueError(f"{self.spec.type} has no driving base")
         return self.data.qpos[self._base_qadr].copy()
 
+    WALK_WINDOW = 25            # ticks (0.5 s): the walking G1's speed is its pelvis's mean over this long
+
     def base_vel(self) -> np.ndarray:
-        """How fast the base moves: (vx, vy, yaw rate)."""
+        """How fast the base moves: (vx, vy, yaw rate). On the walking G1 the mean over the last `WALK_WINDOW` ticks
+        (0.5 s): a pelvis that walks sways and surges with every step (at 0.25 m/s walked its own speed peaks at 0.34),
+        and the speed of a walking body is the speed at which it gets somewhere."""
         if not self.base:
             raise ValueError(f"{self.spec.type} has no driving base")
+        if self.wbc is not None and len(self._walk_track) >= 2:
+            (t0, p0), (t1, p1) = self._walk_track[0], self._walk_track[-1]
+            dt = (t1 - t0) * CONTROL_DT
+            return np.array([(p1[0] - p0[0]) / dt, (p1[1] - p0[1]) / dt, _wrap_angle(p1[2] - p0[2]) / dt])
         return self.data.qvel[self._base_dadr].copy()
 
     def footprint(self, pose=None) -> np.ndarray:
@@ -1526,7 +1721,8 @@ class World:
                "contacts": contacts, "tcp": self.tcp_pose(), "gripper_target": float(self.target[-1]),
                "table_half": self.table_half}
         if self.base:                           # where the base is and how fast it moves; the outline it covers on the floor
-            out["base"] = {"pose": s.qpos[self._base_qadr].copy(), "vel": s.qvel[self._base_dadr].copy(), "footprint": self.footprint()}
+            out["base"] = {"pose": s.qpos[self._base_qadr].copy(), "vel": self.base_vel() if self.wbc is not None else s.qvel[self._base_dadr].copy(),
+                           "footprint": self.footprint()}
         if self.arm_names:                      # `tcp` is the hand of the arm that acted last; `tcps` has every hand
             out["tcps"] = {a: self.arm(a).tcp_pose() for a in self.arm_names}
             out["arm"] = self.acting

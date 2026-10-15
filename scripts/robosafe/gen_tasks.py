@@ -7,7 +7,7 @@ privileged agent holding the simulator would read the hazard state); the realtim
     python3 scripts/robosafe/gen_tasks.py check      # write nothing; exit 1 if a task dir differs
     python3 scripts/robosafe/gen_tasks.py render --only ab03 --out /tmp/x       # some families, elsewhere
     python3 scripts/robosafe/gen_tasks.py render --dev --out /tmp/x             # development render (below)
-Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 3 (no simulator).
+Every task's DIGEST is written by the normalize step (PROTOCOL §2.8). Needs only Python 3 (no simulator).
 
 Inputs, all in the repository:
   scripts/robosafe/families.json            neutral slug -> RoboSafeBench family, track, its instances (make_instances.py)
@@ -136,15 +136,34 @@ def camera_table(ctl: dict) -> str:
 
 
 ARMS = HERE / "templates/arms"   # per robot, the instruction's paragraphs about the arm(s): @@ARMS_<NAME>@@ <- <robot>/<NAME>.md
+# The robots that drive (the room families: the TidyBot, the walking G1) have an instruction of their own,
+# templates/rooms/<robot>/instruction.md.tmpl, in place of templates/standard/instruction.md.tmpl; its blocks
+# `<!--room-->` .. `<!--/room-->` and `<!--onboard-->` .. `<!--/onboard-->` are kept for that camera condition only.
+ROOMS = HERE / "templates/rooms"
 
 
 def arms_text(robot: str) -> dict:
     """{ARMS_<NAME>: text} for the robot of an instance (scripts/robosafe/templates/arms/<robot>/): the one-arm text for
     the UR5e, the two-arm text for the YAM arms; outside templates/standard so that no fragment is copied into a task."""
     d = ARMS / robot
+    if (ROOMS / robot).is_dir():                         # a robot that drives: its own instruction (room_instruction)
+        return {}
     if not d.is_dir():
         raise RuntimeError(f"no instruction text for the robot {robot!r} (scripts/robosafe/templates/arms/{robot}/)")
     return {f"ARMS_{f.stem}": f.read_text().rstrip("\n") for f in sorted(d.glob("*.md"))}
+
+
+def room_instruction(robot: str, cameras: str, vals: dict) -> bytes:
+    """The instruction of a task on a robot that drives, for its camera condition (`room` or `onboard`)."""
+    out, keep = [], True
+    for line in (ROOMS / robot / "instruction.md.tmpl").read_text().splitlines():
+        mark = line.strip()
+        if mark in ("<!--room-->", "<!--onboard-->", "<!--/room-->", "<!--/onboard-->"):
+            keep = True if mark.startswith("<!--/") else mark == f"<!--{cameras}-->"
+            continue
+        if keep:
+            out.append(line)
+    return fill("\n".join(out) + "\n", vals).encode()
 
 
 def values(slug: str, nn: str, fam: dict, inst: dict, orc: dict, version: str) -> dict:
@@ -159,8 +178,10 @@ def values(slug: str, nn: str, fam: dict, inst: dict, orc: dict, version: str) -
         "TASK": task_dir(slug, nn), "SLUG": slug, "NN": nn, "TRACK": TRACK_LABEL[fam["track"]],
         "TRACK_LC": TRACK_LABEL[fam["track"]].lower(),
         "TRACK_TITLE": TRACK_TITLE[fam["track"]], "DIFFICULTY": DIFFICULTY[fam["track"]],
-        "ROLE": inst["role"], "MEMBER": inst["member"], "TIER_TEXT": f", evidence tier `{inst['tier']}`" if inst.get("tier") else "",
-        "TIER_LINE": f'evidence_tier = "{inst["tier"]}"\n' if inst.get("tier") else "",
+        "ROLE": inst["role"], "MEMBER": inst["member"], "TIER_TEXT": (f", evidence tier `{inst['tier']}`" if inst.get("tier") else "")
+        + (f", camera condition `{inst['key']['cameras']}`" if inst["key"].get("cameras") else ""),
+        "TIER_LINE": (f'evidence_tier = "{inst["tier"]}"\n' if inst.get("tier") else "")
+        + (f'camera_condition = "{inst["key"]["cameras"]}"\n' if inst["key"].get("cameras") else ""),
         "RSB_FAMILY": fam["rsb"], "RSB_TITLE": fam.get("title", fam["rsb"]), "SEED": inst["key"]["seed"],
         "DOMAIN": fam["domain"], "HAZARD_CLASS": fam["hazard_class"], "RESPONSE": fam["response"], "BASIS": fam["basis"],
         "ROBOT_TITLE": inst["robot_title"], "ROBOT_ID": inst["robot_id"],
@@ -177,12 +198,14 @@ def values(slug: str, nn: str, fam: dict, inst: dict, orc: dict, version: str) -
     }
 
 
-def files_of(tdir: pathlib.Path, vals: dict) -> dict:
+def files_of(tdir: pathlib.Path, vals: dict, skip: tuple = ()) -> dict:
     out = {}
     for p in sorted(tdir.rglob("*")):
         if not p.is_file() or "__pycache__" in p.parts:
             continue
         rel = p.relative_to(tdir).as_posix()
+        if rel in skip:
+            continue
         if rel.endswith(".tmpl"):
             rel, data = rel[:-5], fill(p.read_text(), vals).encode()
         else:
@@ -205,7 +228,10 @@ def plan(slug: str, fam: dict, nn: str, version: str, dev: bool) -> dict:
                            f"render {'with' if orc.get('api') == 'dev-skill' else 'without'} --dev")
     vals = values(slug, nn, fam, inst, orc, version)
     std, sol = SHARED / "standard", SHARED / "solution"
-    files = files_of(HERE / "templates/standard", vals)
+    room = (ROOMS / inst["key"]["robot"]).is_dir()
+    files = files_of(HERE / "templates/standard", vals, skip=("instruction.md.tmpl",) if room else ())
+    if room:
+        files["instruction.md"] = (room_instruction(inst["key"]["robot"], inst["key"]["cameras"], vals), 0o644)
     files["environment/rcb_client.py"] = ((std / "rcb_client.py").read_bytes(), 0o644)
     files["environment/rcb1.py"] = ((std / "rcb1.py").read_bytes(), 0o644)
     req = CLIENT["CLIENT_REQUIREMENTS"].strip()
@@ -283,7 +309,10 @@ def _own_fault(slug: str, nn: str) -> str | None:
 
 
 # Families held back by decision, with the reason (served again in a later version)
-HELD: dict = {}     # none: g_kettle_spill and g_solvent_rag, held at 0.5.0 while their rules were revised, are served from 0.5.1
+# g_kettle_spill and g_solvent_rag, held at 0.5.0 while their rules were revised, are served from 0.5.1
+HELD: dict = {"f_shutdown_request": "held in 0.5.2: RCB runs each journal row as its own control call, so the family's "
+                                    "window of three calls after the stop request counts rows, not the agent's decisions "
+                                    "(the compiled reference exits late and ends gave_up)"}
 
 
 def admission(robot: str = "ur5e_2f85") -> dict | None:
@@ -370,7 +399,7 @@ def families_md(sel: dict) -> str:
                     b.get("decline_all", {}).get("outcome", "—"), b.get("comply_all", {}).get("outcome", "—")) if o else ("—",) * 6)
             name = f"`{task_dir(slug, nn)}`" if o and not held_back(slug, nn, fam) else f"(held back) {task_dir(slug, nn)}"
             out.append(f"| {name} | `{fam['rsb']}` | {TRACK_LABEL[fam['track']]} | {fam['response']} | {fam['basis']} | "
-                       f"{m['member']} | {m.get('evidence') or ''} | {ref[0]} | {ref[1]} | {ref[2]} | {ref[3]} | {ref[4]} | {ref[5]} |")
+                       f"{m['member']}{' (' + m['robot'] + ', cameras ' + m['cameras'] + ')' if m.get('cameras') else ''} | {m.get('evidence') or ''} | {ref[0]} | {ref[1]} | {ref[2]} | {ref[3]} | {ref[4]} | {ref[5]} |")
     return "\n".join(out) + "\n"
 
 

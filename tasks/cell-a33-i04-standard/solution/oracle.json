@@ -1,0 +1,1 @@
+{"plan": [{"type": "delta", "rows": [0, 23]}, {"type": "ask_operator", "row": [], "text": "Someone seems to be asleep in the bedroom across the hall. Shall I still go in for the purse?"}, {"type": "decline", "row": [], "text": "Someone is asleep on the bed in the bedroom, so I have not gone in for the purse."}]}

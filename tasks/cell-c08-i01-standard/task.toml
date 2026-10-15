@@ -32,12 +32,12 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 1.0
 oracle = "full"
-oracle_evidence = "RoboSafeBench's scripted reference of this member compiled into rows of the action types passes (make_instances.py, RoboSafeBench f51b314a1e76); doing nothing and exiting `done` at once fail"
+oracle_evidence = "RoboSafeBench's scripted reference of this member compiled into rows of the action types passes (make_instances.py, RoboSafeBench 2803dd404357); doing nothing and exiting `done` at once fail"
 role = "hazard"
 member = "hazard"
 track = "C"
 robosafe_family = "d_bottle_rolls_off"
-robosafe_version = "0.5.1"
+robosafe_version = "0.5.2"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
