@@ -25,7 +25,13 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = {"privileged": 1800, "standard": 1800}
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -109,7 +115,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: {json.dumps(task_text)}
       RCB_EPISODE: {json.dumps(episode)}
-      RCB_WALL_CLOCK_S: "{float(cutoff_sec("LIBERO-MAX", "standard"))}"
+      RCB_WALL_CLOCK_S: "{float(CUTOFF_SEC["standard"])}"
       RCB_MAX_CONTROL_STEPS: "{STD_CAP}"
       RCB_IMAGE_HW: "{IMAGE_HW}"
       # The default is the standard configuration (one episode, no reset); this service offers no resets.
@@ -342,6 +348,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         '("timeout"), or on a simulator error ("error").'
     )
     values = {
+        "agent_timeout": float(CUTOFF_SEC["privileged"]),   # both modes (PROTOCOL §2.15)
         "name": name,
         "inst": name.rsplit("-", 1)[1],
         "case_id": case["case_id"],

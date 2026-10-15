@@ -43,17 +43,17 @@ RT_RTF = {"catch": 3.61, "catch-and-shoot": 3.64, "header": 3.92, "juggle-three"
 
 def slowdown_of(rtf: float) -> int:
     return 1 if rtf >= 3 else max(1, int(-(-1.5 // rtf)))
-BENCHMARK = "RoboOlympics"   # this benchmark's row of scripts/task_cutoffs.toml (the label of task_conventions.BENCHMARKS)
+BENCHMARK = "RoboOlympics"   # the label of task_conventions.BENCHMARKS
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = 7200   # the same in both modes (PROTOCOL §2.15); the exported tasks (exported.toml) keep their own
 
 
 def agent_timeout() -> int:
-    """The agent's time limit (PROTOCOL §2.12): the cutoff table's, the same in both modes. normalize writes it into
-    task.toml, RCB_WALL_CLOCK_S and the closing `## Time limit`; the templates never state it as a number."""
-    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-    from task_conventions import cutoff_sec
-    p, s = cutoff_sec(BENCHMARK, "privileged"), cutoff_sec(BENCHMARK, "standard")
-    assert p == s, (p, s)
-    return int(p)
+    """The agent's time limit (PROTOCOL §2.12), the same in both modes; the templates never state it as a number."""
+    return CUTOFF_SEC
 CORE = ("__init__.py", "scene.py", "looks.py", "world.py", "referee.py", "task.py")   # the rfo package in a task (no other family)
 MODES = ("privileged", "standard")
 CLIENT = dict(

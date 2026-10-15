@@ -53,7 +53,7 @@ command = "sh /srv/finalize.sh"
 timeout_sec = {{collect_timeout}}
 
 [agent]
-timeout_sec = 3600.0
+timeout_sec = {{agent_timeout}}
 # The agent container holds no simulator, but LIBERO's demonstrations and LIBERO-MAX's policies are public upstream: the
 # agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
