@@ -7,6 +7,7 @@ This is RoboOlympics task `badminton-match-wallclock-program-standard` (revision
 The world runs in real time at 1/S of real speed (S = `timing.slowdown` in `game spec`); your thinking costs game time. At the end of every unit the world freezes for the reviews.
 
 Whenever the world freezes for a review (after every unit: a point, a shot, a heat; see `game spec`), send `game ready "WHY" "PLAN"` (a short review) before the next unit starts.
+**Each review has a time limit: send `game ready` within 300 s of real time after the world freezes (`timing.review_timeout_s` in `game spec`), or your side loses the match** (`ready_timeout`, a valid result, success 0, even when you are ahead). The world does not go on by itself after the limit: watch for the freeze (your program's log, `game status`) and review at once.
 The match is graded when your session ends: stay until it is over. **If your session ends before the match is over, you lose the match** (a valid result, success 0), also if you never sent `game start`.
 
 ## Write a program

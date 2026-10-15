@@ -178,6 +178,17 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
   20 min for the Isaac start plus a worst case of 2 control steps/s, never less than the old 3600 s, at most 4 h (enough for
   26,400 steps at 2 steps/s, ~46,000 at 3.5). A replay over its limit is a grader error (`grader_error` = 1,
   `replay_timed_out` = 1), as before. `[verifier] timeout_sec` = 30600 s: two capped replays plus 30 min.
+  **Since 2026-10-14** (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at
+  most **40,000 rows** (`MAX_ROWS` in `tests/grade.py`; before, up to the tooling's runaway guard of 200,000, which no
+  replay limit covered), each replay gets `min(28000 s, max(3600 s, 1200 s + steps / 1.5))`, and `[verifier]
+  timeout_sec` = **57800 s** (two 28000 s replays plus 30 min). Basis, from the pool's 484 graded privileged trials
+  (2026-10-09 to 10-14): the longest successful trajectory had 25,404 rows (`setup_a_bar_for_a_cocktail_party`; median of
+  the 113 successes 4,675), the frozen instances' challenge timeouts (`challenge_max_steps`) reach 39,090; the slowest
+  replay measured was the filmed second replay of a 7,747-row `assembling_gift_baskets` trajectory: 4,851 s with a 725 s
+  start, 1.88 control steps/s (its unfilmed first replay: 3.0 steps/s after a 1,115 s start). 40,000 rows is above every
+  challenge timeout and 1.6 times the longest success; 1.5 steps/s is 20 % under the slowest rate measured, and 1200 s
+  covers the slowest start. The instruction states the cap; every success recorded so far is under it. The standard
+  mode is unchanged (its episode is bounded by the agent's wall clock).
 - **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI;
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
   replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
@@ -253,7 +264,7 @@ The pass rules are unchanged; what changed is how a 0 that is not the agent's is
   or ran out of time; `finalize.sh` records each replay's exit code). A reward is written in every case. The layer's
   give-ups keep their meaning: `sim_crashed_on_call` is the agent's 0, `sim_crashed` and `resume_failed` are `infra_error`.
 - **Privileged.** A file the agent wrote that cannot be graded (not an npz, pickled or object arrays, no `task` or
-  `actions` entry, a wrong shape, non-finite values, more than 200,000 rows) is `bad_trajectory` (it was `grader_error`
+  `actions` entry, a wrong shape, non-finite values, more than 200,000 rows; 40,000 since 2026-10-14) is `bad_trajectory` (it was `grader_error`
   for the unreadable ones); a replay process that dies or runs out of time stays `grader_error` and now also sets
   `infra_error` (`replay_failed`, `replay_timed_out`); `instance_ok` = 0 (the frozen scene did not rebuild to the recorded
   one in the verifier, decided before the first action) sets both too (it was a plain 0). The tooling's `replay` CLI skips an extra npz entry it cannot read, and a failure of

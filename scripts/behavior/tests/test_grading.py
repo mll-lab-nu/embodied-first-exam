@@ -281,6 +281,13 @@ class PrivilegedGrader(unittest.TestCase):
                 self.check(w, "0", success=0, bad_trajectory=1, grader_error=0, infra_error=0)
         self.check(lambda p: np.savez(p, actions=np.zeros((3, 25), np.float32), task="another_task"), "0", wrong_family=1, grader_error=0)
 
+    def test_the_row_cap_is_the_graders_not_the_runaway_guard(self):
+        # 2026-10-14 (board 0121): at most 40,000 rows, so that every accepted trajectory gets a verdict within the
+        # replay limit (the tooling's runaway guard, 200,000, is the episode's)
+        self.check(lambda p: np.savez(p, actions=np.zeros((40_000, 25), np.float32), task="picking_up_trash"), "1", success=1)
+        self.check(lambda p: np.savez(p, actions=np.zeros((40_001, 25), np.float32), task="picking_up_trash"), "0",
+                   bad_trajectory=1, grader_error=0, infra_error=0, n_actions=40_001)
+
     def test_an_extra_entry_does_not_matter_to_the_grader(self):
         self.check(lambda p: good_traj(p, notes=np.array([{"k": 1}], dtype=object)), "1", success=1)
 
