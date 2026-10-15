@@ -37,6 +37,18 @@ source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
+name = "roboolympics-fencing-bout-i01-standard"
+source_task = "roboolympics/fencing-bout-wallclock-program-standard"
+revision = "fencing-7+core-0.2"
+source_commits = ["a6712a675343"]
+
+[[tasks]]
+name = "roboolympics-fencing-bout-i02-standard"
+source_task = "roboolympics/fencing-bout-wallclock-program-standard"
+revision = "fencing-7+core-0.2"
+source_commits = ["a6712a675343"]
+
+[[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"

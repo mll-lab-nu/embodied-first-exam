@@ -70,9 +70,9 @@ Benchmark-specific fields (optional, PROTOCOL §1):
   `roboolympics-<family-with-dashes>-i<NN>` (`[metadata].family` = the family with underscores, e.g. `penalty_kick`);
   every family in privileged and standard mode. Its exported tasks (PROTOCOL §3, `scripts/roboolympics/exported.toml`): `<base>` is
   `roboolympics-<sport>-<format>-i<NN>` with the sport's RoboOlympics id (`tabletennis`, `badminton`, `soccer`,
-  `soccerssl`) and `match`, or a skill format (`hitskill`, `actskill`); real-time matches in standard-realtime mode
-  only, turn-based matches (`eai-standard-turn/1.0`) and skill tasks in standard mode only; never a family name of the
-  generated families.
+  `soccerssl`, `fencing`) and its format (`match`, `bout`), or a skill format (`hitskill`, `actskill`); real-time
+  matches in standard-realtime mode only, turn-based matches (`eai-standard-turn/1.0`) and skill tasks in standard mode
+  only; never a family name of the generated families.
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
 - RoboSafeBench: `<base>` is `cell-<slug>-i<NN>` (standard tasks, and for the realtime set `-standard-realtime` twins of
