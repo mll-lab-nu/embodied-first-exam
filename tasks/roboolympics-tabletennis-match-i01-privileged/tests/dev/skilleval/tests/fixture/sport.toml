@@ -1,0 +1,14 @@
+# skilleval's test fixture (skilleval/tests/test_skilleval.py): one seat commands two robots, so the high level's act
+# `swing` carries the core's `entity` beside the skill's request fields. Only what skilleval/evaluate.py's checks read.
+[sport]
+name = "fixture"
+revision = "fixture-1"
+
+[formats.team]
+seats = ["A"]
+
+[modes.low]
+evaluator = "evaluator.py"
+
+[modes.low.deliverable]
+path = "/app/output/skill/swing.py"
