@@ -17,23 +17,23 @@ Exactly (privileged information, also readable through the tooling): One environ
 Success when the button's prismatic joint PlungerSlideJoint has position >= 0.004 m (button_pressed_threshold; the joint ranges from 0 m, unpressed, to 0.01 m, fully pressed; positive = plunger pushed into the housing toward the wall). Evaluated after every control step (decimation 1, so after every 1/120 s physics step) on the simulated state; no hold time is required. The episode terminates at the first step where it holds. Otherwise it is truncated by the time limit: episode_length_s = 20 s, i.e. max_episode_length = 2400 control steps; AM-Bench raises the time-out when episode_length_buf >= max_episode_length - 1, i.e. at the 2399th step.
 The episode **ends by itself** at the first control step where the check holds (success; rows after it are never
 executed), or when the task's episode length of **20 s** runs out (a failure: AM-Bench's time-out ends the episode
-at control step 2399). Isaac Lab resets the scene inside the step that ends an episode, so after it `s.state()`,
-`s.objects()` and the cameras show the start again; `s.status()` keeps the outcome and the end state's hash.
+at control step 2399). Isaac Lab resets the scene inside the step that ends an episode, so after it `s.state()` and
+`s.objects()` show the start again; `s.status()` keeps the outcome and the end state's hash, and the cameras show the end.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if the task succeeds in both replays and both
-end in the same state, else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
-as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
-The file holds `task` and `actions`, a (T, 8) float array of at most **8,000 rows** (one per control step); anything else
-(another shape, NaN, more rows, a row whose quaternion `qw qx qy qz` has zero length, a file that is not such an npz)
-scores 0.
+open-loop from the same initial state in two fresh processes and scored 1 if the task succeeds in both replays, else 0
+(a trajectory that only just succeeds may not succeed in both: leave a margin). Also leave the script that produced it
+at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as you improve it: whatever
+is in `/app/output/` when the time is up is graded. The file holds `task` and `actions`, a (T, 8) float array of at most
+**8,000 rows** (one per control step); anything else (another shape, NaN, more rows, a row whose quaternion
+`qw qx qy qz` has zero length, a file that is not such an npz) scores 0.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
 from rcb_ambench import Session
 s = Session(instance="/app/instance.json")   # ~2-6 min: launches Isaac Sim, builds the scene, resets to the frozen instance
-                                   # (no cameras, as the grader; Session(..., cameras=True) to look: see below)
+                                   # Session(..., cameras=True[, depth=True]) to look (see Cameras below)
 s.reset()                          # back to the frozen instance (the seeded reset; as often as you like)
 s.step(row)                        # one control step (1/120 s): row = 8 values (below); True once the episode is over
 s.hold_action()                    # a row that keeps the current end-effector target and gripper command
@@ -45,20 +45,24 @@ s.actions()                        # (T, 8) rows executed since the last reset: 
 s.replay(actions)                  # reset, run the rows open-loop until the episode ends, return status (+ executed_rows)
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_frame("ee_camera")        # cameras=True only: RGB uint8 (384, 384, 3) at the end effector, or "base_camera" (on the airframe, looking forward)
+s.render_depth("ee_camera")        # cameras=True, depth=True: float32 z-depth (m), 0 = no reading
+s.camera_info()                    # cameras=True: intrinsics, world -> camera extrinsics (OpenCV axes), mounts
 s.start_video("/app/output/try.mp4"); ...; s.stop_video()   # cameras=True only: film the steps in between (both cameras side by side)
 s.env                              # the Isaac Lab environment itself (AM-Bench's source is in /opt/ambench: read-only reference)
 ```
 The tooling is deliberately thin: the environment's own action, its state and its cameras. Reaching, pressing, pushing,
 turning and throwing are yours to build. Isaac Sim runs once per process, and only the first episode of a process is
 guaranteed to be bit-identical to a fresh process's: after changes, check your trajectory with the grader's CLI.
-**Cameras.** The robot's two onboard cameras exist only in a `Session(..., cameras=True)` (decided once per process). With
-them, Isaac renders every step and that makes PhysX's results depend on timing: two runs of the same rows can part after a
-few hundred steps. The grader replays without cameras, where a fresh process reproduces a trajectory bit for bit, so use
-the cameras to look and check every trajectory with the CLI below.
+**Cameras.** The robot's two onboard cameras come with `Session(..., cameras=True)` (decided once per process): a second
+Isaac process then draws them from the physics state (it starts with the Session and takes ~3.5 GB of GPU memory and ~12 GB
+of memory), so looking never changes the physics, which stays exactly the grader's.
 
 The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_ambench.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
-(`... film --instance ... --traj ... --video out.mp4` films the rows with the cameras on: an illustration, not a verdict).
+(`... film --instance ... --traj ... --video out.mp4` films the same rows through the cameras). A process whose output
+shows `PhysX error: GPU ... fail to launch` or `CUDA error: out of memory` ran short of GPU memory and its physics is not
+reliable (PhysX steps on without the failed kernels): rerun it with fewer Isaac processes at once. The grader runs such a
+replay once more and never scores it.
 
 ## Conventions
 - World frame: metres, z up, the ground is the plane z = 0; positions are relative to the environment's origin (the
@@ -72,9 +76,9 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Control and physics run at 120 Hz (one physics step per row). There is no step budget: the time limit (`## Time limit`)
   is your only budget; an episode lasts at most 20 s of simulated time.
 - One `Session` per process (Isaac Sim launches once, then the scene builds: ~2-6 min, the upper end on a busy host).
-  Physics is PhysX on the **GPU** (about 10-15 control steps per second of wall time). One Isaac process takes up to
-  ~13 GiB of memory and ~6.5 GiB of GPU memory: run at most two at once. Do not call `s.close()` before writing every
-  output.
+  Physics is PhysX on the **GPU** (about 10-15 control steps per second of wall time). A camera-free Session takes ~2 GiB
+  of memory and ~1.2 GiB of GPU memory, one with cameras ~14 GiB and ~4.6 GiB (its render worker included): run at most
+  two Sessions with cameras at once. Do not call `s.close()` before writing every output.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
