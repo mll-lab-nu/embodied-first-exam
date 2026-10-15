@@ -2345,6 +2345,12 @@ match = "^robowits-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 
 [[cap]]
+# the `blenderkit` service of the privileged RoboWits tasks whose scenes load BlenderKit models (2026-10-14): decrypts this
+# family's models once (imports gs_gym) and serves them on localhost; the three families without such models have none
+match = "^robowits-(?!dominos-|stack-cubes-|stand-pages-).*-privileged$"
+blenderkit = { cpus = 1.0, memory_gb = 4.0, pids = 4096 }
+
+[[cap]]
 match = "^robowits-.*-standard$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 11.0, pids = 8192 }
