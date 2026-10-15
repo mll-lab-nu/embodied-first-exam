@@ -2,10 +2,13 @@
 
 {{TASK_TEXT}}
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds; the
-whisk moves only through contact with the hand, the bowl and the counter. The controller runs at 50 Hz, with ten 2 ms
-physics substeps.
+The robot is a fixed Tianji Marvin stand at the world origin facing +x, with two 7-joint arms and a dexterous hand
+on each wrist (robot id `marvin-bimanual-sharpa-wave`). Every arm and finger joint is a position servo in the physics
+engine under native force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity
+compensation** (a held target sags by about 1 cm at the hand under load unless your targets account for it). The bowl
+and the whisk move only through contact with the hands, the arms, each other and the counter. The controller runs at
+50 Hz, with ten 2 ms physics substeps. World frame: metres and radians, +z up, +x forward from the robot stand, +y to
+the robot's left.
 
 {{HANDS}}
 {{RESETS}}
@@ -32,13 +35,14 @@ r.fk(q)                       # robot-link forward kinematics; no physics is ste
 r.status()
 res.save("/app/runs/001")
 ```
-`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order: the wrist targets `wrist_x, wrist_y,
-wrist_z` (metres, world position of the grip point on the whisk handle axis inside the closed hand at the start) and
-`wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints about that point), then the finger targets in radians.
-`D` is 28 for `sharpa` (22 Sharpa Wave finger joints `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 26 for `wuji`
-(20 Wuji Hand 2.2 finger joints `r_wuji_r_THJ0..3`, `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`,
-`r_wuji_r_LFJ0..3`). The episode starts with the whisk held in a settled grasp, wrist targets (0.58, 0.0, 1.07) m and
-zero rotations; holding the current targets keeps the grasp. Actuator targets are clipped to the published joint
+`rows` is `(T, D)` in `spec["action_types"]["joint_position"]["layout"]` order, radians: columns 0-6 the left arm
+`SHOULDER_PITCH_L_J1` ... `WRIST_ROLL_L_J7`, 7-13 the right arm `..._R_J1` ... `..._R_J7`, then the left hand's and
+the right hand's finger targets. `D` is 58 for `sharpa` (22 Sharpa Wave finger joints per hand, `left_thumb_CMC_FE`
+... `left_pinky_DIP`, then `right_thumb_CMC_FE` ... `right_pinky_DIP`) and 54 for `wuji` (20 Wuji Hand 2.2 finger joints
+per hand, `l_wuji_*` then `r_wuji_*`). The episode starts with both hands open above the counter and the arms in a
+ready pose; holding the current targets keeps it. The whisk rests against the bowl rim with its handle end on the
+counter (where it settles when released from the source scene's start pose, standing in the bowl); the left hand may
+steady the bowl, which the success predicate does not require. Actuator targets are clipped to the published joint
 limits and clipping is reported. `dt` must be a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most
 10 s. Hold interpolation holds each row for `dt`; linear interpolation starts from the previous target. The robot has
 no scalar gripper opening. Quaternions in measured poses use WXYZ; world z is up and the counter top is at z = 0.68 m;

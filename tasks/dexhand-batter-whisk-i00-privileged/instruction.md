@@ -1,34 +1,38 @@
 # DexHand: Whisk batter in a bowl, drain and set the whisk down
 
-Whisk the batter in the steel bowl, drain the whisk over the bowl and lay it down on the counter. The hand starts holding the balloon whisk upright just above the free-standing bowl (its 25 mm handle in a closed grasp). The batter is not simulated: whisking is measured on the whisk-head point, 20 mm above the wire tip on the whisk axis, which is in the batter while it is between 3 mm above the bowl origin and the batter surface (35.7 mm above the bowl origin) and at least 4 mm inside the bowl wall. Complete four stages in order. (1) Immersed: the head point enters the batter. (2) Whisked: the head point circles the bowl axis by at least 5 full revolutions of net (signed, unwrapped) angle while it stays in the batter; leaving the batter before 5 revolutions resets the count to zero, and controls with the head point closer than 8 mm to the bowl axis add nothing. (3) Drained: while the hand touches the whisk, the wire tip is at least 10 mm above the bowl rim, the head point is within 55 mm of the bowl axis (over the opening) and the whisk hangs head-down within 30 degrees of vertical, for 25 consecutive controls (0.5 s). (4) Set down: lower the whisk until it touches the counter top while the hand still touches it (it is then placed), then let go; the episode succeeds when, for 50 consecutive controls (1 s), the whisk touches the counter top, touches neither the hand nor the bowl, lies within 30 degrees of horizontal with its centre of mass at least 120 mm from the bowl axis, and its centre of mass moves slower than 0.02 m/s and it turns slower than 0.3 rad/s. The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every control, when: the bowl tilts more than 10 degrees, slides more than 30 mm or rises more than 20 mm from its start; the whisk touches nothing, its lowest point is more than 2 mm above the counter top and its centre of mass moves downward faster than 0.2 m/s (dropped); before it is placed, the whisk touches the counter or is out of hand contact for more than 10 consecutive controls (dropped); after it is placed, the whisk touches neither the hand nor the counter for more than 5 consecutive controls (tossed); the bowl or the whisk touches the floor, has its centre of mass below the counter top (z < 0.68 m) or outside the workspace x in [0.25, 0.99] m, y in [-0.36, 0.36] m, z in [0.60, 1.50] m; or the physics becomes unstable. Later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct forces. The episode allows at most 4000 controls at 50 Hz; reaching that limit without success is a failure.
+Pick up the balloon whisk, whisk the batter in the steel bowl, drain the whisk over the bowl and lay it down on the counter. The whisk starts at rest, leaning on the bowl rim with its handle end on the counter (where it settles when released from the source scene's start pose, standing in the bowl); both hands start open. The batter is not simulated: whisking is measured on the whisk-head point, 20 mm above the wire tip on the whisk axis, which is in the batter while it is between 3 mm above the bowl origin and the batter surface (35.7 mm above the bowl origin) and at least 4 mm inside the bowl wall. Complete five stages in order. (1) Picked up: a hand holds the whisk clear of everything else, i.e. the robot touches it, it touches neither the counter nor the bowl and its lowest point is at least 30 mm above the counter top, for 10 consecutive controls. (2) Immersed: the head point enters the batter. (3) Whisked: the head point circles the bowl axis by at least 5 full revolutions of net (signed, unwrapped) angle while it stays in the batter; leaving the batter before 5 revolutions resets the count to zero, and controls with the head point closer than 8 mm to the bowl axis add nothing. (4) Drained: while the robot touches the whisk, the wire tip is at least 10 mm above the bowl rim, the head point is within 55 mm of the bowl axis (over the opening) and the whisk hangs head-down within 30 degrees of vertical, for 25 consecutive controls (0.5 s). (5) Set down: lower the whisk until it touches the counter top while the robot still touches it (it is then placed), then let go; the episode succeeds when, for 50 consecutive controls (1 s), the whisk touches the counter top, touches neither the robot nor the bowl, lies within 30 degrees of horizontal with its centre of mass at least 120 mm from the bowl axis, and its centre of mass moves slower than 0.02 m/s and it turns slower than 0.3 rad/s. The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every control, when: the bowl tilts more than 10 degrees, slides more than 30 mm or rises more than 20 mm from its start; after the pickup, the whisk touches nothing, its lowest point is more than 2 mm above the counter top and its centre of mass moves downward faster than 0.2 m/s (dropped); after the pickup and before it is placed, the whisk touches the counter or is out of robot contact for more than 10 consecutive controls (dropped); after it is placed, the whisk touches neither the robot nor the counter for more than 5 consecutive controls (tossed); the bowl or the whisk touches the floor, has its centre of mass below the counter top (z < 0.68 m) or outside the workspace x in [0.25, 0.99] m, y in [-0.36, 0.36] m, z in [0.60, 1.50] m; or the physics becomes unstable. Before the pickup the whisk may be nudged or slide off the rim; the counter, floor and workspace rules still apply. Later actions cannot undo a failure. "Robot" means any hand, arm link or the stand. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct forces. The episode allows at most 4000 controls at 50 Hz; reaching that limit without success is a failure.
 
-You control one dexterous hand mounted on a six-DoF wrist positioning stage (three prismatic and three serial revolute
-joints, no arm). The stage and the fingers are position actuated in the physics engine under native force bounds; the
-whisk moves only through contact with the hand, the bowl and the counter. The controller runs at 50 Hz, with ten 2 ms
-physics substeps.
+The robot is a fixed Tianji Marvin stand at the world origin facing +x, with two 7-joint arms and a dexterous hand
+on each wrist (robot id `marvin-bimanual-sharpa-wave`). Every arm and finger joint is a position servo in the physics
+engine under native force bounds; arm servos have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity
+compensation** (a held target sags by about 1 cm at the hand under load unless your targets account for it). The bowl
+and the whisk move only through contact with the hands, the arms, each other and the counter. The controller runs at
+50 Hz, with ten 2 ms physics substeps. World frame: metres and radians, +z up, +x forward from the robot stand, +y to
+the robot's left.
 
 ## Hands
 Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Both hands hang from the same six-axis wrist stage with the same wrist joints, ranges, gains and start targets: wrist_x/y/z are the world position of the grip point (on the whisk handle axis inside the closed hand at the start), wrist_rx/ry/rz serial XYZ rotations about it; each hand starts from its own frozen, settled grasp of the whisk.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `28` wide for `sharpa` and `26` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The right arm/hand picks up and uses the whisk; the left arm/hand may steady the bowl.
+Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
 
 ## Action layout
-Each row is one 50 Hz control. The first six entries are the wrist-stage targets, identical for both hands:
-`wrist_x, wrist_y, wrist_z` (metres, world frame: the position of the grip point, which lies on the whisk handle axis
-inside the closed hand at the start) and `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints about that point,
-not a quaternion). The finger targets follow in native actuator order, in radians:
+Each row is one 50 Hz control with a position target for every actuator, in model order (`s.actuator_names`):
 
-- `sharpa`: 28 values, the six wrist targets and 22 Sharpa Wave finger targets `right_thumb_CMC_FE` ... `right_pinky_DIP`.
-- `wuji`: 26 values, the same six wrist targets and 20 Wuji Hand 2.2 finger targets `r_wuji_r_THJ0..3`,
-  `r_wuji_r_FFJ0..3`, `r_wuji_r_MFJ0..3`, `r_wuji_r_RFJ0..3`, `r_wuji_r_LFJ0..3`.
+- columns 0-6: left arm `SHOULDER_PITCH_L_J1, SHOULDER_ROLL_L_J2, ELBOW_PITCH_L_J3, ELBOW_YAW_L_J4, WRIST_PITCH_L_J5,
+  WRIST_YAW_L_J6, WRIST_ROLL_L_J7` (each name + `_target`); columns 7-13: the right arm `..._R_J1` to `..._R_J7`;
+- `sharpa` (58 values): columns 14-35 the left Sharpa Wave fingers `left_thumb_CMC_FE` ... `left_pinky_DIP`, columns
+  36-57 the right Sharpa Wave fingers `right_thumb_CMC_FE` ... `right_pinky_DIP`;
+- `wuji` (54 values): columns 14-33 the left Wuji Hand 2.2 fingers (`l_wuji_*`, vendor order), columns 34-53 the
+  right Wuji fingers (`r_wuji_*`).
 
-Every target must lie within `s.model.actuator_ctrlrange`. Both hands start with the wrist targets at the grip point
-`task.json` `stage.origin` = (0.58, 0.0, 1.07) m and zero rotations; each hand starts from its own frozen, settled grasp
-of the whisk (`task.json` `reset_state[<hand>]`, joint positions and start targets). `s.hold_action()` at reset keeps
-that grasp.
+Every target must lie within `s.model.actuator_ctrlrange`. Both hands start open above the counter with the arms in a
+ready pose (`task.json` `reset_state[<hand>]`: joint positions and start targets); `s.hold_action()` at reset keeps
+that pose. The whisk does not start in a hand: it rests against the bowl rim with its handle end on the counter, where
+it settles when released from the source scene's start pose (standing in the bowl). The left hand may steady the bowl
+(for example while the right hand lifts the whisk off its rim); the success predicate does not require it.
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 28)` for `sharpa` or `(T, 26)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most 4000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical
@@ -45,8 +49,8 @@ s.hand, s.action_dim, s.actuator_names    # selected hand, row width and exact r
 s.hold_action()                           # current motor targets
 s.model.actuator_ctrlrange                # native target limits
 s.model, s.data                           # privileged MuJoCo model and state
-s.features()                              # stage, revolutions, drain/hold counters, contacts, bowl tilt/slide, failure
-s.status()                                # success, done, reason, steps, stage, total_stages (4)
+s.features()                              # stage, pickup/revolutions/drain/hold counters, contacts, bowl tilt/slide
+s.status()                                # success, done, reason, steps, stage, total_stages (5)
 s.step(row)                               # ten 2 ms physics substeps; a no-op once the episode is done
 s.snapshot(), s.restore(snap)             # save / restore the simulation and verdict state (planning)
 s.render_frame("overview")                # RGB uint8 (480, 640, 3); also "closeup" and "side"
@@ -55,9 +59,10 @@ s.replay(actions)                         # reset, run rows until the episode en
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
 Read `/opt/tools/task.json`, `scene.py`, `checker.py` and `runtime.py` for the complete geometry, failure checks and
-predicate. The world frame has z up; lengths are in metres and angles in radians. The counter top is at z = 0.68 m,
-the bowl origin (its outer bottom) starts at (0.58, 0.0, 0.6805) m, its rim is 78 mm above that origin; the whisk
-frame has its origin at the wire tip and +z along the handle (handle from 230 mm to 345 mm).
+predicate, and `arm_rig.py` for the robot. The counter top is at z = 0.68 m (front edge x = 0.25 m), the bowl origin
+(its outer bottom) starts at (0.58, 0.0, 0.6805) m, its rim is 78 mm above that origin; the whisk frame has its origin at
+the wire tip and +z along the handle (handle from 230 mm to 345 mm); at reset the wire tip is at about (0.576, -0.005,
+0.813) m and the handle points down to the counter toward (-0.30, -0.88, -0.36) (`task.json` `reset_state`).
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

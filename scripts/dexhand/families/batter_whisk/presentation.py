@@ -36,6 +36,12 @@ def sha(path):
 def owner(session, gid):
     body = int(session.model.geom_bodyid[gid])
     if session.checker.is_hand[gid]:
+        if session.marvin:
+            from scene import _arm_rig_module
+
+            rig = _arm_rig_module()
+            if body in rig.robot_body_ids(session.model):
+                return "robot"
         return "hand"
     return session.model.body(body).name if body else "world"
 
@@ -195,17 +201,19 @@ def encode(directory, output, hand_label="Sharpa Wave"):
             record = payload["frames"][index]
             if record["success"]:
                 label = "PASS: whisk set down"
-            elif record["stage"] >= 3:
+            elif record["stage"] >= 4:
                 label = "drained, setting the whisk down"
-            elif record["stage"] == 2:
+            elif record["stage"] == 3:
                 label = "whisked 5 turns, lifting to drain"
-            elif record["stage"] == 1:
+            elif record["stage"] == 2:
                 label = f"whisking  {min(record['revolutions'], 5.0):.1f} / 5 turns"
+            elif record["stage"] == 1:
+                label = "whisk picked up, into the batter"
             else:
-                label = "lowering the whisk into the batter"
+                label = "left hand steadies the bowl, right hand picks up the whisk"
             draw = ImageDraw.Draw(pic, "RGBA")
-            draw.rounded_rectangle((20, 18, 470, 88), radius=10, fill=(246, 244, 238, 225))
-            draw.text((34, 27), f"Whisk batter  ·  {hand_label}", font=bold, fill=(40, 46, 44))
+            draw.rounded_rectangle((20, 18, 640, 88), radius=10, fill=(246, 244, 238, 225))
+            draw.text((34, 27), f"Whisk batter  ·  Tianji Marvin arms + {hand_label}", font=bold, fill=(40, 46, 44))
             draw.text((34, 55), f"{label}  ·  physics replay, {speed:g}x", font=font, fill=(88, 102, 74))
             writer.append_data(np.asarray(pic))
         pic.save(output.with_suffix(".png"))

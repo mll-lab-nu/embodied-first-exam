@@ -1,21 +1,25 @@
 # batter_whisk (authoring notes)
 
 DexHand plugin family built from scene-expansion T49 "Hold a bowl and whisk batter" (a kinematic demo: prescribed
-whisk motion and advected batter). Here the whisk moves only through contact with a dexterous hand on the six-axis
-wrist stage; the verdict is computed from simulator state by `checker.py`.
+whisk motion and advected batter). Here the whisk moves only through contact with dexterous hands on the Tianji Marvin
+two-arm rig (`scripts/dexhand/shared/arm_rig.py`, robot `marvin-bimanual-sharpa-wave`); the verdict is computed from
+simulator state by `checker.py`. Wave 3 (2026-10-15): the whisk now starts at rest on the bowl rim (picked up in the
+episode) and the second arm/hand is present and steadies the bowl during the pickup.
 
 ## Files
 
 | file | role |
 |---|---|
-| `scene.py` | MJCF builder: counter, free bowl (+ lumped batter mass), free whisk, Sharpa Wave on the wrist stage; Wuji via `hands.replace_wave_hands` |
+| `scene.py` | MJCF builder: counter, free bowl (+ lumped batter mass), free whisk, Marvin stand + two arms + two hands (`arm_rig.mount_marvin`, Wuji via `hands.replace_wave_hands`); legacy wrist stage when `task.json` has no `rig` |
 | `checker.py` | ordered stages, terminal hold and fail-fast list (numbers in `task.json` `predicate`) |
 | `runtime.py` | `Session` (FAMILY_PLUGIN section 4) incl. `snapshot()` / `restore()` |
 | `replay.py` | fresh-process replay CLI (section 5), optional `--video` |
-| `task.json` | frozen instance: geometry, cameras, predicate, per-hand frozen reset (`reset_state`) |
+| `task.json` | frozen instance: geometry, cameras, predicate, rig (`rig`, `marvin.base_pos`, `floor_z`), per-hand frozen reset (`reset_state`) |
 | `assets/` | original T49 bowl / whisk-wire meshes (look only) + `manifest.json` (sha256) |
-| `tools/make_reset.py` | authoring: settles the pre-held grasp and freezes it into `task.json` |
-| `tools/author_oracle.py` | authoring: closed-loop scripted wrist controller, saves the executed rows |
+| `tools/make_reset_arm.py` | authoring: arms in a ready pose (IK), whisk released from the source pose and settled; freezes it into `task.json` |
+| `tools/author_arm.py`, `tools/armlib.py` | authoring: closed-loop two-arm controller (IK via `shared/arm_ik.py`), saves the executed float32 rows |
+| `tools/sweep.py` | authoring: parameter sweeps of `author_arm.py` phases in one process |
+| `tools/make_reset.py`, `tools/author_oracle.py` | wave-2 floating-stage tools (legacy rig only) |
 
 ## Modelling choices
 
@@ -29,30 +33,38 @@ wrist stage; the verdict is computed from simulator state by `checker.py`.
 - Batter (252 g, 240 ml) is not simulated. Its mass is lumped rigidly into the bowl inertia; its surface is a visual
   mesh at the source fill height (35.7 mm above the bowl origin). Whisking is measured as the net unwrapped angle of the
   whisk-head point (20 mm above the wire tip) about the bowl axis while that point is inside the batter volume.
-- Single hand: the source's second hand holding the bowl is omitted; the free bowl must not tip (10 deg), slide
-  (30 mm) or lift (20 mm).
-- Reset: each hand starts from a frozen grasp. `tools/make_reset.py` holds the whisk fixed only while the fingers close
-  (authoring), then releases it and lets the hand hold it under gravity for 1.5 s; the resulting joint positions (zero
-  velocities) are stored in `task.json` `reset_state[<hand>]`. Episodes start from that state; no welds, pins or state
-  writes happen in an episode. The Sharpa grasp (and the Wuji one) were found by a random search + CEM over the handle
-  offset and finger targets, scored by the slip under a whisk/lift/turn shake test.
+- Start state (wave 3): the source starts with the whisk standing in the bowl (wire tip 9 mm above the bowl origin).
+  Without a hand that pose is not statically stable (the handle side is heavier), so `tools/make_reset_arm.py` releases
+  the whisk from it, tilted 3 deg toward azimuth -pi/2-0.35 (toward the robot's right), and lets the scene integrate
+  3 s with both arms in a ready pose: the whisk comes to rest leaning on the bowl rim with its handle end on the counter.
+  That settled state (zero velocities) is frozen per hand in `reset_state`; episodes start from it with no state writes.
+- Stage 1 `picked_up` (new): robot contact, no counter/bowl contact, lowest point >= 30 mm above the counter for
+  10 controls. Before it the whisk may be nudged (no drop rule, no "knocked" rule); counter/floor/workspace rules apply.
+- Robot: Tianji Marvin stand at the origin facing +x (`base_z = floor_z + 0.1`, floor at z = -0.1), both arms and both
+  hands active. The counter top keeps its source height (0.68 m) and position; the decorative cabinet under it starts
+  behind the stand's base plate (x >= 0.77 m) so that no robot geom overlaps furniture. "Hand" contact in the checker
+  means any robot body (hands, arm links, stand).
+- Second hand: the source's bowl-holding hand is the left arm. The reference solution hooks the left fingertips over
+  the near-left rim and steadies the bowl while the right hand lifts the whisk off the rim (without it the pickup
+  drags the bowl > 30 mm), then lets go and withdraws before whisking: fingers over the rim of this 12 cm bowl sit
+  inside the balloon whisk's volume (holding through the whisking was tried and the whisk struck the fingers in every
+  variant). The predicate therefore does not require a hold.
 - Verdict details (L1-L3 of the wave-2 lessons): a drop fails at the first control at which the whisk touches nothing,
   is not resting within 2 mm of the counter and its COM falls faster than 0.2 m/s (no drop-and-catch window);
   speeds come from `mj_objectVelocity(mjOBJ_BODY, ..., 0)` (COM velocity, checked against a finite difference of
   `xipos`); `state_sha` hashes the integration state, the verdict state, the hand and only the physics/predicate
   entries of `task.json` (`runtime.PHYSICS_KEYS`), never the instruction text or cameras.
-- Authoring controller (`tools/author_oracle.py`): one script for both hands; it reads the whisk-head site and stage
-  joints every control. Release: open the hand over 1.2 s, then slide it along the whisk axis off the handle
-  (Sharpa toward the handle end, Wuji toward the head end, where its thumb does not hook the handle) and lift it.
-- Wrist stage at the world origin: `wrist_x/y/z` are the world position of the grip point (on the handle axis inside
-  the closed hand at reset), rotations are serial XYZ about it. Ranges x [0.15, 1.05], y [-0.45, 0.45], z [0.62, 1.50] m,
-  rotations +-3.14 rad; gains as in `assemble_hamburger`.
+- Authoring controller (`tools/author_arm.py`): every control the IK targets are computed from measured state (whisk
+  pose, hand pose; damped least squares with a joint integral, `shared/arm_ik.py`), rows rounded to float32 before they
+  are executed (a float32 round trip of the archive is lossless). Phases: left hook over the rim, right palm-down grasp
+  of the handle (index toward the head), squeeze, lift, left lets go, turn the measured whisk axis upright beside the
+  bowl, over the bowl, closed-loop head orbit (16 mm, 0.6 Hz) until five revolutions, lift and drain, carry and turn
+  (whisk axis (-0.857, -0.514, -0.10)), lower until counter contact, open, withdraw.
 
 ## Provenance
 
-Scene expansion T49 "Hold a bowl and whisk batter" (`scripts/scene_expansion/tasks/batter_mix`, approved kinematic
-film `artifacts/scene-expansion-50/evidence/trajectory-r1/T49/root-review/approved-success.mp4`; composed hand+scene
-model `scripts/hand_support/tasks/T49/model.xml`). Reused: counter height and extent, bowl pose, the Roesle bowl
+Scene expansion T49 "Hold a bowl and whisk batter" (local authoring folder `scripts/scene_expansion/tasks/batter_mix`,
+approved kinematic film of the scene review; composed hand+scene model `scripts/hand_support/tasks/T49/model.xml`). Reused: counter height and extent, bowl pose, the Roesle bowl
 profile/mass and whisk loop law/handle/mass (`meta_delivery/geometry.py`), the original authored OBJ meshes
 (`assets/`, sha256 in `assets/manifest.json`; the trimesh export header comment was stripped) and, for the film, the
 studio materials, lights, exposure and camera language of `trajectory_r1/studio_render.py`. Replaced: prescribed
@@ -64,23 +76,12 @@ verdict. Omitted: the second (bowl-holding) hand, SPH/advected batter and the dr
 ```bash
 cd scripts/dexhand/families/batter_whisk
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1; ulimit -c 0
-# assets: DEXHAND_ASSET_DIR / WUJI_ASSET_DIR (or the prepared images/dexhand/assets of a checkout)
-python -m unittest tests/test_batter_whisk.py -v                                  # 16 tests, about 80 s
-python tools/make_reset.py --hand sharpa --grasp "$(cat grasp.json)" --write      # only when the scene changes
-python tools/author_oracle.py --hand sharpa --out solution/trajectory.npz --slack 100
-python tools/author_oracle.py --hand wuji --out solution/wuji/trajectory.npz --slack 100
+# assets: DEXHAND_ASSET_DIR / WUJI_ASSET_DIR / DEXHAND_TIANJI_DIR (or the prepared images/dexhand/assets of a checkout)
+python -m unittest tests/test_batter_whisk.py -v
+python tools/make_reset_arm.py --hand sharpa --write      # only when the scene changes (also --hand wuji)
+python tools/author_arm.py --hand sharpa --out solution/trajectory.npz --slack 100
 python replay.py --task batter_whisk --traj solution/trajectory.npz --out out/r1.json   # twice, fresh processes
-python replay.py --task batter_whisk --traj solution/trajectory.npz --video out/preview.mp4 --fps 25 --width 1280 --height 720
-# PR film (Blender 4.5.3, OptiX): exact native poses every 4 controls (2x), then a 3.5 s camera move on the final state
-python presentation.py export --trajectory solution/trajectory.npz --export out/whisk-export
-python presentation.py verify --trajectory solution/trajectory.npz --export out/whisk-export
-BLENDER=/path/to/blender python presentation.py render --export out/whisk-export --output out/batter_whisk.mp4
 ```
 
-Grasps used by `make_reset.py` (native finger order): Sharpa `[1.8683, 0.0354, 1.2223, 0.349, 1.5388, 0.6632, 0,
-1.1508, 0.7582, 0.6632, 0, 1.1508, 0.7582, 0.6632, 0, 1.1508, 0.7582, 0.1, 0.6632, 0, 1.1508, 0.7582]` with
-`stage.grip_in_hand = [0.0421, 0, 0.0669]`; Wuji `[0.1822, 0.4028, 0.2444, 0.5616] + 4 x [1.552, 0, 1.7478, 0.9957]`
-with `--offset [-0.0094, 0.0003]`.
-
 Authoring-only files (never copied into a task): `tools/`, `tests/`, `presentation.py`, `studio_renderer.py`, this
-README.
+README. Runtime shared file: `arm_rig.py` (`family.json` `runtime.shared`).

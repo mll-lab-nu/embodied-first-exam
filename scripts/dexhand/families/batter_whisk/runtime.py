@@ -18,11 +18,12 @@ from scene import build, hands
 CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "batter_whisk"
 # task.json entries that define the physics and the predicate (hashed by state_sha; texts and cameras are not).
-PHYSICS_KEYS = ("physics_dt", "control_dt", "max_steps", "table_z", "counter", "bowl_pos", "bowl_sectors",
+PHYSICS_KEYS = ("rig", "marvin", "floor_z", "physics_dt", "control_dt", "max_steps", "table_z", "counter", "bowl_pos",
+                "bowl_sectors",
                 "bowl_wall_proxy_m", "whisk_pos", "wire_proxy_radius_m", "wire_points_per_strand", "head_point_z",
                 "stage", "workspace", "predicate", "reset_state")
 # Checker attributes that make up the verdict state (saved by snapshot(), restored by restore()).
-VERDICT_STATE = ("bowl_xy0", "bowl_z0", "stage", "turns", "prev_angle", "free_steps", "placed", "unsupported_steps",
+VERDICT_STATE = ("bowl_xy0", "bowl_z0", "stage", "pickup_steps", "turns", "prev_angle", "free_steps", "placed", "unsupported_steps",
                  "drain_steps", "hold", "success", "failure", "failure_detail", "max_bowl_tilt", "max_bowl_slide", "f")
 
 
@@ -38,7 +39,8 @@ class Session:
         self.task = task
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.marvin = self.config.get("rig") == "marvin"
+        self.robot = "marvin-bimanual-sharpa-wave" if self.marvin else self.hand_info["robot"] + "-floating"
         self.model, self.xml = build(self.config, asset_dir, self.hand)
         self.data = mujoco.MjData(self.model)
         self.action_dim = self.model.nu
@@ -51,7 +53,7 @@ class Session:
         self.substeps = round(self.control_dt / self.config["physics_dt"])
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.tcp_body = "wrist_stage"
+        self.tcp_body = "right_hand_mount" if self.marvin else "wrist_stage"
         self.max_control_steps = int(self.config["max_steps"])
         self.checker = Checker(self.model, self.config)
         self.renderer = None
@@ -167,10 +169,10 @@ class Session:
         mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_INTEGRATION)
         digest = hashlib.sha256(state.astype("<f8").tobytes())
         ck = self.checker
-        verdict = [ck.stage, ck.turns, ck.drain_steps, ck.hold, ck.free_steps, ck.placed, ck.unsupported_steps,
+        verdict = [ck.stage, ck.pickup_steps, ck.turns, ck.drain_steps, ck.hold, ck.free_steps, ck.placed, ck.unsupported_steps,
                    bool(ck.success), ck.failure or "", self.steps]
         digest.update(json.dumps(verdict).encode())
-        physics = {k: self.config[k] for k in PHYSICS_KEYS}
+        physics = {k: self.config[k] for k in PHYSICS_KEYS if k in self.config}
         digest.update(json.dumps(physics, sort_keys=True).encode())
         digest.update(self.hand.encode())
         return digest.hexdigest()

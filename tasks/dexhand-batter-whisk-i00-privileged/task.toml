@@ -4,15 +4,15 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/dexhand-batter-whisk-i00-privileged"
-description = "Hold a balloon whisk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2), whisk the batter in a steel bowl with at least five revolutions, lift the whisk out to drain over the bowl and lay it down on the counter; the bowl must not tip or slide."
+description = "Pick a balloon whisk up off the rim of a steel bowl with a dexterous hand on a Tianji Marvin arm (Sharpa Wave by default, or Wuji Hand 2.2; the second arm and hand may steady the bowl), whisk the batter with at least five revolutions, lift the whisk out to drain over the bowl and lay it down on the counter; the bowl must not tip or slide."
 authors = [{ name = "Embodied Exam contributors" }]
-keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "whisking", "kitchen", "free-object", "set-down"]
+keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "tool_use", "tool-use", "whisking", "kitchen", "free-object", "pick-up", "bimanual", "arm", "set-down"]
 
 [metadata]
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
-robot = "sharpa-wave-floating"
+robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "batter_whisk"
@@ -20,7 +20,7 @@ mode = "privileged"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 
 oracle = "full"
-oracle_evidence = "solution/ replays the validated Sharpa Wave authoring trajectory (1,048 controls; the replay ends at success after 948 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows. Harbor 0.23 (eai-dexhand:0.2.0, RCB_LIMITS_ENFORCE=0): privileged oracle 1 / nop 0, standard oracle 1 / nop 0; with Wuji, standard oracle 1 and privileged nop 0. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,540 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
+oracle_evidence = "solution/ replays the validated Sharpa Wave authoring trajectory on the Marvin arm rig (1,971 controls; the replay ends at success after 1,871 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows."
 expert_time_estimate_hours = 4.0
 difficulty = "hard"
 release_status = "provisional"

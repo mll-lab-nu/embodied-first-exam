@@ -35,7 +35,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `envelope_letter_insert` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 2,446 rows |
 | `book_page_turn` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 553 rows |
 | `tray_glass_carry` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 1,072 rows |
-| `batter_whisk` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,048 rows |
+| `batter_whisk` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 1,916 rows |
 | `bicycle_pump_stroke` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 3,581 rows |
 
 The default hand is a right (on the arms and the two-stage rigs: a left and a right) **Sharpa Wave** with 22 actuated finger joints; every
@@ -43,7 +43,7 @@ family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted i
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and six of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and five of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Fifteen families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Fourteen families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -142,7 +142,6 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `pancake_serve` | 875 x 26 | control 725 | `families/pancake_serve/tools/demo.py --params '{"hand": "wuji"}'` (the same closed-loop turner-pose servo as Sharpa, with the Wuji frozen power grasp from `tools/make_reset.py`) |
 | `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
 | `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
-| `batter_whisk` | 1,540 x 26 | control 1,440 | `families/batter_whisk/tools/author_oracle.py --hand wuji` (the Sharpa authoring controller with the Wuji frozen power grasp from `tools/make_reset.py`) |
 | `bicycle_pump_stroke` | 3,561 x 54 | control 3,411 | `families/bicycle_pump_stroke/tools/arm_port.py author --hand wuji` (the Sharpa arm port with Wuji push, swing and press offsets; README) |
 
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
@@ -423,19 +422,20 @@ Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansio
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
 `vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each
-flange (`book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`,
-`envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the left one parked)
-completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
-springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written
-only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity
-the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules
-above apply: fail-fast at the first violating physics substep (unless the section says otherwise), ordered stages, no
-partial credit, and a released or held terminal window. Each instruction states the exact predicate and every threshold;
-each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its authoring tests. All
-run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success,
-where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored source-scene details
-(pre-closed or pre-placed parts, enlarged parts and widened clearances reverted) in the families whose sections say so,
-each naming what was restored and what remains, with the reason; the other families keep their wave-2 version.
+flange (`batter_whisk`, `book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`,
+`coffee_stir`, `envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the
+left one parked) completes each one with motor targets only. Mechanisms are passive joints with limits, damping,
+friction loss and springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and
+object state is written only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is
+summarised by a quantity the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says
+so. The three rules above apply: fail-fast at the first violating physics substep (unless the section says otherwise),
+ordered stages, no partial credit, and a released or held terminal window. Each instruction states the exact predicate
+and every threshold; each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its
+authoring tests. All run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji
+selectable; a Wuji success, where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored
+source-scene details (pre-closed or pre-placed parts, enlarged parts and widened clearances reverted) in the families
+whose sections say so, each naming what was restored and what remains, with the reason; the other families keep their
+wave-2 version.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -786,20 +786,28 @@ Oracle: 1,072 Sharpa rows (success at 952); Wuji: `solution/wuji/` (1,148 rows, 
 
 ### Whisking batter (`batter_whisk`, T49)
 
-The hand starts holding a balloon whisk upright (its 25 mm handle in a frozen, settled contact grasp) just above a
-free-standing steel bowl. The batter is not simulated (its mass is lumped into the bowl): whisking is measured on the
-whisk-head point (20 mm above the wire tip), which is in the batter between 3 mm above the bowl origin and the batter
-surface (35.7 mm) and at least 4 mm inside the wall. **Success**, in order: (1) immersed; (2) five net revolutions of
-the head point about the bowl axis while it stays in the batter (leaving resets the count; controls closer than 8 mm
-to the axis add nothing); (3) drained: in hand, wire tip at least 10 mm above the rim over the opening, head-down
-within 30 degrees, for 25 controls; (4) set down: the whisk lowered onto the counter while held, then released, and
-for 50 controls (1 s) it lies on the counter within 30 degrees of horizontal, at least 120 mm from the bowl axis,
-touching neither hand nor bowl, still. **Immediate failure**, checked after every control: bowl tilt above 10
-degrees, slide above 30 mm or lift above 20 mm; the whisk touching nothing, more than 2 mm above the counter and
-falling faster than 0.2 m/s; before placement, the whisk on the counter or out of hand contact for more than 10
-controls; after placement, touching neither hand nor counter for more than 5 controls; floor contact, below the
-counter or outside the workspace; unstable physics; 4,000 controls. The source scene's second, bowl-holding hand is
-omitted. Oracle: 1,048 Sharpa rows (success at 948); Wuji: `solution/wuji/` (1,540 rows, success at 1,440).
+Wave 3: both Tianji Marvin arms (arm rig above; stand at the world origin facing +x on the floor z = -0.1 m), the left
+hand steadying the bowl during the pick-up, the right one picking up and whisking; layout change: the decorative cabinet
+under the counter starts behind the stand's base plate (the counter top keeps its source height, 0.68 m, and position).
+As in the source, the balloon whisk starts at rest in the free-standing steel bowl (released from the source's standing
+pose it settles leaning on the rim, handle end on the counter); both hands start open. The batter is not simulated (its
+mass is lumped into the bowl): whisking is measured on the whisk-head point (20 mm above the wire tip), which is in the
+batter between 3 mm above the bowl origin and the batter surface (35.7 mm) and at least 4 mm inside the wall.
+**Success**, in order: (1) picked up: a hand holds the whisk clear of the counter and the bowl, its lowest point at
+least 30 mm above the counter, for 10 controls; (2) immersed; (3) five net revolutions of the head point about the bowl
+axis while it stays in the batter (leaving resets the count; controls closer than 8 mm to the axis add nothing); (4)
+drained: in hand, wire tip at least 10 mm above the rim over the opening, head-down within 30 degrees, for 25 controls;
+(5) set down: the whisk lowered onto the counter while held, then released, and for 50 controls (1 s) it lies on the
+counter within 30 degrees of horizontal, at least 120 mm from the bowl axis, touching neither robot nor bowl, still.
+**Immediate failure**, checked after every control: bowl tilt above 10 degrees, slide above 30 mm or lift above 20 mm;
+after the pick-up, the whisk touching nothing, more than 2 mm above the counter and falling faster than 0.2 m/s; after
+the pick-up and before placement, the whisk on the counter or out of robot contact for more than 10 controls; after
+placement, touching neither robot nor counter for more than 5 controls; floor contact, below the counter or outside the
+workspace; unstable physics; 4,000 controls. Wave 3 restored the source's start (the whisk was pre-held in a frozen
+grasp) and added the pick-up stage. Not restored: the second hand holding the bowl through the whisking (fingers hooked
+over the 12 cm bowl's rim sit inside the balloon whisk's sweep and are struck by it in every tried variant). Oracle:
+1,916 Sharpa rows on the arms (success at 1,816); the wave-2 Wuji solution belonged to the wrist stage and is not
+packaged (Wuji selectable, no success).
 
 ### Portable bicycle pump (`bicycle_pump_stroke`, T50)
 

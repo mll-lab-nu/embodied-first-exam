@@ -14,8 +14,8 @@ from runtime import Session
 from scene import hands
 
 TASK = "batter_whisk"
-# Six wrist-stage targets followed by the selected hand's native finger actuators.
-WIDTHS = {"sharpa": 28, "wuji": 26}
+# Marvin rig: 14 arm joint targets (left J1-J7, right J1-J7), then the left and the right hand's finger targets.
+WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 4000
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 
@@ -91,7 +91,7 @@ def overlay(frame, status, phase, hand="Sharpa Wave"):
               fill="white")
     draw.text(
         (round(18 * scale), round(39 * scale)),
-        f"Stage {status['stage']}/4 | revolutions {status['revolutions']:.2f}/5 | drain {status['drain_steps']}/25 | "
+        f"Stage {status['stage']}/5 | revolutions {status['revolutions']:.2f}/5 | drain {status['drain_steps']}/25 | "
         f"set-down hold {status['hold_steps']}/50 | bowl tilt {status['bowl_tilt_deg']:.1f} deg",
         font=font,
         fill=(244, 214, 157),

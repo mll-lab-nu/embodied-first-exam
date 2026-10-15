@@ -4,8 +4,10 @@ Geometry follows the accepted T49 source (scene_expansion/tasks/batter_mix): cou
 Roesle 150672 deep bowl (12 cm, 233 g) and the Roesle 950633 balloon whisk (345 mm, 220 g, 25 mm handle).
 The original authored bowl and wire meshes are used for the look; contact uses convex proxies of the same
 profile (thin meridional wall strips, floor disc, rolled rim; handle cylinder and wire-loop capsules).
-The hand hangs from a six-axis wrist stage at the world origin: wrist_x/y/z are the world position of the grip
-point (where the whisk handle axis crosses the closed hand), wrist_rx/ry/rz serial XYZ rotations about it.
+Robot (``config["rig"] == "marvin"``): the Tianji Marvin stand at the world origin facing +x with both 7-DoF arms and a
+dexterous hand on each flange (``arm_rig.mount_marvin``); the right hand whisks, the left hand holds the bowl.
+Legacy rig (no ``rig`` key): one hand on a six-axis wrist stage at the world origin (wrist_x/y/z = world position of the
+grip point, wrist_rx/ry/rz serial XYZ rotations about it).
 """
 
 from __future__ import annotations
@@ -38,6 +40,24 @@ def _hands_module():
 
 
 hands = _hands_module()
+
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        for parent in HERE.parents:
+            path = parent / "shared/arm_rig.py"
+            if path.is_file():
+                spec = importlib.util.spec_from_file_location("arm_rig", path)
+                module = importlib.util.module_from_spec(spec)
+                sys.modules["arm_rig"] = module
+                spec.loader.exec_module(module)
+                return module
+        raise
 
 # Bowl inner profile (radius, height) in the bowl frame, from the T49 source geometry.
 PROFILE = np.array(
@@ -222,15 +242,27 @@ def add_whisk(world, config):
 
 def add_room(world, config):
     z = config["table_z"]
-    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.05), pos=(0, 0, 0), material="floor")
+    floor_z = float(config.get("floor_z", 0.0))
+    node(world, "geom", name="floor", type="plane", size=(3, 3, 0.05), pos=(0, 0, floor_z), material="floor")
     cx, cy, hx, hy = config["counter"]
     node(world, "geom", name="counter_top", type="box", pos=(cx, cy, z - 0.025), size=(hx, hy, 0.025),
          material="stone", friction=(0.4, 0.002, 0.0001), condim=3, solref=(0.004, 1),
          solimp=(0.95, 0.99, 0.0005))
-    node(world, "geom", name="cabinet", type="box", pos=(cx, cy, (z - 0.05) / 2), size=(hx - 0.01, hy - 0.02,
-         (z - 0.05) / 2), material="cabinet", contype=0, conaffinity=0, group=2)
-    node(world, "geom", name="backsplash", type="box", pos=(cx, cy + hy + 0.02, z + 0.35),
-         size=(hx + 0.4, 0.01, 0.35 + 0.025), material="wall", contype=0, conaffinity=0, group=2)
+    x0, x1 = cx - hx + 0.01, cx + hx - 0.01
+    if config.get("rig") == "marvin":
+        # The stand's base plate reaches 0.75 m in front of the base: the cabinet under the counter starts behind it
+        # (the near part of the counter top is cantilevered), so no robot geom overlaps furniture.
+        x0 = max(x0, float(config["marvin"]["base_pos"][0]) + 0.77)
+    node(world, "geom", name="cabinet", type="box", pos=((x0 + x1) / 2, cy, (z - 0.05 + floor_z) / 2),
+         size=((x1 - x0) / 2, hy - 0.02, (z - 0.05 - floor_z) / 2), material="cabinet", contype=0, conaffinity=0,
+         group=2)
+    if config.get("rig") == "marvin":
+        # The robot stands at the origin facing +x: the wall is behind the counter (far side).
+        node(world, "geom", name="backsplash", type="box", pos=(cx + hx + 0.02, cy, z + 0.35),
+             size=(0.01, hy + 0.4, 0.35 + 0.025), material="wall", contype=0, conaffinity=0, group=2)
+    else:
+        node(world, "geom", name="backsplash", type="box", pos=(cx, cy + hy + 0.02, z + 0.35),
+             size=(hx + 0.4, 0.01, 0.35 + 0.025), material="wall", contype=0, conaffinity=0, group=2)
 
 
 def add_hand_stage(root, world, actuator, hand, config):
@@ -276,7 +308,6 @@ def build(config, asset_dir=None, hand="sharpa"):
         root.remove(key)
     assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
     hand = world.find("body")
-    world.remove(hand)
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -285,10 +316,17 @@ def build(config, asset_dir=None, hand="sharpa"):
     for g in hand.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.5 .005 .0001")
-    add_hand_stage(root, world, actuator, hand, config)
-    if hand_id != "sharpa":
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    sibling = folder.parent / "wuji_v2_2"
+    wuji_folder = sibling if (sibling / "mjcf/right.xml").is_file() else None
+    if config.get("rig") == "marvin":
+        marvin = config["marvin"]
+        _arm_rig_module().mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id,
+                                       active=("left", "right"), sharpa_folder=folder, wuji_folder=wuji_folder)
+    else:
+        world.remove(hand)
+        add_hand_stage(root, world, actuator, hand, config)
+        if hand_id != "sharpa":
+            hands.replace_wave_hands(root, hand_id, folder=wuji_folder)
     mesh_dir = HERE / "assets"
     node(assets, "mesh", name="bowl_visible", file=str((mesh_dir / "rosle-bowl-original.obj").resolve()))
     node(assets, "mesh", name="whisk_wires_visible", file=str((mesh_dir / "rosle-whisk-wires-original.obj").resolve()))

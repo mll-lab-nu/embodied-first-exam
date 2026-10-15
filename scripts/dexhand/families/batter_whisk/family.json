@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 28,
-    "wuji": 26
+    "sharpa": 58,
+    "wuji": 54
   },
-  "robot": "sharpa-wave-floating",
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 4000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -42,9 +44,12 @@
       "whisking",
       "kitchen",
       "free-object",
+      "pick-up",
+      "bimanual",
+      "arm",
       "set-down"
     ],
-    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory (1,048 controls; the replay ends at success after 948 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows. Harbor 0.23 (eai-dexhand:0.2.0, RCB_LIMITS_ENFORCE=0): privileged oracle 1 / nop 0, standard oracle 1 / nop 0; with Wuji, standard oracle 1 and privileged nop 0."
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave authoring trajectory on the Marvin arm rig (1,971 controls; the replay ends at success after 1,871 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows."
   },
   "control_hz": 50,
   "timeouts": {
@@ -55,6 +60,6 @@
     "video_sec": 600
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage with the same wrist joints, ranges, gains and start targets: wrist_x/y/z are the world position of the grip point (on the whisk handle axis inside the closed hand at the start), wrist_rx/ry/rz serial XYZ rotations about it; each hand starts from its own frozen, settled grasp of the whisk."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The right arm/hand picks up and uses the whisk; the left arm/hand may steady the bowl."
   }
 }

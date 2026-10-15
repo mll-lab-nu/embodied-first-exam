@@ -145,7 +145,7 @@ def main():
     shell = material("Pearl white polymer housing", (0.89, 0.91, 0.89), 0.27, 0.10)
     rubber = material("Forest silicone fingertips", (0.10, 0.24, 0.18), 0.68)
 
-    cache, objects = {}, []
+    cache, objects, robot_materials = {}, [], {}
     for record in payload["geoms"]:
         name, kind, size = record["name"], record["kind"], record["size"]
         if kind == 7:
@@ -195,6 +195,11 @@ def main():
         obj.name = name
         if record["owner"] == "hand":
             chosen = rubber if record["material"] == "green" else shell
+        elif record["owner"] == "robot":  # Marvin stand and arm links: their own MuJoCo colours
+            key = tuple(round(c, 3) for c in record["rgba"][:3])
+            if key not in robot_materials:
+                robot_materials[key] = material("Marvin " + str(key), key, 0.35, 0.15)
+            chosen = robot_materials[key]
         elif name == "floor":
             chosen = floor
         elif name == "counter_top":
@@ -237,16 +242,18 @@ def main():
     frames = payload["frames"]
     final_com = Vector(frames[-1]["whisk_com"])
     success_step = payload["success_step"]
-    # Camera language of the T49 film: close on the bowl while stirring, wide while the whisk is lifted, carried and
-    # turned, lower for the set-down, then a slow push-in on the resting whisk while the final state is held.
-    views = [  # (native step, target, offset from target, lens mm)
-        (0, Vector((0.585, 0.02, 0.90)), Vector((0.42, -0.64, 0.22)), 34),
-        (430, Vector((0.585, 0.02, 0.90)), Vector((0.42, -0.64, 0.22)), 34),
-        (520, Vector((0.62, 0.08, 0.99)), Vector((0.62, -0.97, 0.34)), 32),
-        (690, Vector((0.62, 0.08, 0.99)), Vector((0.62, -0.97, 0.34)), 32),
-        (790, Vector((0.64, 0.15, 0.80)), Vector((0.52, -0.82, 0.34)), 35),
+    # Camera language of the T49 film: wide on the two-arm robot, closer for the pickup off the rim, close on the bowl
+    # while whisking, wide for the drain and set-down, then a slow push-in on the resting whisk (final state held).
+    views = [  # (native step, target, offset from target, lens mm); Marvin stand at the origin facing +x, cameras
+        # in front of the robot on its right (x < the backsplash at 1.01 m)
+        (0, Vector((0.42, -0.05, 0.88)), Vector((0.55, -0.95, 0.40)), 28),
+        (230, Vector((0.50, -0.12, 0.76)), Vector((0.42, -0.62, 0.30)), 32),
+        (560, Vector((0.50, -0.12, 0.76)), Vector((0.42, -0.62, 0.30)), 32),
+        (860, Vector((0.58, 0.00, 0.82)), Vector((0.32, -0.60, 0.26)), 34),
+        (1360, Vector((0.58, 0.00, 0.82)), Vector((0.32, -0.60, 0.26)), 34),
+        (1480, Vector((0.52, -0.15, 0.78)), Vector((0.40, -0.70, 0.32)), 31),
     ]
-    tail_view = (final_com + Vector((0.0, -0.02, 0.03)), Vector((0.36, -0.56, 0.26)), 38)
+    tail_view = (final_com + Vector((0.0, 0.04, 0.03)), Vector((0.35, -0.55, 0.26)), 36)
     n_tail = sum(1 for f in frames if f["tail"])
 
     def blend(a, b, u):

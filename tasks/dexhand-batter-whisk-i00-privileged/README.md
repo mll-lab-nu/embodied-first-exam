@@ -5,39 +5,41 @@
 | Benchmark | DexHand |
 | Mode | privileged |
 | Twin | `dexhand-batter-whisk-i00-standard` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating` |
+| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `batter_whisk` |
-| Oracle | `full` — solution/ replays the validated Sharpa Wave authoring trajectory (1,048 controls; the replay ends at success after 948 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows. Harbor 0.23 (eai-dexhand:0.2.0, RCB_LIMITS_ENFORCE=0): privileged oracle 1 / nop 0, standard oracle 1 / nop 0; with Wuji, standard oracle 1 and privileged nop 0. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (1,540 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
+| Oracle | `full` — solution/ replays the validated Sharpa Wave authoring trajectory on the Marvin arm rig (1,971 controls; the replay ends at success after 1,871 controls) in both modes; it succeeds in two fresh processes with identical state hashes, also with float32-rounded rows. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-Whisk the batter in the steel bowl, drain the whisk over the bowl and lay it down on the counter. The hand starts holding the balloon whisk upright just above the free-standing bowl (its 25 mm handle in a closed grasp). The batter is not simulated: whisking is measured on the whisk-head point, 20 mm above the wire tip on the whisk axis, which is in the batter while it is between 3 mm above the bowl origin and the batter surface (35.7 mm above the bowl origin) and at least 4 mm inside the bowl wall. Complete four stages in order. (1) Immersed: the head point enters the batter. (2) Whisked: the head point circles the bowl axis by at least 5 full revolutions of net (signed, unwrapped) angle while it stays in the batter; leaving the batter before 5 revolutions resets the count to zero, and controls with the head point closer than 8 mm to the bowl axis add nothing. (3) Drained: while the hand touches the whisk, the wire tip is at least 10 mm above the bowl rim, the head point is within 55 mm of the bowl axis (over the opening) and the whisk hangs head-down within 30 degrees of vertical, for 25 consecutive controls (0.5 s). (4) Set down: lower the whisk until it touches the counter top while the hand still touches it (it is then placed), then let go; the episode succeeds when, for 50 consecutive controls (1 s), the whisk touches the counter top, touches neither the hand nor the bowl, lies within 30 degrees of horizontal with its centre of mass at least 120 mm from the bowl axis, and its centre of mass moves slower than 0.02 m/s and it turns slower than 0.3 rad/s. The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every control, when: the bowl tilts more than 10 degrees, slides more than 30 mm or rises more than 20 mm from its start; the whisk touches nothing, its lowest point is more than 2 mm above the counter top and its centre of mass moves downward faster than 0.2 m/s (dropped); before it is placed, the whisk touches the counter or is out of hand contact for more than 10 consecutive controls (dropped); after it is placed, the whisk touches neither the hand nor the counter for more than 5 consecutive controls (tossed); the bowl or the whisk touches the floor, has its centre of mass below the counter top (z < 0.68 m) or outside the workspace x in [0.25, 0.99] m, y in [-0.36, 0.36] m, z in [0.60, 1.50] m; or the physics becomes unstable. Later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct forces. The episode allows at most 4000 controls at 50 Hz; reaching that limit without success is a failure.
+Pick up the balloon whisk, whisk the batter in the steel bowl, drain the whisk over the bowl and lay it down on the counter. The whisk starts at rest, leaning on the bowl rim with its handle end on the counter (where it settles when released from the source scene's start pose, standing in the bowl); both hands start open. The batter is not simulated: whisking is measured on the whisk-head point, 20 mm above the wire tip on the whisk axis, which is in the batter while it is between 3 mm above the bowl origin and the batter surface (35.7 mm above the bowl origin) and at least 4 mm inside the bowl wall. Complete five stages in order. (1) Picked up: a hand holds the whisk clear of everything else, i.e. the robot touches it, it touches neither the counter nor the bowl and its lowest point is at least 30 mm above the counter top, for 10 consecutive controls. (2) Immersed: the head point enters the batter. (3) Whisked: the head point circles the bowl axis by at least 5 full revolutions of net (signed, unwrapped) angle while it stays in the batter; leaving the batter before 5 revolutions resets the count to zero, and controls with the head point closer than 8 mm to the bowl axis add nothing. (4) Drained: while the robot touches the whisk, the wire tip is at least 10 mm above the bowl rim, the head point is within 55 mm of the bowl axis (over the opening) and the whisk hangs head-down within 30 degrees of vertical, for 25 consecutive controls (0.5 s). (5) Set down: lower the whisk until it touches the counter top while the robot still touches it (it is then placed), then let go; the episode succeeds when, for 50 consecutive controls (1 s), the whisk touches the counter top, touches neither the robot nor the bowl, lies within 30 degrees of horizontal with its centre of mass at least 120 mm from the bowl axis, and its centre of mass moves slower than 0.02 m/s and it turns slower than 0.3 rad/s. The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every control, when: the bowl tilts more than 10 degrees, slides more than 30 mm or rises more than 20 mm from its start; after the pickup, the whisk touches nothing, its lowest point is more than 2 mm above the counter top and its centre of mass moves downward faster than 0.2 m/s (dropped); after the pickup and before it is placed, the whisk touches the counter or is out of robot contact for more than 10 consecutive controls (dropped); after it is placed, the whisk touches neither the robot nor the counter for more than 5 consecutive controls (tossed); the bowl or the whisk touches the floor, has its centre of mass below the counter top (z < 0.68 m) or outside the workspace x in [0.25, 0.99] m, y in [-0.36, 0.36] m, z in [0.60, 1.50] m; or the physics becomes unstable. Before the pickup the whisk may be nudged or slide off the rim; the counter, floor and workspace rules still apply. Later actions cannot undo a failure. "Robot" means any hand, arm link or the stand. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct forces. The episode allows at most 4000 controls at 50 Hz; reaching that limit without success is a failure.
 
 ## Difficulty
-The whisk is a long tool held in a contact grasp: the hand must move its head through the batter in circles without
-striking the bowl wall (a 10 degree tilt or 30 mm slide of the free bowl fails), lift it clear to drain, turn it from
-vertical to lying, place it on the counter while still holding it and let go so that it comes to rest beside the bowl.
-Dropping the whisk, knocking the bowl or releasing it in the air ends the episode as a failure at once.
+The whisk is not in a hand at the start: it leans on the bowl rim with its handle end on the counter, so a careless
+grasp drags the free bowl (a 30 mm slide or 10 degree tilt fails). The robot is a two-arm Tianji Marvin with no gravity
+compensation, so every hand pose comes from arm joint targets. The whisk must be picked up, turned upright and moved
+through the batter in circles without striking the bowl wall, lifted clear to drain, turned from vertical to lying,
+placed on the counter while still held and let go so that it comes to rest beside the bowl. Dropping the whisk after
+the pickup, knocking the bowl or releasing the whisk in the air ends the episode as a failure at once.
 
 ## Reference solution
-`solution/` replays the validated Sharpa Wave authoring trajectory (a closed-loop scripted wrist controller recorded
-as open-loop rows: lower into the batter, orbit the bowl axis until five revolutions are counted, lift and drain,
-carry and turn, set down while holding, open the hand and slide it off the handle along the whisk axis, lifting it
-clear). The authoring tools (`tools/author_oracle.py`, `tools/make_reset.py`)
-read simulator state and write motor targets only; they never drive an object pose or apply an object force, and
-they are never copied into the agent's environment or image.
-
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (1,540 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
+`solution/` replays the validated Sharpa Wave authoring trajectory on the Marvin rig (a closed-loop scripted
+two-arm controller recorded as open-loop rows: the left hand hooks its fingertips over the near-left bowl rim and
+steadies the bowl while the right hand closes a palm-down grasp on the whisk handle and lifts it off the rim; the left
+hand lets go and withdraws; the right hand turns the whisk upright beside the bowl, lowers it into the batter, orbits
+the bowl axis until five revolutions are counted, lifts and drains, carries and lays the whisk on the counter, opens
+and withdraws). The authoring tools (`tools/author_arm.py`, `tools/armlib.py`, `tools/make_reset_arm.py`, damped
+least-squares IK of the shared arm rig) read simulator state and write motor targets only; they never drive an object
+pose or apply an object force, and they are never copied into the agent's environment or image.
 
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
 twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
 mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
-Failures are fail-fast and permanent: bowl tipped, moved or lifted; whisk dropped (touching nothing
-while falling faster than 0.2 m/s more than 2 mm above the counter, counter contact or no hand contact before it was
-placed, or neither hand nor counter contact for more than 5 controls after it was placed); bowl or whisk on the floor, below the counter top or outside the workspace; unstable physics;
+Failures are fail-fast and permanent: bowl tipped, moved or lifted; whisk dropped after the pickup (touching nothing
+while falling faster than 0.2 m/s more than 2 mm above the counter, counter contact or no robot contact before it was
+placed, or neither robot nor counter contact for more than 5 controls after it was placed); bowl or whisk on the floor, below the counter top or outside the workspace; unstable physics;
 or the 4,000-control budget. The frozen thresholds come from the task, never from an agent archive. A no-op fails.
 Human review and full agent-trial calibration remain pending; report this task as provisional.
 
@@ -62,9 +64,13 @@ Source: `scripts/dexhand/families/batter_whisk/`, generated by `scripts/dexhand/
 source geometry, masses and original authored meshes (`assets/manifest.json`, sha256); contact uses convex proxies
 of the same profile. The 252 g batter charge is not simulated as a fluid: its mass is lumped rigidly into the bowl and
 whisking is summarised by whisk-head revolutions inside the batter volume (no drag, no mixing field). The source
-scene's second hand holding the bowl is omitted: one hand whisks and the free bowl must stay put by itself.
+starts with the whisk standing in the bowl; without a hand that pose is not statically stable (the handle side is
+heavier), so the start is the state in which the whisk settles when released from it: leaning on the rim, handle end on
+the counter. The source's second hand holding the bowl is available (left arm) and the reference solution uses it to
+steady the bowl during the pickup; it lets go before whisking because fingers hooked over the rim of this 12 cm bowl
+would sit inside the whisking volume. The robot is the Tianji Marvin stand of `pot_shelf_transfer` (two 7-DoF arms,
+position servos, no gravity compensation) at the world origin facing +x, with a hand on each flange (`arm_rig.py`).
 The Sharpa Wave assets are pinned to MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0);
 the Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to wuji-technology/wuji-description commit
-`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same wrist stage with its vendor joints, actuators
-and contact geometry unchanged. Each hand starts from a frozen grasp that was settled under gravity without any weld.
-This is tool-use feasibility on a floating wrist stage, not a full-arm or zero-shot claim.
+`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same flanges with its vendor joints, actuators and
+contact geometry unchanged. This is a physical tool-use task for an arm-mounted dexterous hand, not a zero-shot claim.
