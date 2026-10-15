@@ -948,7 +948,35 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 16.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "freezing the instances and three oracle trials (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 10 s, rcb_monitor): a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.9 GiB of memory and 3.2 GiB of GPU memory (oracle trials: 2.8 / 3.1); with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) 13.2 GiB and 6.4 GiB; 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on process"
+measured = "freezing the instances, oracle trials and replays (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 2-10 s, rcb_monitor): with one environment's PhysX buffers (the tooling's), a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.0 GiB of memory and 1.2 GiB of GPU memory (Isaac Lab's default buffers: 2.9 / 3.2); the render worker that draws the cameras (Session(cameras=True), the verifier's filmed illustration) adds 11.9 GiB and 3.4 GiB (3.3-3.6 under every RTX preset tried); 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on Session"
+
+# ambench, standard
+[[rule]]
+match = "^ambench-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 24.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 20.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
+
+# ambench, standard
+[[rule]]
+match = "^ambench-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 24.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 20.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
 
 [[limit]]
 match = "^roboolympics-.*-privileged$"
@@ -2012,7 +2040,37 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 28.0
-measured = "a camera-on Isaac process peaks at 13.2 GiB of memory and 6.4 GiB of GPU memory, a camera-free one at 2.9 / 3.2 (the rule's measurement); the agent may run two processes at once (a Session and the replay CLI): at most 26.4 GiB, 12.8 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "a Session with cameras peaks at 14 GiB of memory and 4.6 GiB of GPU memory (its render worker included), a camera-free one at 2.0 / 1.2 (the rule's measurement); the agent may run two Sessions with cameras at once: at most 28 GiB, 9.2 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^ambench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 30.0
+measured = "the agent's container holds Python and the client only (as every standard task's); the whole trial adds the sim sidecar (physics + render worker, the rule's measurement): provisional"
+
+[[limit]]
+match = "^ambench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 30.0
+measured = "the agent's container holds Python and the client only (as every standard task's); the whole trial adds the sim sidecar (physics + render worker, the rule's measurement): provisional"
 
 [[cap]]
 match = "^behavior-.*-privileged$"
@@ -2414,3 +2472,8 @@ sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
 match = "^ambench-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 34.0, pids = 16384 }
+
+[[cap]]
+match = "^ambench-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
