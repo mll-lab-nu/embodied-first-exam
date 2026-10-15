@@ -42,11 +42,8 @@ trajectory**, not a general policy.
   lies at the 5 mm limit, no shift is applied.
 - The main sheet is scored against the picture: its **inked area** (ink coverage ≥ 0.5) vs the exemplar's ink in the picture:
   **IoU**; **boundary F** (how well the edges of your ink match the edges of the exemplar's ink, precision / recall within 1 mm);
-  **region coverage** (the exemplar's ink is divided into 24 regions along its strokes: each continuous trail of the
-  exemplar's ink, the path one of its brush contacts takes through crossings and turns, is cut into pieces of at most 30 mm
-  along its length, and no region spans two separate pieces of ink; the regions measure 40 to 191 mm² and
-  each counts alike, the smallest too; the fraction of each region covered by your ink; the worst one counts;
-  `min_stroke_coverage` in the metrics); **stray ink**
+  **region coverage** (the exemplar's ink is divided into 24 regions; the fraction of each region covered by your ink; the
+  worst one counts; `min_stroke_coverage` in the metrics); **stray ink**
   (ink more than 1 mm away from the exemplar's ink, as a fraction of the exemplar's inked area); the **number of strokes** on the
   main sheet (inked contacts). **Success iff IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80, stray ink ≤ 0.04
   and at most 5 strokes (continuous brush contacts) on the main sheet.** `final_reward` = the IoU (scaled by 5 / strokes if there are more than 5).
@@ -97,7 +94,6 @@ open-loop from the same initial state in two fresh processes; it succeeds if bot
 exactly the same state. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
-The Python is `/opt/venv` (made with uv, so it has no `pip` module): install a package with `uv pip install <name>`.
 ```python
 from rcb_brush import Session
 s = Session(instance="/app/instance.json")    # a few seconds; builds the scene in the frozen state

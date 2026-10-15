@@ -94,7 +94,6 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_brush as M  # noqa: E402
-import rcb_brush_strict as ST  # noqa: E402  the graders' stroke count (the same module the collect hook replays with)
 S = M.Session(instance=INSTANCE, task=TASK, strict=True, render=True)
 if not S.render_enabled:
     raise SystemExit("the sim service needs a Vulkan-capable GPU for its cameras")
@@ -165,11 +164,7 @@ STATIC = {
                      "orientation": "row 0 = the sheet's far edge (+x), column 0 = its left edge seen from the base (+y); = canvas_cam's orientation",
                      "content": ("the exemplar painting on the main sheet" if S.medium == "mypaint" else "the exemplar in ink on paper")},
     "strokes": {"max_strokes_on_main_sheet": int(TGT["success"]["max_strokes"]),
-                "stroke": f"one continuous contact of the {WORD}-loaded tip with the main sheet (tip over the sheet and below its surface)"
-                          + ("; the grader cuts a contact where the brush moves along the sheet without marking it and counts a very "
-                             "long stroke as several (the task's process rules)" if "stroke_gap_mm" in TGT["success"] else ""),
-                "so_far": "meta strokes_main_sheet: the strokes on the main sheet so far, counted as the grader counts them "
-                          "(a stroke still pressed included)",
+                "stroke": f"one continuous contact of the {WORD}-loaded tip with the main sheet (tip over the sheet and below its surface)",
                 "practice_sheet": "strokes there are never scored and never counted",
                 "order": ("not a separate criterion: later strokes lie over and blend into earlier ones, so the order shows in the painting"
                           if S.medium == "mypaint" else "reported, not part of success")},
@@ -232,13 +227,7 @@ SPEC = {
                        "(robot_spec.base.pose); x forward (away from the base), y to the robot's left, z up",
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV (x right, y down, z forward); cam2world_gl: OpenGL (x right, y up, z backward)"},
-    # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
-    # max_control_steps): the tooling's runaway guard ends the episode (reason step_guard) at that many control steps
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "7200"))},
-    "max_control_steps": int(S.max_steps),
-    "episode": (f"ends when your session ends (reason agent_phase_ended; timeout if time_left_s had reached 0 by then), after "
-                f"{int(S.max_steps)} control steps (max_control_steps, the runaway guard: reason step_guard; meta control_steps_left "
-                f"counts down to it, watches included) or on a simulator error; it is graded as it stands"),
     "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -272,18 +261,9 @@ def recorder(cams, fps: int, meta: dict) -> L.Recorder:
                       depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
 
 
-def strokes_main_sheet() -> int:
-    """The main sheet's strokes so far as the grader counts them (rcb_brush_strict.stroke_count; a stroke still pressed counts)."""
-    c = S.painter.cur
-    cur = {"sheet": c["sheet"], "inked": c["inked"], "samples": c["samples"]} if c is not None else None
-    return int(ST.stroke_count(S.painter.strokes, cur, TGT["success"]))
-
-
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS, "sim_time_s": round(n / CTRL_HZ, 3),
-            "control_steps_left": max(0, int(S.max_steps) - n), "strokes_main_sheet": strokes_main_sheet(),
-            "max_strokes_main_sheet": int(TGT["success"]["max_strokes"]),
             "time_s": round(L.agent_time(E), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - L.agent_time(E), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             **({"cameras": {c: CALIB[c] for c in cams}} if OBS_CALIBRATION else {})}
@@ -348,29 +328,16 @@ def run_ee_pose(A: np.ndarray, dt: float, rec: L.Recorder, plan: list) -> None:
         p1 = np.asarray(row[0:3], np.float64); q1 = np.asarray(row[3:7], np.float64); q1 = q1 / max(1e-9, float(np.linalg.norm(q1)))
         n_dt = max(1, int(round(dt * CTRL_HZ)))
         n_v = tip_steps(p0, p1)
-        n = max(n_dt, n_v); fails = 0; beyond = set()
+        n = max(n_dt, n_v); fails = 0
         for k in range(1, n + 1):
             t = k / n
             q, ok, _ = S.ik(p0 + (p1 - p0) * t, M.quat_slerp(q0, q1, t))
             if not ok: fails += 1
-            elif np.any(q < LIM_ARR[:, 0] - 1e-6) or np.any(q > LIM_ARR[:, 1] + 1e-6):   # a solution the joints cannot reach
-                beyond.update(LAYOUT[j] for j in np.flatnonzero((q < LIM_ARR[:, 0] - 1e-6) | (q > LIM_ARR[:, 1] + 1e-6)))
             if ctrl_step(q if ok else S.hold_action(), rec):
                 E["tip_target"] = (p0 + (p1 - p0) * t, M.quat_slerp(q0, q1, t))
-                plan.append({"row": ri, "steps": k, "ik_failures": fails, "slowed": n > n_dt, **tracking(p0 + (p1 - p0) * t, beyond),
-                             "stopped": EP.stop_reason or "episode over"}); return
+                plan.append({"row": ri, "steps": k, "ik_failures": fails, "slowed": n > n_dt, "stopped": EP.stop_reason or "episode over"}); return
         E["tip_target"] = (p1, q1)
-        plan.append({"row": ri, "steps": n, "ik_failures": fails, "slowed": n > n_dt, **tracking(p1, beyond)})
-
-
-def tracking(target, beyond: set) -> dict:
-    """How far the measured brush tip is from the row's target after its control steps (tip_error_mm: the arm's lag plus
-    anything the joints could not do), and the joints whose IK solution lay outside their limits during the row (an
-    ee_pose row the IK converged on can still be out of reach: the joint stops at its limit and the tip misses)."""
-    out = {"tip_error_mm": round(float(np.linalg.norm(S.tip_pose()[0] - np.asarray(target, np.float64))) * 1000.0, 2)}
-    if beyond:
-        out["beyond_joint_limits"] = sorted(beyond)
-    return out
+        plan.append({"row": ri, "steps": n, "ik_failures": fails, "slowed": n > n_dt})
 
 
 def checked(parse):
@@ -478,9 +445,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
            "rejected": None, "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
          "note": note, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
-         "ik_failures": int(sum(p.get("ik_failures", 0) for p in plan)),
-         "max_tip_error_mm": max((p.get("tip_error_mm", 0.0) for p in plan), default=0.0),
-         "beyond_joint_limits": sorted({j for p in plan for j in p.get("beyond_joint_limits", ())}), "depth": rec.mode})
+         "ik_failures": int(sum(p.get("ik_failures", 0) for p in plan)), "depth": rec.mode})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video, fps)
 
@@ -526,8 +491,7 @@ def status() -> dict:
 def _end_from_signal():
     with LOCK:
         E["exiting"] = True
-        # the agent phase is over (the agent ended its session, or the harness ended it): not the service's own timeout
-        if not E["done"]: finish("timeout" if L.agent_time(E) >= SPEC["budget"]["wall_clock_s"] else "agent_phase_ended")
+        if not E["done"]: finish("timeout")
         dump()
         log({"ev": "exit", "reason": "collect hook: episode dumped; the trajectory is replayed in fresh processes next"})
     sys.stdout.flush(); sys.stderr.flush()

@@ -442,7 +442,7 @@ Margins (a value / its task's limit):
   is only 1.43× the sweep limit.
 
 ## Counted strokes in calligraphy (2026-10-14)
-The failure analysis of 2026-10-14 (agents' runs of 10-05 to 10-14, items 8–11 of its "Decisions needed") found that the
+The failure analysis of 2026-10-14 (agents' runs of 10-05 to 10-14, item 9 of its "Decisions needed") found that the
 calligraphy families' stroke cap counted contacts, not strokes, and that the colouring-in rule (a long path of thin marks) was
 the only bound on what one contact did:
 - **Ink-free connectors.** The Wang brush leaves no mark below a press of about 0.25 mm (Width(z) = 1.187 z − 0.03 cm), but the
@@ -461,7 +461,7 @@ agent's own privileged copy of the instance holds no counting numbers):
   touch-down and the lift before the first and after the last marking sample belong to no piece;
 - each piece counts as one stroke, or ⌈length / `max_stroke_path_mm`⌉ when it is longer than `max_stroke_path_mm` =
   5 × the reference's longest piece (rules.json `reference_longest_stroke_mm`, `measure_reference.py`), rounded up to 10 mm:
-  600–1960 mm; `strokes_counted_ok` = `n_strokes_counted` ≤ `max_strokes`;
+  600–2240 mm; `strokes_counted_ok` = `n_strokes_counted` ≤ `max_strokes`;
 - the paintings' sweep rule on the pieces: at most 10 % of the pieces' path in pieces longer than 12 × their bounding-box
   diagonal (at least 10 mm);
 - `final_reward`'s cap scaling is taken on the counted strokes. The picture rule keeps its own contact count
@@ -509,13 +509,23 @@ rules are what the rows show. A dot fill written as separate contacts was alread
 it counts once (Luna's genuine 2.98 × retrace sets that margin), unless its back-and-forth makes it a scribble (ratio > 12).
 
 **Validation (Harbor).** 2026-10-14, Harbor on ws3 (RTX 4090, `eai-robopaint:0.2.0`, Harbor's
-`-a oracle` / `-a nop`, jobs `rpv1-{oracle,nop}-<task>`), on task files identical to this version's in `environment/` and
-`tests/`: the 16 calligraphy pairs in both modes, oracle 32 of 32 success (deterministic; `n_strokes_counted` = the cap's
-contacts; standard: `live_matches_replay` 1) and nop 0 of 32; lettering liberty and acrylic redfuji (graders unchanged in
-verdict) in both modes, oracle 4 of 4 and nop 0 of 4. Every standard trial's `final.json` reason is `agent_phase_ended`; no
-infra or grader errors. The standard service's new fields were also checked natively on the image's runtime (caoshu wen:
-`/spec` `max_control_steps` 72000; `control_steps_left`, `strokes_main_sheet`, `max_strokes_main_sheet` in every response;
-`tip_error_mm` on every `ee_pose` plan row; SIGUSR1 before the clock ran out → `agent_phase_ended`).
+`-a oracle` / `-a nop`, jobs `rpv1-{oracle,nop}-<task>`), with this version's rules and scoring code (`rcb_brush_strict.py`
+and the instances in `tests/`, `environment/scorer/` and `environment/sim/`; the draft then also held a helper for a
+standard-service stroke counter, taken out since with that counter): the 16 calligraphy pairs in both modes, oracle 32 of 32
+success (deterministic; `n_strokes_counted` = the cap's contacts; standard: `live_matches_replay` 1) and nop 0 of 32;
+lettering liberty and acrylic redfuji (graders unchanged in verdict) in both modes, oracle 4 of 4 and nop 0 of 4; no infra or
+grader errors. The standard sim service (`environment/sim/server.py`) is main's, unchanged.
+
+**Re-grading existing results** (nothing is re-run). `scripts/robopaint_strict/regrade.py JOBS_DIR ... [--traj PATH.npz]
+--out regrade.jsonl` replays every recorded RoboPaint trajectory once with the current task's graders' copy (`tests/`:
+`rcb_brush_strict.py` and the frozen instance) in the base image (docker, GPU) and scores the same final state twice: with
+the rules before this change (`old_verdict`: the instance's `target.success` without the counted-stroke and calligraphy sweep
+keys, exactly the earlier grader) and with the current rules (`new_verdict`); the picture rule alone is `image_success`. A
+trajectory recorded on another instance (its `instance_sha`) is not re-graded, and a recorded success the old rule does not
+reproduce is `inconclusive`. Only the 43 pairs on main (the released set, `RELEASED` in the tool) are re-graded: a trial of any
+other RoboPaint task (pruned or earlier targets, later additions) is listed as `skipped`. Lettering and the paintings re-grade
+to their recorded verdicts. Standard re-grades are conservative ("re-graded under 2026-10-14 rules (conservative)"): the agent
+read the earlier instruction.
 
 ## Oil: the pointed brush (2026-10-09)
 The oil family was saturated (GPT-6 Astra, high: 11 of 11 in both modes, 2026-10-08) and its paintings looked coarse next to the
@@ -682,25 +692,8 @@ Every copy of the tooling is byte-identical within a family and across the six f
 | depth | SAPIEN depth, geometry only: ink and paint never show |
 | `/kinematics` | SAPIEN's pinocchio model (7 joints) |
 | proprio | 28 columns |
-| counters (2026-10-14) | every response: `meta["control_steps_left"]` (to the 72000-step runaway guard, `/spec` `max_control_steps`), `meta["strokes_main_sheet"]` / `meta["max_strokes_main_sheet"]` (the main sheet's strokes so far, counted as the grader counts them: `rcb_brush_strict.stroke_count`) |
-| `ee_pose` plan rows | `ik_failures`, `slowed`, and (2026-10-14) `tip_error_mm` (the measured tip's distance from the row's target after the row) and `beyond_joint_limits` (joints whose IK solution lay outside their limits) |
-| episode end | the collect hook ends it with reason `agent_phase_ended` (2026-10-14; it said `timeout`, also when the agent had stopped by itself), `timeout` only if `time_left_s` had reached 0; `step_guard`; `error` |
 
 More in STANDARD_MODE.md §16.
-
-Why the counters (failure analysis 2026-10-14, item 10): `/spec` said `budget.steps: null` while the 72,000-step guard ended
-5 of GLM's 11 and 4 of DeepSeek's 11 standard oil episodes before their plans finished (GLM read null as "no step limit"),
-and Astra's four acrylic cap failures commanded at or under the cap while the grader counted more contacts (sunflowers 372
-sent, 398 counted, cap 380): brief contact breaks it could not see. Why the tracking fields (item 11): in 9 of 43 Astra and 8
-of 43 Opus standard runs the per-step `ee_pose` IK walked the arm into a joint limit late in the episode and marks landed
-5–60 mm off while `ik_failures` read 0. The cause was not reproduced (a 40,000-step chained IK test on the rest pose stayed
-inside the limits); `tip_error_mm` reports the miss whatever its cause.
-
-**Acrylic thresholds (item 11).** One agent measured ΔE 2.015 for the nearest-paint quantisation of the bedroom picture and
-concluded that the uniform ΔE 2.0 sits at the palette floor. It does not: each acrylic target is the reference painter's own
-canvas, made from the 10 well paints, and the reference solutions score ΔE 0.133–0.167, SSIM ≥ 0.9999, edge 1.000 on all
-ten pictures (2026-10-14, the graders' copy); a per-pixel quantisation of the picture misses the blended stroke edges, which
-the reference reproduces. The thresholds stay.
 
 ## Results
 No task directory holds results (PROTOCOL §5); they are published on the results site
@@ -708,8 +701,9 @@ No task directory holds results (PROTOCOL §5); they are published on the result
 `eai-v2-internal/agent-runs`.
 - This version: no runs yet.
 - 2026-10-14: the calligraphy pairs' process rules count strokes as written (Counted strokes in calligraphy). Runs graded
-  before that date on kaishu, xingshu and caoshu were graded under the contact cap and are reported separately; lettering
-  and the paintings are graded as before.
+  before that date on kaishu, xingshu and caoshu were graded under the contact cap; they are re-graded from their recorded
+  trajectories with `scripts/robopaint_strict/regrade.py`, nothing is re-run. Lettering and the paintings are graded as
+  before.
 - The runs on record are of the earlier version (picture rule only) and are not comparable with this one. Their trajectories
   re-grade under the process rules (Calibration). `codex-gpt6_luna-xhigh` (Codex CLI 0.157.0, GPT-6 Luna, reasoning xhigh):
   - they ran on pre-v1.0 versions of the tasks (privileged without a suffix, standard twins `-limited`): batch

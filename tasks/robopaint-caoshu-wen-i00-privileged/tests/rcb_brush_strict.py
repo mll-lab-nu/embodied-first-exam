@@ -137,15 +137,6 @@ def counted_strokes(pieces: list[tuple[float, float]], cfg: dict) -> int:
     return int(sum(max(1, math.ceil(L / lim - 1e-9)) for L, _ in pieces))
 
 
-def stroke_count(strokes: list[dict], cur: dict | None, cfg: dict) -> int:
-    """The main sheet's strokes as the grader counts them (the standard service reports it in every observation): the
-    counted strokes where the rule has them, else the inked contacts with the main sheet."""
-    pieces = piece_stats(strokes, cur, cfg)
-    if pieces is not None:
-        return counted_strokes(pieces, cfg)
-    return sum(1 for s in list(strokes) + ([cur] if cur is not None else []) if s.get("sheet") == "main" and s.get("inked"))
-
-
 def process_metrics(stats: list[tuple[float, float, float]], cfg: dict, marks: bool = True,
                     pieces: list[tuple[float, float]] | None = None) -> dict:
     """The rules' quantities and verdicts from the main sheet's inked strokes (stroke_stats) and the rule (cfg). marks: the medium

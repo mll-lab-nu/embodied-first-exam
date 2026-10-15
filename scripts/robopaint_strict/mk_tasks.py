@@ -68,9 +68,6 @@ CODE_CHANGES = {
         "2026-10-14 (failure analysis of 2026-10-14): the graders' `rcb_brush_strict.py`, the same file in every RoboPaint "
         "task, gained the calligraphy families' counted strokes (their own entry, where it applies); a task without those rule "
         "keys in `target.success` (lettering and the paintings) is graded exactly as before.",
-        "2026-10-14 (failure analysis of 2026-10-14, item 15): text only. The Tooling section says that `/opt/venv` was "
-        "made with uv and has no `pip` module, and that `uv pip install <name>` installs into it (agents ran `pip install` "
-        "and found no pip).",
     ],
     "standard": [
         "2026-10-10 (review round 2, board 0067): the service's request checks and the client. `environment/sim/server.py` "
@@ -109,21 +106,12 @@ CODE_CHANGES = {
         "2026-10-14 (failure analysis of 2026-10-14): the graders' `rcb_brush_strict.py`, the same file in every RoboPaint "
         "task, gained the calligraphy families' counted strokes (their own entry, where it applies); a task without those rule "
         "keys in `target.success` (lettering and the paintings) is graded exactly as before.",
-        "2026-10-14 (failure analysis of 2026-10-14, items 10, 11 and 13): the sim service (`environment/sim/server.py`) "
-        "reports in every response `control_steps_left` (to the 72000-step runaway guard, which `/spec` now states as "
-        "`max_control_steps`; `budget.steps` was null while the guard ended episodes) and `strokes_main_sheet` / "
-        "`max_strokes_main_sheet` (the main sheet's strokes so far, counted as the grader counts them; agents had overrun "
-        "the cap by contacts they could not see), and per `ee_pose` row of `meta[\"plan\"]` `tip_error_mm` and "
-        "`beyond_joint_limits` (an IK solution outside a joint's limits had reported no failure while the tip missed). "
-        "An episode the collect hook ends before the service's clock ran out has reason `agent_phase_ended` (it said "
-        "`timeout`, also when the agent had ended its own session). The instruction says so. Reporting only: the scene, "
-        "the frozen instance, the recorded trajectory and the grading are unchanged.",
     ],
 }
 # README "Change Log" entries of the pairs of one group (GROUP), both modes, after CODE_CHANGES.
 GROUP_CHANGES = {
     "calligraphy": [
-        "2026-10-14 (failure analysis of 2026-10-14, items 8 and 9): the process rules count strokes as they are written "
+        "2026-10-14 (failure analysis of 2026-10-14, item 9): the process rules count strokes as they are written "
         "(`rcb_brush_strict.py`; the rule numbers in every copy of the instance's `target.success`: `stroke_gap_mm`, "
         "`mark_min_width_mm`, `max_stroke_path_mm`, `max_scribble`, `max_scribble_share`, `scribble_min_mm`). A contact is "
         "cut into two strokes where the brush moves more than 5 mm along the main sheet without marking it (a mark narrower "
@@ -132,8 +120,8 @@ GROUP_CHANGES = {
         "diagonal) applies to these strokes. Before, the cap counted contacts: pieces written separately and joined by a "
         "press too light to ink counted as one stroke, and so did a contact held down to write over and over. The scene "
         "(`instance_sha`), the picture rule and the reference solution are unchanged, and the reference passes with each of "
-        "its strokes counted once; results graded before this change are reported separately. The instruction states the "
-        "rule, and the xingshu and caoshu texts describe how the exemplar's ink is divided into regions and how large they are.",
+        "its strokes counted once. Results graded before this change are re-graded from their recorded trajectories, "
+        "nothing is re-run (scripts/robopaint_strict/regrade.py). The instruction states the rule.",
     ],
 }
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
