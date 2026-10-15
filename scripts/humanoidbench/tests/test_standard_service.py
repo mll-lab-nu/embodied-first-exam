@@ -699,6 +699,30 @@ class ResetCapability(Base):
         code, st, _ = call(svc2, "GET", "/status")
         self.assertEqual((st["control_steps"], st["resets_left"], st["episode"]), (2, 1, 2))
 
+    def test_a_crash_inside_a_reset_resumes_the_abandoned_episode(self):
+        # the process dies in sim.reset(), after the abandoned episode's end and before the new one began: a reset lost
+        # with its call never happened, so that episode runs on, the reset is not charged, and the agent may reset again
+        # (board 0121: the resumed episode was done with reason "reset", every call a 409)
+        class Died(BaseException):
+            pass
+
+        def die():
+            raise Died()
+        sim = FakeSim(goal=99)
+        svc = self.service(sim, reset_budget=2)
+        self.submit(svc, [[0.5]] * 4)
+        sha = sim.state_sha()
+        sim.reset = die
+        with self.assertRaises(Died):
+            call(svc, "POST", "/reset")
+        svc2 = self.service(FakeSim(goal=99), reset_budget=2)
+        self.assertEqual(svc2.sim.state_sha(), sha)
+        code, st, _ = call(svc2, "GET", "/status")
+        self.assertEqual((st["done"], st["reason"], st["control_steps"], st["resets_left"], st["episode"]),
+                         (False, None, 4, 2, 1))
+        self.assertEqual(self.submit(svc2, [[0.5]])[0], 200)
+        self.assertEqual(call(svc2, "POST", "/reset")[0], 200)
+
 
 class ResetChecks(Base):
     def test_a_refused_reset_changes_nothing(self):

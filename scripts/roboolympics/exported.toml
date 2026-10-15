@@ -25,24 +25,28 @@ name = "roboolympics-badminton-match-i01-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-badminton-match-i02-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-tabletennis-hitskill-i00-standard"
@@ -57,9 +61,11 @@ name = "roboolympics-tabletennis-match-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i02-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)

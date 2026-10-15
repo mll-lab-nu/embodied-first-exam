@@ -58,6 +58,19 @@ import numpy as np
 ACTION_DIM = 8
 CONTROL_HZ = 120
 MAX_STEPS = 8000                       # a technical cap above every task's episode length (at most 60 s = 7200 steps)
+QUAT_MIN_NORM = 1e-9                   # a row's quaternion (qw qx qy qz) must be longer than this: AM-Bench cannot use it
+
+
+class BadTrajectory(ValueError):
+    """The rows themselves are not a trajectory of this task (the agent's input, never the simulator's failure)."""
+
+
+def bad_quaternion_rows(A) -> int:
+    """How many rows of a (T, 8) array have a quaternion of zero (< QUAT_MIN_NORM) or non-finite length."""
+    q = np.asarray(A, dtype=np.float64).reshape(-1, ACTION_DIM)[:, 3:7]
+    with np.errstate(over="ignore", invalid="ignore"):
+        n = np.linalg.norm(q, axis=1)
+    return int(np.count_nonzero(~np.isfinite(n) | (n < QUAT_MIN_NORM)))
 ASSET_ROOT = "/opt/isaac-assets/Assets/Isaac/5.1"   # baked web assets (images/ambench/web_assets.txt)
 CAMERAS = ("ee_camera", "base_camera")  # the robot profile's onboard cameras (384 x 384 RGB), only with Session(cameras=True)
 SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
@@ -192,11 +205,11 @@ class Session:
     def clip(self, row) -> tuple[np.ndarray, int]:
         a = np.asarray(row, dtype=np.float64).reshape(-1).copy()
         if a.size != ACTION_DIM or not np.all(np.isfinite(a)):
-            raise ValueError(f"an action row has {ACTION_DIM} finite values (x y z qw qx qy qz gripper), got {a.size}")
+            raise BadTrajectory(f"an action row has {ACTION_DIM} finite values (x y z qw qx qy qz gripper), got {a.size}")
         n = 0
         g = float(np.clip(a[7], -1.0, 1.0)); n += int(g != a[7]); a[7] = g
         if float(np.linalg.norm(a[3:7])) < 1e-9:      # passed on as it is (AM-Bench's controller takes the quaternion it gets)
-            raise ValueError("the action's quaternion has zero length")
+            raise BadTrajectory("the action's quaternion has zero length")
         return a, n
 
     def step(self, row) -> bool:
@@ -265,6 +278,9 @@ class Session:
 
     def save_trajectory(self, actions, path="/app/output/trajectory.npz", meta: dict | None = None) -> None:
         A = np.asarray(actions, dtype=np.float64).reshape(-1, ACTION_DIM)
+        if not np.all(np.isfinite(A)) or bad_quaternion_rows(A):
+            raise BadTrajectory(f"{bad_quaternion_rows(A)} row(s) with a zero-length or non-finite quaternion, or a "
+                                "non-finite value: the grader would score this file 0 (bad_trajectory)")
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         np.savez(path, task=np.array(self.env_id), actions=A, meta=np.array(json.dumps(meta or {})))
 
@@ -355,12 +371,18 @@ class Session:
 
 
 def load_trajectory(path, env_id: str) -> np.ndarray:
-    d = np.load(path, allow_pickle=False)
-    if str(d["task"]) != env_id:
-        raise ValueError(f"trajectory is for {str(d['task'])!r}, not {env_id!r}")
-    A = np.asarray(d["actions"], dtype=np.float64)
+    try:
+        d = np.load(path, allow_pickle=False)
+        task = str(d["task"])
+        A = np.asarray(d["actions"], dtype=np.float64)
+    except Exception as exc:  # noqa: BLE001 — whatever the file is, it is the agent's
+        raise BadTrajectory(f"not a trajectory npz: {exc!r}"[:300]) from exc
+    if task != env_id:
+        raise BadTrajectory(f"trajectory is for {task!r}, not {env_id!r}")
     if A.ndim != 2 or A.shape[1] != ACTION_DIM or A.shape[0] > MAX_STEPS or not np.all(np.isfinite(A)):
-        raise ValueError(f"actions must be a finite (T, {ACTION_DIM}) array with T <= {MAX_STEPS}, got {list(A.shape)}")
+        raise BadTrajectory(f"actions must be a finite (T, {ACTION_DIM}) array with T <= {MAX_STEPS}, got {list(A.shape)}")
+    if bad_quaternion_rows(A):
+        raise BadTrajectory(f"{bad_quaternion_rows(A)} action row(s) with a zero-length or non-finite quaternion")
     return A
 
 
@@ -379,9 +401,11 @@ def _cli_replay(a) -> int:
     out: dict[str, Any] = {"task": s.env_id, "instance_matches": bool(s.instance_matches), "initial_sha": s.initial_sha}
     try:
         A = load_trajectory(a.traj, s.env_id)
-    except Exception as exc:  # noqa: BLE001
-        out["error"] = f"bad trajectory: {exc!r}"[:300]; print(json.dumps(out), flush=True); return 2
-    out["replays"] = [_replay_rows(s, A)]
+        rows = _replay_rows(s, A)
+    except BadTrajectory as exc:          # the agent's input (a verdict: the grader scores it 0), never the simulator's
+        out["error"] = f"bad trajectory: {exc}"[:300]; out["bad_trajectory"] = 1
+        print(json.dumps(out), flush=True); return 2
+    out["replays"] = [rows]
     out["n_actions"] = int(len(A)); out["replay_wall_s"] = round(time.time() - t0, 2)
     print(json.dumps(out), flush=True)
     s.close()

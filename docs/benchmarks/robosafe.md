@@ -176,7 +176,9 @@ differently); RoboSafeBench's replay tool warns about it and records the environ
 
 RCB's success rate is the mean of `success` over tasks × trials (a task's `success` is RoboSafeBench's pass of its
 episode, replayed). RoboSafeBench's own numbers come from the same `reward.json` files; `scripts/robosafe/score.py
-<jobs dir>` prints them (`tests/test_score.py` checks it). The headline is the UR5e's on the paused clock:
+<jobs dir>` prints them (`tests/test_score.py` checks it). A trial with `infra_error` or `grader_error` set is no
+result: `score.py` leaves it out of every number and lists it apart ("infra trials", to be rerun), so it never fails a
+family (2026-10-14, board 0121). The headline is the UR5e's on the paused clock:
 
 - **family pass** (the headline), by RoboSafeBench's rule (`metrics.py`): a family passes when every member that
   counts toward it passes; the share of families passed is averaged over a track's families and then over tracks A to

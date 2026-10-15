@@ -144,6 +144,20 @@ with tempfile.TemporaryDirectory() as td:
                ("rooms: a family pass never mixes conditions or bodies (only the G1 under room fails)",
                 [blocks[k].get("family pass", "")[:5] for k in ("t/room", "t/onboard", "g/room", "g/onboard")]
                 == ["1.000", "1.000", "0.000", "1.000"])]
+# infra trials: a trial with infra_error (or grader_error) set is no result; beside a passing trial of the same task it
+# neither fails the family nor counts as a trial, and it is listed apart (board 0121, B2-M2)
+with tempfile.TemporaryDirectory() as td:
+    root = pathlib.Path(td)
+    job(root, "oracle", True)
+    slug, nn = pick[0], next(iter(fams[pick[0]]["instances"]))
+    d = root / "oracle" / f"cell-{slug}-{nn}-standard__infra" / "verifier"
+    d.mkdir(parents=True)
+    d.joinpath("reward.json").write_text(json.dumps({"success": 0, "infra_error": 1, "grader_error": 1}))
+    i = run(root / "oracle")
+    inf = i.get("infra trials (no result, left out of every number; rerun them)") or {}
+    checks += [("infra trial: the family still passes", i["family pass"] == o["family pass"] and i["trials"] == o["trials"]),
+               ("infra trial: counted and listed apart",
+                inf == {"count": 1, "trials": [f"cell-{slug}-{nn}-standard__infra"]})]
 bad = 0
 for name, ok in checks:
     print(("ok   " if ok else "FAIL ") + name)

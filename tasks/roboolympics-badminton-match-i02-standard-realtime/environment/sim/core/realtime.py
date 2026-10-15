@@ -81,7 +81,12 @@ class RealtimeService(Service):
     def spec_core(self):
         return {"timing": {"slowdown": self.slowdown, "control_dt": self.m.dt, "period_s": self.period,
                            "policy": "report_only", "effect_delay_steps": self.delay,
-                           "reaction_delay_steps": self.react},
+                           "reaction_delay_steps": self.react,
+                           # RCB patch (board 0121): the review window, and what missing it costs (timeout() below)
+                           "review_timeout_s": float(os.environ.get("READY_TIMEOUT_S", "60")),
+                           "review_timeout_rule": "after every unit the world stays frozen until each due player sends "
+                                                  "ready; a side that has not sent it within review_timeout_s seconds "
+                                                  "of real time loses the match (ready_timeout)"},
                 "start": self.start_rule(),
                 "decision_rule": ("program play: your own program may observe and act without a new model response; "
                                   "one act per seat in flight" if os.environ.get("RCB_ACT_RULE") == "program" else
