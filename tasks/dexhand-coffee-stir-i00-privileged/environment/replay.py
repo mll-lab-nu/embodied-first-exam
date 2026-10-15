@@ -10,6 +10,7 @@ import zipfile
 
 import numpy as np
 
+from checker import STAGES
 from runtime import Session
 from scene import hands
 
@@ -72,7 +73,8 @@ def load_actions(path, allow_empty=False):
     return load_trajectory(path, allow_empty)[0]
 
 
-def overlay(frame, features, phase, hand="Sharpa Wave"):
+def overlay(frame, features, phase, hand="Sharpa Wave", goals=(6, 50)):
+    """Caption a frame; ``goals`` = (revolutions, rest-hold controls) from the task's checker config."""
     from PIL import Image, ImageDraw, ImageFont
 
     canvas = Image.fromarray(frame)
@@ -95,8 +97,8 @@ def overlay(frame, features, phase, hand="Sharpa Wave"):
     )
     draw.text(
         (round(18 * scale), round(39 * scale)),
-        f"Stage {features['stage']}/3 | Bowl revolutions {features['revolutions']:.2f}/3 | "
-        f"Bowl in coffee {'yes' if features['bowl_submerged'] else 'no'} | Rest hold {features['rest_hold_steps']}/50",
+        f"Stage {features['stage']}/{len(STAGES)} | Bowl revolutions {features['revolutions']:.2f}/{goals[0]} | "
+        f"Bowl in coffee {'yes' if features['bowl_submerged'] else 'no'} | Rest hold {features['rest_hold_steps']}/{goals[1]}",
         font=font,
         fill=(244, 214, 157),
     )
@@ -127,6 +129,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         session.close()
         raise BadTrajectory("Actuator targets exceed native joint bounds")
     hand_label = session.hand_info["model"]
+    goals = (session.config["stir_revolutions"], session.config["rest_hold_steps"])
     phases = np.full(len(actions), "actuator replay")
     if video:
         with np.load(path, allow_pickle=False) as archive:
@@ -166,13 +169,14 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                     session.features(),
                     "initial state",
                     hand_label,
+                    goals,
                 )
             )
         for i, (action, phase) in enumerate(zip(actions, phases)):
             f = session.step(action)
             if writer and (i + 1) % stride == 0:
                 frame = session.render_frame(camera, width=960, height=544, shadows=False)
-                writer.append_data(overlay(frame, f, str(phase), hand_label))
+                writer.append_data(overlay(frame, f, str(phase), hand_label, goals))
             if writer and i % 500 == 0:
                 print(f"Recorded native action {i}/{len(actions)}", flush=True)
             if i % 50 == 0 or i == len(actions) - 1 or session.done:
@@ -182,7 +186,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                 # later rows are not executed.
                 if writer and (i + 1) % stride:
                     frame = session.render_frame(camera, width=960, height=544, shadows=False)
-                    writer.append_data(overlay(frame, f, str(phase), hand_label))
+                    writer.append_data(overlay(frame, f, str(phase), hand_label, goals))
                 break
         result = {
             "success": session.success,
@@ -220,8 +224,9 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
             final = overlay(
                 session.render_frame(camera, width=960, height=544, shadows=False),
                 session.features(),
-                "spoon resting in the stirred coffee" if session.success else "final state",
+                "spoon laid on the worktop beside the stirred coffee" if session.success else "final state",
                 hand_label,
+                goals,
             )
             for _ in range(fps * 2):
                 writer.append_data(final)
