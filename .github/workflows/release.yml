@@ -1,0 +1,47 @@
+name: release
+# A release of the dataset (board 0120; as Terminal-Bench's release-prebuilt.yml): a GitHub release published from a tag
+# `v<semver>` gets the task list and Harbor's manifest of the tagged commit as assets (tasks.json, TASKS.md,
+# dataset.toml), generated from the tasks (scripts/dataset_manifest.py list), never committed. `harbor publish` of the
+# dataset stays a maintainer's step (credentials), run from the tagged commit with that dataset.toml.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "an existing release tag, e.g. v0.2.0"
+        required: true
+permissions:
+  contents: write          # upload the release assets
+jobs:
+  assets:
+    runs-on: [self-hosted, rcb-ci]
+    timeout-minutes: 10
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Tag
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]] || { echo "FAIL tag $TAG is not v<semver>"; exit 1; }
+      - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Generate the list and the manifest
+        run: python3 scripts/dataset_manifest.py list --out "$RUNNER_TEMP/release"
+      - name: Attach them to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          id=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/releases/tags/$TAG" | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          for f in tasks.json TASKS.md dataset.toml; do
+            old=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/releases/$id/assets" \
+                  | python3 -c "import json,sys; print(next((str(a['id']) for a in json.load(sys.stdin) if a['name'] == '$f'), ''))")
+            [ -z "$old" ] || curl -fsS -X DELETE -H "Authorization: Bearer $GH_TOKEN" "$api/releases/assets/$old"
+            curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/octet-stream" \
+                 --data-binary @"$RUNNER_TEMP/release/$f" \
+                 "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/$id/assets?name=$f" > /dev/null
+            echo "attached $f to $TAG"
+          done

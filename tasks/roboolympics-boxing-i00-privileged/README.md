@@ -9,7 +9,7 @@
 | Family / instance | `boxing` / seed 0 |
 | Oracle | `full` — Reference: a straight right from the guard behind a trunk turn, then the walking policy to stay up: 15.7 N s on the 30 kg bag (the line is 12), a 0.07 s touch; 12 of 12 variations when it was written. The meter reads a known injected impulse 1.5 % low. Measured (make_oracles.py): success after 4.04 s of the 15 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Punch the heavy bag once with the knuckles of your right fist, on the marked band, hard enough to give it 12.0 N s, then bring the fist back to your guard and stand. (RoboOlympics `boxing`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

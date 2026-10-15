@@ -1,5 +1,5 @@
 # eai-robofunolympics: the RoboOlympics simulator for the RoboFunOlympics tasks (docs/benchmarks/robofunolympics.md):
-# MuJoCo 3.3.7 on CPU (bit-exact replay) with OSMesa rendering, no GPU, and RoboOlympics' robot library with its
+# MuJoCo 3.3.7 on CPU (bit-exact replay) with OSMesa rendering (EGL on a GPU for the standard-realtime twins, since 0.2.1), and RoboOlympics' robot library with its
 # Unitree G1 (PROTOCOL §2.1: a base image holds the simulator and its assets) at /opt/roboolympics:
 #   bodies/              the robot library (model, meshes, real limits, the one servo path, the joint-group arbiter,
 #                        kinematics, the walking policies that come with the robot), unchanged
@@ -18,7 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1 PYTHONDONTWRITEBYTECODE=1 
 ENV OPENBLAS_CORETYPE=Haswell \
     NPY_DISABLE_CPU_FEATURES="AVX512F AVX512CD AVX512_KNL AVX512_KNM AVX512_SKX AVX512_CLX AVX512_CNL AVX512_ICL"
 COPY requirements.txt /opt/eai-robofunolympics/requirements.txt
-RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends libosmesa6 libgl1 \
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends libosmesa6 libgl1 libegl1 \
     && pip install -r /opt/eai-robofunolympics/requirements.txt && pip check \
     && rm -rf /var/lib/apt/lists/*
 COPY roboolympics /opt/roboolympics
@@ -29,4 +29,10 @@ import mujoco, numpy, imageio, OpenGL, PIL; from bodies import load_body; import
 B = load_body('unitree_g1'); from bodies.unitree_g1.falcon import Falcon; from bodies.unitree_g1.agile import Agile; \
 assert Falcon(B.decl).parity() < 1e-4 and Agile(B.decl).parity() < 1e-4; \
 print('mujoco', mujoco.__version__, B.name, B.revision, 'falcon + agile parity ok')"
+# EGL on the GPU for the standard-realtime twins (since 0.2.1): libglvnd's EGL loader, and the ICD manifest of the NVIDIA
+# vendor library the container toolkit mounts under NVIDIA_DRIVER_CAPABILITIES=graphics (on some hosts it mounts the
+# library without the manifest). Inert without a GPU; the default backend stays OSMesa (MUJOCO_GL above).
+RUN mkdir -p /usr/share/glvnd/egl_vendor.d && printf \
+    '{"file_format_version":"1.0.0","ICD":{"library_path":"libEGL_nvidia.so.0"}}\n' \
+    > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 WORKDIR /app

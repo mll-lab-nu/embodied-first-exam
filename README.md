@@ -37,6 +37,9 @@ drives it from a controller program of its own. It is offered where a benchmark'
 
 ## Benchmarks
 
+The current list of tasks, with each task's mode, cutoff, oracle and digest and the counts per benchmark, is generated
+after every merge: [`TASKS.md` on the branch `task-list`](../../blob/task-list/TASKS.md) (`tasks.json`, `dataset.toml` next to it).
+
 | Benchmark | Simulator / robot | Tasks (per mode) | Oracle |
 |---|---|---|---|
 | RoboTwin 2.0 (`robotwin_2_0_<task>`) | SAPIEN 3 + CuRobo · ALOHA-AgileX dual arm | 47 of 50 | full (upstream expert) |
@@ -50,7 +53,6 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2 (standard mode: partial), none on 51 (human review) |
 | YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 10 (2 families × 5 object pairs) | full (upstream human demonstrations) |
 | RoboDojo (`robodojo-<task>-i00`) | Isaac Lab / Isaac Sim (RoboDojo) · two ARX X5 arms with parallel grippers | 54 (RoboDojo's 42 tasks + its 12 randomised variants, one evaluation layout each); privileged 48: the 6 whose physics does not replay bit for bit are standard only, graded by the live episode | none (human review; RoboDojo releases no expert) |
-| LabUtopia (`labutopia-<family>-i00`) | LabUtopia on Isaac Sim 6.1 · Franka Panda; a chemistry laboratory: glassware (pick, place, pour, shake), a heater with a button, an instrument panel, a drying oven's door, a cabinet's drawer | 9 | full (LabUtopia's scripted controllers) |
 | BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |
 | VLABench (`vlabench-<task>-i00`) | MuJoCo + dm_control · Franka Panda | 36 | full |
 | RoboCasa (`robocasa-<task>-i00`) | robosuite · Franka Panda on an Omron mobile base | 29 | full (upstream demonstrations) |
@@ -58,7 +60,6 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboCasa-GR1 (`robocasa-gr1-<task>-i00`) | robosuite · Fourier GR1 humanoid | 24 | full (upstream demonstrations) |
 | DexJoCo (`dexjoco-<family>-i00`) | MuJoCo 3.4 · Franka Panda + Allegro hand, one or two arms | 11 | full (upstream human demonstrations) |
 | DexHand (`dexhand-<family>-i00`) | MuJoCo 3.4.0 (CPU) · Sharpa Wave 22-DoF hand on a six-DoF wrist stage (eight families; the six essential families lock the wrist), or two fixed Tianji Marvin 7-DoF arms with a Sharpa Wave hand on each (sweeping debris into a held dustpan, carrying a pot into a shelf); every family also runs with the Wuji Hand 2.2 (20 DoF) in place of each Sharpa Wave; immediate failure when an object drops or leaves its support | 10 | full (recorded physical Sharpa episodes) |
-| AutoBio (`autobio-<family>-i00`) | AutoBio on MuJoCo 3.3 (CPU) · UR5e with a Robotiq 2F-85, ALOHA arms, and a UR5e pair with a pipette-holding dexterous hand; a biology bench: thermal cycler, thermal mixer panel, centrifuge rotor, screw caps, a pipette | 9 | full (AutoBio's scripted experts) |
 | MyoSuite (`myosuite-<family>-i00`) | MyoSuite 2.12.2 (MuJoCo 3.6, CPU) · musculoskeletal hand, arm, torso and legs (MyoHand, MyoArm, MyoLegs, with prostheses in two tasks), muscle commands; MyoChallenge and MyoDex tasks | 22 | full on 3 (MyoSuite's NPG baselines), none on 19 (human review) |
 | RoboARC (`roboarc-<family>-<NN>-i01`; formerly TopoGym and RoboTangle; the MuJoCo release replaces the Genesis one, 2026-10-13) | MuJoCo 3.14.0 (CPU float64; the blanket cloth on a deterministic CUDA step), Nyx RGB · ALOHA 2 bimanual; Franka Panda + Robotiq 2F-85 | per release ([docs/benchmarks/roboarc.md](docs/benchmarks/roboarc.md)) | full, or none where no reference exists |
 | BiGym 2.0 (`bigym2-<family>-i00`) | MuJoCo 3.8.1 + NVIDIA GR00T-WBC (CPU; EGL rendering) · Unitree G1 humanoid with Dex1-1 grippers, legs and waist driven by the whole-body controller | 13 (+ 13 standard-realtime) | none (human review) |
@@ -88,7 +89,7 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
   `scripts/roboolympics/shared/rfo/tasks/`; how to write a family: `scripts/roboolympics/AUTHORING.md`; notes in
   [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md). Its exported tasks are written by RoboOlympics'
   own exporter and listed in `scripts/roboolympics/exported.toml` (the generator skips them).
-- **Other benchmarks:** each has its generator under `scripts/<bench>/` (RoboWits, RoboLab, BEHAVIOR-1K, RoboARC, YAMLab, RoboDojo, ManiGuard, MolmoSpaces, Panda Dynamic Scenes, AM-Bench: `mk_tasks.py --check`; VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, DexJoCo, MuJoCo Playground's quadrupeds: `generate.py --check`; DexHand: `scripts/dexhand/generate.py --check --release` (the families of `scripts/dexhand/release.json`); BiGym 2.0: `gen_tasks.py check`; MyoSuite: `scripts/myosuite/generate.py --check`; LabUtopia: `scripts/labutopia/generate.py --check`; AutoBio: `scripts/autobio/generate.py --check`; MetaWorld+: `generate.py`; RoboPaint: `scripts/robopaint_strict/mk_tasks.py --check`, which runs `scripts/robopaint_brush_mk_task.py --refresh` and adds the process rules). CI runs every check mode (`ci_checks/check-generated-tasks.sh`). Per-benchmark notes: [docs/benchmarks/](docs/benchmarks/).
+- **Other benchmarks:** each has its generator under `scripts/<bench>/` (RoboWits, RoboLab, BEHAVIOR-1K, RoboARC, YAMLab, RoboDojo, ManiGuard, MolmoSpaces, Panda Dynamic Scenes, AM-Bench: `mk_tasks.py --check`; VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, DexJoCo, MuJoCo Playground's quadrupeds: `generate.py --check`; DexHand: `scripts/dexhand/generate.py --check --release` (the families of `scripts/dexhand/release.json`); BiGym 2.0: `gen_tasks.py check`; MyoSuite: `scripts/myosuite/generate.py --check`; MetaWorld+: `generate.py`; RoboPaint: `scripts/robopaint_strict/mk_tasks.py --check`, which runs `scripts/robopaint_brush_mk_task.py --refresh` and adds the process rules). CI runs every check mode (`ci_checks/check-generated-tasks.sh`). Per-benchmark notes: [docs/benchmarks/](docs/benchmarks/).
 - **RoboFunOlympics:** `scripts/robofunolympics/gen_tasks.py` (`render`, `check`) from the families under
   `scripts/robofunolympics/shared/rfo/tasks/`; how to write a family: `scripts/robofunolympics/AUTHORING.md`; notes in
   [docs/benchmarks/robofunolympics.md](docs/benchmarks/robofunolympics.md).
@@ -143,7 +144,8 @@ harbor view jobs
 - **Network policy and external material.** Every task restricts the agent's egress to the model APIs and the package
   registries (PyPI, the Debian / Ubuntu apt archives; `[agent] network_mode = "allowlist"`, one host list in
   `scripts/set_agent_egress.py`), and every instruction states the same honour rule (`## External material`): the agent
-  may install the packages it needs and is asked not to look up or download a solution to the task (PROTOCOL §2.11).
+  may install the packages it needs and read whatever is installed in its container (the benchmark's own source
+  included), and is asked not to search the web for, or download, a ready-made solution to the task (PROTOCOL §2.11).
   GitHub, Hugging Face and the general web, where the benchmarks' sources, demonstrations and policies are, stay
   closed. Official runs go through the usage gateway, which forwards model-API calls only; the harness's web search,
   account connectors and other provider-side tools are off (they run at the model provider, past any allowlist).

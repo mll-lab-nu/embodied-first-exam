@@ -99,7 +99,7 @@ installed, each under a timeout of its own, not from the container's start; a st
 the environment, and what it has not finished starting by then is waited out inside the agent's time), stops the agent
 at the cutoff with
 `AgentTimeoutError`, and then collects the artifacts and runs the verifier as after any other end, so the trial is
-graded as it stands. The number comes from one table, `scripts/task_cutoffs.toml` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
+graded as it stands. The number is the task's own `[agent] timeout_sec` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
 §2.12), and the task's instruction states it in its last section, `## Time limit`. Harbor hands `instruction.md` to the
 agent as it is and `scripts/run_agent_batch.sh` adds nothing to it, so that section is the last thing the agent reads. Official runs pass no multiplier or override for it: never
 `--timeout-multiplier`, `--agent-timeout-multiplier` or an agent `override_timeout_sec` (a result is only comparable
@@ -123,7 +123,7 @@ registries (PyPI: pypi.org, files.pythonhosted.org; apt: deb.debian.org, securit
 security.ubuntu.com, snapshot.ubuntu.com). So `pip install` (or `uv pip install` in the images without pip) and
 `apt-get update && apt-get install` work in every agent container, in both modes; GitHub, raw.githubusercontent.com,
 Hugging Face and the general web do not answer (PROTOCOL §2.11: the instruction asks the agent, as an honour rule, not
-to look a solution up; the network keeps the places where solutions are published out of reach). Checked on real
+to search the web for or download a ready-made solution, and allows it to read whatever is installed in its container; the network keeps the places where solutions are published out of reach). Checked on real
 trials (2026-10-11; Debian 12 and 13, Ubuntu 22.04 images): both installs succeed with and without the usage gateway.
 In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about NVIDIA's own repository
 (developer.download.nvidia.com is not on the list) and goes on; the Ubuntu archives answer.

@@ -118,7 +118,7 @@ def caps_of(task: Path, cfg: dict) -> dict:
         return {k: dict(v) for k, v in caps.items()}
     env = cfg.get("environment") or {}
     isaac = str((cfg.get("metadata") or {}).get("simulator", "")).lower().startswith(("isaac", "omni")) or \
-        task.name.startswith(("behavior-", "robolab-", "maniguard-", "labutopia-", "yamlab-"))
+        task.name.startswith(("behavior-", "robolab-", "maniguard-", "yamlab-"))
     pids = 16384 if isaac else 8192
     return {"main": {"cpus": float(env.get("cpus", 4)), "memory_gb": round(float(env.get("memory_mb", 8192)) / 1024, 2),
                      "pids": pids}, "*": {"pids": pids}}

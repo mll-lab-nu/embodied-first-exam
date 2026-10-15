@@ -34,8 +34,8 @@ and cannot meet part (2)'s names either.
 | robots | `unitree-g1` (1.32 m, 33 kg, 29 joints; three walking policies and a running policy) and `unitree-h1-2` (1.78 m, 67 kg, 27 joints; a walking policy) where the official venue needs an adult-size body; real joint, speed and torque limits, motor torque-speed curves (the H1-2's are estimates), self-collision; fist pads with a switchable grip |
 | actions | views of one sim row per control step: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd: q, dq, tau, kp, kd per joint), and on the G1 `run`, `run_arms`; every row ends with `grip_left`, `grip_right` |
 | score | the referee's verdict: every stage latched in order, no rule broken, within the time limit; binary. `progress` (stages reached) and the family's metrics (a distance, a speed, a count) are reported beside it |
-| tasks | 50 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 100 task directories. No standard-realtime mode yet (owner, 2026-10-11). Plus the 8 tasks RoboOlympics exports itself (below) |
-| image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` (`images/robofunolympics/`, about 600 MB) |
+| tasks | 50 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 100 task directories. No standard-realtime mode yet (owner, 2026-10-11). Plus the 8 tasks RoboOlympics exports itself (below), 100 task directories;, the 13 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`, since 2026-10-14), 113 in all |
+| image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0`, | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` (0.2.1 = 0.2.0 + libglvnd's EGL loader, the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/robofunolympics/`, about 600 MB) |
 | generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `instances/`, `shared/`, `templates/`, `oracles/`; a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
 | agent budget | 7200 s in both modes (the benchmark's row of `scripts/task_cutoffs.toml`; owner, 2026-10-12; PROTOCOL D8: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold; results are grouped by this budget); standard mode: 50 resets, the last attempt graded (owner, 2026-10-12) |
@@ -191,6 +191,7 @@ reproduce the referee's decisions and not only the physics.
 |---|---|---|---|
 | privileged | the world in its own container: the simulator and its full state, the referee's live record, this family's rules as code, unlimited resets | unlimited | `trajectory.npz` (sim rows), replayed twice in fresh processes: both must succeed and end in the same state |
 | standard | a client: the robot's two head cameras (depth on the left one), joint encoders, motor torques, two IMUs, grip state, the venue's fixed camera; action chunks | 50 resets | the last attempt, recorded by the sidecar and replayed in a fresh simulator |
+| standard-realtime (13 dynamic families) | as standard, on a clock that does not stop (S = 1): `submit` plans rows from step `at` and answers at once | 10 resets | as standard; the clock's record is evidence only |
 
 **World-frame information (PROTOCOL D7).** Privileged tasks give everything through the tooling. Standard tasks give
 the rule book and the venue as an athlete knows it: the equipment's dimensions and where the lines, the goal or the
@@ -210,11 +211,37 @@ G1 ships with a walking controller), part of the platform like its PD loop. The 
 general helpers unchanged (`bodies/control/kinematics.py`: forward and inverse kinematics; `bodies/trajopt.py`:
 jerk-limited joint trajectories); a privileged agent may import them, the tooling does not wrap them.
 
+## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`:
+a ball launched, served, thrown or released on the venue's clock, or a keeper driven after the kick) get a
+`-standard-realtime` twin: catch, catch-and-shoot, header, juggle-three, paddle-bounce, penalty-kick,
+table-tennis-return, tennis-return, trap-ball, volley-shot, volleyball-bump, volleyball-set, volleyball-spike.
+- **Service.** The standard twin's `server.py` (`rcb_service.Sim` on `rcb_rfo.Episode`), unchanged, started by the
+  shared realtime layer (`shared/realtime/rcb_realtime.py`, `rcb_client.py`: HumanoidBench's, byte for byte;
+  `command: python /srv/rcb_realtime.py`). Same instance, referee, actions, observations and grading (live attempt +
+  fresh replay, same final state); the clock's record goes to `reward.json` and decides nothing.
+- **Rendering on the GPU.** An OSMesa frame of these venues takes about 1.6 s, which on a clock that does not stop is a
+  stall of its own; the twins render with EGL on the `sim` service's GPU (`MUJOCO_GL=egl`, `graphics` capability).
+  Image 0.2.1 adds `libegl1` and the NVIDIA EGL ICD manifest; everything else in it is 0.2.0's (the standard and
+  privileged tasks move to 0.2.1 with it: the frozen instances rebuild to the same hashes).
+- **Slowdown S = 1, resets 10, cutoff 7200 s** (the standard twin's). RTF of the service with the clock flat out
+  (`RCB_SLOWDOWN=0.01`, physics only, 4 attempts each; ws-1, 4 CPUs, board 0112): catch 3.61, catch-and-shoot
+  3.64, header 3.92, juggle-three 3.89, paddle-bounce 3.74, penalty-kick 3.89, table-tennis-return 4.06,
+  tennis-return 3.24, trap-ball 3.03, volley-shot 2.89, volleyball-bump 2.69, volleyball-set 2.62, volleyball-spike
+  1.83 (the host's load moved between 30 and 60 during the batch); PROTOCOL §4b gives S = 1 for every one (S =
+  ceil(1.5 / RTF) is 1 above RTF 1.5).
+- **Checked at S = 1** (board 0112): the three families with a reference solution (paddle-bounce, volleyball-bump,
+  volleyball-set; `solution/oracle_plan.py` plans the privileged reference's rows at the control steps where they ran)
+  succeed live and in the fresh replay, deterministic; every one of the 13 ran 3 attempts (2 resets) with a controller
+  at the control rate and a camera image every 0.25 s with no stall, each graded replay deterministic; nop (no request)
+  ends `timeout`, not a success.
+
 ## Network: open (PROTOCOL §2.11 exception; owner, 2026-10-11)
 
 RoboOlympics' tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
 instruction says so and encourages the agent to look for existing tools, robot models and pretrained controllers and
-to adapt them; it asks only not to look up this benchmark's own source and reference solutions (an honour rule;
+to adapt them; it asks only not to look up a ready-made solution to the task, such as this benchmark's reference
+solutions (an honour rule; reading the benchmark's installed source is allowed since 2026-10-14;
 trials are reviewed). The reasons: a public G1 controller is fair equipment for a sport, as a published walking
 controller is for a real G1, and whether an agent can find, vet and adapt existing work is part of what these tasks
 measure. What follows:

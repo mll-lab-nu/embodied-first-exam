@@ -9,7 +9,7 @@
 | Family / instance | `high_bar_swing` / seed 0 |
 | Oracle | `full` — Reference: from the dead hang a leg pump that tucks on the way up and extends elsewhere takes the extended body over the top: one full giant swing at 23.6 s; 8 of 8 parameter sets (24 to 35 s) when it was written. The privileged twin's reference rows (2362 control steps, success after 23.62 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Hanging from the high bar by both hands, do one giant swing: take your extended body in a full circle around the bar, without letting go. (RoboOlympics `high-bar-swing`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -58,6 +58,13 @@ SHARED, PKG, ORC = HERE / "shared", HERE / "packages", HERE / "oracles"
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+# The packages' task.toml carry the upstream number (21600 s); this one replaces it in both modes (PROTOCOL §2.15).
+CUTOFF_SEC = 10800
+
 REL = json.loads((HERE / "release.json").read_text())
 
 
@@ -826,7 +833,7 @@ def mujoco_provenance(base: str, rec: dict) -> str:
 
 
 def rewrite_toml(s: str, base: str, rec: dict) -> str:
-    s = mujoco_text(text(instance_facts(s, rec, "privileged")), rec)
+    s = TC.set_agent_timeout(mujoco_text(text(instance_facts(s, rec, "privileged")), rec), CUTOFF_SEC, base)
     s = re.sub(r'(?m)^simulator = "topogym"', f'simulator = "{BENCH}"', s)
     s = re.sub(r'(?m)^robot = "([a-z_]+)"', lambda m: f'robot = "{ROBOT.get(m.group(1), m.group(1))}"', s)
     s = re.sub(r'(?m)^author_name = "jianwen"', 'author_name = "Jianwen Lyu"', s)

@@ -28,17 +28,16 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   host's CPU count is the runner's to clamp (docker refuses it); the values in `scripts/task_resources.toml` stay.
   The same step's `sanitize` line in every `tests/test.sh` removes links and special files from `/app/output` before
   the grader reads the agent's files.
-- The agent's time cutoff (PROTOCOL §2.12) has one source, `scripts/task_cutoffs.toml` (seconds per benchmark and mode,
-  with optional exceptions per family and per task: task > family > benchmark and mode; rendered for reading in
-  `docs/CUTOFFS.md`). `normalize` writes it into `[agent] timeout_sec`, the standard modes' `RCB_WALL_CLOCK_S` and the
-  last section of every `instruction.md`, `## Time limit` ("You have N seconds to complete this task. Do not cheat by
-  using online solutions or hints specific to this task.", then what the cutoff means in the mode), after `## External
-  material` and `## Resource limits`: generator-owned like those two, whatever a template writes there is overwritten.
-  A benchmark's own text says "the time limit (`## Time limit`)", never a duration; a generator that needs the number
-  takes the benchmark's from `task_conventions.cutoff_sec(label, mode)` (normalize applies an exception). To change a time: edit the table, add its `[[history]]`
-  entry (required: CI compares every number with its last recorded value), `python3 scripts/task_cutoffs.py apply`, commit.
-  A new benchmark: its label in `task_conventions.py` `BENCHMARKS` (the table's rows are named by it), then its row and a
-  `[[history]]` entry (`from_sec = 0`) in the pull request that adds its first tasks. `ci_checks/check-cutoffs.py` fails when a task disagrees with the table.
+- The agent's time cutoff (PROTOCOL §2.12) is each task's own `[agent] timeout_sec` (owner 2026-10-14, as in
+  Terminal-Bench): its author sets it in the pull request; a generator writes its benchmark's number, a constant in its
+  own files (`CUTOFF_SEC` / `CUTOFF`). There is no table and no apply script. `normalize` writes from it the standard
+  modes' `RCB_WALL_CLOCK_S`, the README row and the last section of every `instruction.md`, `## Time limit` ("You have N
+  seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.", then what the
+  cutoff means in the mode), after `## External material` and `## Resource limits`: generator-owned like those two. A
+  benchmark's own text says "the time limit (`## Time limit`)", never a duration. `ci_checks/check-cutoffs.py` (per task):
+  a whole number of seconds, at most 14400, the same in a task's privileged and standard versions, and the instruction,
+  README and sim service agree. To change a time (an owner decision): set the number (or the generator's constant and
+  regenerate), normalize, and state old -> new in the pull request; `docs/CUTOFFS.md` keeps the history up to 2026-10-14.
 - Every task names its seeds (PROTOCOL §2.13, 2026-10-13): `[metadata.seeds]` `default` / `allowed` / `oracle` in
   `task.toml`, completed by `normalize` (default = `instance_seed`, else 0); `allowed` is a list, `{ from, to }` or "any"
   (the last two only with `build = "runtime"`: the task builds a seed's instance from a file `seed`); committed
@@ -54,10 +53,12 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   `ci_checks/ci_scope.py` (one benchmark's own paths -> its tasks, generator check and unit tests; shared code -> the full
   suite); pushes to main and the nightly run are the full suite. A new benchmark gets its row in `ci_scope.py` `UNITS`
   (without one, its pull requests run the full suite).
-- `tasks/<task>/DIGEST`: the task's content digest (PROTOCOL §2.8), written last by `normalize` (generators and
-  `task_cutoffs.py apply` refresh it; after a hand edit: `python3 scripts/task_conventions.py tasks/<task>`);
+- `tasks/<task>/DIGEST`: the task's content digest (PROTOCOL §2.8), written last by `normalize` (generators
+  refresh it; after a hand edit: `python3 scripts/task_conventions.py tasks/<task>`);
   `ci_checks/check-dataset-manifest.sh` recomputes it. The release manifest `tasks/dataset.toml` is generated
-  (`scripts/dataset_manifest.py write`) and not committed: pull requests no longer conflict on it.
+  (`scripts/dataset_manifest.py write`) and not committed: pull requests no longer conflict on it. The task list
+  (`TASKS.md`, `tasks.json`, `dataset.toml`) is generated after every merge to main and pushed to the branch
+  `task-list` (`.github/workflows/task-list.yml`; `scripts/dataset_manifest.py list --out DIR` locally).
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.

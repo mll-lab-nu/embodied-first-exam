@@ -23,7 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -154,10 +154,11 @@ COPY test.sh /tests/test.sh
 COPY grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 """
-# The agent's time cutoff per mode: the table's number (scripts/task_cutoffs.toml, PROTOCOL §2.12), written into
-# `[agent] timeout_sec` and the sim service's wall clock; normalize writes the same number again, and the instruction's
-# closing `## Time limit` section. No template states it a second time.
-CUTOFF = {m: cutoff_sec("MuJoCo Playground", m) for m in ("privileged", "standard", "standard-realtime")}
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF = {"privileged": 1800, "standard": 1800, "standard-realtime": 1800}
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and rendering (EGL when a GPU is there, else OSMesa); no GPU reservation.

@@ -31,7 +31,7 @@ OVERSIZED: set[str] = set()
 # Shared files every plugin family receives next to its own runtime files (one source each, D9).
 PLUGIN_SHARED = ("rcb_dexhand.py", "hands.py")
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import cutoff_sec, normalize  # noqa: E402
+from task_conventions import normalize  # noqa: E402
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-dexhand:" + (ROOT / "images/dexhand/VERSION").read_text().strip()
 # The published image is pinned by digest once pushed (images/dexhand/DIGEST, written after `docker push`).
@@ -42,10 +42,11 @@ CLIENT_IMAGE = next(
     for line in (LAYER / "client.env").read_text().splitlines()
     if line.startswith("CLIENT_IMAGE=")
 )
-# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12). No copy of the
-# number in a family or a text: normalize writes it into task.toml, the instruction's closing `## Time limit`
-# section, the README row and the sim service's RCB_WALL_CLOCK_S.
-CUTOFF = {mode: cutoff_sec("DexHand", mode) for mode in ("privileged", "standard")}
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF = {"privileged": 3600, "standard": 3600}
 # Standard mode's reset budget (owner, 2026-10-14, board 0109; PROTOCOL §4.5, DexToolBench's value): the compose
 # default of RCB_RESET_BUDGET, which a run may override; the service's /spec budget.reset is authoritative.
 RESET_BUDGET = 20
@@ -177,7 +178,7 @@ def load_plugin(folder: Path) -> tuple[dict, dict]:
         raise ValueError(f"{folder.name}: action_dim must give a positive width for every hand in {hands}")
     if "agent_sec" in manifest.get("timeouts", {}):
         raise ValueError(f"{folder.name}/family.json: timeouts.agent_sec is gone; the agent's time limit is "
-                         "scripts/task_cutoffs.toml's (PROTOCOL §2.12)")
+                         "CUTOFF in scripts/dexhand/generate.py (PROTOCOL §2.12)")
     if not isinstance(manifest.get("control_hz", 50), int) or not 1 <= manifest.get("control_hz", 50) <= 10_000:
         raise ValueError(f"{folder.name}: control_hz must be an integer rate in Hz")
     runtime = manifest.get("runtime", {})

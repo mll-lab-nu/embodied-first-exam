@@ -9,7 +9,7 @@
 | Family / instance | `toes_to_bar` / seed 0 |
 | Oracle | `full` — Reference: a knee-tuck snap with bent elbows, timed on the back-swing: 5 repetitions in 7.8 s; 12 of 12 variants when it was written. Measured (make_oracles.py): success after 7.78 s of the 60 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Hanging from the high bar by both hands, do five toes-to-bar: bring both feet up to touch the bar between your hands, and come back to the full hang each time, without letting go. (RoboOlympics `toes-to-bar`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

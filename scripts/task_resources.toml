@@ -6,32 +6,6 @@
 # Derivation: measured peaks x 1.2 (memory, rounded up to a GB), x 1.15 (GPU memory, rounded up to 0.5 GB), sustained
 # CPU rounded up; `measured` names the measurements. Edit these values here, not in task.toml.
 
-# autobio, privileged: 9 task(s)
-[[rule]]
-match = "^autobio-.*-privileged$"
-min_cpus = 4.0
-min_memory_gb = 8.0
-min_gpu_memory_gb = 0.0
-gpu_required = false
-gpu_class = "none"
-verifier_min_cpus = 4.0
-verifier_min_memory_gb = 8.0
-verifier_min_gpu_memory_gb = 0.0
-measured = "author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same"
-
-# autobio, standard: 9 task(s)
-[[rule]]
-match = "^autobio-.*-standard$"
-min_cpus = 4.0
-min_memory_gb = 8.0
-min_gpu_memory_gb = 0.0
-gpu_required = false
-gpu_class = "none"
-verifier_min_cpus = 4.0
-verifier_min_memory_gb = 8.0
-verifier_min_gpu_memory_gb = 0.0
-measured = "author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same"
-
 # behavior, privileged: 100 task(s)
 [[rule]]
 match = "^behavior-.*-privileged$"
@@ -273,62 +247,6 @@ verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 2.0
 measured = "GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
-
-# labutopia, privileged: 6 task(s)
-[[rule]]
-match = "^labutopia-.*-privileged$"
-min_cpus = 8.0
-min_memory_gb = 23.0
-min_gpu_memory_gb = 8.5
-gpu_required = true
-gpu_class = "rtx"
-recommended_gpu = "RTX 4090 24GB / L40S 48GB"
-verifier_min_cpus = 8.0
-verifier_min_memory_gb = 21.0
-verifier_min_gpu_memory_gb = 8.5
-measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
-
-# labutopia, privileged: 3 task(s)
-[[rule]]
-match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
-min_cpus = 8.0
-min_memory_gb = 28.0
-min_gpu_memory_gb = 8.5
-gpu_required = true
-gpu_class = "rtx"
-recommended_gpu = "RTX 4090 24GB / L40S 48GB"
-verifier_min_cpus = 8.0
-verifier_min_memory_gb = 26.0
-verifier_min_gpu_memory_gb = 8.5
-measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
-
-# labutopia, standard: 6 task(s)
-[[rule]]
-match = "^labutopia-.*-standard$"
-min_cpus = 8.0
-min_memory_gb = 23.0
-min_gpu_memory_gb = 8.5
-gpu_required = true
-gpu_class = "rtx"
-recommended_gpu = "RTX 4090 24GB / L40S 48GB"
-verifier_min_cpus = 8.0
-verifier_min_memory_gb = 22.0
-verifier_min_gpu_memory_gb = 8.5
-measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
-
-# labutopia, standard: 3 task(s)
-[[rule]]
-match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
-min_cpus = 8.0
-min_memory_gb = 28.0
-min_gpu_memory_gb = 8.5
-gpu_required = true
-gpu_class = "rtx"
-recommended_gpu = "RTX 4090 24GB / L40S 48GB"
-verifier_min_cpus = 8.0
-verifier_min_memory_gb = 27.0
-verifier_min_gpu_memory_gb = 8.5
-measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
 
 # libero-max, privileged: 64 task(s)
 [[rule]]
@@ -963,6 +881,20 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "RoboOlympics' exported skill tasks (scripts/roboolympics/exported.toml; ws-1/2, 2026-10): no sim service, the agent 2 CPUs; the verifier runs the simulator and the skill; CPU only"
 
+# roboolympics, standard-realtime: 13 task(s)
+[[rule]]
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+min_cpus = 3.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 1.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.0
+measured = "as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (ws-1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
+
 # pandadyn, privileged: 25 task(s)
 [[rule]]
 match = "^pandadyn-.*-privileged$"
@@ -1078,6 +1010,21 @@ trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 4.0
 measured = "design defaults of RoboOlympics' exported tasks (no sim service)"
 
+[[limit]]
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 16.0
+measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Resource LIMITS and CAPS (docs/PROTOCOL.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
 # [[limit]] -> [metadata.resources.limits]: the most the agent phase may use. normalize writes it into task.toml and
@@ -1109,36 +1056,6 @@ measured = "design defaults of RoboOlympics' exported tasks (no sim service)"
 #   at most its [environment] cap; trial_max adds the sim sidecar's max(1.5 x peak, peak + 4) (RoboOlympics: its mem_limit).
 # - processes 512 and disk (10 GiB CPU-only privileged, 20 GiB Isaac and standard) under /app, /tmp and /root: not yet
 #   measured; the v1.2 calibration batch confirms or changes them. `measured` in each rule says what each value rests on.
-
-[[limit]]
-match = "^autobio-.*-privileged$"
-scope = "trial"
-max_gpu_memory_gb = 0.0
-max_memory_gb = 10.0
-max_processes = 512
-max_disk_gb = 10.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 0.0
-trial_max_memory_gb = 10.0
-measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (no samples); processes 512 and disk 10 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^autobio-.*-standard$"
-scope = "agent"
-max_gpu_memory_gb = 0.0
-max_memory_gb = 8.0
-max_processes = 512
-max_disk_gb = 20.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 0.0
-trial_max_memory_gb = 20.0
-measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 12 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
 match = "^behavior-.*-privileged$"
@@ -1409,66 +1326,6 @@ window_sec = 120.0
 trial_max_gpu_memory_gb = 6.0
 trial_max_memory_gb = 14.0
 measured = "GPU: 1.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.8 GiB over 11 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 6 GiB (docker peak 1.1 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^labutopia-.*-privileged$"
-scope = "trial"
-max_gpu_memory_gb = 16.0
-max_memory_gb = 32.0
-max_processes = 512
-max_disk_gb = 20.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
-trial_max_memory_gb = 32.0
-measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
-scope = "trial"
-max_gpu_memory_gb = 16.0
-max_memory_gb = 32.0
-max_processes = 512
-max_disk_gb = 20.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
-trial_max_memory_gb = 32.0
-measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^labutopia-.*-standard$"
-scope = "agent"
-max_gpu_memory_gb = 0.0
-max_memory_gb = 8.0
-max_processes = 512
-max_disk_gb = 20.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
-trial_max_memory_gb = 28.0
-measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: no samples of the agent's container; floor 8 GiB (at most the 32 GiB cap); whole trial: + the sim service's 20 GiB (docker peak 12.7 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
-
-[[limit]]
-match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
-scope = "agent"
-max_gpu_memory_gb = 0.0
-max_memory_gb = 8.0
-max_processes = 512
-max_disk_gb = 20.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
-trial_max_memory_gb = 28.0
-measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: no samples of the agent's container; floor 8 GiB (at most the 32 GiB cap); whole trial: + the sim service's 20 GiB (docker peak 12.7 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
 match = "^libero-max-.*-privileged$"
@@ -2158,15 +2015,6 @@ trial_max_memory_gb = 28.0
 measured = "a camera-on Isaac process peaks at 13.2 GiB of memory and 6.4 GiB of GPU memory, a camera-free one at 2.9 / 3.2 (the rule's measurement); the agent may run two processes at once (a Session and the replay CLI): at most 26.4 GiB, 12.8 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[cap]]
-match = "^autobio-.*-privileged$"
-main = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
-
-[[cap]]
-match = "^autobio-.*-standard$"
-main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
-sim = { cpus = 8.0, memory_gb = 15.0, pids = 8192 }
-
-[[cap]]
 match = "^behavior-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 
@@ -2248,27 +2096,9 @@ match = "^kinder-.*-standard$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
-[[cap]]
-match = "^labutopia-.*-privileged$"
-main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
-
-[[cap]]
-match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
-main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
-
-[[cap]]
-match = "^labutopia-.*-standard$"
-main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
-sim = { cpus = 16.0, memory_gb = 24.0, pids = 16384 }
-
 # lab_003 families: the sidecar needs more than the six lab_001 families (21 GB at the renderer's first start, measured
 # by the author; declared verifier minimum 27 GB). Its cap is max(1.5 x peak, peak + 4) = 32 GiB like every other sim
 # cap, never below the declared minimum (ci_checks/check-resources.py; before: 24 GiB, below its own minimum).
-[[cap]]
-match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
-main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
-sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
-
 [[cap]]
 match = "^libero-max-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
@@ -2432,6 +2262,11 @@ sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
 match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
+
+[[cap]]
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 [[cap]]
 match = "^roboarc-(blanket-flatten|blanket-fold)-.*-standard$"

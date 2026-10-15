@@ -66,6 +66,13 @@ def normalizer():
     return normalize
 
 
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = 3600   # the same in both modes (PROTOCOL §2.15)
+
+
 def fill(text: str, values: dict) -> str:
     for k, v in values.items():
         text = text.replace(f"@@{k}@@", v)
@@ -153,7 +160,7 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
         cited positives when there is none."""
         return reference_none(fam, F) if oracle_level(F, mode) == "none" else text
 
-    common = {"FAMILY": fam, "SLUG": slug(fam), "PRIV": task_dir(fam, "privileged"), "STD": task_dir(fam, "standard"),
+    common = {"AGENT_TIMEOUT_S": str(CUTOFF_SEC), "FAMILY": fam, "SLUG": slug(fam), "PRIV": task_dir(fam, "privileged"), "STD": task_dir(fam, "standard"),
               "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version, "ALLOWED_HOSTS": ALLOWED_HOSTS,
               "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip()}
     priv = {"GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),

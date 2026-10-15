@@ -7,7 +7,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, its row in `scripts/task_cutoffs.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/STANDARD_MODE.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
@@ -34,19 +34,17 @@ the expected size of the pull request.
    the README in the standard layout (§2.1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §2.3), `instruction.md` (§2.5, written by a human), the verifier under `tests/`
    (§2.6, separate sandbox) and `solution/` (§2.7).
-   The agent's time cutoff (PROTOCOL §2.12) is not written in the task: add your benchmark's row to
-   `scripts/task_cutoffs.toml` (seconds per mode; 3600 unless you justify more, D8), named by the benchmark's label in
-   `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name: a new benchmark adds it in its
-   shared-files pull request), with a `[[history]]` entry (`from_sec = 0`). The row goes in the pull request that adds
-   the benchmark's first tasks: a row without tasks fails CI, and so do tasks without a row. `normalize` writes the number into
-   `[agent] timeout_sec` and the standard modes' `RCB_WALL_CLOCK_S`, and ends `instruction.md` with the `## Time limit`
-   section, after `## External material` and `## Resource limits` ("You have N seconds to complete this task. Do not
-   cheat by using online solutions or hints specific to this task.", then what the cutoff means in the mode). Your own
-   text never repeats the limit as a duration: say "the time limit (`## Time limit`)", and add what is particular to
-   your benchmark (a simulator's start-up cost). Your service's `time_s` / `time_left_s` count from the agent's first
-   request to it, never from the service's start, and a resumed service keeps that moment (STANDARD_MODE.md, "The
-   agent's clock": the shared layers do it for you; a test must show it). A family or a single
-   task that needs another number than its benchmark gets an exception in the same table (owner decision).
+   The agent's time cutoff (PROTOCOL §2.12) is the task's own `[agent] timeout_sec`, which you set in this pull
+   request (a generator: a constant in your `scripts/<bench>/`) and state in its Contract: a whole number of seconds,
+   3600 unless you justify another number, at most 14400 (D8), the same for a task's privileged and standard versions,
+   and one number for all your benchmark's tasks of a mode unless you say why. There is no central table. `normalize`
+   writes from it the standard modes' `RCB_WALL_CLOCK_S` and the README row, and ends `instruction.md` with the
+   `## Time limit` section, after `## External material` and `## Resource limits` ("You have N seconds to complete this
+   task. Do not cheat by using online solutions or hints specific to this task.", then what the cutoff means in the
+   mode). Your own text never repeats the limit as a duration: say "the time limit (`## Time limit`)", and add what is
+   particular to your benchmark (a simulator's start-up cost). Your service's `time_s` / `time_left_s` count from the
+   agent's first request to it, never from the service's start, and a resumed service keeps that moment
+   (STANDARD_MODE.md, "The agent's clock": the shared layers do it for you; a test must show it).
 3. State the minimum compute (PROTOCOL §2.9): CPU cores, memory and GPU memory of the agent phase and the verifier
    phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /
    cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
@@ -73,7 +71,7 @@ bash ci_checks/run_all.sh tasks/<your tasks>      # must pass
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
-python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: table = task.toml = instruction = sim service (§2.12)
+python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (§2.12)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty
@@ -95,24 +93,28 @@ The checklist is in PROTOCOL §2.7.
    affect (`ci_checks/ci_scope.py`, from the diff against `main`): when it changes only one benchmark's own paths (its
    `tasks/<prefix>*`, `scripts/<bench>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`; plus the benchmarks that
    share code with it), the per-task checks (incl. each task's `DIGEST`) and `task_conventions.py --check` on that
-   benchmark's tasks, its generator's check and its unit tests; the cheap repo-level checks (cutoffs, resources,
+   benchmark's tasks, its generator's check and its unit tests (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
-   (`task_conventions.py`, `task_cutoffs.*`, `task_dynamics.toml`, `task_resources.toml`, `eai_standard/`,
+   (`task_conventions.py`, `task_dynamics.toml`, `task_resources.toml`, `eai_standard/`,
    `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, `docs/PROTOCOL.md` and the other protocol documents, or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
    run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
-2. A maintainer reviews the files, runs the oracle and `nop` on a sample, and, for new benchmarks, an adversarial
-   ("cheat") trial and a model trial.
+2. A sticky overview comment (`.github/workflows/task-pr-overview.yml`) lists the tasks the pull request adds or
+   changes, the cutoffs it changes and the scope of its checks, and labels it (`new-task`, `task-fix`, `shared`,
+   `cutoff-change`). A maintainer reviews the files and comments `/validate` to run the oracle (where `oracle = "full"`)
+   and `nop` on the changed tasks (`.github/workflows/validate-task.yml`, on the GPU runner; the results come back as a
+   comment), and, for new benchmarks, runs an adversarial ("cheat") trial and a model trial.
 3. Merge requires: checks passing, a maintainer approval (CODEOWNERS for shared files), human review where required,
    and a branch up to date with `main`.
-4. After merge, maintainers publish base images and update the task list and results site.
+4. After merge, the task list is regenerated by `.github/workflows/task-list.yml` and pushed to the branch `task-list`
+   (`TASKS.md`, `tasks.json`, `dataset.toml`; nothing in `main` lists the tasks); maintainers publish base images and
+   update the results site. A release (tag `v<semver>`) gets the same files as assets (`.github/workflows/release.yml`).
 
 ## Rules that apply to every contribution
 - A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
-- To change a time cutoff (an owner decision), edit the number in `scripts/task_cutoffs.toml` (the benchmark's row, or an
-  exception for one family or one task), add its `[[history]]` entry there (required: CI and `apply` refuse a changed
-  number without one), run `python3 scripts/task_cutoffs.py apply` and commit what it changed
-  ([docs/CUTOFFS.md](docs/CUTOFFS.md)); never edit the number in a task, a template or a generator. The task keeps its
+- To change a time cutoff (an owner decision), set the new `[agent] timeout_sec` in the tasks concerned (a generated
+  benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them
+  and say old -> new, who decided and why in the pull request ([docs/CUTOFFS.md](docs/CUTOFFS.md)). The task keeps its
   name; results under the earlier cutoff are reported separately (PROTOCOL §2.8, §2.12).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
 - The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives), in every

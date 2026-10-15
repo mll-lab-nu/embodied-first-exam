@@ -9,7 +9,7 @@
 | Family / instance | `sprint` / seed 0 |
 | Oracle | `full` — Reference: stand through the start procedure, react to the gun, then the running policy at 3.5 m/s steered to the lane's centre; 9 of 10 perturbed runs at 2.5 to 4.0 m/s finished when it was written. Measured (make_oracles.py): success after 19.59 s of the 34.2 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
 
 ## Task
 Run the 50 m: wait for the starter's gun, then sprint down your lane until your torso reaches the finish line. (RoboOlympics `sprint`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

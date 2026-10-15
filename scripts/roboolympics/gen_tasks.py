@@ -30,17 +30,30 @@ SHARED = HERE / "shared"
 REGISTRY = "ghcr.io/mll-lab-nu"
 PREFIX = "roboolympics"
 RESET_BUDGET = 50        # standard mode's attempts (PROTOCOL §4.5 per-benchmark default; owner, 2026-10-12)
-BENCHMARK = "RoboOlympics"   # this benchmark's row of scripts/task_cutoffs.toml (the label of task_conventions.BENCHMARKS)
+RT_RESET_BUDGET = 10     # standard-realtime: PROTOCOL §4b's default (owner, 2026-10-14: every realtime task, 10 resets)
+# The standard-realtime twins (PROTOCOL §4b; owner, 2026-10-14, board 0112): the families whose scene is dynamic
+# (scripts/task_dynamics.toml), served by the standard twin's server.py behind the shared realtime layer
+# (shared/realtime/rcb_realtime.py, HumanoidBench's, unchanged). Per family: the real-time factor RTF of that service
+# with its clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 episodes; ws-1, 4 CPUs, board 0112, 2026-10-14)
+# and the slowdown S it gives (PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF), which is 1 for RTF >= 1.5).
+RT_RTF = {"catch": 3.61, "catch-and-shoot": 3.64, "header": 3.92, "juggle-three": 3.89, "paddle-bounce": 3.74,
+          "penalty-kick": 3.89, "table-tennis-return": 4.06, "tennis-return": 3.24, "trap-ball": 3.03,
+          "volley-shot": 2.89, "volleyball-bump": 2.69, "volleyball-set": 2.62, "volleyball-spike": 1.83}
+
+
+def slowdown_of(rtf: float) -> int:
+    return 1 if rtf >= 3 else max(1, int(-(-1.5 // rtf)))
+BENCHMARK = "RoboOlympics"   # the label of task_conventions.BENCHMARKS
+# The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
+# timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
+# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
+# regenerate.
+CUTOFF_SEC = 7200   # the same in both modes (PROTOCOL §2.15); the exported tasks (exported.toml) keep their own
 
 
 def agent_timeout() -> int:
-    """The agent's time limit (PROTOCOL §2.12): the cutoff table's, the same in both modes. normalize writes it into
-    task.toml, RCB_WALL_CLOCK_S and the closing `## Time limit`; the templates never state it as a number."""
-    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-    from task_conventions import cutoff_sec
-    p, s = cutoff_sec(BENCHMARK, "privileged"), cutoff_sec(BENCHMARK, "standard")
-    assert p == s, (p, s)
-    return int(p)
+    """The agent's time limit (PROTOCOL §2.12), the same in both modes; the templates never state it as a number."""
+    return CUTOFF_SEC
 CORE = ("__init__.py", "scene.py", "looks.py", "world.py", "referee.py", "task.py")   # the rfo package in a task (no other family)
 MODES = ("privileged", "standard")
 CLIENT = dict(
@@ -134,6 +147,15 @@ def rulebook_block(inst: dict) -> str:
         out += " This task departs from it in nothing that the referee judges."
     return out + "\n\n"
 
+
+
+def dynamic_families() -> dict[str, str]:
+    """{family: why} of the families scripts/task_dynamics.toml marks dynamic (their `[metadata] family` is fam_id)."""
+    import tomllib
+    t = tomllib.loads((ROOT / "scripts/task_dynamics.toml").read_text())
+    row = t["benchmark"][BENCHMARK]
+    return {f.replace("_", "-"): e["why"] for f, e in t.get("family", {}).get(BENCHMARK, {}).items()
+            if e["dynamics"] == "dynamic" and row["dynamics"] != "dynamic"}
 
 
 def task_dir(fam: str, mode: str) -> str:
@@ -290,6 +312,18 @@ def values(fam: str, spec: dict, inst: dict, version: str) -> dict:
             "`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the "
             "client (`solution/rows.npz`, recorded by scripts/roboolympics/make_oracles.py). "
             + spec["evidence"] + measured_std) if full else f"None (as `{task_dir(fam, 'privileged')}`).",
+        "RT": task_dir(fam, "standard-realtime"),
+        "RT_RESET_BUDGET": RT_RESET_BUDGET,
+        "EXPERT_HOURS_RT": spec.get("expert_hours", 3.0) + 4.0,
+        "ORACLE_EVIDENCE_RT": toml_str(
+            spec["evidence"] + " In standard-realtime mode the privileged twin's reference rows, each run of one action "
+            "type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S (board "
+            "0112)." if full else none_ev),
+        "REFERENCE_RT": (
+            "`solution/oracle_plan.py` plans the privileged twin's reference rows (`solution/rows.npz`) into the attempt "
+            "at the control steps where they ran there (`submit(..., at=step)`; the first, at step 0, starts the clock); "
+            "it uses no privileged information at run time. " + spec["evidence"]) if full else (
+            f"None (as `{task_dir(fam, 'privileged')}`)."),
         "REVIEW": "" if full else ("No oracle; human review " + (f"in PR #{review}" if review else
                                    "in the pull request that adds the benchmark") + " (PROTOCOL §2.7)."),
     }
@@ -319,7 +353,7 @@ def world_files(fam: str, base: str) -> dict[str, tuple[bytes, int]]:
 
 
 def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
-    """{task dir name: {relative path: (content, mode)}} for the two modes of one family."""
+    """{task dir name: {relative path: (content, mode)}} for the modes of one family (standard-realtime: dynamic ones)."""
     path = HERE / "instances" / f"{fam}-i00.json"
     raw = path.read_bytes()
     inst = json.loads(raw)
@@ -329,7 +363,9 @@ def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes,
     std, sol, orc = SHARED / "standard", SHARED / "solution", HERE / "oracles" / fam
     full = spec["oracle"] == "full"
     out = {}
-    for mode in MODES:
+    dyn = dynamic_families()
+    modes = MODES + (("standard-realtime",) if fam in dyn else ())
+    for mode in modes:
         if mode == "privileged":
             files = files_of(HERE / "templates/privileged", vals)
             files.update(world_files(fam, "environment"))
@@ -342,9 +378,18 @@ def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes,
                 files["solution/run_oracle.py"] = ((sol / "run_oracle.py").read_bytes(), 0o644)
                 files["solution/oracle.py"] = ((orc / "oracle.py").read_bytes(), 0o644)
         else:
-            v = dict(vals, REFERENCE=vals["REFERENCE_STD"], ACTION_TABLE=vals["ACTION_TABLE_STD"])
-            files = files_of(HERE / "templates/standard", v)
-            files["environment/rcb_client.py"] = ((std / "rcb_client.py").read_bytes(), 0o644)
+            rt = mode == "standard-realtime"
+            v = dict(vals, REFERENCE=vals["REFERENCE_RT" if rt else "REFERENCE_STD"], ACTION_TABLE=vals["ACTION_TABLE_STD"])
+            if rt:
+                S = slowdown_of(RT_RTF[fam])
+                v.update(SLOWDOWN=S, REAL_TIME_NOTE=" (real time)" if S == 1 else "", DYNAMIC_WHY=dyn[fam],
+                         RTF_TEXT=(f"RTF {RT_RTF[fam]:g} with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 "
+                                   "attempts; ws-1, 4 CPUs, board 0112, 2026-10-14); PROTOCOL §4b: S = 1 when RTF "
+                                   ">= 3, else ceil(1.5 / RTF)"))
+            files = files_of(HERE / ("templates/standard-realtime" if rt else "templates/standard"), v)
+            files["environment/rcb_client.py"] = (((SHARED / "realtime") if rt else std).joinpath("rcb_client.py").read_bytes(), 0o644)
+            if rt:
+                files["environment/sim/rcb_realtime.py"] = ((SHARED / "realtime/rcb_realtime.py").read_bytes(), 0o644)
             files["environment/rcb1.py"] = ((std / "rcb1.py").read_bytes(), 0o644)
             req = CLIENT["CLIENT_REQUIREMENTS"].strip()
             files["environment/client-requirements.txt"] = ((ROOT / "scripts/eai_standard" / req).read_bytes(), 0o644)
@@ -353,7 +398,11 @@ def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes,
             files.update(world_files(fam, "environment/sim"))
             files["environment/sim/instance.json"] = (raw, 0o644)
             files["tests/grade.py"] = ((std / "grade.py").read_bytes(), 0o644)
-            if full:
+            if full and rt:
+                files["solution/solve.sh"] = ((sol / "solve_realtime.sh").read_bytes(), 0o755)
+                files["solution/oracle_plan.py"] = ((sol / "oracle_plan.py").read_bytes(), 0o644)
+                files["solution/rows.npz"] = ((orc / "standard_rows.npz").read_bytes(), 0o644)
+            elif full:
                 files["solution/solve.sh"] = ((sol / "solve_standard.sh").read_bytes(), 0o755)
                 files["solution/oracle_replay.py"] = ((sol / "oracle_replay.py").read_bytes(), 0o644)
                 files["solution/rows.npz"] = ((orc / "standard_rows.npz").read_bytes(), 0o644)
@@ -455,7 +504,7 @@ def main() -> int:
                       if not (out / n / "task.toml").is_file()]
     for d in diffs:
         print(d)
-    print(f"{'checked' if check else 'generated'} {len(made)} RoboOlympics task dirs ({len(made) // 2} families): {len(diffs)} difference(s)")
+    print(f"{'checked' if check else 'generated'} {len(made)} RoboOlympics task dirs ({len(fams)} families): {len(diffs)} difference(s)")
     return 1 if (check and diffs) else 0
 
 

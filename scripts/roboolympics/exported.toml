@@ -2,7 +2,8 @@
 # its simulator service runs unchanged inside each task (PROTOCOL §4c; docs/benchmarks/roboolympics.md, "Tasks exported
 # by RoboOlympics"). They are not rendered by gen_tasks.py, which skips the directories listed here (and fails one that
 # is missing); written by `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in RoboOlympics,
-# then `python3 scripts/task_conventions.py` on them (seeds, resources, cutoff, README) and `scripts/task_cutoffs.py apply`.
+# then `python3 scripts/task_conventions.py` on them (seeds, resources, README; the cutoff is each task's own `[agent]
+# timeout_sec`, which a re-export must keep: 7200 s, 14400 s for soccerssl-match-i00 and badminton-match-i01 / i02).
 # `patched`: files this repository changed after the export (PROTOCOL §4c: sent upstream; a re-export must keep them).
 
 [[tasks]]

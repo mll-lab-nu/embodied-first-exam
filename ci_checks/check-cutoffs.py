@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
-"""The agent's time cutoff (docs/PROTOCOL.md §2.12): one table, and every task says what the table says.
+"""The agent's time cutoff (docs/PROTOCOL.md §2.12): each task sets its own, and says it once, at the end of its instruction.
 
-scripts/task_cutoffs.toml gives the seconds per benchmark and mode, with optional exceptions per family and per task
-(the most specific wins). For every task:
-  - the table has a number for it;
-  - `[agent] timeout_sec` in task.toml is that number (Harbor enforces it);
-  - instruction.md ends with the section scripts/task_conventions.py renders, the last thing the agent reads:
-    `## Time limit`, "You have N seconds to complete this task. Do not cheat by using online solutions or hints specific
-    to this task." with the same N, then what the cutoff means in the task's mode; nothing follows it, and the heading
-    and the sentence stand there once;
+The number is the task's `[agent] timeout_sec` in task.toml, set by its author (or its benchmark's generator) in the
+pull request that adds or changes the task, as in Terminal-Bench; there is no table. For every task given (default:
+every task):
+  - `[agent] timeout_sec` is a whole positive number of seconds, at most 14400 (PROTOCOL D8; no benchmark is excepted);
+  - instruction.md ends with the section scripts/task_conventions.py renders from that number, the last thing the agent
+    reads: `## Time limit`, "You have N seconds to complete this task. Do not cheat by using online solutions or hints
+    specific to this task." with the same N (Terminal-Bench's sentence), then what the cutoff means in the task's mode;
+    nothing follows it, and the heading and the sentence stand there once;
   - nothing else in instruction.md states the agent's limit as a duration (the wordings tasks used before 2026-10-11:
     "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...; and
-    the obvious other shapes: "You have one hour.", "The limit is 3600 seconds.", "Finish within 60 minutes."): a second
-    statement goes stale at the next change of the table, and two limits in one instruction are worse than none;
+    the obvious other shapes: "You have one hour.", "The limit is 3600 seconds.", "Finish within 60 minutes."): two
+    limits in one instruction are worse than none;
   - the README's "Agent time budget" row has the number;
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
-    what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3).
-Repository level (no task given): the table itself is usable, has a number for exactly the benchmark-mode pairs that
-have tasks, privileged and standard (any mode with `same_cutoff_as` in the mode registry) have one number wherever
-both exist (a benchmark's row, a family's entry, a task and its counterpart), every exception names a family or a task that exists, every number equals its last recorded value (its
-newest `[[history]]` entry, else scripts/task_cutoffs.baseline.toml: a change without its entry fails), and
-docs/CUTOFFS.md is what `python3 scripts/task_cutoffs.py apply` renders from it.
+    what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3);
+  - its twins agree: a mode whose entry in the mode registry names `same_cutoff_as` (standard: privileged; owner,
+    2026-10-12) has that mode's number wherever the task of the same base exists in both (PROTOCOL §2.15, §2.16).
 
-    python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task and the repository-level rules
-Fix: edit scripts/task_cutoffs.toml (never a task), then `python3 scripts/task_cutoffs.py apply`. Standard library only.
+    python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task
+Fix: set `[agent] timeout_sec` in task.toml (or the generator's constant, then regenerate) and run
+`python3 scripts/task_conventions.py tasks/<task>`, which renders the rest from it. Standard library only.
 """
 from __future__ import annotations
 
@@ -34,8 +32,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-import task_conventions as tc  # noqa: E402  (one table reader, one renderer)
-import task_cutoffs  # noqa: E402
+import task_conventions as tc  # noqa: E402  (one renderer)
 
 DUR = r"\d[\d,.]*\s*(?:s|sec|secs|seconds?|min|mins|minutes?|h|hrs?|hours?)\b"
 WORD_DUR = (r"(?:(?:an|one|two|three|four|six|half an) hours?|(?:ten|fifteen|twenty|thirty|forty[- ]five|sixty|ninety|"
@@ -89,30 +86,54 @@ def other_limits(instruction: str) -> list[str]:
     return out
 
 
+def number_errors(task: Path) -> list[str]:
+    """What is wrong with the task's own number, `[agent] timeout_sec`; [] when it is usable."""
+    try:
+        v = tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("timeout_sec")
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        return [f"task.toml: {e}"]
+    if v is None:
+        return ["task.toml has no `[agent] timeout_sec` (the agent's cutoff, set by the task's author; PROTOCOL §2.12)"]
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0 or float(v) != int(v):
+        return [f"[agent] timeout_sec = {v!r} is not a whole positive number of seconds"]
+    if v > tc.CUTOFF_CAP:
+        return [f"[agent] timeout_sec = {v:g} is above the {tc.CUTOFF_CAP} s cap (PROTOCOL D8, §2.3; no benchmark is excepted)"]
+    return []
+
+
+def twin_pairs(task: Path) -> list[tuple[Path, Path]]:
+    """(task, its twin) for every mode pair the registry ties together (`same_cutoff_as`), in either direction, where the
+    twin exists; sorted so that a pair reached from both sides is the same tuple."""
+    mode, base = tc.mode_of(task), tc.base_of(task)
+    out = []
+    for m, d in tc.MODE_REGISTRY.items():
+        o = d["same_cutoff_as"]
+        if not o or mode not in (m, o):
+            continue
+        other = task.with_name(f"{base}-{o if mode == m else m}")
+        if (other / "task.toml").is_file():
+            out.append(tuple(sorted((task, other))))
+    return out
+
+
 def check_task(task: Path) -> list[str]:
-    errs: list[str] = []
     try:
         mode = tc.mode_of(task)
     except ValueError as e:
         return [str(e)]
-    bench = tc.bench_of(task)
+    errs = number_errors(task)
+    if errs:
+        return errs
     sec = tc.cutoff_for(task)
-    if sec is None:
-        return [f"scripts/task_cutoffs.toml has no cutoff for {bench or 'this benchmark'!s} in {mode} mode "
-                "(add the number to the benchmark's row in [cutoff_sec]; a new benchmark also needs its label in "
-                "task_conventions.py BENCHMARKS)"]
-    meta = tomllib.loads((task / "task.toml").read_text())
-    have = meta.get("agent", {}).get("timeout_sec")
-    if have is None or float(have) != sec:
-        errs.append(f"[agent] timeout_sec = {have!r}, the table says {sec} ({task_cutoffs.source_of(task)})")
+    bench = tc.bench_of(task)
     ins = (task / "instruction.md").read_text(encoding="utf-8") if (task / "instruction.md").is_file() else ""
     want = tc.render_cutoff(sec, mode, bench)
     if not ins.startswith("# "):
         errs.append("instruction.md does not start with its `# ` title line")
     if not ins.endswith("\n\n" + want):
         stated = re.findall(tc.CUTOFF_RE, ins)
-        errs.append(f"instruction.md does not end with the `{tc.CUTOFF_HEADING}` section rendered for {sec} s in {mode} mode "
-                    "(the last thing the agent reads; nothing after it)"
+        errs.append(f"instruction.md does not end with the `{tc.CUTOFF_HEADING}` section rendered for its {sec} s in {mode} mode "
+                    "(the last thing the agent reads; nothing after it; run scripts/task_conventions.py on the task)"
                     + (f" (it says {', '.join(stated)} seconds)" if stated else " (the sentence is missing)"))
     if len(re.findall(tc.CUTOFF_RE, ins)) > 1 or len(re.findall(rf"(?m)^{re.escape(tc.CUTOFF_HEADING)}[ \t]*$", ins)) > 1:
         errs.append(f"instruction.md has the cutoff sentence or the `{tc.CUTOFF_HEADING}` heading more than once")
@@ -134,81 +155,38 @@ def check_task(task: Path) -> list[str]:
             except ValueError:
                 ok = False
             if not ok:
-                errs.append(f"environment/docker-compose.yaml: {tc.WALL_CLOCK_ENV} = {v}, the table says {sec}")
+                errs.append(f"environment/docker-compose.yaml: {tc.WALL_CLOCK_ENV} = {v}, the task's cutoff is {sec}")
     return errs
 
 
-def check_repo(tasks: list[Path]) -> list[str]:
-    errs: list[str] = []
-    table = tc.cutoff_table()
-    families, by_task = tc.cutoff_overrides()
-    have = {(tc.bench_of(t), tc.mode_of(t)) for t in tasks}
-    for bench, row in sorted(table.items()):
-        for mode in row:
-            if (bench, mode) not in have:
-                errs.append(f"scripts/task_cutoffs.toml: {bench} has a cutoff for {mode} mode but no task in that mode")
-    # an exception that reaches no task is a typo (a family is `[metadata] family` in task.toml) or a leftover
-    fam = {(tc.bench_of(t), tc.family_of(t), tc.mode_of(t)) for t in tasks} if families else set()
-    for bench, rows in sorted(families.items()):
-        for family, row in sorted(rows.items()):
-            for mode in row:
-                if (bench, family, mode) not in fam:
-                    known = sorted({f for b, f, _m in fam if b == bench})
-                    errs.append(f"scripts/task_cutoffs.toml: [family_cutoff_sec] {bench} has no task of family {family!r} in "
-                                f"{mode} mode (its families, `[metadata] family` in task.toml: {', '.join(known[:12])}"
-                                + (", ..." if len(known) > 12 else "") + ")")
-    names = {t.name for t in tasks}
-    for name in sorted(by_task):
-        if name not in names:
-            errs.append(f"scripts/task_cutoffs.toml: [task_cutoff_sec] names {name!r}, which is not a task directory")
-    # a benchmark may ship any subset of the modes (PROTOCOL §2.15), but a mode whose registry entry names
-    # `same_cutoff_as` has that mode's number wherever both exist (§2.16; standard = privileged, owner 2026-10-12):
-    # in a benchmark's row, in a family's entry, and for a task and its counterpart of the same base
-    pairs = [(m, d["same_cutoff_as"]) for m, d in tc.MODE_REGISTRY.items() if d["same_cutoff_as"]]
-    for m, other in pairs:
-        for bench, row in sorted(table.items()):
-            if m in row and other in row and row[m] != row[other]:
-                errs.append(f"scripts/task_cutoffs.toml: {bench} gives {other} {row[other]} s and {m} {row[m]} s; the two "
-                            "modes have the same cutoff (PROTOCOL §2.12, §2.16)")
-        for bench, rows in sorted(families.items()):
-            for family, row in sorted(rows.items()):
-                if m in row and other in row and row[m] != row[other]:
-                    errs.append(f"scripts/task_cutoffs.toml: [family_cutoff_sec] {bench} {family!r} gives {other} "
-                                f"{row[other]} s and {m} {row[m]} s; the two modes have the same cutoff")
-        for t in tasks:
-            if tc.mode_of(t) != m:
+def twin_errors(tasks: list[Path]) -> list[str]:
+    errs, seen = [], set()
+    for t in tasks:
+        for a, b in twin_pairs(t):
+            if (a, b) in seen:
                 continue
-            o = t.with_name(f"{tc.base_of(t)}-{other}")
-            if (o / "task.toml").is_file() and tc.cutoff_for(t) != tc.cutoff_for(o):
-                errs.append(f"{t.name} has a cutoff of {tc.cutoff_for(t)} s and {o.name} {tc.cutoff_for(o)} s; the two "
-                            "modes have the same cutoff (PROTOCOL §2.12, §2.16)")
-    errs += task_cutoffs.history_errors()     # every number equals its last recorded value: a change has its [[history]] entry
-    doc = ROOT / "docs/CUTOFFS.md"
-    if not doc.is_file() or doc.read_text(encoding="utf-8") != task_cutoffs.render_doc(tasks):
-        errs.append("docs/CUTOFFS.md is not what scripts/task_cutoffs.toml renders (run python3 scripts/task_cutoffs.py apply)")
+            seen.add((a, b))
+            sa, sb = tc.cutoff_for(a), tc.cutoff_for(b)
+            if sa is not None and sb is not None and sa != sb:
+                errs.append(f"{a.name} has a cutoff of {sa} s and {b.name} {sb} s; the twins have the same cutoff "
+                            "(PROTOCOL §2.12, §2.15, §2.16; mode registry `same_cutoff_as`)")
     return errs
 
 
 def main(argv: list[str]) -> int:
-    try:
-        tc.cutoff_table()
-    except (ValueError, tomllib.TOMLDecodeError, OSError) as e:
-        print(f"FAIL scripts/task_cutoffs.toml: {e}")
-        return 1
     every = sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
-    tasks = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] if argv else every
+    tasks = [Path(a).resolve() for a in argv if (Path(a) / "task.toml").is_file()] if argv else every
     rc = 0
     for t in tasks:
         for e in check_task(t):
             rc = 1
             print(f"FAIL {t}: {e}")
-    if not argv:
-        for e in check_repo(every):
-            rc = 1
-            print(f"FAIL {e}")
-        if rc == 0:
-            print(f"check-cutoffs: {len(tasks)} tasks state the cutoff of scripts/task_cutoffs.toml "
-                  "(task.toml, instruction.md, README, sim service)")
+    for e in twin_errors(tasks):
+        rc = 1
+        print(f"FAIL {e}")
+    if rc == 0:
+        print(f"check-cutoffs: {len(tasks)} tasks state their own cutoff (task.toml, instruction.md, README, sim service; "
+              "twins equal)")
     return rc
 
 
