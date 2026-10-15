@@ -6,6 +6,12 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 > **Removing an answer key from what we ship is not the same as the agent being unable to get it.**
 > The first is a set we control. The second is everything the container can reach.
 
+Since 2026-10-14 the honour rule allows the agent to read anything installed in its container, the simulator's and
+the benchmark's own source included (owner, board 0107 E4; PROTOCOL §2.11); it forbids only searching the web for, or
+downloading, a ready-made solution. Reading the image is therefore not a violation in any trial: whatever the image
+ships is fair game, and the only protection of the answer is that the image does not hold it. Everything below is
+about making that true.
+
 ## 1. Where it survives
 
 | Place | Why it is still readable | Check |

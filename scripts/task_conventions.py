@@ -168,15 +168,18 @@ ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 
 EMERGENCY_GPU_FACTOR = 1.5           # §2.10: host protection in enforced runs (the same value: rcb_monitor/monitor.py)
 LIMIT_SCOPES = {m: d["limit_scope"] for m, d in MODE_REGISTRY.items()}   # §2.10: who the limits bind
 LIMITS_HEADING = "## Resource limits"
-# PROTOCOL §2.11 (owner, 2026-10-11, board 0072): an honour rule, the same words in every task's instruction.md, just
-# before `## Resource limits` (generator-owned: edit it here, never in a task; ci_checks/check-resources.py compares).
-# Installing packages is fine; looking the task's solution up is not. No threat: trials are reviewed, the owner decides.
+# PROTOCOL §2.11 (owner, 2026-10-11, board 0072; relaxed 2026-10-14, board 0107 E4): an honour rule, the same words in
+# every task's instruction.md, just before `## Resource limits` (generator-owned: edit it here, never in a task;
+# ci_checks/check-resources.py compares). Installing packages and reading whatever is installed in the container (the
+# simulator's and the benchmark's own source included) are fine; searching the web for, or downloading, a ready-made
+# solution to the task is not. No threat: trials are reviewed, the owner decides.
 EXTERNAL_HEADING = "## External material"
 EXTERNAL_TEXT = (
-    "You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution "
-    "to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or "
-    "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
-    "package registries (PyPI, Debian / Ubuntu archives) only.")
+    "You may install packages you need (pip, apt), and you may read anything installed in your container, the "
+    "simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web "
+    "for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, "
+    "or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and "
+    "the package registries (PyPI, Debian / Ubuntu archives) only.")
 # Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
 # the agent's egress is open and finding existing tools and controllers is part of the task. It covers the benchmark's
 # tasks that set no [agent] network policy; one of its tasks that declares the allowlist (RoboOlympics' exported tasks,
@@ -187,8 +190,9 @@ EXTERNAL_OPEN = {
         "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
         "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
         "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
-        "The one thing not to look up is a solution to this exact task: this benchmark's own source code and reference "
-        "solutions. This is an honour rule; trials are reviewed."),
+        "You may read anything installed in your container, this benchmark's own source code included. The one thing "
+        "not to look up is a ready-made solution to this exact task, such as this benchmark's reference solutions. This "
+        "is an honour rule; trials are reviewed."),
 }
 
 # PROTOCOL §2.12 (owner, 2026-10-11 / 12, board 0080): the agent's time cutoff. One table, scripts/task_cutoffs.toml
@@ -564,6 +568,16 @@ def render_external(task: "Path | str" = "") -> str:
     if isinstance(task, Path) and declares_allowlist(task):
         name = ""
     text = next((v for p, v in EXTERNAL_OPEN.items() if name and name.startswith(p)), EXTERNAL_TEXT)
+    # owner 2026-10-14: the words above are the baseline every task carries; a task may add STRICTER requirements of
+    # its own on top (never looser), as `[metadata.honour] stricter = "..."` in its task.toml, rendered after them
+    stricter = ""
+    if isinstance(task, Path):
+        try:
+            stricter = ((tomllib.loads((task / "task.toml").read_text()).get("metadata") or {}).get("honour") or {}).get("stricter", "")
+        except (OSError, ValueError):
+            stricter = ""
+    if stricter:
+        text = text.rstrip() + "\n\nAdditional rules for this task (stricter than the above): " + str(stricter).strip()
     return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
