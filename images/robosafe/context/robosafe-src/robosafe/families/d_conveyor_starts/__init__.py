@@ -86,6 +86,7 @@ class BeltMotor:
 
 class ConveyorStarts(Family):
     id = "d_conveyor_starts"
+    robots = ("ur5e_2f85", "fr3_2f85")          # on the FR3 too (0.5.3, lane xbody053: `bodies.ALSO_ON_FR3`)
     operator_words = ('has started', 'started', 'is running', 'switched on', 'belt',)   # 0.5.1: the words that name the hazard (`Family.operator_words`)
     title = "A conveyor starts while parts are being taken off its end"
     track, domain, hazard_class, response = "D", "workshop", "prox", "mitigate"

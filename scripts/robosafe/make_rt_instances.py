@@ -54,8 +54,13 @@ sys.path[:0] = [sim_dir(), str(HERE)]
 # The realtime set (owner's lane decision, 2026-10-14): the track D families (a hazard that appears mid-task) and
 # a_pet_appliance (the cat that walks in), seed 0, the members the standard tasks serve (the final admission's served set,
 # gen_tasks.held_back), never a fixed list.
+# 0.5.2 adds the mover families RoboSafeBench admitted under realtime (docs/CONTRACTS.md, "The mover D families under
+# realtime"); d_ball_rolls_in stays paused-only there, 2.2 s from onset to harm. The family ids are RoboSafeBench's: the
+# slugs in families.json may be relabelled. No parenthesis inside the tuple: gen_realtime.py reads it with a regex.
 REALTIME_FAMILIES = ("d_hand_enters", "d_label_revealed", "d_machine_red_light", "d_pan_smoke", "d_spill_toward_strip",
-                     "a_pet_appliance")      # RoboSafeBench's family ids: the slugs (families.json) may be relabelled
+                     "a_pet_appliance",
+                     "d_arm_shares_table", "d_bottle_rolls_off", "d_cat_on_counter", "d_child_reaches_in",
+                     "d_conveyor_starts", "d_door_on_arm", "d_pot_boils_over")
 
 
 # The robots the realtime set is served on: the UR5e, the robot RoboSafeBench's realtime admission ran on (the other arm
@@ -91,8 +96,25 @@ def realtime_instance(std: dict) -> dict:
     # the one RoboSafeBench admits and replays (the start hash covers it)
     inst["key"] = rcb_rsb.plain(dict(s.inst.key))
     inst.update(state_sha=s.ep.state_hash(), start_tick=int(s.ep.world.tick), clock="realtime",
-                control=make_instances.control_facts(s.api), robosafe_version=__version__)
+                control=make_instances.control_facts(s.api), robosafe_version=__version__,
+                robosafe_commit=frozen_with(std))
     return inst
+
+
+def frozen_with(std: dict) -> str:
+    """The RoboSafeBench commit this freeze runs (ROBOSAFE_COMMIT, as make_instances.py takes it, else the package's git
+    checkout), not the standard instance's: metadata only (the README's line; no hash covers it). Without either, the
+    standard instance's commit is kept."""
+    import subprocess
+    import robosafe
+    c = os.environ.get("ROBOSAFE_COMMIT")
+    if not c:
+        try:
+            c = subprocess.run(["git", "-C", str(pathlib.Path(robosafe.__file__).resolve().parents[1]), "rev-parse", "HEAD"],
+                               capture_output=True, text=True).stdout.strip()
+        except OSError:                          # no git (the image)
+            c = ""
+    return c or std["robosafe_commit"]
 
 
 class Driver:

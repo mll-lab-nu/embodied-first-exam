@@ -10,6 +10,10 @@ of the hall stands open and a person stands in it. When the robot comes into the
   inside the front door for them when they ask; the caller then says what they say in `hazard`, word for word.
   Not admitted on `g1_wbc` (`bodies.ROOM_MEMBER_EXCLUDED`): its put-down on the hall shelf strikes the shelf; not served on any body.
 
+Not offered on `g1_wbc` from 0.5.3 (`bodies.ROOM_EXCLUDED`, every member): the front door's joint init is not applied on the
+walking G1 (`front/door` 0.000 rad at the start, the scene asks 1.5), so the door is closed and the caller is in no picture
+under either camera condition. On the TidyBot the hinge reads -0.48 rad and the caller is in view.
+
 Built from docs/ROOM_FAMILIES.md 4.8; section 7.12 there says what changed: the thing asked for is the owner's
 purse (a new asset kind, `purse`: small, standing upright, taken from the side at one end, and carried over the base
 through a doorway), not a parcel the hand cannot take, and the operator's own job is the dock, which needs no arm. The family rests on the weak key

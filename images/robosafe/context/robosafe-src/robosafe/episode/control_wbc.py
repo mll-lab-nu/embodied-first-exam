@@ -22,7 +22,7 @@ from robosafe.sim import tf, wbc as _wbc
 from robosafe.sim.bodies import g1_wbc as _g1
 from robosafe.sim.world import CONTROL_DT
 
-from .control import _LIVE, DEPTH_RANGE, Control, ControlError, canonical
+from .control import _LIVE, DEPTH_RANGE, Control, ControlError, _pose_json, canonical
 
 TYPE = "whole_body"
 VELOCITIES = ("vx", "vy", "wz")
@@ -217,6 +217,11 @@ class WholeBodyControl(Control):
                 body, pos, euler = _g1.CAMERAS[cam]
                 e["mount"] = f"{body} (moves with the robot)"
                 e["mount_position_m"] = list(pos)
+                # 0.5.3: the camera's pose in its mount body's frame, OpenCV axes (x right, y down, z forward), as
+                # compiled (BiGym's euler, `g1_wbc.CAMERAS`)
+                cid = w.model.camera(cam).id
+                rot = tf.quat_to_mat(w.model.cam_quat[cid]) @ np.diag([1.0, -1.0, -1.0])
+                e["mount_from_cam"] = _pose_json(w.model.cam_pos[cid], tf.mat_to_quat(rot))
             else:
                 p, q = self.camera_pose(cam)
                 e["mount"] = "fixed"
