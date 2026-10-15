@@ -240,7 +240,8 @@ table-tennis-return, tennis-return, trap-ball, volley-shot, volleyball-bump, vol
 
 RoboOlympics' tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
 instruction says so and encourages the agent to look for existing tools, robot models and pretrained controllers and
-to adapt them; it asks only not to look up this benchmark's own source and reference solutions (an honour rule;
+to adapt them; it asks only not to look up a ready-made solution to the task, such as this benchmark's reference
+solutions (an honour rule; reading the benchmark's installed source is allowed since 2026-10-14;
 trials are reviewed). The reasons: a public G1 controller is fair equipment for a sport, as a published walking
 controller is for a real G1, and whether an agent can find, vet and adapt existing work is part of what these tasks
 measure. What follows:

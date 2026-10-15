@@ -123,7 +123,7 @@ registries (PyPI: pypi.org, files.pythonhosted.org; apt: deb.debian.org, securit
 security.ubuntu.com, snapshot.ubuntu.com). So `pip install` (or `uv pip install` in the images without pip) and
 `apt-get update && apt-get install` work in every agent container, in both modes; GitHub, raw.githubusercontent.com,
 Hugging Face and the general web do not answer (PROTOCOL §2.11: the instruction asks the agent, as an honour rule, not
-to look a solution up; the network keeps the places where solutions are published out of reach). Checked on real
+to search the web for or download a ready-made solution, and allows it to read whatever is installed in its container; the network keeps the places where solutions are published out of reach). Checked on real
 trials (2026-10-11; Debian 12 and 13, Ubuntu 22.04 images): both installs succeed with and without the usage gateway.
 In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about NVIDIA's own repository
 (developer.download.nvidia.com is not on the list) and goes on; the Ubuntu archives answer.
