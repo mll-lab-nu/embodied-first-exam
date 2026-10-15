@@ -36,14 +36,14 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `book_page_turn` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 553 rows |
 | `tray_glass_carry` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 1,072 rows |
 | `batter_whisk` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,048 rows |
-| `bicycle_pump_stroke` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 3,581 rows |
+| `bicycle_pump_stroke` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 4,299 rows |
 
 The default hand is a right (on the arms and the two-stage rigs: a left and a right) **Sharpa Wave** with 22 actuated finger joints; every
 family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted in its place, selected per
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and six of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and five of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Fifteen families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Fourteen families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -143,7 +143,6 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
 | `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
 | `batter_whisk` | 1,540 x 26 | control 1,440 | `families/batter_whisk/tools/author_oracle.py --hand wuji` (the Sharpa authoring controller with the Wuji frozen power grasp from `tools/make_reset.py`) |
-| `bicycle_pump_stroke` | 3,561 x 54 | control 3,411 | `families/bicycle_pump_stroke/tools/arm_port.py author --hand wuji` (the Sharpa arm port with Wuji push, swing and press offsets; README) |
 
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
 start cannot be held by the Wuji geometry; only hand joints (and, where physically necessary, the held objects' start
@@ -420,7 +419,12 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 ## Wave-2 household scene families
 
 Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
-household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`, `vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`, `envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the left one parked) completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
+household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
+tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
+`vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each
+flange (`book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`, `coffee_stir`,
+`envelope_letter_insert`, `jar_lid_open`, `paper_staple`, `remote_battery_swap` with the right arm, the left one parked)
+completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
 springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written
 only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity
 the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules
@@ -480,24 +484,25 @@ on the arm (success at 1,802); no Wuji solution.
 ### Jam jar lid (`jar_lid_open`, T14)
 
 Wave 3: the right Tianji Marvin arm and hand (stand at base (-0.56, 0.08, 0) behind the worktop on the floor z = -0.1 m,
-the left arm parked); the worktop is at a real table height (top z = 0.75 m; it was 0.30 m on the wrist stage) with the
-jar at (-0.22, -0.08). Nothing holds the jar (550 g, it stands on its weight and friction). The red twist-off lid (32 g)
-is closed by a contact-only lug thread: four inclined glass ramps hold four lid lugs; after a 1.049 rad
-counter-clockwise turn the lugs sit in the ramp gaps and the lid lifts off. **Success**, in order: (1) while the lid is
-still seated (origin < 6 mm above its closed height, within 4 mm of the jar axis) its unwrapped counter-clockwise turn
-relative to the jar reaches 1.049 rad; (2) the lowest point of the lid skirt rises more than 30 mm above the rim; (3)
-for 50 consecutive controls (1 s) the lid rests on the worktop touching neither hand nor jar, upright within 0.15 rad,
-at least 90 mm from the jar axis, slower than 0.02 m/s and 0.3 rad/s, while the jar stands untouched, upright within
-0.10 rad and slower than 0.02 m/s. **Immediate failure**, after every 2 ms substep: jar tilt above 15 degrees, slide
-above 30 mm or lift above 15 mm; the lid touching the worktop before stage 2; the lid touching nothing while falling
-faster than 0.3 m/s (or falling faster than 1.0 m/s at any time); floor contact or leaving the worktop or workspace; the
-lid leaving the thread upward outside the ramp gaps; unstable physics; 3,000 controls. The lid is lightly closed (no
-vacuum, seal adhesion or preload); the jam is part of the jar's rigid mass. Not restored, with evidence in the family
-README: a second hand holding the jar (on the 67 mm body just above the worktop the holding palm could not be placed:
-forearm and wrist against the worktop, J6/J7 limits; in exploratory runs, whose numbers were not archived, the best
-grips held only about 0.06-1.02 N m) and a seal breakaway torque of about 1-2 N m (without a holding hand, one hand
-would turn the whole jar, which stands on about 0.13 N m of friction). Oracle: 1,159 Sharpa rows on the arm (success at
-1,009); Wuji: `solution/wuji/` (1,242 rows, success at 1,097).
+the left arm parked); layout change: the worktop is raised to a real table height (top z = 0.75 m; it was 0.30 m on the
+wrist stage) and widened to |y| <= 0.58 m so that its legs clear the stand's base plate with the jar at (-0.22, -0.08).
+Nothing holds the jar (550 g, it stands on its weight and friction). The red twist-off lid (32 g) is closed by a
+contact-only lug thread: four inclined glass ramps hold four lid lugs; after a 1.049 rad counter-clockwise turn the lugs
+sit in the ramp gaps and the lid lifts off. **Success**, in order: (1) while the lid is still seated (origin < 6 mm
+above its closed height, within 4 mm of the jar axis) its unwrapped counter-clockwise turn relative to the jar reaches
+1.049 rad; (2) the lowest point of the lid skirt rises more than 30 mm above the rim; (3) for 50 consecutive controls (1
+s) the lid rests on the worktop touching neither hand nor jar, upright within 0.15 rad, at least 90 mm from the jar
+axis, slower than 0.02 m/s and 0.3 rad/s, while the jar stands untouched, upright within 0.10 rad and slower than 0.02
+m/s. **Immediate failure**, after every 2 ms substep: jar tilt above 15 degrees, slide above 30 mm or lift above 15 mm;
+the lid touching the worktop before stage 2; the lid touching nothing while falling faster than 0.3 m/s (or falling
+faster than 1.0 m/s at any time); floor contact or leaving the worktop or workspace; the lid leaving the thread upward
+outside the ramp gaps; unstable physics; 3,000 controls. The lid is lightly closed (no vacuum, seal adhesion or
+preload); the jam is part of the jar's rigid mass. Not restored, with evidence in the family README: a second hand
+holding the jar (on the 67 mm body just above the worktop the holding palm could not be placed: forearm and wrist
+against the worktop, J6/J7 limits; in exploratory runs, whose numbers were not archived, the best grips held only about
+0.06-1.02 N m) and a seal breakaway torque of about 1-2 N m (without a holding hand, one hand would turn the whole jar,
+which stands on about 0.13 N m of friction). Oracle: 1,159 Sharpa rows on the arm (success at 1,009); Wuji:
+`solution/wuji/` (1,242 rows, success at 1,097).
 
 ### Manual coffee grinder (`grinder_crank`, T15)
 
@@ -798,24 +803,27 @@ omitted. Oracle: 1,048 Sharpa rows (success at 948); Wuji: `solution/wuji/` (1,5
 ### Portable bicycle pump (`bicycle_pump_stroke`, T50)
 
 Wave 3: the right Tianji Marvin arm (arm rig above; stand at the world origin facing +x on the source floor z = -0.1 m,
-the left arm parked) and its hand do the task. A free-standing Topeak Mini Morph-type pump (T handle 0.45 m above the
-bench, 0.20 m piston travel) stands on its folding foot next to a 406 wheel lying on the bench. As in the source, the
-hose head (TRK-RP04 type) starts disconnected: 17.5 mm out from its seat on the valve stem's axis, thumb lock open; the
-head is a passive slide along the stem (2 N friction, seat end stop) and the thumb lock a passive hinge (0 to 1.65 rad).
-The piston slides on a passive joint whose linear air spring returns the handle (6 N at the top, 46 N at the bottom;
-viscous damping, 1 N seal friction). A stroke counts only while the head is connected, when the handle reaches a depth
-of at least 0.18 m and then returns to at most 0.04 m; tire pressure is a checker quantity (200.0 kPa + 380 Pa per
-counted stroke, the source gas model's mean rise; air is not simulated). **Success**, in order: (1) head connected
-(seated within 0.5 mm with the thumb lock within 0.15 rad of closed; latches); (2) 28 counted strokes; (3) pressure at
-least 210.6 kPa (the source's value after its 28 strokes); (4) the handle released at the top (depth <= 0.01 m, no robot
-contact with the pump, pump tilt <= 0.0873 rad, pump and handle speeds <= 0.02 m/s) for 50 consecutive controls (1 s).
-**Immediate failure**, after every 2 ms substep: pump tilt above 0.2618 rad, base moved more than 0.03 m horizontally or
-lifted more than 0.02 m, the pump's centre of mass below the bench top or a pump part on the floor, the connected head
-pulled back more than 2 mm or its lock opened below 1.2 rad, unstable physics; 5,000 controls. Wave 3 restored the
-source's disconnected head (it was pre-locked on the valve) and its 28-stroke pressure model (was six strokes from 207.8
-kPa); the source's optional steadying second hand is not used (one arm-mounted hand keeps the free pump upright through
-all strokes). Oracle: 3,581 Sharpa rows on the arm (success at 3,431); Wuji: `solution/wuji/` (3,561 rows, success at
-3,411).
+the left arm parked) and its hand do the task; layout change: the bench's two back legs are moved 8 cm under the
+unchanged top so that they clear the stand's base plate. A free-standing Topeak Mini Morph-type pump (T handle 0.45 m
+above the bench, 0.20 m piston travel) stands on its folding foot next to a 406 wheel lying on the bench. As in the
+source, the hose head (TRK-RP04 type) starts disconnected: 17.5 mm out from its seat on the valve stem's axis, thumb
+lock open; the head is a passive slide along the stem (2 N friction, seat end stop) and the thumb lock a passive hinge
+(0 to 1.65 rad). The piston slides on a passive joint whose linear air spring returns the handle (6 N at the top, 46 N
+at the bottom; viscous damping, 1 N seal friction). A stroke counts only while the head is seated and locked, when the
+handle reaches a depth of at least 0.18 m and then returns to at most 0.04 m; tire pressure is a checker quantity (200.0
+kPa + 380 Pa per counted stroke, the source gas model's mean rise; air is not simulated). **Success**, in order: (1)
+head connected (seated within 0.5 mm with the thumb lock within 0.15 rad of closed; latches); (2) 28 counted strokes;
+(3) pressure at least 210.6 kPa (the source's value after its 28 strokes); (4) the head disconnected again, as at the
+end of the source (lock opened to at most 0.5 rad and the head at least 12.5 mm off its seat; latches); (5) the handle
+released at the top (depth <= 0.01 m, no robot contact with the pump or the head, pump tilt <= 0.0873 rad, pump and
+handle speeds <= 0.02 m/s) for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: pump tilt
+above 0.2618 rad, base moved more than 0.03 m horizontally or lifted more than 0.02 m, the pump's centre of mass below
+the bench top or a pump part on the floor, the connected head pulled back more than 2 mm or its lock opened below 1.2
+rad before stage 3, the head pulled off with its lock still closed after stage 3, unstable physics; 5,000 controls. Wave
+3 restored the source's disconnected start, its unlock-and-retract end and its 28-stroke pressure model (wave 2 had the
+head locked on the valve throughout and six strokes from 207.8 kPa); the source's optional steadying second hand is not
+used (one arm-mounted hand keeps the free pump upright through all strokes). Oracle: 4,299 Sharpa rows on the arm
+(success at 4,149); the earlier Wuji solution is not packaged (Wuji selectable, no success).
 
 ## Modes and grading
 
@@ -883,7 +891,7 @@ trial):
 | `book_page_turn` | 1 / 0 | 1 / 0 | 5 min | 3.47 / 2.48 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `tray_glass_carry` | 1 / 0 | 1 / 0 | 3 min | 0.61 / 0.84 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `batter_whisk` | 1 / 0 | 1 / 0 | 2 min | 0.44 / 0.61 | Wuji standard oracle 1; Wuji privileged nop 0 |
-| `bicycle_pump_stroke` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.28 | wave 3 (2026-10-15; standard nop: the family's final trial); Wuji privileged oracle 1 (wave 3, arm) |
+| `bicycle_pump_stroke` | - | - | - | - | wave 3 re-integration: smoke pending |
 
 The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`). Wave-2 rows: the oracle / nop and Wuji verdicts are the family authors' trials on the final task files (2026-10-14/15, same image and settings); wall time and peaks are this branch's integration smoke (one privileged and one standard Sharpa oracle per family, both 1, every standard live episode = its replays).
 

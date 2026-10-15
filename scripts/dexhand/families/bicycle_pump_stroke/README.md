@@ -2,8 +2,8 @@
 
 DexHand family built from scene-expansion scene T50 "Inflate a tire with a portable bicycle pump" (a kinematic demo:
 prescribed head insertion, 28 prescribed piston cycles, no hands). Here a dexterous hand on the right arm of a Tianji
-Marvin robot connects the hose head to the valve (push on, close the thumb lock) and pumps physically, 28 strokes
-from the source's 200.0 kPa.
+Marvin robot connects the hose head to the valve (push on, close the thumb lock), pumps physically (28 strokes from
+the source's 200.0 kPa) and disconnects the head again (open the lock, pull the head off), as in the source.
 
 ## Files
 | file | role |
@@ -15,7 +15,7 @@ from the source's 200.0 kPa.
 | `task.json` | frozen instance: thresholds, pump parameters, cameras, per-hand start targets |
 | `assets/` | `t50_scene.json` (geoms, colours, poses at film frame 50), meshes (smooth tire, rim, head shells), `manifest.json` (sha256) |
 | `tools/extract_source.py` | one-off copy of the approved scene-v4 export into `assets/` |
-| `tools/arm_port.py` | authoring: records the wave-2 floating-stage witness's hand poses, sets the arm start pose, repeats one stroke cycle to 28 strokes and tracks the hand path with the arm (`shared/arm_ik.py`); writes `solution/trajectory.npz` and `solution/wuji/trajectory.npz` |
+| `tools/arm_port.py` | authoring: records the wave-2 floating-stage witness's hand poses, sets the arm start pose, repeats one stroke cycle to 28 strokes and tracks the hand path with the arm (`shared/arm_ik.py`); writes `solution/trajectory.npz` (no Wuji witness in this version) |
 | `tools/film_export.py` | native pose export of a replay for the Blender film (`verify` re-checks every sample bit for bit) |
 | `tools/studio_film.py` | Blender 4.5.3 studio film, copied from the approved T50 film renderer (materials, lights, camera) |
 | `tests/test_bicycle_pump_stroke.py` | authoring tests (positive, nop, truncation, knock fail-fast, snapshot, forged/ambiguous members, width, NaN, range, hand label, Wuji) |
@@ -40,7 +40,11 @@ from the source's 200.0 kPa.
   -17.5 mm) carrying the source's head, collar and hose-neck geometry; the thumb lock `thumb_lock` on the passive hinge
   `lever_angle` (source axis: world y at the lever's foot; 0 = up/open, 1.65 rad = closed; 0.004 N m friction).
   Connected (latched) = seated within 0.5 mm and the lever within 0.15 rad of closed; strokes are armed and counted
-  only while connected; afterwards a head pulled back > 2 mm or a lever opened below 1.2 rad is `head_disconnected`.
+  only while the head is seated and locked like this at that substep; until the pressure is reached a head pulled back
+  > 2 mm or a lever opened below 1.2 rad is `head_disconnected`. Disconnected (latched, after the pressure) = lever
+  opened to <= 0.5 rad and head pulled >= 12.5 mm back off its seat (beyond the 9.5 mm core engagement); pulling the
+  head back > 2 mm while the lever is still >= 1.2 rad is `head_forced_off`. The final hold also requires no robot
+  contact with the head.
   The cam's clamping force and the grommet/core seal are not simulated. Head and lever never collide with the static
   wheel/valve/hose (they move on their guided joints); the last four hose segments ride with the head (display
   only). Wheel, valve and hose are static world geometry at the approved film pose; hose segments 0-1 at the pump
@@ -64,8 +68,8 @@ goal and makes the pumping physical.
   `task.json` (`HASHED_CONFIG_KEYS` in runtime.py), never instruction prose, titles or cameras.
 
 ## Simplifications (disclosed in the instruction)
-- The head starts disconnected and must be connected and locked; the source's final unlock/disconnect is not part of
-  the task. The head is guided along the stem axis (no lateral misalignment).
+- The head starts disconnected, must be connected and locked, and must be unlocked and pulled off again at the end
+  (the source's stages). The head is guided along the stem axis (no lateral misalignment).
 - Air is not simulated: tire pressure is a checker quantity, 200.0 kPa + 380 Pa per counted stroke (the source's 28
   strokes). The piston's air is a linear spring (it returns the handle).
 - Wheel, valve and hose are static props.
@@ -78,9 +82,8 @@ records.
 export DEXHAND_ASSET_DIR=<robot_coding_bench>/images/dexhand/assets/hand WUJI_ASSET_DIR=<...>/assets/wuji_v2_2
 python tools/arm_port.py poses --hand sharpa --old <wave-2 bicycle_pump_stroke folder> --out <dir>/poses_sharpa.npz
 python tools/arm_port.py ready --hand sharpa --poses <dir>/poses_sharpa.npz     # initial_targets in task.json
-python tools/arm_port.py author --hand sharpa --poses <dir>/poses_sharpa.npz --out solution/trajectory.npz
-python tools/arm_port.py author --hand wuji --poses <dir>/poses_wuji.npz --push-extra 0.012 --swing-over 0.3 \
-    --press-depth 0.008 --out solution/wuji/trajectory.npz   # (after `ready --hand wuji`)
+python tools/arm_port.py author --hand sharpa --poses <dir>/poses_sharpa.npz --swing-over 0.3 --hold-extra 100 \
+    --out solution/trajectory.npz
 python replay.py --task bicycle_pump_stroke --traj solution/trajectory.npz --out <dir>/r.json   # twice: same state_sha
 python -m pytest -q tests/test_bicycle_pump_stroke.py
 # film (GPU): native pose export, exact re-check, Blender render + captions
