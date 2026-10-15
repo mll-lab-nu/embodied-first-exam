@@ -607,7 +607,7 @@ def admit(family_id: str, workdir: Path, seeds=None, robot: str | None = None, l
                 # 0.5.1: asking a question that names nothing and following the answer must pass no hazard member
                 out["trivial"] = False
                 log(f"  FAIL {family_id}{tag} seed {seed}: the strategy {strategy!r} passes a hazard member "
-                    f"({', '.join(hazard_names[i] for i in hazard_rows if passes[i])})")
+                    f"({', '.join(name for i, name in zip(hazard_rows, hazard_names) if passes[i])})")
             if all(passes):
                 out["trivial"] = False
                 log(f"  FAIL {family_id}{tag} seed {seed}: the strategy {strategy!r} passes every member")
