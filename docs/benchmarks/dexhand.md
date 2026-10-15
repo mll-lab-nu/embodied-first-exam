@@ -24,7 +24,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `pancake_serve` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 874 rows |
 | `vacuum_bin_reseat` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 20 x 1 ms | 1,019 rows |
 | `drying_rack_unfold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,415 rows |
-| `picture_hang` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 813 rows |
+| `picture_hang` | two Tianji Marvin 7-DoF arms, a hand on each | 58 / 54 | 50 Hz, 10 x 2 ms | 869 rows |
 | `usb_plug_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,134 rows |
 | `fan_guard_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,665 rows |
 | `stool_brace_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,006 rows |
@@ -43,7 +43,7 @@ family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted i
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and eleven of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and ten of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Twenty families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Nineteen families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -141,7 +141,6 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `jar_lid_open` | 905 x 26 | control 755 | `families/jar_lid_open/demo.py --hand wuji` (fingertip targets inside the skirt as grip force, two regrasp strokes: the Wuji servos are too weak for the Sharpa's single wrist turn) |
 | `grinder_crank` | 1,005 x 52 | control 905 | `families/grinder_crank/tools/search_wuji.py` + `tools/make_oracle.py --hand wuji` (the Sharpa scripted controller; CEM over the left grasp, knob pinch and crank rate) |
 | `pancake_serve` | 875 x 26 | control 725 | `families/pancake_serve/tools/demo.py --params '{"hand": "wuji"}'` (the same closed-loop turner-pose servo as Sharpa, with the Wuji frozen power grasp from `tools/make_reset.py`) |
-| `picture_hang` | 821 x 52 | control 621 | `families/picture_hang/tools/make_oracle.py --hand wuji` (the closed-loop authoring controller `tools/controller.py` with a Wuji finger posture) |
 | `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
 | `paper_staple` | 1,125 x 26 | control 925 | `families/paper_staple/demo.py --hand wuji` (the Sharpa controller with a narrower Wuji abduction spread) |
 | `envelope_letter_insert` | 1,588 x 26 | control 1,488 | `families/envelope_letter_insert/demo.py --hand wuji` (the Sharpa controller, vertex-based fingertip targets for Wuji) |
@@ -424,18 +423,21 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 
 ## Wave-2 household scene families
 
-Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn household
-scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical tasks:
-a hand on the six-DoF wrist stage or two hands on two six-DoF wrist stages (`grinder_crank`, `picture_hang`, `tray_glass_carry`)
-completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction loss and
-springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written
-only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the
-checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules above
-apply: fail-fast at the first violating physics substep (unless the section says otherwise), ordered stages, no partial
-credit, and a released or held terminal window. Each instruction states the exact predicate and every threshold; each
-family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its authoring tests. All run at
-50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where
-one exists, is packaged as `solution/wuji/` (see Hands).
+Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
+household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
+tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`grinder_crank`, `tray_glass_carry`),
+or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`picture_hang`
+with both arms) completes each one with motor targets only. Mechanisms are passive joints with limits, damping, friction
+loss and springs (hinges, slides, detents, latches); nothing is welded to a hand, scripted or pushed, and object state
+is written only at reset. A medium that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a
+quantity the checker derives from simulator state (revolutions, strokes, tilt), and the instruction says so. The three
+rules above apply: fail-fast at the first violating physics substep (unless the section says otherwise), ordered stages,
+no partial credit, and a released or held terminal window. Each instruction states the exact predicate and every
+threshold; each family's authoring `README.md` lists its modelling choices and simplifications, `tests/` its authoring
+tests. All run at 50 Hz (10 x 2 ms), `oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a
+Wuji success, where one exists, is packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source
+scene wherever that was physically feasible (pre-closed or pre-placed parts, enlarged parts and widened clearances
+reverted); each section names what was restored and what remains, with the reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -545,21 +547,27 @@ latch (an open leg stays open past its over-centre under load, as in the source)
 
 ### Picture hanging (`picture_hang`, T21)
 
-A free 2.0 kg, 52 x 52 x 6 cm framed print stands upright on a console (top z = 0.72 m) in front of a wall (face
-x = 0.74 m) with two brass hooks (saddles at z = 1.38 m, y = +-0.255 m: 12 mm saddle, 10 mm upturned lip); two D-rings
-(18 x 20 mm loops of 2 mm wire) hinge passively behind the side rails. Two hands, each on its own six-DoF wrist stage:
-with `sharpa` the genuine right Sharpa Wave and its declared mirror image on the left stage, with `wuji` the
-manufacturer's left and right Wuji Hand 2.2. **Success**, in order: lifted (origin 2 cm above the start, no console
+A free 2.0 kg, 52 x 52 x 6 cm framed print stands upright on a console (top z = 0.72 m) in front of a wall (face x =
+0.74 m) with two brass hooks (saddles at z = 1.38 m, y = +-0.255 m: 12 mm saddle, 10 mm upturned lip); two D-rings (18 x
+20 mm loops of 2 mm wire) hinge passively behind the side rails. Wave 3: both Tianji Marvin arms (arm rig above) work, a
+hand on each flange: with `sharpa` the genuine right Sharpa Wave and its declared mirror image on the left flange, with
+`wuji` the manufacturer's left and right Wuji Hand 2.2. The stand faces the wall at base (0.18, 0, 0.20) on a 0.10 m
+plinth exactly under its base plate (the stand's floor moved with it: from the floor the 1.38 m hooks are 19-25 mm out
+of reach); layout change: the console (top, height and the frame's start unchanged) stands on its two rear legs, moved
+from x = 0.60 to 0.615 m, because the source's front legs (x = 0.40 m) would pass through the base plate (exact check:
+no robot geom overlaps furniture at reset or over the oracle). The palms squeeze the top 9 cm of the side rails (the
+Marvin wrist link is 28 mm proud of the palm). **Success**, in order: lifted (origin 2 cm above the start, no console
 contact); both rings threaded on their own hooks (saddle through the D loop between lip and wall) and touching them;
-then released for 50 consecutive controls (1 s): both threaded, each hook carrying >= 20 % of the weight and both
->= 85 %, no hand, console or floor contact, level within 3 degrees, tilt <= 0.10 rad, slower than 0.02 m/s and
-0.15 rad/s. **Immediate failure**, after every 2 ms substep: floor contact; the origin leaving x in [0.20, 0.76] m,
-y in [-0.45, 0.45] m, z in [0.60, 1.30] m; tilt above 0.6 rad; falling 1 cm below the start height after lift-off; a
-released frame with an unthreaded ring after both rings engaged; a frame held by nothing while falling faster than
-0.2 m/s; unstable physics; and, at the end of every control, a frame held by nothing at all after lift-off (no
-drop-and-catch window); 3,000 controls. The D-ring hinge's lower stop (0 rad, 0.005 N m/rad return spring) stands in
-for the frame back (ring-frame contacts are filtered). Oracle: 813 Sharpa rows (success at 613); Wuji:
-`solution/wuji/` (821 rows, success at 621).
+then released for 50 consecutive controls (1 s): both threaded, each hook carrying >= 20 % of the weight and both >= 85
+%, no hand, console or floor contact, level within 3 degrees, tilt <= 0.10 rad, slower than 0.02 m/s and 0.15 rad/s.
+**Immediate failure**, after every 2 ms substep: floor contact; the origin leaving x in [0.20, 0.76] m, y in [-0.45,
+0.45] m, z in [0.60, 1.30] m; tilt above 0.6 rad; falling 1 cm below the start height after lift-off; a released frame
+with an unthreaded ring after both rings engaged; a frame held by nothing while falling faster than 0.2 m/s; an arm,
+torso or stand link touching anything (`robot_collision`); unstable physics; and, at the end of every control, a frame
+held by nothing at all after lift-off (no drop-and-catch window); 3,000 controls. The D-ring hinge's lower stop (0 rad,
+0.005 N m/rad return spring) stands in for the frame back (ring-frame contacts are filtered). Oracle: 869 Sharpa rows on
+the arms (success at 669); the wave-2 Wuji solution belonged to the wrist stages and is not packaged (Wuji selectable,
+no success).
 
 ### USB plug into a hub port (`usb_plug_insert`, T24)
 
@@ -682,9 +690,10 @@ rad, for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms 
 (sliding on the desk and hanging over its edge are allowed); a page with no contact falling faster than 0.2 m/s with no
 ring through its holes; a page origin more than 2 mm below the desk top or outside the workspace box; the binder moved
 more than 0.03 m or tilted more than 0.35 rad; a ring wire more than 1.2 mm into a page or a hand part more than 3 mm
-into a page; unstable physics; 6,000 controls. Pages are stiff cardstock plates (no bending). Still on the floating
-wrist stage: from any stand that reaches the binder, the flat pages and the desk edges where a rigid page can be picked
-up are out of the Marvin arm's reach. Oracle: 3,095 Sharpa rows (success at 2,940); no Wuji solution.
+into a page; unstable physics; 6,000 controls. Pages are stiff cardstock plates (no bending). Not restored: the source's
+two hands (one hand on the floating wrist stage: from any stand that reaches the binder, the flat pages and the desk
+edges where a rigid page can be picked up are out of the Marvin arms' reach, and on the wrist stage one hand picks a
+flat page by the edge pinch). Oracle: 3,095 Sharpa rows (success at 2,940); no Wuji solution.
 
 ### Letter into an envelope (`envelope_letter_insert`, T38)
 

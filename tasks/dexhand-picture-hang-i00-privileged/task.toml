@@ -4,15 +4,15 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/dexhand-picture-hang-i00-privileged"
-description = "Two dexterous hands on two six-axis wrist stages lift a free 2 kg 52 x 52 cm framed print from a console, carry it to the wall, engage both of its passive D-rings on the two installed brass wall hooks, release it and withdraw; the picture must hang level and still from both hooks."
+description = "A fixed dual-arm robot (Tianji Marvin) with a dexterous hand on each arm lifts a free 2 kg 52 x 52 cm framed print from a console, carries it to the wall, engages both of its passive D-rings on the two installed brass wall hooks, releases it and withdraws; the picture must hang level and still from both hooks."
 authors = [{ name = "Embodied Exam contributors" }]
-keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "bimanual-manipulation", "bimanual", "large-object", "hanging", "hook-engagement", "passive-hinge", "two-hands"]
+keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "bimanual-manipulation", "bimanual", "dual-arm", "large-object", "hanging", "hook-engagement", "passive-hinge", "two-hands"]
 
 [metadata]
 author_name = "Embodied Exam contributors"
 task_type = "trajectory"
 simulator = "mujoco"
-robot = "sharpa-wave-floating-bimanual"
+robot = "marvin-bimanual-sharpa-wave"
 hands = ["sharpa", "wuji"]
 default_hand = "sharpa"
 family = "picture_hang"
@@ -20,7 +20,7 @@ mode = "privileged"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 
 oracle = "full"
-oracle_evidence = "solution/trajectory.npz: 813 Sharpa Wave rows (success after 613 controls) and solution/wuji/trajectory.npz: 821 Wuji Hand 2.2 rows (success after 621), both recorded from the authoring controller tools/controller.py (motor targets only). Each replays to success in two fresh processes with identical state hashes, also with float32-rounded rows. Harbor 0.23 on 2026-10-14: oracle 1 / nop 0 in both modes (standard: live = replay), Wuji oracle 1 in both modes, standard Wuji nop 0. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (821 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes."
+oracle_evidence = "solution/trajectory.npz: 869 Sharpa Wave rows on the Marvin dual-arm robot (success after 669 controls, 200 rows of slack), recorded from the authoring controller tools/controller.py through tools/arm_author.py (IK to arm joint targets; motor targets only). Two fresh-process replays end with identical state hashes; float32-rounded rows also succeed. Wave-3 port of the 2026-10-14 floating-stage oracle."
 expert_time_estimate_hours = 5.0
 difficulty = "hard"
 release_status = "provisional"

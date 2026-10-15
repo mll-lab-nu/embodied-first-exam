@@ -1,10 +1,9 @@
 # DexHand: Hang a large picture on two wall hooks
 
-Hang the framed picture on the two wall hooks. The free 2.0 kg frame (52 x 52 x 6 cm) stands upright on a console; two brass picture hooks are installed on the wall and two D-rings on passive hinges are screwed to the back of the frame. Lift the frame off the console with both hands, engage BOTH D-rings on their matching hooks (left ring on the left hook, right ring on the right hook), then let go: the picture must hang still and level from both hooks with no hand touching it. Success requires, in this order: (1) lift-off: the frame origin (the centre of its bottom edge) at least 0.02 m above its start height z = 0.72 m and no contact with the console; (2) engagement: both rings threaded on their own hooks (the hook's load saddle passes through the ring's D loop, with the ring between the hook's upturned lip and the wall; a ring resting on top of the lip does not count) and each ring touching its hook; (3) a released hang for 50 consecutive controls (1 s): both rings threaded, each hook carrying at least 20 % of the frame's weight vertically through its ring and both hooks together at least 85 %, no hand touching the frame, no frame contact with the console or the floor, the frame's top edge level within 3 degrees, its tilt from upright at most 0.10 rad, its centre-of-mass speed at most 0.02 m/s and its angular speed at most 0.15 rad/s. The episode ends with success at that moment; one engaged hook, or rings left on the hook lips, never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the frame touches the floor, when its origin leaves the workspace box x in [0.20, 0.76] m, y in [-0.45, 0.45] m, z in [0.60, 1.30] m, when it tilts more than 0.6 rad from upright, when after lift-off its origin falls more than 0.01 m below its start height, when after both rings were engaged no hand touches the frame while a ring is not threaded (it fell off a hook), or when the physics becomes unstable; and when after lift-off the frame is held by nothing (no hand contact, no console contact and not hanging threaded on both hooks with both rings touching them): at the end of any control, or at any substep where its centre of mass is also moving down faster than 0.2 m/s (dropped, even if caught again, released early, dangling from one hook or resting on the hook lips). Later actions cannot undo a failure. Only robot actuator targets are allowed; no grasp welds, scripted object motion or forces on the frame. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+Hang the framed picture on the two wall hooks. The free 2.0 kg frame (52 x 52 x 6 cm) stands upright on a console; two brass picture hooks are installed on the wall and two D-rings on passive hinges are screwed to the back of the frame. Lift the frame off the console with both hands, engage BOTH D-rings on their matching hooks (left ring on the left hook, right ring on the right hook), then let go: the picture must hang still and level from both hooks with no hand touching it. Success requires, in this order: (1) lift-off: the frame origin (the centre of its bottom edge) at least 0.02 m above its start height z = 0.72 m and no contact with the console; (2) engagement: both rings threaded on their own hooks (the hook's load saddle passes through the ring's D loop, with the ring between the hook's upturned lip and the wall; a ring resting on top of the lip does not count) and each ring touching its hook; (3) a released hang for 50 consecutive controls (1 s): both rings threaded, each hook carrying at least 20 % of the frame's weight vertically through its ring and both hooks together at least 85 %, no hand touching the frame, no frame contact with the console or the floor, the frame's top edge level within 3 degrees, its tilt from upright at most 0.10 rad, its centre-of-mass speed at most 0.02 m/s and its angular speed at most 0.15 rad/s. The episode ends with success at that moment; one engaged hook, or rings left on the hook lips, never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the frame touches the floor, when its origin leaves the workspace box x in [0.20, 0.76] m, y in [-0.45, 0.45] m, z in [0.60, 1.30] m, when it tilts more than 0.6 rad from upright, when after lift-off its origin falls more than 0.01 m below its start height, when after both rings were engaged no hand touches the frame while a ring is not threaded (it fell off a hook), when an arm, torso or stand link of the robot touches anything (only the hands may make contact), or when the physics becomes unstable; and when after lift-off the frame is held by nothing (no hand contact, no console contact and not hanging threaded on both hooks with both rings touching them): at the end of any control, or at any substep where its centre of mass is also moving down faster than 0.2 m/s (dropped, even if caught again, released early, dangling from one hook or resting on the hook lips). Later actions cannot undo a failure. Only the robot's actuator targets (14 arm joints and the fingers of both hands) are allowed; no grasp welds, scripted object motion or forces on the frame. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
 
-You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
-serial revolute joints, no arm). The stages and the fingers are position actuated in the physics engine under native
-force bounds; the frame moves only through contact, gravity and its two passive ring hinges, so lifting, carrying,
+You control a fixed dual-arm robot (Tianji Marvin: two 7-joint arms on a stand) with a dexterous hand on each wrist. The arm joints and the fingers are position actuated in the physics engine under native force bounds;
+the frame moves only through contact, gravity and its two passive ring hinges, so lifting, carrying,
 hooking and releasing all require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
 ## Scene (world frame: metres, z up, x pointing into the wall)
@@ -17,31 +16,37 @@ hooking and releasing all require physical contact. The controller runs at 50 Hz
   frame's y axis at frame-local (0.033, +-0.255, 0.478) (3 mm behind the back face, on the side rails) and can swing
   from upright (0 rad) up to 1 rad toward the wall; its D loop (2 mm brass wire) is 18 mm wide and 20 mm tall. Felt
   bumpers sit on the back of the bottom corners.
-- The two hands hang palm-inward beside the frame's side rails, fingers pointing down, thumbs toward the wall.
+- The robot stand faces the wall (+x) in front of the console, its base origin at (0.18, 0.00, 0.20) (on a plinth;
+  shoulders 1.121 m above the base origin, at y = +-0.2215). Only the hands may touch anything: any contact of an arm, torso or stand
+  link with the frame, the hooks, the wall, the console, the floor or the other hand ends the episode (`robot_collision`).
+- At the start both hands hang palm-inward above the frame's side rails, fingers pointing down, thumbs toward the wall.
 
 ## Hands
 Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
-Each row is the left wrist stage (`l_wrist_x, l_wrist_y, l_wrist_z` in m, `l_wrist_rx, l_wrist_ry, l_wrist_rz` in rad), the right wrist stage (the same six, `r_wrist_*`), then the left hand's finger targets and the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). Both hands use the same two stages, ranges, gains and start targets. With `sharpa` the left hand is a declared mirror image of the genuine right Sharpa Wave; with `wuji` both are the manufacturer's left and right Wuji Hand 2.2 models.
-Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `56` wide for `sharpa` and `52` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
+Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7, radians), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`: the genuine right Sharpa Wave on the right flange and its declared mirror image on the left flange; 20 per hand for `wuji`: the manufacturer's left and right Wuji Hand 2.2). Both arms and both hands perform the task.
+Choose the hand with `Session(..., hand="wuji")` or the environment variable `DEXHAND_HAND=wuji` (default `sharpa`). Action rows are `58` wide for `sharpa` and `54` wide for `wuji`; `s.actuator_names` gives the exact order. `s.save_trajectory(actions, path)` records the hand in the archive (`hand` member). The verifier rebuilds the scene with the recorded hand (default `sharpa` when the member is absent) and rejects a trajectory whose width does not match that hand; rows are never padded, truncated or converted between hands.
 
 ## Action layout
-Each row is one 50 Hz control: the left stage `l_wrist_x, l_wrist_y, l_wrist_z` (metres) and `l_wrist_rx, l_wrist_ry,
-l_wrist_rz` (radians, serial XYZ joints, not a quaternion), the right stage (`r_wrist_x` ... `r_wrist_rz`), then the
-left hand's finger targets and the right hand's, in radians:
+Each row is one 50 Hz control: the 14 Marvin arm joint targets (radians) `SHOULDER_PITCH_L_J1_target,
+SHOULDER_ROLL_L_J2_target, ELBOW_PITCH_L_J3_target, ELBOW_YAW_L_J4_target, WRIST_PITCH_L_J5_target,
+WRIST_YAW_L_J6_target, WRIST_ROLL_L_J7_target`, then the same seven for the right arm (`..._R_J1_target` ...
+`..._R_J7_target`), then the left hand's finger targets and the right hand's, in radians:
 
-- `sharpa`: 56 values, 22 Sharpa Wave finger targets per hand: `l_hand_thumb_CMC_FE` ... `l_hand_pinky_DIP`, then
-  `r_hand_thumb_CMC_FE` ... `r_hand_pinky_DIP`. The right hand is the genuine Sharpa Wave right hand; the left hand is a
+- `sharpa`: 58 values, 22 Sharpa Wave finger targets per hand: `left_thumb_CMC_FE` ... `left_pinky_DIP`, then
+  `right_thumb_CMC_FE` ... `right_pinky_DIP`. The right hand is the genuine Sharpa Wave right hand; the left hand is a
   declared mirror image of it (the right model reflected across its palm's sagittal plane, same joints, ranges and
   force limits), not a separate manufacturer left-hand model.
-- `wuji`: 52 values, 20 Wuji Hand 2.2 finger targets per hand: `l_wuji_l_THJ0..3, l_wuji_l_FFJ0..3, l_wuji_l_MFJ0..3,
+- `wuji`: 54 values, 20 Wuji Hand 2.2 finger targets per hand: `l_wuji_l_THJ0..3, l_wuji_l_FFJ0..3, l_wuji_l_MFJ0..3,
   l_wuji_l_RFJ0..3, l_wuji_l_LFJ0..3`, then the same for `r_wuji_r_` (the manufacturer's left and right models).
 
-Stage targets are offsets from each stage's fixed base, left (0.49, 0.33, 1.15) and right (0.49, -0.33, 1.15): slides
-within +-0.8 m, hinges within +-1.6 rad. Every target must lie within `s.model.actuator_ctrlrange`. Both hands use the
-same stages, ranges, gains and start targets; the frozen start targets are all zero (`task.json` `initial_targets`).
+Arm servos: kp 700 N m/rad, kv 48 N m s/rad, force limits 108 / 108 / 66 / 66 / 18 / 18 / 18 N m (J1 ... J7), no
+gravity compensation (a loaded arm sags unless you correct it). Each hand sits rigidly on its arm's flange (bodies
+`l_wrist_stage` / `r_wrist_stage`; fingers along the flange +z, palm normal +x, thumb +y for the right hand). No IK
+primitive is supplied. Every target must lie within `s.model.actuator_ctrlrange`; the frozen start targets (arm pose
+with the hands above the frame, open fingers) are in `task.json` `initial_targets`.
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 56)` for `sharpa` or `(T, 52)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most 3000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical

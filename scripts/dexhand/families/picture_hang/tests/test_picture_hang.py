@@ -48,18 +48,23 @@ def save(rows, hand="sharpa", **extra):
     return tmp
 
 
-def test_only_stages_and_fingers_are_actuated():
-    for hand, width in (("sharpa", 56), ("wuji", 52)):
+def test_only_arms_and_fingers_are_actuated():
+    from scene import arm_rig
+
+    sharpa = Session()
+    for hand, width in (("sharpa", 58), ("wuji", 54)):
         s = Session(hand=hand)
         m = s.model
         assert m.nu == width == s.action_dim
         assert m.nmocap == 0 and m.neq == 0
         joints = [m.joint(int(j)).name for j in m.actuator_trnid[:, 0]]
-        assert joints[:12] == [f"{side}_wrist_{a}" for side in "lr" for a in ("x", "y", "z", "rx", "ry", "rz")]
+        assert joints[:14] == arm_rig.ARM_JOINTS["left"] + arm_rig.ARM_JOINTS["right"]
         assert not any(j.startswith(("picture", "l_ring", "r_ring")) for j in joints)
         assert m.joint("picture_free").type == mujoco.mjtJoint.mjJNT_FREE
-        # The stages are the same for both hands.
-        assert np.allclose(m.actuator_gainprm[:12, 0], Session().model.actuator_gainprm[:12, 0])
+        # The Marvin arms (servo gains, ranges) are the same for both hands.
+        assert np.allclose(m.actuator_gainprm[:14, 0], sharpa.model.actuator_gainprm[:14, 0])
+        assert np.allclose(m.actuator_ctrlrange[:14], sharpa.model.actuator_ctrlrange[:14])
+        assert s.robot.startswith("marvin-bimanual-")
 
 
 def test_oracle_succeeds_with_slack_and_is_deterministic(oracle, oracle_result):
@@ -85,8 +90,7 @@ def test_nop_and_truncations_fail(oracle, oracle_result):
 def test_drop_mid_carry_fails_fast(oracle):
     s = Session()
     rows = oracle.copy()
-    rows[250:, 1] = s.initial_targets[1] + 0.02
-    rows[250:, 7] = s.initial_targets[7] - 0.02
+    rows[250:] = s.initial_targets  # both arms return to the open start pose mid-carry: the frame is dropped
     r = R.replay(save(rows))
     assert not r["success"] and r["reason"] == "picture_unsupported"
     assert 250 < r["steps"] <= 260 and r["steps"] < len(rows)
@@ -121,9 +125,9 @@ def test_forged_metadata_and_wrong_width_are_rejected(oracle):
     forged = save(oracle[:10], success=np.array(True), state_sha=np.array("x"))
     assert not R.replay(forged)["success"]  # extra members are ignored, the rows decide
     with pytest.raises(Exception):
-        R.load_trajectory(save(oracle, hand="wuji"))  # 56-wide rows labelled wuji
+        R.load_trajectory(save(oracle, hand="wuji"))  # 58-wide rows labelled wuji
     with pytest.raises(Exception):
-        R.load_trajectory(save(oracle[:, :52]))
+        R.load_trajectory(save(oracle[:, :54]))
     bad = save(oracle.copy())
     with zipfile.ZipFile(bad, "a") as z:
         z.writestr("actions", b"shadow")
@@ -155,8 +159,7 @@ def test_wuji_fingers_flex_toward_the_frame():
     for side, sign in (("r", 1.0), ("l", -1.0)):
         site = m.site(f"{side}_wuji_{side}_index_finger_tip").id
         joint = m.actuator_trnid[s.actuator_names.index(f"{side}_wuji_{side}_FFJ0"), 0]
-        mujoco.mj_resetData(m, d)
-        mujoco.mj_forward(m, d)
+        s.reset()  # the arm start pose: both palms face the frame (fingers down)
         before = d.site_xpos[site].copy()
         d.qpos[m.jnt_qposadr[joint]] = 1.0
         mujoco.mj_forward(m, d)
@@ -171,7 +174,7 @@ def test_nan_and_out_of_range_rows_are_bad_trajectories(oracle):
     with pytest.raises(Exception):
         R.load_trajectory(tmp)
     rows = oracle[:20].copy()
-    rows[5, 0] = 5.0  # stage slide target far outside +-0.8 m
+    rows[5, 0] = 5.0  # arm joint target far outside its +-3.11 rad range
     with pytest.raises(R.BadTrajectory):
         R.replay(save(rows))
 
@@ -179,11 +182,12 @@ def test_nan_and_out_of_range_rows_are_bad_trajectories(oracle):
 def test_knock_off_after_engagement_fails_fast():
     """Hang the frame, open the hands, grab it again before the hold completes, lift it off the saddles, pull it
     away from the wall and let go: the episode fails (fell_off_hook) at that moment."""
-    sys.path[:0] = [str(HERE / "tools")]
+    sys.path[:0] = [str(HERE / "tools"), str(HERE.parents[1] / "shared")]
+    import arm_author
     import controller as C
 
-    s = Session()
-    c = C.Controller(s)
+    s = arm_author.proxy(Session(), "sharpa", rest=arm_author.REST)  # old stage rows -> Marvin arm rows (IK)
+    c = C.Controller(s, arm_author.ARM_PARAMS["sharpa"])
     p = c.p
     c.ramp(1.0, "approach", squeeze=p["open_in"], thumb=1.0)
     c.ramp(1.0, "squeeze", squeeze=p["squeeze_in"], curl=p["curl"])

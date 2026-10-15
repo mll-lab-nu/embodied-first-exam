@@ -1,19 +1,19 @@
 """T21 picture-hanging scene: a free 52 x 52 x 6 cm framed print with two passive hinged D-rings, two installed
-brass wall hooks, a console and two dexterous hands, each on its own six-axis wrist stage.
+brass wall hooks, a console and a Tianji Marvin dual-arm robot with a dexterous hand on each arm.
 
 Scene geometry, masses and materials follow the accepted T21 source scene
 (``scripts/scene_expansion/repairs/picture_sharpa/meta_delivery_trajectory_r1/hardware.py`` and ``scene.py``).
 The only physical object that moves is the frame (with its two D-rings on passive hinges); hooks, wall and
 console are static. Nothing is attached to a hand.
 
-Hands: the genuine Sharpa Wave right hand on the right stage and its declared Y-mirror (the same reflection the
-accepted bimanual pot/sweep families use; ``mirror_sharpa``) on the left stage; with ``hand="wuji"`` the shared
-``hands.replace_wave_hands`` swaps each Wave for the genuine right/left Wuji Hand 2.2 under the unchanged stages.
+Robot (wave 3): the shared ``arm_rig.mount_marvin`` stand with two 7-DoF Marvin arms (position servos) stands in
+front of the console, facing the wall; the genuine Sharpa Wave right hand is on the right flange and its declared
+y-mirror on the left flange (``hand="wuji"``: the genuine right/left Wuji Hand 2.2). The flange mount bodies keep
+the old stage names ``l_wrist_stage`` / ``r_wrist_stage`` so that every hand geometry lies below them.
 """
 
 from __future__ import annotations
 
-import copy
 import hashlib
 import importlib.util
 import json
@@ -45,6 +45,24 @@ def _hands_module():
 
 hands = _hands_module()
 
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = HERE.parents[1] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
+arm_rig = _arm_rig_module()
+
 # ------------------------------------------------------------------------------------------------ source geometry
 WIDTH, HEIGHT, DEPTH = 0.52, 0.52, 0.060
 RAIL = 0.010
@@ -57,14 +75,6 @@ START = np.array([0.50, 0.0, 0.72])
 FRAME_MASS = 2.0
 SIDES = ("l", "r")
 SIDE_SIGN = {"l": 1.0, "r": -1.0}  # +y is the viewer's left when facing the wall (+x)
-
-# Wave native frame: fingers +Z, palm normal +X, thumb +Y (right) / -Y (mirrored left).
-# Mount: fingers point down (-z world), palm faces the frame's side rail (toward y = 0), thumb toward the wall (+x).
-MOUNT_MATRIX = {
-    "r": np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, -1.0]]),
-    "l": np.array([[0.0, -1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, -1.0]]),
-}
-
 
 def vec(value):
     return " ".join(f"{float(v):.17g}" for v in np.ravel(value))
@@ -107,73 +117,6 @@ def sharpa_folder(asset_dir=None) -> Path:
         if candidate and (Path(candidate) / "right_hand.xml").is_file():
             return Path(candidate)
     raise AssetError("Sharpa Wave assets not found (set DEXHAND_ASSET_DIR or use the eai-dexhand image)")
-
-
-# ------------------------------------------------------------------------------------------------ hands
-def _numbers(text):
-    return np.array([float(x) for x in text.split()])
-
-
-def _reflect(element):
-    """Reflect local coordinates by S = diag(1, -1, 1) (positions S p, rotations S R S, axial hinge vectors -S a)."""
-    for item in element.iter():
-        if "pos" in item.attrib:
-            item.set("pos", vec(_numbers(item.attrib["pos"]) * (1, -1, 1)))
-        if "quat" in item.attrib:
-            item.set("quat", vec(_numbers(item.attrib["quat"]) * (1, -1, 1, -1)))
-        if "axis" in item.attrib:
-            item.set("axis", vec(_numbers(item.attrib["axis"]) * (-1, 1, -1)))
-        if "fromto" in item.attrib:
-            item.set("fromto", vec(_numbers(item.attrib["fromto"]) * (1, -1, 1, 1, -1, 1)))
-        if "fullinertia" in item.attrib:
-            item.set("fullinertia", vec(_numbers(item.attrib["fullinertia"]) * (1, 1, 1, -1, 1, -1)))
-
-
-def mirror_sharpa(root, parent, side, folder: Path, quat):
-    """Append one 22-actuator Sharpa Wave under ``parent``; ``side == "l"`` is the declared Y-reflection.
-
-    Same construction as ``scripts/everyday_dexterity/hand_models.merge_hand`` (used by the accepted bimanual
-    families): names get the prefix ``<side>_hand_`` (root ``<side>_hand_palm``), velocity feedback becomes
-    dissipative, manufacturer ranges/gains/force limits are unchanged.
-    """
-    source = folder / "right_hand.xml"
-    hand = ET.parse(source).getroot()
-    prefix = side + "_hand_"
-    mesh_dir = source.parent / hand.find("compiler").attrib.get("meshdir", "")
-    names = {item.attrib["name"] for item in hand.iter() if "name" in item.attrib}
-    classes = {item.attrib["class"] for item in hand.findall(".//default") if "class" in item.attrib}
-    mapping = {name: prefix + name.removeprefix("right_") for name in names | classes}
-    mapping["right_hand_C_MC"] = prefix + "palm"
-    refs = {"name", "class", "childclass", "mesh", "material", "joint", "body1", "body2", "geom1", "geom2", "site"}
-    for item in hand.iter():
-        for attr in refs & item.attrib.keys():
-            if item.attrib[attr] in mapping:
-                item.set(attr, mapping[item.attrib[attr]])
-        if item.tag == "mesh" and "file" in item.attrib:
-            item.set("file", str((mesh_dir / item.attrib["file"]).resolve()))
-            if side == "l":
-                scale = _numbers(item.attrib.get("scale", "1 1 1"))
-                item.set("scale", vec(scale * (1, -1, 1)))
-        if item.tag == "general" and "biasprm" in item.attrib:
-            values = _numbers(item.attrib["biasprm"])
-            if len(values) >= 3:
-                values[2] = -abs(values[2])
-                item.set("biasprm", vec(values))
-        if item.tag == "geom" and "fingertip_collision" in item.attrib.get("name", ""):
-            item.set("friction", "1.5 0.005 0.0001")
-    if side == "l":
-        _reflect(hand.find("worldbody"))
-    for section_name in ("default", "asset", "contact", "actuator", "sensor"):
-        section = hand.find(section_name)
-        if section is not None:
-            target = root.find(section_name)
-            if target is None:
-                target = ET.SubElement(root, section_name)
-            target.extend(copy.deepcopy(list(section)))
-    palm = copy.deepcopy(hand.find("worldbody/body"))
-    palm.set("pos", "0 0 0")
-    palm.set("quat", vec(quat))
-    parent.append(palm)
 
 
 # ------------------------------------------------------------------------------------------------ objects
@@ -266,67 +209,74 @@ def make_hooks(world):
 
 
 # ------------------------------------------------------------------------------------------------ build
+HAND_MOUNTS = {"left": "l_wrist_stage", "right": "r_wrist_stage"}
+
+
+def _hand_tweaks(root, hand_id):
+    """The wave-2 Sharpa tweaks of this family: fingertip friction 1.5 and dissipative finger velocity feedback."""
+    if hand_id != "sharpa":
+        return
+    for item in root.iter("geom"):
+        if "fingertip_collision" in item.get("name", ""):
+            item.set("friction", "1.5 0.005 0.0001")
+    for item in root.iter("general"):
+        if "biasprm" in item.attrib:
+            values = _numbers(item.attrib["biasprm"])
+            if len(values) >= 3:
+                values[2] = -abs(values[2])
+                item.set("biasprm", vec(values))
+
+
+def _numbers(text):
+    return np.array([float(x) for x in text.split()])
+
+
 def build(config, hand="sharpa", asset_dir=None):
-    """Compose the frozen scene with the selected genuine hands; returns (model, xml)."""
+    """Compose the frozen scene with the Marvin robot and the selected genuine hands; returns (model, xml)."""
     hand_id = hands.canonical(hand)
     folder = sharpa_folder(asset_dir)
-    root = ET.Element("mujoco", model=f"T21 picture hanging / {hands.info(hand_id)['model']}")
-    node(root, "compiler", angle="radian", autolimits="true")
-    option = node(root, "option", timestep=config["physics_dt"], integrator="implicitfast", cone="elliptic",
-                  impratio=10, iterations=60, gravity=(0, 0, -9.81))
-    del option
+    root = arm_rig.sharpa_root(folder)
+    root.set("model", f"T21 picture hanging / Marvin + {hands.info(hand_id)['model']}")
+    root.find("compiler").set("autolimits", "true")
+    option = root.find("option")
+    for key, value in (("timestep", config["physics_dt"]), ("integrator", "implicitfast"), ("cone", "elliptic"),
+                       ("impratio", 10), ("iterations", 60), ("gravity", "0 0 -9.81")):
+        option.set(key, str(value))
     visual = node(root, "visual")
     node(visual, "global", offwidth=1280, offheight=720)
     node(visual, "quality", shadowsize=4096, offsamples=4)
     node(visual, "headlight", ambient=(0.3, 0.3, 0.3), diffuse=(0.55, 0.55, 0.55), specular=(0.1, 0.1, 0.1))
-    asset = node(root, "asset")
-    world = node(root, "worldbody")
-    node(root, "actuator")
+    asset = root.find("asset")
+    world = root.find("worldbody")
     materials(asset)
     node(world, "geom", name="floor", type="plane", size=(4, 4, 0.05), pos=(0, 0, 0), rgba=(0.47, 0.45, 0.41, 1))
     node(world, "geom", name="wall", type="box", size=(0.025, 2.5, 1.25), pos=(WALL_X + 0.025, 0, 1.25),
          material="wall_paint")
     node(world, "geom", name="console_top", type="box", size=(0.15, 0.19, 0.015), pos=(0.50, 0, START[2] - 0.015),
          material="console_oak", friction=(0.8, 0.005, 0.0001))
-    for i, x in enumerate((0.40, 0.60)):
-        for j, y in enumerate((-0.15, 0.15)):
-            node(world, "geom", name=f"console_leg_{i}{j}", type="box", size=(0.025, 0.025, 0.345),
-                 pos=(x, y, 0.345), material="console_oak")
+    # Wave 3: the console stands on its two rear legs only (a wall-side console), moved 15 mm back (x = 0.615 m) for
+    # clearance. The dual-arm stand's 0.79 m base
+    # plate occupies the floor under the console's front half; the source's front legs (x = 0.40 m) would pass
+    # through it. Top, height and the frame's start are unchanged; the legs are decor (never touched).
+    for j, y in enumerate((-0.15, 0.15)):
+        node(world, "geom", name=f"console_leg_1{j}", type="box", size=(0.025, 0.025, 0.345), pos=(0.615, y, 0.345),
+             material="console_oak")
     make_picture(world)
     make_hooks(world)
     node(world, "light", pos=(0.2, -0.6, 2.0), dir=(0, 0.3, -1), diffuse=(0.8, 0.8, 0.8), castshadow="true")
     node(world, "light", pos=(-0.2, 0.7, 1.6), dir=(1, -0.3, -0.4), diffuse=(0.5, 0.5, 0.5), castshadow="false")
     for name, cam in config["cameras"].items():
         node(world, "camera", name=name, pos=cam["pos"], xyaxes=cam["xyaxes"], fovy=cam["fovy"])
-    stage_cfg = config["stage"]
-    actuator = root.find("actuator")
-    for side in SIDES:
-        stage = node(world, "body", name=f"{side}_wrist_stage", pos=config["stage_base"][side])
-        node(stage, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(1e-5, 1e-5, 1e-5))
-        for i, axis_name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-            slide = i < 3
-            joint = f"{side}_wrist_{axis_name}"
-            node(stage, "joint", name=joint, type="slide" if slide else "hinge", axis=np.eye(3)[i % 3],
-                 range=stage_cfg["slide_range"] if slide else stage_cfg["hinge_range"],
-                 damping=stage_cfg["slide_damping"] if slide else stage_cfg["hinge_damping"], armature=0.02)
-            node(actuator, "position", name=joint + "_act", joint=joint,
-                 kp=stage_cfg["slide_kp"] if slide else stage_cfg["hinge_kp"],
-                 kv=stage_cfg["slide_kv"] if slide else stage_cfg["hinge_kv"], inheritrange=1,
-                 forcerange=stage_cfg["slide_force"] if slide else stage_cfg["hinge_force"])
-        mirror_sharpa(root, stage, side, folder, mat2quat(MOUNT_MATRIX[side]))
-    # Actuator order: left stage (6), right stage (6), left hand fingers, right hand fingers.
-    acts = list(actuator)
-    stage_acts = [a for a in acts if "_wrist_" in a.get("name", "")]
-    finger_acts = [a for a in acts if a not in stage_acts]
-    order = sorted(stage_acts, key=lambda a: SIDES.index(a.get("name")[0]))
-    order += [a for a in finger_acts if a.get("name", "").startswith("l_")]
-    order += [a for a in finger_acts if a.get("name", "").startswith("r_")]
-    for a in acts:
-        actuator.remove(a)
-    actuator.extend(order)
-    if hand_id != "sharpa":
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
-        # replace_wave_hands appends each hand's actuators in model order (left stage first, then right).
+    robot = config["robot_base"]
+    # The stand is raised on a plinth exactly under its base plate (|x|, |y| <= 0.393 m about the base origin): the
+    # plinth top is the stand's floor, base_z - 0.1 (arm_rig convention; the feet reach 0.099 m below the origin).
+    # Visual only: the static stand never collides with static geometry.
+    plinth = robot["pos"][2] - 0.1
+    if plinth > 0:
+        node(world, "geom", name="robot_plinth", type="box", size=(0.393, 0.393, plinth / 2),
+             pos=(robot["pos"][0], robot["pos"][1], plinth / 2), rgba=(0.30, 0.31, 0.32, 1), contype=0, conaffinity=0)
+    arm_rig.mount_marvin(root, base_pos=robot["pos"], base_yaw=robot["yaw"], hand=hand_id, active=("left", "right"),
+                         sharpa_folder=folder, mount_names=HAND_MOUNTS)
+    _hand_tweaks(root, hand_id)
     xml = ET.tostring(root, encoding="unicode")
     return mujoco.MjModel.from_xml_string(xml), xml

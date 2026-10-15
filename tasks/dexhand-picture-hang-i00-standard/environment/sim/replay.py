@@ -12,8 +12,8 @@ import numpy as np
 from runtime import TASK_ID, Session
 from scene import hands
 
-# Two wrist stages (6 each) + both hands' finger actuators (22 per Sharpa Wave, 20 per Wuji Hand 2.2).
-WIDTHS = {"sharpa": 56, "wuji": 52}
+# Two Marvin arms (7 joint targets each) + both hands' finger actuators (22 per Sharpa Wave, 20 per Wuji Hand 2.2).
+WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
 MAX_BYTES = 64_000_000
 
@@ -39,7 +39,7 @@ def overlay(frame, status, hand_label, phase=""):
     label = "PASS" if status["success"] else ("FAIL: " + status["reason"] if status["failed"] else "IN PROGRESS")
     draw.rectangle((0, 0, frame.shape[1], round(70 * scale)), fill=(28, 34, 38))
     draw.text((round(16 * scale), round(8 * scale)),
-              f"{hand_label} x2 | hang picture on two hooks | {label} | t={status['steps'] * 0.02:5.2f}s {phase}",
+              f"Marvin + {hand_label} x2 | hang picture on two hooks | {label} | t={status['steps'] * 0.02:5.2f}s {phase}",
               font=font, fill="white")
     shares = f["hook_load_share"]
     draw.text((round(16 * scale), round(38 * scale)),

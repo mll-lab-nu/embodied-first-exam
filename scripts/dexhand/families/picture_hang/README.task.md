@@ -2,7 +2,8 @@
 {{TASK_TEXT}}
 
 ## Difficulty
-A 2 kg, 52 cm frame has to be lifted and carried by two coordinated hands without dropping or tipping it, and both of
+A 2 kg, 52 cm frame has to be lifted and carried by two coordinated arms and hands without dropping or tipping it
+(no arm link may touch anything), and both of
 its passive D-rings (18 x 20 mm loops of 2 mm wire, 3 mm behind the frame's back) have to be passed over two 6 mm hook
 saddles at the same time: the clearance between each hook's upturned lip and the wall is about 1 cm, the rings sit
 behind the frame where cameras cannot see them well, and the frame's back face meets the hook lips just as the rings
@@ -11,15 +12,14 @@ hanging the frame from one hook, or leaving the rings on top of the lips is a fa
 credit.
 
 ## Reference solution
-`solution/trajectory.npz` replays a validated Sharpa Wave trajectory (813 controls; the replay ends at success after
-613). `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory (821 controls, success after 621), which
-the oracle uses when the run selects `wuji`. Both were recorded from an authoring controller in the family folder
-(`scripts/dexhand/families/picture_hang/tools/controller.py`) that reads the simulator state and commands only stage and
-finger targets: the fingertips and thumbs squeeze the side rails above the frame's centre of mass, the stages lift the
-frame, carry it to the wall with the ring pivots just below the hook saddles, slide the rings over the saddles, lower
-until the hooks carry the frame, open the hands and withdraw. It never sets an object pose or applies an object force,
-and it is never copied into the agent's environment or image. The standard oracle submits the same rows through the
-public client.
+`solution/trajectory.npz` replays a validated Sharpa Wave trajectory on the dual-arm robot (869 controls; the replay
+ends at success after 669). It was recorded from the authoring controller in the family folder
+(`scripts/dexhand/families/picture_hang/tools/controller.py`, driven through `tools/arm_author.py`), which reads the
+simulator state and converts its hand-pose commands into the 14 arm joint targets by inverse kinematics: the two palms
+squeeze the top of the side rails, the arms lift the frame, carry it to the wall with the ring pivots just below the
+hook saddles, slide the rings over the saddles, lower until the hooks carry the frame, open the hands and withdraw. It
+commands only arm and finger targets, never sets an object pose or applies an object force, and it is never copied
+into the agent's environment or image. The standard oracle submits the same rows through the public client.
 
 ## Verification
 {{MODE}} mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
@@ -44,6 +44,9 @@ to MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.
 mirror image of the right model (positions, rotations, hinge axes, inertial frames and mesh scales reflected), the same
 construction as the dual-arm DexHand families, not a separate manufacturer left-hand model. The Wuji Hand 2.2 models
 (`hand2/hand2_2`, left and right) are pinned to wuji-technology/wuji-description commit
-`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same stages with their vendor joints, actuators
-and contact geometry unchanged. The wrist stages are positioning mechanisms, not a model of a commercial arm; this is
-bimanual hanging feasibility, not a full-arm or zero-shot claim.
+`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same flanges with their vendor joints, actuators
+and contact geometry unchanged. The robot is the Tianji Marvin dual-arm stand of the accepted pot_shelf_transfer family (two
+7-joint arms, position servos kp 700 N m/rad, kv 48, force limits 108/108/66/66/18/18/18 N m, Tianji meshes pinned in
+the image), standing on a plinth in front of the console (which stands on its two rear legs so that the stand's base plate fits
+under its front half); each hand sits rigidly on its arm's flange. This is a
+simulated bimanual hanging task, not a zero-shot hardware claim.

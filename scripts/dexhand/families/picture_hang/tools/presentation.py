@@ -42,9 +42,12 @@ APPROVED = {  # the approved T21 scene film's presentation settings (its export 
         {"name": "Ceiling bounce", "offset": [0.0, -0.2, 1.6], "energy": 35.2, "size": 1.3, "color": [1, 1, 1]},
     ],
 }
-MAIN = {"position": [-1.15, -0.85, 1.48], "target": [0.59, 0, 0.99], "lens": 32}
-HOOK_L = {"position": [0.735, 0.365, 1.405], "target": [0.734, 0.255, 1.382], "lens": 50}
-FINAL = {"position": [-0.8, -0.63, 1.38], "target": [0.62, 0, 1.12], "lens": 37}
+# Wave 3 (Marvin arms): the robot stands between the old main camera and the frame, so the main and final views look
+# over the robot's right shoulder from the right-front, and the hook close-up looks along the wall from outside the
+# left hand.
+MAIN = {"position": [-0.62, -1.95, 1.62], "target": [0.47, 0, 1.08], "lens": 34}
+HOOK_L = {"position": [0.735, 0.52, 1.40], "target": [0.734, 0.255, 1.382], "lens": 50}
+FINAL = {"position": [-0.25, -1.55, 1.50], "target": [0.62, 0, 1.15], "lens": 36}
 WALL = {"rgba": [0.65, 0.68, 0.63, 1], "roughness": 0.82, "bump": {"scale": 700, "strength": 0.1, "distance": 6e-05}}
 OAK = {"rgba": [0.45, 0.29, 0.17, 1], "roughness": 0.38, "bump": {"scale": 160, "strength": 0.2, "distance": 0.00015}}
 FRAME = {"rgba": [0.92, 0.915, 0.89, 1], "roughness": 0.28, "coat": 0.15,
@@ -76,9 +79,9 @@ def visual_material(name):
 
 def camera_for(step, success_step):
     """Main view; the left hook close-up from the wall gap while the rings go over the saddles; final view."""
-    if 440 <= step < 545:
+    if 420 <= step < 560:
         return HOOK_L
-    if step >= 545:
+    if step >= 560:
         return FINAL
     return MAIN
 
@@ -174,7 +177,7 @@ def export(trajectory, directory, stride=2):
         "scripted_object_motion": False,
         "probe_only": False,
         "hand": session.hand,
-        "hand_label": session.hand_info["model"] + " x2",
+        "hand_label": "Marvin arms + " + session.hand_info["model"] + " x2",
         "stage_names": ["frame on the console", "lifted, carrying to the wall", "both D-rings on the hooks",
                         "released, hanging"],
         "playback_speed": 1.0,

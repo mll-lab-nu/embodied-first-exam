@@ -2,9 +2,8 @@
 
 {{TASK_TEXT}}
 
-You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
-serial revolute joints, no arm). The stages and the fingers are position actuated in the physics engine under native
-force bounds; the frame moves only through contact, gravity and its two passive ring hinges, so lifting, carrying,
+You control a fixed dual-arm robot (Tianji Marvin: two 7-joint arms on a stand) with a dexterous hand on each wrist. The arm joints and the fingers are position actuated in the physics engine under native force bounds;
+the frame moves only through contact, gravity and its two passive ring hinges, so lifting, carrying,
 hooking and releasing all require physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
 
 ## Scene (world frame: metres, z up, x pointing into the wall)
@@ -17,27 +16,33 @@ hooking and releasing all require physical contact. The controller runs at 50 Hz
   frame's y axis at frame-local (0.033, +-0.255, 0.478) (3 mm behind the back face, on the side rails) and can swing
   from upright (0 rad) up to 1 rad toward the wall; its D loop (2 mm brass wire) is 18 mm wide and 20 mm tall. Felt
   bumpers sit on the back of the bottom corners.
-- The two hands hang palm-inward beside the frame's side rails, fingers pointing down, thumbs toward the wall.
+- The robot stand faces the wall (+x) in front of the console, its base origin at (0.18, 0.00, 0.20) (on a plinth;
+  shoulders 1.121 m above the base origin, at y = +-0.2215). Only the hands may touch anything: any contact of an arm, torso or stand
+  link with the frame, the hooks, the wall, the console, the floor or the other hand ends the episode (`robot_collision`).
+- At the start both hands hang palm-inward above the frame's side rails, fingers pointing down, thumbs toward the wall.
 
 {{HANDS}}
 ## Action layout
-Each row is one 50 Hz control: the left stage `l_wrist_x, l_wrist_y, l_wrist_z` (metres) and `l_wrist_rx, l_wrist_ry,
-l_wrist_rz` (radians, serial XYZ joints, not a quaternion), the right stage (`r_wrist_x` ... `r_wrist_rz`), then the
-left hand's finger targets and the right hand's, in radians:
+Each row is one 50 Hz control: the 14 Marvin arm joint targets (radians) `SHOULDER_PITCH_L_J1_target,
+SHOULDER_ROLL_L_J2_target, ELBOW_PITCH_L_J3_target, ELBOW_YAW_L_J4_target, WRIST_PITCH_L_J5_target,
+WRIST_YAW_L_J6_target, WRIST_ROLL_L_J7_target`, then the same seven for the right arm (`..._R_J1_target` ...
+`..._R_J7_target`), then the left hand's finger targets and the right hand's, in radians:
 
-- `sharpa`: 56 values, 22 Sharpa Wave finger targets per hand: `l_hand_thumb_CMC_FE` ... `l_hand_pinky_DIP`, then
-  `r_hand_thumb_CMC_FE` ... `r_hand_pinky_DIP`. The right hand is the genuine Sharpa Wave right hand; the left hand is a
+- `sharpa`: 58 values, 22 Sharpa Wave finger targets per hand: `left_thumb_CMC_FE` ... `left_pinky_DIP`, then
+  `right_thumb_CMC_FE` ... `right_pinky_DIP`. The right hand is the genuine Sharpa Wave right hand; the left hand is a
   declared mirror image of it (the right model reflected across its palm's sagittal plane, same joints, ranges and
   force limits), not a separate manufacturer left-hand model.
-- `wuji`: 52 values, 20 Wuji Hand 2.2 finger targets per hand: `l_wuji_l_THJ0..3, l_wuji_l_FFJ0..3, l_wuji_l_MFJ0..3,
+- `wuji`: 54 values, 20 Wuji Hand 2.2 finger targets per hand: `l_wuji_l_THJ0..3, l_wuji_l_FFJ0..3, l_wuji_l_MFJ0..3,
   l_wuji_l_RFJ0..3, l_wuji_l_LFJ0..3`, then the same for `r_wuji_r_` (the manufacturer's left and right models).
 
-Stage targets are offsets from each stage's fixed base, left (0.49, 0.33, 1.15) and right (0.49, -0.33, 1.15): slides
-within +-0.8 m, hinges within +-1.6 rad. Every target must lie within `s.model.actuator_ctrlrange`. Both hands use the
-same stages, ranges, gains and start targets; the frozen start targets are all zero (`task.json` `initial_targets`).
+Arm servos: kp 700 N m/rad, kv 48 N m s/rad, force limits 108 / 108 / 66 / 66 / 18 / 18 / 18 N m (J1 ... J7), no
+gravity compensation (a loaded arm sags unless you correct it). Each hand sits rigidly on its arm's flange (bodies
+`l_wrist_stage` / `r_wrist_stage`; fingers along the flange +z, palm normal +x, thumb +y for the right hand). No IK
+primitive is supplied. Every target must lie within `s.model.actuator_ctrlrange`; the frozen start targets (arm pose
+with the hands above the frame, open fingers) are in `task.json` `initial_targets`.
 
 ## Deliverable
-Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 56)` for `sharpa` or `(T, 52)`
+Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most {{MAX_ROWS}} rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
 hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical

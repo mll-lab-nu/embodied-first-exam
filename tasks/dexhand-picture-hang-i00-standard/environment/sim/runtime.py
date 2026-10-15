@@ -1,7 +1,8 @@
-"""picture_hang: two dexterous hands hang a 2 kg framed print on two wall hooks (actuator-only physics).
+"""picture_hang: a dual-arm robot with two dexterous hands hangs a 2 kg framed print on two wall hooks (actuator-only
+physics).
 
 One ``step(row)`` applies the row's position targets for ``substeps`` physics steps of ``physics_dt`` (50 Hz control).
-Only the two six-axis wrist stages and the two hands' finger servos act; the frame and its passive D-rings move only
+Only the robot's position servos (two 7-joint Marvin arms and the two hands' fingers) act; the frame and its passive D-rings move only
 through contact, gravity and their passive hinges. The verdict (``checker.Checker``) is evaluated from simulator
 state after every control: ordered stages, fail-fast failures, terminal released hold.
 """
@@ -25,8 +26,8 @@ TASK_ID = "picture_hang"
 CONFIG_PATH = Path(__file__).with_name("task.json")
 STATE = mujoco.mjtState.mjSTATE_INTEGRATION
 # task.json fields that define the physics and the verdict (hashed into state_sha); texts and cameras are not.
-PHYSICS_KEYS = ("physics_dt", "control_dt", "max_steps", "stage", "stage_base", "start", "initial_targets",
-                "predicate")
+PHYSICS_KEYS = ("physics_dt", "control_dt", "max_steps", "robot_base", "start", "initial_targets", "predicate")
+ROBOTS = {"sharpa": "marvin-bimanual-sharpa-wave", "wuji": "marvin-bimanual-wuji-hand-2.2"}
 
 
 class Session:
@@ -41,7 +42,7 @@ class Session:
         self.spec = self.config
         self.hand = hands.selected(hand)
         self.hand_info = hands.info(self.hand)
-        self.robot = self.hand_info["robot"] + "-floating-bimanual"
+        self.robot = ROBOTS[self.hand]
         self.model, self.xml = build(self.config, self.hand, asset_dir)
         self.data = mujoco.MjData(self.model)
         self.action_dim = int(self.model.nu)
@@ -51,7 +52,7 @@ class Session:
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
-        self.tcp_bodies = [self.model.body(f"{s}_hand_palm").name for s in ("l", "r")]
+        self.tcp_bodies = ["l_wrist_stage", "r_wrist_stage"]  # flange mount bodies (hand roots)
         self.ctrl_lo, self.ctrl_hi = self.model.actuator_ctrlrange.T.copy()
         init = self.config["initial_targets"][self.hand]
         targets = np.zeros(self.action_dim)

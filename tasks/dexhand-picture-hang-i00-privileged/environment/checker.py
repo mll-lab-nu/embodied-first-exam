@@ -10,7 +10,8 @@ Ordered stages (latched in order):
                   floor, level (|roll| <= ``max_roll_deg``), upright (tilt <= ``max_tilt_rad``) and still (COM speed
                   <= ``max_speed_m_s``, angular speed <= ``max_angular_speed_rad_s``).
 Fail-fast (permanent; checked after every physics substep and at the end of every control): see
-``Checker.failure_reason`` and ``Checker.substep``.
+``Checker.failure_reason`` and ``Checker.substep`` (wave 3 adds ``robot_collision``: any contact of a Marvin arm,
+torso or stand link with anything).
 """
 
 from __future__ import annotations
@@ -48,6 +49,9 @@ class Checker:
                 name = m.body(parent).name
                 if name in tags:
                     owner[b] = tags[name]
+                    break
+                if name == "base_link":  # Marvin stand, torso and arm links (everything above the hand mounts)
+                    owner[b] = "robot"
                     break
                 parent = int(m.body_parentid[parent])
         self.body_owner = owner
@@ -111,6 +115,7 @@ class Checker:
         contacts = set()
         hook_load = {"l": 0.0, "r": 0.0}
         hand_contacts = 0
+        robot_contacts = []
         f6 = np.zeros(6)
         for i in range(data.ncon):
             c = data.contact[i]
@@ -119,6 +124,8 @@ class Checker:
             k1, k2 = self.geom_kind[c.geom1], self.geom_kind[c.geom2]
             contacts.add((k1, k2))
             contacts.add((k2, k1))
+            if "robot" in (k1, k2):
+                robot_contacts.append(f"{m.geom(c.geom1).name or k1}|{m.geom(c.geom2).name or k2}")
             if (k1 in self.picture_kinds and k2.startswith("hand")) or (k2 in self.picture_kinds and k1.startswith("hand")):
                 hand_contacts += 1
             for side in SIDES:
@@ -165,12 +172,17 @@ class Checker:
             "touch_floor": picture_touches("floor"),
             "touch_wall": picture_touches("wall"),
             "touch_hand": {s: picture_touches("hand_" + s) for s in SIDES},
+            "robot_contacts": robot_contacts,
         }
 
     # ------------------------------------------------------------------ evaluation (once per control)
     def failure_reason(self, f, include_unsupported=True):
         p = self.p
         origin = np.asarray(f["origin"])
+        if f["robot_contacts"]:
+            # Only the hands may touch anything: an arm, torso or stand link touching the frame, a hook, the wall,
+            # the console, the floor or the other arm's hand is a robot collision.
+            return "robot_collision", "arm/stand link contact: " + ", ".join(sorted(set(f["robot_contacts"]))[:4])
         if f["touch_floor"]:
             return "picture_dropped", "frame touches the floor"
         if np.any(origin < self.ws_lo) or np.any(origin > self.ws_hi):

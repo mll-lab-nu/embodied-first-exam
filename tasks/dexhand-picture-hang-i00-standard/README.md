@@ -5,17 +5,18 @@
 | Benchmark | DexHand |
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `dexhand-picture-hang-i00-privileged` |
-| Simulator / robot | `mujoco` / `sharpa-wave-floating-bimanual` |
+| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `picture_hang` |
-| Oracle | `full` — solution/trajectory.npz: 813 Sharpa Wave rows (success after 613 controls) and solution/wuji/trajectory.npz: 821 Wuji Hand 2.2 rows (success after 621), both recorded from the authoring controller tools/controller.py (motor targets only). Each replays to success in two fresh processes with identical state hashes, also with float32-rounded rows. Harbor 0.23 on 2026-10-14: oracle 1 / nop 0 in both modes (standard: live = replay), Wuji oracle 1 in both modes, standard Wuji nop 0. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (821 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
+| Oracle | `full` — solution/trajectory.npz: 869 Sharpa Wave rows on the Marvin dual-arm robot (success after 669 controls, 200 rows of slack), recorded from the authoring controller tools/controller.py through tools/arm_author.py (IK to arm joint targets; motor targets only). Two fresh-process replays end with identical state hashes; float32-rounded rows also succeed. Wave-3 port of the 2026-10-14 floating-stage oracle. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-Hang the framed picture on the two wall hooks. The free 2.0 kg frame (52 x 52 x 6 cm) stands upright on a console; two brass picture hooks are installed on the wall and two D-rings on passive hinges are screwed to the back of the frame. Lift the frame off the console with both hands, engage BOTH D-rings on their matching hooks (left ring on the left hook, right ring on the right hook), then let go: the picture must hang still and level from both hooks with no hand touching it. Success requires, in this order: (1) lift-off: the frame origin (the centre of its bottom edge) at least 0.02 m above its start height z = 0.72 m and no contact with the console; (2) engagement: both rings threaded on their own hooks (the hook's load saddle passes through the ring's D loop, with the ring between the hook's upturned lip and the wall; a ring resting on top of the lip does not count) and each ring touching its hook; (3) a released hang for 50 consecutive controls (1 s): both rings threaded, each hook carrying at least 20 % of the frame's weight vertically through its ring and both hooks together at least 85 %, no hand touching the frame, no frame contact with the console or the floor, the frame's top edge level within 3 degrees, its tilt from upright at most 0.10 rad, its centre-of-mass speed at most 0.02 m/s and its angular speed at most 0.15 rad/s. The episode ends with success at that moment; one engaged hook, or rings left on the hook lips, never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the frame touches the floor, when its origin leaves the workspace box x in [0.20, 0.76] m, y in [-0.45, 0.45] m, z in [0.60, 1.30] m, when it tilts more than 0.6 rad from upright, when after lift-off its origin falls more than 0.01 m below its start height, when after both rings were engaged no hand touches the frame while a ring is not threaded (it fell off a hook), or when the physics becomes unstable; and when after lift-off the frame is held by nothing (no hand contact, no console contact and not hanging threaded on both hooks with both rings touching them): at the end of any control, or at any substep where its centre of mass is also moving down faster than 0.2 m/s (dropped, even if caught again, released early, dangling from one hook or resting on the hook lips). Later actions cannot undo a failure. Only robot actuator targets are allowed; no grasp welds, scripted object motion or forces on the frame. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+Hang the framed picture on the two wall hooks. The free 2.0 kg frame (52 x 52 x 6 cm) stands upright on a console; two brass picture hooks are installed on the wall and two D-rings on passive hinges are screwed to the back of the frame. Lift the frame off the console with both hands, engage BOTH D-rings on their matching hooks (left ring on the left hook, right ring on the right hook), then let go: the picture must hang still and level from both hooks with no hand touching it. Success requires, in this order: (1) lift-off: the frame origin (the centre of its bottom edge) at least 0.02 m above its start height z = 0.72 m and no contact with the console; (2) engagement: both rings threaded on their own hooks (the hook's load saddle passes through the ring's D loop, with the ring between the hook's upturned lip and the wall; a ring resting on top of the lip does not count) and each ring touching its hook; (3) a released hang for 50 consecutive controls (1 s): both rings threaded, each hook carrying at least 20 % of the frame's weight vertically through its ring and both hooks together at least 85 %, no hand touching the frame, no frame contact with the console or the floor, the frame's top edge level within 3 degrees, its tilt from upright at most 0.10 rad, its centre-of-mass speed at most 0.02 m/s and its angular speed at most 0.15 rad/s. The episode ends with success at that moment; one engaged hook, or rings left on the hook lips, never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the frame touches the floor, when its origin leaves the workspace box x in [0.20, 0.76] m, y in [-0.45, 0.45] m, z in [0.60, 1.30] m, when it tilts more than 0.6 rad from upright, when after lift-off its origin falls more than 0.01 m below its start height, when after both rings were engaged no hand touches the frame while a ring is not threaded (it fell off a hook), when an arm, torso or stand link of the robot touches anything (only the hands may make contact), or when the physics becomes unstable; and when after lift-off the frame is held by nothing (no hand contact, no console contact and not hanging threaded on both hooks with both rings touching them): at the end of any control, or at any substep where its centre of mass is also moving down faster than 0.2 m/s (dropped, even if caught again, released early, dangling from one hook or resting on the hook lips). Later actions cannot undo a failure. Only the robot's actuator targets (14 arm joints and the fingers of both hands) are allowed; no grasp welds, scripted object motion or forces on the frame. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
 
 ## Difficulty
-A 2 kg, 52 cm frame has to be lifted and carried by two coordinated hands without dropping or tipping it, and both of
+A 2 kg, 52 cm frame has to be lifted and carried by two coordinated arms and hands without dropping or tipping it
+(no arm link may touch anything), and both of
 its passive D-rings (18 x 20 mm loops of 2 mm wire, 3 mm behind the frame's back) have to be passed over two 6 mm hook
 saddles at the same time: the clearance between each hook's upturned lip and the wall is about 1 cm, the rings sit
 behind the frame where cameras cannot see them well, and the frame's back face meets the hook lips just as the rings
@@ -24,17 +25,14 @@ hanging the frame from one hook, or leaving the rings on top of the lips is a fa
 credit.
 
 ## Reference solution
-`solution/trajectory.npz` replays a validated Sharpa Wave trajectory (813 controls; the replay ends at success after
-613). `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory (821 controls, success after 621), which
-the oracle uses when the run selects `wuji`. Both were recorded from an authoring controller in the family folder
-(`scripts/dexhand/families/picture_hang/tools/controller.py`) that reads the simulator state and commands only stage and
-finger targets: the fingertips and thumbs squeeze the side rails above the frame's centre of mass, the stages lift the
-frame, carry it to the wall with the ring pivots just below the hook saddles, slide the rings over the saddles, lower
-until the hooks carry the frame, open the hands and withdraw. It never sets an object pose or applies an object force,
-and it is never copied into the agent's environment or image. The standard oracle submits the same rows through the
-public client.
-
-Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (821 rows of motor targets, physical contact only). When the sim service runs the Wuji Hand 2.2 (`DEXHAND_HAND=wuji`, `spec()["hand"]`), `solve.sh` submits these rows as float64 instead of the Sharpa Wave rows.
+`solution/trajectory.npz` replays a validated Sharpa Wave trajectory on the dual-arm robot (869 controls; the replay
+ends at success after 669). It was recorded from the authoring controller in the family folder
+(`scripts/dexhand/families/picture_hang/tools/controller.py`, driven through `tools/arm_author.py`), which reads the
+simulator state and converts its hand-pose commands into the 14 arm joint targets by inverse kinematics: the two palms
+squeeze the top of the side rails, the arms lift the frame, carry it to the wall with the ring pivots just below the
+hook saddles, slide the rings over the saddles, lower until the hooks carry the frame, open the hands and withdraw. It
+commands only arm and finger targets, never sets an object pose or applies an object force, and it is never copied
+into the agent's environment or image. The standard oracle submits the same rows through the public client.
 
 ## Verification
 standard mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
@@ -74,9 +72,12 @@ to MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.
 mirror image of the right model (positions, rotations, hinge axes, inertial frames and mesh scales reflected), the same
 construction as the dual-arm DexHand families, not a separate manufacturer left-hand model. The Wuji Hand 2.2 models
 (`hand2/hand2_2`, left and right) are pinned to wuji-technology/wuji-description commit
-`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same stages with their vendor joints, actuators
-and contact geometry unchanged. The wrist stages are positioning mechanisms, not a model of a commercial arm; this is
-bimanual hanging feasibility, not a full-arm or zero-shot claim.
+`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same flanges with their vendor joints, actuators
+and contact geometry unchanged. The robot is the Tianji Marvin dual-arm stand of the accepted pot_shelf_transfer family (two
+7-joint arms, position servos kp 700 N m/rad, kv 48, force limits 108/108/66/66/18/18/18 N m, Tianji meshes pinned in
+the image), standing on a plinth in front of the console (which stands on its two rear legs so that the stand's base plate fits
+under its front half); each hand sits rigidly on its arm's flange. This is a
+simulated bimanual hanging task, not a zero-shot hardware claim.
 
 ### Change Log
 - 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.

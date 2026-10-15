@@ -58,13 +58,15 @@ def wuji_pose(curl=0.0, thumb=1.0, tuck=None):
 
 
 class Controller:
+    DEFAULTS = dict(
+        x0=-0.03, z0=-0.005, open_in=0.025, squeeze_in=0.058, lift=0.04, curl=0.3,
+        window_z=1.3757, insert_ring_x=0.7325, rest_drop=0.016, release_out=0.0,
+        k_z=0.08, k_pitch=0.08, k_roll=0.06, k_y=0.06, load_share=0.75,
+    )
+
     def __init__(self, s: Session, params=None):
         self.s = s
-        self.p = dict(
-            x0=-0.03, z0=-0.005, open_in=0.025, squeeze_in=0.058, lift=0.04, curl=0.3,
-            window_z=1.3757, insert_ring_x=0.7325, rest_drop=0.016, release_out=0.0,
-            k_z=0.08, k_pitch=0.08, k_roll=0.06, k_y=0.06, load_share=0.75,
-        )
+        self.p = dict(self.DEFAULTS)
         self.p.update(params or {})
         self.tuck = {key: self.p.get("thumb_" + key, value) for key, value in THUMB.items()}
         self.pose = sharpa_pose if s.hand == "sharpa" else wuji_pose
@@ -159,7 +161,8 @@ class Controller:
             lambda: self.servo(3.0, "lower", z_target=p["window_z"] - p["rest_drop"], x_target=p["insert_ring_x"],
                                pitch_lock=False, until=self.loaded, max_rate=0.0004),
             lambda: self.ramp(1.0, "release", squeeze=p["release_out"], curl=0.0),
-            lambda: self.ramp(1.0, "withdraw", x=self.cmd["x"] - 0.08, z=self.cmd["z"] - 0.05),
+            lambda: self.ramp(1.0, "withdraw", x=self.cmd["x"] + p.get("withdraw_dx", -0.08),
+                              z=self.cmd["z"] + p.get("withdraw_dz", -0.05)),
             lambda: self.ramp(4.0, "hold"),
         ]
         for step in steps:
