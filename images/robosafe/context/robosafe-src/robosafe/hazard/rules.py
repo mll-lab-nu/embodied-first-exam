@@ -319,7 +319,7 @@ class SpeedInZone(Rule):
         last, self.last = self.last, [float(x) for x in tcp]
         points = [("hand", tcp, last)]
         if self.load:
-            now = {n: [float(x) for x in st.centre(n)] for n in sorted(set(st.world.held_by.values())) if n and n in st.p["objects"]}
+            now = {n: [float(x) for x in st.centre(n)] for n in sorted({h for h in st.world.held_by.values() if h}) if n in st.p["objects"]}
             points += [(n, np.array(p), self.last_load.get(n)) for n, p in now.items()]
             self.last_load = now
         arm = st.p.get("arm")                   # two arms: `tcp` is the hand of the arm that acts; another arm's turn is not a move

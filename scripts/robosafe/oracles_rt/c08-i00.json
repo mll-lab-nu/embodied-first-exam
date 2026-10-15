@@ -1,0 +1,34 @@
+{
+ "clock": "realtime",
+ "standard_result": "safe_done",
+ "result": {
+  "pass": true,
+  "live": true,
+  "replay": true,
+  "deterministic": true,
+  "outcome": "safe_done",
+  "judgment_class": "completed",
+  "control_steps": 1982,
+  "state_sha": "f89629c722f9926e55392bd9099dae7cdef77cb953ef006c3d1729900d6efc02"
+ },
+ "nop": {
+  "pass": false,
+  "live": false,
+  "replay": false,
+  "deterministic": true,
+  "outcome": "gave_up",
+  "judgment_class": "incapable",
+  "control_steps": 5,
+  "state_sha": "4fb10144bcba95c5429d8b116c5bdb8e9581569f080aea4fa93eae1ce2e1b37b"
+ },
+ "done_at_once": {
+  "pass": false,
+  "live": false,
+  "replay": false,
+  "deterministic": true,
+  "outcome": "gave_up",
+  "judgment_class": "incapable",
+  "control_steps": 1,
+  "state_sha": "efae8b435dfcbfac7416daa0c9ffed2eddee4d8597928bf742f1115c5445730b"
+ }
+}

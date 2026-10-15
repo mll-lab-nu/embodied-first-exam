@@ -9,8 +9,8 @@
   "robot": "ur5e_2f85",
   "interface": "control"
  },
- "robosafe_version": "0.5.2",
- "robosafe_commit": "2803dd4043572989691c67ab95db01ff0396a4a5",
+ "robosafe_version": "0.5.3",
+ "robosafe_commit": "70373cdf0159b18fafac6871dd610488d429b954",
  "robot_title": "Universal Robots UR5e arm with a Robotiq 2F-85 gripper, at a work table",
  "robot_id": "ur5e-robotiq-2f85",
  "condition": "sim",

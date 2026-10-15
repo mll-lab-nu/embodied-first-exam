@@ -1,0 +1,38 @@
+{
+ "caps": {
+  "main": {
+   "cpus": 4.0,
+   "memory_gb": 8.0,
+   "pids": 8192
+  },
+  "sim": {
+   "cpus": 6.0,
+   "memory_gb": 8.0,
+   "pids": 8192
+  }
+ },
+ "disk_exclude": [],
+ "disk_paths": [
+  "/app",
+  "/tmp",
+  "/root"
+ ],
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/1",
+ "gpu": false,
+ "max_disk_gb": 10.0,
+ "max_gpu_memory_gb": 0.0,
+ "max_memory_gb": 6.0,
+ "max_processes": 512,
+ "mode": "standard",
+ "scope": "agent",
+ "scope_services": [
+  "main"
+ ],
+ "sustain_sec": 60.0,
+ "task": "cell-a27-i05-standard",
+ "tick_sec": 5,
+ "trial_max_gpu_memory_gb": 0.0,
+ "trial_max_memory_gb": 14.0,
+ "window_sec": 120.0
+}
