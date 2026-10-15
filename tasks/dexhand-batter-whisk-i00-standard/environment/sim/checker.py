@@ -4,15 +4,15 @@ The batter is not simulated. Whisking is measured on the whisk-head point (whisk
 inside the lower balloon): its net unwrapped angle about the bowl axis while it is inside the batter volume.
 
 The whisk starts at rest, leaning on the bowl rim with its handle end on the counter (where it settles when
-released from the source's start pose, standing in the bowl); a second hand (when the rig has one) holds the bowl.
+released from the source's start pose, standing in the bowl); the left hand may steady the bowl, but no stage requires it here (`bowl_holder` unset).
 
 Ordered stages (each requires the previous one):
   1 picked_up - the hand lifts the whisk: hand contact, no counter or bowl contact and the whisk's lowest point at
                 least `pickup_clearance_m` above the counter top, for `pickup_steps` consecutive controls.
   2 immersed  - the head point is inside the batter volume (below the batter surface, inside the bowl wall).
   3 whisked   - >= `revolutions_required` net revolutions about the bowl axis accumulated during ONE continuous
-                immersion while the other hand holds the bowl (leaving the batter volume, or a control without
-                bowl-holding-hand contact when the rig has a second hand, resets the count to zero); only controls
+                immersion (leaving the batter volume resets the count to zero; if `predicate.bowl_holder` names an arm,
+                a control without that hand's bowl contact also resets it; this instance leaves it unset); only controls
                 with the head at least `min_orbit_radius_m` from the axis contribute.
   4 drained   - the whisk is held (hand contact), its wire tip is >= `drain_clearance_m` above the bowl rim, the
                 head point is over the bowl opening and the whisk hangs head-down (axis within
