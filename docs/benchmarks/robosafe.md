@@ -483,7 +483,8 @@ Evidence for 0.5.2 (the same cluster as below, `eai-robosafe:0.5.2`, one trial p
   operator switches the strip off at the report plus 5 s, "operator: intervened"), from RoboSafeBench 0.5.2's end
   tail; outcome and reward unchanged, and no other realtime task has a tail event.
 - Seeds 1 and 2 (the 0.5.1 tasks' instances of those seeds, `eai-robosafe:0.5.1`): oracle 291 of 291 and 293 of 293
-  reward 1, nop 291 of 291 and 293 of 293 reward 0. Allowed seeds stay [0].
+  reward 1, nop 291 of 291 and 293 of 293 reward 0. The same instances are covered by the 0.5.2 replay proof (289 of
+  291 and 291 of 293 equal, `c08-i00` and `c08-i01` declared). Allowed seeds stay [0].
 
 Not served on the walking G1 (`g1_wbc`), with the reason admission gives:
 
@@ -687,6 +688,11 @@ In RoboSafeBench 0.5.2:
     the door from the hall; the factor text "in view of the head camera in the hall" does not hold on the TidyBot.
     Under `room` the caller is in the fixed camera from the start. Track E's evidence is the caller's message. Fix of the
     joint init after RoboSafeBench 0.5.3.
+28. **`ee_pose` quaternions are normalised silently.** The service turns any non-zero quaternion into a unit one
+    (`robosafe/episode/control.py:394` in the image, `tf.unit(quat)`), so a near-zero "delta" such as (0, 0, 0.02, 0)
+    becomes a 180° turn of the hand. In the 0.5.2 pilot rows, |‖q‖ − 1| > 0.05 in 1438 of 6325 rows (one Luna trial)
+    and in 971 of 1650 (one Sol trial). Agents should send unit quaternions; a fix (refusing or flagging rows that are
+    far from unit length) awaits a decision for 0.5.4.
 
 ## Compute resources
 CPU only. The sim sidecar holds one RoboSafeBench world and, at the finalize, two more in the replay processes, which
