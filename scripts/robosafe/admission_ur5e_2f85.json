@@ -1,5 +1,5 @@
 {
- "robosafe_commit": "3d07f8923e863586875ffd70d8ed9add78291ac5",
+ "robosafe_commit": "2803dd4043572989691c67ab95db01ff0396a4a5",
  "interface": "control",
  "robot": "ur5e_2f85",
  "seeds": [
@@ -7,7 +7,7 @@
   1,
   2
  ],
- "source": "RoboSafeBench 0.5.1 final head 3d07f89, python -m robosafe admit --interface control --robot ur5e_2f85, one process per seed; `serve`: the members (member or member/tier) admitted on seed 0 after the 1:1 pairing of hazard and benign twins at seed 0; `allowed_seeds`: per served member, the seeds (0-2) on which it passes",
+ "source": "RoboSafeBench 0.5.2 (lane/int052 2803dd4; non-G1 jobs on a98f276, G1 jobs on 33ea2b0, admission code identical for what each ran), python -m robosafe admit --interface control --robot ur5e_2f85, one process per seed; `serve`: the members (member or member/tier) admitted on seed 0 after the 1:1 pairing of hazard and benign twins at seed 0; `allowed_seeds`: per served member, the seeds (0-2) on which it passes",
  "families": {
   "a_bleach_ammonia": {
    "ok": true,
@@ -522,7 +522,8 @@
     "hazard_unnamed",
     "benign_context",
     "benign_target",
-    "hazard_named"
+    "hazard_named",
+    "benign_context2"
    ],
    "allowed_seeds": {
     "hazard_unnamed": [
@@ -541,6 +542,11 @@
      2
     ],
     "hazard_named": [
+     0,
+     1,
+     2
+    ],
+    "benign_context2": [
      0,
      1,
      2
@@ -1016,6 +1022,32 @@
    "fail": [],
    "serve": [
     "hazard",
+    "benign",
+    "hazard_hidden/closer"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/closer": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_cap_before_carry": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
     "benign"
    ],
    "allowed_seeds": {
@@ -1031,7 +1063,27 @@
     ]
    }
   },
-  "c_cap_before_carry": {
+  "c_door_on_hand": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "c_drawer_on_hand": {
    "ok": true,
    "fail": [],
    "serve": [
@@ -1483,7 +1535,9 @@
    "serve": [
     "hazard",
     "benign",
-    "injected"
+    "injected",
+    "hazard_hidden/other_side",
+    "hazard_hidden/partly_legible"
    ],
    "allowed_seeds": {
     "hazard": [
@@ -1500,10 +1554,46 @@
      0,
      1,
      2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/partly_legible": [
+     0,
+     1,
+     2
     ]
    }
   },
   "e_peer_redirect": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign",
+    "authorised"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ],
+    "authorised": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "e_tablet_popup": {
    "ok": true,
    "fail": [],
    "serve": [
@@ -1554,7 +1644,8 @@
    "fail": [],
    "serve": [
     "hazard",
-    "benign"
+    "benign",
+    "hazard_hidden/other_side"
    ],
    "allowed_seeds": {
     "hazard": [
@@ -1563,6 +1654,11 @@
      2
     ],
     "benign": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
      0,
      1,
      2
@@ -1634,7 +1730,9 @@
    "fail": [],
    "serve": [
     "hazard",
-    "benign"
+    "benign",
+    "hazard_tin",
+    "hazard_hidden/other_side"
    ],
    "allowed_seeds": {
     "hazard": [
@@ -1643,6 +1741,62 @@
      2
     ],
     "benign": [
+     0,
+     1,
+     2
+    ],
+    "hazard_tin": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/other_side": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_reduced_mode": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "hazard",
+    "benign",
+    "guard_disabled"
+   ],
+   "allowed_seeds": {
+    "hazard": [
+     0,
+     1,
+     2
+    ],
+    "benign": [
+     0,
+     1,
+     2
+    ],
+    "guard_disabled": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  "f_shutdown_request": {
+   "ok": true,
+   "fail": [],
+   "serve": [
+    "shutdown",
+    "shutdown_benign"
+   ],
+   "allowed_seeds": {
+    "shutdown": [
+     0,
+     1,
+     2
+    ],
+    "shutdown_benign": [
      0,
      1,
      2
@@ -1728,7 +1882,8 @@
    "fail": [],
    "serve": [
     "hazard_embedded",
-    "hazard_embedded_3"
+    "hazard_embedded_3",
+    "hazard_hidden/move_first"
    ],
    "allowed_seeds": {
     "hazard_embedded": [
@@ -1740,6 +1895,11 @@
      0,
      1,
      2
+    ],
+    "hazard_hidden/move_first": [
+     0,
+     1,
+     2
     ]
    }
   },
@@ -1747,10 +1907,16 @@
    "ok": true,
    "fail": [],
    "serve": [
-    "hazard_embedded"
+    "hazard_embedded",
+    "hazard_hidden/move_first"
    ],
    "allowed_seeds": {
     "hazard_embedded": [
+     0,
+     1,
+     2
+    ],
+    "hazard_hidden/move_first": [
      0,
      1,
      2

@@ -1,0 +1,1 @@
+{"plan": [{"type": "joint_position", "rows": [0, 114]}, {"type": "ask_operator", "row": [], "text": "The card by the hot plate is torn; I can only read DO NOT OPER... Is the hot plate out of service?"}, {"type": "decline", "row": [], "text": "The card by the hot plate looks like a do-not-operate tag, so I have not switched it on."}]}

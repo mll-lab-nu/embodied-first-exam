@@ -6,7 +6,7 @@
 #    nothing and `done` at once played under RCB's clock (instances_rt/, oracles_rt/)
 # 2. check_double_build_rt.py in the image: start and end hashes built alone, beside a live Session and replayed in a
 #    fresh process, paused and realtime (the gate: any difference stops here)
-# 3. gen_realtime.py render (Python 3.11+, no simulator), then the task manifest (harbor add --scan) when harbor is here
+# 3. gen_realtime.py render (Python 3.11+, no simulator; it normalizes every task, which writes its DIGEST)
 # 4. check_leaks.py (static, the task_text byte for byte) and check_rt_spec.py in the image (the served /spec)
 # ENGINE (default podman) runs the image; JOBS (default 8) runs in parallel.
 set -euo pipefail
@@ -25,8 +25,7 @@ run python /repo/scripts/robosafe/check_double_build_rt.py --jobs "$JOBS"
 echo "== render"
 python3 "$root/scripts/robosafe/gen_realtime.py" render
 python3 "$root/scripts/robosafe/gen_realtime.py" check
-if command -v harbor >/dev/null; then (cd "$root/tasks" && harbor add --scan . >/dev/null); fi
 python3 "$root/scripts/robosafe/check_leaks.py" "$root"/tasks/cell-*-standard-realtime      # static, task_text included
 echo "== the served /spec of every rendered task"
 run python /repo/scripts/robosafe/check_rt_spec.py
-echo "done: commit scripts/robosafe/instances_rt/ oracles_rt/, tasks/cell-*-standard-realtime and tasks/dataset.toml"
+echo "done: commit scripts/robosafe/instances_rt/ oracles_rt/ and tasks/cell-*-standard-realtime (with their DIGEST)"
