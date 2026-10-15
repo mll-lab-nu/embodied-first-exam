@@ -1,0 +1,47 @@
+name: task-list
+# The task list, generated after every merge to main and pushed to the branch `task-list`, never to main (board 0120;
+# as Terminal-Bench publishes its generated chart on a branch of its own): tasks.json (every task's own metadata, cutoff,
+# resources, digest), TASKS.md (per benchmark and mode: tasks, cutoffs, oracle levels; then every task) and the release
+# manifest dataset.toml. Nothing in main lists the tasks, so pull requests that change different tasks share no file.
+#   scripts/dataset_manifest.py list --out DIR    the same files locally
+# The branch holds one commit (the list of the latest main); its message names main's commit. Readers: the task-list
+# site, batch_eval_live, anyone: `git fetch origin task-list && git show origin/task-list:TASKS.md`.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write          # push the branch `task-list` (only this workflow writes it)
+concurrency:
+  group: task-list
+  cancel-in-progress: true # the latest main wins
+jobs:
+  list:
+    runs-on: [self-hosted, rcb-ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Generate the list
+        run: python3 scripts/dataset_manifest.py list --out "$RUNNER_TEMP/task-list"
+      - name: Push it to the branch task-list
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          cd "$RUNNER_TEMP/task-list"
+          cat > README.md <<MD
+          # task-list (generated; do not edit)
+
+          The task list of [\`main\`](https://github.com/${GITHUB_REPOSITORY}/tree/${GITHUB_SHA}) at \`${GITHUB_SHA}\`,
+          written by \`.github/workflows/task-list.yml\` after every merge: [TASKS.md](TASKS.md), [tasks.json](tasks.json),
+          [dataset.toml](dataset.toml) (Harbor's manifest for \`harbor publish\`).
+          MD
+          git init -q -b task-list
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Task list of main ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:task-list
+          echo "pushed the task list of ${GITHUB_SHA} to task-list ($(python3 -c 'import json; print(len(json.load(open("tasks.json"))["tasks"]))') tasks)"

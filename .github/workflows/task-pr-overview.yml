@@ -1,0 +1,51 @@
+name: pr-overview
+# A pull request's overview (board 0120; as Terminal-Bench's task-pr-overview.yml): one sticky comment, updated on every
+# push, with the changed tasks (mode, oracle, cutoff, minimum compute), the cutoffs it changes (old -> new: an owner
+# decision, PROTOCOL §2.12), the cutoffs per benchmark and mode after it, twins whose cutoffs differ and the scope of its
+# static checks (ci_checks/pr_overview.py); and labels: new-task, task-fix, shared, cutoff-change (added, never removed:
+# a maintainer removes a wrong one). The overview is also the job's summary, so a token without write access (a fork)
+# loses only the comment.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+concurrency:
+  group: pr-overview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  overview:
+    runs-on: [self-hosted, rcb-ci]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }   # GitHub's merge commit: HEAD^1 = main, HEAD^2 = the branch
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Overview
+        run: |
+          python3 ci_checks/pr_overview.py --diff-from HEAD^1 --labels "$RUNNER_TEMP/labels.txt" > "$RUNNER_TEMP/overview.md"
+          cat "$RUNNER_TEMP/overview.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Sticky comment and labels
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
+          body=$(python3 -c 'import json,sys; print(json.dumps({"body": open(sys.argv[1]).read()}))' "$RUNNER_TEMP/overview.md")
+          id=$(curl -fsS "${auth[@]}" "$api/issues/$PR/comments?per_page=100" \
+               | python3 -c 'import json,sys; print(next((str(c["id"]) for c in json.load(sys.stdin) if c["body"].startswith("<!-- rcb-pr-overview -->")), ""))')
+          if [ -n "$id" ]; then
+            curl -fsS -X PATCH "${auth[@]}" "$api/issues/comments/$id" -d "$body" > /dev/null; echo "updated comment $id"
+          else
+            curl -fsS -X POST "${auth[@]}" "$api/issues/$PR/comments" -d "$body" > /dev/null; echo "posted the overview"
+          fi
+          if [ -s "$RUNNER_TEMP/labels.txt" ]; then
+            labels=$(python3 -c 'import json,sys; print(json.dumps({"labels": open(sys.argv[1]).read().split()}))' "$RUNNER_TEMP/labels.txt")
+            curl -fsS -X POST "${auth[@]}" "$api/issues/$PR/labels" -d "$labels" > /dev/null; echo "labels: $(tr '\n' ' ' < "$RUNNER_TEMP/labels.txt")"
+          fi
