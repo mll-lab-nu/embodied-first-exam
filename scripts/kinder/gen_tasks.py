@@ -43,7 +43,7 @@ sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normaliz
 # regenerate.
 CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
-# standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
+# standard mode's default reset budget (RCB_RESET_BUDGET's default; KinDER's own choice, PROTOCOL §4.5; owner
 # 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
 # attempt share them; ten, as MyoSuite, because a scripted episode ends in about a minute; RCB_RESET_BUDGET=0 still runs
 # the single-episode configuration

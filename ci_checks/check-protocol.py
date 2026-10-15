@@ -21,20 +21,24 @@ import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.16
 # the `protocol` values each mode may declare: standard 2.1 / 2.2 / 2.4 (2.4: the operations capability, issue #89),
 # standard-realtime 2.3 (the realtime capability, §4b), privileged none
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
-# Tasks a benchmark exports with its own service inside (PROTOCOL §4c; owner, 2026-10-14): the protocol it serves, per
-# mode; only for directories its manifest lists (scripts/roboolympics/exported.toml)
-OWN_PROTOCOLS = {"roboolympics-": {"standard-realtime": "eai-standard-realtime/1.0", "standard": "skilleval-api-test/1"}}
-OWN_MANIFESTS = {"roboolympics-": ROOT / "scripts" / "roboolympics" / "exported.toml"}
+# Tasks a benchmark exports with its own service inside (PROTOCOL §4c): each such benchmark keeps a manifest,
+# scripts/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol each mode serves
+# (`[protocols]`); a listed directory may declare its manifest's protocol for its mode. No per-benchmark table here.
+def _own_protocols() -> dict[str, dict[str, str]]:
+    out: dict[str, dict[str, str]] = {}
+    for man in sorted((ROOT / "scripts").glob("*/exported.toml")):
+        d = tomllib.loads(man.read_text())
+        for t in d.get("tasks", []):
+            out[t["name"]] = d.get("protocols", {})
+    return out
+
+
+OWN_PROTOCOLS = _own_protocols()
 
 
 def own_protocol(name: str, mode: str | None) -> str | None:
     """The protocol a benchmark's own exported task may declare instead (None: not such a task)."""
-    for prefix, per_mode in OWN_PROTOCOLS.items():
-        man = OWN_MANIFESTS[prefix]
-        if name.startswith(prefix) and man.is_file() and \
-                name in {t["name"] for t in tomllib.loads(man.read_text()).get("tasks", [])}:
-            return per_mode.get(mode or "")
-    return None
+    return OWN_PROTOCOLS.get(name, {}).get(mode or "")
 
 
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")

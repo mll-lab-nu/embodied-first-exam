@@ -1,6 +1,6 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.md` first.
+Read `README.md`, `docs/PROTOCOL.md` (recommended conventions, v1.2-rc; each task declares its own settings, §0) and `CONTRIBUTING.md` first.
 
 - Terminology (protocol v1.0): **privileged** mode (formerly unlimited) and **standard** mode (formerly limited,
   wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`); v1.1 adds a third mode, **standard-realtime** (standard mode on a
