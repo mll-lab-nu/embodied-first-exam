@@ -39,6 +39,11 @@ def make_policy(config):
 
 class TruthReference(Reference):
     def act(self, view):
+        if (view.get("state") or {}).get("phase") == "unit_over":
+            return {"type": "ready"}  # the review after a point: carry on (the camera player's service sent it)
+        return self.play(view)
+
+    def play(self, view):
         st, ob = view.get("state") or {}, view.get("observation") or {}
         if not self.high or st.get("world") != "running" or st.get("pending_commands"):
             return None
