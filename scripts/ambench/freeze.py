@@ -23,10 +23,18 @@ import argparse, json, os, pathlib, subprocess, sys, time
 _ME = pathlib.Path(__file__).resolve()
 ROOT = _ME.parents[2] if len(_ME.parents) > 2 else _ME.parent     # (inside the image the script is /freeze/freeze.py)
 HERE = ROOT / "scripts/ambench"
-EXPERTS = {"PressButton": ("ambench.policies.scripted.press_button", "PressButtonPolicy"),
+EXPERTS = {"CabinetPickPlace": ("ambench.policies.scripted.cabinet_pick_place", "CabinetPickPlacePolicy"),
+           "FrameAssembly": ("ambench.policies.scripted.frame_assembly", "FrameAssemblyPolicy"),
+           "LemonHarvesting": ("ambench.policies.scripted.lemon_harvesting", "LemonHarvestingPolicy"),
+           "NDT": ("ambench.policies.scripted.NDT", "NDTPolicy"),
+           "OpenDoor": ("ambench.policies.scripted.open_door", "OpenDoorPolicy"),
+           "PegInHole": ("ambench.policies.scripted.peg_in_hole", "PegInHolePolicy"),
+           "PressButton": ("ambench.policies.scripted.press_button", "PressButtonPolicy"),
+           "PullLever": ("ambench.policies.scripted.pull_lever", "PullLeverPolicy"),
            "PushSlider": ("ambench.policies.scripted.push_slider", "PushSliderPolicy"),
            "RotateValve": ("ambench.policies.scripted.rotate_valve", "RotateValvePolicy"),
-           "TossBall": ("ambench.policies.scripted.toss_ball", "TossBallPolicy")}
+           "TossBall": ("ambench.policies.scripted.toss_ball", "TossBallPolicy"),
+           "WipeWindow": ("ambench.policies.scripted.wipe_window", "WipeWindowPolicy")}     # the FA-Hexa PID registrations' entry points
 
 
 def inside_record(env_id: str, seed: int, out: str, npz: str, pad_s: float, tries: int) -> int:

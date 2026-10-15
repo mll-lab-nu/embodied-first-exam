@@ -1,11 +1,11 @@
-"""Point AM-Bench's USDs at the image's copies of the web assets they load from NVIDIA's asset bucket (build step).
+"""Point AM-Bench's USDs at the image's copies of the web assets they load from NVIDIA's asset buckets (build step).
 
-Four of AM-Bench's assets reference files on the bucket by URL: the TossBall bin (objects/container.usd payloads its geometry,
-Container_B06), the button's material (objects/push_button.usd, Plastic_ABS.mdl) and the robot's paint (robots/configuration/
-hexa_scorpion_base.usd and end_effector_base.usd, two vMaterials). The tasks run with closed egress, so the image bakes those
-files in (images/ambench/web_assets.txt, sha256-checked, mirroring the bucket's layout under /opt/isaac-assets) and this script
-rewrites the URLs in the USD layers to the local copies (the same files: the same scene). It writes each layer in its original
-crate version and fails if any web asset path is left in a layer it was given. (images/robodojo/localize_assets.py's logic.)
+Thirteen of AM-Bench's USDs reference files on the buckets by URL (objects' payloads and materials: the TossBall / lemon
+tote, the door, frame, peg, hole, lever, the SimReady lemon, lime and table, the NDT marker tape, the button; the robot's
+paint). The tasks run with closed egress, so the image bakes those files in (images/ambench/web_assets.txt, sha256-checked,
+mirroring the buckets' layouts under /opt/isaac-assets) and this script rewrites the URLs in the USD layers to the local
+copies (the same files: the same scene). It writes each layer in its original crate version and fails if any web asset path
+is left in a layer it was given. (images/robodojo/localize_assets.py's logic.)
     python localize_assets.py <remote prefix>=<local prefix> [...] -- <usd file>...
 """
 import sys

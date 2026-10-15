@@ -1,0 +1,9 @@
+{
+ "env_id": "OpenDoor-Am-FAHexa-Abs-PID-Direct-v0",
+ "seed": 0,
+ "task": "OpenDoor",
+ "action_dim": 8,
+ "control_hz": 120,
+ "episode_length_s": 15.0,
+ "initial_sha": "6f6419afcb65e790488b9eb6d78db2ab5b924dbf7def97dec57d1912acb44ab0"
+}

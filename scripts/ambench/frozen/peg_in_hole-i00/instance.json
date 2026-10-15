@@ -1,0 +1,9 @@
+{
+ "env_id": "PegInHole-Am-FAHexa-Abs-PID-Direct-v0",
+ "seed": 0,
+ "task": "PegInHole",
+ "action_dim": 8,
+ "control_hz": 120,
+ "episode_length_s": 20.0,
+ "initial_sha": "67bd15ae704517316b4bb02f5ba9259184d5da9f3583eb11b68e1ff2755a3c30"
+}
