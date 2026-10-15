@@ -13,8 +13,9 @@ substeps.
   axis along world -x. The rear rim (radius 0.1845, wire radius 0.0018) lies in the plane x = 0.73.
 - Clip hinges (fixed to the fan; hinge axis tangential to the rim; angle 0 closed over both rims, 1.40 open, the
   elastic detent's over-centre point at 0.70): 45 deg (0.734, 0.3128, 1.0848), 135 deg (0.734, 0.0472, 1.0848),
-  225 deg (0.734, 0.0472, 0.8192), 315 deg (0.734, 0.3128, 0.8192). The two upper clips (45 and 135 deg) start at 1.40;
-  the two lower clips (225 and 315 deg) start closed and form open-topped hanger channels for the guard's rim.
+  225 deg (0.734, 0.0472, 0.8192), 315 deg (0.734, 0.3128, 0.8192). All four clips start open at 1.40 (as in the source
+  scene). A closed lower clip (225 or 315 deg) forms an open-topped U channel that can carry the guard's rim; an upper
+  clip only counts when it locks at or after the first seated control.
 - Front guard (rigid, 0.185 kg): rim radius 0.1845 (wire radius 0.0018), dish 0.047 deep toward the operator, a hub
   cap of radius 0.043 and height 0.022 at its centre (front face 0.057 in front of the rim plane), centre of mass
   0.018 in front of the rim plane on the axis. It starts flat on the worktop, dome up, rim centre at

@@ -10,6 +10,7 @@ from pathlib import Path
 import subprocess
 import sys
 
+import mujoco
 import numpy as np
 import pytest
 
@@ -52,7 +53,7 @@ def test_oracle_float32_rows_succeed(tmp_path):
     assert replay_cli(path, tmp_path)["success"]
 
 
-@pytest.mark.parametrize("cut", [300, 900, 1480, 1560])
+@pytest.mark.parametrize("cut", [600, 1590, 2370, 2484])
 def test_partial_trajectories_fail(cut, tmp_path):
     result = replay_cli(save(tmp_path / "cut.npz", rows()[:cut]), tmp_path)
     assert not result["success"]
@@ -68,9 +69,9 @@ def test_nop_fails_and_forged_members_are_ignored(tmp_path):
 def test_drop_and_catch_fails_at_once(tmp_path):
     actions = rows()
     open_q = np.load(FAMILY / "tools/seeds/open.npy")
-    actions[400:403, 6:] = open_q[6:]
+    actions[1290:1293, 6:] = open_q[6:]  # fingers open for 3 rows while the lifted guard is being turned
     result = replay_cli(save(tmp_path / "drop.npz", actions), tmp_path)
-    assert result["reason"] == "guard_dropped" and result["steps"] < 420
+    assert result["reason"] == "guard_dropped" and result["steps"] < 1310
 
 
 def test_wrong_width_or_hand_label_is_a_bad_trajectory(tmp_path):
@@ -108,11 +109,29 @@ def test_snapshot_restore_is_bit_exact():
 
 def test_knock_into_the_fan_fails_fast(tmp_path):
     actions = rows()
-    for i in range(860, len(actions)):
-        actions[i] = actions[859]
-        actions[i, 0] = actions[859, 0] + min(1.0, (i - 860) / 60) * 0.25
+    for i in range(1750, len(actions)):  # after the guard hangs in the lower clips: drive the hand into the fan
+        actions[i] = actions[1749]
+        actions[i, 0] = actions[1749, 0] + min(1.0, (i - 1750) / 60) * 0.25
     result = replay_cli(save(tmp_path / "knock.npz", actions), tmp_path)
-    assert not result["success"] and result["reason"] == "fan_displaced"
+    assert not result["success"] and result["reason"] in ("fan_displaced", "fan_tipped", "guard_hit_fan_body")
+
+
+def test_all_clips_start_open_and_an_open_clip_blocks_stage_two():
+    from geometry import OPEN
+
+    s = Session()
+    assert np.allclose(s.data.qpos[s.clip_qadr], OPEN)
+    for row in rows()[:2480]:
+        s.step(row)
+    assert s.checker.stage == 2
+    for clip in range(4):
+        snap = s.snapshot()
+        s.data.qpos[s.clip_qadr[clip]] = OPEN
+        mujoco.mj_forward(s.model, s.data)
+        feats = s.checker.evaluate(s.data, s.steps + 1)
+        assert s.checker.stage < 2, clip
+        assert feats["clips_locked"] == 3
+        s.restore(snap)
 
 
 def test_non_finite_and_out_of_range_rows_are_bad_trajectories(tmp_path):

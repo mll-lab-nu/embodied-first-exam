@@ -2,8 +2,8 @@
 
 Physical version of scene-expansion T26 "Install a desk fan front guard" (source, read-only:
 `scripts/scene_expansion/repairs/fan_guard_meta_delivery_polish_r1_capture_trajectory_r1/`, a kinematic demo with
-prescribed guard and clip motion). Here a dexterous hand on a six-axis wrist stage does the whole task in MuJoCo
-physics; only actuator targets are commanded.
+prescribed guard and clip motion; all four clips open at the start). Here a dexterous hand on a six-axis wrist stage
+does the whole task in MuJoCo physics; only actuator targets are commanded.
 
 ## Files
 
@@ -42,14 +42,23 @@ budget.
   45 mg articulated snap leaf (which needed a 0.25 ms step) is replaced by the source's own over-centre elastic tendon
   detent, made stiffer (2500 N/m: 0.036 N m holding torque, 14 mJ barrier) so a closed lower clip carries the guard.
   The snap leaf and bracket remain as visual-only shapes. A small thumb tab on the bridge gives a fingertip purchase.
-- 2-clip simplification: the lower clips (225, 315 deg) start closed and act as hanger channels; the hand closes the
-  upper two (45, 135 deg). The checker still requires all four clips locked. Reason: an open top channel cannot carry
-  the guard's weight (its opening faces down) and a guard hung only on the bottom must be clipped at the top, which a
-  single hand can do once the guard hangs by itself.
+- All four clips start open (1.40 rad), as in the source (wave 2 started the two lower clips closed as hanger
+  channels; reverted in wave 3). With one hand the order is forced: the hand closes the two lower clips first (index
+  fingertip reaching behind each open clip from beside the rim, hand outside the cage pointing down along the rim),
+  hangs the guard in the two closed lower channels, lets go and closes the upper clips over the seated guard. The
+  checker requires all four clips locked with the rim inside every channel, and the upper clips locked at or after the
+  first seated control (an upper clip cannot be pre-closed: a closed channel at the top would block the rim).
 - Lower clip lips sit 1.3 mm deeper (0.65 mm axial play instead of 1.95 mm) so the hung guard (COM 18 mm in front of
   its rim plane) leans at most ~0.4 deg and the closing upper hooks clear the rim. Lips end 4.8 mm inside the clip
   (source 6.8 mm) so they do not land on the dish wires that rise steeply inside the rim.
 - Centre badge: a 22 mm raised hub cap (source: 6 mm disc) so fingertips can grip its edge in front of the dish wires.
+  Wave 3 tried the source badge (6 mm disc): it stands only ~1.9 mm proud of the inner spoke ends (3.4 mm at
+  r = 50 mm), so an 8.1 mm fingertip capsule resting on the spokes can touch it only at its top corner. Corner-pinch
+  grasps (several seed, offset, spin and release variants) did lift and seat the guard in some runs, but every such
+  lift relied on the thumb and index fingertip capsules sinking 8+ mm into the 0.5 mm dish spokes (a soft-contact
+  artifact: the wires end up inside the fingertip), and the jammed fingertips then dragged the seated guard off the fan
+  on release. With legitimate contact the source badge cannot be gripped, so the 22 mm cap stays (the accepted
+  oracle's hand-object penetration stays <= 3.4 mm; cap grasp <= 1.6 mm).
 - Dish wires (spokes, hoops) collide with the hand, rims, clips, fan body and table but not with the other cage's dish
   wires (performance); rims, cap and clips collide with everything.
 - Plug and cord are static visual decoration (source: a free plug body).

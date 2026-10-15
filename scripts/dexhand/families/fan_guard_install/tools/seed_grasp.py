@@ -29,6 +29,11 @@ def main():
     p.add_argument("--squeeze", type=float, default=0.006)
     p.add_argument("--open", type=float, default=0.014)
     p.add_argument("--init", help="optional initial row (.npy) for the wrist guess")
+    p.add_argument("--out-dir", default="")
+    p.add_argument("--corner", action="store_true")
+    p.add_argument("--yaw", type=float, default=0.0, help="grasp layout yaw about the vertical (deg)")
+    p.add_argument("--corner-gap", type=float, default=0.0066)
+    p.add_argument("--margin", type=float, default=0.002)
     args = p.parse_args()
     s = Session(hand=args.hand)
     m = s.model
@@ -36,12 +41,19 @@ def main():
     cap = GUARD_REST + np.array([0, 0, CAP_AXIAL])
     zc = cap[2] + CAP_HALF - args.below_top
     r = CAP_RADIUS + args.pad
-    targets = {"thumb": np.array([cap[0] - r - 0.001, cap[1], zc]),
-               "index": np.array([cap[0] + r, cap[1] + 0.014, zc]),
-               "middle": np.array([cap[0] + r, cap[1] - 0.012, zc])}
+    if args.corner:
+        # Source 6 mm badge: the fingertip pads rest on the dish spokes just outside the badge and press on its
+        # top edge (contact normal ~35 deg above horizontal; fingertip friction carries the guard).
+        r = CAP_RADIUS + args.corner_gap
+        spoke_z = GUARD_REST[2] + 0.047 * (1 - r / 0.1845) ** 0.70
+        zc = spoke_z + args.pad
+    yaw = np.radians(args.yaw)
+    Rz = np.array([[np.cos(yaw), -np.sin(yaw), 0], [np.sin(yaw), np.cos(yaw), 0], [0, 0, 1]])
+    layout = {"thumb": (-r - 0.001, 0.0), "index": (r, 0.014), "middle": (r, -0.012)}
+    targets = {n: cap + Rz @ np.array([dx, dy, zc - cap[2]]) for n, (dx, dy) in layout.items()}
     q0 = np.array(s.initial_targets)
-    q0[3:6] = stage_angles(hand_frame([1, 0, -0.05], [0, 0.05, -1]))
-    q0[:3] = cap + [-0.03, 0.0, 0.09]
+    q0[3:6] = stage_angles(Rz @ hand_frame([1, 0, -0.05], [0, 0.05, -1]))
+    q0[:3] = cap + Rz @ np.array([-0.03, 0.0, 0.09])
     if args.init:
         q0[:6] = np.load(args.init)[:6]
     sl = k.slices
@@ -53,7 +65,9 @@ def main():
     avoid = [g for g in range(m.ngeom) if s.checker.guard_geom[g] and np.linalg.norm(s.data.geom_xpos[g] - cap) < 0.11
              and m.geom(g).name != "front_badge"] + [m.geom("table_top").id]
     var = list(range(6)) + [j for n in ("thumb", "index", "middle") for j in sl[n]]
-    q, cost = k.solve(q0, targets, var, avoid=avoid, reg=0.02, max_nfev=400)
+    if args.corner:  # the pads rest on the spokes next to the badge: avoid only the rim, hoops and worktop
+        avoid = [g for g in avoid if "spoke" not in (m.geom(g).name or "")]
+    q, cost = k.solve(q0, targets, var, avoid=avoid, reg=0.02, max_nfev=400, margin=args.margin)
     tips = k.fk(q)
     print("grasp cost", cost, {n: np.round((tips[n] - t) * 1000, 1).tolist() for n, t in targets.items()})
     fingers = [j for n in ("thumb", "index", "middle") for j in sl[n]]
@@ -71,7 +85,7 @@ def main():
     squeeze, c1 = shifted(-args.squeeze)
     opened, c2 = shifted(args.open)
     print("squeeze cost", c1, "open cost", c2)
-    out = HERE / "seeds"
+    out = Path(args.out_dir) if args.out_dir else HERE / "seeds"
     out.mkdir(exist_ok=True)
     prefix = "" if args.hand == "sharpa" else args.hand + "_"
     np.save(out / f"{prefix}grasp.npy", q)

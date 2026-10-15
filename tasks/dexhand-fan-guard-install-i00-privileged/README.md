@@ -7,28 +7,32 @@
 | Twin | `dexhand-fan-guard-install-i00-standard` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `fan_guard_install` |
-| Oracle | `full` — solution/ replays the recorded Sharpa Wave episode in both modes (1,775 controls; success after 1,595): two fresh-process replays with identical state hashes, float32 rows succeed; Harbor 0.23 (eai-dexhand:0.2.0, 2026-10-14): privileged oracle 1 / nop 0, standard oracle 1 (live = replay) / nop 0. |
+| Oracle | `full` — solution/ replays the recorded Sharpa Wave episode in both modes (2,665 controls; success after 2,485; all four clips start open and are closed by the hand): two fresh-process replays with identical state hashes, float32 rows succeed. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
-Install the front guard on the desk fan. The unpowered fan stands on the worktop facing the operator (its axis points along world -x); its rear wire guard carries four perimeter U clips at 45, 135, 225 and 315 degrees. The two lower clips (225 and 315 degrees) are already closed and form hanger channels; the two upper clips are swung open. The detached front guard (0.369 m wire cage, 185 g, with a raised hub cap at its centre) lies flat on the worktop, dome up. Lift the guard, turn it upright with its dome facing the operator, seat its rim on the rear rim inside the two lower clip channels, close both upper clips over the two rims, and take the hand away. Success requires, in order: (1) the guard seated: guard centre within 5 mm of the fan axis, axial seat error within 2.5 mm and guard axis within 5 degrees of the fan axis; (2) the guard still seated, all four clip hinges in their locked range (hinge angle at most 0.12 rad) and the guard rim inside every clip's U channel (in each clip's frame, with origin at its hinge, x toward the operator along world -x and y radially outward, the guard-rim point nearest that clip lies at x from 6.8 to 9.9 mm for the upper clips and 6.8 to 8.6 mm for the lower clips and y from -4.8 to -2.2 mm, i.e. between the rear rim and the clip's lip and inside its bridge), each upper clip having locked at or after the first control at which the guard was seated; (3) the complete condition with no hand contact on the guard, the clips or the fan, guard speed at most 0.02 m/s and angular speed at most 0.2 rad/s, for 50 consecutive controls (1 s). The episode ends with success at that moment; a guard that is only placed, or clips that are only partly closed, never count. The episode ends immediately with failure, checked after every 2 ms physics substep, when the fan moves more than 3 cm from its start or tilts more than 0.10 rad, when the guard touches the worktop, a table leg or the floor after its centre of mass has been lifted more than 5 cm above its resting height (dropped or set back down), or at the first substep at which the guard touches nothing while its centre of mass falls faster than 0.2 m/s (dropped, even if caught again), when the guard touches the fan's base, stem, neck, motor housing, feet or buttons, when the guard's centre of mass falls below the worktop (z < 0.65 m) or leaves the workspace box x in [0.20, 1.10] m, y in [-0.55, 0.55] m, z in [0.60, 1.40] m, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The clips are rigid U channels on passive hinges held by an elastic over-centre spring (a modelled snap detent); the guard is a rigid wire cage. The episode allows at most 6000 controls at 50 Hz; reaching that limit without success is a failure.
+Install the front guard on the desk fan. The unpowered fan stands on the worktop facing the operator (its axis points along world -x); its rear wire guard carries four perimeter U clips at 45, 135, 225 and 315 degrees. All four clips start swung open (hinge angle 1.40 rad); the hand has to close every one of them. A closed lower clip (225 or 315 degrees) forms an open-topped U channel that can carry the guard's rim. The detached front guard (0.369 m wire cage, 185 g, with a raised hub cap at its centre) lies flat on the worktop, dome up. Lift the guard, turn it upright with its dome facing the operator, seat its rim on the rear rim, close all four clips over the two rims (the lower clips may be closed before or after the guard is seated; the upper clips can only lock over a seated guard), and take the hand away. Success requires, in order: (1) the guard seated: guard centre within 5 mm of the fan axis, axial seat error within 2.5 mm and guard axis within 5 degrees of the fan axis; (2) the guard still seated, all four clip hinges in their locked range (hinge angle at most 0.12 rad) and the guard rim inside every clip's U channel (in each clip's frame, with origin at its hinge, x toward the operator along world -x and y radially outward, the guard-rim point nearest that clip lies at x from 6.8 to 9.9 mm for the upper clips and 6.8 to 8.6 mm for the lower clips and y from -4.8 to -2.2 mm, i.e. between the rear rim and the clip's lip and inside its bridge), each upper clip having locked at or after the first control at which the guard was seated; (3) the complete condition with no hand contact on the guard, the clips or the fan, guard speed at most 0.02 m/s and angular speed at most 0.2 rad/s, for 50 consecutive controls (1 s). The episode ends with success at that moment; a guard that is only placed, or clips that are only partly closed, never count. The episode ends immediately with failure, checked after every 2 ms physics substep, when the fan moves more than 3 cm from its start or tilts more than 0.10 rad, when the guard touches the worktop, a table leg or the floor after its centre of mass has been lifted more than 5 cm above its resting height (dropped or set back down), or at the first substep at which the guard touches nothing while its centre of mass falls faster than 0.2 m/s (dropped, even if caught again), when the guard touches the fan's base, stem, neck, motor housing, feet or buttons, when the guard's centre of mass falls below the worktop (z < 0.65 m) or leaves the workspace box x in [0.20, 1.10] m, y in [-0.55, 0.55] m, z in [0.60, 1.40] m, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The clips are rigid U channels on passive hinges held by an elastic over-centre spring (a modelled snap detent); the guard is a rigid wire cage. The episode allows at most 6000 controls at 50 Hz; reaching that limit without success is a failure.
 
 ## Difficulty
-The 0.369 m wire guard must be picked up from flat on the worktop, turned upright with its dome toward the operator and
-placed on the fan's rear rim within a 0.65 mm axial window above the two lower hanger clips, then released so that it
-hangs by itself. The two open upper clips must then be swung closed over both rims with a fingertip against an elastic
-over-centre detent, without pushing the 2.15 kg fan off its feet or knocking the guard out of its seat, and the hand
-must leave the installed guard. The predicate checks the seat (concentric, axial and parallel tolerances), all four
-clip hinges, the order of the stages and a released stable hold. A dropped guard or a displaced or tipped fan ends the
-episode as a failure at once.
+All four perimeter clips start swung open, as in the source scene, and nothing holds the guard on the fan until clips
+are closed. With one hand, the two lower clips have to be swung closed first (a fingertip reaches behind each open
+clip beside the rim and pushes it past its elastic over-centre point), which turns them into open-topped channels.
+The 0.369 m wire guard must then be picked up from flat on the worktop, turned upright with its dome toward the
+operator and placed on the fan's rear rim within a 0.65 mm axial window above those two channels, released so that it
+hangs by itself, and the two upper clips swung closed over both rims, without pushing the 2.15 kg fan off its feet or
+knocking the guard out of its seat; then the hand must leave the installed guard. The predicate checks the seat
+(concentric, axial and parallel tolerances), all four clip hinges with the rim inside every clip's channel, the order
+of the stages and a released stable hold. A dropped guard or a displaced or tipped fan ends the episode as a failure
+at once.
 
 ## Reference solution
-`solution/` holds a validated Sharpa Wave trajectory (1,775 controls; the replay ends at success after 1,595 controls,
-leaving 180 rows of slack). Privileged mode re-saves these rows; standard mode submits the same rows as float64
-through `rcb_client` (one row per 50 Hz control, `hold`). It is an open-loop recording: it is deterministic and
-survives float32 rounding and 0.5 mm / 0.5 mrad row noise, but not 1 mm noise (the guard's rim must enter the lower
-clip channels within a 0.65 mm axial window). It was recorded from a closed-loop authoring controller
+`solution/` holds a validated Sharpa Wave trajectory (2,665 controls; the replay ends at success after 2,485 controls,
+leaving 180 rows of slack): the index fingertip closes the lower clips (225 then 315 degrees), the hand grips the hub
+cap, lifts and turns the guard, hangs it in the two lower channels, lets go and closes the upper clips (45 then
+135 degrees). Privileged mode re-saves these rows; standard mode submits the same rows as float64 through
+`rcb_client` (one row per 50 Hz control, `hold`). It is an open-loop recording: it is deterministic and survives
+float32 rounding. It was recorded from a closed-loop authoring controller
 (`scripts/dexhand/families/fan_guard_install/tools/author.py`) that computes wrist-stage and finger targets only from
 robot kinematics and the simulator state; it never drives an object pose or applies an object force, and it is never
 copied into the agent's environment or image.
@@ -63,15 +67,14 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ### Notes
 Source: `scripts/dexhand/families/fan_guard_install/`, generated by `scripts/dexhand/generate.py`. The scene is
 adapted from the scene-expansion T26 desk-fan front-guard scene (an HTF1220-style estimate: cage radius, wire layout,
-three-paddle blade meshes, fan body, masses and the four perimeter U clips are kept). Simplifications, stated plainly: the two lower clips start closed (they are the hangers that carry the guard) and the
-hand closes the two upper ones; the guard's centre badge is enlarged into a 22 mm raised hub cap so a fingertip grip
-fits in front of the dish wires. Other modelling choices: the clip snap
-leaf is represented by an elastic over-centre tendon detent on each clip hinge (a passive spring, not an actuator); the
-two lower clips start closed and serve as hanger channels while the hand closes the two upper ones (2 of the 4 clips
-are hand-operated); the lower clips' lips sit 1.3 mm deeper than the upper clips' so the hung guard cannot tip
-forward; the guard's centre badge is a 22 mm raised hub cap that a hand can grip in front of the dish wires; the dish
-wires collide with the hand, the rims, the clips and the table but not with the other cage's dish wires; the plug and
-cord are static decoration. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
+three-paddle blade meshes, fan body, masses and the four perimeter U clips are kept). All four clips start open, as in the source, and
+the hand closes all of them. Modelling choices, stated plainly: the guard's centre badge is enlarged into a 22 mm
+raised hub cap (source: a 6 mm badge disc) so a fingertip grip fits in front of the dish wires (the source badge stands
+only about 2 mm proud of the inner spoke ends, which an 8 mm fingertip cannot pinch reliably); the clip snap leaf is
+represented by an elastic over-centre tendon detent on each clip hinge (a passive spring, not an actuator); the lower
+clips' lips sit 1.3 mm deeper than the upper clips' so a guard hung in them cannot tip forward; the dish wires collide
+with the hand, the rims, the clips and the table but not with the other cage's dish wires; the plug and cord are
+static decoration. The Sharpa Wave assets are pinned to MuJoCo Menagerie commit
 `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). The Wuji Hand 2.2 model (`hand2/hand2_2`) is pinned to
 wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same
 wrist stage with its vendor joints, actuators and contact geometry unchanged. This is a rigid-wire, rigid-clip

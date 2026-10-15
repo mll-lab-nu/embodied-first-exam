@@ -3,14 +3,16 @@
 
 ## Difficulty
 The hand has to operate a passive over-centre mechanism (press a booster lever to open the rings, press the raised
-toggle plates to close them), pick thin pages from a stand, and thread three 6.35 mm holes at once over three 2.6 mm
-ring wires while the page follows the curved ring. Both pages must be threaded on all three rings before the rings
-close, and the hand must leave everything still for one second. A dropped page, a page on the desk, a wire forced
-through the paper, or a binder pushed more than 3 cm ends the episode as a failure at once.
+toggle plates to close them), pick up thin rigid pages that lie flat on the desk (drag each one with the fingertips
+until its far edge hangs over the desk edge, then pinch the overhang between thumb and fingers), and thread three
+6.35 mm holes at once over three 2.6 mm ring wires while the page follows the curved ring. Both pages must be
+threaded on all three rings before the rings close, and the hand must leave everything still for one second. A
+dropped page, a page on the floor, a wire forced through the paper, or a binder pushed more than 3 cm ends the episode
+as a failure at once.
 
 ## Reference solution
-`solution/` replays the validated Sharpa Wave authoring trajectory (2,192 controls; the replay ends at success after
-2,042 controls). The authoring controller (`scripts/dexhand/families/binder_page_load/demo.py`) reads the simulator
+`solution/` replays the validated Sharpa Wave authoring trajectory (3,095 controls; the replay ends at success after
+2,940 controls). The authoring controller (`scripts/dexhand/families/binder_page_load/demo.py`) reads the simulator
 state and commands motor targets only; it never sets an object pose or applies an object force, and it is never copied
 into the agent's environment or image.
 
@@ -28,7 +30,7 @@ scene-expansion T37 (Avery 05806 Standard View mini binder reconstruction, 1 in 
 1/4 in holes; authored geometry, not manufacturer CAD). The binder is free on the desk with passive spine/cover hinges,
 two toggle ring plates (0 to 0.60 rad) coupled by the source's internal linkage, one over-centre spatial-tendon spring
 per plate and two boosters. Pages are rigid 6 g cardstock plates with three see-through octagonal holes; paper bending
-is not modelled. Wooden page stands hold the pages holes-down so a hand can pinch their top edge. The Sharpa Wave assets
+is not modelled. The two pages start loose and flat on the desk at the source scene's positions. The Sharpa Wave assets
 are pinned to MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model
 (`hand2/hand2_2`) is pinned to wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT)
 and mounted on the same wrist stage with its vendor joints, actuators and contact geometry unchanged.

@@ -52,9 +52,6 @@ PAGE_W, PAGE_H = 0.1397, 0.2159  # 5.5 x 8.5 in
 HOLE_RADIUS, HOLE_MARGIN = 0.003175, 0.009525  # 1/4 in punched holes, 3/8 in from the binding edge
 PAGE_HALF_T = 0.0004  # stiff cardstock contact plate (visual sheet is thinner)
 PAGE_MASS = 0.006
-STAND_LEAN = 0.21  # rad, lean of a page against its desk stand (from vertical, towards +x)
-STAND_SLAB = (0.035, 0.125, 0.005)
-STAND_BACK = (0.004, 0.125, 0.045)
 
 
 def node(parent, tag, **attributes):
@@ -233,49 +230,6 @@ def sheet_visual_mesh(assets, name, half_t):
     node(assets, "mesh", name=name, vertex=vertices.ravel(), face=np.asarray(faces).ravel())
 
 
-def stand_geometry(sx, sy):
-    """Slab top height, back-plate centre and its lean for the page stand at (sx, sy)."""
-    slab_top = DESK_TOP + 2 * STAND_SLAB[2]
-    lean = STAND_LEAN
-    # Back plate: its front face passes through (sx + 0.012, slab_top) and leans back by ``lean``.
-    foot = np.array([sx + 0.012, slab_top])
-    up = np.array([np.sin(lean), np.cos(lean)])
-    normal = np.array([np.cos(lean), -np.sin(lean)])  # into the plate (+x side)
-    centre = foot + up * STAND_BACK[2] + normal * STAND_BACK[0]
-    return slab_top, foot, up, normal, centre
-
-
-def stand_page_pose(sx, sy):
-    """Page resting on the slab, flat against the back plate, holes at the bottom, printed face towards -x."""
-    slab_top, foot, up, normal, _ = stand_geometry(sx, sy)
-    # Page bottom edge rests on the slab a little in front of the plate foot; page lies on the plate face.
-    lean = STAND_LEAN
-    bottom = foot - normal * PAGE_HALF_T + up * 0.0
-    bottom = np.array([bottom[0] - PAGE_HALF_T * np.tan(lean) - 0.0, slab_top + PAGE_HALF_T * np.sin(lean) + 0.0002])
-    hole = bottom + up * HOLE_MARGIN
-    # page x axis = up (lean), page z (printed face) = (-cos, 0, sin)
-    xa = np.array([up[0], 0, up[1]])
-    ya = np.array([0, 1.0, 0])
-    za = np.cross(xa, ya)
-    R = np.c_[xa, ya, za]
-    from scipy.spatial.transform import Rotation
-
-    q = Rotation.from_matrix(R).as_quat()  # xyzw
-    return (hole[0], sy, hole[1]), (q[3], q[0], q[1], q[2])
-
-
-def add_stand(world, i, sx, sy, ground):
-    slab_top, foot, up, normal, centre = stand_geometry(sx, sy)
-    wood = (0.62, 0.47, 0.32, 1)
-    node(world, "geom", name=f"page_stand_{i}_base", type="box", size=STAND_SLAB,
-         pos=(sx, sy, DESK_TOP + STAND_SLAB[2]), rgba=wood, **ground)
-    node(world, "geom", name=f"page_stand_{i}_back", type="box", size=STAND_BACK, pos=(centre[0], sy, centre[1]),
-         euler=(0, STAND_LEAN, 0), rgba=wood, **ground)
-    # Front lip keeps the bottom edge from sliding off the slab.
-    node(world, "geom", name=f"page_stand_{i}_lip", type="box", size=(0.003, STAND_SLAB[1], 0.004),
-         pos=(sx - 0.02, sy, slab_top + 0.004), rgba=wood, **ground)
-
-
 def add_page(world, assets, index, pos, yaw, quat=None):
     """A rigid punched page; body origin = centre of the middle hole, +x = across the sheet away from the holes."""
     if quat is None:
@@ -399,17 +353,16 @@ def build(config, asset_dir=None, hand="sharpa"):
             node(world, "geom", name=f"desk_leg_{x}_{y}", type="box", size=(0.022, 0.022, 0.339),
                  pos=(x, y, 0.339), rgba=(0.25, 0.24, 0.21, 1), contype=0, conaffinity=0, group=1)
     add_binder(world, tendon, equality)
-    for i, (sx, sy) in enumerate(config["stand_xy"]):
-        add_stand(world, i, sx, sy, ground)
-        pos, quat = stand_page_pose(sx, sy)
-        add_page(world, assets, i, pos, 0.0, quat=quat)
+    for i, (px, py) in enumerate(config["page_xy"]):
+        # loose sheets lying flat on the desk as in the source (T37 scene.py: page origin = middle hole centre)
+        add_page(world, assets, i, (px, py, DESK_TOP + PAGE_HALF_T), 0.0)
     node(world, "light", pos=(0.5, -1.0, 2.3), dir=(0, 0.3, -1), diffuse=(0.7, 0.7, 0.68), castshadow="true")
     node(world, "light", pos=(0.1, 1.2, 2.0), dir=(0.3, -0.3, -1), diffuse=(0.4, 0.4, 0.42), castshadow="false")
     cams = {
         "overview": ((1.08, -0.62, 1.28), (0.62, 0.0, 0.72), 42),
         "closeup": ((0.74, -0.34, 0.98), (0.51, 0.0, 0.72), 45),
         "rings": ((0.64, -0.21, 0.86), (0.49, 0.0, 0.725), 45),
-        "stands": ((0.55, -0.42, 0.98), (0.80, 0.0, 0.78), 50),
+        "pages": ((0.62, -0.45, 1.00), (0.82, 0.10, 0.70), 50),
     }
     for name, (cpos, target, fovy) in cams.items():
         node(world, "camera", name=name, pos=cpos, xyaxes=look_at(cpos, target), fovy=fovy)

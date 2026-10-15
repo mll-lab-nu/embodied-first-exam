@@ -1,7 +1,8 @@
 """Authoring controller (closed loop over Session state, recorded as open-loop actuator rows).
 
-Phases: grasp the hub cap of the flat guard, lift, turn it upright (dome toward the operator), carry it in front of
-the fan raised above the lower hanger clips, press it onto the rear rim, lower it into the two lower clip channels,
+Phases: all four clips start open; close the two lower clips with the index fingertip (hand beside the rim, pointing
+down along it), grasp the hub cap of the flat guard, lift, turn it upright (dome toward the operator), carry it in
+front of the fan raised above the lower clips, press it onto the rear rim, lower it into the two lower clip channels,
 release, then close the two upper clips one after the other with the index fingertip and withdraw.
 Only actuator targets are produced; the recorded rows are replayed in fresh processes by replay.py.
 """
@@ -108,6 +109,21 @@ def run(args):
     rec = Recorder(s)
     grasp_q = np.load(args.grasp)
     squeeze = np.load(args.squeeze)
+    q = s.hold_action()
+    rec.hold(q, 10, "settle")
+    # All four clips start open: close the two lower clips first so they become hanger channels.
+    for clip in args.lower_clips:
+        q = close_clip(s, rec, k, q, clip, args)
+        report(s, f"lower clip {clip} closed")
+        if s.failure:
+            return s, rec
+    if args.lower_clips:
+        q_free = q.copy()
+        q_free[0] -= 0.10
+        q_free[2] += 0.10
+        rec.move(q, q_free, 60, "withdraw from the lower clips")
+    if args.stop == "lower":
+        return s, rec
     pre = grasp_rows(s, rec, k, grasp_q, np.load(args.open))
     rec.move(pre, grasp_q, 30, "close on the cap")
     rec.move(grasp_q, squeeze, 25, "squeeze the cap")
@@ -249,9 +265,24 @@ def clip_frame(s, clip):
     return b.xpos.copy(), r[:, 0], r[:, 1]
 
 
+def finger_direction(s, clip, xc, yc):
+    """Index direction while swinging ``clip``: radially inward for the upper clips (hand above the clip); along the
+    rim toward the bottom of the cage for the lower clips (hand beside the clip, clear of the worktop)."""
+    if clip in (0, 1):
+        return -yc
+    zc = np.cross(xc, yc)
+    down = zc if zc[2] < 0 else -zc
+    return down - 0.0 * yc
+
+
 def close_clip(s, rec, k, q_prev, clip, args):
     hinge, xc, yc = clip_frame(s, clip)
-    rot = hand_frame(-yc, [-1.0, 0.0, 0.0])
+    if clip in (0, 1):
+        palm = np.array([-1.0, 0.0, 0.0])
+    else:  # palm roll about the finger axis, measured from -x (operator side) toward the clip's radial axis
+        a = np.radians(args.palm_deg[clip - 2])
+        palm = np.cos(a) * np.array([-1.0, 0.0, 0.0]) + np.sin(a) * yc
+    rot = hand_frame(finger_direction(s, clip, xc, yc), palm)
     q = q_prev.copy()
     q[6:] = POINTS[s.hand]
     r_f = args.arc_radius
@@ -265,12 +296,18 @@ def close_clip(s, rec, k, q_prev, clip, args):
     q_a = k.wrist_for_tip(q, "index", approach_front, rot)
     far = approach_front + 0.12 * xc + 0.04 * yc
     q_far = k.wrist_for_tip(q, "index", far, rot)
+    if clip in (2, 3) and getattr(args, "retreat", 0.0) > 0:
+        # back away toward the operator before swinging across the front of the fan
+        q_ret = q_prev.copy()
+        q_ret[0] = min(q_prev[0], q_far[0]) - args.retreat
+        rec.move(q_prev, q_ret, 40, f"move to lower clip {clip}")
+        q_prev = q_ret
     q_back = q_prev.copy()
     q_back[0] = min(q_back[0], q_far[0])
     q_back[1:3] = q_far[1:3]
-    rec.move(q_prev, q_back, 60, f"move to upper clip {clip}")
-    rec.move(q_back, q_far, 70, f"move to upper clip {clip}")
-    rec.move(q_far, q_a, 50, f"move to upper clip {clip}")
+    rec.move(q_prev, q_back, 60, f"move to {'upper' if clip in (0, 1) else 'lower'} clip {clip}")
+    rec.move(q_back, q_far, 70, f"move to {'upper' if clip in (0, 1) else 'lower'} clip {clip}")
+    rec.move(q_far, q_a, 50, f"move to {'upper' if clip in (0, 1) else 'lower'} clip {clip}")
     report(s, f"in front of clip {clip}")
     q_b = k.wrist_for_tip(q, "index", approach, rot)
     rec.move(q_a, q_b, 40, f"reach behind clip {clip}")
@@ -317,6 +354,9 @@ if __name__ == "__main__":
     p.add_argument("--press", type=float, default=0.002)
     p.add_argument("--lower-extra", type=float, default=0.004)
     p.add_argument("--clips", type=int, nargs="*", default=[0, 1])
+    p.add_argument("--lower-clips", type=int, nargs="*", default=[2, 3])
+    p.add_argument("--palm-deg", type=float, nargs=2, default=[45.0, -60.0])
+    p.add_argument("--retreat", type=float, default=0.12)
     p.add_argument("--arc-radius", type=float, default=0.0165)
     p.add_argument("--arc-from", type=float, default=2.3)
     p.add_argument("--arc-to", type=float, default=0.95)

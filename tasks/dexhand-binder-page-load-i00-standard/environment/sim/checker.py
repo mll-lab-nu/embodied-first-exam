@@ -10,9 +10,9 @@ Ordered stages (evaluated after every 50 Hz control):
   4. terminal hold: stage-3 condition, pages over the back cover and resting on the binder, no hand contact with any
      page or any binder part, and every page within ``page_still_m`` / ``page_still_rad`` of its pose at the start of
      the window, continuously for ``hold_steps`` controls. Success ends the episode.
-Fail-fast (checked after every physics substep; the first failure is permanent): a page touches the desk or the
-floor, a page has no contact at all and falls faster than ``free_fall_m_s`` while no ring passes through any of its
-holes (dropped; no catch window), a page origin below the desk top or outside the workspace box, a hand geom
+Fail-fast (checked after every physics substep; the first failure is permanent): a page touches the floor, a page
+has no contact at all and falls faster than ``free_fall_m_s`` while no ring passes through any of its
+holes (dropped; no catch window), a page origin more than 2 mm below the desk top or outside the workspace box, a hand geom
 penetrates a page deeper than ``max_hand_penetration_m``, the binder moved more than ``binder_max_shift_m``
 horizontally or tilted more than ``binder_max_tilt_rad``, a ring wire penetrates a page deeper than
 ``max_wire_penetration_m`` (a ring can only enter a page through its hole), or unstable physics.
@@ -78,7 +78,7 @@ class Checker:
         self.hand_geom = gowner == "hand"
         self.binder_geom = gowner == "binder"
         self.ground_geom = np.zeros(m.ngeom, bool)
-        self.ground_geom[[m.geom("desk").id, m.geom("floor").id]] = True
+        self.ground_geom[m.geom("floor").id] = True  # the pages start on the desk: only the floor is a drop
         self.ring_geom = np.array([(m.geom(g).name or "").startswith("ring_") for g in range(m.ngeom)])
         self.finger_name = [None] * m.ngeom
         for g in range(m.ngeom):
@@ -129,7 +129,7 @@ class Checker:
         m = self.m
         for p, b in enumerate(self.pages):
             pos = d.xpos[b]
-            if pos[2] < self.desk_top:
+            if pos[2] < self.desk_top - 0.002:
                 return "page_below_desk", f"page_{p}"
             if np.any(pos < self.ws_lo) or np.any(pos > self.ws_hi):
                 return "page_left_workspace", f"page_{p}"

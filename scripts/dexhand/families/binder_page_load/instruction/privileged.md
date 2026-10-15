@@ -15,8 +15,8 @@ two booster paddles are coupled by the binder's internal linkage (passive joint 
 Pressing a booster paddle down opens the rings; pushing the plates back past the over-centre point (for example by
 pressing the raised inner edges of the open plates down) closes them.
 Simplifications, stated plainly: the pages are rigid 0.8 mm cardstock plates (paper bending, creasing and tearing are
-not modelled; the holes are octagonal openings 6.35 mm across flats); the source scene had the two sheets lying loose on
-the desk, here two wooden page stands hold them leaning, holes down, so a hand can reach an edge; the binder geometry is
+not modelled; the holes are octagonal openings 6.35 mm across flats); as in the source scene the two sheets start loose and
+flat on the desk (a hand can drag a page so that its far edge overhangs the desk edge, then pinch it); the binder geometry is
 an authored reconstruction (Avery 05806 dimensions), not manufacturer CAD.
 
 {{HANDS}}
@@ -52,13 +52,14 @@ s.model, s.data                                 # privileged MuJoCo model and st
 s.features()                                    # toggle angles, threaded/linked holes, contacts, page poses
 s.status()                                      # success, done, reason, steps, stage (0..4), total_stages, hold_steps
 s.step(row)                                     # ten 2 ms physics substeps; a no-op once the episode is done
-s.render_frame("overview")                      # RGB uint8 (480, 640, 3); also "closeup", "rings", "stands"
+s.render_frame("overview")                      # RGB uint8 (480, 640, 3); also "closeup", "rings", "pages"
 s.reset()                                       # exact frozen reset
 s.replay(actions)                               # reset, run rows until the episode ends, return status()
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
 Read `/opt/tools/task.json`, `scene.py`, `checker.py` and `runtime.py` for the complete geometry, failure checks and
 predicate. The world frame has z up; lengths are in metres and angles in radians. The desk top is at z = 0.70 m, the
-binder starts at (0.48, 0.00, 0.705) with its back cover towards +x, and the page stands are at `task.json`
-`stand_xy`. The wrist-stage targets are offsets from `task.json` `wrist_base` (0.62, 0.00, 0.70); at zero wrist
+binder starts at (0.48, 0.00, 0.705) with its back cover towards +x, and the pages lie flat on the desk with their middle hole centres at
+`task.json` `page_xy` (0.71, 0.22) and (0.71, -0.025), z = 0.7004 m (page frame: origin at the middle hole centre, +x
+across the sheet away from the holes, +z the printed face); the desk's +x edge is at x = 0.98 m. The wrist-stage targets are offsets from `task.json` `wrist_base` (0.62, 0.00, 0.70); at zero wrist
 rotation the fingers point down (-z) and the palm faces +x.

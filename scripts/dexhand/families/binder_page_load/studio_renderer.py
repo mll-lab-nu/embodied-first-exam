@@ -198,10 +198,10 @@ def main():
     camera = bpy.data.objects.new("Presentation camera", cam_data)
     scene.collection.objects.link(camera)
     scene.camera = camera
-    cam_data.lens = 31
+    cam_data.lens = 34
     cam_data.clip_start, cam_data.clip_end = 0.01, 20
-    camera.location = Vector((1.04, -0.58, 1.16))
-    target = Vector((0.62, 0.0, 0.75))
+    camera.location = Vector((1.30, -0.70, 1.24))  # wave 3: also frames the desk's +x edge where pages are picked up
+    target = Vector((0.73, 0.04, 0.74))
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     n = len(payload["frames"])
     if args.only:

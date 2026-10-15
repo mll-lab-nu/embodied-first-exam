@@ -1,4 +1,4 @@
-# ram_module_install (DexHand plugin family, wave 2, scene T28)
+# ram_module_install (DexHand plugin family, wave 2, scene T28; socket throat from wave 3)
 
 Physical version of scene-expansion scene T28 "Install a desktop RAM module" (accepted kinematic demo). A Sharpa Wave
 (default) or Wuji Hand 2.2 on the shared six-axis wrist stage picks a Kingston DDR4 DIMM out of an anti-static foam
@@ -22,8 +22,9 @@ lower edge pushes the passive latch over centre, and lets go.
 - Geometry, materials, label texture, module dimensions (133.35 x 31.25 x 1.27 mm), mass 14 g, inertia, keyed lower
   edge (off-centre notch), the four sockets and the board come from the source scene, copied verbatim.
 - Target socket `socket_3`: the 30 copper contact sliders (0.25 g on 900 N/m springs; unstable at a 2 ms step, no
-  electrical meaning) and both side catches are visual only; throat walls and end forks widened from 1.66 to 2.10 mm
-  with 0.6 rad x 1.5 mm lead-in chamfers (exact visual copies keep the source look); floor raised 1 mm to the source's
+  electrical meaning) and both side catches are visual only; throat walls and end forks keep the source's 1.66 mm gap
+  (wave 3; wave 2 had widened them to 2.10 mm) with 0.6 rad x 1.5 mm lead-in chamfers (exact visual copies keep the
+  source look); floor raised 1 mm to the source's
   2 mm seating datum; key kept at its position/height, 0.70 mm wide with a rounded top (notch 1.50 mm); fixed-end post
   rigid (flexure not needed for a straight entry) with a chamfered top inner edge.
 - Moving latch: source hinge (0..0.55 rad, damping 0.001, armature 1e-6). The source spring (0.012 N m/rad towards
@@ -37,6 +38,26 @@ lower edge pushes the passive latch over centre, and lets go.
 - Wrist targets are the world position of the hand mount (stage base at the origin), ranges x [0.17, 1.07],
   y [-0.51, 0.39], z [0.70, 1.30] m, angles +-3.14 rad; mount quaternion `0 0 1 0` (fingers down at zero angles).
 
+## Wave 3 (2026-10-15): realism review against the source scene
+
+- Socket throat: back to the source's 1.66 mm (`socket_half_gap_m` 0.83 mm; wave 2 widened it to 2.10 mm). The same
+  authoring controller inserts the module (success after 1,379 controls instead of 1,391); latch physics unchanged.
+- Module start pose: still upright in the foam holder. In the source it lies flat on the workbench (DRAM packages up,
+  resting on its rear package). Picking a flat 1.27 mm PCB was tried and is not feasible with these fingertips tonight:
+  the fingertip spheres (r 8.1 / 9.4 mm) cannot get under an edge that the rear package can tilt up by at most 3.4 mm
+  (the contact lies below the sphere centre and pushes the edge down); sliding / turning the board on the bench to an
+  overhang at the bench edge fails because the soft finger servos give ~0.1 N of press force (with stiff contacts or
+  joint-limit fingers a small hand turn slams one fingertip with 24-83 N and tips the board), and a palm press cannot
+  transmit the turning torque through its single small contact patch. Scripts and logs: the wave-3 worker evidence
+  (`flat_start_attempts/`, outside this repository).
+- Marvin arm: a port onto the arm rig was attempted and is not shipped. Following the floating oracle's hand poses with
+  arm IK drops the module during the carry; running this controller closed loop on the arm (its plans mirrored from
+  the arm episode, arm IK + joint integral per control; tracking within 1 mm) carries it to the socket, but the
+  two-pad pinch lets the 133 mm board pivot and slide during the alignment iterations, and with the source's 1.66 mm
+  throat the fixed end then lands on the end-guide top (1-5 mm lateral error) instead of entering; a three-finger
+  pinch (thumb against index + middle; an authoring variant, not shipped, that succeeds on the stage after 1,385
+  controls) loses the middle finger when the arm lifts the module out of the holder. The task stays on the wave-2 wrist stage.
+
 ## Evidence (phase A)
 Kept with the wave-2 worker records (status.json and evidence/, outside this repository): two fresh replays with
 identical state hashes, float32 rows, negatives (nop, truncations, drops), a perturbation sweep, videos and frames.
@@ -46,7 +67,7 @@ Commands (from this folder, with `DEXHAND_ASSET_DIR` pointing at the Sharpa asse
 
 ```bash
 python demo.py --out solution/trajectory.npz                 # regenerate the oracle bit-exactly (~30 s)
-python replay.py --task ram_module_install --traj solution/trajectory.npz --out out/r1.json   # success at 1391
+python replay.py --task ram_module_install --traj solution/trajectory.npz --out out/r1.json   # success at 1379
 python -m unittest tests/test_ram_module_install.py          # 24 authoring tests (~90 s)
 python presentation.py export --trajectory <rows.npz> --export <dir>        # sampled native poses (every 4 controls)
 BLENDER=<blender 4.5.3> python presentation.py render --export <dir> --output film.mp4 --engine eevee --samples 24

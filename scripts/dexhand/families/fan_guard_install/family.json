@@ -37,7 +37,7 @@
   },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/ replays the recorded Sharpa Wave episode in both modes (1,775 controls; success after 1,595): two fresh-process replays with identical state hashes, float32 rows succeed; Harbor 0.23 (eai-dexhand:0.2.0, 2026-10-14): privileged oracle 1 / nop 0, standard oracle 1 (live = replay) / nop 0.",
+    "oracle_evidence": "solution/ replays the recorded Sharpa Wave episode in both modes (2,665 controls; success after 2,485; all four clips start open and are closed by the hand): two fresh-process replays with identical state hashes, float32 rows succeed.",
     "expert_time_estimate_hours": 4.0,
     "keywords": [
       "assembly",

@@ -99,7 +99,8 @@ def sector_vertices(r_in_low, r_in_high, r_out, a, b, z_low, z_high):
 def hollow_leg(parent, assets, config, y, prefix):
     """A leg split around its two blind bores: solid blocks, shoulders, a blind bottom and convex wall sectors.
 
-    Each bore is a straight 1 mm-clearance section topped by a 45-degree-ish entry chamfer; no convex geometry fills it.
+    Each bore is a straight section of the source radius (4.1 mm for the 4.0 mm dowel: 0.1 mm radial clearance, 24
+    sectors, no entry chamfer, as in the T27 source); no convex geometry fills it.
     """
     length, width = config["leg_length"], config["leg_width"]
     half = width / 2
@@ -115,18 +116,19 @@ def hollow_leg(parent, assets, config, y, prefix):
     n = int(config["bore_sectors"])
     # Circumscribed polygons keep at least the nominal radial clearance everywhere.
     r_bore = config["bore_radius"] / np.cos(np.pi / n)
-    r_chamfer = config["chamfer_radius"] / np.cos(np.pi / n)
     z_bottom, z_top = half - depth, half
-    z_chamfer = half - config["chamfer_depth"]
+    pieces = [(r_bore, r_bore, z_bottom, z_top)]  # one straight section from the blind bottom to the entry
+    if config.get("chamfer_depth", 0.0) > 0:  # optional entry chamfer (not used: the source bores have none)
+        z_chamfer = half - config["chamfer_depth"]
+        r_chamfer = config["chamfer_radius"] / np.cos(np.pi / n)
+        pieces = [(r_bore, r_bore, z_bottom, z_chamfer), (r_bore, r_chamfer, z_chamfer, z_top)]
     for k, x in enumerate(config["rail_stations"]):
         wood(parent, f"{prefix}_b{k}_left", (cut, (half - cut) / 2, half), (x, y - (half + cut) / 2, 0))
         wood(parent, f"{prefix}_b{k}_right", (cut, (half - cut) / 2, half), (x, y + (half + cut) / 2, 0))
         wood(parent, f"{prefix}_b{k}_bottom", (cut, cut, (width - depth) / 2), (x, y, -half + (width - depth) / 2))
         for j in range(n):
             a, b = 2 * np.pi * np.array([j, j + 1]) / n
-            for part, (r0, r1, z0, z1) in enumerate(
-                ((r_bore, r_bore, z_bottom, z_chamfer), (r_bore, r_chamfer, z_chamfer, z_top))
-            ):
+            for part, (r0, r1, z0, z1) in enumerate(pieces):
                 mesh = f"{prefix}_b{k}_s{j}_{part}"
                 node(assets, "mesh", name=mesh, vertex=sector_vertices(r0, r1, 0.013, a, b, z0, z1))
                 # Bore walls collide with dowels only (collision bit 2): nothing else can reach inside a bore.

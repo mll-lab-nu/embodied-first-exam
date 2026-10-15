@@ -20,7 +20,7 @@ mode = "privileged"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 
 oracle = "full"
-oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory in both modes (1,541 rows; the episode ends at success after 1,391 controls). Two fresh-process replays give identical state hashes; Harbor 0.23 oracle trials score 1 in privileged and standard mode, nop trials 0 (Sharpa, and Wuji in both modes)."
+oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory in both modes (1,529 rows; the episode ends at success after 1,379 controls, with the source's 1.66 mm socket throat). Two fresh-process replays give identical state hashes; Harbor 0.23 oracle trials score 1 in privileged and standard mode, nop trials 0."
 expert_time_estimate_hours = 4.0
 difficulty = "hard"
 release_status = "provisional"

@@ -31,7 +31,7 @@ from runtime import Session  # noqa: E402
 from scene import hands  # noqa: E402
 
 ORACLE = np.load(FAMILY / "solution/trajectory.npz")["actions"]
-SUCCESS_STEP = 2808  # the oracle replay ends with success after this many controls
+SUCCESS_STEP = 2806  # the oracle replay ends with success after this many controls
 TASK = "stool_brace_insert"
 
 

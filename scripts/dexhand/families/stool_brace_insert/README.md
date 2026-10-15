@@ -13,8 +13,10 @@ of the source film is not part of the task.
 
 ## Modelling choices
 - Geometry from the source `geometry.py` (legs, factory crossrails, rails, dowel/bore dimensions, positions, masses and
-  inertias). Bore radius 4.1 -> 5.0 mm (1 mm radial clearance) plus a 4 mm entry chamfer to 7.5 mm, 12 convex sectors
-  per bore (straight + chamfer piece); dowels are capsules (rounded ends) of the source radius and exposed length.
+  inertias). Bores as in the source (wave 3): radius 4.1 mm for the 4.0 mm dowels (0.1 mm radial clearance), no
+  entry chamfer, 24 convex sectors (circumscribed, so the clearance is at least 0.1 mm everywhere); dowels are capsules
+  (rounded ends) of the source radius and exposed length. Wave 2 had widened the bores to 5.0 mm with a 4 mm entry
+  chamfer; the authoring controller seats all eight dowels with the source clearance as well.
 - Collision bitmasks (`scene.BITS`): bore walls touch only dowels; frames touch the table through invisible 1 mm skids
   under each leg face (fewer redundant box/box contacts, ~4x faster); everything else collides normally.
 - Solver: implicitfast, elliptic cones, impratio 10 (source values), plus `noslip_iterations = 5`: without it the
@@ -32,8 +34,8 @@ of the source film is not part of the task.
 `presentation.py` + `studio_renderer.py` (not shipped): PR film from exact saved poses (approved T27 studio look).
 Run from this folder with the pinned MuJoCo environment and `DEXHAND_ASSET_DIR` pointing at the Sharpa assets:
 ```bash
-python demo.py --out stool_demo.npz            # ~90 s; success after 2,808 controls
-python replay.py --traj solution/trajectory.npz --out replay.json     # ~85 s; success, state_sha 6bf2b74e...
+python demo.py --out stool_demo.npz            # ~90 s; success after 2,806 controls
+python replay.py --traj solution/trajectory.npz --out replay.json     # ~85 s; success, state_sha afe276e9...
 python replay.py --traj solution/trajectory.npz --out replay.json --video replay.mp4 --fps 25 --width 1280 --height 720
 python -m pytest -q tests                      # 17 tests, ~4 min (positive, nop, partial, fail-fast, trust boundary, Wuji)
 python presentation.py export --trajectory solution/trajectory.npz --export film_export --stride 5
@@ -42,9 +44,9 @@ DEXHAND_BLENDER=<blender 4.5.3> python studio_renderer.py --export film_export -
 python presentation.py encode --export film_export --output film.mp4 --fps 20 --crf 18
 ```
 
-## Evidence (wave 2, 2026-10-14/15)
-Oracle: two fresh replays success at control 2,808 with identical state_sha `6bf2b74e...`; float32 rows succeed at
+## Evidence (wave 3 source bores, 2026-10-15; wave-2 structure)
+Oracle: two fresh replays success at control 2,806 with identical state_sha `afe276e9...`; float32 rows succeed at
 the same step; Harbor oracle 1 / nop 0 in privileged and standard mode, Wuji nop 0. Negatives: nop, truncation
 before assembly, one seated brace dowel (stage 2), brace released mid-air (fail-fast `brace_dropped` at control 507),
-hand swept into a pre-seated rail (fail-fast `rail_knocked` at control 1254). Replay costs about 0.03 s per control
+hand swept into a pre-seated rail (fail-fast `rail_knocked` at control 1282). Replay costs about 0.03 s per control
 (noslip solver); `replay_sec` = 1200 s covers 6,000 rows with margin.

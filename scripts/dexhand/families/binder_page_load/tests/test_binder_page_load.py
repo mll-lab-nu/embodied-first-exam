@@ -125,17 +125,31 @@ class TaskTests(unittest.TestCase):
         self.assertFalse(s.replay(actions[: stages[3] - 1])["success"])
         drop = actions.copy()
         lo, hi = s.model.actuator_ctrlrange[6:19].T
-        drop[540:, 6:19] = np.clip(0.0, lo, hi)
+        drop[1000:, 6:19] = np.clip(0.0, lo, hi)  # open thumb/index/middle while carrying page 1 in the air
         st = s.replay(drop)
         self.assertEqual(st["reason"], "page_dropped")
-        self.assertEqual(st["failure_detail"]["control"], 541)  # first free-fall substep after the release at row 540
+        self.assertEqual(st["failure_detail"]["control"], 1002)  # first free-fall substep after the release
         self.assertFalse(st["success"])
-        knock = actions.copy()
-        for k in range(60):  # sweep the wrist into the binder after both pages are placed
-            knock[1500 + k, 0] = actions[1500, 0] - 0.0015 * k
-            knock[1500 + k, 2] = max(actions[1500, 2] - 0.002 * k, 0.02)
-        st = s.replay(knock[:1700])
+        knock = actions[:2980].copy()
+        for k in range(120):  # sweep the hand sideways through the binder while it closes the rings
+            knock[2860 + k] = actions[2860]
+            knock[2860 + k, 1] = actions[2860, 1] + 0.25 * min(1.0, (k + 1) / 80)
+        st = s.replay(knock)
         self.assertEqual(st["reason"], "binder_displaced")
+
+    def test_pages_start_loose_on_the_desk(self):
+        """Source start: both pages flat on the desk (no stands); resting on the desk is not a failure."""
+        s = Session()
+        self.assertFalse(any((s.model.geom(g).name or "").startswith("page_stand") for g in range(s.model.ngeom)))
+        for k, (x, y) in enumerate(s.config["page_xy"]):
+            b = s.data.body(f"page_{k}")
+            np.testing.assert_allclose(b.xpos, [x, y, 0.7004], atol=1e-6)
+            self.assertAlmostEqual(float(b.xmat[8]), 1.0, places=9)  # flat, printed face up
+        st = s.replay(np.tile(s.hold_action(), (100, 1)))
+        self.assertIsNone(st["failure"])
+        for k in range(2):
+            self.assertTrue(any(s.checker.page_geom[c.geom[0]] or s.checker.page_geom[c.geom[1]]
+                                for c in s.data.contact[: s.data.ncon]))
 
     def test_page_holes_are_open(self):
         """A ray through a hole centre passes the page; a ray through the sheet hits it."""

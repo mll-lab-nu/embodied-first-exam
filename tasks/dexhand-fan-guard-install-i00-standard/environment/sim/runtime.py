@@ -13,7 +13,7 @@ import mujoco
 import numpy as np
 
 from checker import STAGES, Checker
-from geometry import LOWER, OPEN, UPPER
+from geometry import OPEN
 from scene import build, hands
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
@@ -59,8 +59,7 @@ class Session:
     def reset(self):
         mujoco.mj_resetData(self.model, self.data)
         self.data.qpos[self.qadr] = self.initial_targets
-        self.data.qpos[self.clip_qadr[list(UPPER)]] = OPEN
-        self.data.qpos[self.clip_qadr[list(LOWER)]] = 0.0
+        self.data.qpos[self.clip_qadr] = OPEN  # all four perimeter clips start open (source start state)
         self.data.ctrl[:] = self.initial_targets
         mujoco.mj_forward(self.model, self.data)
         self.steps = 0

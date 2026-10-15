@@ -79,7 +79,7 @@ class Session:
         return self.data.ctrl.copy()
 
     def cameras(self):
-        return ["overview", "closeup", "rings", "stands"]
+        return ["overview", "closeup", "rings", "pages"]
 
     def step(self, action):
         values = np.asarray(action, dtype=np.float64)

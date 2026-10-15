@@ -46,8 +46,8 @@ MODELLING_NOTES = [
     "step and carry no task meaning (no electrical model).",
     "The fixed-end retainer post is rigid (its flexure is not needed for a straight insertion) and both side catches "
     "are visual only, so the module is inserted straight down instead of fixed-end-first with a lean.",
-    "Socket 3 throat widened from 1.66 mm to 2.10 mm (module 1.27 mm) and its end forks to the same gap; the floor is "
-    "raised by 1 mm so the module rests at the source's 2 mm seating datum.",
+    "Socket 3 keeps the source throat (1.66 mm for the 1.27 mm module) and end-fork gap, with lead-in chamfers on the "
+    "guide tops; the floor is raised by 1 mm so the module rests at the source's 2 mm seating datum.",
     "The DIMM starts upright in a slotted anti-static foam holder on the bench (key towards +x) instead of lying flat: "
     "picking a 1.27 mm flat PCB off a table is outside a position-controlled hand's reach in this task.",
     "The moving latch keeps the source joint law (hinge 0..0.6 rad, spring 0.012 N m/rad towards closed, damping "

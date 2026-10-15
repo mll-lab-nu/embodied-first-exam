@@ -26,12 +26,12 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `drying_rack_unfold` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,415 rows |
 | `picture_hang` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 813 rows |
 | `usb_plug_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,134 rows |
-| `fan_guard_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,775 rows |
-| `stool_brace_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,008 rows |
-| `ram_module_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,541 rows |
+| `fan_guard_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,665 rows |
+| `stool_brace_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,006 rows |
+| `ram_module_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,529 rows |
 | `boot_sole_brush` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,329 rows |
 | `paper_staple` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 946 rows |
-| `binder_page_load` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 2,192 rows |
+| `binder_page_load` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,095 rows |
 | `envelope_letter_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,298 rows |
 | `book_page_turn` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 650 rows |
 | `tray_glass_carry` | two hands, each on its own six-DoF wrist stage | 56 / 52 | 50 Hz, 10 x 2 ms | 1,072 rows |
@@ -580,51 +580,62 @@ floor); unstable physics; 3,000 controls. Ports are open cavities with generous 
 ### Desk-fan front guard (`fan_guard_install`, T26)
 
 An unpowered desk fan (free body on rubber feet) stands on the worktop with its rear wire cage and four perimeter U
-clips (passive hinges with an elastic over-centre detent). The detached front guard (0.369 m wire cage, 185 g, raised
-22 mm hub cap) lies flat, dome up. The two lower clips start closed as hanger channels; the hand closes the two upper
-ones. **Success**, in order: (1) the guard seated: centre within 5 mm of the fan axis, axial seat error within 2.5 mm,
-axis within 5 degrees; (2) still seated, all four clip hinges at most 0.12 rad with the guard rim inside every clip's
-U channel, each upper clip locked at or after the first seated control; (3) no hand contact on guard, clips or fan,
-guard slower than 0.02 m/s and 0.2 rad/s, for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms
-substep: the fan moved more than 3 cm or tilted more than 0.10 rad; the guard back on the worktop, a leg or the floor
-after it was lifted 5 cm; the guard touching nothing while falling faster than 0.2 m/s; the guard striking the fan
-base, stem, neck, motor housing, feet or buttons; its centre of mass below the worktop or outside the workspace box;
-unstable physics; 6,000 controls. Rigid cages and clips; the source's 45 mg snap leaf is the elastic detent. Oracle:
-1,775 Sharpa rows (success at 1,595); no Wuji solution.
+clips (passive hinges with an elastic over-centre detent). The detached front guard (0.369 m wire cage, 185 g, raised 22
+mm hub cap) lies flat, dome up. All four clips start swung open (1.40 rad), as in the source, and the hand closes all
+four; a closed lower clip forms an open-topped U channel that can carry the rim. **Success**, in order: (1) the guard
+seated: centre within 5 mm of the fan axis, axial seat error within 2.5 mm, axis within 5 degrees; (2) still seated, all
+four clip hinges at most 0.12 rad with the guard rim inside every clip's U channel, each upper clip locked at or after
+the first seated control; (3) no hand contact on guard, clips or fan, guard slower than 0.02 m/s and 0.2 rad/s, for 50
+consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: the fan moved more than 3 cm or tilted more
+than 0.10 rad; the guard back on the worktop, a leg or the floor after it was lifted 5 cm; the guard touching nothing
+while falling faster than 0.2 m/s; the guard striking the fan base, stem, neck, motor housing, feet or buttons; its
+centre of mass below the worktop or outside the workspace box; unstable physics; 6,000 controls. Rigid cages and clips;
+the source's 45 mg snap leaf is the elastic detent. Wave 3 (2026-10-15): the pre-closed lower clips are gone (realism
+restored); kept are the raised 22 mm hub cap in place of the source's 6 mm badge (a fingertip resting on the spokes
+reaches only the badge's top corner: every tried lift needed the fingertip capsules 8 mm inside the 0.5 mm spokes) and
+the floating wrist stage (with the fan 0.45 m behind the worktop edge, the Marvin arm reaches neither the clip pushes
+nor the upright-guard poses, whose wrist angles exceed J6/J7). Oracle: 2,665 Sharpa rows (success at 2,485); no Wuji
+solution.
 
 ### Stool cross brace (`stool_brace_insert`, T27)
 
-A pine stool dry frame: the lower side frame lies flat with its four bores up and three rails already seated in three
-of them; the loose cross brace (0.26 m, an 8 mm dowel exposed 15 mm at each end) and the opposite side frame (upside
-down) lie beside it. A dowel is seated when its tip is 12-19 mm past the bore entry, within 1.6 mm of the bore axis
-and within 0.105 rad of it. **Success**, in order: (1) brace lifted (clear of the table, centre raised 0.05 m, lowest
-corner 0.02 m up); (2) one brace dowel seated in the empty lower bore; (3) the opposite frame lifted; (4) assembled:
-each of the eight bores holds exactly one seated dowel and every rail has one dowel seated in each side frame; then no
-hand contact and every part still (0.02 m/s, 0.2 rad/s) for 50 controls (1 s). **Immediate failure**, after every
-2 ms substep: the lower frame moved more than 0.03 m or tilted more than 10 degrees; a pre-seated rail pulled to less
-than 8 mm or tilted more than 10 degrees; the brace back on the table or below 0.09 m after stage 1, tilted more than
-20 degrees after stage 2; the opposite frame on the table or tilted more than 20 degrees after stage 3; any part with
-no contact falling faster than 0.2 m/s; floor contact, below the table top or outside the workspace box; unstable
-physics; 6,000 controls. All parts are free rigid bodies; bores are hollow contact geometry with 1 mm radial clearance
-and a 4 mm chamfer; glue, screws and the seat are not modelled; the solver adds 5 noslip iterations so the 0.58 kg
-frame does not creep in the grip. Oracle: 3,008 Sharpa rows (success at 2,808); no Wuji solution.
+A pine stool dry frame: the lower side frame lies flat with its four bores up and three rails already seated in three of
+them; the loose cross brace (0.26 m, an 8 mm dowel exposed 15 mm at each end) and the opposite side frame (upside down)
+lie beside it. A dowel is seated when its tip is 12-19 mm past the bore entry, within 1.6 mm of the bore axis and within
+0.105 rad of it. **Success**, in order: (1) brace lifted (clear of the table, centre raised 0.05 m, lowest corner 0.02 m
+up); (2) one brace dowel seated in the empty lower bore; (3) the opposite frame lifted; (4) assembled: each of the eight
+bores holds exactly one seated dowel and every rail has one dowel seated in each side frame; then no hand contact and
+every part still (0.02 m/s, 0.2 rad/s) for 50 controls (1 s). **Immediate failure**, after every 2 ms substep: the lower
+frame moved more than 0.03 m or tilted more than 10 degrees; a pre-seated rail pulled to less than 8 mm or tilted more
+than 10 degrees; the brace back on the table or below 0.09 m after stage 1, tilted more than 20 degrees after stage 2;
+the opposite frame on the table or tilted more than 20 degrees after stage 3; any part with no contact falling faster
+than 0.2 m/s; floor contact, below the table top or outside the workspace box; unstable physics; 6,000 controls. All
+parts are free rigid bodies; the bores keep the source size (4.1 mm radius for the 4 mm dowels: 0.1 mm radial clearance,
+no entry chamfer; hollow contact geometry of 24 convex sectors; wave 3 restored them from the earlier 1 mm clearance and
+4 mm chamfer); glue, screws and the seat are not modelled; the solver adds 5 noslip iterations so the 0.58 kg frame does
+not creep in the grip. Still on the floating wrist stage: the brace pivot (fingers-down, palm toward the robot) stays
+23-107 mm out of the Marvin arms' reach from every tried stand pose. Oracle: 3,006 Sharpa rows (success at 2,806); no
+Wuji solution.
 
 ### RAM module installation (`ram_module_install`, T28)
 
-A Kingston DDR4 module stands upright in a slotted anti-static foam holder on a service workbench; an ATX motherboard
-is fixed in its tray with four DIMM sockets; the outer socket has one moving latch, open. **Success**, in order: (1)
-picked: the module out of the holder (no holder contact, lower edge z >= 0.851 m), held by the thumb and another
-finger; (2) seated: both lower module ends 1.5 to 2.6 mm above the socket base, lateral offset <= 0.5 mm, along-slot
-offset <= 1.0 mm, height axis within 3 degrees of vertical and length axis within 3 degrees of the keyed direction (a
-reversed module never counts); (3) latched: while seated, latch hinge <= 0.08 rad; then 50 consecutive controls (1 s)
-seated and latched with no hand contact on module or latch, module slower than 0.01 m/s and 0.2 rad/s. **Immediate
-failure**, after every 2 ms substep: module contact with anything but the hand, the holder or the target socket; an
-unsupported module falling faster than 0.2 m/s or a free fall above 5 cm; a lower corner below the bench top or a
-lower end less than 1.2 mm above the socket base; leaving the workspace box; unstable physics; 3,000 controls.
-Simplifications (target socket only): copper contacts and side catches are visual; the throat is widened from 1.66 to
-2.10 mm (module 1.27 mm) with lead-in chamfers; the latch is a passive over-centre toggle spring that only the module's
-lower edge closes; no electrical contact or retention force. Oracle: 1,541 Sharpa rows (success at 1,391); no Wuji
-solution.
+A Kingston DDR4 module stands upright in a slotted anti-static foam holder on a service workbench; an ATX motherboard is
+fixed in its tray with four DIMM sockets; the outer socket has one moving latch, open. **Success**, in order: (1)
+picked: the module out of the holder (no holder contact, lower edge z >= 0.851 m), held by the thumb and another finger;
+(2) seated: both lower module ends 1.5 to 2.6 mm above the socket base, lateral offset <= 0.5 mm, along-slot offset <=
+1.0 mm, height axis within 3 degrees of vertical and length axis within 3 degrees of the keyed direction (a reversed
+module never counts); (3) latched: while seated, latch hinge <= 0.08 rad; then 50 consecutive controls (1 s) seated and
+latched with no hand contact on module or latch, module slower than 0.01 m/s and 0.2 rad/s. **Immediate failure**, after
+every 2 ms substep: module contact with anything but the hand, the holder or the target socket; an unsupported module
+falling faster than 0.2 m/s or a free fall above 5 cm; a lower corner below the bench top or a lower end less than 1.2
+mm above the socket base; leaving the workspace box; unstable physics; 3,000 controls. Simplifications (target socket
+only): copper contacts and side catches are visual; the throat keeps the source's 1.66 mm (module 1.27 mm; wave 3
+restored it from 2.10 mm) with lead-in chamfers; the latch is a passive over-centre toggle spring that only the module's
+lower edge closes; no electrical contact or retention force. Kept from wave 2: the slotted foam holder (the source
+module lies flat; a flat 1.27 mm board cannot be picked up with these fingertips: its raised edge stays below the
+fingertip spheres' centres) and the floating wrist stage (on the Marvin arm the module slipped or pivoted in the pinch
+during the carry and alignment, and the 1.66 mm throat needs < 0.5 mm lateral error). Oracle: 1,529 Sharpa rows (success
+at 1,379); no Wuji solution.
 
 ### Boot sole brushing (`boot_sole_brush`, T29)
 
@@ -661,16 +672,19 @@ is formed. Oracle: 946 Sharpa rows (success at 746); Wuji: `solution/wuji/` (1,1
 A free open-front ring binder lies on the desk with three 1-inch split rings on two toggle plates with an over-centre
 spring (closed at 0 rad, open at 0.60 rad); a booster paddle at each end opens them when pressed down (the plates and
 boosters are coupled by joint equalities inside the passive mechanism, never to the hand). Two rigid punched pages
-(139.7 x 215.9 mm, 6 g, three 6.35 mm holes) lean in two page stands. **Success**, in order: (1) rings opened (both
-plates >= 0.50 rad); (2) pages placed: rings still open, each of the six holes threaded by the right ring half of its
-own station (one crossing within 3.5 mm of the hole centre), no hand contact on the pages, each page centre over the
-back cover; (3) rings closed (<= 0.05 rad), every hole linked exactly once; (4) no hand contact on pages or binder,
-both pages resting on the binder and staying within 2 mm and 0.03 rad, for 50 consecutive controls (1 s).
-**Immediate failure**, after every 2 ms substep: a page touching the desk or floor; a page with no contact falling
-faster than 0.2 m/s with no ring through its holes; a page below the desk top or outside the workspace box; the binder
-moved more than 0.03 m or tilted more than 0.35 rad; a ring wire more than 1.2 mm into a page or a hand part more than
-3 mm into a page; unstable physics; 6,000 controls. Pages are stiff cardstock plates (no bending). Oracle: 2,192
-Sharpa rows (success at 2,042); no Wuji solution.
+(139.7 x 215.9 mm, 6 g, three 6.35 mm holes) lie loose and flat on the desk, printed face up, as in the source (wave 3
+removed the earlier page stands): a hand drags a page until its far edge overhangs the desk edge and pinches the
+overhang. **Success**, in order: (1) rings opened (both plates >= 0.50 rad); (2) pages placed: rings still open, each of
+the six holes threaded by the right ring half of its own station (one crossing within 3.5 mm of the hole centre), no
+hand contact on the pages, each page centre over the back cover; (3) rings closed (<= 0.05 rad), every hole linked
+exactly once; (4) no hand contact on pages or binder, both pages resting on the binder and staying within 2 mm and 0.03
+rad, for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms substep: a page touching the floor
+(sliding on the desk and hanging over its edge are allowed); a page with no contact falling faster than 0.2 m/s with no
+ring through its holes; a page origin more than 2 mm below the desk top or outside the workspace box; the binder moved
+more than 0.03 m or tilted more than 0.35 rad; a ring wire more than 1.2 mm into a page or a hand part more than 3 mm
+into a page; unstable physics; 6,000 controls. Pages are stiff cardstock plates (no bending). Still on the floating
+wrist stage: from any stand that reaches the binder, the flat pages and the desk edges where a rigid page can be picked
+up are out of the Marvin arm's reach. Oracle: 3,095 Sharpa rows (success at 2,940); no Wuji solution.
 
 ### Letter into an envelope (`envelope_letter_insert`, T38)
 

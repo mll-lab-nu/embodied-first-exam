@@ -25,8 +25,8 @@ RADIUS = 0.1845
 RIM_WIRE = 0.0018
 AXIAL = np.array([-1.0, 0.0, 0.0])  # cage axis, pointing from the fan toward the operator (world -x)
 ANGLES = np.deg2rad([45, 135, 225, 315])
-UPPER = (0, 1)  # clips the hand closes (start open)
-LOWER = (2, 3)  # pre-closed hanger clips carrying the guard
+UPPER = (0, 1)  # upper clips: must lock after the guard is seated
+LOWER = (2, 3)  # lower clips (all four clips start open)
 # Hook-lip centre along the clip axis: the lower hanger clips have a 1.3 mm deeper lip (0.65 mm axial play on the
 # seated rim) so the hung guard cannot tip forward; the upper clips keep the source lip (1.95 mm play) and clear the
 # seated rim while they swing closed.

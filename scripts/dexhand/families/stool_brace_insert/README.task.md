@@ -2,13 +2,13 @@
 {{TASK_TEXT}}
 
 ## Difficulty
-A single hand has to turn a loose 0.29 m brace upright, insert an 8 mm dowel into a hollow bore with 1 mm radial
-clearance, let go without knocking it over, then carry a 0.58 kg side frame and lower it onto four dowels at once so
+A single hand has to turn a loose 0.29 m brace upright, insert an 8 mm dowel into a hollow 8.2 mm bore (0.1 mm radial
+clearance, no entry chamfer), let go without knocking it over, then carry a 0.58 kg side frame and lower it onto four dowels at once so
 that the brace's second dowel enters the opposite leg. Grip slip, tilt during transport, a nudged pre-seated rail or a
 dropped part end the episode at once; a single seated dowel or a partial frame never counts.
 
 ## Reference solution
-`solution/` replays a Sharpa Wave authoring trajectory (3,008 controls; the replay ends at success after 2,808). In
+`solution/` replays a Sharpa Wave authoring trajectory (3,006 controls; the replay ends at success after 2,806). In
 privileged mode the oracle hands the rows in as `/app/output/trajectory.npz`; in standard mode `oracle_replay.py`
 submits the same float64 rows through the public client in chunks. The
 authoring controller (`scripts/dexhand/families/stool_brace_insert/demo.py`, not copied into any task directory)
@@ -35,8 +35,8 @@ grain texture is the scene's own procedural texture (`assets/`, sha256 manifest)
 MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the Wuji Hand 2.2 model
 (`hand2/hand2_2`) is pinned to wuji-technology/wuji-description commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702`
 (MIT) and mounted on the same wrist stage. Modelling scope: the source geometry is kept (leg 0.43 x 0.03 x 0.03 m,
-rails 0.26 m, 8 mm dowels exposed 15 mm, 16 mm blind bores); the bores are widened to 1 mm radial clearance with a 4
-mm entry chamfer so that a dexterous hand can insert them physically; parts are free rigid bodies with the source
+rails 0.26 m, 8 mm dowels exposed 15 mm, 16 mm blind bores of 4.1 mm radius, i.e. 0.1 mm radial clearance and no entry chamfer, built from 24 convex
+sectors; the dowel ends are rounded capsules); parts are free rigid bodies with the source
 masses; the frames touch the table through thin skids under each leg face; the solver uses 5 noslip iterations (no
 frictional creep in held grasps); the seat and eight screws are static decor; glue, screws and the final upright turn
 of the source film are not part of the task.

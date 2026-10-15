@@ -36,7 +36,7 @@
   },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/trajectory.npz replays a Sharpa Wave authoring trajectory (3,008 controls; success after 2,808) in both modes: two fresh-process replays with identical state hashes, float32 rows succeed, Harbor oracle 1 in privileged and standard mode (standard: rows submitted through the public client, live hash = replay hash).",
+    "oracle_evidence": "solution/trajectory.npz replays a Sharpa Wave authoring trajectory (3,006 controls; success after 2,806) in both modes: two fresh-process replays with identical state hashes, float32 rows succeed, Harbor oracle 1 in privileged and standard mode (standard: rows submitted through the public client, live hash = replay hash).",
     "expert_time_estimate_hours": 4.0,
     "keywords": [
       "furniture-assembly",

@@ -13,6 +13,7 @@ from pathlib import Path
 import sys
 
 os.environ.setdefault("MUJOCO_GL", "egl")
+import mujoco
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -54,8 +55,8 @@ HANDMAP = {
 DEFAULTS = {
     "press_frac": 0.8,
     "grip_down": 0.016,   # pinch point below the page's far (top) edge
-    "pre_gap": 0.007,
-    "squeeze": 0.003,
+    "pre_gap": 0.014,
+    "squeeze": 0.006,
     "lift": 0.07,
     "phi0": 0.55, "phi_max": 1.05, "a_start": 3.75, "a_end": 2.4, "thread_steps": 120,
     "entry_dx": -0.012,   # hole centre offset before the tips (binder x)
@@ -64,6 +65,7 @@ DEFAULTS = {
     "ki": 0.15, "imax": 0.012,
     "flatten_x": [0.11], "flatten_hi": 0.09, "flatten_lo": 0.012,
     "slide_out": 0.05,
+    "desk_edge_x": 0.98, "overhang": 0.04, "drag_press": 0.0, "drag_step": 0.0008, "approach_out": 0.06, "thumb_dx": 0.006,
     "release_lift": 0.005,
 }
 
@@ -150,33 +152,101 @@ class Demo(Ctl):
         q3[2] += 0.06
         self.go(q3, 30, "booster lift")
 
-    # ------------------------------------------------------------------ 2. pinch a page from its stand
-    def grasp_stand(self, k):
+    # ------------------------------------------------------------------ 2. pick a page lying flat on the desk
+    def slide_page(self, k):
+        """Index and middle fingertips press on the printed face and drag the page +x until its far edge overhangs
+        the desk edge by ``overhang`` (the desk is the only support; the page never leaves the desk)."""
         p = self.p
         pos, R = self.page_frame(k)
-        xa, za = R[:, 0], R[:, 2]  # za: printed face (towards -x); back face is -za
-        top_edge = pos + xa * (PAGE_W - HOLE_MARGIN)
-        pinch = top_edge - xa * p["grip_down"]
-        back = za  # fingers on the printed (front) face, thumb on the back face
+        xa, za = R[:, 0], R[:, 2]
+        far = pos + xa * (PAGE_W - HOLE_MARGIN)
+        dx = p["desk_edge_x"] + p["overhang"] - far[0]
+        c = pos + xa * 0.065
+        r_i = self.H["r_i"]
+        down = PAGE_HALF_T + r_i - p["drag_press"]
+        tg = {"index": c + np.array([0, -0.012, 0]) + za * down, "middle": c + np.array([0, 0.012, 0]) + za * down}
+        q0 = self.with_fingers(self.s.data.ctrl, self.H["flat2"])
+        fdir = unit([-0.35, 0, -1.0])
+        var = WRIST + self.H["index"] + self.H["middle"]
+        up = np.array([0, 0, 0.04])
+        q1, e1 = self.ik(q0, {f: v + up for f, v in tg.items()}, var, finger_dir=fdir, w_orient=1.0)
+        way = q1.copy()
+        way[2] = max(self.s.data.ctrl[2], q1[2]) + 0.03
+        self.go(way, 60, "")
+        self.go(q1, 40, f"page{k} drag above e={max(e1.values()):.4f}")
+        q2, e2 = self.ik(q1, tg, var, finger_dir=fdir, w_orient=1.0)
+        # the fingertip collision capsules are tilted: put their lowest surface point ``drag_press`` into the page
+        top = (pos + za * PAGE_HALF_T)[2]
+        q2[2] += (top - p["drag_press"]) - self.lowest(q2, ("index", "middle"))
+        q1[2] += (top + 0.03) - self.lowest(q1, ("index", "middle"))
+        self.go(q1, 20, "")
+        self.go(q2, 40, f"page{k} drag touch e={max(e2.values()):.4f}")
+        start = self.page_frame(k)[0].copy()
+        goal = p["desk_edge_x"] + p["overhang"]
+        q = q2.copy()
+        for j in range(int(2 * dx / p["drag_step"])):
+            pp, pR = self.page_frame(k)
+            if (pp + pR[:, 0] * (PAGE_W - HOLE_MARGIN))[0] >= goal:
+                break
+            q = q.copy()
+            q[0] += p["drag_step"]
+            self.step(q)
+            if self.s.done:
+                break
+        self.hold(15, "")
+        moved = self.page_frame(k)[0] - start
+        if self.verbose:
+            print(f"   page{k} dragged {np.round(moved * 1000, 1)} mm for a hand travel of {dx * 1000:.1f} mm", flush=True)
+        q3 = q.copy()
+        q3[2] += 0.04
+        self.go(q3, 30, f"page{k} drag lift")
+        return q3
+
+    def lowest(self, q, fingers):
+        """Lowest world z of the named fingertip collision geoms (capsule or mesh) at targets ``q``."""
+        d = self.fk(q)
+        z = []
+        for f in fingers:
+            g = self.m.geom(self.tipnames[f]).id
+            R = d.geom_xmat[g].reshape(3, 3)
+            if self.m.geom_type[g] == mujoco.mjtGeom.mjGEOM_CAPSULE:
+                r, hl = self.m.geom_size[g][:2]
+                z.append(d.geom_xpos[g][2] - r - hl * abs(R[2, 2]))
+            else:
+                mid = self.m.geom_dataid[g]
+                a, n = self.m.mesh_vertadr[mid], self.m.mesh_vertnum[mid]
+                z.append(float((d.geom_xpos[g] + self.m.mesh_vert[a:a + n] @ R.T)[:, 2].min()))
+        return min(z)
+
+    def grasp_flat(self, k):
+        """Thumb under the overhanging far edge, index and middle on the printed face: pinch and lift the page."""
+        p = self.p
+        pos, R = self.page_frame(k)
+        xa, za = R[:, 0], R[:, 2]
+        far = pos + xa * (PAGE_W - HOLE_MARGIN)
+        pinch = far - xa * p["grip_down"]
+        back = za  # fingers on the printed (upper) face, thumb under the sheet
         gap = p["pre_gap"]
         R_I, R_T = self.H["r_i"], self.H["r_t"]
         pre = {"index": pinch + back * (PAGE_HALF_T + R_I + gap) + [0, -0.004, 0],
                "middle": pinch + back * (PAGE_HALF_T + R_I + gap) + [0, 0.014, 0] - xa * 0.004,
-               "thumb": pinch - back * (PAGE_HALF_T + R_T + gap) + [0, 0.004, 0] - xa * 0.004}
+               "thumb": pinch - back * (PAGE_HALF_T + R_T + gap) + [0, 0.004, 0] + xa * p["thumb_dx"]}
         q0 = self.with_fingers(self.s.data.ctrl, self.H["pinch_seed"])
-        q0[:3] = pinch + np.array([-0.02, 0.0, 0.17]) - self.base
         fdir = unit(-xa)
         fingers = self.H["thumb"] + self.H["index"] + self.H["middle"]
         var = WRIST + fingers
-        up = np.array([0, 0, 0.05])
-        q1, e1 = self.ik(q0, {f: v + up for f, v in pre.items()}, var, finger_dir=fdir, palm_dir=-back, w_orient=1.0)
+        out = xa * p["approach_out"]
+        q1, e1 = self.ik(q0, {f: v + out for f, v in pre.items()}, var, finger_dir=fdir, palm_dir=-back, w_orient=1.0)
         if self.verbose:
             print(f"grasp{k} pre err", {f: round(v, 4) for f, v in e1.items()}, "wrist", np.round(q1[:6], 3), flush=True)
+        high = q1.copy()
+        high[2] += 0.08
         cur = np.array(self.s.data.ctrl, float)
-        way = q1.copy()
-        way[2] = max(cur[2], q1[2]) + 0.04
-        self.go(way, 70, "")
-        self.go(q1, 40, f"page{k} above")
+        way = high.copy()
+        way[2] = max(cur[2], high[2])
+        self.go(way, 80, "")
+        self.go(high, 30, f"page{k} beyond the edge")
+        self.go(q1, 50, f"page{k} thumb below the edge e={max(e1.values()):.4f}")
         q2, e2 = self.ik(q1, pre, var, finger_dir=fdir, palm_dir=-back, w_orient=1.0)
         self.go(q2, 50, f"page{k} pre-pinch e={max(e2.values()):.4f}")
         sq = gap + p["squeeze"]
@@ -184,17 +254,22 @@ class Demo(Ctl):
         q3, e3 = self.ik(q2, tgt, fingers)
         self.go(q3, 30, f"page{k} pinch e={max(e3.values()):.4f}")
         self.hold(10)
+        if self.verbose:
+            d = self.s.data
+            pp, pR = self.page_frame(k)
+            side = {f: round(float((d.geom(self.tipnames[f]).xpos - pp) @ pR[:, 2]) * 1000, 1) for f in ("thumb", "index", "middle")}
+            print(f"   pinch ik err {dict((f, round(v * 1000, 1)) for f, v in e3.items())} tip centre heights (mm) {side}", flush=True)
+            qa = d.qpos[self.s.qadr]
+            print("   joint err (actual-target) wrist", np.round((qa - d.ctrl)[:6], 4), "thumb/index/middle",
+                  np.round((qa - d.ctrl)[fingers], 3), flush=True)
         q4 = q3.copy()
-        q4[:3] += xa * 0.03
+        q4[2] += 0.02
         self.go(q4, 30, "")
         q4[2] += p["lift"]
         self.go(q4, 50, f"page{k} lift")
         st = self.s.status()
         pp, pR = self.page_frame(k)
         if self.verbose:
-            dd = self.s.data
-            print("   sides (mm, + = printed face):", {f: round(float((dd.geom(self.tipnames[f]).xpos - pp) @ pR[:, 2]) * 1000, 1)
-                                                  for f in ("thumb", "index", "middle")}, flush=True)
             print(f"page{k} fingers", st["page_fingers"], "pos", np.round(pp, 4), "xaxis", np.round(pR[:, 0], 3), flush=True)
         return q4
 
@@ -375,7 +450,10 @@ def run(hand="sharpa", params=None, verbose=True, snaps=None, cam="closeup", pha
             demo.open_rings()
         elif phase.startswith("page"):
             k = int(phase[4:])
-            q = demo.grasp_stand(k)
+            demo.slide_page(k)
+            if s.done:
+                break
+            q = demo.grasp_flat(k)
             if s.done:
                 break
             q = demo.thread(k, q)

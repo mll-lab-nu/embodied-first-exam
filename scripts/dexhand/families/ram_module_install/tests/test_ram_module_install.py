@@ -25,7 +25,7 @@ from runtime import Session  # noqa: E402
 from scene import hands  # noqa: E402
 
 SOLUTION = FAMILY / "solution/trajectory.npz"
-SUCCESS_STEP = 1391
+SUCCESS_STEP = 1379
 DROP_ROW = 395  # a row of the carry phase (module pinched in mid-air)
 
 

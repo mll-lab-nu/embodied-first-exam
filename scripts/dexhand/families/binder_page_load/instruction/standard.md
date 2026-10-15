@@ -15,8 +15,8 @@ two booster paddles are coupled by the binder's internal linkage (passive joint 
 Pressing a booster paddle down opens the rings; pushing the plates back past the over-centre point (for example by
 pressing the raised inner edges of the open plates down) closes them.
 Simplifications, stated plainly: the pages are rigid 0.8 mm cardstock plates (paper bending, creasing and tearing are
-not modelled; the holes are octagonal openings 6.35 mm across flats); the source scene had the two sheets lying loose on
-the desk, here two wooden page stands hold them leaning, holes down, so a hand can reach an edge; the binder geometry is
+not modelled; the holes are octagonal openings 6.35 mm across flats); as in the source scene the two sheets start loose and
+flat on the desk (a hand can drag a page so that its far edge overhangs the desk edge, then pinch it); the binder geometry is
 an authored reconstruction (Avery 05806 dimensions), not manufacturer CAD.
 
 {{HANDS}}
@@ -51,7 +51,7 @@ wrist_z` (metres, offsets from the stage base at (0.62, 0.00, 0.70)) and `wrist_
 `r_wuji_r_LFJ0..3`). Actuator targets are clipped to the published joint limits and clipping is reported. `dt` must be
 a multiple of 0.02 s, between 0.02 and 0.5 s; a chunk covers at most 10 s. Hold interpolation holds each row for `dt`;
 linear interpolation starts from the previous target. The robot has no scalar gripper opening. Quaternions in measured
-poses use WXYZ; world z is up and the desk top is at z = 0.70 m. Cameras are overview, closeup, rings and stands, at
+poses use WXYZ; world z is up and the desk top is at z = 0.70 m. Cameras are overview, closeup, rings and pages, at
 640 x 480.
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
 images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the

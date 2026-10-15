@@ -13,7 +13,8 @@ Action layout (one row = every actuator target, model order; identical to pot_sh
     sharpa: 14 + 22 + 22 = 58          wuji: 14 + 20 + 20 = 54
 Any other (non-robot) actuators of a scene would follow the hands; DexHand scenes have none.
 
-See artifacts/wave3-2026-10-15/arm/ARM_RIG.md for base placement, porting steps and pitfalls.
+See docs/benchmarks/dexhand.md ("Arm rig") for the rig's role in the DexHand families; arm_ik.py (authoring only)
+converts a family's wrist-stage episode into arm rows.
 """
 
 from __future__ import annotations
