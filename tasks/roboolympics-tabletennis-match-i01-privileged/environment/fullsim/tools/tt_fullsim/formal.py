@@ -253,9 +253,12 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
         if service is not None and service.phase != "over":
             service.collect()
         if service is not None:
+            # Wait under the service's lock: its finalize thread sets `finalized` and rewrites final.json (the replay's
+            # verdict) in one critical section, so reading the flag without the lock could read the old final.json.
             deadline = time.monotonic() + 650
-            while not service.finalized and time.monotonic() < deadline:
-                time.sleep(0.01)
+            with service.cond:
+                while not service.finalized and time.monotonic() < deadline:
+                    service.cond.wait(timeout=1.0)
         shutil.rmtree(public)
     result = {
         "success": 0,
@@ -282,6 +285,8 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
     try:
         if service is not None:
             final = json.loads((out / "match/final.json").read_text())
+            if not final.get("graded_ready"):
+                raise ValueError("the service's final.json is not graded yet (replay unfinished)")
             # Original service already replayed once in a fresh process. Do a second fresh journal replay.
             second = subprocess.run(
                 [sys.executable, "-m", "core.episode", str(ROOT / "sports/tabletennis/plugin.py"), str(out / "match")],
