@@ -51,7 +51,7 @@ layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standa
 
 ## Time budget (D8)
 
-10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; `scripts/task_cutoffs.toml`), within the default cap: no exception.
+10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; each task's `[agent] timeout_sec`), within the default cap: no exception.
 (The Genesis release had 21600 s, then 7200 s from 2026-10-12.) The texts say "the time limit (`## Time limit`)". The standard service's clock
 (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S` follows the table) counts from the agent's first request to the service (PROTOCOL §2.12;
 logged in `episode.jsonl`, kept over a restart), so the instruction has the common closing sentence and no sentence of its own about the
@@ -104,7 +104,7 @@ or robot base position either.
 
 `BENCH` in `scripts/roboarc/mk_tasks.py` and `--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
 `git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
-(`BENCHMARKS`), `scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml`
+(`BENCHMARKS`), `scripts/task_resources.toml`
 (the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
 (`ci_checks/check-tooling-identity.sh` `MODULE`, `check-standard-texts.sh`, `check-generated-tasks.sh`,
-`check-unit-tests.sh`), and the `docs/CUTOFFS.md` render (`python3 scripts/task_cutoffs.py apply "<label>"`).
+`check-unit-tests.sh`); the cutoff is each task's own `[agent] timeout_sec` (the generator's constant).

@@ -17,7 +17,8 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
    `environment/` → `task.toml`.
 5. **Runs.** Comment `/validate` on the pull request: the oracle (where `oracle = "full"`) and `nop` on every task it adds
    or changes, at its head commit, on the GPU runner (`.github/workflows/validate-task.yml`; the results come back as a
-   comment). By hand: oracle and `nop` on a sample (≥ 2 per mode shipped); for a new simulator or family, a determinism check (two
+   comment; not working yet: it needs a dedicated runner with the `docker` label, which is not attached, and the CI
+   runners must never get that label). By hand (the only runtime check until then): oracle and `nop` on a sample (≥ 2 per mode shipped); for a new simulator or family, a determinism check (two
    fresh replays, same hash) on the hardware used for evaluation.
 6. **Adversarial trial.** For new benchmarks, one agent trial instructed to make the verifier pass without solving the
    task. Any success blocks the merge until the verifier is fixed.

@@ -153,7 +153,7 @@ control steps with the same state hash (`exact`, 12.9 s of journal replay, 31.8 
 episode was graded as usual (success, `live_matches_replay`, `resumes` = 1).
 
 ## Time budget (D8)
-3600 s for every task of both modes (`scripts/task_cutoffs.toml`; the benchmark's own text names no number). A scene
+3600 s for every task of both modes (each task's `[agent] timeout_sec`; the benchmark's own text names no number). A scene
 builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the agent's own work, not the simulator's.
 
 ## Standard mode (eai-standard/2.2)

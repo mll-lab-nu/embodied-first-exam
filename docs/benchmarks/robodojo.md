@@ -173,7 +173,7 @@ Result (2026-10-10, RTX 4090): resumed once, exactly (state hash `224d592a77d3c2
 fresh-process replays, deterministic, no infrastructure error. The driver does not solve the task (success 0 is expected).
 
 ## Time budget (D8)
-The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL
+The number is each task's own `[agent] timeout_sec`, written by the generator ([`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL
 §2.12): 3600 s (one hour) for every task of both modes on 2026-10-11, the owner's decision of that day (5400 s before,
 from #142 on 2026-10-10; no official result was published with 5400 s, and the trials recorded with it are kept apart).
 The cost that had argued for the longer budget is unchanged and is what an agent has to plan around: every Python process
