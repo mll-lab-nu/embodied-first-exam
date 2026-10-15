@@ -40,6 +40,7 @@ INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__)
 TEXTS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "texts.json")))    # task_text, episode (mk_tasks.py)
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 120; SUBSTEPS = 1; ACTION_DIM = 8
+HOLD_PAD_S = 2.0          # the last command held after a live success in the graded trajectory (dump())
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
@@ -76,15 +77,28 @@ def dump() -> None:
     E["dumped"] = True
     try:
         acts = S.actions(); E["live_sha"] = S.status()["state_sha"]; E["n_actions"] = int(len(acts))
+        # A live success ends the episode at its success step N, so the journal has no row after N. The race of
+        # docs/benchmarks/ambench.md (Determinism) can move a fresh replay's success one step later (OpenDoor 395 -> 396):
+        # with nothing left to run that replay would fail a correct episode. The trajectory the graders replay therefore
+        # holds the last command for up to HOLD_PAD_S after a live success, as the privileged reference does (Oracle);
+        # a replay stops at its own success, so the padding runs only where the race delayed it.
+        pad = 0
+        if E["success"] and len(acts):
+            pad = max(0, min(int(round(HOLD_PAD_S * CTRL_HZ)), int(M.MAX_STEPS) - int(len(acts))))
+            if pad:
+                acts = np.concatenate([np.asarray(acts, dtype=np.float64),
+                                       np.repeat(np.asarray(S.hold_action(), dtype=np.float64)[None, :], pad, axis=0)])
+        E["hold_pad_rows"] = pad
         S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
-                                                                            "reason": E["reason"], "resumes": EP.resumes})
+                                                                            "reason": E["reason"], "resumes": EP.resumes,
+                                                                            "hold_pad_rows": pad})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": S.env_id, "protocol": PROTOCOL,
-                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+                   "n_actions": E.get("n_actions"), "hold_pad_rows": E.get("hold_pad_rows", 0), "live_sha": E.get("live_sha"), **EP.final_fields()})
     write_final()
 
 

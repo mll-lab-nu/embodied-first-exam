@@ -202,10 +202,15 @@ def main() -> int:
                 r["old_verdict"] = r["replay_old_verdict"] if r.get("old_verdict") is None else r["old_verdict"]
                 if r.get("new_verdict") is not None and r["new_verdict"] != r["replay_new_verdict"]:
                     r["record_vs_replay"] = "the record and the replay disagree on the new verdict"
-                r["new_verdict"] = r["replay_new_verdict"]
-                r["basis"] = "replay"
+                if r.get("inconclusive"):
+                    # board 0130 review M1: a replay that does not reproduce the recorded success under the old rule says
+                    # nothing about the new one; keep the record's exact verdict (None when there is none)
+                    r["basis"] = "record (replay inconclusive on this host)"
+                else:
+                    r["new_verdict"] = r["replay_new_verdict"]
+                    r["basis"] = "replay"
     for r in results:
-        if "skipped" not in r and "error" not in r:
+        if "skipped" not in r and "error" not in r and r.get("new_verdict") is not None:
             r["label"] = "re-graded under 2026-10-14 rules"
     with open(a.out, "w") as f:
         for r in results:
