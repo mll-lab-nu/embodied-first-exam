@@ -31,6 +31,7 @@ services:
       RCB_TEXTURE_BUDGET: ${RCB_TEXTURE_BUDGET:-0.1}   # Isaac's texture memory as a fraction of the GPU (rcb_behavior.py
                                                        # _cap_texture_memory); default 0.1 since protocol v1.1.5 so that GPU
                                                        # memory does not grow with the card (Isaac's own default: 0.6)
+      PYTHONHASHSEED: "0"           # the same set order in the service and its replays (with the tooling's stable hashes)
       RCB_TASK: cook_bacon
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_behavior.py
