@@ -57,7 +57,7 @@ layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standa
 logged in `episode.jsonl`, kept over a restart), so the instruction has the common closing sentence and no sentence of its own about the
 service's clock (2026-10-13; the Genesis release's "has run since the service first started" is not carried over). The service still ends the
 episode with reason `timeout` when that count reaches 0; counted from the first request, that is never before the harness's cutoff.
-The plan (2026-10-13, moved from PROTOCOL §2.12 on 2026-10-14): that end becomes report-only at RoboARC's next task update.
+The plan (2026-10-13, moved from PROTOCOL §2.12 on 2026-10-14): that end becomes report-only at RoboARC's next task update. When the agent phase ends first (the agent ends its session, or the harness's cutoff comes), the collect hook ends the episode with reason `agent_phase_ended` (2026-10-14; it said `timeout` before, also when the agent had stopped by itself).
 
 ## Safety readings in standard mode (`meta["safety"]`)
 

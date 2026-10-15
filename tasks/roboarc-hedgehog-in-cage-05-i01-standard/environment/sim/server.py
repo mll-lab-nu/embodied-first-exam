@@ -303,7 +303,8 @@ SPEC = {
     "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "
-                "counted from your first request to this service, any endpoint; meta time_s / time_left_s), after "
+                "counted from your first request to this service, any endpoint; meta time_s / time_left_s), when your session "
+                "ends before that (reason agent_phase_ended, graded as it stands), after "
                 f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
                 "simulator error; a simulator "
                 f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
@@ -680,7 +681,9 @@ def end_from_signal() -> None:
 def _end_and_exit() -> None:
     """Main thread, between simulator jobs. No svc.lock here: an HTTP call holds it while it waits for the main thread."""
     E["exiting"] = True                     # the HTTP layer answers 409 from now on
-    if not E["done"]: finish("timeout")
+    # the agent phase is over (the agent ended its session, or the harness ended it) before this service's own clock ran
+    # out: not this service's timeout (that one is ended by deadline_reached() with reason "timeout")
+    if not E["done"]: finish("timeout" if E["ready"] and time.monotonic() >= E["deadline"] else "agent_phase_ended")
     else: dump()
     log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the GPU for the fresh-process replay"})
     if not os.path.exists(PID_FILE):        # a SIGUSR1 that came in during a resume: the hook must still see this process end
