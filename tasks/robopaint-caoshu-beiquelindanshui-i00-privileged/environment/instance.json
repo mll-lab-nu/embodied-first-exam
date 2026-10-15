@@ -111,7 +111,10 @@
    "register_mm": 5.0,
    "max_strokes": 12,
    "max_path_mm": 2680.0,
-   "min_mark_width_mm": 0.59
+   "min_mark_width_mm": 0.59,
+   "max_scribble": 12.0,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
   }
  },
  "instance_sha": "57a212725aed55b6",
