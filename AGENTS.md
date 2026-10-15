@@ -57,7 +57,9 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
 - `tasks/<task>/DIGEST`: the task's content digest (PROTOCOL §2.8), written last by `normalize` (generators and
   `task_cutoffs.py apply` refresh it; after a hand edit: `python3 scripts/task_conventions.py tasks/<task>`);
   `ci_checks/check-dataset-manifest.sh` recomputes it. The release manifest `tasks/dataset.toml` is generated
-  (`scripts/dataset_manifest.py write`) and not committed: pull requests no longer conflict on it.
+  (`scripts/dataset_manifest.py write`) and not committed: pull requests no longer conflict on it. The task list
+  (`TASKS.md`, `tasks.json`, `dataset.toml`) is generated after every merge to main and pushed to the branch
+  `task-list` (`.github/workflows/task-list.yml`; `scripts/dataset_manifest.py list --out DIR` locally).
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.
