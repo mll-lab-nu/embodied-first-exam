@@ -883,7 +883,7 @@ measured = "RoboOlympics' exported skill tasks (scripts/roboolympics/exported.to
 
 # roboolympics, standard-realtime: 13 task(s)
 [[rule]]
-match = "^roboolympics-.*-standard-realtime$"
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 1.0
@@ -1011,7 +1011,7 @@ trial_max_memory_gb = 4.0
 measured = "design defaults of RoboOlympics' exported tasks (no sim service)"
 
 [[limit]]
-match = "^roboolympics-.*-standard-realtime$"
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2264,7 +2264,7 @@ match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-.*-standard-realtime$"
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
