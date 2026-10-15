@@ -16,7 +16,7 @@ family = "fruits_green_limes_on_plate"
 mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/PROTOCOL.md §3)
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
-oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-fruits-green-limes-on-pl__3NH9BN4 (robolab-fruits-green-limes-on-plate-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/fruits_green_limes_on_plate/limited/). Human review per family (PROTOCOL §2.7)."
+oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-fruits-green-limes-on-pl__3NH9BN4 (robolab-fruits-green-limes-on-plate-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/fruits_green_limes_on_plate/limited/). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7)."
 instance_seed = 0                 # scene = environment/instance.json (the full scene state after the seeded reset + its hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0
 
