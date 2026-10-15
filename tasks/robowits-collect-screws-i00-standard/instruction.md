@@ -5,21 +5,26 @@ the simulator runs in a service you cannot open. You get one client and one epis
 the container
 
 ## Success criterion (as graded)
-This is exactly what the grader checks (RoboWits' success predicate, stated in words). Where the task text says
-something else, this section is what counts. The service evaluates it after every `submit` and after every `get_obs`
-that watches (`seconds` > 0), and once more when the episode ends; the first time it holds, the episode ends as a
-success. The service then replays your recorded episode, which must end in the same state and satisfy it again.
+This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
+condition the grader adds: the last item). Where the task text says something else, this section is what counts. After
+every `submit` and every `get_obs` that watches (`seconds` > 0) the service checks the conditions at that instant;
+when they hold, it keeps your last command for a settle window, inside the same call: 1 s with nothing checked, then 2
+s in which every condition must hold at every 6th control step and at the last one, with each graded object staying
+within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the episode ends as a
+success; if not, the episode goes on and `meta["settle"]` says why. When your session ends, the same window decides
+once more. The service then replays your recorded episode, which must end in the same state and pass again.
 
 - Only one point is tested: the screw's reference point (the origin of its mesh, near its centre).
 - That point is over the table, within the table bounds grown by 2 cm, and no lower than 5 cm under the table top.
 - That point lies inside the container's bounding box, grown by 1 mm sideways and by 2 cm at the bottom and at the top
   (the container is about 10 cm across and 12 cm tall).
+- Released and at rest: no part of the robot touches the screw, and it moves at most 2 mm during the check window.
 
-Not checked: the rest of the screw, whether a gripper (or the dustpan) still holds it, the dustpan, and any speed.
+Not checked: the rest of the screw, whether the dustpan still holds it, and where the dustpan is.
 
 Task text vs grader ("Collect the screw into the container"): "Into the container" is a single point inside the
-container's box, with 2 cm allowed above the rim and no release check: a screw lying on the rim, or held just above
-the opening, also counts.
+container's box, with 2 cm allowed above the rim: a screw lying on the rim also counts, but not one held in or above
+the opening (the robot must not touch it).
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`
 points of your proprioception) is inside the object's bounding box grown by 3 cm on every side; the *table bounds* are
@@ -32,7 +37,7 @@ not give: keeping clear of the table's edges satisfies it).
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
-  (`meta["done"]`, `reason` "success") the first time it holds.
+  (`meta["done"]`, `reason` "success") the first time it holds through the settle window.
 - **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
   1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
@@ -42,7 +47,10 @@ not give: keeping clear of the table's edges satisfies it).
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
-- **If the service crashes** (a connection error or a 5xx instead of an answer), it restarts and resumes the SAME
+- **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other
+  request waits for it (`r.status()` from another process included), and a client-side timeout during that time means
+  "busy", not "crashed": nothing restarts, the call runs to its end and the episode goes on from there.
+- **If the service crashes** (the connection is refused or reset instead of an answer), it restarts and resumes the SAME
   episode, never a reset, in the state after the last call it completed. `r.wait_ready()` waits until it answers again
   (resuming replays the episode so far: about a second per 700 control steps); then check `r.status()` (`calls`,
   `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]` stops at the next control
