@@ -820,8 +820,8 @@ lifted more than 0.02 m, the pump's centre of mass below the bench top or a pump
 pulled back more than 2 mm or its lock opened below 1.2 rad, unstable physics; 5,000 controls. Wave 3 restored the
 source's disconnected head (it was pre-locked on the valve) and its 28-stroke pressure model (was six strokes from 207.8
 kPa); the source's optional steadying second hand is not used (one arm-mounted hand keeps the free pump upright through
-all strokes). Oracle: 3,581 Sharpa rows on the arm (success at 3,431); Wuji: `solution/wuji/` (3,561 rows, success at
-3,411).
+all strokes). Not restored: the source's final unlock-and-retract stage (review BS3-1). Oracle: 3,581 Sharpa rows on the
+arm (success at 3,431); Wuji: `solution/wuji/` (3,561 rows, success at 3,411).
 
 ## Modes and grading
 
