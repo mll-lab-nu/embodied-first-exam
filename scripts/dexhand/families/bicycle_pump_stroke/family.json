@@ -38,7 +38,7 @@
   },
   "metadata": {
     "oracle": "full",
-    "oracle_evidence": "solution/ replays the validated Sharpa Wave episode on the Marvin right arm (4,299 controls, success after 4,149: hose head pushed onto the valve and locked at control 306, 28 counted strokes to 210.64 kPa, lock opened and head pulled off at control 4,083, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed.",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave episode on the Marvin right arm (3,581 controls, success after 3,431: hose head pushed onto the valve and locked at control 312, 28 counted strokes, 210.64 kPa, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed.",
     "expert_time_estimate_hours": 2.0,
     "keywords": [
       "tool-use",

@@ -26,7 +26,7 @@ from scene import arm_rig, hands  # noqa: E402
 
 PHYSICS_SOURCES = ("task.json", "runtime.py", "scene.py", "checker.py", "replay.py")
 STAGE_NAMES = ["Head pushed onto the valve and locked", "28 full piston strokes", "Tire pressure target reached",
-               "Head unlocked and pulled off the valve", "Released: 1 s hold", "Complete: tire at target pressure, head off"]
+               "Handle released at the top: 1 s hold", "Complete: tire at target pressure, pump released"]
 WIDTHS = {"sharpa": 58, "wuji": 54}
 
 
@@ -110,8 +110,7 @@ def export(trajectory, directory, source_scene, stride=3, hold_s=1.5, fps=25):
                        "failed": bool(f["failed"]), "reason": f["reason"], "strokes": int(f["strokes"]),
                        "tire_gauge_pa": float(f["tire_gauge_pa"]), "piston_depth_m": float(f["piston_depth_m"]),
                        "released_hold_steps": int(f["released_hold_steps"]),
-                       "head_connected": bool(f["head_connected"]),
-                       "head_disconnected": bool(f["head_disconnected"])},
+                       "head_connected": bool(f["head_connected"])},
         })
         positions.append(session.data.geom_xpos[ids].copy())
         rotations.append(session.data.geom_xmat[ids].reshape(-1, 3, 3).copy())

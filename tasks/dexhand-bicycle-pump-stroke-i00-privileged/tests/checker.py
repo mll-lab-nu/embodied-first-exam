@@ -9,13 +9,9 @@ Everything here reads MuJoCo state (qpos/qvel/xpos/xmat/contacts) and never writ
 * Tire gauge pressure is a checker quantity: ``p = p0 + strokes * dp`` (air is not simulated).
 * Connection: the pump head is pushed onto the Schrader stem (head slide within 0.5 mm of its 17.5 mm seat) and its
   thumb lock closed (lever within 0.15 rad of 1.65 rad); this latches. Strokes are armed and counted only while the
-  head is latched at that very substep (seated and locked); once connected and until the tire is inflated, a head
-  pulled back more than 2 mm from its seat or a lever opened below 1.2 rad fails the episode (``head_disconnected``).
-* Disconnection (the source's final stages): after the strokes and the pressure, the thumb lock is opened to at most
-  0.5 rad and the head pulled at least 12.5 mm back off the stem (latched); pulling the head back more than 2 mm while
-  the lock is still closed (>= 1.2 rad) fails (``head_forced_off``).
-* Stages, in order: (1) connected; (2) ``required`` strokes; (3) ``p >= target``; (4) disconnected; (5) released at the
-  top, no robot contact with the pump or the head: handle depth
+  head is connected; once connected, a head pulled back more than 2 mm from its seat or a lever opened below 1.2 rad
+  fails the episode (``head_disconnected``).
+* Stages, in order: (1) connected; (2) ``required`` strokes; (3) ``p >= target``; (4) released at the top: handle depth
   ``<= 0.05 * travel``, no hand contact with any pump geom, pump tilt <= 5 deg, pump speed <= 0.02 m/s, handle speed
   <= 0.02 m/s, held for ``hold_steps`` consecutive controls (1 s). Success ends the episode.
 * Fail-fast (after every physics substep, permanent): pump tilt > 15 deg (``pump_tipped``), pump base moved > 3 cm
@@ -30,7 +26,7 @@ from __future__ import annotations
 import mujoco
 import numpy as np
 
-STAGE_NAMES = ("connected", "strokes", "pressure", "disconnected", "released_hold")
+STAGE_NAMES = ("connected", "strokes", "pressure", "released_hold")
 
 
 class PumpChecker:
@@ -49,8 +45,6 @@ class PumpChecker:
         self.lock_q = float(connect["lever_closed_rad"]) - float(connect["lock_tolerance_rad"])
         self.unseat_q = -float(connect["head_travel_m"]) + float(connect["unseat_m"])
         self.unlock_q = float(connect["unlock_rad"])
-        self.open_q = float(connect["open_rad"])
-        self.off_q = -float(connect["head_travel_m"]) + float(connect["off_m"])
         self.travel = float(config["pump"]["travel_m"])
         strokes = config["strokes"]
         self.required = int(strokes["required"])
@@ -81,8 +75,6 @@ class PumpChecker:
                 parent = int(model.body_parentid[parent])
         geom_owner = np.array([self.owner.get(int(model.geom_bodyid[g]), "world") for g in range(model.ngeom)])
         self.pump_geom = geom_owner == "pump"
-        head_bodies = {model.body("pump_head").id, model.body("thumb_lock").id}
-        self.head_geom = np.array([int(model.geom_bodyid[g]) in head_bodies for g in range(model.ngeom)])
         self.hand_geom = geom_owner == "hand"
         self.floor_geom = np.zeros(model.ngeom, dtype=bool)
         self.floor_geom[model.geom("floor").id] = True
@@ -95,8 +87,6 @@ class PumpChecker:
         self.base0 = data.xpos[self.pump_body].copy()
         self.connected = False
         self.connect_control = None
-        self.disconnected = False
-        self.disconnect_control = None
         self.strokes = 0
         self.armed = False
         self.max_depth = 0.0
@@ -122,14 +112,13 @@ class PumpChecker:
         if self.failure or self.success:
             return
         head, lever = float(data.qpos[self.head_q]), float(data.qpos[self.lever_q])
-        latched = head <= self.seat_q and lever >= self.lock_q
-        if not self.connected and latched:
+        if not self.connected and head <= self.seat_q and lever >= self.lock_q:
             self.connected = True
             self.connect_control = control
         depth = self.depth(data)
         self.max_depth = max(self.max_depth, depth)
-        # Strokes inflate the tire only through a properly latched head (seated and locked at this very substep).
-        if not latched:
+        # Strokes inflate the tire only through a connected head: a stroke is armed and counted while connected.
+        if not self.connected:
             self.armed = False
         elif depth >= self.down_depth:
             self.armed = True
@@ -137,20 +126,10 @@ class PumpChecker:
             self.armed = False
             self.strokes += 1
             self.stroke_log.append(control)
-        inflated = self.strokes >= self.required and self.pressure >= self.target
-        if self.connected and not inflated and (head > self.unseat_q or lever < self.unlock_q):
-            # Unlocking or pulling the head back before the tire is inflated loses the connection.
+        if self.connected and (head > self.unseat_q or lever < self.unlock_q):
             self.failure = "head_disconnected"
             self.failure_detail = {"control": control, "substep": substep, "head_slide_m": head, "lever_rad": lever}
             return
-        if self.connected and inflated and head > self.unseat_q and lever >= self.unlock_q:
-            # The thumb lock must be opened before the head is pulled off the valve.
-            self.failure = "head_forced_off"
-            self.failure_detail = {"control": control, "substep": substep, "head_slide_m": head, "lever_rad": lever}
-            return
-        if inflated and not self.disconnected and lever <= self.open_q and head >= self.off_q:
-            self.disconnected = True
-            self.disconnect_control = control
         violation = self.violation(data)
         if violation:
             self.failure, detail = violation
@@ -194,15 +173,6 @@ class PumpChecker:
         hit = (self.pump_geom[a] & self.hand_geom[b]) | (self.pump_geom[b] & self.hand_geom[a])
         return int(hit.sum())
 
-    def hand_head_contacts(self, data):
-        n = data.ncon
-        if not n:
-            return 0
-        pairs = data.contact.geom[:n]
-        a, b = pairs[:, 0], pairs[:, 1]
-        hit = (self.head_geom[a] & self.hand_geom[b]) | (self.head_geom[b] & self.hand_geom[a])
-        return int(hit.sum())
-
     def features(self, model, data):
         velocity = np.empty(6)
         mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY, self.pump_body, velocity, 0)
@@ -212,9 +182,6 @@ class PumpChecker:
             "head_slide_m": float(data.qpos[self.head_q]),
             "lever_angle_rad": float(data.qpos[self.lever_q]),
             "connect_control": self.connect_control,
-            "head_disconnected": self.disconnected,
-            "disconnect_control": self.disconnect_control,
-            "hand_head_contacts": self.hand_head_contacts(data),
             "strokes": self.strokes,
             "required_strokes": self.required,
             "stroke_armed": self.armed,
@@ -249,11 +216,8 @@ class PumpChecker:
                 stage = 2
                 if self.pressure >= self.target:
                     stage = 3
-                    if self.disconnected:
-                        stage = 4
         released = (
-            stage == 4
-            and f["hand_head_contacts"] == 0
+            stage == 3
             and f["piston_depth_m"] <= self.release_depth
             and f["hand_pump_contacts"] == 0
             and f["pump_tilt_rad"] <= release["max_tilt_rad"]
@@ -262,7 +226,7 @@ class PumpChecker:
         )
         self.hold = self.hold + 1 if released else 0
         if self.hold >= release["hold_steps"]:
-            stage = 5
+            stage = 4
             self.success = True
         self.stage = stage
         f.update(stage=stage, released_hold_steps=self.hold, success=self.success)

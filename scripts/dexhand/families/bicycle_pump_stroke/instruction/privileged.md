@@ -3,8 +3,8 @@
 {{TASK_TEXT}}
 
 You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
-hand on each wrist, standing at the bench with its base centre at the world origin, facing +x (shoulders at z = 1.121 m,
-1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by the right arm and hand
+hand on each wrist, standing at the bench with its base centre at the world origin, facing +x (shoulders 1.121 m above
+the floor). The left arm stays parked beside the torso with its hand open; the task is done by the right arm and hand
 alone. Every arm and finger joint is a position servo inside the physics engine under native force bounds; arm servos
 have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held target sags under the arm's
 weight and the handle's push unless your targets account for it). Pushing the pump handle requires physical contact.
@@ -53,9 +53,8 @@ s.reset()                                        # exact frozen reset
 s.replay(actions)                                # reset, run rows until the episode ends, return status()
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
-`s.features()` and `s.status()` report `head_connected`, `head_disconnected`, `head_slide_m`, `lever_angle_rad`,
-`hand_head_contacts`, `strokes`, `piston_depth_m`, `tire_gauge_pa`, `stage` (completed stages:
-1 = head connected, 2 = 28 strokes, 3 = pressure target, 4 = head disconnected, 5 = released hold), `released_hold_steps`, `pump_tilt_rad`,
+`s.features()` and `s.status()` report `head_connected`, `head_slide_m`, `lever_angle_rad`, `strokes`, `piston_depth_m`, `tire_gauge_pa`, `stage` (completed stages:
+1 = head connected, 2 = 28 strokes, 3 = pressure target, 4 = released hold), `released_hold_steps`, `pump_tilt_rad`,
 `pump_displacement_m`, `pump_lift_m`, `pump_speed_m_s`, `handle_speed_m_s`, `hand_pump_contacts` and, after a failure,
 `failure` / `failure_detail`. Read `/opt/tools/task.json`, `scene.py`, `arm_rig.py`, `checker.py` and `runtime.py` for the
 complete geometry, the robot, failure checks and predicate. The world frame has z up; lengths are in metres and angles in radians. The bench top is at z = 0.70 m; the

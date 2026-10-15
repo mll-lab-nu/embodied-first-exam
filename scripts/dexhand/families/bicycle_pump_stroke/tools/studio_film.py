@@ -617,11 +617,9 @@ def encode(args):
             fill=(61, 104, 75) if status["success"] else (90, 94, 88),
         )
         if status["success"]:
-            footer = "Complete: 28 strokes counted, head unlocked and pulled off, pump upright and still for 1 s"
-        elif status.get("head_disconnected"):
-            footer = "Head unlocked and pulled off the valve: tire kept at the target pressure; hands off, hold still"
+            footer = "Complete: head locked, 28 strokes counted, handle released at the top, pump upright and still for 1 s"
         elif status["stage"] >= 2:
-            footer = "28 strokes counted: release the handle, open the thumb lock, pull the head off the valve"
+            footer = "28 strokes counted: release the handle at the top and hold still"
         elif not status.get("head_connected"):
             footer = "Connect: push the hose head onto the Schrader valve and close its thumb lock"
         elif status["strokes"] == 0 and status["piston_depth_m"] < 0.01:
