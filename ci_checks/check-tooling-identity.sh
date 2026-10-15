@@ -7,6 +7,7 @@
 #      finalize.sh, run.sh, rcb1.py);
 #    - the graders, tests/grade.py (one version per mode).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as check-robopaint-tooling.sh.
+#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, Panda Dynamic Scenes): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE.md), and the sidecar is
@@ -41,7 +42,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventio
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "dexhand": "rcb_dexhand.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
-"robofun, "labutopia": "rcb_labutopia.py", "autobio": "rcb_autobio.py", "roboolympics": "rcb_rfo.py",
+          "roboolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py",
           "cell": "rcb_rsb.py"}   # cell-: RoboSafeBench
@@ -107,7 +108,8 @@ for t in sorted(os.listdir(tasks)):
     if not os.path.isfile(tt):
         continue
     bench = t.split("-")[0]
-    proto = str(tomllib.load(open(tt, "rb")).get("metadata", {}).get("protocol", ""))
+    meta = tomllib.load(open(tt, "rb")).get("metadata", {})
+    proto = str(meta.get("protocol", ""))
     v24 = proto == "eai-standard/2.4"
     if proto == "eai-standard/2.3":
         n_rt += 1
@@ -158,12 +160,15 @@ for t in sorted(os.listdir(tasks)):
                     bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel][0]} (the service has one source: change it there and regenerate)")
     if bench not in MODULE:
         continue
+    module = MODULE[bench]
+    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c): its own sources
+        bench += " (exported)"
     dirs[bench] += 1
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
         for f in fns:
             rel = os.path.relpath(os.path.join(dp, f), os.path.join(tasks, t)).replace(os.sep, "/")
-            role = MODULE[bench] if f == MODULE[bench] else f"{mode} {rel}" if rel in SHARED else None
+            role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
             if role:
                 seen[bench][role].setdefault(sha(os.path.join(dp, f)), f"{t}/{rel}")
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
