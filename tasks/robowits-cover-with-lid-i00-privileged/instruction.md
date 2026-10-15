@@ -106,9 +106,13 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Success criterion (as graded)
 This is exactly what the grader checks, written from the predicate above (RoboWits' `_check_success`, which the grader
-runs). Where the task text says something else, this section and the predicate are what count. It is evaluated once
-per replay, on the state right after the last action of your trajectory (no settle steps are added: let things come to
-rest inside the trajectory), and must hold after both replays.
+runs) and the release and rest condition the grader adds (the last item). Where the task text says something else,
+this section and the code are what count. After the last action of your trajectory the grader holds that action's
+command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in which every
+condition below must hold at every 6th control step and at the last one, with each graded object staying within 2 mm
+of where it was when those 2 s began (the *check window*). It must pass in both replays. `s.replay(actions)` runs
+exactly this and returns the verdict as `success` (and why in `settle`); `s.status()["success"]` is the same
+conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 - The pot's footprint lies inside the table bounds (1 mm tolerance).
 - Exactly one lid qualifies. A lid qualifies when its footprint lies inside the table bounds (1 mm tolerance), its
@@ -118,13 +122,15 @@ rest inside the trajectory), and must hold after both replays.
 - In this scene only `lid large` is inside the size window (area about 1.23 times the pot's; `lid medium` about 0.60,
   `small lid` about 0.25). Its overlap can reach only about 0.81 (the pot's area over the lid's), so it must sit
   within about 1.4 cm of concentric with the pot.
+- Released and at rest: no part of the robot touches the large lid, and it moves at most 2 mm during the check window.
 
-Not checked: contact (whether the lid rests on the pot), any height beyond the one above, whether a gripper holds it,
-and where the other two lids are (they never qualify).
+Not checked: whether the lid touches the pot, any height beyond the one above, and where the other two lids are (they
+never qualify).
 
 Task text vs grader ("Cover the pot precisely using one lid."): "Using one lid" means exactly one qualifying lid: the
-wrong-size lids never qualify, so putting them on the pot as well costs nothing. "Cover" does not require the lid to
-rest on the pot: the large lid held concentrically above it counts.
+wrong-size lids never qualify, so putting them on the pot as well costs nothing. "Cover" means the large lid released
+and at rest over the pot within the overlap and height tests (in practice: lying on its rim); holding it above the pot
+does not count.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
 plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is
@@ -134,7 +140,7 @@ inside the object's axis-aligned bounding box grown by 3 cm on every side; the *
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+completed after the replay: the settle window of the success criterion above, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
 one.
 
@@ -158,8 +164,8 @@ s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object'
 p["set_joint_targets"](q16, steps=1); p["close_gripper"]("left"); p["gripper_quat"](yaw, approach)   # more thin wrappers: help(p[...])
 s.step(action)                     # one low-level action (16 joint targets, below) = one control step (1/30 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 16) actions, one row per control step
-s.status()                         # {'success': bool, 'progress': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
-s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.status()                         # {'success': the conditions hold now, 'predicate', 'touching', 'progress', 'sim_steps', 'resets', 'state_sha'}
+s.replay(actions)                  # resets, replays open-loop, then the settle window: the verdict  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
@@ -187,7 +193,7 @@ CLI equivalent of the grader:
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resource limits
-Limits for the whole trial, all its processes together (every simulator you start included): at most **6 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 4 cores for your container; the cap only slows you down.
+Limits for the whole trial, all its processes together (every simulator you start and the `blenderkit` service included): at most **6 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 4 cores for your container; the cap only slows you down.
 
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
