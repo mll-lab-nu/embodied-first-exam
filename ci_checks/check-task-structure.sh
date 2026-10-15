@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Harbor task contract: the canonical files exist and scripts are executable. solution/solve.sh is required unless the
+# ADVISORY (docs/PROTOCOL.md §1). Harbor task contract: the canonical files exist and scripts are executable. solution/solve.sh is required unless the
 # task declares `oracle = "none"` (docs/PROTOCOL.md §2.1, §2.7).
 t="$1"; rc=0
 for f in task.toml instruction.md README.md environment/Dockerfile tests/test.sh; do
@@ -14,7 +14,7 @@ fi
 # No agent results in the repository (docs/PROTOCOL.md D3): they are published on the results site.
 [ -e "$t/results" ] && { echo "FAIL $t: results/ does not belong in the repository (PROTOCOL D3)"; rc=1; }
 # README in the standard layout (docs/PROTOCOL.md §2.1, §2.9).
-python3 - "$t" <<'PY' || rc=1
+python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY' || rc=1
 import re, sys, pathlib
 t = pathlib.Path(sys.argv[1]); s = (t / "README.md").read_text() if (t / "README.md").is_file() else ""
 bad = []
@@ -25,6 +25,14 @@ pos = [s.find(f"\n## {h}\n") for h in ("Task", "Difficulty", "Reference solution
 if -1 in pos or pos != sorted(pos):
     bad.append("sections ## Task, ## Difficulty, ## Reference solution, ## Verification, ## Compute resources (in this order) "
                "required (Compute resources: PROTOCOL §2.9, v1.1.4)")
+# PROTOCOL §3: a standard or standard-realtime task without its privileged twin says why in its Twin row
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts")); import task_conventions as tc
+try:
+    tw = tc.twin_of(t)
+except ValueError:
+    tw = None
+if tw is not None and not (tw / "task.toml").is_file() and not re.search(r"(?m)^\| Twin \| — \(none:", s):
+    bad.append(f"its twin {tw.name} is missing and the Twin row does not say why (`— (none: <reason>)`, PROTOCOL §3)")
 for b in bad: print(f"FAIL {t}: README.md: {b}")
 sys.exit(1 if bad else 0)
 PY

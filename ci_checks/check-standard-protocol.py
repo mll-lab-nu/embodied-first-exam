@@ -9,7 +9,7 @@ through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed
   /spec     2.2 keys and nothing unknown; cameras (intrinsics, mounting), robot_spec (joints with real limits, grippers,
             controller gains, TCP), world, kinematics, depth, proprio groups; budget == the task's [agent].timeout_sec;
   never     no forbidden field anywhere (segmentation, object poses, physical parameters); nothing in `static` or the limited
-            texts says where things are (positions, heights, centres, world coordinates: check-standard-texts.sh), while names,
+            texts says where things are (positions, heights, centres, world coordinates: the benchmark's scripts/<bench>/ci/advisory-world-frame.sh), while names,
             sizes and colours may stay (listed as INFO); response parts and meta keys from the allowed sets;
   frames    one frame axis: proprio rows = frame_step = frame_time_s = extrinsic_cv/<cam> = depth_frames/<cam> frames;
             time = step / control_hz; meta.cameras = the last frame's pose; static cameras never move;
@@ -199,8 +199,10 @@ def check_spec(rep: Report, spec: dict, task: Path | None) -> None:
     for path, v in leaves(st, "static"):
         rep.add("INFO", "spec.static (scene fact, no position)", f"{path} = {json.dumps(v)[:160]}")
     if task is not None:
-        tx = subprocess.run(["bash", str(Path(__file__).resolve().parent / "check-standard-texts.sh"), str(task)], capture_output=True, text=True)
-        rep.ok(tx.returncode == 0, "task.limited_texts", (tx.stdout.strip() or "no inventories, sizes or workspace parameters in the texts")[:1500])
+        hooks = sorted((Path(__file__).resolve().parents[1] / "scripts").glob("*/ci/advisory-world-frame.sh"))
+        outs = [subprocess.run(["bash", str(h), str(task)], capture_output=True, text=True) for h in hooks]
+        bad = [o for o in outs if o.returncode != 0]
+        rep.ok(not bad, "task.limited_texts", ("\n".join(o.stdout.strip() for o in bad) or "no inventories, sizes or workspace parameters in the texts")[:1500])
     # cameras
     cams = spec.get("cameras") or {}
     kin = spec.get("kinematics") or {}

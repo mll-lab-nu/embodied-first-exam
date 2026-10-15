@@ -34,7 +34,7 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 MAX_ROWS = 4500
 RT_LAYER = ROOT / "scripts/humanoidbench/shared"     # the shared eai-standard/2.3 layer (one source; check-tooling-identity.sh)
-# The standard-realtime twins (owner, 2026-10-14, board 0107 E3 / board 0112): the dynamic families (scripts/task_dynamics.toml;
+# The standard-realtime twins (owner, 2026-10-14, board 0107 E3 / board 0112): the dynamic families (each task's `[metadata] dynamics`;
 # PROTOCOL §2.14), each with its slowdown S from the real-time factor RTF of its realtime service, measured on the reference
 # workstation (docs/benchmarks/pandadyn.md "Standard-realtime": the realtime service with its clock flat out, RCB_SLOWDOWN =
 # 0.01, and the bare physics loop, at host loads 18-80): S = 1 when RTF >= 3, else ceil(1.5 / RTF) with the lowest RTF

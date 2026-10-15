@@ -217,7 +217,7 @@ services:
 
 
 # ------------------------------------------------------------------------------------------- standard-realtime twins
-# The dynamic families (scripts/task_dynamics.toml; PROTOCOL §2.14) get a `-standard-realtime` twin (owner, 2026-10-14,
+# The dynamic families (each task's `[metadata] dynamics`; PROTOCOL §2) get a `-standard-realtime` twin (owner, 2026-10-14,
 # board 0112): the same frozen instance and success rule, served by shared/realtime/server.py (the rcb_service.Sim
 # adapter on rcb_myosuite.Session) behind the shared eai-standard/2.3 layer (rcb_realtime.py + rcb_service.py, copied
 # unchanged from scripts/humanoidbench/shared/; check-tooling-identity.sh). Per family: the slowdown S its service runs

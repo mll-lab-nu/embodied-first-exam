@@ -6,10 +6,13 @@
 # to every family of the stack at once, each with its own re-validation (new rule features are opt-in per task through the
 # instance's success rule, so an unchanged rule scores exactly as before). The process rules' module rcb_brush_strict.py (graders'
 # side: tests/, environment/scorer/ or environment/sim/) is one more shared file.
-# Usage: check-robopaint-tooling.sh [tasks dir]   (repo-level; run_all.sh calls it once)
+# ADVISORY hook of RoboPaint (moved from ci_checks/check-robopaint-tooling.sh, board 0124): ci_checks/run_all.sh runs every
+# scripts/*/ci/advisory-* hook with the task directories in scope; this one checks the tasks directory they are in.
+# Usage: advisory-tooling.sh [task dirs]   (default: the repository's tasks/)
 set -uo pipefail
-root="$(cd "$(dirname "$0")/.." && pwd)"
-python3 - "${1:-$root/tasks}" <<'PY'
+root="$(cd "$(dirname "$0")/../../.." && pwd)"
+tdir="$root/tasks"; [ $# -gt 0 ] && tdir="$(cd "$(dirname "${1%/}")" && pwd)"
+python3 - "$tdir" <<'PY'
 import collections, hashlib, os, sys
 tasks = sys.argv[1]
 NAMES = {"rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py", "rcb_client.py", "rcb_brush_strict.py"}

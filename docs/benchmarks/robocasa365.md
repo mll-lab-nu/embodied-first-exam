@@ -63,7 +63,7 @@ not MuJoCo's left-eye camera 3.4 cm to its left (`docs/benchmarks/robocasa.md`, 
 from before used the offset calibration.
 
 ## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic tasks (PROTOCOL §2.14, `scripts/task_dynamics.toml`) get a
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`; until 2026-10-14 `scripts/task_dynamics.toml`) get a
 `-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.

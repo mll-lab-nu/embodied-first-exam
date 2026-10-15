@@ -26,14 +26,14 @@ Privileged mode measures whether an agent can program a robot when it has full a
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
 [docs/STANDARD_MODE.md](docs/STANDARD_MODE.md).
 
-A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §4b), is standard mode on a clock that does not
+A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §3), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
 drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, BiGym 2.0; RoboOlympics' exported matches serve its own `eai-standard-realtime/1.0`, PROTOCOL §4c, RoboOlympics, BiGym 2.0, RoboSafeBench), as
 `<base>-standard-realtime` next to `<base>-privileged` and `<base>-standard`; its results are reported separately.
 
 > **Names.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard* and `rcb-limited/2.1` to
 > `eai-standard/2.1`. Every task directory ends in its mode, `-privileged` or `-standard` (since v1.1 also `-standard-realtime`). Base images are
-> `ghcr.io/mll-lab-nu/eai-<name>` (formerly `rcb-<sim>` under several registries), one per benchmark (PROTOCOL D5).
+> `ghcr.io/mll-lab-nu/eai-<name>` (formerly `rcb-<sim>` under several registries), one per benchmark (PROTOCOL §1).
 
 ## Benchmarks
 
@@ -124,14 +124,18 @@ harbor view jobs
 - Docker.
 - An NVIDIA GPU with `nvidia-container-toolkit` for RoboTwin (CuRobo, Vulkan) and for MuJoCo rendering. KinDER's physics runs on CPU.
 - GPUs are passed through by `environment/docker-compose.yaml`, because Harbor's local Docker sandbox does not support `[environment].gpus`.
-- Reference hardware is an RTX 4090. Four RoboTwin instances rebuild to a different state on other GPUs (e.g. L40S) and are then reported as `grader_error` (PROTOCOL §3).
+- Reference hardware is an RTX 4090. Four RoboTwin instances rebuild to a different state on other GPUs (e.g. L40S) and are then reported as `grader_error` (PROTOCOL §4).
 - Disk space for the base images (the RoboTwin image is about 22 GB). Public images can be pulled; `BUILD_ONLY` ones are built on the host.
 
 **Running official results:**
-- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (PROTOCOL §2.11, D11): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
-- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), and the numbers per benchmark and mode are in one table, [docs/CUTOFFS.md](docs/CUTOFFS.md) (3600 s by default; PROTOCOL §2.12). The token budget (100M input / 10M output tokens per trial) is defined in PROTOCOL §5; it will be applied to Harbor's recorded counts, which is not implemented yet (PROTOCOL §7).
+- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (docs/RUNNING.md "Official runs"): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
+- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), each task sets its own (3600 s by default; PROTOCOL §2; history in [docs/CUTOFFS.md](docs/CUTOFFS.md)). The token budget (100M input / 10M output tokens per trial) is enforced by the usage gateway (docs/RUNNING.md "Official runs"). Results are ranked only within one comparable configuration (mode, cutoff, reset budget, S, network), unvalidated tasks apart (docs/RUNNING.md "Results").
 
 ## Integrity
+
+Eight invariants bind every task and every run ([PROTOCOL Appendix H](docs/PROTOCOL.md#appendix-h-invariants-binding));
+no task setting overrides them, and the required CI job `invariants` fails a pull request that breaks one. Everything
+else in the protocol is a recommended convention, reported by the job `advisories` as a warning.
 
 - **Verifier isolation.** Every task is graded in its own sandbox (`[verifier] environment_mode = "separate"`).
   The agent's container is stopped first, and only the declared artifacts are copied across. An agent is root inside
@@ -141,15 +145,18 @@ harbor view jobs
   oracle agent alone. Upstream experts are removed from the agent's images.
 - **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
   and writes the verdict inputs. The agent never holds the simulator.
-- **Network policy and external material.** Every task restricts the agent's egress to the model APIs and the package
+- **Infrastructure retry.** An infrastructure failure allows at most one full retry with the same instance, seed and
+  configuration; a normal task failure is never retried (H.5).
+- **Network policy and external material.** By default a task restricts the agent's egress to the model APIs and the package
   registries (PyPI, the Debian / Ubuntu apt archives; `[agent] network_mode = "allowlist"`, one host list in
   `scripts/set_agent_egress.py`), and every instruction states the same honour rule (`## External material`): the agent
   may install the packages it needs and read whatever is installed in its container (the benchmark's own source
-  included), and is asked not to search the web for, or download, a ready-made solution to the task (PROTOCOL §2.11).
+  included), and is asked not to search the web for, or download, a ready-made solution to the task (PROTOCOL §5, H.6; a task whose author chooses open egress declares
+  `[metadata] network = "open"`, and its results are ranked apart).
   GitHub, Hugging Face and the general web, where the benchmarks' sources, demonstrations and policies are, stay
   closed. Official runs go through the usage gateway, which forwards model-API calls only; the harness's web search,
   account connectors and other provider-side tools are off (they run at the model provider, past any allowlist).
-- **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: PROTOCOL §7, open item 2). A task's identity is its digest (`tasks/<task>/DIGEST`; the release manifest `tasks/dataset.toml` is generated from them),
+- **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: open, PROTOCOL_HISTORY.md v1 §7 item 2). A task's identity is its digest (`tasks/<task>/DIGEST`; the release manifest `tasks/dataset.toml` is generated from them),
   and published task inputs never change.
 
 ## Repository layout
@@ -158,10 +165,11 @@ harbor view jobs
 tasks/                 Harbor tasks (one directory per task and mode, each with its content DIGEST)
 images/<sim>/          simulator base images (simulator installs only)
 scripts/               task generators, image build/push, the egress allowlist, results and report tools
-ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh; scoped by ci_scope.py)
-docs/                  PROTOCOL.md (contract), STANDARD_MODE.md (standard-mode wire protocol),
+ci_checks/             checks run on every pull request: run_invariants.sh (required: PROTOCOL Appendix H) and
+                       run_all.sh (both tiers; the advisory ones only warn); scoped by ci_scope.py
+docs/                  PROTOCOL.md (conventions + the binding invariants), STANDARD_MODE.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
-                       RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
+                       RUNNING.md (official runs, seeds, retries, results, batches), LEAKAGE.md (where answer keys survive),
                        benchmarks/ (per-benchmark notes)
 third_party/           upstream sources used by the base images (RoboTwin)
 ```
@@ -170,11 +178,12 @@ third_party/           upstream sources used by the base images (RoboTwin)
 
 Agent results are not stored in this repository: per-task results and batch reports are published on the results
 site and the Hugging Face dataset, keyed by run id `<harness>-<model>-<effort>` (for example `codex-gpt6_luna-xhigh`)
-(PROTOCOL §5). How to run a batch and read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
+(PROTOCOL §4); each result records its effective configuration (docs/RUNNING.md "Results"). How to run a batch and read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
 
 ## Contributing
 
-New benchmarks start with a proposal issue. Task pull requests contain one benchmark each, pass `ci_checks/`, and
+New benchmarks start with a proposal issue. Task pull requests contain one benchmark each, pass the required check
+`invariants` (`ci_checks/run_invariants.sh`), and
 include oracle and `nop` evidence. A task without an oracle needs human review. See [CONTRIBUTING.md](CONTRIBUTING.md)
 and [docs/REVIEWING.md](docs/REVIEWING.md).
 

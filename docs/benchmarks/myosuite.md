@@ -274,7 +274,7 @@ that score 0; apple_lift's first (exploit) trajectory scores 0 under the final r
   state for random action sequences in every family.
 
 ## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`)
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`; until 2026-10-14 `scripts/task_dynamics.toml`)
 get a `-standard-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
 every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged
@@ -307,3 +307,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
 `scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there; `shared/realtime/`
 the standard-realtime twin's service);
 `images/myosuite/` (Dockerfile, VERSION).
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+Serves `eai-standard/2.2` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (STANDARD_MODE Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

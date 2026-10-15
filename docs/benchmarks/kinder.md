@@ -91,3 +91,13 @@ Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (ve
 `reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
 runs with 10 resets (the default from 2026-10-11), with 50 (the optional capability before it) and with none are
 reported separately (PROTOCOL D1), and runs recorded before protocol v1.0 are marked as such.
+
+## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+
+**KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
+shared service (`scripts/{kinder,humanoidbench}/shared/standard/rcb_service.py`, identical in both) with a per-benchmark
+simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
+PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step
+counters are `rows` and `control_steps`. No world coordinates are given (odometry and camera poses are in the robot's
+starting frame). A request body over 64 MB gets 413 before it is decoded. The service implements the optional reset
+capability (`RCB_RESET_BUDGET`).

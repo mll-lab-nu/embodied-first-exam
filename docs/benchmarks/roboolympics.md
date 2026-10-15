@@ -212,7 +212,7 @@ general helpers unchanged (`bodies/control/kinematics.py`: forward and inverse k
 jerk-limited joint trajectories); a privileged agent may import them, the tooling does not wrap them.
 
 ## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2.14, `scripts/task_dynamics.toml`:
+The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`, the generator's `DYNAMIC_FAMILIES`;
 a ball launched, served, thrown or released on the venue's clock, or a keeper driven after the kick) get a
 `-standard-realtime` twin: catch, catch-and-shoot, header, juggle-three, paddle-bounce, penalty-kick,
 table-tennis-return, tennis-return, trap-ball, volley-shot, volleyball-bump, volleyball-set, volleyball-spike.
@@ -246,9 +246,9 @@ trials are reviewed). The reasons: a public G1 controller is fair equipment for 
 controller is for a real G1, and whether an agent can find, vet and adapt existing work is part of what these tasks
 measure. What follows:
 
-- The prefix `roboolympics-` is in `ci_checks/check-verifier-isolation.sh` `OPEN_EGRESS`, `scripts/task_conventions.py`
-  `EXTERNAL_OPEN` and `scripts/set_agent_egress.py` `OPEN_EGRESS`; `scripts/run_agent_batch.sh` does not narrow these
-  tasks' copies to the usage gateway (the model API still goes through it).
+- Every generated task declares it, `[metadata] network = "open"` (PROTOCOL Appendix H.6: the author's choice; until
+  2026-10-14 three prefix lists held it), and its `## External material` paragraph is the generator's `EXTERNAL`;
+  `scripts/run_agent_batch.sh` and the scheduler do not narrow these tasks' copies to the usage gateway (the model API still goes through it).
 - With open egress the gateway is not the only road to a model provider (the provider key is in the agent's
   container): its token accounting and its budget (PROTOCOL §5) bind only what the harness itself sends, so these runs'
   usage is reported as harness-reported, and a trial that called a model API directly is flagged in review (moved from
@@ -426,7 +426,7 @@ What differs from the 2.x tasks (PROTOCOL §4c, owner 2026-10-14):
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (RoboOlympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10 (`metadata.slowdown`) | results state S |
 | agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02 and wheeled soccer 14400 s (those tasks' own `[agent] timeout_sec`, owner 2026-10-14) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10 |
 | network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL §2.11 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
-| twin | privileged + standard | none (`NO_TWIN`) | no trajectory deliverable |
+| twin | privileged + standard | none (the README's Twin row says why) | no trajectory deliverable |
 | skill task | — | mode `standard`, `task_type = "policy"`, no sim service; the verifier runs the simulator and the skill | the deliverable is code (`/app/output/skill/hit.py`, `act.py`) |
 | seeds | the instance's | matches: `[metadata.seeds]` default = allowed = the instance's development seed; skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; RoboOlympics' official results are produced by RoboOlympics on its hidden six-digit seeds |
 | metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the D11 proxy's file `metering/think_proxy.py` is in the image's copy but never started) | |
