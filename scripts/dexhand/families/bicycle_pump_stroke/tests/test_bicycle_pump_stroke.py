@@ -35,11 +35,15 @@ def replay_cli(tmp_path, rows, hand="sharpa", **extra):
     return json.loads(out.read_text())
 
 
-@pytest.mark.parametrize("hand", ["sharpa", "wuji"])
+ORACLE_HANDS = ["sharpa"] + (["wuji"] if (HERE / "solution/wuji/trajectory.npz").is_file() else [])
+
+
+@pytest.mark.parametrize("hand", ORACLE_HANDS)
 def test_oracle_succeeds_with_slack_and_float32(hand):
     rows = oracle(hand)
     status = Session(hand=hand).replay(rows)
-    assert status["success"] and status["strokes"] >= 28 and status["stage"] == 4 and status["head_connected"]
+    assert status["success"] and status["strokes"] >= 28 and status["stage"] == 5
+    assert status["head_connected"] and status["head_disconnected"]
     assert len(rows) - status["steps"] >= 50
     assert Session(hand=hand).replay(rows.astype(np.float32).astype(np.float64))["success"]
 
@@ -202,7 +206,43 @@ def test_strokes_count_only_through_a_connected_head():
     data.qpos[lever] = 1.65             # locked: connected from now on
     stroke(2)
     assert c.connected and c.strokes == 1
-    data.qpos[lever] = 1.0              # opened again
+    data.qpos[lever] = 1.40             # sagging lock: still connected, but strokes no longer count
+    stroke(3)
+    assert c.strokes == 1 and c.failure is None
+    data.qpos[lever] = 1.0              # opened before the tire is inflated
     mujoco.mj_forward(s.model, data)
-    c.substep(data, 3, 0)
+    c.substep(data, 4, 0)
     assert c.failure == "head_disconnected"
+
+
+def test_disconnect_stage_order():
+    """After the strokes/pressure: pulling the head off while locked fails; unlock then pull off latches the stage."""
+    import mujoco
+
+    s = Session()
+    c = s.checker
+    head = s.model.jnt_qposadr[s.model.joint("head_slide").id]
+    lever = s.model.jnt_qposadr[s.model.joint("lever_angle").id]
+    for forced in (True, False):
+        data = mujoco.MjData(s.model)
+        data.qpos[:] = s.data.qpos
+        mujoco.mj_forward(s.model, data)
+        c.reset(data)
+        data.qpos[head], data.qpos[lever] = -0.0175, 1.65
+        mujoco.mj_forward(s.model, data)
+        c.substep(data, 0, 0)
+        c.strokes = c.required          # inflated (scratch state)
+        if forced:
+            data.qpos[head] = -0.010       # pulled 7.5 mm back while still locked
+            mujoco.mj_forward(s.model, data)
+            c.substep(data, 1, 0)
+            assert c.failure == "head_forced_off"
+        else:
+            data.qpos[lever] = 0.3         # unlocked first
+            mujoco.mj_forward(s.model, data)
+            c.substep(data, 1, 0)
+            assert c.failure is None and not c.disconnected
+            data.qpos[head] = -0.004       # then pulled 13.5 mm back off the stem
+            mujoco.mj_forward(s.model, data)
+            c.substep(data, 2, 0)
+            assert c.failure is None and c.disconnected

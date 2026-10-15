@@ -3,8 +3,8 @@
 {{TASK_TEXT}}
 
 You control the right arm and right hand of a fixed Tianji Marvin robot: a stand with two 7-joint arms and a dexterous
-hand on each wrist, standing at the bench with its base centre at the world origin, facing +x (shoulders at z = 1.121 m
-(1.221 m above the floor)). The left arm stays parked beside the torso with its hand open; the task is done by the right arm and hand
+hand on each wrist, standing at the bench with its base centre at the world origin, facing +x (shoulders at z = 1.121 m,
+1.221 m above the floor). The left arm stays parked beside the torso with its hand open; the task is done by the right arm and hand
 alone. Every arm and finger joint is a position servo inside the physics engine under native force bounds; arm servos
 have stiffness 700 N m/rad, damping 48 N m s/rad and **no gravity compensation** (a held target sags under the arm's
 weight and the handle's push unless your targets account for it). Pushing the pump handle requires physical contact.

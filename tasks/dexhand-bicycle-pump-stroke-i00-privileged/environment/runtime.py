@@ -165,7 +165,8 @@ class Session:
             "actions": len(self.actions),
             "checker": {k: (v.copy() if isinstance(v, np.ndarray) else (list(v) if isinstance(v, list) else v))
                         for k, v in vars(c).items()
-                        if k in ("base0", "connected", "connect_control", "strokes", "armed", "max_depth",
+                        if k in ("base0", "connected", "connect_control", "disconnected", "disconnect_control",
+                                 "strokes", "armed", "max_depth",
                                  "stroke_log", "hold", "stage", "failure", "failure_detail", "success")},
         }
 
@@ -184,7 +185,8 @@ class Session:
         mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_INTEGRATION)
         digest = hashlib.sha256(state.astype("<f8").tobytes())
         c = self.checker
-        predicate = {"connected": c.connected, "strokes": c.strokes, "armed": c.armed, "hold": c.hold, "stage": c.stage,
+        predicate = {"connected": c.connected, "disconnected": c.disconnected, "strokes": c.strokes, "armed": c.armed,
+                     "hold": c.hold, "stage": c.stage,
                      "failure": c.failure, "success": c.success, "steps": self.steps}
         digest.update(json.dumps(predicate, sort_keys=True).encode())
         # Only the physics/predicate parameters of the frozen instance: editing texts never changes evidence hashes.
