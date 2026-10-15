@@ -1,0 +1,12 @@
+BiGym 2.0
+Copyright 2024 the BiGym authors
+Copyright 2026 the BiGym 2.0 authors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This distribution includes the NVIDIA GR00T Whole-Body Control policy
+weights (bigym/loco/assets/GR00T-WholeBodyControl-Balance.onnx and
+bigym/loco/assets/GR00T-WholeBodyControl-Walk.onnx):
+Licensed by NVIDIA Corporation under the NVIDIA Open Model License.
+The agreement text and all other third-party notices are in
+THIRD_PARTY_NOTICES.md.

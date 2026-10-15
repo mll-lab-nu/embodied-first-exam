@@ -1098,11 +1098,12 @@ def press(world: World, pose, depth: float = 0.008, *, max_force: float = 40.0, 
 def look(world: World, point, side: str = "above", distance: float = LOOK_DISTANCE, yaw: float = 0.0):
     """Bring the wrist camera to look at a point from `side`, the pinch point `distance` away from it. The hand
     touches nothing on purpose. A view from the side is taken as low as the arm can manage (37 degrees above the
-    horizon, else 55, else 70). The sides are those of the bench as its `front` camera shows it; `yaw` turns them
-    about the vertical (a robot that drives names them as its own camera sees the thing). An arm that cannot reach
-    all round a thing takes the nearest view it can (`RobotSpec.extra["look_round"]`, below); `info` then says by
-    how much the view was brought round (`towards_front_deg`) and from what elevation it is. Reasons:
-    `unknown_side`, `unreachable_view` (nothing moved), `path_blocked`, `not_reached`."""
+    horizon, else 55, else 70; a robot may name its own, `RobotSpec.extra["look_elevations"]`). The sides are those of
+    the bench as its `front` camera shows it; `yaw` turns them about the vertical (a robot that drives names them as
+    its own camera sees the thing). An arm that cannot reach all round a thing takes the nearest view it can
+    (`RobotSpec.extra["look_round"]`, below); `info` then says by how much the view was brought round
+    (`towards_front_deg`) and from what elevation it is. Reasons: `unknown_side`, `unreachable_view` (nothing moved),
+    `path_blocked`, `not_reached`."""
     if side not in LOOK_SIDES:
         return Status(False, "unknown_side", {"sides": sorted(LOOK_SIDES)})
     point = np.asarray(point, dtype=np.float64)
@@ -1135,7 +1136,7 @@ def look(world: World, point, side: str = "above", distance: float = LOOK_DISTAN
             for a in near["towards_front"]:
                 hs.append(tf.rotate(tf.quat_axis_angle(UP, sign * math.radians(a)), h))
                 turns.append(float(a))
-        elevations = (37.0, 55.0, 70.0) + (tuple(near["flat"]) if near else ())
+        elevations = tuple(world.spec.extra.get("look_elevations", (37.0, 55.0, 70.0))) + (tuple(near["flat"]) if near else ())
         outs = [view(hh, e) for hh in hs for e in elevations]
         turns = [t for t in turns for _ in elevations]
     seeds = [world.joint_pos, world.ready, S.ready_posture(world, "side"), S.ready_posture(world, "side_low"), world.home]
@@ -1238,3 +1239,264 @@ def home(world: World):
 def wait(world: World, seconds: float):
     yield from S.hold(world, max(float(seconds), CONTROL_DT))
     return Status(True, "ok", {"seconds": float(seconds)})
+
+
+# ---- holding a thing where it stands, turning a cap (0.5.0) -------------------------------------------------------------
+HOLD_TILTS = (90.0, 75.0, 60.0)        # degrees from straight down at which a hand takes a standing thing by its side to hold it
+HOLD_LEANS = (0.0, 30.0, -30.0, 60.0, -60.0)   # degrees about the vertical from the direction towards the arm's base
+HOLD_BACK = 0.08                        # m: the hand comes in along its own axis from this far back
+HOLD_RAISE = (0.0, 0.01, 0.02, 0.035)   # m: above the asset's grasp by the side, where the hand may also take the thing
+
+
+def _hold_point(world: World, obj: str) -> tuple[np.ndarray, float]:
+    """Where a hand takes a standing thing by its side, and how wide it is there: the asset's grasp by the side (its
+    `body`), else the middle of its height on its axis."""
+    meta = world.objects[obj]["meta"]
+    here = world.locate(obj)
+    for g in meta.get("grasps", []):
+        if g["type"] == "side":
+            return tf.compose(here, (np.asarray(g["pos"], dtype=np.float64), IDENTITY))[0], float(g["width"])
+    lo, hi = world.box(obj)
+    size = meta.get("size", [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]])
+    return np.array([here[0][0], here[0][1], (lo[2] + hi[2]) / 2.0]), float(min(size[0], size[1]))
+
+
+def hold(world: World, obj: str, *, speed: float = 1.0):
+    """Take a thing that stands on something by its side and keep it where it is, without lifting it: the hand that
+    holds a bottle still while the other hand turns its cap, or a cup while the other pours into it. The hand comes
+    in level or tipped (`HOLD_TILTS`), from the arm's side of the thing (`HOLD_LEANS`), along its own axis, and
+    closes; the thing is then held by the grasp assist as by `pick`. Reasons: `already_holding`, `not_graspable`,
+    `too_wide`, `ik_unreachable:pregrasp`, `path_blocked:pregrasp` (nothing moved), `not_reached:approach`,
+    `nothing_grasped`."""
+    if S.holding(world):
+        return Status(False, "already_holding", {"held": world.held})
+    o = world.objects.get(obj)
+    if o is None or o["fixed"]:
+        return Status(False, "not_graspable", {"object": obj})
+    # a thing with a handle that sticks out (a saucepan) is held by it, from straight above, where it stands
+    handle = next((g for g in grasps_of(world, obj) if g["name"] == "handle" and g["type"] == "top" and g["offset"] > 0.015), None)
+    if handle is not None and float(handle["width"]) <= S.max_opening(world) - 0.004:
+        st = yield from S.pick(world, obj, {"type": "top", "pose": handle["pose"], "width": handle["width"], "free": True}, lift=0.0, speed=speed)
+        if st.ok:
+            return Status(True, "ok", {"object": obj, "by": "handle"})
+        if not st.reason.endswith(":pregrasp"):
+            return st
+    point, width = _hold_point(world, obj)
+    if width > S.max_opening(world) - 0.004:
+        return Status(False, "too_wide", {"object": obj, "opens_to": S.max_opening(world)})
+    base = np.asarray(world.scene["robot"]["pos"][:2], dtype=np.float64)
+    to_base = math.atan2(float(base[1] - point[1]), float(base[0] - point[0]))
+    seeds = [world.home, world.ready, S.ready_posture(world, "side"), S.ready_posture(world, "side_low")]
+    best, refused = None, []
+    # the most nearly level hand first (it takes the least room above the thing: the other hand may need it), and
+    # for each tilt the way of holding at the thing's grasp by its side, then up to 3.5 cm higher on it
+    tries = [(tilt, dz, lean) for tilt in HOLD_TILTS for dz in HOLD_RAISE for lean in HOLD_LEANS]
+    top = float(world.box(obj)[1][2])
+    base_point = point
+    for tilt, dz, lean in tries:
+        point = base_point + np.array([0.0, 0.0, dz])
+        if point[2] > top - 0.02:
+            continue
+        if True:
+            a = to_base + math.radians(lean)
+            towards = np.array([math.cos(a), math.sin(a), 0.0])           # from the thing towards the wrist
+            t = math.radians(tilt)
+            z = -math.cos(t) * UP - math.sin(t) * towards                  # the hand points into the thing
+            y = np.cross(UP, towards)                                      # the fingers close level, across it
+            quat = tf.quat_from_axes(y=y, z=z)
+            goal = (point.copy(), quat)
+            pre = (point - HOLD_BACK * z, quat)
+            plan, why = S._reach(world, pre, [goal], [], ignore_last=(obj,), seeds=seeds)
+            if plan is None:
+                refused.append(why)
+                continue
+            best = (plan, pre, goal, tilt)
+            break
+    if best is None:
+        blocked = any(w.startswith("blocked") for w in refused)
+        return Status(False, "path_blocked:pregrasp" if blocked else "ik_unreachable:pregrasp", {"refused": refused[:6]})
+    plan, pre, goal, tilt = best
+    yield from S._grip(world, S.gripper_target_for_opening(min(width + 0.024, S.max_opening(world)), world))
+    g = float(world.target[-1])
+    st = yield from S._go(world, plan["q_first"], g, (), speed)
+    if not st.ok:
+        return Status(False, f"{st.reason}:pregrasp", st.info)
+    st = yield from S._move(world, goal, g, linear=True, speed=speed, lin_speed=0.10)
+    if not st.ok and not (st.reason == "not_reached" and float(np.linalg.norm(world.tcp_pose()[0] - goal[0])) < 0.008):
+        yield from S._move(world, pre, g, linear=True, speed=speed, lin_speed=0.10)
+        return Status(False, f"{st.reason}:approach", st.info)
+    yield from S._close(world)
+    if getattr(world, "assist", True) and world.objects[obj].get("weld_id") is not None:
+        world.attach(obj)
+    if not S.holding(world):
+        yield from S._grip(world, g)
+        return Status(False, "nothing_grasped", {})
+    return Status(True, "ok", {"tilt_deg": tilt, "object": obj})
+
+
+TWIST_STROKE = 200.0       # degrees: the most one turn of the wrist gives before the hand lets go and takes hold again
+TWIST_STEP = 40.0          # degrees per straight move of a stroke
+TWIST_STROKES = 8          # strokes a call makes at most
+TWIST_JUMP = 0.6           # rad: the most a joint may change between neighbouring yaws (10 degrees) of a stroke
+TWIST_SETTLE_S = 0.3       # s: the closed hand keeps still this long before a stroke turns (was 0.1)
+TWIST_RESISTED_RAD = 0.02  # rad: a turn of the wrist held back by less than this at its end is taken as done
+
+
+def _twist_resisted(st) -> bool:
+    """A straight move of a stroke that tracked its whole path and then did not settle within `TWIST_RESISTED_RAD` of
+    its joint targets (`not_reached`, measured 3 to 5 mrad): the cap held on the bottle's axis pulls back on a hand
+    whose pinch point is not exactly on that axis (0.5.1, grasping by contact). Before, a stroke ended there after
+    its first 40 degrees and a twist ran out of strokes."""
+    return st.reason == "not_reached" and float((st.info or {}).get("joint_err", 1.0)) < TWIST_RESISTED_RAD
+
+
+def _yaw_run(world: World, pinch, ignore) -> list[float]:
+    """The yaws (degrees, in 10 degree steps) at which the hand reaches `pinch` pointing straight down without
+    touching anything (but `ignore`), as one run of neighbours that the arm turns through without a jump of its joints:
+    each yaw's configuration is solved from the last one's (0.5.1: a run of yaws that were each reachable from some
+    seed was not always one the wrist could turn through: on the YAM the hand stopped 40 degrees into a stroke, and
+    a twist under grasping by contact ran out of strokes)."""
+    first = {}
+    for yaw in range(-180, 180, 10):
+        quat = tf.quat_from_ypr(float(yaw), 0.0, 0.0)
+        for seed in (world.joint_pos, world.ready, world.home):
+            r = world.ik.solve(pinch, quat, seed, max_jump=10.0, max_iters=200)
+            if r.ok and world.ik.collision(r.q, ignore) is None:
+                first[yaw] = r.q
+                break
+    best: list = []
+    for start in sorted(first):
+        run, q, yaw = [float(start)], first[start], start
+        while len(run) < 36:
+            yaw += 10
+            r = world.ik.solve(pinch, tf.quat_from_ypr(float(yaw), 0.0, 0.0), q, max_jump=TWIST_JUMP, max_iters=200)
+            if not r.ok or world.ik.collision(r.q, ignore) is not None:
+                break
+            q = r.q
+            run.append(float(yaw))
+        if len(run) > len(best):
+            best = run
+    return best
+
+
+def twist(world: World, cap: str, vessel: str, *, direction: str = "open", done=None, speed: float = 1.0):
+    """Turn a screw cap with the hand: `open` takes hold of the cap from above and turns it anticlockwise (seen from
+    above), in strokes of up to `TWIST_STROKE` degrees (the hand lets go, turns back and takes hold again between
+    them), until `done()` says it has come off, then lifts it 6 cm; `close` puts the cap the hand holds on the
+    vessel's mouth (`place`), takes hold of it again and turns it clockwise until `done()` says it is tight, then lets
+    go and rises. Whether a cap turns on its bottle is the hazard layer's (`ScrewCap`): the bottle must be kept from
+    turning with it, by the other hand or because it is fixed. After the first stroke of an `open` the cap still
+    fastened to its bottle means that the bottle turned with it: the hand lets go and rises (`turned_with_it`).
+    Reasons: `already_holding`, `not_holding`, `ik_unreachable:turn` (no straight-down hand can turn far enough
+    there; nothing moved), those of reaching the cap (`...:pregrasp`, `...:approach`), `turned_with_it`,
+    `not_loosened` / `not_tightened` (the strokes ran out)."""
+    done = done or (lambda: False)
+    if direction == "open" and S.holding(world):
+        return Status(False, "already_holding", {"held": world.held})
+    if direction == "close":
+        if world.held != cap:
+            return Status(False, "not_holding", {})
+        meta_v = world.objects[vessel]["meta"]
+        mouth = tf.compose(world.locate(vessel), (np.asarray(meta_v.get("sites", {}).get("mouth", [0.0, 0.0, meta_v["size"][2]]), dtype=np.float64), IDENTITY))[0]
+        st = yield from place(world, mouth, speed=speed)
+        if not st.ok:
+            return st
+    meta = world.objects[cap]["meta"]
+    lo, hi = world.box(cap)
+    width = float(min(meta.get("size", [hi[0] - lo[0]] * 2)[:2]))
+    up_axis = tf.rotate(world.locate(cap)[1], UP)
+    pinch = (np.asarray(lo) + np.asarray(hi)) / 2.0
+    pinch[2] = max(float(pinch[2]), float(hi[2]) - 0.012)
+    ignore = (cap, vessel) + tuple(world.others_hold() if hasattr(world, "others_hold") else ())
+    run = _yaw_run(world, pinch, ignore)
+    if len(run) < 7 or float(up_axis[2]) < 0.95:          # less than 60 degrees of turn, or a bottle that does not stand up
+        return Status(False, "ik_unreachable:turn", {"yaws": run[:1] + run[-1:]})
+    stroke = min(run[-1] - run[0], TWIST_STROKE)
+    sign = 1.0 if direction == "open" else -1.0
+    start = run[0] if direction == "open" else run[-1]
+    opening = S.gripper_target_for_opening(min(width + 0.024, S.max_opening(world)), world)
+    yield from S._grip(world, opening)
+    g = float(world.target[-1])
+    # the way in: a free move to above the cap (as high as the hand reaches pointing down: the other arm, holding the
+    # bottle, is lower down beside it), then straight down to the cap
+    quat = tf.quat_from_ypr(start, 0.0, 0.0)
+    plan, why, chain = None, "ik_unreachable", None
+    for high in (0.16, 0.12, 0.08, None):
+        for above in (0.08, 0.06, 0.04, 0.025):           # a hand pointing down is not held high far from its base
+            pre = (pinch + np.array([0.0, 0.0, above]), quat)
+            if high is not None and high <= above:
+                continue
+            first = pre if high is None else (pinch + np.array([0.0, 0.0, high]), quat)
+            rest = [(pinch.copy(), quat)] if high is None else [pre, (pinch.copy(), quat)]
+            plan, why = S._reach(world, first, rest, S._ready_list(world, "top"), ignore_last=ignore, ignore=ignore[:2],
+                                 seeds=[world.home, world.ready])
+            if plan is not None:
+                chain = [first] + rest
+                break
+        if plan is not None:
+            break
+    if plan is None:
+        return Status(False, ("path_blocked" if why.startswith("blocked") else "ik_unreachable") + ":pregrasp", {"why": why})
+    if plan["via"] is not None:
+        st = yield from S._go(world, plan["via"], g, (), speed)
+        if not st.ok:
+            return Status(False, f"{st.reason}:ready", st.info)
+    st = yield from S._go(world, plan["q_first"], g, (), speed)
+    if not st.ok:
+        return Status(False, f"{st.reason}:pregrasp", st.info)
+    for pose in chain[1:]:
+        st = yield from S._move(world, pose, g, linear=True, speed=speed, lin_speed=0.08)
+        if not st.ok and not (st.reason == "not_reached" and float(np.linalg.norm(world.tcp_pose()[0] - pinch)) < 0.006):
+            return Status(False, f"{st.reason}:approach", st.info)
+    turned, strokes = 0.0, 0
+    for strokes in range(1, TWIST_STROKES + 1):
+        yield from S._close(world)
+        if world.held is None:
+            world.attach(cap)
+        # (0.5.1) the hand keeps still a while before it turns: under the control interface a grasp is taken once the
+        # fingers have rested for 5 ticks, and only a cap held by a hand turns on its bottle (`ScrewCap`); a turn begun
+        # earlier turned the bottle with the cap and the compiled rows of a twist did not open it again
+        yield from S.hold(world, TWIST_SETTLE_S)
+        yaw, left = start, stroke
+        while left > 1e-6 and not done():
+            step = min(TWIST_STEP, left)
+            q = tf.quat_from_ypr(yaw + sign * step, 0.0, 0.0)
+            st = yield from S._move(world, (pinch.copy(), q), float(world.target[-1]), linear=True, speed=speed, lin_speed=0.05, ang_speed=0.8)
+            if not st.ok and not _twist_resisted(st):
+                break
+            yaw += sign * step
+            left -= step
+            turned += step
+        yield from S.hold(world, 0.1)
+        if done():
+            break
+        if direction == "open" and strokes == 1 and cap in world.fastened and cap not in getattr(world, "hinged", {}):
+            yield from S._grip(world, opening)                 # the bottle turned with the cap: nothing held it
+            yield from _retreat(world, speed=speed, released=cap)
+            return Status(False, "turned_with_it", {"turned_deg": turned})
+        yield from S._grip(world, opening)                      # let go, turn back the way it came, take hold again
+        st = Status(True, "ok", {})
+        while st.ok and abs(yaw - start) > 1e-6:
+            yaw -= math.copysign(min(TWIST_STEP, abs(yaw - start)), yaw - start)
+            st = yield from S._move(world, (pinch.copy(), tf.quat_from_ypr(yaw, 0.0, 0.0)), g, linear=True, speed=speed, lin_speed=0.05, ang_speed=1.2)
+            if not st.ok and _twist_resisted(st):
+                st = Status(True, "ok", {})
+        if not st.ok:
+            break
+    if not done():
+        if world.held is not None:
+            yield from S._grip(world, opening)
+        yield from _retreat(world, speed=speed, released=cap)
+        return Status(False, "not_loosened" if direction == "open" else "not_tightened", {"turned_deg": turned, "strokes": strokes})
+    if direction == "open":                                     # lift the cap off and keep it
+        # (at the end of a stroke the wrist may stand near a joint limit that a lift of 6 cm runs into: lower lifts are
+        # tried; the cap is off whichever succeeds, and `place` plans its own way up from where the hand is)
+        for lift in (0.06, 0.04, 0.02):
+            st = yield from S._move(world, (pinch + np.array([0.0, 0.0, lift]), world.tcp_pose()[1]), float(world.target[-1]), linear=True,
+                                    speed=speed, lin_speed=0.06)
+            if st.ok:
+                break
+        return Status(True, "ok", {"turned_deg": turned, "strokes": strokes, "holding": world.held == cap, "lifted": lift if st.ok else 0.0})
+    yield from S._grip(world, opening)
+    yield from _retreat(world, speed=speed, released=cap)
+    return Status(True, "ok", {"turned_deg": turned, "strokes": strokes})

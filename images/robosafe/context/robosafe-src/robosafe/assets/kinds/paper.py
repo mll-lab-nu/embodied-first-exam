@@ -24,10 +24,16 @@ def _worn(spec) -> dict:
 
 @kind("tag_card", minor_contact=True, vary={"text": ["Na", "Fe", "Cu", "Li", "K", "Zn"], "stand": ["tent", "holder"]})
 def tag_card(k: Kit, *, text="Na", pictograms=(), style="tag", stand="tent", width=0.085, height=0.055, color="white",
-             mass=0.015, wear=None, wear_back=None):
+             mass=0.015, wear=None, wear_back=None, printed="both"):
     """A small card with large text: a tent card (`stand="tent"`, printed on both faces), a card in a holder block
     (`holder`), or lying flat (`flat`). Also a note or a sign on a tray: `text` may be several lines. `wear`,
-    `wear_back` (0.5.0): the print of the front face (and of the back face) worn (`robosafe.assets.wear`)."""
+    `wear_back` (0.5.0): the print of the front face (and of the back face) worn (`robosafe.assets.wear`).
+    `printed` (after 0.5.1, the tiers `other_side` of `hazard_hidden`): which faces of a tent or holder card carry the
+    print, `both` (the default, the bytes as before), `front` (the -y face; the back is blank card) or `back` (the
+    front is blank card). A one-sided card's only print has the site `label` whichever face it is on; `wear` applies to
+    it."""
+    if printed not in ("both", "front", "back"):
+        raise ValueError("printed: both, front or back")
     W, H = mm(width, height)
     lines = _as_lines(text)
     st = style if not isinstance(style, str) else {"base": style}
@@ -43,6 +49,12 @@ def tag_card(k: Kit, *, text="Na", pictograms=(), style="tag", stand="tent", wid
             c = (0.0, sgn * half / 2.0, zt / 2.0)
             k.vis("box", (W, 0.8, H), c, color, quat=qx(sgn * math.degrees(lean)), name=f"face_{int(sgn > 0)}")
             k.col("box", (W, 1.6, H * 0.98), c, quat=qx(sgn * math.degrees(lean)))
+            if printed != "both":                                 # a one-sided card: the other face is blank
+                if printed != ("front" if sgn < 0 else "back"):
+                    continue
+                k.label_flat(lines, pictograms, size=(W - 4.0, H - 4.0), pos=(c[0] + n[0] * 0.5, c[1] + n[1] * 0.5, c[2] + n[2] * 0.5),
+                             normal=n, up=up, style=st, name="label", **_worn(wear))
+                continue
             k.label_flat(lines, pictograms, size=(W - 4.0, H - 4.0), pos=(c[0] + n[0] * 0.5, c[1] + n[1] * 0.5, c[2] + n[2] * 0.5),
                          normal=n, up=up, style=st, name="label" if sgn < 0 else "label_back",
                          **_worn(wear if sgn < 0 else wear_back))
@@ -51,6 +63,11 @@ def tag_card(k: Kit, *, text="Na", pictograms=(), style="tag", stand="tent", wid
         k.solid("box", (W * 0.6, 26.0, 12.0), (0, 0, 6.0), "black", name="holder", finish="matte")
         k.solid("box", (W, 1.2, H), (0, 0, 10.0 + H / 2.0), color, name="card")
         for sgn in (-1.0, 1.0):
+            if printed != "both":                                 # a one-sided card: the other face is blank
+                if printed == ("front" if sgn < 0 else "back"):
+                    k.label_flat(lines, pictograms, size=(W - 4.0, H - 4.0), pos=(0, sgn * 0.7, 10.0 + H / 2.0), normal=(0, sgn, 0),
+                                 style=st, name="label", **_worn(wear))
+                continue
             k.label_flat(lines, pictograms, size=(W - 4.0, H - 4.0), pos=(0, sgn * 0.7, 10.0 + H / 2.0), normal=(0, sgn, 0),
                          style=st, name="label" if sgn < 0 else "label_back", **_worn(wear if sgn < 0 else wear_back))
     elif stand == "flat":
