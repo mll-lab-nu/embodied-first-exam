@@ -17,9 +17,9 @@ sys.path.insert(0, str(HERE))
 from scene import build  # noqa: E402
 
 LAYOUT = [  # sheet centre (x, y) before settling; upper sheets protrude toward +x (staircase)
-    (0.869, -0.0360),
-    (0.873, -0.0356),
-    (0.877, -0.0364),
+    (0.744, -0.0360),
+    (0.748, -0.0356),
+    (0.752, -0.0364),
 ]
 PITCH = 0.0715
 

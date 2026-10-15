@@ -38,8 +38,8 @@ PAPER = {"rgba": [0.965, 0.955, 0.915, 1], "roughness": 0.8, "bump": {"scale": 6
 INK = {"rgba": [0.16, 0.18, 0.16, 1], "roughness": 0.5}
 FLOOR = {"rgba": [0.65, 0.66, 0.63, 1], "roughness": 0.5}
 CONFIG = {
-    "camera": {"position": [1.16, -0.62, 1.33], "target": [0.81, -0.06, 0.81], "lens": 40},
-    "light_target": [0.78, -0.05, 0.81],
+    "camera": {"position": [1.38, 0.52, 1.36], "target": [0.66, -0.16, 0.86], "lens": 36},
+    "light_target": [0.66, -0.06, 0.81],
     "exposure": -0.8,
     "visual_bevel_m": 0.00028,
     "lights": [  # the approved T36 film's three area lights
@@ -131,7 +131,7 @@ def export(trajectory, directory, stride=2):
             break
     np.savez_compressed(directory / "poses.npz", positions=np.asarray(positions), rotations=np.asarray(rotations))
     final = session.status()
-    title = f"Align and staple three sheets · {session.hand_info['model']}"
+    title = f"Align and staple three sheets · {session.hand_info['model']} on a Marvin arm"
     payload = {
         "task": "paper_staple",
         "title": title,

@@ -41,6 +41,21 @@ def _hands_module():
 
 hands = _hands_module()
 
+
+def _arm_rig_module():
+    """The shared Marvin arm rig (copied next to this file in generated task dirs)."""
+    try:
+        import arm_rig
+
+        return arm_rig
+    except ModuleNotFoundError:
+        path = Path(__file__).resolve().parents[2] / "shared/arm_rig.py"
+        spec = importlib.util.spec_from_file_location("arm_rig", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["arm_rig"] = module
+        spec.loader.exec_module(module)
+        return module
+
 # Stapler part frame (source legacy_geometry.py): base origin BASE, handle pivot PIVOT relative to BASE.
 PIVOT = np.array([-0.052, 0.0, 0.020])
 MAGAZINE = np.array([-0.052, 0.0, 0.009])
@@ -58,6 +73,16 @@ def node(parent, tag, **attributes):
         return str(x)
 
     return ET.SubElement(parent, tag, {k: value(v) for k, v in attributes.items()})
+
+
+def look_at(pos, target):
+    """Camera x and y axes (MuJoCo ``xyaxes``) looking from ``pos`` at ``target`` with world z up."""
+    f = np.asarray(target, float) - np.asarray(pos, float)
+    f /= np.linalg.norm(f)
+    x = np.cross(f, [0.0, 0.0, 1.0])
+    x /= np.linalg.norm(x)
+    y = np.cross(x, f)
+    return np.r_[x, y]
 
 
 def verify_assets():
@@ -209,7 +234,7 @@ def add_desk(world, config):
 
 
 def build(config, asset_dir=None, hand="sharpa"):
-    """Compose the frozen scene with the selected genuine hand on the six-axis wrist stage."""
+    """Compose the frozen scene with the Marvin arm rig carrying the selected genuine hand (right arm active)."""
     hand_id = hands.canonical(hand)
     verify_assets()
     folder = Path(
@@ -231,39 +256,7 @@ def build(config, asset_dir=None, hand="sharpa"):
         root.remove(key)
     assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
     hand_body = world.find("body")
-    world.remove(hand_body)
-    wrist = node(world, "body", name="wrist_stage")
-    node(wrist, "inertial", pos=(0, 0, 0), mass=0.01, diaginertia=(0.00001,) * 3)
-    hand_body.set("quat", "0 0.7071067811865476 0 0.7071067811865476")
-    wrist.append(hand_body)
-    ranges = config["wrist_range"]
-    for i, name in enumerate(("x", "y", "z", "rx", "ry", "rz")):
-        axis = [int(i % 3 == j) for j in range(3)]
-        span = ranges[name] if i < 3 else (-3.14, 3.14)
-        wrist.insert(
-            i,
-            ET.Element(
-                "joint",
-                name="wrist_" + name,
-                type="slide" if i < 3 else "hinge",
-                axis=" ".join(map(str, axis)),
-                range=f"{span[0]} {span[1]}",
-                damping="15" if i < 3 else "1",
-                armature=".02",
-            ),
-        )
-        actuator.insert(
-            i,
-            ET.Element(
-                "position",
-                name="wrist_" + name + "_act",
-                joint="wrist_" + name,
-                kp="2500" if i < 3 else "120",
-                kv="80" if i < 3 else "8",
-                inheritrange="1",
-                forcerange="-80 80" if i < 3 else "-10 10",
-            ),
-        )
+    # the family's Sharpa tweaks on the right Wave, before mounting (the rig mirrors them onto the parked left Wave)
     for a in actuator:
         if a.tag == "general":
             bias = [float(v) for v in a.get("biasprm", "0 0 0").split()]
@@ -272,9 +265,13 @@ def build(config, asset_dir=None, hand="sharpa"):
     for g in hand_body.iter("geom"):
         if "fingertip_collision" in g.get("name", ""):
             g.set("friction", "1.5 .005 .0001")
-    if hand_id != "sharpa":
-        sibling = folder.parent / "wuji_v2_2"
-        hands.replace_wave_hands(root, hand_id, folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    arm_rig = _arm_rig_module()
+    sibling = folder.parent / "wuji_v2_2"
+    marvin = config["marvin"]
+    arm_rig.mount_marvin(root, marvin["base_pos"], marvin["base_yaw"], hand=hand_id, active=("right",),
+                         mount_names={"right": "wrist_stage"}, sharpa_folder=folder,
+                         wuji_folder=sibling if (sibling / "mjcf/right.xml").is_file() else None)
+    assets, world, actuator = root.find("asset"), root.find("worldbody"), root.find("actuator")
     _materials(assets)
     add_desk(world, config)
     stop = add_stapler(world, config)
@@ -296,12 +293,10 @@ def build(config, asset_dir=None, hand="sharpa"):
          castshadow="true")
     node(world, "light", name="fill", pos=(0.2, 0.6, 1.8), dir=(0.3, -0.4, -1), diffuse=(0.40, 0.42, 0.46),
          castshadow="false")
-    node(world, "camera", name="overview", pos=(1.30, -0.62, 1.22), xyaxes=(0.782, 0.623, 0, -0.303, 0.38, 0.874),
-         fovy=45)
-    node(world, "camera", name="closeup", pos=(0.98, -0.36, 0.98), xyaxes=(0.8, 0.6, 0, -0.274, 0.366, 0.889),
-         fovy=42)
-    node(world, "camera", name="throat", pos=(0.86, -0.22, 0.86), xyaxes=(0.753, 0.659, 0, -0.242, 0.277, 0.93),
-         fovy=40)
+    for name, pos, target, fovy in (("overview", (1.42, 0.62, 1.38), (0.66, -0.12, 0.84), 50),
+                                    ("closeup", (1.02, 0.30, 1.02), (0.68, -0.06, 0.79), 42),
+                                    ("throat", (0.80, 0.12, 0.89), (0.625, -0.095, 0.80), 40)):
+        node(world, "camera", name=name, pos=pos, xyaxes=look_at(pos, target), fovy=fovy)
     v = root.find("visual")
     if v is None:
         v = node(root, "visual")

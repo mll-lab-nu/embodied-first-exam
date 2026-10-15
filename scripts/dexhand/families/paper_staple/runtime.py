@@ -13,7 +13,9 @@ import mujoco
 import numpy as np
 
 from checker import STAGE_NAMES, Checker
-from scene import build, hands
+from scene import _arm_rig_module, build, hands
+
+arm_rig = _arm_rig_module()
 
 CONFIG_PATH = Path(__file__).with_name("task.json")
 TASK = "paper_staple"
@@ -42,7 +44,7 @@ class Session:
         self.qadr = self.model.jnt_qposadr[self.model.actuator_trnid[:, 0]]
         self.joint_names = [self.model.joint(int(j)).name for j in self.model.actuator_trnid[:, 0]]
         self.actuator_names = [self.model.actuator(i).name for i in range(self.model.nu)]
-        self.robot = self.hand_info["robot"] + "-floating"
+        self.robot = arm_rig.ROBOT_ID
         self.tcp_body = "wrist_stage"
         self.max_control_steps = int(self.config["max_steps"])
         self.checker = Checker(self.model, self.config, self.head_stop)

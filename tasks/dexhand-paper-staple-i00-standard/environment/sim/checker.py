@@ -5,7 +5,7 @@ from __future__ import annotations
 import mujoco
 import numpy as np
 
-from scene import STAPLE_LOCAL
+from scene import STAPLE_LOCAL, _arm_rig_module
 
 CORNERS = np.array([[-1, -1], [1, -1], [1, 1], [-1, 1]], dtype=float)
 STAGE_NAMES = ["aligned", "in_throat", "pressed", "released_hold"]
@@ -40,21 +40,19 @@ class Checker:
         self.head = model.body("stapler_head").id
         self.hinge = int(model.joint("head_hinge").qposadr[0])
         self.blade = model.geom("driver_blade").id
-        wrist = model.body("wrist_stage").id
-        owner = np.full(model.nbody, "", dtype=object)
-        for b in range(1, model.nbody):
-            p = b
-            while p:
-                if p == wrist:
-                    owner[b] = "hand"
-                    break
-                p = int(model.body_parentid[p])
+        # every body that is not the world, a sheet or the stapler belongs to the robot (stand, both arms, both
+        # hands): any robot contact counts as "hand contact" for the released hold
+        owner = np.full(model.nbody, "hand", dtype=object)
+        owner[0] = ""
         for i, b in enumerate(self.sheet_ids):
             owner[b] = f"sheet_{i}"
         owner[self.base] = "stapler"
         owner[self.head] = "stapler"
         self.geom_owner = np.array([owner[int(model.geom_bodyid[g])] for g in range(model.ngeom)], dtype=object)
         self.is_hand = self.geom_owner == "hand"
+        # the Marvin stand and arm links (not the hands): touching the desk, the stapler or a sheet ends the episode
+        arm_bodies = _arm_rig_module().robot_body_ids(model)
+        self.is_arm = np.array([int(model.geom_bodyid[g]) in arm_bodies for g in range(model.ngeom)])
         self.is_sheet = np.array([str(o).startswith("sheet_") for o in self.geom_owner])
         self.is_stapler = self.geom_owner == "stapler"
         self.ground = np.zeros(model.ngeom, dtype=bool)
@@ -142,6 +140,13 @@ class Checker:
         if n:
             g = data.contact.geom[:n]
             g1, g2 = g[:, 0], g[:, 1]
+            arm = (self.is_arm[g1] & ~self.is_hand[g2]) | (self.is_arm[g2] & ~self.is_hand[g1])
+            if arm.any():
+                k = int(np.flatnonzero(arm)[0])
+                a, b = int(g1[k]), int(g2[k])
+                if not self.is_arm[a]:
+                    a, b = b, a
+                return "arm_collision", f"{self.m.geom(a).name or 'arm link'} touched {self.m.geom(b).name or 'world'}"
             objects = self.is_sheet | self.is_stapler
             hit = (objects[g1] & self.ground[g2]) | (objects[g2] & self.ground[g1])
             if hit.any():

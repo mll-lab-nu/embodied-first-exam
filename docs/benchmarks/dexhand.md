@@ -30,7 +30,7 @@ frozen scene, in privileged and standard mode (60 task directories,
 | `stool_brace_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,006 rows |
 | `ram_module_install` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,529 rows |
 | `boot_sole_brush` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,329 rows |
-| `paper_staple` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 946 rows |
+| `paper_staple` | one Tianji Marvin 7-DoF arm and hand (the other arm parked) | 58 / 54 | 50 Hz, 10 x 2 ms | 942 rows |
 | `binder_page_load` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 3,095 rows |
 | `envelope_letter_insert` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 1,298 rows |
 | `book_page_turn` | hand on a six-DoF wrist stage | 28 / 26 | 50 Hz, 10 x 2 ms | 650 rows |
@@ -43,7 +43,7 @@ family also runs with the genuine **Wuji Hand 2.2** (20 finger joints) mounted i
 episode (`essential_two_object` and `sweep_dustpan` with a Wuji-specific start, see Hands). There
 is no assisted grasp: no welds, attachments, scripted object motion or forces on objects; objects move only through
 contact and gravity. Every family's reference solution is a recorded physical Sharpa episode (`oracle = "full"`);
-nine of the first ten (all but `sweep_dustpan`) and nine of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
+nine of the first ten (all but `sweep_dustpan`) and eight of the wave-2 families also package a successful Wuji Hand 2.2 episode, which the oracle uses when a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
@@ -121,7 +121,7 @@ oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the fol
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
-(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Eighteen families package a
+(graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Seventeen families package a
 Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
 copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
@@ -141,7 +141,6 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 | `jar_lid_open` | 905 x 26 | control 755 | `families/jar_lid_open/demo.py --hand wuji` (fingertip targets inside the skirt as grip force, two regrasp strokes: the Wuji servos are too weak for the Sharpa's single wrist turn) |
 | `pancake_serve` | 875 x 26 | control 725 | `families/pancake_serve/tools/demo.py --params '{"hand": "wuji"}'` (the same closed-loop turner-pose servo as Sharpa, with the Wuji frozen power grasp from `tools/make_reset.py`) |
 | `boot_sole_brush` | 1,336 x 26 | control 1,186 | `families/boot_sole_brush/tools/author_oracle.py --hand wuji` (the Sharpa controller with Wuji grip parameters and multi-seed IK) |
-| `paper_staple` | 1,125 x 26 | control 925 | `families/paper_staple/demo.py --hand wuji` (the Sharpa controller with a narrower Wuji abduction spread) |
 | `envelope_letter_insert` | 1,588 x 26 | control 1,488 | `families/envelope_letter_insert/demo.py --hand wuji` (the Sharpa controller, vertex-based fingertip targets for Wuji) |
 | `book_page_turn` | 650 x 26 | control 347 | `families/book_page_turn/author.py` (the Sharpa controller with per-hand overrides, `HAND_DEFAULTS`) |
 | `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
@@ -426,18 +425,18 @@ Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansio
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`), or, since wave 3
 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each flange (`grinder_crank`, `picture_hang`
-with both arms; `bicycle_pump_stroke` with the right arm, the left one parked) completes each one with motor targets
-only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides, detents, latches);
-nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium that is not
-simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator
-state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first
-violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held
-terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
-lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
-"full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
-`solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically feasible
-(pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each section names what was restored
-and what remains, with the reason.
+with both arms; `bicycle_pump_stroke`, `paper_staple` with the right arm, the left one parked) completes each one with
+motor targets only. Mechanisms are passive joints with limits, damping, friction loss and springs (hinges, slides,
+detents, latches); nothing is welded to a hand, scripted or pushed, and object state is written only at reset. A medium
+that is not simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from
+simulator state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the
+first violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released
+or held terminal window. Each instruction states the exact predicate and every threshold; each family's authoring
+`README.md` lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms),
+`oracle = "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is
+packaged as `solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored the source scene wherever that was physically
+feasible (pre-closed or pre-placed parts, enlarged parts and widened clearances reverted); each section names what was
+restored and what remains, with the reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -667,18 +666,26 @@ success at 1,186).
 
 ### Paper stapling (`paper_staple`, T36)
 
-A desk (top z = 0.78 m), a free NOVUS B2-style stapler (a passive spring-returned head hinge with a bottom stop at
-0.1701 rad and a paper insertion stop behind the anvil) and three rigid A5 sheets (0.5 mm, 2.5 g) that start as a
-misaligned staircase (4 and 8 mm toward +x) with the bottom sheet's corner resting on the anvil mouth. **Success**, in
-order: (1) every corner of sheets 1 and 2 within 2.0 mm of sheet 0's, stacked and in contact; (2) the staple point
-inside every sheet 3-30 mm from both edges of a corner and 0-6 mm below every sheet; (3) the head within 0.01 rad of
-its bottom stop with the driver blade on the top sheet; (4) head back up (<= 0.02 rad), no hand contact with sheets or
-stapler, sheets slower than 0.02 m/s, for 50 consecutive controls (1 s). **Immediate failure**, after every 2 ms
-substep: a sheet centre below z = 0.77925 m or a corner below 0.765 m; a sheet centre off the desk or outside the
-workspace box; a sheet or the stapler on the floor or a desk leg; a contact-free sheet or stapler falling faster than
-0.2 m/s; the stapler moved more than 3 cm or tilted more than 0.26 rad; unstable physics; 6,000 controls. Simplified:
-the sheets start propped on the anvil mouth, the paper stop is an added part, the sheets are rigid plates, no staple
-is formed. Oracle: 946 Sharpa rows (success at 746); Wuji: `solution/wuji/` (1,125 rows, success at 925).
+Wave 3: the right Tianji Marvin arm (arm rig above) and its hand do the task, the left arm parked; the stand is at base
+(0.58, -0.66, 0.10) on the floor, yawed 135 degrees, its base plate between the desk legs (at least 20.6 mm clear; exact
+check at reset and over the oracle). A desk (top z = 0.78 m), a free NOVUS B2-style stapler at the source pose (a
+passive spring-returned head hinge with the source's press force, about 10 N to start the stroke and 25 N at the bottom
+stop 8 cm in front of the hinge, a bottom stop at 0.1701 rad and a paper insertion stop behind the anvil) and three
+rigid A5 sheets (0.5 mm, 2.5 g) that start as a misaligned staircase (4 and 8 mm toward +x) with the bottom sheet's
+corner resting on the anvil mouth. **Success**, in order: (1) every corner of sheets 1 and 2 within 2.0 mm of sheet 0's,
+stacked and in contact; (2) the staple point inside every sheet 3-30 mm from both edges of a corner and 0-6 mm below
+every sheet; (3) the head within 0.01 rad of its bottom stop with the driver blade on the top sheet; (4) head back up
+(<= 0.02 rad), no hand contact with sheets or stapler, sheets slower than 0.02 m/s, for 50 consecutive controls (1 s).
+**Immediate failure**, after every 2 ms substep: a sheet centre below z = 0.77925 m or a corner below 0.765 m; a sheet
+centre off the desk or outside the workspace box; a sheet or the stapler on the floor or a desk leg; a contact-free
+sheet or stapler falling faster than 0.2 m/s; the stapler moved more than 3 cm or tilted more than 0.26 rad; an arm link
+or the stand touching the desk, the stapler or a sheet; unstable physics; 6,000 controls. Wave 3 restored the stapler's
+source pose and press spring. Not restored, with evidence in the family README: the source's flat start (the 8 mm
+fingertip capsules meet a 0.5 mm sheet edge above the desk at a slant, press the sheets down and ride over them, so the
+sheets start propped on the anvil mouth) and the paper stop (not part of the real B2, but without a counter-face the
+misaligned stack cannot be squared). The sheets are rigid plates and no staple is formed. Oracle: 942 Sharpa rows on the
+arm (success at 742); the wave-2 Wuji solution is not packaged (on the arm the Wuji fingers fold under the 25 N press;
+Wuji selectable, no success).
 
 ### Ring binder page loading (`binder_page_load`, T37)
 

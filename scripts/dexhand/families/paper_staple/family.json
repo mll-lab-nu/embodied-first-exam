@@ -13,17 +13,19 @@
     "dirs": [
       "assets"
     ],
-    "shared": []
+    "shared": [
+      "arm_rig.py"
+    ]
   },
   "hands": [
     "sharpa",
     "wuji"
   ],
   "action_dim": {
-    "sharpa": 28,
-    "wuji": 26
+    "sharpa": 58,
+    "wuji": 54
   },
-  "robot": "sharpa-wave-floating",
+  "robot": "marvin-bimanual-sharpa-wave",
   "max_rows": 6000,
   "instruction": {
     "privileged": "instruction/privileged.md",
@@ -39,12 +41,13 @@
     "oracle_evidence": "",
     "expert_time_estimate_hours": 3.0,
     "keywords": [
+      "arm-mounted-hand",
+      "articulated-mechanism",
+      "edge-alignment",
       "office-tools",
       "paper",
-      "stapler",
-      "edge-alignment",
       "pushing",
-      "articulated-mechanism"
+      "stapler"
     ]
   },
   "control_hz": 50,
@@ -56,6 +59,6 @@
     "video_sec": 900
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage (world-frame x, y, z slides and serial x-y-z hinges), with the same wrist joints, ranges, gains and start targets."
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
   }
 }

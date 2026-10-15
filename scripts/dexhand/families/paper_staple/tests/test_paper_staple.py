@@ -21,16 +21,34 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
+sys.path.append(str(HERE.parents[1] / "shared"))
 
+import arm_ik  # noqa: E402  (authoring-only IK helper, used to build negative paths)
+import arm_rig  # noqa: E402
 from runtime import Session  # noqa: E402
 from scene import hands  # noqa: E402
 
 ORACLE = HERE / "solution/trajectory.npz"
-WUJI_ORACLE = HERE / "solution/wuji/trajectory.npz"
 
 
 def rows(path=ORACLE):
-    return hands.read_trajectory(path, widths={"sharpa": 28, "wuji": 26}, max_rows=6000, task="paper_staple")[0]
+    return hands.read_trajectory(path, widths={"sharpa": 58, "wuji": 54}, max_rows=6000, task="paper_staple")[0]
+
+
+def ik_path(session, points, R, n=80):
+    """Right-arm joint rows moving the hand mount through ``points`` with rotation ``R`` (left arm parked)."""
+    ik = arm_ik.ArmIK(session.model, "right")
+    arm = arm_rig.layout(session.model)["arm"]["right"]
+    q0 = session.hold_action()
+    qa = q0[arm].copy()
+    out = []
+    for a, b in zip(points[:-1], points[1:]):
+        for r in np.linspace(0, 1, n)[1:]:
+            qa, _, _ = ik.solve(np.asarray(a) + (np.asarray(b) - np.asarray(a)) * r, R, q0=qa, iters=60)
+            q = q0.copy()
+            q[arm] = qa
+            out.append(q)
+    return np.asarray(out)
 
 
 def cli(path, *extra):
@@ -46,17 +64,25 @@ def cli(path, *extra):
 class Model(unittest.TestCase):
     def test_only_the_robot_is_actuated(self):
         s = Session()
-        self.assertEqual(s.action_dim, 28)
+        self.assertEqual(s.action_dim, 58)
+        self.assertEqual(s.robot, "marvin-bimanual-sharpa-wave")
         self.assertEqual(s.model.nmocap, 0)
         self.assertEqual(s.model.neq, 0)
+        self.assertEqual(s.actuator_names[:14], list(arm_rig.ARM_ACTUATORS))
         joints = [s.model.joint(int(j)).name for j in s.model.actuator_trnid[:, 0]]
-        self.assertTrue(all(n.startswith(("wrist_", "right_")) for n in joints))
+        self.assertTrue(all(n in arm_rig.ARM_JOINTS["left"] + arm_rig.ARM_JOINTS["right"]
+                            or n.startswith(("left_", "right_")) for n in joints))
         for i in range(3):
             self.assertEqual(s.model.joint(f"sheet_{i}_free").type, mujoco.mjtJoint.mjJNT_FREE)
         self.assertEqual(s.model.joint("stapler_free").type, mujoco.mjtJoint.mjJNT_FREE)
+        self.assertNotIn("paper_stop", [s.model.actuator(i).name for i in range(s.model.nu)])
         hinge = s.model.joint("head_hinge")
-        self.assertGreater(float(s.model.jnt_stiffness[hinge.id]), 0)  # passive spring return, no actuator
+        self.assertAlmostEqual(float(s.model.jnt_stiffness[hinge.id]), 7.0)  # passive spring return, no actuator
         self.assertAlmostEqual(float(s.model.jnt_range[hinge.id][1]), 0.1701, places=3)
+        # spring torque: about 0.8 N m at the open stop, 2.0 N m at the bottom stop (10 N / 25 N at 8 cm)
+        k, ref = float(s.model.jnt_stiffness[hinge.id]), float(s.model.qpos_spring[s.model.jnt_qposadr[hinge.id]])
+        self.assertAlmostEqual(-k * ref, 0.805, places=2)
+        self.assertAlmostEqual(k * (0.1701 - ref), 1.996, places=2)
 
     def test_reset_is_at_rest_and_deterministic(self):
         a, b = Session(), Session()
@@ -92,11 +118,18 @@ class Oracle(unittest.TestCase):
         s = Session()
         self.assertTrue(s.replay(rows().astype(np.float32).astype(np.float64))["success"])
 
-    def test_wuji_oracle(self):
-        s = Session(hand="wuji")
-        st = s.replay(rows(WUJI_ORACLE))
-        self.assertTrue(st["success"], st["reason"])
-        self.assertEqual(st["hand"], "wuji")
+    def test_no_arm_link_touches_the_task_during_the_oracle(self):
+        s = Session()
+        arm = s.checker.is_arm
+        touched = 0
+        for row in rows():
+            s.step(row)
+            g = s.data.contact.geom[: s.data.ncon]
+            touched += int(np.any(arm[g[:, 0]] | arm[g[:, 1]]))
+            if s.done:
+                break
+        self.assertTrue(s.success)
+        self.assertEqual(touched, 0)
 
 
 class Negatives(unittest.TestCase):
@@ -109,7 +142,7 @@ class Negatives(unittest.TestCase):
     def test_truncations_fail(self):
         oracle = rows()
         s = Session()
-        for cut, stage in ((560, 2), (690, 3)):
+        for cut, stage in ((260, 0), (640, 2), (700, 3)):
             st = s.replay(oracle[:cut])
             self.assertFalse(st["success"])
             self.assertEqual(st["stage"], stage)
@@ -127,24 +160,27 @@ class Negatives(unittest.TestCase):
         self.assertEqual(before, s.state_sha())
 
     def test_stapler_knock_fails_fast(self):
-        """Drive the wrist straight through the stapler at desk height: the first broken control ends the episode."""
+        """Sweep the hand through the stapler at desk height: the first broken control ends the episode."""
         s = Session()
-        q = s.hold_action()
-        path = []
-        for target in ([0.70, 0.10, 1.00], [0.70, 0.10, 0.86], [0.70, -0.35, 0.86]):
-            start = q.copy()
-            for r in np.linspace(0, 1, 120)[1:]:
-                q = start.copy()
-                q[:3] = start[:3] + (np.asarray(target) - start[:3]) * r
-                path.append(q.copy())
-        st = s.replay(np.asarray(path))
+        R = np.c_[[-1, 0, 0], [0, 1, 0], [0, 0, -1]]  # fingers down: the hand sweeps +y through the stapler
+        p0 = s.data.xpos[s.model.body("wrist_stage").id].copy()
+        path = ik_path(s, [p0, [0.58, -0.22, 1.0], [0.58, -0.22, 0.90], [0.58, 0.05, 0.90]], R)
+        st = s.replay(path)
         self.assertTrue(st["failed"])
         self.assertIn(st["reason"], ("stapler_tipped", "stapler_displaced"))
         self.assertLess(st["steps"], len(path))  # later rows were not executed
         detail = st["failure_detail"]
         again = Session()
-        again.replay(np.asarray(path)[: detail["control"]])
+        again.replay(path[: detail["control"]])
         self.assertFalse(again.failure)  # one row earlier the episode was still alive
+
+    def test_arm_link_on_the_desk_fails_fast(self):
+        s = Session()
+        R = np.c_[[1, 0, 0], [0, -1, 0], [0, 0, 1]]  # palm +x, fingers up: the wrist links reach the desk first
+        p0 = s.data.xpos[s.model.body("wrist_stage").id].copy()
+        st = s.replay(ik_path(s, [p0, [0.45, -0.25, 0.98], [0.45, -0.25, 0.70]], R))
+        self.assertEqual(st["reason"], "arm_collision")
+        self.assertIn("desk_top", st["failure_detail"]["what"])
 
     def test_mid_air_drop_fails_without_catch_window(self):
         s = Session()
@@ -189,13 +225,13 @@ class TrustBoundary(unittest.TestCase):
         oracle = rows()
         with tempfile.TemporaryDirectory() as tmp:
             cases = {
-                "narrow.npz": dict(actions=oracle[:, :26], hand=np.array("sharpa")),
+                "narrow.npz": dict(actions=oracle[:, :54], hand=np.array("sharpa")),
                 "wuji_label.npz": dict(actions=oracle, hand=np.array("wuji")),
                 "nan.npz": dict(actions=np.where(np.arange(oracle.size).reshape(oracle.shape) == 7, np.nan, oracle)),
                 "hand.npz": dict(actions=oracle, hand=np.array("robotiq")),
                 "task.npz": dict(actions=oracle, task=np.array("assemble_hamburger")),
-                "empty.npz": dict(actions=np.zeros((0, 28))),
-                "range.npz": dict(actions=oracle + np.r_[np.zeros(6), np.full(22, 10.0)]),
+                "empty.npz": dict(actions=np.zeros((0, 58))),
+                "range.npz": dict(actions=oracle + np.r_[np.zeros(14), np.full(44, 10.0)]),
             }
             for name, members in cases.items():
                 r = cli(self.write(tmp, name, **members))
@@ -206,10 +242,10 @@ class TrustBoundary(unittest.TestCase):
 
 
 class Wuji(unittest.TestCase):
-    def test_wuji_composes_with_the_same_stage_and_nop_fails(self):
+    def test_wuji_composes_on_the_same_arms_and_nop_fails(self):
         s, t = Session(hand="wuji"), Session(hand="wuji")
-        self.assertEqual(s.action_dim, 26)
-        self.assertEqual(s.actuator_names[:6], Session().actuator_names[:6])
+        self.assertEqual(s.action_dim, 54)
+        self.assertEqual(s.actuator_names[:14], Session().actuator_names[:14])
         self.assertEqual(s.initial_sha, t.initial_sha)
         st = s.replay(np.tile(s.hold_action(), (200, 1)))
         self.assertFalse(st["success"])
