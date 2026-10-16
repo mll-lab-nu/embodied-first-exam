@@ -39,7 +39,8 @@ name = "roboolympics-soccer-match-i00-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+           "task.toml", "environment/docker-compose.yaml"]   # 2026-10-16: the replay video's time limit 1800 s (was 300 s: the render was killed, no replay.mp4); RoboOlympics' exporter writes the same since fexam-vidfix
 
 [[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
