@@ -52,7 +52,7 @@ configuration (`config_key`; RUNNING.md "Results").
 | Seeds | `[metadata.seeds]` `default`, `allowed` (list, `{from, to}`, `"any"`), `oracle`, `build` | the default seed only |
 | Network | `[metadata] network` | `"allowlist"`; `"open"` by the author's choice (H.6) |
 | Scene dynamics | `[metadata] dynamics` (`dynamic`: something other than the robot does work by a force other than the robot's and gravity) | none: declared by every task |
-| Validated | `[metadata] validated`, else `oracle = "full"` | unvalidated tasks are reported apart, never ranked with validated ones |
+| Validated | `[metadata] validated`, else `oracle = "full"` | a recorded marker, not part of the configuration: validated and unvalidated tasks are ranked together |
 | Stricter honour rules | `[metadata.honour] stricter` | none (never looser rules) |
 
 ## 3. Modes
@@ -83,7 +83,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | The verdict written before videos are rendered; videos never affect it; a `replay.mp4` | |
 | Success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice | within H.4 |
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
-| `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | unvalidated tasks are ranked apart |
+| `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
 | Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | RUNNING.md |
 
 ## 5. Instructions and information
