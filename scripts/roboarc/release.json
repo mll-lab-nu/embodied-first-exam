@@ -44,50 +44,6 @@
   }
  },
  "bases": {
-  "blanket-flatten-01-i01": {
-   "creation_source": "e2e2f564",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "71572ecef0ce2db6ed039eca0136ed9c60da743493d4cbb33e2faa8b4a6736a4"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "71572ecef0ce2db6ed039eca0136ed9c60da743493d4cbb33e2faa8b4a6736a4"
-    }
-   },
-   "family": "blanket_flatten",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source e2e2f564; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "very_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "blanket-flatten-very-easy-i00",
-   "grasp_rules": "assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his pbd_local_patch_v1 grasp regions on blanket)",
-   "grasp_regions": {
-    "privileged": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.3, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region.",
-    "standard": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.3, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region."
-   },
-   "gpu_physics": true
-  },
   "blanket-flatten-02-i01": {
    "creation_source": "e2e2f564",
    "evidence": {
@@ -214,75 +170,6 @@
    },
    "gpu_physics": true
   },
-  "blanket-flatten-05-i01": {
-   "creation_source": "e2e2f564",
-   "evidence": {
-    "privileged": {
-     "status": "not_run",
-     "trajectory_sha256": "f9b6a2df7a1f512048555cfa52886e2c44a34c456da3df3653fec3eee7afec63"
-    },
-    "standard": {
-     "status": "not_run",
-     "trajectory_sha256": "f9b6a2df7a1f512048555cfa52886e2c44a34c456da3df3653fec3eee7afec63"
-    }
-   },
-   "family": "blanket_flatten",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source e2e2f564; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "rd_medium",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "blanket-flatten-very-easy-i00",
-   "variation": "medium",
-   "design": "redesigned start states of the blanket, coverage 0.95",
-   "grasp_rules": "assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his pbd_local_patch_v1 grasp regions on blanket)",
-   "grasp_regions": {
-    "privileged": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.5, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region.",
-    "standard": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.5, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region."
-   },
-   "gpu_physics": true
-  },
-  "blanket-flatten-06-i01": {
-   "creation_source": "e2e2f564",
-   "evidence": {
-    "privileged": {
-     "status": "not_run",
-     "trajectory_sha256": "4f9e875f4d998c10faa0b9c5279282d472a650fcfafb6a349348be86cb0e92b5"
-    },
-    "standard": {
-     "status": "not_run",
-     "rows_over": 3,
-     "trajectory_sha256": "4f9e875f4d998c10faa0b9c5279282d472a650fcfafb6a349348be86cb0e92b5"
-    }
-   },
-   "family": "blanket_flatten",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source e2e2f564; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "rd_hard",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "blanket-flatten-very-easy-i00",
-   "variation": "hard",
-   "design": "redesigned start states of the blanket, coverage 0.95",
-   "grasp_rules": "assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his pbd_local_patch_v1 grasp regions on blanket)",
-   "grasp_regions": {
-    "privileged": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.5, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region.",
-    "standard": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.5, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region."
-   },
-   "gpu_physics": true
-  },
   "blanket-fold-01-i01": {
    "creation_source": "e2e2f564",
    "evidence": {
@@ -320,46 +207,6 @@
    "template": "blanket-flatten-very-easy-i00",
    "variation": "blanket_fold_very_easy",
    "design": "from flat; the target: the half fold, the far half over the near one",
-   "grasp_rules": "assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his pbd_local_patch_v1 grasp regions on blanket)",
-   "grasp_regions": {
-    "privileged": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.5, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region.",
-    "standard": "Soft grasp patches: blanket: spatial radius 18 mm, material radius 18 mm, finger proximity 6 mm, maximum material strain ratio 1.5, exposed patch required. Both fingers must be near the same material patch; penetration and native constraint health checks still apply. Two hands may hold disjoint patches of one object. Material bounds, when present, restrict the admissible region."
-   },
-   "gpu_physics": true
-  },
-  "blanket-fold-02-i01": {
-   "creation_source": "e2e2f564",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
-     "trajectory_sha256": "7c9b0cd284dd71d5b0cedf8f5ed946e6077b86e70d9590fcfeded887b56320b0"
-    },
-    "standard": {
-     "status": "not_run",
-     "trajectory_sha256": "7c9b0cd284dd71d5b0cedf8f5ed946e6077b86e70d9590fcfeded887b56320b0"
-    }
-   },
-   "family": "blanket_fold",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source e2e2f564; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easier",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "blanket-flatten-very-easy-i00",
-   "variation": "blanket_fold_easier",
-   "design": "from flat; the target: the half fold with the top layer's corner dog-eared",
    "grasp_rules": "assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his pbd_local_patch_v1 grasp regions on blanket)",
@@ -588,29 +435,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "buzz-wire-3d-03-i01": {
-   "creation_source": "05846213",
-   "evidence": {},
-   "oracle": "none",
-   "family": "buzz_wire_3d",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "buzz-wire-3d-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on wand)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "buzz-wire-3d-04-i01": {
    "creation_source": "05846213",
    "evidence": {},
@@ -626,29 +450,6 @@
     "date": "2026-10-14"
    },
    "ported_from": "buzz-wire-3d-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on wand)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "buzz-wire-3d-05-i01": {
-   "creation_source": "05846213",
-   "evidence": {},
-   "oracle": "none",
-   "family": "buzz_wire_3d",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "hard",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "buzz-wire-3d-hard-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his contact_weld_v1 grasp regions on wand)",
@@ -747,51 +548,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "buzz-wire-3d-08-i01": {
-   "creation_source": "d1eb6f13",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "3a2e970b5b775f6b7488a7353cd6c0151aa4315491567ac6b4381ffa0dd0e49b"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "3a2e970b5b775f6b7488a7353cd6c0151aa4315491567ac6b4381ffa0dd0e49b"
-    }
-   },
-   "family": "buzz_wire_3d",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d1eb6f13; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "rd_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "buzz-wire-3d-easier-i00",
-   "variation": "buzz_wire_3d_rd_easy",
-   "design": "a redesigned wire, with insulated rest sleeves and an insulated finish post",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on wand)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "buzz-wire-3d-09-i01": {
    "creation_source": "d1eb6f13",
    "evidence": {
@@ -877,135 +633,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): wand: radius 25 mm, on the wand's grip. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "cast-coil-01-i01": {
-   "creation_source": "aae08c2e",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "0dddbaa3a7641a5981f4deb477e99dd7d9c77da57132a6723a4c5aadb8354ecd"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "0dddbaa3a7641a5981f4deb477e99dd7d9c77da57132a6723a4c5aadb8354ecd"
-    }
-   },
-   "family": "cast_coil",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source aae08c2e; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "very_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "cast-coil-very-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on coil_gold, coil_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 38 mm; coil_silver: radius 38 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 38 mm; coil_silver: radius 38 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "cast-coil-02-i01": {
-   "creation_source": "aae08c2e",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "c534f263e46a6e6fa0aa1d0ddb4e22361d88e3ea9ae64047bad47a4dfd226989"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "c534f263e46a6e6fa0aa1d0ddb4e22361d88e3ea9ae64047bad47a4dfd226989"
-    }
-   },
-   "family": "cast_coil",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source aae08c2e; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easier",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "cast-coil-easier-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on coil_gold, coil_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 38 mm; coil_silver: radius 38 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 38 mm; coil_silver: radius 38 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "cast-coil-03-i01": {
-   "creation_source": "6fb23e0d",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "041d5a8c9f3504b2cf15edd6462944eb2c0d1cbd7954907357cddf22d6ebea23"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "041d5a8c9f3504b2cf15edd6462944eb2c0d1cbd7954907357cddf22d6ebea23"
-    }
-   },
-   "family": "cast_coil",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 6fb23e0d; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "cast-coil-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on coil_gold, coil_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 25 mm; coil_silver: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 25 mm; coil_silver: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "cast-coil-04-i01": {
    "creation_source": "aae08c2e",
    "evidence": {
@@ -1041,49 +668,6 @@
     "date": "2026-10-14"
    },
    "ported_from": "cast-coil-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on coil_gold, coil_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 25 mm; coil_silver: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 25 mm; coil_silver: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "cast-coil-05-i01": {
-   "creation_source": "aae08c2e",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "fcd916a5a083fd3818f6b759421a3dcb2487f0be5e6611fc6047ffcea598b909"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "fcd916a5a083fd3818f6b759421a3dcb2487f0be5e6611fc6047ffcea598b909"
-    }
-   },
-   "family": "cast_coil",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source aae08c2e; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "hard",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "cast-coil-hard-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his contact_weld_v1 grasp regions on coil_gold, coil_silver)",
@@ -1227,92 +811,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_silver: radius 25 mm; coil_gold: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "cast-keyhole-01-i01": {
-   "creation_source": "aae08c2e",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "8c51b94726651dbf8da93c2168260800a874c156e3cea1efaf9d6102061ae4c6"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "8c51b94726651dbf8da93c2168260800a874c156e3cea1efaf9d6102061ae4c6"
-    }
-   },
-   "family": "cast_keyhole",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source aae08c2e; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "very_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "cast-keyhole-very-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (keyhole_gold, keyhole_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on keyhole_gold, keyhole_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 26 mm; keyhole_silver: radius 22 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 26 mm; keyhole_silver: radius 22 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "cast-keyhole-02-i01": {
-   "creation_source": "aae08c2e",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "d10bf9156d5448aa95617ec1736dd886d401b808050fdcbc84575071448e7e70"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "d10bf9156d5448aa95617ec1736dd886d401b808050fdcbc84575071448e7e70"
-    }
-   },
-   "family": "cast_keyhole",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source aae08c2e; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easier",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "cast-keyhole-easier-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (keyhole_gold, keyhole_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on keyhole_gold, keyhole_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 26 mm; keyhole_silver: radius 22 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 26 mm; keyhole_silver: radius 22 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "cast-keyhole-03-i01": {
    "creation_source": "aae08c2e",
    "evidence": {
@@ -1442,180 +940,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 50 mm; keyhole_silver: radius 40 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "cast-keyhole-06-i01": {
-   "creation_source": "6fb23e0d",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "ecc97db82dd4714dd1ef7888dd544132c7e7b1e9522aac3811f52780920a2ba6"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "ecc97db82dd4714dd1ef7888dd544132c7e7b1e9522aac3811f52780920a2ba6"
-    }
-   },
-   "family": "cast_keyhole",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 6fb23e0d; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "double_maze",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "cast-keyhole-easy-i00",
-   "variation": "cast_keyhole_double_maze",
-   "design": "Double maze: two plates, gold and silver, each with a slot grid, threaded through each other at right angles (design dm4b)",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (keyhole_gold, keyhole_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 pre-weld: the grippers start closed on keyhole_gold, keyhole_silver)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 30 mm; keyhole_silver: radius 30 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 30 mm; keyhole_silver: radius 30 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "fiber-bundling-01-i01": {
-   "creation_source": "f24ccdce",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "f5d42fae2632b0a0458c869771b0baa430a1b6ca8b7183b3feaf86baa51dbcaf"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "f5d42fae2632b0a0458c869771b0baa430a1b6ca8b7183b3feaf86baa51dbcaf"
-    }
-   },
-   "family": "fiber_bundling",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source f24ccdce; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "very_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "fiber-bundling-very-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on fiber_bundle)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "fiber-bundling-02-i01": {
-   "creation_source": "f24ccdce",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "b9ec2647ea46b47049bea4c4e2703609a239a8c7c7b37b13b8aea21b31946cc1"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "b9ec2647ea46b47049bea4c4e2703609a239a8c7c7b37b13b8aea21b31946cc1"
-    }
-   },
-   "family": "fiber_bundling",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source f24ccdce; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easier",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "fiber-bundling-easier-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on fiber_bundle)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "fiber-bundling-03-i01": {
-   "creation_source": "f24ccdce",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "f47644b719ab563e89df9f150a5796c3011110d69176df878b1c8321008406af"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "f47644b719ab563e89df9f150a5796c3011110d69176df878b1c8321008406af"
-    }
-   },
-   "family": "fiber_bundling",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source f24ccdce; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "fiber-bundling-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on fiber_bundle)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "fiber-bundling-04-i01": {
    "creation_source": "f24ccdce",
    "evidence": {
@@ -1651,29 +975,6 @@
     "date": "2026-10-14"
    },
    "ported_from": "fiber-bundling-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on fiber_bundle)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "fiber-bundling-05-i01": {
-   "creation_source": "f24ccdce",
-   "evidence": {},
-   "oracle": "none",
-   "family": "fiber_bundling",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source f24ccdce; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "hard",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "fiber-bundling-hard-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his contact_weld_v1 grasp regions on fiber_bundle)",
@@ -1757,45 +1058,6 @@
    },
    "template": "fiber-bundling-easier-i00",
    "variation": "fiber_bundling_rd_easier",
-   "design": "formboard: 16 strands, a tighter ring turned and moved, pegs on the board and a target roll of the red fiber",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on fiber_bundle)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): fiber_bundle: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "fiber-bundling-08-i01": {
-   "creation_source": "f24ccdce",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "913222f403125c837f0717ecdd34c828fcc83c802081df5a26831fc046260423"
-    },
-    "standard": {
-     "status": "not_run",
-     "trajectory_sha256": "913222f403125c837f0717ecdd34c828fcc83c802081df5a26831fc046260423"
-    }
-   },
-   "family": "fiber_bundling",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source f24ccdce; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "rd_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "fiber-bundling-easy-i00",
-   "variation": "fiber_bundling_rd_easy",
    "design": "formboard: 16 strands, a tighter ring turned and moved, pegs on the board and a target roll of the red fiber",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (fiber_bundle) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
    "physics_dt_s": 0.0025,
@@ -1969,92 +1231,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "hedgehog-in-cage-03-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
-     "success": 1,
-     "deterministic": 1,
-     "trajectory_sha256": "a3f4aecf7397e7e26eceabfe619402ca190b324472d9559376f026bb3c209019"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
-     "trajectory_sha256": "a3f4aecf7397e7e26eceabfe619402ca190b324472d9559376f026bb3c209019"
-    }
-   },
-   "family": "hedgehog_in_cage",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "hedgehog-in-cage-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on hedgehog_ball)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "hedgehog-in-cage-04-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
-     "success": 1,
-     "deterministic": 1,
-     "trajectory_sha256": "a6656cb8c6b8e07acaec808aea6ee0993b774ab5ebfb07f7bd6d98c40241e45b"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
-     "trajectory_sha256": "a6656cb8c6b8e07acaec808aea6ee0993b774ab5ebfb07f7bd6d98c40241e45b"
-    }
-   },
-   "family": "hedgehog_in_cage",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "medium",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "hedgehog-in-cage-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on hedgehog_ball)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "hedgehog-in-cage-05-i01": {
    "creation_source": "d1eb6f13",
    "evidence": {
@@ -2096,51 +1272,6 @@
    "grasp_regions": {
     "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 64.2 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 64.2 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "hedgehog-in-cage-08-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
-     "success": 1,
-     "deterministic": 1,
-     "trajectory_sha256": "005916f1b7f43f7839fdcc2664bbb65b777023f7db437dfd90e4c840a832a441"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
-     "trajectory_sha256": "005916f1b7f43f7839fdcc2664bbb65b777023f7db437dfd90e4c840a832a441"
-    }
-   },
-   "family": "hedgehog_in_cage",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "window_change",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "hedgehog-in-cage-very-easy-i00",
-   "variation": "hedgehog_in_cage_window_change",
-   "design": "the very_easy cage with a narrower start window",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on hedgehog_ball)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): hedgehog_ball: radius 89.3 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
   "hedgehog-in-cage-06-i01": {
@@ -2362,49 +1493,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): horseshoe_left: radius 90.6 mm, enclosing the whole part; horseshoe_right: radius 90.6 mm, enclosing the whole part; target_ring: radius 81.9 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "horseshoe-ring-04-i01": {
-   "creation_source": "6fb23e0d",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "85e7befadb5aa27ec66a03a18aa36c1274c8fa9be689cd76ebe5259ee1de3730"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "85e7befadb5aa27ec66a03a18aa36c1274c8fa9be689cd76ebe5259ee1de3730"
-    }
-   },
-   "family": "horseshoe_ring",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 6fb23e0d; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "medium",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "horseshoe-ring-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (horseshoe_left, horseshoe_right, target_ring) once both fingers touch the same part inside its grasp region, the tool frame within 12.0552 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on horseshoe_left, horseshoe_right, target_ring)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): horseshoe_left: radius 90.6 mm, enclosing the whole part; horseshoe_right: radius 90.6 mm, enclosing the whole part; target_ring: radius 81.7 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): horseshoe_left: radius 90.6 mm, enclosing the whole part; horseshoe_right: radius 90.6 mm, enclosing the whole part; target_ring: radius 81.7 mm, enclosing the whole part. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "horseshoe-ring-05-i01": {
    "creation_source": "6fb23e0d",
    "evidence": {
@@ -2577,49 +1665,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): piece_0: radius 30 mm; piece_1: radius 30 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
    }
   },
-  "interlocked-claws-04-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "d9ccaa4056d5ffa20d588d29efd502385f350a7f15ec231ed09d775b32880db1"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "d9ccaa4056d5ffa20d588d29efd502385f350a7f15ec231ed09d775b32880db1"
-    }
-   },
-   "family": "interlocked_claws",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "medium",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "interlocked-claws-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): piece_0: radius 30 mm; piece_1: radius 30 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): piece_0: radius 30 mm; piece_1: radius 30 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
   "interlocked-claws-05-i01": {
    "creation_source": "d601866b",
    "evidence": {
@@ -2753,51 +1798,6 @@
     "standard": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): piece_0: 2 spheres of radius 30 mm; piece_1: radius 30 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically."
    }
   },
-  "interlocked-claws-08-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "44b93540c6469b833485bcb8e00bd3b2bfce35690c7a2709fce0151a8899e0a2"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "44b93540c6469b833485bcb8e00bd3b2bfce35690c7a2709fce0151a8899e0a2"
-    }
-   },
-   "family": "interlocked_claws",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "rd_easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "interlocked-claws-easy-i00",
-   "variation": "interlocked_claws_rd_easy",
-   "design": "keyhole gates: a redesigned pair of interlocked pieces, brown and teal (new geometry)",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): piece_0: 2 spheres of radius 30 mm; piece_1: 2 spheres of radius 30 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): piece_0: 2 spheres of radius 30 mm; piece_1: 2 spheres of radius 30 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically."
-   }
-  },
   "interlocked-claws-09-i01": {
    "creation_source": "d601866b",
    "evidence": {
@@ -2834,51 +1834,6 @@
    },
    "template": "interlocked-claws-medium-i00",
    "variation": "interlocked_claws_rd_medium",
-   "design": "keyhole gates: a redesigned pair of interlocked pieces, brown and teal (new geometry)",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): piece_0: 2 spheres of radius 30 mm; piece_1: 2 spheres of radius 30 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): piece_0: 2 spheres of radius 30 mm; piece_1: 2 spheres of radius 30 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically."
-   }
-  },
-  "interlocked-claws-10-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "ca93a3425e3db2460c9c4122ee6e9b3e395ff1a24545c027591f317ca63b9f02"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "ca93a3425e3db2460c9c4122ee6e9b3e395ff1a24545c027591f317ca63b9f02"
-    }
-   },
-   "family": "interlocked_claws",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "rd_hard",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "template": "interlocked-claws-hard-i00",
-   "variation": "interlocked_claws_rd_hard",
    "design": "keyhole gates: a redesigned pair of interlocked pieces, brown and teal (new geometry)",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command",
    "physics_dt_s": 0.0025,
@@ -3152,66 +2107,6 @@
     "plastic": null
    }
   },
-  "knot-untying-04-i01": {
-   "creation_source": "d601866b",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "image": "an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "date": "2026-10-13",
-     "source": "d601866b",
-     "tooling": "fde662d5",
-     "success": 1,
-     "deterministic": 1,
-     "trajectory_sha256": "2b690038b73e0bc9e06332c2dcba2a6542b2644f60bef7a05ee5f7f5fc5c9756"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "a release-candidate build of this benchmark's image (2026-10-13) that holds the same frozen instance",
-     "source": "7d0e5039",
-     "tooling": "646f914f",
-     "date": "2026-10-13",
-     "trajectory_sha256": "2b690038b73e0bc9e06332c2dcba2a6542b2644f60bef7a05ee5f7f5fc5c9756"
-    }
-   },
-   "family": "knot_untying",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d601866b; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "medium",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "knot-untying-medium-i00",
-   "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
-   "physics_dt_s": 0.005,
-   "grasp": "physical (no assisted grasping)",
-   "chain": {
-    "kind": "rope",
-    "entity": "rope",
-    "profile": "knot_chain_v7",
-    "links": 239,
-    "link_mm": 4.49,
-    "radius_mm": 4.0,
-    "bend_stop_rad": 0.9,
-    "stiffness_nm_rad": 0.0,
-    "speed_clamp": {
-     "v_m_s": 2.0,
-     "w_rad_s": 150.0,
-     "rate": 0.5
-    },
-    "tension_guard": {
-     "t_on": 30.0,
-     "t_ref": 30.0,
-     "decay": 0.99
-    },
-    "plastic": null
-   }
-  },
   "knot-untying-05-i01": {
    "creation_source": "d601866b",
    "evidence": {
@@ -3307,92 +2202,6 @@
     "date": "2026-10-14"
    },
    "ported_from": "lock-picking-very-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (lock_key) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.05 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on lock_key)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "lock-picking-02-i01": {
-   "creation_source": "d1eb6f13",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "829b93d19689af4454b0d0fabdca9ca8c1b82ac3ac8836ed94a03e55b68ec6b0"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "829b93d19689af4454b0d0fabdca9ca8c1b82ac3ac8836ed94a03e55b68ec6b0"
-    }
-   },
-   "family": "lock_picking",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d1eb6f13; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easier",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "lock-picking-easier-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (lock_key) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.05 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.0025,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on lock_key)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically."
-   }
-  },
-  "lock-picking-03-i01": {
-   "creation_source": "d1eb6f13",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "27131b5cc719f7dcfc4d45083b5efd207947b00a6bc97eca15a8437b1ab85693"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "27131b5cc719f7dcfc4d45083b5efd207947b00a6bc97eca15a8437b1ab85693"
-    }
-   },
-   "family": "lock_picking",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source d1eb6f13; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "lock-picking-easy-i00",
    "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (lock_key) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.05 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
    "physics_dt_s": 0.0025,
    "grasp": "assisted (his contact_weld_v1 grasp regions on lock_key)",
@@ -3547,134 +2356,6 @@
      "rate": 0.5
     },
     "tension_guard": null,
-    "plastic": null
-   }
-  },
-  "rope-threading-01-i01": {
-   "creation_source": "6fb23e0d",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "c589ff0a979785c84ac6ee146b452df5a1232122da3b59868d4e426154064953"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "c589ff0a979785c84ac6ee146b452df5a1232122da3b59868d4e426154064953"
-    }
-   },
-   "family": "rope_threading",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 6fb23e0d; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "easy",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "rope-threading-easy-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (rope) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 6 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 2.5 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.04,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on rope)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically."
-   },
-   "chain": {
-    "kind": "rope",
-    "entity": "rope",
-    "profile": "rope_chain_v3",
-    "links": 200,
-    "link_mm": 5.5,
-    "radius_mm": 4.0,
-    "bend_stop_rad": 0.9,
-    "stiffness_nm_rad": 0.0,
-    "speed_clamp": {
-     "v_m_s": 6.0,
-     "w_rad_s": 300.0,
-     "rate": 0.5
-    },
-    "tension_guard": {
-     "t_on": 30.0,
-     "t_ref": 30.0,
-     "decay": 0.99
-    },
-    "plastic": null
-   }
-  },
-  "rope-threading-02-i01": {
-   "creation_source": "6fb23e0d",
-   "evidence": {
-    "privileged": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "7a736bb517f4c9bad73b28878e1b48890f3ab513f3c624d53a57988668d2ffe8"
-    },
-    "standard": {
-     "status": "passed",
-     "success": 1,
-     "deterministic": 1,
-     "image": "the release image eai-roboarc 0.1.0",
-     "source": "37aa7ac0",
-     "tooling": "d8692e15",
-     "date": "2026-10-14",
-     "trajectory_sha256": "7a736bb517f4c9bad73b28878e1b48890f3ab513f3c624d53a57988668d2ffe8"
-    }
-   },
-   "family": "rope_threading",
-   "instance_package": "MuJoCo instance made before this image was built (TopoGym source 6fb23e0d; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)",
-   "tier": "medium",
-   "physics_engine": "mujoco",
-   "release_commit": "b842da3204f47ddceb35acf749ce0153f15b0c5f",
-   "nop": {
-    "status": "passed",
-    "run": "the release image eai-roboarc 0.1.0; harbor run -a nop with rendering off (scripts/roboarc/harbor_check.py)",
-    "date": "2026-10-14"
-   },
-   "ported_from": "rope-threading-medium-i00",
-   "grasp_rules": "assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (rope) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 6 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 2.5 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction)",
-   "physics_dt_s": 0.04,
-   "grasp": "assisted (his contact_weld_v1 grasp regions on rope)",
-   "grasp_regions": {
-    "privileged": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.",
-    "standard": "Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically."
-   },
-   "chain": {
-    "kind": "rope",
-    "entity": "rope",
-    "profile": "rope_chain_v3",
-    "links": 200,
-    "link_mm": 5.5,
-    "radius_mm": 4.0,
-    "bend_stop_rad": 0.9,
-    "stiffness_nm_rad": 0.0,
-    "speed_clamp": {
-     "v_m_s": 6.0,
-     "w_rad_s": 300.0,
-     "rate": 0.5
-    },
-    "tension_guard": {
-     "t_on": 30.0,
-     "t_ref": 30.0,
-     "decay": 0.99
-    },
     "plastic": null
    }
   },

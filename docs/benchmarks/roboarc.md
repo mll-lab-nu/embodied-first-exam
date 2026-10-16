@@ -33,6 +33,67 @@ layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standa
   `Session.grasp_rules()` of the instance (the weld's slip force over 20 ms, 60 N ALOHA / 65 N Robotiq, and the
   Robotiq's release after 0.2 s without finger contact).
 
+This version: 63 bases, 126 task dirs (`scripts/roboarc/release.json` `bases`; the 0.1.0 release had 94 and 188, see
+"Removed from this version"):
+
+| Family | Bases | Numbers |
+|---|---|---|
+| blanket-flatten | 3 | 02, 03, 04 |
+| blanket-fold | 4 | 01, 03, 04, 05 |
+| buzz-wire-3d | 7 | 01, 02, 04, 06, 07, 09, 10 |
+| cast-coil | 4 | 04, 06, 07, 08 |
+| cast-keyhole | 3 | 03, 04, 05 |
+| fiber-bundling | 5 | 04, 06, 07, 09, 10 |
+| hedgehog-in-cage | 5 | 01, 02, 05, 06, 07 |
+| horseshoe-ring | 4 | 01, 02, 03, 05 |
+| interlocked-claws | 9 | 01, 02, 03, 05, 06, 07, 09, 11, 12 |
+| knot-untying | 4 | 01, 02, 03, 05 |
+| lock-picking | 3 | 01, 04, 05 |
+| orbits | 1 | 01 |
+| rope-threading | 6 | 03, 04, 05, 06, 07, 08 |
+| slotted-post-ring | 5 | 01, 02, 03, 04, 05 |
+
+## Removed from this version
+
+Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.
+
+31 bases, 62 task dirs (94 -> 63 bases, 188 -> 126 task dirs); their numbers stay unused:
+- `roboarc-blanket-flatten-01-i01-privileged`, `roboarc-blanket-flatten-01-i01-standard`
+- `roboarc-blanket-flatten-05-i01-privileged`, `roboarc-blanket-flatten-05-i01-standard`
+- `roboarc-blanket-flatten-06-i01-privileged`, `roboarc-blanket-flatten-06-i01-standard`
+- `roboarc-blanket-fold-02-i01-privileged`, `roboarc-blanket-fold-02-i01-standard`
+- `roboarc-buzz-wire-3d-03-i01-privileged`, `roboarc-buzz-wire-3d-03-i01-standard`
+- `roboarc-buzz-wire-3d-05-i01-privileged`, `roboarc-buzz-wire-3d-05-i01-standard`
+- `roboarc-buzz-wire-3d-08-i01-privileged`, `roboarc-buzz-wire-3d-08-i01-standard`
+- `roboarc-cast-coil-01-i01-privileged`, `roboarc-cast-coil-01-i01-standard`
+- `roboarc-cast-coil-02-i01-privileged`, `roboarc-cast-coil-02-i01-standard`
+- `roboarc-cast-coil-03-i01-privileged`, `roboarc-cast-coil-03-i01-standard`
+- `roboarc-cast-coil-05-i01-privileged`, `roboarc-cast-coil-05-i01-standard`
+- `roboarc-cast-keyhole-01-i01-privileged`, `roboarc-cast-keyhole-01-i01-standard`
+- `roboarc-cast-keyhole-02-i01-privileged`, `roboarc-cast-keyhole-02-i01-standard`
+- `roboarc-cast-keyhole-06-i01-privileged`, `roboarc-cast-keyhole-06-i01-standard`
+- `roboarc-fiber-bundling-01-i01-privileged`, `roboarc-fiber-bundling-01-i01-standard`
+- `roboarc-fiber-bundling-02-i01-privileged`, `roboarc-fiber-bundling-02-i01-standard`
+- `roboarc-fiber-bundling-03-i01-privileged`, `roboarc-fiber-bundling-03-i01-standard`
+- `roboarc-fiber-bundling-05-i01-privileged`, `roboarc-fiber-bundling-05-i01-standard`
+- `roboarc-fiber-bundling-08-i01-privileged`, `roboarc-fiber-bundling-08-i01-standard`
+- `roboarc-hedgehog-in-cage-03-i01-privileged`, `roboarc-hedgehog-in-cage-03-i01-standard`
+- `roboarc-hedgehog-in-cage-04-i01-privileged`, `roboarc-hedgehog-in-cage-04-i01-standard`
+- `roboarc-hedgehog-in-cage-08-i01-privileged`, `roboarc-hedgehog-in-cage-08-i01-standard`
+- `roboarc-horseshoe-ring-04-i01-privileged`, `roboarc-horseshoe-ring-04-i01-standard`
+- `roboarc-interlocked-claws-04-i01-privileged`, `roboarc-interlocked-claws-04-i01-standard`
+- `roboarc-interlocked-claws-08-i01-privileged`, `roboarc-interlocked-claws-08-i01-standard`
+- `roboarc-interlocked-claws-10-i01-privileged`, `roboarc-interlocked-claws-10-i01-standard`
+- `roboarc-knot-untying-04-i01-privileged`, `roboarc-knot-untying-04-i01-standard`
+- `roboarc-lock-picking-02-i01-privileged`, `roboarc-lock-picking-02-i01-standard`
+- `roboarc-lock-picking-03-i01-privileged`, `roboarc-lock-picking-03-i01-standard`
+- `roboarc-rope-threading-01-i01-privileged`, `roboarc-rope-threading-01-i01-standard`
+- `roboarc-rope-threading-02-i01-privileged`, `roboarc-rope-threading-02-i01-standard`
+
+Their frozen instances stay pinned in `scripts/roboarc/assets.json` (the image's build context,
+`scripts/roboarc/fetch_image_context.sh`, copies every pinned instance, so the image of `images/roboarc/VERSION` still
+carries them); no task stages them.
+
 ## Generator and release
 
 - `scripts/roboarc/mk_tasks.py` (`--check` in CI) renders the task dirs from this directory: `release.json`,
@@ -88,7 +149,8 @@ ask for; stating 92 % as the goal instead would have lowered the goal in privile
 file shared by all 94); the verdicts can change only in the 30 tasks of the six families with a hold, since a replay of the
 other families succeeds only within the rows. The standard twins are unchanged. Of the privileged results on record
 (GPT-6 Luna, 10-14), the two blanket-flatten successes above become failures; every other privileged success had
-`strict_goal_reached` 1.
+`strict_goal_reached` 1. (94 and 30 are the 0.1.0 release's counts; this version has 63 privileged tasks, 22 of them in
+the six families with a hold.)
 
 **Re-grading existing results** (nothing is re-run). `scripts/roboarc/regrade.py JOBS_DIR ... [--replay] --out
 regrade.jsonl` reads every RoboARC privileged trial under the Harbor jobs trees and gives its recorded verdict, the old
@@ -103,6 +165,8 @@ rule's and the new rule's:
 
 Only the 94 tasks of the RoboARC 0.1.0 release are re-graded; a trial of any other task (a later RoboARC task, a Genesis
 `robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: their grading did not change.
+The 0.1.0 tasks removed on 2026-10-15 ("Removed from this version") are still in that set: their trials are re-graded
+from the record; with `--replay` they report `no task dir ... in this checkout`.
 
 **Validation.** 2026-10-14, ws (RTX 4090, `eai-roboarc:0.1.0`, Harbor `-a oracle` / `-a nop`, jobs
 `rav1-{oracle,nop}-<task>`) with this version's privileged `tests/`: the privileged oracle scores 1 with

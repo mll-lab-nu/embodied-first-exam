@@ -17,12 +17,6 @@
   "number": "03",
   "difficulty": "easy"
  },
- "robotangle-interlocked-claws-medium-i01": {
-  "new": "roboarc-interlocked-claws-04-i01",
-  "family": "interlocked-claws",
-  "number": "04",
-  "difficulty": "medium"
- },
  "robotangle-interlocked-claws-hard-i01": {
   "new": "roboarc-interlocked-claws-05-i01",
   "family": "interlocked-claws",
@@ -41,23 +35,11 @@
   "number": "07",
   "difficulty": "easier"
  },
- "robotangle-interlocked-claws-rd-easy-i01": {
-  "new": "roboarc-interlocked-claws-08-i01",
-  "family": "interlocked-claws",
-  "number": "08",
-  "difficulty": "easy"
- },
  "robotangle-interlocked-claws-rd-medium-i01": {
   "new": "roboarc-interlocked-claws-09-i01",
   "family": "interlocked-claws",
   "number": "09",
   "difficulty": "medium"
- },
- "robotangle-interlocked-claws-rd-hard-i01": {
-  "new": "roboarc-interlocked-claws-10-i01",
-  "family": "interlocked-claws",
-  "number": "10",
-  "difficulty": "hard"
  },
  "robotangle-interlocked-claws-cast-abc-i01": {
   "new": "roboarc-interlocked-claws-11-i01",
@@ -83,23 +65,11 @@
   "number": "02",
   "difficulty": "easier"
  },
- "robotangle-buzz-wire-3d-easy-i01": {
-  "new": "roboarc-buzz-wire-3d-03-i01",
-  "family": "buzz-wire-3d",
-  "number": "03",
-  "difficulty": "easy"
- },
  "robotangle-buzz-wire-3d-medium-i01": {
   "new": "roboarc-buzz-wire-3d-04-i01",
   "family": "buzz-wire-3d",
   "number": "04",
   "difficulty": "medium"
- },
- "robotangle-buzz-wire-3d-hard-i01": {
-  "new": "roboarc-buzz-wire-3d-05-i01",
-  "family": "buzz-wire-3d",
-  "number": "05",
-  "difficulty": "hard"
  },
  "robotangle-buzz-wire-3d-rd-very-easy-i01": {
   "new": "roboarc-buzz-wire-3d-06-i01",
@@ -113,12 +83,6 @@
   "number": "07",
   "difficulty": "easier"
  },
- "robotangle-buzz-wire-3d-rd-easy-i01": {
-  "new": "roboarc-buzz-wire-3d-08-i01",
-  "family": "buzz-wire-3d",
-  "number": "08",
-  "difficulty": "easy"
- },
  "robotangle-buzz-wire-3d-rd-medium-i01": {
   "new": "roboarc-buzz-wire-3d-09-i01",
   "family": "buzz-wire-3d",
@@ -131,35 +95,11 @@
   "number": "10",
   "difficulty": "hard"
  },
- "robotangle-cast-coil-very-easy-i01": {
-  "new": "roboarc-cast-coil-01-i01",
-  "family": "cast-coil",
-  "number": "01",
-  "difficulty": "very_easy"
- },
- "robotangle-cast-coil-easier-i01": {
-  "new": "roboarc-cast-coil-02-i01",
-  "family": "cast-coil",
-  "number": "02",
-  "difficulty": "easier"
- },
- "robotangle-cast-coil-easy-i01": {
-  "new": "roboarc-cast-coil-03-i01",
-  "family": "cast-coil",
-  "number": "03",
-  "difficulty": "easy"
- },
  "robotangle-cast-coil-medium-i01": {
   "new": "roboarc-cast-coil-04-i01",
   "family": "cast-coil",
   "number": "04",
   "difficulty": "medium"
- },
- "robotangle-cast-coil-hard-i01": {
-  "new": "roboarc-cast-coil-05-i01",
-  "family": "cast-coil",
-  "number": "05",
-  "difficulty": "hard"
  },
  "robotangle-cast-coil-very-easy-i02": {
   "new": "roboarc-cast-coil-06-i01",
@@ -179,18 +119,6 @@
   "number": "08",
   "difficulty": "easy"
  },
- "robotangle-cast-keyhole-very-easy-i01": {
-  "new": "roboarc-cast-keyhole-01-i01",
-  "family": "cast-keyhole",
-  "number": "01",
-  "difficulty": "very_easy"
- },
- "robotangle-cast-keyhole-easier-i01": {
-  "new": "roboarc-cast-keyhole-02-i01",
-  "family": "cast-keyhole",
-  "number": "02",
-  "difficulty": "easier"
- },
  "robotangle-cast-keyhole-easy-i01": {
   "new": "roboarc-cast-keyhole-03-i01",
   "family": "cast-keyhole",
@@ -209,12 +137,6 @@
   "number": "05",
   "difficulty": "hard"
  },
- "robotangle-cast-keyhole-double-maze-i01": {
-  "new": "roboarc-cast-keyhole-06-i01",
-  "family": "cast-keyhole",
-  "number": "06",
-  "difficulty": "hard"
- },
  "robotangle-hedgehog-in-cage-very-easy-i01": {
   "new": "roboarc-hedgehog-in-cage-01-i01",
   "family": "hedgehog-in-cage",
@@ -226,18 +148,6 @@
   "family": "hedgehog-in-cage",
   "number": "02",
   "difficulty": "easier"
- },
- "robotangle-hedgehog-in-cage-easy-i01": {
-  "new": "roboarc-hedgehog-in-cage-03-i01",
-  "family": "hedgehog-in-cage",
-  "number": "03",
-  "difficulty": "easy"
- },
- "robotangle-hedgehog-in-cage-medium-i01": {
-  "new": "roboarc-hedgehog-in-cage-04-i01",
-  "family": "hedgehog-in-cage",
-  "number": "04",
-  "difficulty": "medium"
  },
  "robotangle-hedgehog-in-cage-hard-i01": {
   "new": "roboarc-hedgehog-in-cage-05-i01",
@@ -257,12 +167,6 @@
   "number": "07",
   "difficulty": "easy"
  },
- "robotangle-hedgehog-in-cage-window-change-i01": {
-  "new": "roboarc-hedgehog-in-cage-08-i01",
-  "family": "hedgehog-in-cage",
-  "number": "08",
-  "difficulty": "easier"
- },
  "robotangle-horseshoe-ring-very-easy-i01": {
   "new": "roboarc-horseshoe-ring-01-i01",
   "family": "horseshoe-ring",
@@ -281,12 +185,6 @@
   "number": "03",
   "difficulty": "easy"
  },
- "robotangle-horseshoe-ring-medium-i01": {
-  "new": "roboarc-horseshoe-ring-04-i01",
-  "family": "horseshoe-ring",
-  "number": "04",
-  "difficulty": "medium"
- },
  "robotangle-horseshoe-ring-hard-i01": {
   "new": "roboarc-horseshoe-ring-05-i01",
   "family": "horseshoe-ring",
@@ -298,18 +196,6 @@
   "family": "lock-picking",
   "number": "01",
   "difficulty": "very_easy"
- },
- "robotangle-lock-picking-easier-i01": {
-  "new": "roboarc-lock-picking-02-i01",
-  "family": "lock-picking",
-  "number": "02",
-  "difficulty": "easier"
- },
- "robotangle-lock-picking-easy-i01": {
-  "new": "roboarc-lock-picking-03-i01",
-  "family": "lock-picking",
-  "number": "03",
-  "difficulty": "easy"
  },
  "robotangle-lock-picking-medium-i01": {
   "new": "roboarc-lock-picking-04-i01",
@@ -323,35 +209,11 @@
   "number": "05",
   "difficulty": "hard"
  },
- "robotangle-fiber-bundling-very-easy-i01": {
-  "new": "roboarc-fiber-bundling-01-i01",
-  "family": "fiber-bundling",
-  "number": "01",
-  "difficulty": "very_easy"
- },
- "robotangle-fiber-bundling-easier-i01": {
-  "new": "roboarc-fiber-bundling-02-i01",
-  "family": "fiber-bundling",
-  "number": "02",
-  "difficulty": "easier"
- },
- "robotangle-fiber-bundling-easy-i01": {
-  "new": "roboarc-fiber-bundling-03-i01",
-  "family": "fiber-bundling",
-  "number": "03",
-  "difficulty": "easy"
- },
  "robotangle-fiber-bundling-medium-i01": {
   "new": "roboarc-fiber-bundling-04-i01",
   "family": "fiber-bundling",
   "number": "04",
   "difficulty": "medium"
- },
- "robotangle-fiber-bundling-hard-i01": {
-  "new": "roboarc-fiber-bundling-05-i01",
-  "family": "fiber-bundling",
-  "number": "05",
-  "difficulty": "hard"
  },
  "robotangle-fiber-bundling-rd-very-easy-i01": {
   "new": "roboarc-fiber-bundling-06-i01",
@@ -364,12 +226,6 @@
   "family": "fiber-bundling",
   "number": "07",
   "difficulty": "easier"
- },
- "robotangle-fiber-bundling-rd-easy-i01": {
-  "new": "roboarc-fiber-bundling-08-i01",
-  "family": "fiber-bundling",
-  "number": "08",
-  "difficulty": "easy"
  },
  "robotangle-fiber-bundling-rd-medium-i01": {
   "new": "roboarc-fiber-bundling-09-i01",
@@ -401,12 +257,6 @@
   "number": "03",
   "difficulty": "easy"
  },
- "robotangle-knot-untying-medium-i01": {
-  "new": "roboarc-knot-untying-04-i01",
-  "family": "knot-untying",
-  "number": "04",
-  "difficulty": "medium"
- },
  "robotangle-knot-untying-hard-i01": {
   "new": "roboarc-knot-untying-05-i01",
   "family": "knot-untying",
@@ -418,18 +268,6 @@
   "family": "orbits",
   "number": "01",
   "difficulty": "very_easy"
- },
- "robotangle-rope-threading-easy-i01": {
-  "new": "roboarc-rope-threading-01-i01",
-  "family": "rope-threading",
-  "number": "01",
-  "difficulty": "easy"
- },
- "robotangle-rope-threading-medium-i01": {
-  "new": "roboarc-rope-threading-02-i01",
-  "family": "rope-threading",
-  "number": "02",
-  "difficulty": "medium"
  },
  "robotangle-rope-threading-hard-i01": {
   "new": "roboarc-rope-threading-03-i01",
@@ -497,12 +335,6 @@
   "number": "04",
   "difficulty": "medium"
  },
- "robotangle-blanket-flatten-very-easy-i01": {
-  "new": "roboarc-blanket-flatten-01-i01",
-  "family": "blanket-flatten",
-  "number": "01",
-  "difficulty": "very_easy"
- },
  "robotangle-blanket-flatten-rd-very-easy-i01": {
   "new": "roboarc-blanket-flatten-02-i01",
   "family": "blanket-flatten",
@@ -521,29 +353,11 @@
   "number": "04",
   "difficulty": "easy"
  },
- "robotangle-blanket-flatten-rd-medium-i01": {
-  "new": "roboarc-blanket-flatten-05-i01",
-  "family": "blanket-flatten",
-  "number": "05",
-  "difficulty": "medium"
- },
- "robotangle-blanket-flatten-rd-hard-i01": {
-  "new": "roboarc-blanket-flatten-06-i01",
-  "family": "blanket-flatten",
-  "number": "06",
-  "difficulty": "hard"
- },
  "robotangle-blanket-fold-very-easy-i01": {
   "new": "roboarc-blanket-fold-01-i01",
   "family": "blanket-fold",
   "number": "01",
   "difficulty": "very_easy"
- },
- "robotangle-blanket-fold-easier-i01": {
-  "new": "roboarc-blanket-fold-02-i01",
-  "family": "blanket-fold",
-  "number": "02",
-  "difficulty": "easier"
  },
  "robotangle-blanket-fold-easy-i01": {
   "new": "roboarc-blanket-fold-03-i01",
