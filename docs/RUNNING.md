@@ -111,6 +111,13 @@ reasoning summaries, tool calls, images and token use with the robot service's l
 
 ## Recordings
 
+- **Every trial has a video** (PROTOCOL §4): a finished, graded trial without a playable `*.mp4` in `verifier/`,
+  `artifacts/data/` or `artifacts/out/` is flagged by the runner (`no_video`, with the reason it can read), unless it
+  is a privileged trial whose agent submitted no trajectory that replays. A video a trial missed (the render ran out of
+  its time bound, crashed, or the task rendered none) is rendered afterwards from the recorded trajectory in the
+  task's own image, on the same host class when the replay is only reproducible there, and kept only when the replay
+  reaches the recorded final state; `replay.regenerated.json` next to it says how. The grade is never touched, and
+  the agent is never rerun for a video.
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
   each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
   costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,

@@ -80,7 +80,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | Recommended | Notes |
 |---|---|
 | `/logs/verifier/reward.txt` `1` or `0`; `reward.json` numbers only: `success`, `deterministic` (trajectory tasks), `infra_error`, `sim_error`, `grader_error`, `progress`, the resource fields, cost fields (`n_actions`, `sim_steps`) | the same names wherever the concept applies |
-| The verdict written before videos are rendered; videos never affect it; a `replay.mp4` | |
+| Every graded trial leaves a playable replay video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (RUNNING.md "Recordings") |
 | Success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice | within H.4 |
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
 | `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
