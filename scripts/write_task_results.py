@@ -7,7 +7,7 @@ usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --ou
 config.json (RUNNING.md "Results", PROTOCOL v2.0): the trial's effective configuration (scripts/task_conventions.py
 effective_config: protocol version, mode, cutoff, reset budget, slowdown S, seed, network, validated flag, digest), its
 result (`success`, `fail` or `not_a_result` with the reason) and whether it is counted. Results are ranked only within
-one comparable configuration (task_conventions.config_key), unvalidated tasks apart.
+one comparable configuration (task_conventions.config_key), validated and unvalidated tasks together.
 attempts.json: every trial of this task x run id seen so far. RUNNING.md "Infrastructure retry": an infrastructure failure
 (not a result) allows at most one full retry with the same instance, seed and configuration; the voided attempt is never
 counted, an agent's own failure is never retried, and more than 2 attempts of one task x run id is flagged
@@ -190,7 +190,7 @@ def main(argv):
                  "| | |", "|---|---|",
                  f"| result | {'**1 (success)**' if ok else NOT_A_RESULT.format(why) if why else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
                  f"| configuration | {tc.config_label(cfg)}; seed {cfg.get('seed')} ({cfg.get('seed_source')}); "
-                 f"{'validated' if cfg.get('validated') is True else 'unvalidated (not ranked)' if cfg.get('validated') is False else 'legacy'} (`config.json`) |",
+                 f"{'validated' if cfg.get('validated') is True else 'unvalidated' if cfg.get('validated') is False else 'legacy'} (`config.json`) |",
                  f"| attempts | {len(led)}" + (f" — **over the cap of {MAX_ATTEMPTS}**" if over_cap else "") + " |",
                  f"| agent time | {span(r.get('agent_execution') or {})} s |",
                  f"| actions / physics steps | {rw.get('steps') or rw.get('n_actions') or '—'} / {rw.get('sim_steps') or '—'} |",
