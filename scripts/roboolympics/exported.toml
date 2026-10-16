@@ -118,12 +118,6 @@ kind = "fullsim-policy"
 generator = "scripts/roboolympics/privileged/generate.py"
 
 [[tasks]]
-name = "roboolympics-soccer-match-i01-standard-realtime"
-source_task = "roboolympics/soccer-match-wallclock-program-standard"
-revision = "soccer-2v2-10+core-0.2"
-source_commits = ["83b8b6fa65e9"]
-
-[[tasks]]
 name = "roboolympics-tabletennis-match-i03-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
