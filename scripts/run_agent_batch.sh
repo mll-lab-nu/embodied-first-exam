@@ -37,9 +37,11 @@
 #                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL D3: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
 #   HOST_CPUS    the host's CPU count (`nproc`): a task's CPU cap above it ([environment] / [verifier.environment] cpus,
-#                a compose service's cpus) is clamped to it in the job's own copy of the task ($JOBS/.tasks/<job>/,
-#                removed afterwards), as PROTOCOL §2.10 requires of a runner (docker refuses a larger cap); tasks/ keeps its
-#                values (scripts/clamp_cpus.py)
+#                a compose service's cpus) is clamped to it in the job's own copy of the task (below), as PROTOCOL §2.10
+#                requires of a runner (docker refuses a larger cap); tasks/ keeps its values (scripts/clamp_cpus.py)
+#   Every job runs from its own copy of its tasks ($JOBS/.tasks/<job>/, removed afterwards), every file's mtime derived
+#   from its content (scripts/stamp_mtimes.py): Docker's BuildKit can otherwise build one task's image with another
+#   task's equal-size, equal-mtime file (issue #258, docs/RUNNING.md "Building task images")
 #   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
 #   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
 #                calls through scripts/usage_gateway/gateway.py, which forwards
@@ -53,8 +55,7 @@
 #                whole conversation); 0 = token usage only
 #                The gateway forwards model-API calls only (scripts/usage_gateway/api_paths.json) and answers anything
 #                else at the provider 403 (account connectors, files, web tools; counted in totals.json refused_paths)
-#   GATEWAY_EGRESS  gateway (default; takes effect with GATEWAY=1) = each job runs from its own copy of the task
-#                ($JOBS/.tasks/<job>/, removed afterwards) whose egress allowlist is the gateway's address and the package registries (PyPI, apt), so the
+#   GATEWAY_EGRESS  gateway (default; takes effect with GATEWAY=1) = each job's copy of the task allows as egress only the gateway's address and the package registries (PyPI, apt), so the
 #                agent's container reaches its provider through the gateway's model-API paths only. (Harbor's allowlist
 #                names an address, not a port: every TCP service listening on that address of the host is reachable
 #                from a trial, as it has been since the gateway exists. Bind host services to 127.0.0.1.)
@@ -168,6 +169,11 @@ if [ "$MEM_GUARD" = 1 ] && ! grep -qs mem_guard.py "/proc/${pid:-0}/cmdline"; th
   log "started mem_guard (2 GiB red line; log jobs/journal/mem_guard.log)"
 fi
 
+# job copies a killed runner left behind (run_job removes its own; never here on exit: Harbor may still be tearing a
+# trial down from that directory, whose compose file and bind mounts it holds; a copy is at most 11 MB, and no job runs
+# for a month)
+[ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
+
 # transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
 if [ "$GATEWAY" = 1 ]; then
   mkdir -p "$JOBS/.gateway"; ready="$JOBS/.gateway/port.$$"; rm -f "$ready"
@@ -195,10 +201,6 @@ u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_g
   }
   gw_pid=""; trap '[ -n "$gw_pid" ] && kill "$gw_pid" 2>/dev/null' EXIT
   gw_start
-  # job copies a killed runner left behind (run_job removes its own; never here on exit: Harbor may still be tearing a
-  # trial down from that directory, whose compose file and bind mounts it holds; a copy is at most 11 MB, and no job
-  # runs for a month)
-  [ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
   [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   gw_port="$(cat "$ready")"; GW="http://$GATEWAY_BIND:$gw_port"
   gw_alive || { log "usage gateway $GW does not answer its health check (see $JOBS/.gateway/gateway.$$.err); not starting"; exit 2; }
@@ -356,20 +358,12 @@ PY
   mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
 }
 
-stamp_task_dirs() {  # <root> <harbor -i args...>: give every file of each task dir about to be built its own fresh nanosecond mtime
+stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime derived from its content (scripts/stamp_mtimes.py)
   # BuildKit keeps one shared snapshot per build-context NAME (Harbor's are always "environment" and "tests") and re-sends a file
-  # only when its name, size, mode or mtime changed; copies with whole-second mtimes (tar, rsync of a tar copy) can therefore
-  # build one task's image with ANOTHER task's equal-size file (instance.json, target.png, test.sh). A fresh ns mtime per task
-  # dir makes every such file differ. git ignores mtimes.
-  local root="$1" a ts; shift
-  while [ $# -gt 0 ]; do
-    a="$1"; shift
-    if [ "$a" = -i ] && [ $# -gt 0 ]; then
-      ts="$(date +%s.%N)"
-      [ -d "$root/tasks/$1" ] && find "$root/tasks/$1" -exec touch -h -m -d "@$ts" {} +
-      shift
-    fi
-  done
+  # only when its name, size, mode or mtime changed: a tree whose files share mtimes (git checkout, tar, cp -r, sed loops) can
+  # build one task's image with ANOTHER task's equal-size file (issue #258). A content-derived mtime never matches another
+  # content's. Always on the job's own copy: a checkout update during the trial cannot reset it before the verifier is built.
+  python3 "$R/scripts/stamp_mtimes.py" --full "$1/tasks" >/dev/null
 }
 
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
@@ -410,30 +404,29 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
   local envf=(); [ -n "$ENV_FILE" ] && envf=(--env-file "$ENV_FILE")
   local root="$R" f dirs=()
   mapfile -t dirs < <(task_dirs "$R" "$@")
-  # PROTOCOL §2.10: a CPU cap above the host's CPU count is clamped to it in the copy the job runs (docker refuses such a
-  # container: "range of CPUs is from 0.01 to 8.00"), never in tasks/
+  # every job runs from its own copy of the task ($JOBS/.tasks/<job>/, removed afterwards), stamped (issue #258); PROTOCOL §2.10:
+  # a CPU cap above the host's CPU count is clamped to it in that copy (docker refuses such a container: "range of CPUs is
+  # from 0.01 to 8.00"), never in tasks/
   local clamp=0; python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" --needs "${dirs[@]}" >/dev/null && clamp=1
-  if { [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; } || [ "$clamp" = 1 ]; then
-    [[ "$job" =~ ^[A-Za-z0-9._-]+$ ]] || { log "FAILED $job: not a job name (letters, digits, . _ -); not started"; return 1; }
-    root="$JOBS/.tasks/$job"
-    if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
-      gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy (the gateway and the package registries as the only egress) ($root); not started"; rm -rf "$root"; return 1; }
-    else
-      plain_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy ($root); not started"; rm -rf "$root"; return 1; }
-    fi
-    for f in .env .env.local; do [ -e "$R/$f" ] && ln -s "$R/$f" "$root/$f"; done     # what Harbor would load from the repository
-    if [ "$clamp" = 1 ]; then
-      mapfile -t dirs < <(task_dirs "$root" "$@")
-      python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" "${dirs[@]}" | sed "s#^$root/tasks/#[$job] clamped #" | tee -a "$LOG" >/dev/null \
-        && ! python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" --needs "${dirs[@]}" >/dev/null \
-        || { log "FAILED $job: could not clamp its CPU caps to the host's $HOST_CPUS ($root); not started"; rm -rf "$root"; return 1; }
-    fi
+  [[ "$job" =~ ^[A-Za-z0-9._-]+$ ]] || { log "FAILED $job: not a job name (letters, digits, . _ -); not started"; return 1; }
+  root="$JOBS/.tasks/$job"
+  if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
+    gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy (the gateway and the package registries as the only egress) ($root); not started"; rm -rf "$root"; return 1; }
+  else
+    plain_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy ($root); not started"; rm -rf "$root"; return 1; }
   fi
-  stamp_task_dirs "$root" "$@"
+  for f in .env .env.local; do [ -e "$R/$f" ] && ln -s "$R/$f" "$root/$f"; done     # what Harbor would load from the repository
+  if [ "$clamp" = 1 ]; then
+    mapfile -t dirs < <(task_dirs "$root" "$@")
+    python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" "${dirs[@]}" | sed "s#^$root/tasks/#[$job] clamped #" | tee -a "$LOG" >/dev/null \
+      && ! python3 "$R/scripts/clamp_cpus.py" --cpus "$HOST_CPUS" --needs "${dirs[@]}" >/dev/null \
+      || { log "FAILED $job: could not clamp its CPU caps to the host's $HOST_CPUS ($root); not started"; rm -rf "$root"; return 1; }
+  fi
+  stamp_task_dirs "$root" || { log "FAILED $job: could not stamp its task copy (scripts/stamp_mtimes.py, $root); not started"; rm -rf "$root"; return 1; }
   log "start $job: $* (concurrency $n, attempts $K)"
   (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
   log "done $job (harbor rc=$?)"
-  [ "$root" != "$R" ] && rm -rf "$root"
+  rm -rf "$root"
   return 0
 }
 
