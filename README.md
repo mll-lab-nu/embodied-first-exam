@@ -50,7 +50,7 @@ after every merge: [`TASKS.md` on the branch `task-list`](../../blob/task-list/T
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
-| RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2 (standard mode: partial), none on 51 (human review) |
+| RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 34 | none (human review) |
 | YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 10 (2 families × 5 object pairs) | full (upstream human demonstrations) |
 | RoboDojo (`robodojo-<task>-i00`) | Isaac Lab / Isaac Sim (RoboDojo) · two ARX X5 arms with parallel grippers | 54 (RoboDojo's 42 tasks + its 12 randomised variants, one evaluation layout each); privileged 48: the 6 whose physics does not replay bit for bit are standard only, graded by the live episode | none (human review; RoboDojo releases no expert) |
 | BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |

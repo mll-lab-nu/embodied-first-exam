@@ -4,7 +4,7 @@ the on-table term of take_measuring_spoon_out and cooking_clear_plate, the 30-st
 trajectories, instead of re-running them (docs/benchmarks/robolab.md, Re-grading).
 
     python3 scripts/robolab/regrade.py JOBS_DIR [JOBS_DIR ...] [--out regrade.jsonl] [--parallel 2] [--families a,b]
-    python3 scripts/robolab/regrade.py --traj PATH.npz --family banana_in_bowl [--traj ...]
+    python3 scripts/robolab/regrade.py --traj PATH.npz --family apple_and_yogurt_in_bowl [--traj ...]
 
 Host side (needs docker and the image ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>, an RTX-class GPU):
 finds every RoboLab trial under JOBS_DIR (a Harbor jobs tree), takes its recorded trajectory (privileged:

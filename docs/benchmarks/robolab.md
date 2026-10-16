@@ -2,8 +2,9 @@
 
 [NVIDIA RoboLab](https://github.com/NVlabs/RoboLab) v0.3.1 on Isaac Lab 2.3.2 / Isaac Sim 5.1: tabletop language-goal tasks
 for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "robolab"`, `robot = "franka-robotiq-2f85"`.
-53 families, each as a privileged task `robolab-<family>-i00-privileged` and its standard twin
-`robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance. On 2026-10-14 the success rule changed
+34 families, each as a privileged task `robolab-<family>-i00-privileged` and its standard twin
+`robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance (68 tasks; 19 families were removed
+on 2026-10-15: Removed from this version). On 2026-10-14 the success rule changed
 in place (Success semantics; PROTOCOL v2.0 §1, H.8: a new DIGEST, results are attributed by digest): results recorded
 under the earlier DIGESTs are not comparable with the current ones; `scripts/robolab/regrade.py` re-grades them
 (Re-grading).
@@ -19,8 +20,9 @@ under the earlier DIGESTs are not comparable with the current ones; `scripts/rob
   `rm -rf /logs/verifier/*` first in `test.sh`, no `results/`) and then synced into `tasks/`. Re-running it leaves
   `git diff tasks/` empty; `--check` only compares.
 - A family is RoboLab's benchmark task of that name, its success predicate RoboLab's own `success` termination term.
-  `families.json` holds the 53 families that have tasks: the 2 with a reference solution and the 51 with
-  a graded positive example. 35 further RoboLab tasks were frozen but have no positive yet (PROTOCOL §2.7 needs one
+  `families.json` holds the 34 families that have tasks (`"tasks": true`), each with a graded positive example, and the
+  19 removed on 2026-10-15 (`"tasks": false` with `removed`: their entries, instances and oracle inputs are kept, the
+  generator writes no task for them and reports a leftover task dir as stale). 35 further RoboLab tasks were frozen but have no positive yet (PROTOCOL §2.7 needs one
   before review); their entries and instances are not kept here (repository history, 9621e47d1).
 - The frozen instance is the full scene state after RoboLab's canonical seeded reset (`env.reset()` twice, as RoboLab's
   evaluation loop does), with its state hash, made in the image by `rcb_robolab.py make-instance --task <f> --seed 0`;
@@ -29,7 +31,8 @@ under the earlier DIGESTs are not comparable with the current ones; `scripts/rob
 - New family: add its entry to `families.json` and `instances/`, then run the generator and `cd tasks && harbor add --scan .`.
 
 ## Oracle and review (PROTOCOL §2.7)
-- banana_in_bowl and rubiks_cube_left_of_bowl have a reference solution: `solution/oracle_<family>.py`, a human-written
+- No family of this version has a reference solution. Until 2026-10-15 (Removed from this version) banana_in_bowl
+  and rubiks_cube_left_of_bowl had one, kept in `scripts/robolab/oracles/`: `solution/oracle_<family>.py`, a human-written
   script on the privileged tooling plus the skills in `solution/ref_primitives.py` (never in the agent image); the
   standard oracle streams the privileged oracle's recorded joint targets through the client in one-second chunks and
   rides through a service crash (`spec.on_service_error`). The labels follow the recorded runs (static validation):
@@ -39,13 +42,11 @@ under the earlier DIGESTs are not comparable with the current ones; `scripts/rob
     the depth default, which run-oracle and replay pass explicitly); `oracle_evidence` cites the runs;
   - standard `oracle = "partial"`: oracle_replay scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the
     same verdict formula, and has not been re-run on this version.
-- `oracle = "none"` (51 families): RoboLab ships no expert or planner. Every such family has at least one model trial that
+- `oracle = "none"` (all 34 families): RoboLab ships no expert or planner. Every such family has at least one model trial that
   the separate verifier scored 1 (run `codex-gpt6_luna-xhigh`), cited by trial id in `oracle_evidence` and in the README
   with its trial log on the results site and its replay video on Hugging Face (results are not kept in task directories,
   PROTOCOL D3; three standard positives of the withdrawn rcb-limited/2.0 batch are unpublished). These tasks have no
   `solution/` and go through human review per family in PR #3 (both modes, a positive, the `nop` result).
-- bananas_in_bin_one_more and bananas_in_bin_three_total have the identical predicate (exactly 1 of `banana`,
-  `banana_01`, `banana_03` in `grey_bin`, RoboLab's `choose`, K = 1); only their instructions differ.
 
 ## Success semantics (instantaneous)
 RoboLab evaluates its `success` term after every control step and terminates the episode at the first step where it
@@ -64,7 +65,8 @@ region; the instructions state the rule in both modes. Three changes on 2026-10-
 - **On the table where the words say so.** `take_measuring_spoon_out` ("... and put it on the table") and
   `cooking_clear_plate` (RoboLab's specific wording: "place each on the table surface") use RoboLab's own
   `object_outside_of_and_on_surface` with surface `table` and their own parameters instead of `object_outside_of`,
-  which counted an object lifted out of the container or knocked off the table (5 successes).
+  which counted an object lifted out of the container or knocked off the table (5 successes). Both families were
+  removed on 2026-10-15; the rule stays in the tooling.
 - **A settle hold at the end.** After a trajectory's last row the replay holds it for `SETTLE_STEPS` (30 control steps,
   2 s), the term still checked at every step, so a release in the last rows completes (a trajectory recorded before
   that ended at the old success step ends the same way); in standard mode the service holds the last command as long
@@ -110,11 +112,11 @@ it: the second point.
 - **RoboLab's asset library did, until image 0.1.2.** 15 of its USD layers reference NVIDIA's public Omniverse content
   bucket (`omniverse-content-production.s3…amazonaws.com`) by URL: the MDL materials of the four tables, of the grey bin
   and of the robot, their textures, and a few props of scenes that are not tasks here; the scenes of 43 of the 53
-  families load some of them. Kit fetched them whenever a scene was built. On 0.1.1 under the allowlist the fetches
+  families of the time load some of them. Kit fetched them whenever a scene was built. On 0.1.1 under the allowlist the fetches
   fail (`could not find module … in module path`, `Unable to find SdrShaderNode`): the table renders as a glossy red
   surface instead of wood (64 % of the pixels of the front camera's first frame differ from the open-egress frame, 77 %
   of the wrist camera's, 16 % of the shoulder camera's) and the scene is ready later (501 to 640 s against 333 to
-  428 s), while physics is unchanged (none of the 53 families references remote geometry). Image 0.1.2 holds the files:
+  428 s), while physics is unchanged (none of the 53 families of the time references remote geometry). Image 0.1.2 holds the files:
   `images/robolab/mirror_remote_assets.py`, the last step of the build, copies all 419 (635 MB) to
   `/opt/robolab/assets/_remote`, checks each against `images/robolab/remote_assets.sha256` and points the layers at the
   copies; no layer of the library names a remote file any more. Checked from the published 0.1.2 under the
@@ -191,7 +193,8 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
 - Validation in this PR is static (user decision, 2026-10-01). The crash recovery was exercised on the CPU with a test
   double of the tooling under `run.sh` and a restart loop (kills inside and between calls, an exact-hash mismatch, three
   crashes inside calls, the 400s), with the shared layer's own selftest; `scripts/robolab/kill_test.sh` is the acceptance
-  test on a GPU host (Harbor oracle, the service killed mid-episode). Per-call state hashing only reads the scene
+  test on a GPU host (Harbor oracle, the service killed mid-episode; it needs a task with a reference solution, which
+  this version has none of). Per-call state hashing only reads the scene
   (`InteractiveScene.get_state` reads PhysX views into Isaac Lab's timestamped buffers and writes nothing), so it cannot
   change a live run; live == replay with per-call hashing on Isaac is still to be confirmed by a run.
 
@@ -205,7 +208,7 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
 
 The tooling records (T, 8) actions (7 joint targets + the binary gripper command) at 15 Hz. Every copy of the tooling and
 of the standard sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`); the tooling's TASKS
-registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 without a positive), so adding a family later does not change existing tasks.
+registry lists all 88 RoboLab tasks that were frozen (the 34 here, the 19 removed on 2026-10-15 and the 35 without a positive), so adding a family later does not change existing tasks.
 
 ## Declarations
 - **Tooling: thin wrappers only.** Differential-IK moves, joint moves, gripper, hold, plus the frozen instance, state,
@@ -241,8 +244,7 @@ sees it and still ends the episode with a 500.
   changes (Success semantics: both fingers, two on-table terms, the settle hold). Still looser than their words (board
   0086): "inside" extends without limit along the container's up axis (the instructions state it), so a toppled or
   tilted container can count objects as outside or inside; `object_upright` has no support term (an object in free fall
-  passes); `is_supported_on_surface` accepts a mug lying on its side as "standing". `tools_picking_drill`'s term names the left bin while the drill starts in the
-  right bin; the instruction says so (2026-10-14).
+  passes); `is_supported_on_surface` accepts a mug lying on its side as "standing".
 - Contact can make the physics diverge (joint readings of 1e6 and more, objects thrown off the table) after a grasp
   that looks ordinary; in standard mode that episode is lost (board 0086 saw it once in about 350 trials). A
   privileged `s.reset()` does not restore the start bit for bit; the verifier replays in a fresh process.
@@ -261,6 +263,28 @@ each first held.
 - **Standard trials are conservative.** Under the current rule an early success would not have ended the episode, and
   the agent could still have released the object; the label is "re-graded under 2026-10-14 rules (conservative)".
 - **Privileged trials are close to exact.**
+
+## Removed from this version
+Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.
+- `robolab-banana-in-bowl-i00` (`-privileged`, `-standard`)
+- `robolab-bananas-in-bin-three-total-i00` (`-privileged`, `-standard`)
+- `robolab-bananas-out-of-bin-i00` (`-privileged`, `-standard`)
+- `robolab-butter-above-raisin-i00` (`-privileged`, `-standard`)
+- `robolab-cooking-clear-plate-i00` (`-privileged`, `-standard`)
+- `robolab-food-packing2-cans-i00` (`-privileged`, `-standard`)
+- `robolab-fruits-green-limes-on-plate-i00` (`-privileged`, `-standard`)
+- `robolab-keyboard-out-of-bin-i00` (`-privileged`, `-standard`)
+- `robolab-larger-object-raisin-box-in-bin-i00` (`-privileged`, `-standard`)
+- `robolab-mustard-above-raisin-i00` (`-privileged`, `-standard`)
+- `robolab-mustard-in-left-bin-i00` (`-privileged`, `-standard`)
+- `robolab-recycle-cartons-vertical-crate-i00` (`-privileged`, `-standard`)
+- `robolab-reorient-red-mug-i00` (`-privileged`, `-standard`)
+- `robolab-rubiks-cube-left-of-bowl-i00` (`-privileged`, `-standard`)
+- `robolab-rubiks-cube-then-banana-i00` (`-privileged`, `-standard`)
+- `robolab-rubiks-cubes-in-bin-i00` (`-privileged`, `-standard`)
+- `robolab-take-measuring-spoon-out-i00` (`-privileged`, `-standard`)
+- `robolab-take-mugs-off-of-shelf-i00` (`-privileged`, `-standard`)
+- `robolab-tools-picking-drill-i00` (`-privileged`, `-standard`)
 
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA

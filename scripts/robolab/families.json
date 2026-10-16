@@ -1,5 +1,5 @@
 {
- "_doc": "RoboLab families for scripts/robolab/mk_tasks.py (one entry per RoboLab benchmark task that has tasks here; tasks = true: generated into tasks/ in both modes). Frozen instances: instances/<family>.json; oracle inputs: oracles/<family>/. change_log (optional): README Change Log entries of the family's standard task alone, after those of every task.",
+ "_doc": "RoboLab families for scripts/robolab/mk_tasks.py (one entry per RoboLab benchmark task that has, or had, tasks here; tasks = true: generated into tasks/ in both modes; tasks = false with `removed`: removed from this version by the benchmark owner, its inputs kept, not generated). Frozen instances: instances/<family>.json; oracle inputs: oracles/<family>/. change_log (optional): README Change Log entries of the family's standard task alone, after those of every task.",
  "families": {
   "apple_and_yogurt_in_bowl": {
    "tasks": true,
@@ -52,7 +52,8 @@
    ]
   },
   "banana_in_bowl": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "BananaInBowlTask",
    "task_file": "benchmark/banana_in_bowl_task.py",
    "seed": 0,
@@ -192,7 +193,8 @@
    ]
   },
   "bananas_in_bin_three_total": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "BananasInBinThreeTotalTask",
    "task_file": "benchmark/bananas_in_bin_three.py",
    "seed": 0,
@@ -235,7 +237,8 @@
    ]
   },
   "bananas_out_of_bin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "BananasOutOfBinTask",
    "task_file": "benchmark/bananas_out_of_bin.py",
    "seed": 0,
@@ -499,7 +502,8 @@
    ]
   },
   "butter_above_raisin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "ButterAboveRaisinTask",
    "task_file": "benchmark/butter_above_raisin_task.py",
    "seed": 0,
@@ -692,7 +696,8 @@
    ]
   },
   "cooking_clear_plate": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "CookingClearPlateTask",
    "task_file": "benchmark/cooking_clear_plate_specific.py",
    "seed": 0,
@@ -817,7 +822,8 @@
    ]
   },
   "food_packing2_cans": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "FoodPacking2CansTask",
    "task_file": "benchmark/foodpacking_1bin_2can.py",
    "seed": 0,
@@ -905,7 +911,8 @@
    ]
   },
   "fruits_green_limes_on_plate": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "FruitsGreenLimesOnPlateTask",
    "task_file": "benchmark/fruits_green_limes_on_plate.py",
    "seed": 0,
@@ -1021,7 +1028,8 @@
    ]
   },
   "keyboard_out_of_bin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "KeyboardOutOfBinTask",
    "task_file": "benchmark/keyboard_out_of_bin_task.py",
    "seed": 0,
@@ -1068,7 +1076,8 @@
    ]
   },
   "larger_object_raisin_box_in_bin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "LargerObjectRaisinBoxInBinTask",
    "task_file": "benchmark/bigger_object.py",
    "seed": 0,
@@ -1165,7 +1174,8 @@
    ]
   },
   "mustard_above_raisin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "MustardAboveRaisinTask",
    "task_file": "benchmark/mustard_above_raisin_task.py",
    "seed": 0,
@@ -1213,7 +1223,8 @@
    ]
   },
   "mustard_in_left_bin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "MustardInLeftBinTask",
    "task_file": "benchmark/mustard_in_left_bin.py",
    "seed": 0,
@@ -1579,7 +1590,8 @@
    ]
   },
   "recycle_cartons_vertical_crate": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "RecycleCartonsVerticalCrateTask",
    "task_file": "benchmark/recycle_cartons_vertical_crate.py",
    "seed": 0,
@@ -1666,7 +1678,8 @@
    ]
   },
   "reorient_red_mug": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "ReorientRedMugTask",
    "task_file": "benchmark/reorient_red_mugs_task.py",
    "seed": 0,
@@ -1857,7 +1870,8 @@
    ]
   },
   "rubiks_cube_left_of_bowl": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "RubiksCubeLeftOfBowlTask",
    "task_file": "benchmark/rubiks_cube_left_of_bowl.py",
    "seed": 0,
@@ -1965,7 +1979,8 @@
    ]
   },
   "rubiks_cube_then_banana": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "RubiksCubeThenBananaTask",
    "task_file": "benchmark/rubiks_cube_then_banana.py",
    "seed": 0,
@@ -2005,7 +2020,8 @@
    ]
   },
   "rubiks_cubes_in_bin": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "RubiksCubesInBinTask",
    "task_file": "benchmark/rubiks_cubes_in_bin.py",
    "seed": 0,
@@ -2218,7 +2234,8 @@
    ]
   },
   "take_measuring_spoon_out": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "TakeMeasuringSpoonOutTask",
    "task_file": "benchmark/take_measuring_spoon_out.py",
    "seed": 0,
@@ -2275,7 +2292,8 @@
    }
   },
   "take_mugs_off_of_shelf": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "TakeMugsOffOfShelfTask",
    "task_file": "benchmark/take_mugs_off_of_shelf.py",
    "seed": 0,
@@ -2433,7 +2451,8 @@
    ]
   },
   "tools_picking_drill": {
-   "tasks": true,
+   "tasks": false,
+   "removed": "Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version.",
    "robolab_task": "ToolsPickingDrillTask",
    "task_file": "benchmark/tools_picking_drill.py",
    "seed": 0,

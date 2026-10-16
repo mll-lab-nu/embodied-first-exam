@@ -3,11 +3,12 @@
 # run the task's oracle with Harbor, kill -9 the sim service in the middle of the episode (once N calls are checkpointed,
 # while the next call runs), and check that the service resumed the same episode exactly, the oracle carried on, the
 # episode was graded as usual, and the live run still equals its fresh-process replays (live_matches_replay).
-#   usage: scripts/robolab/kill_test.sh [task dir] [jobs dir] [N checkpoints before the kill]
-#   default: tasks/robolab-banana-in-bowl-i00-standard, $PWD/jobs/kill_test, 4
+#   usage: scripts/robolab/kill_test.sh <task dir> [jobs dir] [N checkpoints before the kill]
+#   default: $PWD/jobs/kill_test, 4. The task needs a reference solution (solution/); no RoboLab task of this version has
+#   one (banana_in_bowl, the default before, was removed on 2026-10-15: docs/benchmarks/robolab.md).
 # Needs the eai-robolab image on the host (images/robolab/BUILD_ONLY), harbor and docker. One Isaac at a time per 32 GB.
 set -uo pipefail
-TASK="${1:-tasks/robolab-banana-in-bowl-i00-standard}"; JOBS="$(mkdir -p "${2:-$PWD/jobs/kill_test}" && cd "${2:-$PWD/jobs/kill_test}" && pwd)"
+TASK="${1:?usage: kill_test.sh <task dir with a solution/> [jobs dir] [N]}"; JOBS="$(mkdir -p "${2:-$PWD/jobs/kill_test}" && cd "${2:-$PWD/jobs/kill_test}" && pwd)"
 N="${3:-4}"
 D="docker"; docker ps >/dev/null 2>&1 || D="sg docker -c"
 dk() { if [ "$D" = docker ]; then docker "$@"; else sg docker -c "docker $(printf '%q ' "$@")"; fi; }

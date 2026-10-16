@@ -4,13 +4,14 @@ mode, eai-standard/2.2) for every family of scripts/robolab/families.json with "
 
     python3 scripts/robolab/mk_tasks.py                    # (re)write every RoboLab task dir; `git diff tasks/` stays empty
     python3 scripts/robolab/mk_tasks.py --check            # write nothing; exit 1 if a task dir differs from the generator's
-    python3 scripts/robolab/mk_tasks.py banana_in_bowl ... # these families only
+    python3 scripts/robolab/mk_tasks.py apple_and_yogurt_in_bowl ... # these families only
 Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 3 (no simulator).
 
 Inputs, all in the repository:
   scripts/robolab/families.json          per family: RoboLab's task class and file, the goal, the success term's source and
                                          its notes, the texts of both modes, the oracle level and the cited positives
-                                         (`tasks: false`: frozen, not generated yet)
+                                         (`tasks: false`: not generated; with `removed`: removed
+                                         from this version by the benchmark owner, docs/benchmarks/robolab.md)
   scripts/robolab/instances/<f>.json     the frozen instance (RoboLab's canonical seeded reset), written in the image by
                                          `python rcb_robolab.py make-instance --task <f> --seed 0 --out <f>.json`
   scripts/robolab/oracles/<f>/           families with a reference solution: oracle_<f>.py (privileged) and the standard

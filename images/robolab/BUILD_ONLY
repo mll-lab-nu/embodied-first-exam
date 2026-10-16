@@ -35,15 +35,16 @@ Build (from the repository root)
 
 Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of a reference trajectory
-  must end in its recorded hash. With a task directory at hand:
-    docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab-banana-in-bowl-i00-privileged:/t \
+  must end in its recorded hash. From the repository root (the inputs the generator copies into a task directory; the
+  banana_in_bowl tasks were removed from this version on 2026-10-15, their instance and oracle are kept in scripts/robolab/):
+    docker run --rm --gpus all --shm-size 8g -v $PWD/scripts/robolab:/r:ro -v $PWD/scripts/robolab/shared:/solution:ro \
       ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) bash -c \
-      "cd /tmp && python /t/environment/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
-         --code /t/solution/oracle_banana_in_bowl.py --out /tmp/t.npz && \
-       python /t/environment/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"
+      "cd /tmp && python /r/shared/rcb_robolab.py run-oracle --task banana_in_bowl --instance /r/instances/banana_in_bowl.json \
+         --code /r/oracles/banana_in_bowl/oracle_banana_in_bowl.py --out /tmp/t.npz && \
+       python /r/shared/rcb_robolab.py replay --task banana_in_bowl --instance /r/instances/banana_in_bowl.json --traj /tmp/t.npz"
   expects instance_exact true (instance sha 7c211bc3fe6d80cd), success true, and the same final state_sha from both
   commands. Compare the two commands, not hosts: the final hash can differ between hosts (two values seen on ours,
-  61afa384566be3a5 and 902e40deb3d42ed0, both successes). Or run `harbor run -p tasks/robolab-banana-in-bowl-i00-privileged -a oracle`.
+  61afa384566be3a5 and 902e40deb3d42ed0, both successes).
 
 On a CI machine (maintainers)
   A self-hosted runner with such a GPU builds the image with the command above when images/robolab/ or VERSION changes,
