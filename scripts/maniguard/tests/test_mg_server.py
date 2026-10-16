@@ -4,9 +4,9 @@ import json, os, runpy, sys, tempfile, threading
 from http.server import HTTPServer
 import numpy as np, requests
 REPO, HERE = (sys.argv[1] if len(sys.argv) > 1 else os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))), os.path.dirname(os.path.abspath(__file__))
-SIM = os.path.join(REPO, "tasks/maniguard-jar-transport-i14-standard/environment/sim")
+SIM = os.path.join(REPO, "tasks/maniguard-jar-transport-i13-standard/environment/sim")
 sys.path[:0] = [os.path.join(HERE, "stub_mg"), SIM]
-os.environ.update(RCB_DATA=tempfile.mkdtemp(), RCB_TASK="jar_transport/task_0014", RCB_INSTANCE="/x", RCB_STARTUP_TIMEOUT_S="600")
+os.environ.update(RCB_DATA=tempfile.mkdtemp(), RCB_TASK="jar_transport/task_0013", RCB_INSTANCE="/x", RCB_STARTUP_TIMEOUT_S="600")
 import rcb_limited as L, rcb1
 import importlib.util as _u
 _s = _u.spec_from_file_location("rcb_maniguard", os.path.join(HERE, "stub_mg", "rcb_maniguard.py")); _m = _u.module_from_spec(_s); _s.loader.exec_module(_m); sys.modules["rcb_maniguard"] = _m

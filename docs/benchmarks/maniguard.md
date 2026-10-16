@@ -7,7 +7,7 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 `simulator = "maniguard"`, `robot = "franka-panda-longfinger"`. Tasks: `maniguard-<family>-i<NN>-privileged` and the
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
-Status (2026-10-04): 30 tasks, 5 per family in all 6 families (`families.json`): the 14 tasks of the hard shortlist with a `full` oracle (below), and 16 tasks added for variety with `oracle = "none"` (second table). Built and run on two hosts: an RTX 4090 Laptop GPU and lab's RTX PRO 6000 Blackwell (both driver 580.178.04; see "Other hosts").
+Status (2026-10-15): 22 tasks (`families.json`): cabinet_pickup 5, clutter_pickup 4, dusty_transfer 4, lid_transport 4, stack_retrieve 3, jar_transport 2; 10 tasks of the hard shortlist with a `full` oracle (below), and 12 tasks added for variety with `oracle = "none"` (second table). 8 tasks were removed on 2026-10-15 (§ Removed from this version); before that (2026-10-04) there were 30 tasks, 5 per family in all 6 families, 14 with a `full` oracle and 16 without. Built and run on two hosts: an RTX 4090 Laptop GPU and lab's RTX PRO 6000 Blackwell (both driver 580.178.04; see "Other hosts").
 
 First 14 (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
 smoke (`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and
@@ -21,15 +21,11 @@ cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The o
 
 | Task | ManiGuard-Bench | State hash | Strict goal held at step (oracle) |
 |---|---|---|---|
-| `maniguard-jar-transport-i14` | `jar_transport/task_0014` | `5d235d1b51a76116` | 599 |
 | `maniguard-cabinet-pickup-i19` | `cabinet_pickup/task_0019` | `d2191aa0e0587eb3` | 2240 |
 | `maniguard-dusty-transfer-i03` | `dusty_transfer/task_0003` | `885424f9128af320` | 946 |
-| `maniguard-stack-retrieve-i21` | `stack_retrieve/task_0021` | `188ff9254232eb3f` | 1474 |
 | `maniguard-dusty-transfer-i24` | `dusty_transfer/task_0024` | `547e404cadce1203` | 972 |
 | `maniguard-stack-retrieve-i10` | `stack_retrieve/task_0010` | `54fd5209a5c360c5` | 1560 |
 | `maniguard-cabinet-pickup-i20` | `cabinet_pickup/task_0020` | `23d6be8e9af9ba1e` | 2125 |
-| `maniguard-lid-transport-i16` | `lid_transport/task_0016` | `e5b674c6e3831f68` | 687 |
-| `maniguard-jar-transport-i02` | `jar_transport/task_0002` | `58f0cb6d7738fb8d` | 514 |
 | `maniguard-lid-transport-i12` | `lid_transport/task_0012` | `1a9beafecba5e52f` | 561 |
 | `maniguard-cabinet-pickup-i22` | `cabinet_pickup/task_0022` | `58012fc4249fa3ad` | 2344 |
 | `maniguard-stack-retrieve-i08` | `stack_retrieve/task_0008` | `67161e85980b5298` | 1577 |
@@ -47,19 +43,27 @@ never copied into the task and not replayed here.
 | `maniguard-cabinet-pickup-i26` | `cabinet_pickup/task_0026` | `9f0df8b55512a085` | a round, rolling head cabbage (15 cm); conference table |
 | `maniguard-cabinet-pickup-i29` | `cabinet_pickup/task_0029` | `66b0d5f46c15f14f` | a 6.5 cm chocolate cake; a 19 cm glass cruet in the drawer's path; round coffee table |
 | `maniguard-dusty-transfer-i25` | `dusty_transfer/task_0025` | `34f583c2f9bf3d9c` | the family's smallest food, a 2.5 cm garlic clove, into a long-handled saucepan |
-| `maniguard-dusty-transfer-i20` | `dusty_transfer/task_0020` | `ed90dd164ff74206` | potato from a platter into a deep mixing bowl; steel kitchen table; another sponge |
 | `maniguard-dusty-transfer-i16` | `dusty_transfer/task_0016` | `7ea4b07f85b21d28` | potato from a flat chopping board into a deep stockpot at the reach edge |
-| `maniguard-jar-transport-i09` | `jar_transport/task_0009` | `9916236d78d2ff16` | the third jar model, lid open about 160°; the family's longest carry (42 cm) |
 | `maniguard-jar-transport-i25` | `jar_transport/task_0025` | `38c331dc1d5f4f70` | on a tall bar; the sphere 29 cm above the bar top |
 | `maniguard-lid-transport-i06` | `lid_transport/task_0006` | `3463868903df88b2` | tupperware and lemon; the lid 0.6 m away; the family's longest carry (1.03 m) |
 | `maniguard-lid-transport-i15` | `lid_transport/task_0015` | `942a6d9824503c4a` | a storage box with half a Brussels sprout; glass-topped table at the reach edge |
 | `maniguard-stack-retrieve-i13` | `stack_retrieve/task_0013` | `803c1af818aa3c63` | the family's tallest stack: four nested bowls (31 cm), the bottom one out |
-| `maniguard-stack-retrieve-i12` | `stack_retrieve/task_0012` | `aad13a21b20c4d01` | three tippy face-cream bottles on a pop case; a nightstand |
 | `maniguard-clutter-pickup-i28` | `clutter_pickup/task_0028` | `2ef0663763b82cb5` | the family's densest pack (nearest neighbour 8.6 cm); a 2.3 cm sphere; a bar |
 | `maniguard-clutter-pickup-i15` | `clutter_pickup/task_0015` | `be98dc0729e59682` | a tall golden goblet into a raised sphere 0.65 m away |
-| `maniguard-clutter-pickup-i25` | `clutter_pickup/task_0025` | `af2da06ca81fa7eb` | a shallow 17 cm bowl carried 0.73 m, the family's longest carry |
 | `maniguard-clutter-pickup-i09` | `clutter_pickup/task_0009` | `23d5d2418f027373` | a small mug from a dense pack; a 2.6 cm sphere; a low coffee table |
 | `maniguard-clutter-pickup-i23` | `clutter_pickup/task_0023` | `021f30c779dc2819` | a top-heavy cocktail glass among a 25 cm vase and a wineglass; a raised sphere |
+
+## Removed from this version (2026-10-15)
+Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version. Both modes of each
+(`-privileged` and `-standard`, 16 task directories) are deleted; their `families.json` entries stay with `"include": false`
+and `"removed"` (their instances and oracle inputs are kept), so the generator does not write them again:
+- from the hard shortlist (`full` oracle, 4): `maniguard-jar-transport-i02`, `maniguard-jar-transport-i14`,
+  `maniguard-lid-transport-i16`, `maniguard-stack-retrieve-i21`;
+- from the variety tasks of 2026-10-04 (`oracle = "none"`, 4): `maniguard-clutter-pickup-i25`, `maniguard-dusty-transfer-i20`,
+  `maniguard-jar-transport-i09`, `maniguard-stack-retrieve-i12`.
+
+The grader and service unit tests (`scripts/maniguard/tests/`) ran on `maniguard-jar-transport-i14`; they now run on
+`maniguard-jar-transport-i13` (the same family and safety rule). Other mentions of the removed tasks below are history.
 
 ## Prerequisites (every ManiGuard run)
 - **The image** `ghcr.io/mll-lab-nu/eai-maniguard:<images/maniguard/VERSION>`, built on the host
@@ -194,7 +198,7 @@ The standard twin's oracle streams the same rows through its service (`solution/
 scores 1 too.
 
 ## Negative checks (shortcuts that must fail)
-Per included task, the obvious shortcuts of its family, each replayed in a fresh process through the tooling (the
+Per included task (the rows of the tasks removed on 2026-10-15 are kept as a record), the obvious shortcuts of its family, each replayed in a fresh process through the tooling (the
 verifier's computation): built from the task's oracle (a phase skipped or cut short) or scripted on the tooling's
 primitives. Every one scores 0, for the reason given.
 

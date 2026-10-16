@@ -176,7 +176,8 @@
   "stack_retrieve/task_0021": {
    "rank": 5,
    "shortlist": "top10",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -204,7 +205,8 @@
   "jar_transport/task_0014": {
    "rank": 6,
    "shortlist": "top10",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -261,7 +263,8 @@
   "lid_transport/task_0016": {
    "rank": 8,
    "shortlist": "top10",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -290,7 +293,8 @@
   "jar_transport/task_0002": {
    "rank": 9,
    "shortlist": "top10",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -596,7 +600,8 @@
   "jar_transport/task_0009": {
    "rank": 23,
    "shortlist": "variety-1004",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -741,7 +746,8 @@
   "dusty_transfer/task_0020": {
    "rank": 28,
    "shortlist": "variety-1004",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -826,7 +832,8 @@
   "stack_retrieve/task_0012": {
    "rank": 31,
    "shortlist": "variety-1004",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"
@@ -912,7 +919,8 @@
   "clutter_pickup/task_0025": {
    "rank": 34,
    "shortlist": "variety-1004",
-   "include": true,
+   "include": false,
+   "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/maniguard.md, Removed from this version)",
    "modes": [
     "privileged",
     "standard"

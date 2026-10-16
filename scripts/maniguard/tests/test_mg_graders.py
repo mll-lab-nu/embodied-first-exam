@@ -3,8 +3,8 @@ is not the agent's failure is flagged."""
 import json, os, shutil, stat, subprocess, sys, tempfile, textwrap, time
 import numpy as np
 REPO = (sys.argv[1] if len(sys.argv) > 1 else os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))); PY = sys.executable
-T_STD = os.path.join(REPO, "tasks/maniguard-jar-transport-i14-standard")
-T_PRIV = os.path.join(REPO, "tasks/maniguard-jar-transport-i14-privileged")
+T_STD = os.path.join(REPO, "tasks/maniguard-jar-transport-i13-standard")
+T_PRIV = os.path.join(REPO, "tasks/maniguard-jar-transport-i13-privileged")
 td = tempfile.mkdtemp(); n_ok = 0
 def check(cond, what, detail=""):
     global n_ok
@@ -83,7 +83,7 @@ def finalize(name, tool_behaviour, *, end_rc=0, episode=True, traj=True, budget=
     if pre_final is not None: json.dump(pre_final, open(os.path.join(data, "final.json"), "w"))
     sh = open(os.path.join(T_STD, "environment/sim/finalize.sh")).read().replace("/srv", srv)
     f = os.path.join(d, "finalize.sh"); open(f, "w").write(sh)
-    env = {**os.environ, "PATH": bind + ":" + os.environ["PATH"], "RCB_DATA": data, "RCB_TOOL": tool, "RCB_TASK": "jar_transport/task_0014", "RCB_INSTANCE": "/x",
+    env = {**os.environ, "PATH": bind + ":" + os.environ["PATH"], "RCB_DATA": data, "RCB_TOOL": tool, "RCB_TASK": "jar_transport/task_0013", "RCB_INSTANCE": "/x",
            "STUB": json.dumps(tool_behaviour), **({"RCB_HOOK_BUDGET_S": str(budget)} if budget else {})}
     t0 = time.time(); p = subprocess.run(["sh", f], capture_output=True, text=True, env=env, timeout=120)
     assert p.returncode == 0, (p.stdout, p.stderr)
@@ -144,13 +144,13 @@ def priv_grade(name, make_traj, tool_behaviour=None, extra=()):
         """))
     env = {**os.environ, "RCB_VERIFIER_LOG_DIR": log, "STUB": json.dumps(tool_behaviour or {})}
     t0 = time.time()
-    p = subprocess.run([PY, os.path.join(tests, "grade.py"), "--task", "jar_transport/task_0014", "--instance", "/x", "--traj", traj, *extra], capture_output=True, text=True, env=env, timeout=120)
+    p = subprocess.run([PY, os.path.join(tests, "grade.py"), "--task", "jar_transport/task_0013", "--instance", "/x", "--traj", traj, *extra], capture_output=True, text=True, env=env, timeout=120)
     assert p.returncode == 0, p.stderr
     r = json.load(open(os.path.join(log, "reward.json"))); txt = open(os.path.join(log, "reward.txt")).read().strip()
     assert all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in r.values()), r
     assert txt == str(r["success"]) and "deterministic" in r and "grader_error" in r, (txt, r)
     return r, time.time() - t0
-A = np.zeros((600, 8), np.float32); TASK = "jar_transport/task_0014"
+A = np.zeros((600, 8), np.float32); TASK = "jar_transport/task_0013"
 good = lambda p: np.savez(p, actions=A, task=TASK, instance_sha="x", meta="{}")
 r, _ = priv_grade("pass", good); check(r["success"] == 1 and r["grader_error"] == 0 and r["deterministic"] == 1, "privileged: a pass stays a pass", r)
 r, _ = priv_grade("fail", good, {"1": "fail", "2": "fail"}); check(r["success"] == 0 and r["grader_error"] == 0, "privileged: a failing trajectory is the agent's 0", r)
