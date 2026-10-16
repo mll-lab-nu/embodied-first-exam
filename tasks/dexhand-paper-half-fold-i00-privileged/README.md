@@ -81,3 +81,6 @@ Modelling scope: a 9 x 5 triangular MuJoCo flex shell (160 x 100 mm, 1.28 g) wit
 bending-memory law; uncalibrated material coefficients; the left half is adhered to a visible backing (pinned
 vertices); effective 0.7 mm contact thickness; finite contact compliance. This is a reduced passive-paper model, not a
 fibre or adhesive-peel model.
+
+### Change Log
+- 2026-10-16 (board 0136, video only): the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after `reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video. The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.
