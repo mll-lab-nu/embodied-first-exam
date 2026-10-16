@@ -22,7 +22,7 @@ services:
       RCB_TOOL: /srv/rcb_ispatialgym.py
       RCB_DATA: /out
       RCB_WALL_CLOCK_S: "3600"
-      RCB_STARTUP_TIMEOUT_S: "$startup_s" # startup watchdog: 2x the slowest scene load measured ($load_max s)
+      RCB_STARTUP_TIMEOUT_S: "$startup_s" # startup watchdog: 2x the slowest scene load measured ($load_max s), at least 2400 s
       RCB_COLLECT_BUDGET_S: "$collect_s"
       PYTHONPATH: /srv
     shm_size: "8gb"

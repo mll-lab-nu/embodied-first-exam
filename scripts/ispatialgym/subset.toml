@@ -1,8 +1,9 @@
 # iSpatialGym subset: the single source for every tasks/ispatialgym-* directory (`mk_tasks.py render` writes them).
 #
-# Upstream (kmy17518/iSpatialGym, branch ispatialgym-eval-release, "eval v1.0") ships 83 instances: 7 families, 23 tasks,
-# one instance per subtask (a subtask = a task with its objects). Three model-free steps pick the tasks below
-# (docs/benchmarks/ispatialgym.md); no model's result enters the choice.
+# Upstream's public pre-release (kmy17518/iSpatialGym, MIT) evaluates 13 instances of 7 families, one per task. They are
+# the 14 tasks rcb picked from the 83 instances of its internal release (23 tasks) by the model-free steps below, less
+# configuration_matching_attachment, which the public release does not support; step 4 drops disembedding too. No model's
+# result enters the choice (docs/benchmarks/ispatialgym.md).
 #   1. One task per success rule. Two tasks whose BDDL goal and measured targets are the same keep one:
 #      camera_relocalization_standard is camera_relocalization_obstructed without the obstacle (the obstructed one stays);
 #      of an open / close pair the opening twin stays (as in BiGym 2.0); a relation checked at two scales keeps the
@@ -22,9 +23,9 @@
 
 [defaults]
 instance = 0
-upstream = "kmy17518/iSpatialGym@6c1ed2e7ead746129a7aa4648618f9f6063e1ec3"            # branch ispatialgym-eval-release ("eval v1.0")
+upstream = "kmy17518/iSpatialGym@fddcf756c8134bab1358e539f8b6c1f16ad3e1ec"            # public, MIT ("pre release", 13 eval instances)
 upstream_b1k = "kmy17518/BEHAVIOR-1K@6a6194600939179671054e1ae5e78b0a158f996c"         # branch ispatialgym-eval
-upstream_data = "kmy17518/ispatialgym-eval-data@15cb9a71bdfd888b179eb50094ff20eca0f90ff7"
+upstream_data = "huggingface.co/datasets/kmy17518/ispatialgym-eval-data@v1.0"
 tolerance_scale = 3                                    # run_isg --mode policy's default
 settle_eval = true                                     # upstream's settle-eval (not run_isg --mode policy's default): the goal and every target
                                                        # hold over the last 45 steps with the task's objects and the robot at rest; off, a blind

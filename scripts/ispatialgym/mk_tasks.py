@@ -110,7 +110,7 @@ def cmd_instances(a) -> None:
         ep = episodes[(t["subtask"], t["instance"])]
         upstream = {"task_family": rec["task_family"], "task": rec["task"], "subtask": rec["subtask"], "instance": rec["instance"],
                     "scene": rec["scene"], "problem": rec["problem"], "activity": activity, "definition_id": int(did),
-                    "instance_id": iid, "demo_length": ep["length"],
+                    "instance_id": iid, "max_steps": rec["max_steps"], "demo_length": ep["length"],
                     "bddl_problem_sha256": sha256(Path(a.bddl) / "activity_definitions" / activity / f"problem{did}.bddl"),
                     "files_sha256": {k: sha256(v) for k, v in files.items() if k != "oracle"}}
         (out / "upstream.json").write_text(json.dumps(upstream, indent=1) + "\n")
@@ -188,7 +188,7 @@ def render_task(t: dict, out: Path) -> None:
          "max_steps_reason": "failed: the episode's control steps ran out",
          "settle_steps": facts["settle_steps"], "settle_s": f"{facts['settle_steps'] / 30:.1f}", "collect_s": int(3600 + 2 * replay_s + 600),
          "verifier_s": 2 * max(2400, replay_s) + 600, "replay_timeout_s": max(2400, replay_s),   # grade_privileged.py's formula
-         "load_mins": f"{max(1, round(min(loads) / 60))}-{max(1, round(max(loads) / 60))}",   # measured, fresh processes
+         "load_mins": "-".join(dict.fromkeys(str(max(1, round(x / 60))) for x in (min(loads), max(loads)))),   # measured, fresh processes
          "load_max": max(loads), "startup_s": max(2400, -(-2 * max(loads) // 100) * 100),
          "steps_per_s": f"{1.0 / hold_step_s:.0f}", "targets": targets_text(t["task"], facts),
          "scene": up["scene"], "description": t["description"], "start_sha": facts["start_sha"],
@@ -274,7 +274,9 @@ def _docker(task: str, args: str, out: Path) -> str:
     """One fresh process of the tooling in the image, on the GPU, with the licensed dataset mounted as the tasks mount it."""
     data = os.environ["RCB_BEHAVIOR_DATA"]
     image = f"ghcr.io/mll-lab-nu/eai-ispatialgym:{(ROOT / 'images/ispatialgym/VERSION').read_text().strip()}"
-    cmd = (f"docker run --rm --gpus all --shm-size 8g -v {data}:/bdata:ro -v {HERE / 'instances' / task}:/srv/instance:ro "
+    gpus = os.environ.get("RCB_ISG_GPU")            # one device of a multi-GPU host, e.g. 2 (default: all)
+    gpus = f"'\"device={gpus}\"'" if gpus else "all"
+    cmd = (f"docker run --rm --gpus {gpus} --shm-size 8g -v {data}:/bdata:ro -v {HERE / 'instances' / task}:/srv/instance:ro "
            f"-v {HERE / 'shared'}:/srv/tool:ro -v {out}:/out -v rcb-isg-measure-cache:/cache --entrypoint python {image} "
            f"/srv/tool/rcb_ispatialgym.py {args}")
     r = subprocess.run(["sg", "docker", "-c", cmd], capture_output=True, text=True)
@@ -317,7 +319,7 @@ def main() -> None:
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("render")
     s = sub.add_parser("instances")
-    s.add_argument("--data", required=True, help="a checkout of kmy17518/ispatialgym-eval-data at subset.toml's upstream_data")
+    s.add_argument("--data", required=True, help="upstream's eval data at subset.toml's upstream_data (the Hugging Face dataset, ispatialgym-eval-instances/)")
     s.add_argument("--bddl", required=True, help="ispatialgym/assets/bddl of iSpatialGym at subset.toml's upstream (only hashed)")
     s = sub.add_parser("measure", help="facts.json of one task (needs the image, a GPU and $RCB_BEHAVIOR_DATA)")
     s.add_argument("--task", required=True)

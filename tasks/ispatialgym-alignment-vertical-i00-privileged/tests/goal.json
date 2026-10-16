@@ -1,0 +1,91 @@
+{
+ "tro_ispatialgym": {
+  "schema_version": "isg-tro-v1",
+  "activity": "alignment",
+  "activity_definition_id": 3,
+  "task_variant": "alignment-world_vertical-painting-walls",
+  "instance_id": "alignment-world_vertical-painting-walls__house_single_floor__support-walls_dhsptd_0-r00__target-painting-dacihj__0000",
+  "generation_seed": 2703541264137460616,
+  "evaluation_profile": "isg-v1",
+  "bddl_sha256": "1a245b27d47729079bf4be006a86cd27186aea8e375a84827529e941cb2eccf4",
+  "task_spec_sha256": "44157081aa95ed2b403b091ff4fa1bbd891511e33357d391bdc7dc043b8ca7c0",
+  "layout_template_id": null,
+  "goal_observation": {
+   "sensor_key": "robot_r1:zed_link:Camera:0",
+   "rgb_path": "house_single_floor_task_alignment_vertical_painting_0_0_template-goal_rgb.png",
+   "rgb_sha256": "51dbfe26d79576ed181f116b445ce9867aa0eec36bef2c91f758045330a4262c",
+   "resolution": [
+    1080,
+    1080
+   ],
+   "intrinsics": {
+    "fx": 459.0,
+    "fy": 459.0,
+    "cx": 540.0,
+    "cy": 540.0,
+    "width": 1080,
+    "height": 1080
+   },
+   "camera_pose_world": {
+    "position": [
+     17.058509826660156,
+     1.69959557056427,
+     1.57541823387146
+    ],
+    "orientation": [
+     -0.3909001648426056,
+     0.3909255266189575,
+     0.5892367959022522,
+     -0.5892149806022644
+    ]
+   },
+   "evaluation_profile": "isg-v1",
+   "n_render_iterations": 1
+  },
+  "pose_targets": {
+   "painting.n.01_1": {
+    "link": null,
+    "frame": "world",
+    "position": null,
+    "orientation": [
+     2.1334988094614343e-20,
+     0.005589957349002361,
+     0.9999843835830688,
+     2.5489173529127522e-18
+    ],
+    "position_metric": null,
+    "orientation_metric": "full",
+    "position_tolerance": null,
+    "orientation_tolerance": 0.08,
+    "orientation_equivalences": []
+   }
+  },
+  "groups": {},
+  "articulation_targets": {}
+ },
+ "tro_scene": {
+  "template_path": "../template.json",
+  "template_sha256": "321fe27f40b146cc16821bc9a6f1e9242b7a4cdd3f5ead8a74a84347075c9560",
+  "sampled_with_rooms": [
+   "living_room_0",
+   "corridor_0",
+   "dining_room_0",
+   "garden_0",
+   "kitchen_0"
+  ],
+  "required_scene_objects": [
+   "floors_uzsntg_0",
+   "walls_dhsptd_0"
+  ]
+ },
+ "template_meta": {
+  "problem": "alignment-3",
+  "eval": {
+   "task_family": "alignment",
+   "task": "alignment_vertical",
+   "subtask": "alignment_vertical_painting",
+   "variant": "alignment-world_vertical-painting-walls"
+  }
+ },
+ "tro_sha256": "4cac5ba21e29dac11b867950ecbb4fe4d8771a9fb209c9ba2dbb74af02dd3a33"
+}

@@ -7,13 +7,13 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 
 | | |
 |---|---|
-| upstream | iSpatialGym "eval v1.0" (`kmy17518/iSpatialGym`, branch `ispatialgym-eval-release`, `6c1ed2e7`; [demo gallery](https://minyeongkim.com/ispatialgym/)), on its BEHAVIOR-1K fork (`kmy17518/BEHAVIOR-1K`, branch `ispatialgym-eval`, `6a619460`) and its eval data (`kmy17518/ispatialgym-eval-data`, `15cb9a71`) |
-| licence | the iSpatialGym repository is private and has no licence file (Known issues); BEHAVIOR-1K's code is MIT, its dataset licensed (no redistribution) |
-| simulator | OmniGibson (the fork: 3.9 + the vector-env merge + iSpatialGym's object states) on Isaac Sim 5.1, CPU PhysX at 120 Hz; cuRobo v0.8.0 |
+| upstream | iSpatialGym's pre-release evaluation pipeline (`kmy17518/iSpatialGym`, MIT, `fddcf756`; [demo gallery](https://minyeongkim.com/ispatialgym/)), on its BEHAVIOR-1K fork (`kmy17518/BEHAVIOR-1K`, branch `ispatialgym-eval`, `6a619460`, its submodule) and its eval data (Hugging Face `kmy17518/ispatialgym-eval-data`, MIT, revision `v1.0`) |
+| licence | iSpatialGym's code and eval data: MIT; BEHAVIOR-1K's code MIT, its dataset licensed (no redistribution, mounted at run time) |
+| simulator | OmniGibson (the fork: 3.9 + the vector-env merge + iSpatialGym's object states) on Isaac Sim 5.1, CPU PhysX at 120 Hz |
 | robot | R1Pro: holonomic base, 4-joint trunk, two 7-joint arms with parallel grippers; iSpatialGym's 23-D JoyLo action at 30 Hz; head and wrist cameras, 1080×1080 RGB |
 | score | upstream's geometric success with its settle-eval on: the BDDL goal and every measured target within the `isg-v2` tolerances × 3 (`run_isg --mode policy`) at every one of the last 45 control steps, the measured objects and the robot at rest over them (`pose_settled`); within max(300, 2 × the demo's length) control steps |
 | tasks | 12 in both modes: `tasks/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
-| image | `ghcr.io/mll-lab-nu/eai-ispatialgym:0.1.1` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside, and the private source is passed in at build time) |
+| image | `ghcr.io/mll-lab-nu/eai-ispatialgym:0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
 | oracle | none |
 
 ## Tasks: upstream's 23, ours ✅ (12)
@@ -68,9 +68,9 @@ rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the
 | deliverable, grading | the episode the sidecar records; live ∧ two fresh replays ∧ deterministic, in the sidecar | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
 
 The privileged agent's image is eai-ispatialgym with a layer that removes, and the build then asserts gone: every BDDL
-problem (goals), the IDDL templates and per-subtask specs (roles, tolerances), the samplers (they derive the goal from the
-start), the scripted expert and cuRobo planner wrapper, the LLM harness, tests, docs and bytecode
-(`scripts/ispatialgym/shared/scrub.sh`). It writes this task's start-only BDDL problem (objects and positive initial
+problem (goals), the docs (they preview the reference demonstrations), tests, configs and README, the eval data's
+dataset name and the project URLs (they locate the demonstrations) and bytecode; upstream's release ships no
+scripted expert, planner or sampler (`scripts/ispatialgym/shared/scrub.sh`). It writes this task's start-only BDDL problem (objects and positive initial
 atoms, one neutral goal atom) from the image's own copy. Upstream's success-check code stays in the image, as KinDER's and
 BEHAVIOR-1K's do; with no goal, target or problem in the container it has nothing to check, and the tooling reports no
 success. Measured: the same 300 rows give bit-identical start and final states in the agent's simulator and the
@@ -99,9 +99,6 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 (`instances` splits the picked instances of upstream's eval data into `instance.json` and `goal.json`; `measure --task T` writes `facts.json`, on a GPU).
 
 ## Known issues
-- **Licence.** Upstream's repository is private and carries no licence; the image is BUILD_ONLY and its source is passed
-  in by the builder. The task directories hold upstream's instance files (scene, start state, goal image): the authors'
-  permission is needed before the tasks are published.
 - **No fall rule.** Upstream ends an episode only on success or at its step budget. The R1Pro can tip over against an
   obstacle (seen in camera relocalization), and in one run a toppled robot driven on fell through the floor; the episode
   then runs on to its budget. Kept as upstream has it.
@@ -109,7 +106,7 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
   goal holds), the privileged adversarial trial scored 1 on mental_rotation without a leak, by a blind sweep of the held
   knife's poses (8 steps each), and a generic 300-row determinism probe succeeded on alignment_vertical at step 61. Upstream's
   own settle-eval (the same rule held over 45 steps, everything at rest) scores both 0, so both modes use it (2026-10-16).
-- **Sim start-up is on the agent's clock**: 7-15 min measured per trial (a cold Kit cache), inside the hour.
+- **Sim start-up is on the agent's clock**: 3-17 min measured per scene load (a cold Kit cache is the slow one), inside the hour.
 - **GPU memory.** One trial's Isaac process takes 4-7 GiB of GPU memory; three trials beside other work on one 24 GB card
   ran out of it at start-up (an infrastructure failure, `infra_error = 1`). The service exits non-zero on a start-up error so
   that compose restarts it (Isaac's Kit otherwise exits 0).

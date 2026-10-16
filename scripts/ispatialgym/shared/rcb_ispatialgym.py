@@ -36,14 +36,11 @@ os.environ.setdefault("OMNIGIBSON_HEADLESS", "1")
 
 import argparse
 import hashlib
-import importlib.abc
-import importlib.util
 import json
 import math
 import subprocess
 import sys
 import time
-import types
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +50,8 @@ CTRL_HZ = 30                # run_isg: action_frequency 30, physics_frequency 12
 SUBSTEPS = 4
 TOLERANCE_SCALE = 3.0       # run_isg --mode policy's default --tolerance-scale
 SETTLE_EVAL = True          # upstream's settle-eval (subset.toml): with it off, a blind sweep of a held object's poses succeeds
+SETTLE_STEPS = 45           # configs/eval.yaml settle_steps
+IMAGE_SIZE, HEAD_APERTURE_MM = 1080, 40.0   # configs/eval.yaml: evaluation camera profile isg-v1 (the goal images')
 TCP_FRAMES = {"left": "left_tcp", "right": "right_tcp"}
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])     # camera frame, OpenGL axes (x right, y up, z back) -> OpenCV (x right, y down, z forward)
 POSE = ["x", "y", "z", "qx", "qy", "qz", "qw"]
@@ -240,46 +239,6 @@ class _Kin:
 
 
 # --------------------------------------------------------------------------- the session
-class _Removed(importlib.abc.MetaPathFinder, importlib.abc.Loader):
-    """A privileged agent's image has upstream's scripted expert, planners and samplers removed (their modules are
-    imported by run_isg but never run by the loader): an `ispatialgym.*` module that is not on disk loads as a stub
-    whose every name is a class that refuses to be used."""
-
-    def find_spec(self, name, path=None, target=None):
-        return importlib.util.spec_from_loader(name, self, is_package=True) if name.startswith("ispatialgym.") else None
-
-    def create_module(self, spec):
-        m = types.ModuleType(spec.name)
-        m.__path__ = []
-
-        def removed(attr):
-            if attr.startswith("__"):
-                raise AttributeError(attr)
-            def refuse(*a, **k):
-                raise RuntimeError(f"{spec.name}.{attr} is not in this image")
-            return type(attr, (), {"__init__": refuse, "__call__": refuse})
-        m.__getattr__ = removed
-        return m
-
-    def exec_module(self, module):
-        pass
-
-
-def _pip_warp() -> None:
-    """The import-time effect of upstream's cuRobo wrapper, which a privileged agent's image does not have (a planner):
-    `warp` is the pip warp-lang, its site directory first on sys.path, as in the grader's process."""
-    import importlib.metadata
-    site = str(importlib.metadata.distribution("warp-lang").locate_file(""))
-    if site in sys.path:
-        sys.path.remove(site)
-    sys.path.insert(0, site)
-    for name in ("warp", "warp.config", "warp.context", "warp.types", "warp.utils", "warp.torch", "warp.constants"):
-        try:
-            importlib.import_module(name)
-        except ImportError:
-            pass
-
-
 START_BDDL = Path(os.environ.get("RCB_ISG_START_BDDL", "/opt/tools/activity_definitions"))   # privileged image (scrub.sh)
 
 
@@ -301,14 +260,15 @@ def restore_goal(start: dict, goal: dict) -> tuple[dict, dict]:
 
 
 def write_layout(start: dict, tro: dict, meta: dict) -> Path:
-    """The sampler-output layout run_isg loads (template.json, template_meta.json, instances/*-tro_state.json)."""
+    """The eval dataset's layout upstream's loader reads (ispatialgym.eval.instances.template_files):
+    scenes/<scene>/json/<prefix>_0_0_template{,-meta}.json and <prefix>_instances/<id>-tro_state.json."""
     import tempfile
-    d = Path(tempfile.mkdtemp(prefix="rcb-isg-"))
-    (d / "instances").mkdir()
-    (d / "template.json").write_text(json.dumps(start["template"]))
-    (d / "template_meta.json").write_text(json.dumps(meta))
-    (d / "instances" / "instance-tro_state.json").write_text(json.dumps(tro))
-    return d / "instances" / "instance-tro_state.json"
+    j = Path(tempfile.mkdtemp(prefix="rcb-isg-")) / "scenes" / str(meta["scene"]) / "json"
+    (j / "frozen_task_start_instances").mkdir(parents=True)
+    (j / "frozen_task_start_0_0_template.json").write_text(json.dumps(start["template"]))
+    (j / "frozen_task_start_0_0_template-meta.json").write_text(json.dumps(meta))
+    (j / "frozen_task_start_instances" / "instance-tro_state.json").write_text(json.dumps(tro))
+    return j / "frozen_task_start_instances" / "instance-tro_state.json"
 
 
 def _no_judge() -> None:
@@ -342,39 +302,38 @@ class Session:
         else:
             tro = write_layout(start, start["tro"], start["template_meta"])
         import torch as th
-        if not judge:
-            _pip_warp()
-            sys.meta_path.append(_Removed())                               # after every real finder
-        from ispatialgym.oracle import run_isg as R          # first: it pins warp before omnigibson (upstream's order)
         import omnigibson as og
         from ispatialgym import single_env as SE
+        from ispatialgym.activity import problem as P
         from ispatialgym.eval import instances as INST
-        from ispatialgym.eval.episode import isg_info
-        from ispatialgym.oracle import texture_wait as TW
+        from ispatialgym.eval.executor import isg_info
+        from ispatialgym.eval.loader import InstanceLoader
+        from ispatialgym.eval.texture_wait import wait_for_textures
+        from ispatialgym.tasks import ispatialgym_task as IT
         self.th, self.og, self.SE, self._isg_info = th, og, SE, isg_info
-        L = R.InstanceLoader(str(tro))
-        if judge:
-            self.budget = INST.step_budget(self.up["demo_length"], mode="policy")
-            bddl = Path(R.__file__).parents[1] / "assets/bddl/activity_definitions"
-            problem = bddl / self.up["activity"] / f"problem{self.up['definition_id']}.bddl"
+        if judge:                                     # run_isg's standard track (configs/eval.yaml), settle-eval on
+            self.budget = INST.step_budget(self.up["max_steps"], settle_steps=SETTLE_STEPS, settle_eval=SETTLE_EVAL)
+            problem = Path(P.problem_path(self.up["activity"], self.up["definition_id"]))
             if hashlib.sha256(problem.read_bytes()).hexdigest() != self.up["bddl_problem_sha256"]:
                 raise RuntimeError(f"{problem} is not the BDDL problem this instance was frozen with (upstream.json)")
-            L.tmeta.setdefault("_paths", {})["activity_definitions_root"] = str(bddl)
         else:
             _no_judge()
-            L.tmeta.setdefault("_paths", {})["activity_definitions_root"] = str(START_BDDL)
-            held = start["held_articulations"]
-            L._held_articulations = lambda physical: {                    # upstream's, with the target instances named here
-                i: physical[i].get_joint_positions().clone()
-                for i in dict.fromkeys(held + [r["object"] for r in getattr(L, "_joint_position_records", [])]) if i in physical}
+            IT.ACTIVITY_DEFINITIONS_ROOT = str(START_BDDL)                # the start-only problem the image build wrote
+        L = InstanceLoader(str(tro), image_size=IMAGE_SIZE, head_aperture=HEAD_APERTURE_MM)
         L.build_env()
         if judge:
             L.task.configure_evaluation(SETTLE_EVAL, self.budget["settle_steps"])
+        if not judge:   # the joints restore() holds through its settle and resets: its targets' instances, by name, taken
+            grasps = L._restore_grasps   # where restore() takes them (its next call), so both modes settle alike
+            def _held_then_grasps(records):
+                L._articulation_q = {i: L.physical[i].get_joint_positions().clone() for i in start["held_articulations"] if i in L.physical}
+                return grasps(records)
+            L._restore_grasps = _held_then_grasps
         obs, _ = L.restore()
-        self.tolerances = L.task.apply_tolerance_profile("policy", scale=TOLERANCE_SCALE) if judge else None
+        self.tolerances = L.task.apply_tolerance_profile(TOLERANCE_SCALE) if judge else None
         self.loader, self.env, self.task, self.robot = L, L.env, L.task, L.robot
         self.head_camera = L.cam_key                                       # the goal image's camera
-        self.texture_wait, o2 = TW.wait_for_textures(lambda: SE.get_obs(self.env)[0], og.sim.render, self.robot.name, None)
+        self.texture_wait, o2 = wait_for_textures(lambda: SE.get_obs(self.env)[0], og.sim.render, self.robot.name, None)
         self.obs = o2 if o2 is not None else obs
         self.max_steps = int(self.budget["max_steps"]) if judge else None
         self.action_dim = int(self.robot.action_dim)
@@ -439,7 +398,7 @@ class Session:
         self.n += 1; self._last = a; self.rows.append(a)
         if not self.judge:
             return False
-        self.isg = self._isg_info(info)
+        self.isg = self._isg_info(info)                                  # upstream's reader (OmniGibson nests it)
         if self.isg["official_success"]:
             self.success, self.done, self.reason, self.success_step = True, True, "success", self.n
         elif self.n >= self.max_steps:
@@ -580,7 +539,7 @@ class Session:
             tcp[eef] = {"parent_link": eef, "link_T_frame": np.eye(4).tolist(), "definition": f"the {a} end-effector frame: z along the fingers"}
             tcp[TCP_FRAMES[a]] = {"parent_link": link, "link_T_frame": off.tolist(),
                                   "definition": f"the {a} fingertip centre: {off[2, 3] * 100:.2f} cm along +z of {eef}"}
-        from ispatialgym.oracle import r1pro_model as M
+        from ispatialgym.robot import r1pro as M
         return {"name": "R1Pro", "description": "Galaxea R1 Pro as iSpatialGym models it (BEHAVIOR-1K's R1Pro, JoyLo controllers): a holonomic "
                                                 "wheeled base, a 4-joint trunk, two 7-joint arms with parallel-jaw grippers, a head camera, a wrist camera per arm",
                 "base": {"type": "mobile", "root_link": r.base_footprint_link_name,

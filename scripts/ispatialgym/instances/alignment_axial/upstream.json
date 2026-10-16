@@ -1,0 +1,20 @@
+{
+ "task_family": "alignment",
+ "task": "alignment_axial",
+ "subtask": "alignment_axial_board_game",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "alignment-0",
+ "activity": "alignment",
+ "definition_id": 0,
+ "instance_id": "house_single_floor_task_alignment_axial_board_game_0_0_template",
+ "max_steps": 1612,
+ "demo_length": 806,
+ "bddl_problem_sha256": "6eea44af51916eb798416fdc217ebabf7f763ea62a90b001de93774bb371cc28",
+ "files_sha256": {
+  "template": "1159e69a1af3c198d01483b7c4def34e4a52bc9add04da453f600be6d2249b55",
+  "template_meta": "3d6cfb5d0884f7c31c6f009a88e0d18e9f2b541d9610eb8c0902b2ee113d3cfe",
+  "tro_state": "70874e822fe39d879f1a272c8235f96d7160b6cb7b5557a1a9790c2cd9fc5fb9",
+  "goal_rgb": "db38028a8402ff86db1e764c5acb8ebfd434e5b9f57f7d6d9ce7dd93db54a234"
+ }
+}
