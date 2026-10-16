@@ -143,3 +143,9 @@ name = "roboolympics-soccerssl-match-i01-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
+
+[[tasks]]
+name = "roboolympics-tabletennis-duelrl-i01-standard-realtime"
+source_task = "roboolympics/tabletennis-duel-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["13f5e0981a99"]
