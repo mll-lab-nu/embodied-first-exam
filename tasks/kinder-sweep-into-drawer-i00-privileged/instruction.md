@@ -55,7 +55,8 @@ Each action is 11 numbers, one 10 Hz control step, in KinDER's own order (`s.act
 The trajectory is replayed **open-loop**, but nothing stops you from *generating* it closed-loop: replayed from
 `s.reset()`, KinDER on CPU is bit-exact, so actions recorded from a feedback controller reproduce exactly. Use whatever
 you like -- scripted motions, feedback control, search, optimisation. One 1000-step episode costs about
-18 s of one core and the container has 16. `s.env.unwrapped.set_state()` restores KinDER's
+18 s of one core, measured on a lightly loaded host (slower when the host is busy), and the container
+has 16. `s.env.unwrapped.set_state()` restores KinDER's
 object-centric state, not everything the physics carries, so a rollout continued from it can drift from the same actions
 replayed from the start: check the final trajectory with `s.replay`.
 

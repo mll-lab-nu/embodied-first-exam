@@ -93,6 +93,15 @@
   "deterministic": true,
   "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
   "episode_seconds": 6.8,
+  "goal_region": {
+   "along_x": 0.85,
+   "along_y": 0.85,
+   "height": 0.1,
+   "region": "ground_goal_region",
+   "skew_deg": 7.3,
+   "x": 5.115,
+   "y": -2.478
+  },
   "nop_success": false,
   "obs_dim": 70,
   "scene_sha": "56eb0ac29841eb83",
@@ -279,6 +288,15 @@
   "deterministic": true,
   "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
   "episode_seconds": 49.1,
+  "goal_region": {
+   "along_x": 0.475,
+   "along_y": 0.85,
+   "height": 0.1,
+   "region": "sweep_region",
+   "skew_deg": -2.9,
+   "x": 0.508,
+   "y": 0.062
+  },
   "nop_success": false,
   "obs_dim": 883,
   "scene_sha": "b73343bb8019907a",

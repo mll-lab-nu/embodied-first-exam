@@ -47,8 +47,9 @@ from rcb_client import Robot
 r = Robot()
 res = r.submit("delta", A)       # A: (T, 11), one 10 Hz control step per row
 ```
-Measured cost here: about 14.2 ms per control step in one-row calls asking for one camera, 19.4 ms
-with both robot cameras' images (and the wrist's depth), 10.0 ms per step in chunks of 10 rows asking for one camera (video="none" each time).
+Measured cost here, on a lightly loaded host (slower when the host is busy): about 14.2 ms per control step in
+one-row calls asking for one camera, 19.4 ms with both robot cameras' images (and the wrist's depth), 10.0 ms per step in chunks of 10 rows
+asking for one camera (video="none" each time).
 
 Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: where the base started, x the way it faced, y left), `base_vx`, `base_vy`, `base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the fingers' position: 0 open, 1 at their joint's closed limit, about 0.98 when they close on nothing) and `gripper_vel`; `spec()["proprio"]` gives the units.
 

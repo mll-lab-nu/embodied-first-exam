@@ -9,7 +9,8 @@
   facts.json as it is.
 
 What a task says in words comes from subset.toml; every number it states (the scene's digest, the action space, the
-costs) comes from facts.json, which only `measure` writes. The simulator-backed commands run in the image:
+costs, a marked goal's place) comes from facts.json, which only `measure` writes. The simulator-backed commands run in
+the image:
 
   docker run --rm --gpus all -e NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility -v $PWD:/repo -w /repo \\
     --user $(id -u):$(id -g) -e HOME=/tmp <image: images/kinder/VERSION> python scripts/kinder/gen_tasks.py measure
@@ -309,13 +310,28 @@ def context(t: dict, d: dict, f: dict) -> dict:
     }
 
 
+def goal_place(t: dict, f: dict) -> str:
+    """Where a goal marked faintly on the floor (subset.toml `goal_mark`) lies at t = 0, from facts.json, in the
+    odometry frame the standard instruction describes: a sentence after the goal's, or nothing."""
+    if "goal_mark" not in t:
+        return ""
+    g, mark = f["goal_region"], t["goal_mark"]
+    dist, bearing = math.hypot(g["x"], g["y"]), math.degrees(math.atan2(g["y"], g["x"]))
+    side = "straight ahead" if abs(bearing) < 5 else f"{abs(bearing):.0f}° to the {'left' if bearing > 0 else 'right'}"
+    height = f", from the floor to {g['height']:g} m up" if mark.get("height") else ""
+    return (f" Measured at the start, in the odometry frame (below): the {mark['name']}'s centre is at x = {g['x']:.2f} m, "
+            f"y = {g['y']:.2f} m, {dist:.1f} m from the centre of the base and {side} of the way it faces; it is "
+            f"{g['along_x']:g} m along x by {g['along_y']:g} m along y{height}, its sides about "
+            f"{abs(g['skew_deg']):.0f}° off the frame's axes.")
+
+
 def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dict:
     """The standard twin's placeholders: its robot's sensors, and its own goal sentence where the privileged one names
     the goal by world coordinates or state names (subset.toml `standard_statement`)."""
     stmt = one_line(t.get("standard_statement", t["task_statement"]))
     text = {k: v.format(hw=ctx["image_hw"]) for k, v in SENSORS[kind(f["entry_point"])].items()}
     kinematic = kind(f["entry_point"]) == "kinematic3d"
-    return ctx | text | {"task_dir": task_dir, "task_statement": stmt,
+    return ctx | text | {"task_dir": task_dir, "task_statement": stmt, "goal_place": goal_place(t, f),
                          "task_text_yaml": json.dumps(goal_text(stmt), ensure_ascii=False),   # a YAML string, quotes and all
                          "robot_time": f" ({ctx['robot_seconds']} s of robot time)" if ctx["view"] == "task_view" else "",
                          "chunk_rows": 100,   # max_chunk_s (10 s) / control_dt (0.1 s)
@@ -544,6 +560,28 @@ def stated_bound(v, side: int) -> float | None:
     return round(r - side * 1e-4, 4) if side * (type(v)(r) - v) > 0 else r
 
 
+def goal_region(s, region: str) -> dict:
+    """A goal region on the floor (upstream's `region`: the box KinDER draws and checks, its sides along the world's
+    axes) at t = 0, in the standard twin's odometry frame (origin under the base's centre, x the way it faces, y left):
+    its centre, its extent along each axis, its height, and the angle between its sides and the axes."""
+    oc = s.env.unwrapped._object_centric_env
+    (r,) = oc._ground_fixture.region_objects[region]
+    env, r.env = r.env, oc._robot_env                         # the env KinDER's goal check computes the box in
+    try:
+        x0, y0, _, x1, y1, z1 = r.bbox
+    finally:
+        r.env = env
+    st = s.state()
+    rob = st.get_object_from_name(oc.robot_name)
+    bx, by, th = (float(st.get(rob, k)) for k in ("pos_base_x", "pos_base_y", "pos_base_rot"))
+    dx, dy = (x0 + x1) / 2 - bx, (y0 + y1) / 2 - by
+    quarter = round(-th / (math.pi / 2))                      # the world's x axis, seen from the base: quarter turns + skew
+    ext = (x1 - x0, y1 - y0) if quarter % 2 == 0 else (y1 - y0, x1 - x0)
+    return {"region": region, "x": round(dx * math.cos(th) + dy * math.sin(th), 3),
+            "y": round(-dx * math.sin(th) + dy * math.cos(th), 3), "along_x": round(ext[0], 3),
+            "along_y": round(ext[1], 3), "height": round(z1, 3), "skew_deg": round(math.degrees(-th - quarter * math.pi / 2), 1)}
+
+
 def measure_one(t: dict, d: dict, images: Path) -> dict:
     import numpy as np
     sys.path.insert(0, str(SHARED))
@@ -559,7 +597,8 @@ def measure_one(t: dict, d: dict, images: Path) -> dict:
     f = {"scene_sha": sha, "obs_dim": int(s.obs().shape[0]), "action_dim": int(dim),
          "entry_point": gymnasium.spec(s.env_id).entry_point,
          "action_doc": s.env.unwrapped.metadata.get("action_space_description", ""),
-         "action_low": [stated_bound(v, -1) for v in low], "action_high": [stated_bound(v, +1) for v in high]}
+         "action_low": [stated_bound(v, -1) for v in low], "action_high": [stated_bound(v, +1) for v in high],
+         **({"goal_region": goal_region(s, t["goal_mark"]["region"])} if "goal_mark" in t else {})}
     t0 = time.perf_counter()
     nop = s.replay(np.zeros((s.max_steps, dim)))              # holding still for the whole episode
     f["episode_seconds"] = round(time.perf_counter() - t0, 1)
@@ -607,8 +646,8 @@ def cmd_verify(args) -> int:
         new, old = measure_one(t, d, Path(args.images)), facts.get(t["family"], {})
         failed += checks(t["family"], new)
         for k in ("scene_sha", "obs_dim", "action_dim", "action_low", "action_high", "nop_success", "entry_point",
-                  "action_doc"):
-            if new[k] != old.get(k):
+                  "action_doc", "goal_region"):
+            if new.get(k) != old.get(k):
                 failed.append(f"{t['family']}: {k} drifted: facts.json {old.get(k)}, measured {new[k]}")
     print("\n".join(f"FAIL {x}" for x in failed) or "verify: all checks pass")
     return 1 if failed else 0

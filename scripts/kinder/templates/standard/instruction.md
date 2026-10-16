@@ -1,7 +1,7 @@
 # KinDER task, instance {{instance_tag}} — STANDARD MODE (robot as a service)
 
 You control {{standard_robot}} -- **as if it were real hardware**: the simulator runs in a service you cannot open,
-and you reach it only through a client. **Task:** {{task_statement}}
+and you reach it only through a client. **Task:** {{task_statement}}{{goal_place}}
 
 ## Rules (real-robot rules)
 {{reset_rule}}
@@ -46,8 +46,9 @@ from rcb_client import Robot
 r = Robot()
 res = r.submit("delta", A)       # A: (T, {{action_dim}}), one {{step_name}} per row
 ```
-Measured cost here: about {{ms_single}} ms per control step in one-row calls asking for one camera, {{ms_images}} ms
-with {{images_what}}, {{ms_batch}} ms per step in chunks of 10 rows asking for one camera (video="none" each time).
+Measured cost here, on a lightly loaded host (slower when the host is busy): about {{ms_single}} ms per control step in
+one-row calls asking for one camera, {{ms_images}} ms with {{images_what}}, {{ms_batch}} ms per step in chunks of 10 rows
+asking for one camera (video="none" each time).
 
 {{proprio_text}}
 

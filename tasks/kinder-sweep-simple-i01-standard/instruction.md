@@ -2,7 +2,7 @@
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holonomic base, a Kinova Gen3 7-DoF
 arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
-and you reach it only through a client. **Task:** get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box.
+and you reach it only through a client. **Task:** get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box. Measured at the start, in the odometry frame (below): the grey box's centre is at x = 0.51 m, y = 0.06 m, 0.5 m from the centre of the base and 7° to the left of the way it faces; it is 0.475 m along x by 0.85 m along y, from the floor to 0.1 m up, its sides about 3° off the frame's axes.
 
 ## Rules (real-robot rules)
 - **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after
@@ -47,8 +47,9 @@ from rcb_client import Robot
 r = Robot()
 res = r.submit("delta", A)       # A: (T, 11), one 10 Hz control step per row
 ```
-Measured cost here: about 49.9 ms per control step in one-row calls asking for one camera, 53.4 ms
-with both robot cameras' images (and the wrist's depth), 45.9 ms per step in chunks of 10 rows asking for one camera (video="none" each time).
+Measured cost here, on a lightly loaded host (slower when the host is busy): about 49.9 ms per control step in
+one-row calls asking for one camera, 53.4 ms with both robot cameras' images (and the wrist's depth), 45.9 ms per step in chunks of 10 rows
+asking for one camera (video="none" each time).
 
 Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: where the base started, x the way it faced, y left), `base_vx`, `base_vy`, `base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the fingers' position: 0 open, 1 at their joint's closed limit, about 0.98 when they close on nothing) and `gripper_vel`; `spec()["proprio"]` gives the units.
 

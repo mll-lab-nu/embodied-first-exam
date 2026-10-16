@@ -22,6 +22,10 @@
 #   instance_tag, replaces   a task whose scene changed carries a new tag (PROTOCOL §1, H.8); replaces: what the
 #                     default tag's instance was (its README's Change Log)
 #   oracle_privileged, oracle_standard   instead, where oracles/<family>/<mode>/ holds an oracle: what it does
+#   goal_mark         where the goal is a translucent region marked on the floor, which the robot's cameras show
+#                     faintly: upstream's region (`region`, the task JSON's) and what the statement calls it (`name`);
+#                     `measure` places it relative to the robot at t = 0 (facts.json `goal_region`) and the standard
+#                     instruction states that (its height too where `height`: the goal is for objects, not the base)
 # The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs and the package registries), read by gen_tasks.py:
 # KinDER and its baselines are public, so anything more lets a standard-mode agent install the simulator it is not
 # given, and either mode fetch upstream's planners.
@@ -37,6 +41,7 @@ review_pr = 8             # the pull request whose human review covers the tasks
 family = "dynamo"
 env_id = "kinder/Dynamo3D-o3-v0"
 task_view = { position = [-1.0, -1.2, 2.8], lookat = [2.2, 1.9, 0.0], fovy = 70 }  # upstream: 6.75 m up, straight down
+goal_mark = { region = "ground_goal_region", name = "green square" }
 expert_hours = 2.0
 difficulty = """Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The
 benchmark's fixture: the pipeline check, with an oracle in both modes."""
@@ -104,6 +109,7 @@ family = "sweep-simple"
 env_id = "kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0"
 instance_tag = "i01"      # i00 was the o10 variant (left side of the island) until 2026-10-16
 replaces = "upstream's o10 variant: ten cubes, the left side of the kitchen island"
+goal_mark = { region = "sweep_region", name = "grey box", height = true }
 expert_hours = 3.0
 difficulty = """Nonprehensile, tool use: fifty small cubes spread over 2 m² of floor into a box marked at the kitchen island's
 end, with a wiper standing about 1.7 m from where the robot starts. The variant is upstream's o50 (both cube families use
