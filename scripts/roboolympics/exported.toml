@@ -132,3 +132,9 @@ source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["e25d8cc11861"]
 
+
+[[tasks]]
+name = "roboolympics-badminton-match-i04-standard-realtime"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["62333496959f"]
