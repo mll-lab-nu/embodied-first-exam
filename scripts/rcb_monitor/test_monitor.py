@@ -869,9 +869,99 @@ def test_default_is_neutral():
     check(bad == 0, f"{bad} of {n} combinations changed a verdict with enforcement off")
 
 
+def test_clock_and_beacon():
+    """#231 / #234: usage.json carries the agent's clock (from the monitor's start, never more time than the agent has),
+    after a failed tick too, and `monitor.py beacon` writes it with `"measured": false` where no monitor can run."""
+    c = monitor.clock(1000.0, 400.0, 3600)
+    check(c["elapsed_s"] == 600.0 and c["time_left_s"] == 3000.0 and c["time_limit_s"] == 3600, f"clock: {c}")
+    check(c["deadline_utc"] == "1970-01-01T01:06:40Z", f"deadline: {c}")
+    check(monitor.clock(5000.0, 400.0, 3600)["time_left_s"] == 0.0, "time left never negative")
+    check("time_left_s" not in monitor.clock(1000.0, 400.0, 0), "no time limit: elapsed only")
+    beacon_dir = tempfile.mkdtemp(prefix="rcb-beacon-test-")
+    real = (monitor.SCOPE_BEACON, monitor.LIMITS, monitor.REC)
+    try:
+        monitor.SCOPE_BEACON, monitor.REC = beacon_dir, os.path.join(beacon_dir, "rec")
+        monitor.LIMITS = os.path.join(beacon_dir, "limits.json")
+        with open(monitor.LIMITS, "w") as fh:
+            json.dump({"max_memory_gb": 8.0, "tick_sec": 5, "agent_timeout_sec": 600}, fh)
+        monitor.beacon(rounds=1)
+        u = rcb_limits.read_json(os.path.join(beacon_dir, "usage.json"))
+        check(u["measured"] is False and u["enforced"] == 0 and u["limits"]["max_memory_gb"] == 8.0, f"beacon: {u}")
+        check(u["time_limit_s"] == 600 and 590 <= u["time_left_s"] <= 600, f"beacon clock: {u}")
+        started = rcb_limits.read_json(os.path.join(monitor.REC, "beacon.json"))["started"]
+        monitor.beacon(rounds=1)                       # a restarted beacon keeps the first start
+        check(rcb_limits.read_json(os.path.join(monitor.REC, "beacon.json"))["started"] == started, "beacon restart")
+        m = Fake().monitor({"max_memory_gb": 8.0, "tick_sec": 5, "agent_timeout_sec": 600})
+        m.clock_t0 = monitor.now() - 100
+        m.write_usage(monitor.now())                   # before any sample (or after a failed tick): the clock still runs
+        u = rcb_limits.read_json(os.path.join(beacon_dir, "usage.json"))
+        check(u["measured"] is False and u["memory_gb"] is None and 495 <= u["time_left_s"] <= 500, f"usage: {u}")
+        m._usage_vals = {"gpu_memory_gb": 0.0, "memory_gb": 1.5, "processes": 3, "disk_gb": None}
+        m.write_usage(monitor.now())
+        u = rcb_limits.read_json(os.path.join(beacon_dir, "usage.json"))
+        check(u["measured"] is True and u["memory_gb"] == 1.5 and u["processes"] == 3, f"usage: {u}")
+    finally:
+        monitor.SCOPE_BEACON, monitor.LIMITS, monitor.REC = real
+        shutil.rmtree(beacon_dir, ignore_errors=True)
+
+
+def test_session_log_copy():
+    """#233: the monitor copies the agent's session log append-only; the verifier gives the grader that copy when the
+    agent's file is gone or rewritten, and the agent's own file when it is what was written (plus a last tick)."""
+    d = tempfile.mkdtemp(prefix="rcb-slog-test-")
+    real_rec = monitor.REC
+    try:
+        rec, root = os.path.join(d, "rec"), os.path.join(d, "root")
+        os.makedirs(rec)
+        os.makedirs(os.path.join(root, "app", "output"))
+        monitor.REC = rec
+        log = os.path.join(root, "app", "output", "rcb_session_log.jsonl")
+        c = monitor.SessionLogCopy()
+        c.step(root)
+        check(not os.path.exists(os.path.join(rec, "session_log")), "no log yet: nothing copied")
+        with open(log, "w") as f:
+            f.write('{"e":"session","n":1}\n')
+        c.step(root)
+        with open(log, "a") as f:
+            f.write('{"e":"reset","n":2}\n')
+        c.step(root)
+        out = os.path.join(d, "out")
+        os.makedirs(out)
+        vlogs = os.path.join(d, "vlogs")
+        os.environ["RCB_VERIFIER_LOGS"] = vlogs
+        agent = os.path.join(out, "rcb_session_log.jsonl")
+        with open(agent, "w") as f:                    # the agent's file: what was written, and one line more
+            f.write('{"e":"session","n":1}\n{"e":"reset","n":2}\n{"e":"step","n":3}\n')
+        check(rcb_limits.session_log_source(agent, record=rec) is None, "an untouched log stays the grader's input")
+        st = rcb_limits.read_json(os.path.join(vlogs, "session_log.json"))
+        check(st["tampered"] == 0 and st["from_monitor"] == 0, f"status: {st}")
+        with open(log, "w") as f:                      # the agent rewrites it: one line left, one forged
+            f.write('{"e":"session","n":1}\n{"e":"forged"}\n')
+        c.step(root)
+        os.unlink(log)
+        c.step(root)
+        ev = [e["event"] for e in rcb_limits.read_jsonl(os.path.join(rec, "events.jsonl"))]
+        check("session_log_rewritten" in ev and "session_log_removed" in ev, f"events: {ev}")
+        os.unlink(agent)
+        msg = rcb_limits.session_log_source(agent, record=rec)
+        got = open(agent).read().splitlines()
+        check(msg and got == ['{"e":"session","n":1}', '{"e":"reset","n":2}', '{"e":"forged"}'], f"merged: {got}")
+        st = rcb_limits.read_json(os.path.join(vlogs, "session_log.json"))
+        check(st["tampered"] == 1 and st["from_monitor"] == 1, f"status: {st}")
+        os.symlink("/etc/hostname", log)               # a link is never followed (it would resolve in the monitor)
+        c2 = monitor.SessionLogCopy()
+        c2.step(root)
+        check(c2.s["ino"] is None, "a symbolic link is not copied")
+    finally:
+        monitor.REC = real_rec
+        os.environ.pop("RCB_VERIFIER_LOGS", None)
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     for t in (test_classify_race, test_dead_leader_and_zombies, test_disk_walk, test_disk_baseline, test_emergency,
-              test_kill_path, test_switch, test_verify_edges, test_oom_watch, test_oom_verdicts, test_sanitize, test_default_is_neutral):
+              test_kill_path, test_switch, test_verify_edges, test_oom_watch, test_oom_verdicts, test_sanitize, test_default_is_neutral,
+              test_clock_and_beacon, test_session_log_copy):
         t()
     shutil.rmtree(os.environ["RCB_MONITOR_RECORD"], ignore_errors=True)
     print("rcb_monitor test_monitor: ok")

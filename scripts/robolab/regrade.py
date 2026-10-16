@@ -53,6 +53,19 @@ def host_info() -> str:
     return f"CPU {cpu}; GPU {gpu}"
 
 
+def task_name(d: pathlib.Path) -> str | None:
+    """The full task name of a trial dir (board 0130 review M1): Harbor's result.json `task_name` or config.json
+    `task.path`; None when neither is there (then the cut trial dir name is all there is)."""
+    for f, get in (("result.json", lambda j: j.get("task_name")), ("config.json", lambda j: (j.get("task") or {}).get("path"))):
+        try:
+            v = get(json.loads((d / f).read_text()))
+        except (OSError, ValueError, AttributeError):
+            v = None
+        if v:
+            return pathlib.PurePosixPath(str(v)).name
+    return None
+
+
 def family_of(trial_name: str) -> str:
     base = trial_name.split("__")[0].removeprefix("robolab-")
     return base.split("-i0")[0].replace("-", "_")
@@ -75,7 +88,12 @@ def find_trials(roots: list[str]) -> list[dict]:
             name = d.name.split("__")[0]
             if not name.startswith("robolab-"):
                 continue
-            mode = mode_of(d.name)
+            full = task_name(d)                 # Harbor cuts the trial dir name to 32 characters: read the task's own name
+            if full and not re.search(r"-i\d\d-(privileged|standard|limited)$", full):
+                full = None
+            if full is None and not (d / "verifier").is_dir():
+                continue                        # a job dir (job-level result.json), not a trial
+            mode = mode_of(full + "__x") if full else mode_of(d.name)
             traj = next((d / p for p in TRAJ_PATHS[mode] + TRAJ_PATHS["standard" if mode == "privileged" else "privileged"]
                          if (d / p).is_file()), None)
             rec = {}
@@ -83,7 +101,7 @@ def find_trials(roots: list[str]) -> list[dict]:
                 rec = json.loads((d / "verifier/reward.json").read_text())
             except (OSError, ValueError):
                 pass
-            out.append({"trial": str(d), "mode": mode, "traj": str(traj) if traj else None, "family_hint": family_of(d.name),
+            out.append({"trial": str(d), "mode": mode, "traj": str(traj) if traj else None, "family_hint": family_of(full or d.name), "task": full,
                         "recorded_success": rec.get("success")})
     return out
 
@@ -104,8 +122,13 @@ def worker(tests: str, family: str, traj: str, out_path: str) -> None:
     s = Session(family, instance=os.path.join(tests, "instance.json"), depth=False)
     func, params = s.upstream_term
     old_params = dict(params)
-    if "gripper_name" in inspect.signature(func).parameters:
+    sig = inspect.signature(func).parameters
+    if "gripper_name" in sig:
         old_params["gripper_name"] = "gripper_left"        # upstream's one contact body: the left inner finger
+    if "key" in sig:
+        # board 0130 review M2: a stateful upstream term (objects_placed_in_container_in_order latches each object's first
+        # placement under `key`); the old rule must keep its own latch, or its looser placements decide the new verdict
+        old_params["key"] = "rcb_regrade_old_rule::" + str(params.get("key") or func.__name__)
 
     def old_holds() -> bool:
         v = func(s.env, **old_params)

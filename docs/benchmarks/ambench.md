@@ -84,6 +84,12 @@ only those, OpenDoor's 395, left a replay that needed one step more nothing to r
 expert reads the simulator's state between steps, so its own live episode is not the reference: two fresh-process
 replays with the grader's CLI must both succeed and end in the same state before an instance is frozen.
 
+Standard mode (board 0130, 2026-10-15): a live success ends the episode at its success step, so the trajectory the
+sim sidecar saves for the graders holds the last command for up to 2 s after it (`hold_pad_rows` in `episode.json`), as
+the privileged reference does; a replay stops at its own success, so the padding runs only where the race of
+Determinism delays it. A live episode that logged GPU faults and did not succeed is an infrastructure failure, not
+the agent's 0.
+
 The experts are not in the image: the Dockerfile copies AM-Bench without `policies/scripted/`, `ambench_learn`, its scripts,
 documentation and git history, blanks the task registrations' `scripted_policy_entry_point`, and fails if anything left
 names them. `freeze.py` mounts the expert read-only from a checkout outside the image. AM-Bench is public on GitHub and

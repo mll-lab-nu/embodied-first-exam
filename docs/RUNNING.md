@@ -18,7 +18,8 @@ PROTOCOL_HISTORY.md):
   cloud agents off (`WEB_SEARCH=disabled`, `scripts/codex_tools_off.py`; below).
 - **Token budget** per trial: 100M input tokens (Harbor `n_input_tokens`, cache included), 10M output (reasoning
   included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`); with the gateway, exceeding either stops the agent and
-  fails the trial (`over_token_budget = 1`). A batch run with another budget records it in its results' metadata.
+  fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
+  labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
   `override_timeout_sec`), and **nothing added to the instruction** (no prompt template, no extra instruction).
 - **The runner's seed, the task's network, at most one infrastructure retry** (the next three sections), and the
@@ -82,9 +83,15 @@ checked by `ci_checks/check-resources.py`).
   count against the agent. CPU is only a cap. A CPU cap above the host's count means the host's count: the runner
   clamps it in its copy (`scripts/clamp_cpus.py`); memory and pids caps are never clamped.
 - **Monitor**: the `rcb_monitor` sidecar samples every few seconds into its own record (`rcb-monitor/1`), sealed in the
-  first collect hook, and shows current values in `/run/rcb-limits/usage.json`; the verifier recomputes violations from
-  the raw samples with its own copy of the limits. A missing, unsealed or mostly empty record (> 10 % of the agent phase
-  unobserved) is `resource_monitor_missing = 1`.
+  first collect hook, and shows current values in `/run/rcb-limits/usage.json`, with the agent's clock (`elapsed_s`,
+  `time_left_s`, `deadline_utc`: `[agent] timeout_sec` from the environment's start, so never more than the agent has);
+  the verifier recomputes violations from the raw samples with its own copy of the limits. A missing, unsealed or mostly
+  empty record (> 10 % of the agent phase unobserved) is `resource_monitor_missing = 1`. A runner whose container runtime
+  cannot run the monitor (no `pid: host`) runs the same service as `monitor.py beacon` (no pid / cgroup host, no record):
+  `usage.json` then has the clock and `"measured": false`.
+- **Session log**: the monitor copies the agent's `/app/output/rcb_session_log.jsonl` append-only into its record
+  (`session_log/`); before the grader, the verifier step gives the grader that copy when the agent's file was removed or
+  rewritten (`session_log_tampered`, `session_log_from_monitor` in `reward.json`). The log feeds cost fields only.
 - **The switch** `RCB_LIMITS_ENFORCE` (compose default 0, so it does not change the digest): `1` — a confirmed violation
   kills the scope's processes and fails the trial (`reward 0`, `success_before_limits`, `resource_limit_exceeded = 1`),
   never retried; `0` — observe and record only (`limits_violation_observed`, `/logs/verifier/resource_limits.json`);
@@ -114,8 +121,24 @@ reasoning summaries, tool calls, images and token use with the robot service's l
   `agent_sessions/` with an `index.json` of all of them (`agent_traces`, `agent_trace_steps`, `agent_trace_videos`
   in reward.json). Self-reported: an agent that teleports objects through `exec_code` will not replay faithfully.
 
+## Building task images: stamp first
+Docker's BuildKit keeps one synced copy of a build context per context directory name and client (Harbor's contexts are
+always `environment/` and `tests/`) and re-sends a file only when its path, size, mode or mtime changed. A task built
+from a tree whose files share mtimes (a git checkout, `git archive`, tar, `cp -r`, a sed loop) can therefore get another
+task's equal-size file in its image, silently, with `--no-cache` too (issue #258; rootless podman builds are not
+affected). **Never build a task image from a tree without stamping it:** `scripts/stamp_mtimes.py` gives every file a
+mtime derived from its content, so different files never share one (content, modes and DIGEST unchanged; git ignores
+mtimes). `scripts/run_agent_batch.sh`, `/validate`, `scripts/task_seed.py materialize`, the benchmarks' kill tests and
+RoboARC's `regrade.py --replay` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
+```bash
+c=$(python3 scripts/stamp_mtimes.py stage tasks/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
+python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
+python3 scripts/check_image_files.py <image> <context dir>   # after building an image yourself: it holds the context's files
+```
+
 ## Running a two-mode batch (privileged + standard)
 ```bash
+python3 scripts/stamp_mtimes.py tasks                   # first ("Building task images" above)
 harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
 harbor run -p tasks -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
 harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
@@ -177,10 +200,9 @@ harbor run -p /tmp/run1/<task> -a <agent> ...
 
 The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`,
 and the copy carries only the drawn one. As of 2026-10-13 every task allows its default seed only, so
-`scripts/run_agent_batch.sh` runs the task directories as they are (or a copy: with the gateway, the copy whose
-egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy with that cap clamped, Resources
-above); it materializes a seed per trial once a
-benchmark allows more than one.
+`scripts/run_agent_batch.sh` runs each job from a stamped copy of the task as it is (with the gateway, the copy's
+egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap clamped, Resources
+above); it materializes a seed per trial once a benchmark allows more than one.
 
 ## The agent's time (the cutoff)
 A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it around the agent's run only
@@ -321,7 +343,10 @@ summary shows side by side. They agree exactly when the agent ends by itself; wh
 gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
 before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
 (default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
-the agent stops; `totals.json` records `over_token_budget = 1`, the batch summary marks it, and `write_task_results.py`
+the agent stops; `totals.json` records `over_token_budget = 1` and, from the first refused request, `budget_stop`
+(`limit` input|output, `first_refused_at` / `last_refused_at`, the input / cached / output counts at the stop, `refused`):
+a runner records such a trial as `TokenBudgetExceeded` (not the harness's own exception, which reads as a network or API
+error: Codex `NetworkConnectionError` / `NonZeroAgentExitCodeError`, Claude Code `UnknownApiError`), the batch summary marks it, and `write_task_results.py`
 counts it as failed (Official runs above). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
 The raw log stores each conversation item once and a request as references to the items it resends, like Codex's and
 Claude Code's own session files, and is lossless: `scripts/usage_gateway/rawlog.py cat <trial>/gateway` prints every

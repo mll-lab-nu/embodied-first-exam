@@ -18,7 +18,8 @@ on, and the rule only adds that condition). A trial already graded under the cur
 its verdict.
 With --replay (needs docker, a GPU and the image of images/roboarc/VERSION): the recorded trajectory
 (artifacts/app/output/trajectory.npz) is also replayed by the current task's own tests/grade.py in the task's verifier image
-(built from tasks/<task>/tests/, as Harbor builds it; the verifier's two replays, no video): new_verdict = that run's
+(built from a stamped copy of tasks/<task>/tests/ and checked to hold its files, scripts/stamp_mtimes.py and
+scripts/check_image_files.py; the verifier's two replays, no video): new_verdict = that run's
 `success`, old_verdict = its replays all succeeded with no review event (what the earlier grade.py credited). Only recorded
 successes (and trials without a record) are replayed: the rule only adds a condition, so a recorded failure stays a failure.
 A recorded success the replay does not reproduce under the old rule is marked `inconclusive`: re-grade it on the host class
@@ -28,10 +29,12 @@ Scope: only the 94 tasks of the RoboARC 0.1.0 release (RELEASED below) are re-gr
 task added after 0.1.0, a Genesis robotangle-* task) is listed with `skipped` and the reason, and so is a standard trial
 (the standard twins' grading did not change). Output: one JSON line per trial (--out) and a table on stdout."""
 from __future__ import annotations
-import argparse, json, os, pathlib, re, subprocess, sys, tempfile
+import argparse, json, os, pathlib, re, shutil, subprocess, sys, tempfile
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import check_image_files, stamp_mtimes  # noqa: E402  (issue #258: a stamped build context, the image checked)
 # The RoboARC 0.1.0 release (main at 2026-10-14): family -> number of tasks, roboarc-<family>-01..NN-i01-{privileged,standard}.
 RELEASED_FAMILIES = {"blanket-flatten": 6, "blanket-fold": 5, "buzz-wire-3d": 10, "cast-coil": 8, "cast-keyhole": 6,
                      "fiber-bundling": 10, "hedgehog-in-cage": 8, "horseshoe-ring": 5, "interlocked-claws": 12,
@@ -138,9 +141,23 @@ def replay(t: dict, work: pathlib.Path, memory: str) -> dict:
     if not t["traj"]:
         return {"replay_error": "no recorded trajectory (artifacts/app/output/trajectory.npz) in the trial dir"}
     tag = f"rcb-regrade-{t['task']}:local"
-    b = subprocess.run(["docker", "build", "-q", "-t", tag, str(tests)], capture_output=True, text=True)
+    # built from a stamped copy and checked after (issue #258: BuildKit can put another task's equal-size tests/ file, a
+    # runtime_binding.json, into this image when the checkout's mtimes are equal; scripts/stamp_mtimes.py)
+    ctx = work / "context" / "tests"
+    shutil.rmtree(ctx, ignore_errors=True)
+    shutil.copytree(tests, ctx, symlinks=True)
+    if stamp_mtimes.stamp_tree(str(ctx), full=True)["err"]:
+        return {"replay_error": f"could not stamp the build context {ctx}"}
+    b = subprocess.run(["docker", "build", "-q", "-t", tag, str(ctx)], capture_output=True, text=True)
     if b.returncode:
         return {"replay_error": f"docker build failed: {(b.stderr or b.stdout)[-300:]}"}
+    try:
+        chk = check_image_files.check(tag, str(ctx))
+    except (OSError, RuntimeError, ValueError) as e:
+        return {"replay_error": f"could not check the verifier image's files: {e}"}
+    if chk["mismatch"]:
+        return {"replay_error": "the verifier image holds other files than the task's tests/: "
+                                + ", ".join(m["file"] for m in chk["mismatch"])}
     out = work / "verifier"; out.mkdir(parents=True, exist_ok=True)
     cmd = ["docker", "run", "--rm", "--gpus", "all", "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "--memory", memory,
            "-e", "RCB_VERIFIER_LOG_DIR=/o", "-v", f"{out}:/o", "-v", f"{pathlib.Path(t['traj']).resolve()}:/app/output/trajectory.npz:ro",
@@ -202,10 +219,15 @@ def main() -> int:
                 r["old_verdict"] = r["replay_old_verdict"] if r.get("old_verdict") is None else r["old_verdict"]
                 if r.get("new_verdict") is not None and r["new_verdict"] != r["replay_new_verdict"]:
                     r["record_vs_replay"] = "the record and the replay disagree on the new verdict"
-                r["new_verdict"] = r["replay_new_verdict"]
-                r["basis"] = "replay"
+                if r.get("inconclusive"):
+                    # board 0130 review M1: a replay that does not reproduce the recorded success under the old rule says
+                    # nothing about the new one; keep the record's exact verdict (None when there is none)
+                    r["basis"] = "record (replay inconclusive on this host)"
+                else:
+                    r["new_verdict"] = r["replay_new_verdict"]
+                    r["basis"] = "replay"
     for r in results:
-        if "skipped" not in r and "error" not in r:
+        if "skipped" not in r and "error" not in r and r.get("new_verdict") is not None:
             r["label"] = "re-graded under 2026-10-14 rules"
     with open(a.out, "w") as f:
         for r in results:

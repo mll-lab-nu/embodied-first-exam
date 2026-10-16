@@ -57,7 +57,9 @@ own agent/ and verifier/ (not inside agent/, which the agent's container mounts 
 Token budget (PROTOCOL §5, D10; on by default when the gateway runs): once a trial's totals reach --budget-input input
 or --budget-output output tokens, totals.json gets over_token_budget = 1 and every further model request of that trial
 is refused with HTTP 400 and a "token budget exceeded" error in the provider's format, without being forwarded, so the
-agent stops; the request in flight when the budget is crossed completes. 0 disables a limit. The refusal avoids 429 and
+agent stops; the request in flight when the budget is crossed completes. The first refusal writes totals.json
+"budget_stop" (limit input|output, first/last_refused_at, the counts at the stop, refused): the structured stop record
+the runner maps to TokenBudgetExceeded (issue #229). 0 disables a limit. The refusal avoids 429 and
 "usage limit" wording on purpose: scripts/account_failure_check.py would read those as an account failure.
 
 Token counts are normalized the way Harbor counts them: input = everything the model read (Anthropic: input +
@@ -480,6 +482,18 @@ def tally(tot: dict, rec: dict) -> None:
         tot["refused_bodies"] = tot.get("refused_bodies", 0) + 1
     elif rec.get("refused") == "host_not_allowed":
         tot["refused_hosts"] = tot.get("refused_hosts", 0) + 1
+    elif rec.get("refused") == "over_token_budget":
+        # the structured stop record (issue #229): which limit ended the run, when the first request was refused, how
+        # many were; the runner reads it and records the trial as TokenBudgetExceeded instead of the harness's exception
+        # (Codex: NetworkConnectionError / NonZeroAgentExitCodeError; Claude Code: UnknownApiError)
+        bs = tot.setdefault("budget_stop", {
+            "limit": "input" if ARGS.budget_input and tot.get("input", 0) >= ARGS.budget_input else "output",
+            "first_refused_at": rec["ts"], "input": tot.get("input", 0), "cached": tot.get("cached", 0),
+            "output": tot.get("output", 0), "budget": {"input": ARGS.budget_input, "output": ARGS.budget_output},
+            "refused": 0})
+        bs["refused"] += 1
+        bs["last_refused_at"] = rec["ts"]
+        tot["refused"] = tot.get("refused", 0) + 1      # kept as before: older readers count budget refusals here
     elif rec.get("refused"):
         tot["refused"] = tot.get("refused", 0) + 1
     elif rec.get("forwarded") is False:            # the upstream could not be reached: a failure, not a request
