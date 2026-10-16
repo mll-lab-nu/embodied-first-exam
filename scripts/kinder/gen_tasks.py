@@ -39,15 +39,14 @@ TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 # The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
 # timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
-# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
-# regenerate.
-CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
+# the sim service's wall clock. To change it (the author's decision; the pull request states old -> new), edit it here
+# and regenerate. 1800 s since 2026-10-16 (author decision, both twins; 3600 s before).
+CUTOFF_SEC = {"privileged": 1800, "standard": 1800}
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
-# standard mode's default reset budget (RCB_RESET_BUDGET's default; KinDER's own choice, PROTOCOL §4.5; owner
-# 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
-# attempt share them; ten, as MyoSuite, because a scripted episode ends in about a minute; RCB_RESET_BUDGET=0 still runs
-# the single-episode configuration
-RESET_BUDGET = 10
+# standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §2; author 2026-10-16, before it 10 from
+# 2026-10-11): 0, the protocol's default: one episode, whose 1000 control steps the practice and the graded attempt
+# share; RCB_RESET_BUDGET=N still runs a configuration with N resets
+RESET_BUDGET = 0
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
 IMAGE = "ghcr.io/mll-lab-nu/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
 # The agent container and the verifier of every standard-mode task: the one client base (pinned by digest) and the
@@ -213,6 +212,12 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
     if (ORACLES / t["family"] / mode).is_dir():
         return {"oracle_lines": 'oracle = "full"', "reference_solution": one_line(t["oracle_" + mode]),
                 "oracle_note": "The oracle (`solution/solve.sh`) scores 1; `nop` scores 0."}
+    if "oracle_evidence" not in t:              # no positive example yet: unvalidated (PROTOCOL §2, §4)
+        evidence = "none yet: no positive example is known for this instance (human review pending)"
+        return {"oracle_lines": f'oracle = "none"\nvalidated = false\noracle_evidence = {json.dumps(evidence)}',
+                "reference_solution": "None, and no positive example yet: the task is unvalidated (`validated = false`, "
+                                      "docs/PROTOCOL.md §2, §4) until a human review records one.",
+                "oracle_note": "No oracle; no positive example yet (human review pending). `nop` scores 0."}
     evidence = one_line(t["oracle_evidence"]) + f"; human review in {review}"
     return {"oracle_lines": f'oracle = "none"\noracle_evidence = {json.dumps(evidence, ensure_ascii=False)}',
             "reference_solution": "None. Solvability rests on the positive example in `oracle_evidence` (task.toml), "
@@ -220,10 +225,55 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
             "oracle_note": f"No oracle; human review in {review}. `nop` scores 0."}
 
 
+def change_log(t: dict, d: dict, mode: str) -> str:
+    """The README's Change Log: a task that keeps its instance lists the changes made to it in place; a task with a new
+    instance tag starts its own log, naming the one it replaces."""
+    if t.get("instance_tag", d["instance_tag"]) != d["instance_tag"]:
+        return (f"- 2026-10-16: first version, a new instance replacing `kinder-{t['family']}-{d['instance_tag']}-{mode}` "
+                f"({t['replaces']}): the scene changed, so the task "
+                f"has a new name (PROTOCOL §1, H.8). Agent time limit {CUTOFF_SEC[mode]} s"
+                + ((f"; {RESET_BUDGET} resets." if RESET_BUDGET else "; no reset.") if mode == "standard" else "."))
+    log = ["- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5, docs/benchmarks/kinder.md); the "
+           "service already had `POST /reset`. The scene, instance, pass rule and verifier are unchanged, so the task keeps its "
+           "name; runs recorded before this date had no reset and are reported separately."] if mode == "standard" else []
+    log.append("- 2026-10-16: agent time limit 3600 s -> 1800 s (`[agent] timeout_sec`, both twins; author decision, "
+               "docs/benchmarks/kinder.md)" + (", and `RCB_RESET_BUDGET`'s default 10 -> 0 (author decision): one episode, "
+               "which the practice and the graded attempt share" if mode == "standard" else "")
+               + ". The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded "
+               "before this date are reported separately.")
+    return "\n".join(log)
+
+
+def reset_text(n: int, steps: int) -> dict:
+    """What the standard instruction and README say about resets: with a budget, the reset rules and `r.reset()`'s row;
+    without one, a single episode and no reset row (the service has no `POST /reset` then)."""
+    if n == 0:
+        return {"reset_rule": "- **No reset: one episode.** The episode starts when the service comes up. It ends when the task "
+                              "succeeds, after", "reset_rule_tail": "No other episode follows "
+                              "(`spec()[\"budget\"][\"reset\"]` is 0, and it is authoritative), and **this episode is "
+                              "graded**: a success ends the run at once, and when your time is up it is graded as it "
+                              "stands. Once it has ended, `submit` raises `EpisodeOver`.",
+                "reset_row": "", "reset_left": "", "reset_summary": "No reset: one episode, which is graded."}
+    return {"reset_rule": "- **Episodes and resets.** The episode starts when the service comes up. It ends when the task "
+                          "succeeds, after",
+            "reset_rule_tail": f"You have **{n} resets** (`spec()[\"budget\"][\"reset\"]`, which is authoritative: if it "
+                               "says 0, there is no reset and the one episode is the run). `r.reset()` starts a new episode "
+                               f"from the same starting state, with its own {steps} control steps, either abandoning "
+                               "the running episode or after one has ended; it returns the start's frames. Once an episode "
+                               "has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you reset. "
+                               "**Only the last episode is graded**: a success ends the run at once, and when your time is "
+                               "up the episode then running is the one graded; `meta[\"episode\"]` and "
+                               "`meta[\"resets_left\"]` count the episodes.",
+            "reset_row": f"\n| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting "
+                         f"state (at most {n} in all); returns the start's frames |",
+            "reset_left": ", or a reset is left", "reset_summary": f"{n} resets; only the last episode is graded."}
+
+
 def context(t: dict, d: dict, f: dict) -> dict:
     """The privileged task's placeholders; standard_context() adds its twin's."""
     stmt = one_line(t["task_statement"])
-    base = f"kinder-{t['family']}-{d['instance_tag']}"; full = base + "-privileged"
+    tag = t.get("instance_tag", d["instance_tag"])   # a task whose scene changed carries a new tag (PROTOCOL §1, H.8)
+    base = f"kinder-{t['family']}-{tag}"; full = base + "-privileged"
     std = f["standard"]
     ms = std["step_ms"]
     k, n = kind(f["entry_point"]), max_steps(t, d)
@@ -231,7 +281,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
     mujoco = k == "tidybot"
     return {
         "family": t["family"], "env_id": t["env_id"], "env_name": t["env_id"].split("/")[1].removesuffix("-v0"),
-        "instance_tag": d["instance_tag"], "seed": d["seed"], "max_steps": n, "reset_budget": RESET_BUDGET,
+        "instance_tag": tag, "seed": d["seed"], "max_steps": n, "reset_budget": RESET_BUDGET,
         "category": category, "robot": robot, "robot_id": "tidybot-plus-plus",   # both kinds' robot
         "keywords": ", ".join(f'"{w}"' for w in keywords), "view": "task_view" if mujoco else "render",
         "step_time": f" ({n / 10:g} s at 10 Hz)" if mujoco else "", "step_name": "10 Hz control step" if mujoco else "control step",
@@ -255,7 +305,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
         "agent_timeout": float(CUTOFF_SEC["privileged"]),
         "verifier_timeout": float(d["verifier_timeout_sec"]), "image_hw": "×".join(map(str, std["image_hw"])),
         "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",
-        **oracle_fields(t, d, "privileged"),
+        "change_log": change_log(t, d, "privileged"), **oracle_fields(t, d, "privileged"),
     }
 
 
@@ -270,8 +320,8 @@ def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dic
                          "robot_time": f" ({ctx['robot_seconds']} s of robot time)" if ctx["view"] == "task_view" else "",
                          "chunk_rows": 100,   # max_chunk_s (10 s) / control_dt (0.1 s)
                          "blocked_note": " or at a step the robot refuses (`meta[\"blocked\"]`)" if kinematic else "",
-                         "agent_timeout": float(CUTOFF_SEC["standard"]),
-                         **oracle_fields(t, d, "standard")}
+                         "agent_timeout": float(CUTOFF_SEC["standard"]), "change_log": change_log(t, d, "standard"),
+                         **reset_text(RESET_BUDGET, ctx["max_steps"]), **oracle_fields(t, d, "standard")}
 
 
 def write(path: Path, text: str, executable: bool = False) -> None:
