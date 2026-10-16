@@ -144,4 +144,4 @@ patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
 name = "roboolympics-tabletennis-matchlow-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["aad5a9862ab8"]
+source_commits = ["dd4db78ea10a"]
