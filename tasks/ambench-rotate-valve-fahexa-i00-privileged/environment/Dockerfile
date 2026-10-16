@@ -1,6 +1,6 @@
 # Base image = AM-Bench (scrubbed: no scripted experts) + Isaac Lab / Isaac Sim 5.1 + the baked web assets (see
 # images/ambench/; BUILD_ONLY). Everything task-specific is copied here; no reference solution is in the image.
-FROM ghcr.io/mll-lab-nu/eai-ambench:0.1.0
+FROM ghcr.io/mll-lab-nu/eai-ambench:0.2.0
 COPY instance.json /app/instance.json
 COPY rcb_ambench.py /opt/tools/rcb_ambench.py
 ENV PYTHONPATH=/opt/tools

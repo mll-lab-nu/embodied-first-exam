@@ -3,9 +3,9 @@
 # (Pyroki @ 2eafc99 with JAX 0.4.28 on the CPU, acados @ fa0af20 built with qpOASES). What is left out on purpose: AM-Bench's
 # scripted experts (source/ambench/ambench/policies/scripted/, the reference solutions; the task registrations' pointer to them is
 # blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history: nothing an agent can read
-# here locates a solution (docs/PROTOCOL.md §2.7). The web assets the scenes load at run time (Isaac Lab's ground, the wall's
-# material, the TossBall bin's geometry, the button's material, the robot's paint) are baked in under /opt/isaac-assets
-# (images/ambench/web_assets.txt), mirroring the asset bucket's layout: the tasks run with closed egress.
+# here locates a solution (docs/PROTOCOL.md §2.7). Every web asset the twelve tasks' scenes load at run time (objects'
+# payloads and materials, the robot's paint, Isaac Lab's ground, NDT's warehouse scene) is baked in under /opt/isaac-assets
+# (images/ambench/web_assets.txt), mirroring the asset buckets' layouts: the tasks run with closed egress.
 # Tag = images/ambench/VERSION; build from the repo root (images/ambench/BUILD_ONLY has the command, licences and checks):
 #   docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/eai-ambench:$(cat images/ambench/VERSION) .
 # Every Python package is pinned in images/ambench/requirements.lock (`uv pip freeze` of the reference build).
@@ -49,20 +49,24 @@ RUN cd /opt/ambench && pip install --no-cache-dir -e ext/pyroki && pip install -
     pip install --no-cache-dir -e ext/acados/interfaces/acados_template && pip install --no-cache-dir -e source/ambench
 ENV JAX_PLATFORMS=cpu ACADOS_SOURCE_DIR=/opt/ambench/ext/acados \
     LD_LIBRARY_PATH=/opt/ambench/ext/acados/lib:/opt/ambench/ext/acados/build
-# Web assets (each checked against its sha256), mirroring the bucket's layout: the tooling sets Isaac's asset root to
-# /opt/isaac-assets/Assets/Isaac/5.1 (the ground, the wall's material), and localize_assets.py rewrites the URLs four of
-# AM-Bench's USDs load from the bucket (the bin's geometry, the button's material, the robot's paint) to the copies. The USD
-# rewrite uses a throwaway usd-core: Isaac Sim's own pxr loads only inside Kit.
+# Web assets (2269 files, ~0.95 GB, each checked against its sha256), mirroring the buckets' layouts: the tooling sets
+# Isaac's asset root to /opt/isaac-assets/Assets/Isaac/5.1 (the ground, the wall's material, NDT's warehouse scene), and
+# localize_assets.py rewrites the URLs thirteen of AM-Bench's USDs load from the buckets (objects' payloads and materials, the
+# robot's paint) to the copies. The USD rewrite uses a throwaway usd-core: Isaac Sim's own pxr loads only inside Kit.
 COPY images/ambench/web_assets.txt images/ambench/localize_assets.py /opt/isaac-assets/
-RUN set -e; grep -v '^#' /opt/isaac-assets/web_assets.txt | while read -r sha url dst; do \
-      mkdir -p "$(dirname "$dst")"; curl -sSfL -o "$dst" "$url"; echo "$sha  $dst" | sha256sum -c --quiet -; done; \
+RUN set -e; grep -v '^#' /opt/isaac-assets/web_assets.txt | xargs -P 16 -L 1 sh -c \
+      'mkdir -p "$(dirname "$2")" && curl -sSfL --retry 5 -o "$2" "$1" && echo "$0  $2" | sha256sum -c --quiet -' && \
     A=/opt/ambench/source/ambench/ambench/assets; \
     python -m venv /tmp/usdv && /tmp/usdv/bin/pip install -q --no-cache-dir usd-core==25.5 && \
     /tmp/usdv/bin/python /opt/isaac-assets/localize_assets.py \
       https://omniverse-content-production.s3-us-west-2.amazonaws.com/=/opt/isaac-assets/ \
-      https://omniverse-content-production.s3.us-west-2.amazonaws.com/=/opt/isaac-assets/ -- \
-      $A/objects/container.usd $A/objects/push_button.usd \
-      $A/robots/configuration/hexa_scorpion_base.usd $A/robots/configuration/end_effector_base.usd && \
+      https://omniverse-content-production.s3.us-west-2.amazonaws.com/=/opt/isaac-assets/ \
+      http://omniverse-content-production.s3-us-west-2.amazonaws.com/=/opt/isaac-assets/ \
+      https://omniverse-content-staging.s3.us-west-2.amazonaws.com/=/opt/isaac-assets/staging/ \
+      https://omniverse-content-staging.s3-us-west-2.amazonaws.com/=/opt/isaac-assets/staging/ -- \
+      $A/objects/cline.usd $A/objects/container.usd $A/objects/door.usd $A/objects/frame.usd $A/objects/hole.usd \
+      $A/objects/lemon.usd $A/objects/lever.usd $A/objects/lime.usd $A/objects/marked_region.usda $A/objects/peg.usd \
+      $A/objects/push_button.usd $A/robots/configuration/end_effector_base.usd $A/robots/configuration/hexa_scorpion_base.usd && \
     rm -rf /tmp/usdv
 # Pin: the steps above follow AM-Bench's scripts/setup/install.sh; this one sets every package to the version of the reference
 # build (images/ambench/requirements.lock, without resolving), and the build fails unless the result is exactly the lock

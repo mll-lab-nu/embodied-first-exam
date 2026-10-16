@@ -123,19 +123,24 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Success criterion (as graded)
 This is exactly what the grader checks, written from the predicate above (RoboWits' `_check_success`, which the grader
-runs). Where the task text says something else, this section and the predicate are what count. It is evaluated once
-per replay, on the state right after the last action of your trajectory (no settle steps are added: let things come to
-rest inside the trajectory), and must hold after both replays.
+runs) and the release and rest condition the grader adds (the last item). Where the task text says something else,
+this section and the code are what count. After the last action of your trajectory the grader holds that action's
+command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in which every
+condition below must hold at every 6th control step and at the last one, with each graded object staying within 2 mm
+of where it was when those 2 s began (the *check window*). It must pass in both replays. `s.replay(actions)` runs
+exactly this and returns the verdict as `success` (and why in `settle`); `s.status()["success"]` is the same
+conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 - At least 50 % of the red block's footprint area lies over the target area's footprint (overlap area / the red
   block's footprint area >= 0.5).
+- Released and at rest: no part of the robot touches the red block, and it moves at most 2 mm during the check window.
 
-Not checked: anything else: the red block's height, orientation, whether it rests on the table or is held, the white
-blocks, and the table bounds.
+Not checked: anything else: the red block's height, orientation, whether it rests on the table, the white blocks, and
+the table bounds.
 
 Task text vs grader ("Push the red block onto the green target area."): Only where the red block is, seen from above,
-is checked: how it got there is not (the red block lifted or held over the target also counts). RoboWits' docstring
-says 30 %; the code requires 50 %.
+is checked, once it is released and at rest: how it got there is not. RoboWits' docstring says 30 %; the code requires
+50 %.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
 plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is
@@ -145,7 +150,7 @@ inside the object's axis-aligned bounding box grown by 3 cm on every side; the *
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+completed after the replay: the settle window of the success criterion above, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
 one.
 
@@ -169,8 +174,8 @@ s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object'
 p["set_joint_targets"](q16, steps=1); p["close_gripper"]("left"); p["gripper_quat"](yaw, approach)   # more thin wrappers: help(p[...])
 s.step(action)                     # one low-level action (16 joint targets, below) = one control step (1/30 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 16) actions, one row per control step
-s.status()                         # {'success': bool, 'progress': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
-s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.status()                         # {'success': the conditions hold now, 'predicate', 'touching', 'progress', 'sim_steps', 'resets', 'state_sha'}
+s.replay(actions)                  # resets, replays open-loop, then the settle window: the verdict  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
@@ -203,4 +208,4 @@ Limits for the whole trial, all its processes together (every simulator you star
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

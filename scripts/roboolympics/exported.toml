@@ -25,21 +25,24 @@ name = "roboolympics-badminton-match-i01-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
 
 [[tasks]]
 name = "roboolympics-badminton-match-i02-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+           "task.toml", "environment/docker-compose.yaml", "README.md"]   # 2026-10-16, board 0136: the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"

@@ -438,10 +438,16 @@ def write_solution(task: Path, mode: str, trajectory: Path, hands: dict[str, Pat
 
 
 def grading(manifest: dict | None) -> str:
-    """Per-family grader limits read by the shared grade.py / finalize.py (defaults: 1400 s replay, 300 s video)."""
+    """Per-family grader limits read by the shared grade.py / finalize.py (default replay timeout 1400 s). The replay
+    video runs after the verdict in the time left of the step it runs in (board 0136): the privileged verifier's
+    timeout_sec and the standard collect hook's timeout_sec are written here for that bound; video_timeout_s (at least
+    the replay timeout) caps it."""
     timeouts = (manifest or {}).get("timeouts", {})
     return json.dumps({"replay_timeout_s": int(timeouts.get("replay_sec", 1400)),
-                       "video_timeout_s": int(timeouts.get("video_sec", 300))}, sort_keys=True) + "\n"
+                       # the video replays the whole episode again: never a shorter bound than the replay's own
+                       "video_timeout_s": max(int(timeouts.get("video_sec", 1400)), int(timeouts.get("replay_sec", 1400))),
+                       "verifier_timeout_s": int(timeouts.get("verifier_privileged_sec", 3600)),
+                       "collect_timeout_s": int(timeouts.get("collect_sec", 3600))}, sort_keys=True) + "\n"
 
 
 def release_families() -> list[str]:
@@ -1286,6 +1292,16 @@ def change_log(spec: dict, mode: str) -> str:
             "`inhand_side` (thumb side), mounted on the locked hand like `palm`; the standard service returns "
             "`overview` and `inhand_top` by default. Before, the object was 40-60 px wide in the overview and the palm "
             "camera saw the back of the hand, so its in-hand pose could hardly be observed in standard mode.")
+    lines.append(
+        "- 2026-10-16 (board 0136, video only): "
+        + ("the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after "
+           "`reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video."
+           if mode == "privileged" else
+           "the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s) instead of a "
+           "fixed 300 s, which cut the video of episodes longer than ~10k steps.")
+        + (" The video films every 2nd step but at most 1500 frames (a 640x480 OSMesa frame takes ~0.3 s)."
+           if spec["id"].startswith("essential_") else "")
+        + " The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.")
     if spec["id"] in HELD_ROTATION_BEFORE:
         bound = spec["invariants"]["body_rotation"][1]
         lines.append(

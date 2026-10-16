@@ -1,15 +1,29 @@
 {
- "comment": "RoboPaint's process rules (docs/benchmarks/robopaint.md). Per family: max_path_mm = path_factor x the pair's reference_path_mm, rounded up to round_mm; calligraphy and lettering: min_mark_width_mm = mark_factor x the pair's reference_mark_width_mm, rounded down to 0.01 mm (colouring in = path_mm > max_path_mm and mark_width_mm < min_mark_width_mm); paintings: the path budget path_mm <= max_path_mm and the sweep rule (max_scribble, max_scribble_share, scribble_min_mm). reference_path_mm / reference_mark_width_mm: the pair's reference solution (solution/oracle_qpos.npy) replayed with rcb_brush_strict's Session on the graders' instance (measure_reference.py, base image). oracle_evidence: the task.toml text per mode; oracle_evidence_family: a family's own texts; oracle_evidence_pairs: a pair's own texts (it wins over its family's). Calibration (2026-10-04, ws3): docs/benchmarks/robopaint.md. current_reference: a pair whose reference solution was re-made after its limits were set (2026-10-09): the current reference's path_mm and mark_width_mm (measure_reference.py), quoted in its oracle evidence; the limits stay on reference_path_mm / reference_mark_width_mm. change_log: a pair's README Change Log entries. change_log_all: per mode, the README Change Log entries of every pair (changes to the code all pairs share), after the pair's own.",
+ "comment": "RoboPaint's process rules (docs/benchmarks/robopaint.md). Per family: max_path_mm = path_factor x the pair's reference_path_mm, rounded up to round_mm; calligraphy and lettering: min_mark_width_mm = mark_factor x the pair's reference_mark_width_mm, rounded down to 0.01 mm (colouring in = path_mm > max_path_mm and mark_width_mm < min_mark_width_mm); paintings: the path budget path_mm <= max_path_mm and the sweep rule (max_scribble, max_scribble_share, scribble_min_mm). reference_path_mm / reference_mark_width_mm: the pair's reference solution (solution/oracle_qpos.npy) replayed with rcb_brush_strict's Session on the graders' instance (measure_reference.py, base image). oracle_evidence: the task.toml text per mode; oracle_evidence_family: a family's own texts; oracle_evidence_pairs: a pair's own texts (it wins over its family's). Calibration (2026-10-04, ws3): docs/benchmarks/robopaint.md. reference_longest_stroke_mm (calligraphy, 2026-10-14): the current reference solution's longest marked piece (measure_reference.py's longest_counted_stroke_mm, with the family's stroke_gap_mm and mark_min_width_mm); max_stroke_path_mm = stroke_path_factor x it, rounded up to stroke_round_mm (the counted strokes: a contact is cut where the brush moves more than stroke_gap_mm without a mark at least mark_min_width_mm wide, a stroke longer than max_stroke_path_mm counts as several; the sweep rule max_scribble / max_scribble_share / scribble_min_mm is then taken on these strokes). current_reference: a pair whose reference solution was re-made after its limits were set (2026-10-09): the current reference's path_mm and mark_width_mm (measure_reference.py), quoted in its oracle evidence; the limits stay on reference_path_mm / reference_mark_width_mm. change_log: a pair's README Change Log entries. change_log_all: per mode, the README Change Log entries of every pair (changes to the code all pairs share), after the pair's own.",
  "families": {
   "kaishu": {
    "path_factor": 3.0,
    "round_mm": 10,
-   "mark_factor": 0.3
+   "mark_factor": 0.3,
+   "stroke_gap_mm": 5.0,
+   "mark_min_width_mm": 0.1,
+   "stroke_path_factor": 5.0,
+   "stroke_round_mm": 10,
+   "max_scribble": 12.0,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
   },
   "xingshu": {
    "path_factor": 3.0,
    "round_mm": 10,
-   "mark_factor": 0.3
+   "mark_factor": 0.3,
+   "stroke_gap_mm": 5.0,
+   "mark_min_width_mm": 0.1,
+   "stroke_path_factor": 5.0,
+   "stroke_round_mm": 10,
+   "max_scribble": 12.0,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
   },
   "lettering": {
    "path_factor": 3.0,
@@ -33,7 +47,14 @@
   "caoshu": {
    "path_factor": 3.0,
    "round_mm": 10,
-   "mark_factor": 0.3
+   "mark_factor": 0.3,
+   "stroke_gap_mm": 5.0,
+   "mark_min_width_mm": 0.1,
+   "stroke_path_factor": 5.0,
+   "stroke_round_mm": 10,
+   "max_scribble": 12.0,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
   }
  },
  "oracle_evidence": {
@@ -164,6 +185,24 @@
   "robopaint-lettering-diligence-i00": 0.3562,
   "robopaint-lettering-liberty-i00": 0.465,
   "robopaint-lettering-virtue-i00": 0.4188
+ },
+ "reference_longest_stroke_mm": {
+  "robopaint-caoshu-beiquelindanshui-i00": 170.77,
+  "robopaint-caoshu-nangong-i00": 391.3,
+  "robopaint-caoshu-siwushaonian-i00": 193.62,
+  "robopaint-caoshu-wen-i00": 142.3,
+  "robopaint-caoshu-zhen-i00": 317.44,
+  "robopaint-caoshu-zhongtiangechuifen-i00": 175.26,
+  "robopaint-kaishu-linfengguilong-i00": 182.97,
+  "robopaint-kaishu-yongzibafa-i00": 119.24,
+  "robopaint-xingshu-feng-i00": 446.03,
+  "robopaint-xingshu-he-i00": 352.06,
+  "robopaint-xingshu-huifenghechang-i00": 249.98,
+  "robopaint-xingshu-maolinxiuzhu-i00": 242.8,
+  "robopaint-xingshu-nian-i00": 215.6,
+  "robopaint-xingshu-shan-i00": 270.19,
+  "robopaint-xingshu-xian-i00": 384.4,
+  "robopaint-xingshu-yong-i00": 265.06
  },
  "current_reference": {
   "robopaint-kaishu-linfengguilong-i00": {

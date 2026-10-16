@@ -6,8 +6,9 @@
   result", never as the agent's 0; a verdict, the cutoff and the token budget stay results;
 - scripts/clamp_cpus.py clamps every CPU cap of a task copy to the host's count (PROTOCOL §2.10) and nothing else, and
   refuses the repository's own tasks;
-- scripts/run_agent_batch.sh runs a task whose cap is above HOST_CPUS from a clamped copy (a stand-in `harbor` on PATH
-  records what it was given), runs a task without such a cap from tasks/ as before, and leaves tasks/ unchanged;
+- scripts/run_agent_batch.sh runs every job from its own copy of the task, every file stamped with its content's mtime
+  (scripts/stamp_mtimes.py, issue #258), with a CPU cap above HOST_CPUS clamped in that copy (a stand-in `harbor` on
+  PATH records what it was given), removes the copy afterwards, and leaves tasks/ unchanged;
 - (board 0121 M4) a trial whose last model calls failed at the usage gateway, or whose job the gateway died in, is not a
   result; with GATEWAY=1 the runner restarts a dead gateway before the next job."""
 import json
@@ -107,7 +108,8 @@ def test_results():
         check("EnvironmentStartTimeoutError" in line and "no reward.json" in line, f"the reason names Harbor's exception: {line}")
 
 
-UNVALIDATED = "humanoidbench-loco-walk-i00-standard-realtime"   # oracle = "none": never ranked with validated tasks
+UNVALIDATED = "humanoidbench-loco-walk-i00-standard-realtime"   # oracle = "none": ranked with validated tasks, marked
+VALIDATED_RT = "humanoidbench-loco-sit-simple-i00-standard-realtime"   # oracle = "full", the same configuration as UNVALIDATED
 WTR = [sys.executable, str(ROOT / "scripts/write_task_results.py")]
 
 
@@ -195,22 +197,25 @@ def summary_code() -> str:
 
 
 def test_summary_grouping():
-    """run_agent_batch.sh's summary: one table per comparable configuration, unvalidated tasks apart, voided trials not
-    counted in a success rate."""
+    """run_agent_batch.sh's summary: one table per comparable configuration, unvalidated tasks ranked in it (marked),
+    voided trials not counted in a success rate."""
     with tempfile.TemporaryDirectory() as td:
         td = Path(td); jobs = td / "jobs"
         make_trial(jobs, "bx-standard-a", "t1", TASK, "2026-10-14T01:00:00Z", {"success": 0, "infra_error": 1})
         make_trial(jobs, "bx-standard-a", "t2", TASK, "2026-10-14T02:00:00Z", {"success": 1})
         make_trial(jobs, "bx-privileged-a", "p1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 0})
         make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
+        make_trial(jobs, "bx-standard-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
         r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True)
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
         out = r.stdout
-        head, _, unval = out.partition("## Unvalidated tasks (not ranked)")
-        check(bool(unval) and UNVALIDATED in unval and UNVALIDATED not in head, f"the unvalidated task is not apart:\n{out}")
-        check(head.count("\n## protocol 2.0, ") == 2, f"not one table per configuration:\n{out}")
-        check("Success (results only): 1 / 1; 1 voided." in head, f"a voided trial counted in the success rate:\n{out}")
-        check("not a result (voided" in head, f"the voided trial is not marked:\n{out}")
+        check("## Unvalidated" not in out and out.count("\n## protocol 2.0, ") == 3, f"not one table per configuration:\n{out}")
+        rt = out[out.index("standard-realtime, "):]
+        check(f"| {UNVALIDATED} (unvalidated) |" in rt and f"| {VALIDATED_RT} |" in rt,
+              f"the unvalidated task is not ranked (marked) with the validated one of its configuration:\n{out}")
+        check("Success (results only): 1 / 2 (validated tasks: 0 / 1); 0 voided." in rt, f"the shared table's rate:\n{out}")
+        check("Success (results only): 1 / 1; 1 voided." in out, f"a voided trial counted in the success rate:\n{out}")
+        check("not a result (voided" in out, f"the voided trial is not marked:\n{out}")
 
 
 def caps(task: Path) -> list[str]:
@@ -261,9 +266,12 @@ FAKE_HARBOR = r'''#!/usr/bin/env python3
 import json, os, re, sys
 a = sys.argv[1:]
 tasks = [a[i + 1] for i, x in enumerate(a) if x == "-i"]
-rec = {"cwd": os.getcwd(), "caps": {}}
+rec = {"cwd": os.getcwd(), "caps": {}, "unstamped": {}}
+sys.path.insert(0, os.environ["RCB_SCRIPTS"])
+import stamp_mtimes
 for t in tasks:
     d = os.path.join(os.getcwd(), a[a.index("-p") + 1], t)
+    rec["unstamped"][t] = stamp_mtimes.stamp_tree(d, check=True)["bad"]
     c = re.findall(r"(?m)^cpus\s*=\s*(\S+)", open(os.path.join(d, "task.toml")).read())
     c += re.findall(r"(?m)^[ \t]*cpus:[ \t]*([0-9.]+)", open(os.path.join(d, "environment", "docker-compose.yaml")).read())
     rec["caps"][t] = [float(x) for x in c]
@@ -281,7 +289,7 @@ def test_batch_runner():
         orig = {t: caps(ROOT / "tasks" / t) for t in (f"{BIG}-standard", f"{SMALL}-standard")}
         env = {**os.environ, "PATH": f"{td / 'bin'}:{os.environ['PATH']}", "FAKE_HARBOR_OUT": str(rec), "JOBS": str(td / "jobs"),
                "RESULTS": "", "LOG_MIRROR": "0", "MEM_GUARD": "0", "GATEWAY": "0", "WEB_SEARCH": "allowed", "MODES": "standard",
-               "HOST_CPUS": "8"}
+               "HOST_CPUS": "8", "RCB_SCRIPTS": str(ROOT / "scripts")}
         r = subprocess.run(["bash", str(ROOT / "scripts/run_agent_batch.sh"), "clamptest", BIG, SMALL], env=env,
                            capture_output=True, text=True, timeout=300)
         check(r.returncode == 0, f"run_agent_batch.sh exited {r.returncode}: {r.stderr[-800:]}")
@@ -290,14 +298,14 @@ def test_batch_runner():
         for run in runs:
             for t, c in run["caps"].items():
                 check(c and max(c) <= 8, f"{t} ran with caps {c} on an 8-CPU host")
-                if t.startswith(BIG):
-                    check(Path(run["cwd"]).resolve() == (td / "jobs/.tasks/clamptest-standard-" f"{BIG}").resolve(),
-                          f"the clamped task ran from {run['cwd']}, not its job copy")
-                else:
-                    check(Path(run["cwd"]).resolve() == ROOT.resolve(), f"a task without a cap above the host's ran from {run['cwd']}")
+                # every job (GATEWAY=0 too, with or without a clamp) runs from its own copy, every file content-stamped (#258)
+                base = BIG if t.startswith(BIG) else SMALL
+                check(Path(run["cwd"]).resolve() == (td / f"jobs/.tasks/clamptest-standard-{base}").resolve(),
+                      f"{t} ran from {run['cwd']}, not its job copy")
+                check(run["unstamped"].get(t) == 0, f"{t}'s copy had {run['unstamped'].get(t)} file(s) without their content stamp")
         log = (td / "jobs/clamptest.log").read_text()
         check("clamped" in log and "12 -> 8" in log, "the clamp is not in the batch log")
-        check(not (td / f"jobs/.tasks/clamptest-standard-{BIG}").exists(), "the job copy was not removed")
+        check(not any((td / f"jobs/.tasks/clamptest-standard-{b}").exists() for b in (BIG, SMALL)), "a job copy was not removed")
         for t, c in orig.items():
             check(caps(ROOT / "tasks" / t) == c, f"tasks/{t} was changed")
 
@@ -351,4 +359,4 @@ if __name__ == "__main__":
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
-    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, clamp_cpus, run_agent_batch.sh clamped copies and gateway restart")
+    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, clamp_cpus, run_agent_batch.sh stamped job copies, clamped copies and gateway restart")

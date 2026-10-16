@@ -75,8 +75,21 @@ fails the task. Our reference solution writes this exemplar with `path_mm` 2017 
 (rounded down). A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
 under the path limit: both are fine.
 
-**Success iff the picture rule above holds and the run is not colouring in.** The continuous score is the one above, × min(1,
-6060 / `path_mm`) when it is colouring in.
+**The stroke cap counts strokes as they are written, not contacts** (this refines "one continuous contact is one stroke"
+above). A contact is cut into two strokes wherever the brush moves more than 5 mm along the main sheet without
+marking it (its mark narrower than 0.1 mm: a press too light to ink), and a stroke longer than
+1250 mm of path counts as one stroke per started 1250 mm (5 times our
+reference solution's longest stroke, 250 mm, rounded up). Pieces joined by a touch too light to ink are
+therefore separate strokes, and one contact held down to write and re-write for a long time counts as several; a stroke
+written with the brush down and lifted at its end is one. **Strokes are sweeps:** at most 10 % of
+`path_mm` may lie in strokes whose path is longer than 12 times the diagonal of their bounding box (taken as at
+least 10 mm): back-and-forth, zigzag, spiral or looping fills inside one stroke fail (our reference solution's
+strokes stay under 5 times).
+
+**Success iff the picture rule above holds, the run is not colouring in, the counted strokes are within the cap and the strokes
+are sweeps.** The continuous score is the one above, × min(1,
+6060 / `path_mm`) when it is colouring in, × (1 − that share) when the strokes are not sweeps, and with the cap's
+scaling taken on the counted strokes.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
@@ -143,4 +156,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

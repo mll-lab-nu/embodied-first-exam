@@ -31,6 +31,7 @@ IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-
 CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
 SEEDS = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 REALTIME = [sys.executable, str(ROOT / "ci_checks/check-realtime.py")]
+VIDEO = [sys.executable, str(ROOT / "ci_checks/check-video.py")]
 TWINS = [sys.executable, str(ROOT / "ci_checks/check-twins.py")]              # repo-level-ish: reads the twin next to it
 INSTANCE = ["bash", str(ROOT / "ci_checks/check-instance-copies.sh")]
 STDIMG = ["bash", str(ROOT / "ci_checks/check-standard-agent-image.sh")]
@@ -353,6 +354,13 @@ MUTATIONS = [
     ("a standard-realtime service that declares no reset budget",
      "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
      "must declare its reset budget"),
+    # PROTOCOL §4 (board 0136): every graded trial leaves a replay video
+    ("a privileged verifier that renders no video", DTB_P, "tests/grade.py", sub(r"\.mp4\b", ".bin", count=0), VIDEO,
+     "its verifier renders no replay video"),
+    ("a standard task whose sim video is not collected", "humanoidbench-loco-walk-i00-standard", TOML,
+     sub(r'^\s*\{ source = "/data/replay\.mp4", service = "sim" \},\n', ""), VIDEO, "the sim's video is never collected"),
+    ("a video time bound shorter than the verdict replay's", MWP_P, "+tests/grading.json",
+     append('{"replay_timeout_s": 1400, "video_timeout_s": 300}'), VIDEO, "shorter than the verdict replay's 1400 s"),
 ]
 
 

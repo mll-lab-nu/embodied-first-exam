@@ -1,0 +1,9 @@
+{
+ "env_id": "CabinetPickPlace-Am-FAHexa-Abs-PID-Direct-v0",
+ "seed": 0,
+ "task": "CabinetPickPlace",
+ "action_dim": 8,
+ "control_hz": 120,
+ "episode_length_s": 60.0,
+ "initial_sha": "bd6848fff44881682a0d02fa18d46ba1af260365078e4fbdeea44c20047baeb3"
+}

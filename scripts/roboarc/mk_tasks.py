@@ -583,18 +583,17 @@ def row_cap(base: str) -> int:
     return cap
 
 
-R_HOLD_OLD = ("Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above "
-              "within your own rows (not only in the hold).")
-R_HOLD_NEW = ("Success needs both replays to succeed; each of them may complete its confirmation within that hold (whether "
-              "one reached the goal with the thresholds above within your own rows is recorded, `strict_goal_reached`, not "
-              "required).")
-ROWS_OLD = ("so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row "
-            "(holding still) before saving.")
-ROWS_NEW = ("so a replay whose confirmation ends a few ticks later completes it in that hold; copies of the final row "
-            "(holding still) appended before saving give it more room.")
-VERIFY_OLD = ("at least one replay must\nreach the goal with the instance's own thresholds within the trajectory's rows.")
-VERIFY_NEW = ("every replay may confirm\nwithin that hold (R-hold, 2026-10-05). Whether one reached the goal with the "
-              "instance's own thresholds within the\ntrajectory's rows is reported (`strict_goal_reached`), not required.")
+# The privileged grading rule (2026-10-14, failure analysis item 12): success needs both grading replays to succeed AND at
+# least one of them to reach the goal with the instance's own thresholds within the agent's own rows (shared/privileged/
+# grade.py, `strict_replay_required` 1): the tolerant hold only confirms, as in standard mode, where the live episode is
+# strict. The packages' texts say so (R_HOLD_STRICT, VERIFY_STRICT) and are kept as they are; R-hold (2026-10-05: every
+# replay could confirm within the hold) made the hold's relaxed thresholds the effective goal (blanket-flatten: 92 %
+# coverage instead of 95 %), and its wording must not come back.
+R_HOLD_STRICT = ("Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above "
+                 "within your own rows (not only in the hold).")
+VERIFY_STRICT = ("at least one replay must\nreach the goal with the instance's own thresholds within the trajectory's rows.")
+R_HOLD_WORDS = ("`strict_goal_reached`, not required", "each of them may complete its confirmation within that hold",
+                "every replay may confirm\nwithin that hold")
 
 
 def time_per_call(step: float, hz: int) -> str:
@@ -640,11 +639,11 @@ def review_fixes(s: str, name: str, base: str, mode: str) -> str:
     up = PKG / f"{base}-privileged" / "instruction.md"
     step = base_step(base); hz = int(re.search(r"Control runs at (\d+) Hz", up.read_text()).group(1))
     if mode == "privileged":
-        if R_HOLD_OLD in s:        # the GPU families (a tolerant hold): the grader's rule since tooling v16 is R-hold
-            s = swap(swap(s, R_HOLD_OLD, R_HOLD_NEW, f"{base} {name} R-hold"), ROWS_OLD, ROWS_NEW, f"{base} {name} R-hold rows")
-        if name == "README.md" and VERIFY_OLD in s:
-            s = swap(s, VERIFY_OLD, VERIFY_NEW, f"{base} README Verification")
-        assert "within your own rows (not only in the hold)" not in s and "at least one replay must" not in s, f"{base} {name}"
+        # the families with a grading hold state the strict rule (R_HOLD_STRICT; README: VERIFY_STRICT), as the grader applies it
+        assert not any(w in s for w in R_HOLD_WORDS), f"{base} {name}: R-hold wording"
+        if name == "instruction.md" and "final targets for up to" in s:
+            s = swap(s, R_HOLD_STRICT, R_HOLD_STRICT[:-2] + "; `s.replay(actions, grading=True)` reports it as "
+                     "`[\"grading\"][\"strict_success\"]`).", f"{base} the privileged grading rule")
         if name == "instruction.md":
             cap = row_cap(base)
             s = swap(s, "There is no step budget; your\n  wall-clock budget is",
@@ -873,6 +872,31 @@ def mujoco_changes(mode: str, rec: dict) -> list[str]:
     return [PORT_TASK.format(date=date, bench=BENCH, old=rec["ported_from"], mode=mode)]
 
 
+FIX_STRICT_GOAL = ("- 2026-10-14: the grading rule (tests/grade.py; failure analysis 2026-10-14, item 12). Success needs both replays to "
+                   "succeed AND at least one of them to reach the goal with the instance's own thresholds within the trajectory's rows "
+                   "(`strict_replay_required` 1; `success_in_hold_only` 1 marks a trajectory whose replays succeeded only in the hold, "
+                   "not credited). From 2026-10-05 (R-hold) to this change a replay could also confirm within the hold, with its "
+                   "relaxed thresholds, and no strict goal was required: privileged mode has no graded live run, so the hold's "
+                   "thresholds were the effective goal. The frozen instance, the reference and the replay are unchanged; results "
+                   "graded before this change are re-graded from their recorded trajectories, nothing is re-run "
+                   "(scripts/roboarc/regrade.py). Runs: docs/benchmarks/roboarc.md (Grading replays).")
+FIX_STRICT_GOAL_NO_HOLD = ("- 2026-10-14: tests/grade.py, the same file in every privileged task, requires again that one grading replay "
+                           "reach the goal with the instance's own thresholds within the trajectory's rows (failure analysis "
+                           "2026-10-14, item 12; docs/benchmarks/roboarc.md, Grading replays). This family has no grading hold: a "
+                           "replay succeeds only within the rows, so every verdict is unchanged. reward.json gains "
+                           "`success_in_hold_only` (always 0 here), and `strict_replay_required` is 1.")
+
+
+def fix_changes(base: str, mode: str) -> list[str]:
+    """The Change Log entries of fixes after the release (PROTOCOL §2.8: same name and frozen instance, new digest). The
+    standard twins are unchanged; every privileged task's tests/grade.py changed (the families with a grading hold, whose
+    packages state the strict rule (R_HOLD_STRICT), change their verdicts)."""
+    if mode == "standard":
+        return []
+    hold = R_HOLD_STRICT in (PKG / f"{base}-privileged" / "instruction.md").read_text()
+    return [FIX_STRICT_GOAL if hold else FIX_STRICT_GOAL_NO_HOLD]
+
+
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
     s = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(s, rec, mode)), rec), rec), rec), rec).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
                         "checked against `tests/runtime_binding.json`)")
@@ -883,6 +907,7 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
            "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
     log = mujoco_changes(mode, rec)      # a new benchmark: the RoboARC task's own history stays with that task
+    log += fix_changes(base, mode)
     return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(log) + "\n"
 
 

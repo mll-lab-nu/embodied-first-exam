@@ -22,8 +22,8 @@
   "calls": 3
  },
  "result": {
-  "pass": false,
-  "outcome": "gave_up",
+  "pass": true,
+  "outcome": "correct_stop",
   "rows": 770,
   "state_sha": "05b628f9216c922580087ee036617551c744070533d515830a58f5cdcd2529cf",
   "robot_time_s": 15.78

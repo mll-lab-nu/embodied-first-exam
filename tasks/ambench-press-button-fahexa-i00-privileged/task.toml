@@ -16,7 +16,7 @@ simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / 
 robot = "ambench-fahexa"
 family = "press_button_fahexa"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (PROTOCOL §2): nothing but the robot does work on the scene
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 2.0
@@ -32,7 +32,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 16.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "freezing the instances and three oracle trials (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 10 s, rcb_monitor): a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.9 GiB of memory and 3.2 GiB of GPU memory (oracle trials: 2.8 / 3.1); with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) 13.2 GiB and 6.4 GiB; 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on process"
+measured = "freezing the instances, oracle trials and replays (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 2-10 s, rcb_monitor): with one environment's PhysX buffers (the tooling's), a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.0 GiB of memory and 1.2 GiB of GPU memory (Isaac Lab's default buffers: 2.9 / 3.2); the render worker that draws the cameras (Session(cameras=True), the verifier's filmed illustration) adds 11.9 GiB and 3.4 GiB (3.3-3.6 under every RTX preset tried); 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on Session"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -48,7 +48,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 28.0
-measured = "a camera-on Isaac process peaks at 13.2 GiB of memory and 6.4 GiB of GPU memory, a camera-free one at 2.9 / 3.2 (the rule's measurement); the agent may run two processes at once (a Session and the replay CLI): at most 26.4 GiB, 12.8 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "a Session with cameras peaks at 14 GiB of memory and 4.6 GiB of GPU memory (its render worker included), a camera-free one at 2.0 / 1.2 (the rule's measurement); the agent may run two Sessions with cameras at once: at most 28 GiB, 9.2 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
@@ -62,11 +62,9 @@ allowed = [0]
 oracle = [0]
 
 [verifier]
-timeout_sec = 9000.0              # tests/grade.py's limits for the longest episode (3120 rows: 1500 s + 3120 / 4 = 2280 s per
-                                  # process): two fresh-process replays (no cameras), one rerun of a replay that died early,
-                                  # and the filmed illustration (cameras on; its time-out only costs the video); measured:
-                                  # 1.5-6 min of Isaac start, the verifier's first one compiling its shaders, + 9-12 control
-                                  # steps/s
+# 4 x tests/grade.py's per-process limit for this episode (2399 rows: max(1800 s, 1500 s + rows / 4)): two fresh-process
+# replays (camera-free), one rerun of a replay that died early or had GPU faults, and the filmed illustration
+timeout_sec = 8400.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image (images/ambench/web_assets.txt)
 

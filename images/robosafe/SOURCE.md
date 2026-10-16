@@ -1,6 +1,6 @@
 # eai-robosafe: where its contents come from
 
-The snapshot is RoboSafeBench 0.5.2 (commit `2803dd4`, `source.env`), the version the tasks were frozen with.
+The snapshot is RoboSafeBench 0.5.3 (commit `70373cd`, `source.env`), the version the tasks were frozen with.
 RoboSafeBench's source repository is not public yet: the snapshot in `context/` is what this
 repository builds from, and `fetch_context.sh --check <clone>` lets a maintainer with access compare it with the
 repository.
