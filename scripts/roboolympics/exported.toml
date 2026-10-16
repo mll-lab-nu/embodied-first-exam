@@ -50,13 +50,6 @@ source_commits = ["d71e9f642ead"]
 protocol = "eai-standard-turn/1.0"   # not [protocols]: a turn-based match in mode standard
 
 [[tasks]]
-name = "roboolympics-darts-501-i01-standard"
-source_task = "roboolympics/darts-501-program-standard"
-revision = "darts-7+core-0.2"
-source_commits = ["d71e9f642ead"]
-protocol = "eai-standard-turn/1.0"   # not [protocols]: a turn-based match in mode standard
-
-[[tasks]]
 name = "roboolympics-foosball-match-i01-standard-realtime"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
@@ -141,3 +134,9 @@ source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 source_commits = ["0d7f680cc049"]
 kind = "fullsim-policy"
 generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-soccer-match-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-standard"
+revision = "soccer-2v2-10+core-0.2"
+source_commits = ["83b8b6fa65e9"]
