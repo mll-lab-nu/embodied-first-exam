@@ -53,7 +53,7 @@ measured = "author estimate: no trials yet; memory under the 16 GiB cap by the m
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
-main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
+main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 
 [metadata.seeds]
 # the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw

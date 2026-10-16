@@ -2514,6 +2514,16 @@ trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 6.0
 measured = "author estimate, not yet measured: 6 GiB under the 8 GiB container cap (2 GiB for the monitor's margin), enough for about ten worlds at once; processes 512 and disk 20 GiB: design defaults"
 
+# RoboOlympics' other privileged twins (scripts/roboolympics/privileged/generate.py): the caps that are applied (their
+# [environment] cpus / memory_mb)
+[[cap]]
+match = "^roboolympics-(badminton|soccerssl)-match-i[0-9]{2}-privileged$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+
+[[cap]]
+match = "^roboolympics-soccer-match-i[0-9]{2}-privileged$"
+main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
+
 [[cap]]
 match = "^roboolympics-tabletennis-match-i[0-9]{2}-privileged$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }

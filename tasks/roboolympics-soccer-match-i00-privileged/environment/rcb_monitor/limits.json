@@ -2,7 +2,7 @@
  "agent_timeout_sec": 7200,
  "caps": {
   "main": {
-   "cpus": 8.0,
+   "cpus": 6.0,
    "memory_gb": 16.0,
    "pids": 8192
   }
