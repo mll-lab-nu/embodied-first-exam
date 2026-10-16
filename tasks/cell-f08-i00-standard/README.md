@@ -62,3 +62,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Observations | `front`, `top`, `wrist` (RGB-D); proprioception: 28 columns (`spec()['proprio_layout']`) |
 | Episode | one, no reset; at most 90000 control steps (technical cap, 1800 s of robot time) |
 | Network | the model APIs and the package registries (`scripts/set_agent_egress.py`) |
+
+### Change Log
+- 2026-10-16 (board 0136): the sim collect hook waits for the replay video until 1680 s after the episode ends (was 870 s; `timeout_sec` 900 -> 1710). The video replays the graded episode once more after the verdict, and episodes of more than ~17,000 control steps lost it. Video only: the verdict, its 840 s bound, the physics and the pass rule are unchanged, so results from before this date stay valid.
