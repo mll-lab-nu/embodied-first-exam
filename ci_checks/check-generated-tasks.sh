@@ -36,7 +36,7 @@ gens=("kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behavior/m
 # generators that their tasks pull request adds: run when present (DexHand: the release families of
 # scripts/dexhand/release.json)
 for g in "roboolympics/gen_tasks.py check" "roboarc/mk_tasks.py --check" "yamlab/mk_tasks.py --check" \
-         "pandadyn/mk_tasks.py --check" "ambench/mk_tasks.py --check" "robodojo/mk_tasks.py --check" \
+         "pandadyn/mk_tasks.py --check" "ambench/mk_tasks.py --check" "ispatialgym/mk_tasks.py --check" "robodojo/mk_tasks.py --check" \
          "bigym2/gen_tasks.py check" "robofunolympics/gen_tasks.py check" \
          "dexhand/generate.py --check --release" \
          "molmospaces/mk_tasks.py --check" \
