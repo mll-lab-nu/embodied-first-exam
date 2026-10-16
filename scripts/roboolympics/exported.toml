@@ -139,12 +139,6 @@ revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["62333496959f"]
 
 [[tasks]]
-name = "roboolympics-soccer-duelrl-i01-standard-realtime"
-source_task = "roboolympics/soccer-duel-wallclock-program-standard"
-revision = "soccer-2v2-10+core-0.2"
-source_commits = ["7a8e2d19eab9"]
-
-[[tasks]]
 name = "roboolympics-soccerssl-match-i01-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
