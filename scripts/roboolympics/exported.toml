@@ -139,3 +139,9 @@ source_commits = ["b12667a02300"]
 patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
            "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
            # 2026-10-16, board 0146: a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
+
+[[tasks]]
+name = "roboolympics-tabletennis-matchlow-i01-standard-realtime"
+source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["aad5a9862ab8"]
