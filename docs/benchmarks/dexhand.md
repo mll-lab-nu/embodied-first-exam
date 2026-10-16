@@ -388,7 +388,8 @@ archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure e
 hand_wuji`); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a third fresh
 replay renders the replay video (`/logs/verifier/replay.mp4`, its record in `video.json`) in the verifier's remaining
 time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict (board 0136, 2026-10-16: before, the privileged
-verifier rendered no video at all).
+verifier rendered no video at all). The essential families' `replay.py` films every 2nd step, at most 1500 frames
+(`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core, so a 28k-step episode took over an hour before).
 
 **Standard** (`eai-standard/2.2`, docs/STANDARD_MODE.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer
