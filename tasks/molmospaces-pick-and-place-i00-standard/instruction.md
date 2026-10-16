@@ -1,6 +1,6 @@
 # MolmoSpaces · pick-and-place — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Pick up the realistic small white bird with feathers and place it in or on the black bowl with colorful grid.
+**Task:** Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (an Objaverse object).
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one

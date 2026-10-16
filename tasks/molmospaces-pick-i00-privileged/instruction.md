@@ -1,9 +1,9 @@
 # MolmoSpaces · pick — frozen episode
 
-**Task:** Pick up the white rectangular light switch plate.
+**Task:** Pick up the pie.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-objaverse/FrankaPickHardBench/FrankaPickHardBench_20260206_json_benchmark`,
-episode 387: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 806: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 

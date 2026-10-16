@@ -1,9 +1,9 @@
 # MolmoSpaces · pick-and-place — frozen episode
 
-**Task:** Pick up the realistic small white bird with feathers and place it in or on the black bowl with colorful grid.
+**Task:** Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-objaverse/FrankaPickandPlaceHardBench/FrankaPickandPlaceHardBench_20260206_json_benchmark`,
-episode 134: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 228: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 

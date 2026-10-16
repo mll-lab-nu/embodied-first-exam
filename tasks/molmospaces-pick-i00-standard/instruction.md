@@ -1,6 +1,6 @@
 # MolmoSpaces · pick — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Pick up the white rectangular light switch plate.
+**Task:** Pick up the pie.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (an Objaverse object).
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one
