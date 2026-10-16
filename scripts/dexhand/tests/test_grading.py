@@ -29,6 +29,14 @@ args = sys.argv[1:]
 out = Path(args[args.index("--out") + 1])
 with open(os.environ["STUB_COUNTER"], "a") as f:
     f.write(out.name + "\n")
+if "--video" in args:                       # the third replay, after the verdict (board 0136)
+    video = os.environ.get("STUB_VIDEO", "ok")
+    if video == "EXIT":
+        sys.exit(3)
+    if video == "ok":
+        Path(args[args.index("--video") + 1]).write_bytes(b"mp4")
+    out.write_text('{"video": %s}' % ("true" if video == "ok" else "false"))
+    sys.exit(0)
 n = 1 if out.name == "replay1.json" else 2
 spec = os.environ.get(f"STUB_VERDICT_{n}", "{}")
 if spec == "EXIT":
@@ -127,6 +135,34 @@ class Privileged(unittest.TestCase):
         result, reward = self.grade(_1=self.ok(), _2=self.ok())
         self.assertEqual((reward, result["bad_trajectory"], result["infra_error"]), ("0", 1, 0))
         self.assertFalse((self.tmp / "counter").exists())   # never replayed
+
+    def video(self):
+        return json.loads((self.logs / "video.json").read_text()), (self.logs / "replay.mp4").is_file()
+
+    def test_video_is_rendered_after_the_verdict(self):
+        self.traj.write_bytes(b"stub")
+        result, reward = self.grade(_1=self.ok(), _2=self.ok())
+        self.assertEqual((reward, self.video()), ("1", ({"video": True}, True)))
+        self.assertEqual((self.tmp / "counter").read_text().split()[-1], "video.json")   # the third, last replay
+
+    def test_failed_video_changes_no_verdict(self):
+        self.traj.write_bytes(b"stub")
+        before, _ = self.grade(_1=self.ok(), _2=self.ok())
+        os.environ["STUB_VIDEO"] = "EXIT"
+        try:
+            result, reward = self.grade(_1=self.ok(), _2=self.ok())
+        finally:
+            del os.environ["STUB_VIDEO"]
+        record, exists = self.video()
+        self.assertEqual((reward, result, record["video"], exists), ("1", before, False, False))
+
+    def test_no_video_without_a_replayable_archive(self):
+        result, _ = self.grade(_1=self.ok(), _2=self.ok())          # missing trajectory
+        self.assertFalse((self.logs / "video.json").exists())
+        self.traj.write_bytes(b"stub")
+        bad = {"success": False, "bad_trajectory": 1, "state_sha": "", "n_actions": 0}
+        self.grade(_1=bad, _2=bad)
+        self.assertFalse((self.logs / "video.json").exists())
 
     def test_wuji_is_reported_numerically(self):
         self.traj.write_bytes(b"stub")
