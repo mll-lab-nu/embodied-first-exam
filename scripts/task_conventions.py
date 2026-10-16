@@ -97,7 +97,8 @@ RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
                      "roboolympics-tabletennis-hitskill-i00-standard",
                      "roboolympics-tabletennis-match-i01-standard-realtime",
-                     "roboolympics-tabletennis-match-i02-standard-realtime")
+                     "roboolympics-tabletennis-match-i02-standard-realtime",
+                     "roboolympics-tabletennis-match-i03-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
