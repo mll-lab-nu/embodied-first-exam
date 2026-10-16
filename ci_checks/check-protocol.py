@@ -23,13 +23,16 @@ import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.16
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
 # Tasks a benchmark exports with its own service inside (PROTOCOL §4c): each such benchmark keeps a manifest,
 # scripts/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol each mode serves
-# (`[protocols]`); a listed directory may declare its manifest's protocol for its mode. No per-benchmark table here.
+# (`[protocols]`); a listed directory may declare its manifest's protocol for its mode, or the protocol its own row
+# names (`[[tasks]] protocol`, e.g. RoboOlympics' turn-based matches in mode standard). No per-benchmark table here.
 def _own_protocols() -> dict[str, dict[str, str]]:
     out: dict[str, dict[str, str]] = {}
     for man in sorted((ROOT / "scripts").glob("*/exported.toml")):
         d = tomllib.loads(man.read_text())
         for t in d.get("tasks", []):
             out[t["name"]] = d.get("protocols", {})
+            if t.get("protocol"):              # a task's own row may name another protocol than its mode's
+                out[t["name"]] = {**out[t["name"]], "__task__": t["protocol"]}
     return out
 
 
@@ -38,7 +41,8 @@ OWN_PROTOCOLS = _own_protocols()
 
 def own_protocol(name: str, mode: str | None) -> str | None:
     """The protocol a benchmark's own exported task may declare instead (None: not such a task)."""
-    return OWN_PROTOCOLS.get(name, {}).get(mode or "")
+    own = OWN_PROTOCOLS.get(name, {})
+    return own.get("__task__") or own.get(mode or "")
 
 
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")

@@ -1,0 +1,243 @@
+# billiards (docs/framework_zh.md §4.2, §10 stage 1): migrated from the legacy tree (scripts/olympiad/billiards/,
+# scripts/olympiad/shared/billiards/), the simulator unchanged (eightball.py, duel_core.py, render.py). Two formats:
+# `eightball` (one seat against the scripted opponent, levels 1-3) and `duel` (seat A against seat B). The legacy
+# recordings of both tasks replay to the same state hash (golden/convert.py).
+
+[sport]
+name = "billiards"
+title = "Billiards"
+summary = "one rack of American 8-ball on a 7-ft pool table: break, then call every shot (a ball and a pocket, or safety), clear your group (solids or stripes) and pot the 8 into the pocket you call; you shoot by cue direction, cue speed and tip offset, and place the cue ball when you have ball in hand; in the `eightball` format the opponent is a scripted computer player, in the `duel` format another player"
+protocol = "turn"
+revision = "billiards-3"              # plugin.REVISION; billiards-1: FIRST_PLAYER broke in the duel; legacy: eightball-turn-2
+                                      # (eightball), eightball-duel-turn-2 (duel); billiards-2: the coin toss (duel);
+                                      # billiards-3: the planning opponent (levels 1-3, every stroke checked by the
+                                      # rules, a kick search when snookered), the toss in eightball, ball_share, the
+                                      # sight camera at the cue ball's 5 cm cell
+physics = "pooltool 0.6.0 (event-based billiards physics with spin, cushions and pockets, float64, CPU); the sport's own PIL pinhole renderer draws the cameras"
+image = "ghcr.io/mll-lab-nu/eai-olympiad-billiards:0.1.0"
+status = "sport"
+publish = true
+category = "robotics-sports-arena"
+
+[rulebook]
+name = "WPA Rules of Play, section 4 (8-Ball) with the general rules (section 1) and fouls (section 3)"
+version = "effective 2025-09-15"
+url = "https://wpapool.com/wp-content/uploads/2025/09/2025.09.15-WPA-Rules.pdf"
+
+[[deviations]]
+id = "D1"
+rule = "4.3(e), 4.3(f)"
+text = "the 8 pocketed on the break is always spotted and the breaker continues if the break was legal (no re-break option)"
+affects_result = true
+[[deviations]]
+id = "D2"
+rule = "4.3(d)"
+text = "after an illegal break the other player always re-racks the same rack and breaks (option (2); the other options do not exist)"
+affects_result = true
+[[deviations]]
+id = "D3"
+rule = "4.3(g), 4.3(h)"
+text = "a foul on the break gives the other player ball in hand above the head string (no option to accept the table)"
+affects_result = true
+[[deviations]]
+id = "D4"
+rule = "1.6"
+text = "with ball in hand above the head string you cannot ask for an object ball above it to be spotted"
+affects_result = true
+[[deviations]]
+id = "D5"
+rule = "1.7, 4.6"
+text = "every shot after the break is called explicitly (a ball and a pocket, or safety): no obvious shots"
+affects_result = true
+[[deviations]]
+id = "D6"
+rule = "2.9"
+text = "the action has no cue elevation, so there are no jump or masse shots"
+affects_result = false
+[[deviations]]
+id = "D7"
+rule = "1.6"
+text = "the cue ball cannot be placed touching a ball or in a pocket opening"
+affects_result = false
+[[deviations]]
+id = "D8"
+rule = "4.11"
+text = "a 60-shot limit per player replaces the stalemate rule: a player out of shots passes; when both have used all 60 the player with fewer balls left in its group wins (an open table counts as 7); if level, the player with more chess-clock time left (eightball: the scripted opponent's clock never runs, so a tie goes to it); if the clocks are equal too, (last resort, not from the rulebook) the player who did not break"
+affects_result = true
+[[deviations]]
+id = "D9"
+rule = "1.2, 4.1"
+text = "no lag for the break (the rulebook: the players lag and the winner of the lag chooses who breaks; neither the Rules of Play nor the Playing Regulations provide a coin toss): a coin toss drawn from the seed decides who breaks (the toss decides, nobody chooses); duel: FIRST_PLAYER if it falls 0, else the other player, and every pairing plays both first orders; eightball (since billiards-3): you if it falls 0, else the scripted opponent, at every level (billiards-2: level 1 you, level 2 the opponent, which put the break's edge of about 6 pp into the difference between the levels)"
+affects_result = true
+[[deviations]]
+id = "D10"
+rule = "none (simulation)"
+text = "a shot the physics engine cannot resolve (a rare internal failure of pooltool) is simulated again from the same position with the aim nudged by 0.001 degree steps in a fixed order (+0.001, -0.001, +0.002, ... up to +-0.03) until it resolves; the shot report says so (physics_retry). If none resolves, the shot is void (billiards-3): nothing moves (a cue placement is undone too), no foul, and the same player shoots again with the same ball in hand; the shot number advances (a new execution draw) but the shot does not count towards the player's 60; the shot report says so (void). Deterministic: the replay does the same"
+affects_result = true
+[[deviations]]
+id = "D11"
+rule = "section 1 (the player shoots with the cue)"
+text = "the cue is a declared cue machine, like Deep Green, the pool-playing robot of Queen's University (a ceiling-mounted gantry robot with a cue on a robotic wrist; Greenspan et al., Toward a Competitive Pool-Playing Robot, IEEE Computer 41(1), 46-53, 2008, https://doi.org/10.1109/MC.2008.33), not a player: you set the cue's direction, speed and tip offset at impact and the machine strikes with a stated execution scatter. Cue speed 0.3 to 7 m/s: within the cue speeds reported for Deep Green (about 3 m/s for its normal stroke, up to 12 m/s for its break stroke; speeds above about 3 m/s correspond to the break stroke); the execution scatter is an estimate, not the machine's number"
+affects_result = false
+
+[formats.eightball]
+seats = ["A"]
+opponent = true                       # the scripted opponent of eightball.py (RCB_LEVEL 1-3); success = winning the rack
+[formats.duel]
+seats = ["A", "B"]
+first = ["A", "B"]                    # the runner plays both first orders; the seed's coin toss decides who breaks
+
+[modes]
+action_levels = ["low"]               # one level: the shot (cue direction, speed, tip offset, placement, call)
+plays = ["program"]
+
+[timing]
+clock_s = 3600                        # each player's chess clock, running only on its own turn
+start_timeout_s = 1800
+
+[observation]
+fields = ["shot_number", "balls_on_table", "cue_ball_on_table", "breaker", "your_group", "opponent_group",
+          "your_balls_left", "opponent_balls_left", "your_shots", "opponent_shots", "max_shots",
+          "shots_since_your_last", "break_shot", "ball_in_hand", "on_the_8", "call_required", "result"]
+renderer = "mujoco"                   # required by the contract check; billiards draws its own images (render.py via
+                                      # Match.camera_job, final.json renderer = "sport"): its image has no MuJoCo
+frame_budget_ms = 1500                # measured ~300 ms (top 1120 x 640 + sight 960 x 540, PIL, CPU)
+columns = 2
+
+[spec]                                # the rule constants: /spec shows them, the prompt lists them
+world = "metres; the playing surface (inside the cushion noses) is 0 <= x <= W = 0.9906, 0 <= y <= L = 1.9812 with the cloth at z = 0; z up; balls have radius R = 0.028575, all the same mass"
+pockets = "six pockets (centres and radii in `game spec` table.pockets): lb (0, 0), rb (W, 0), lc (0, L/2), rc (W, L/2), lt (0, L), rt (W, L) (l/r: x = 0 / W; b/c/t: y = 0 (head end) / L/2 / L (foot end); the letters are not image directions); the openings are about 11.7 cm wide at the corners and 13.5 cm at the sides; side pockets accept only balls that come in fairly straight (within about 45 degrees of the cushion normal)"
+spots = "head spot (W/2, L/4), foot spot (W/2, 3L/4); the head string is the line y = L/4 and `above the head string` means y < L/4 (the line itself excluded); diamonds on the rails every L/8 along the long rails and every W/4 along the short rails"
+shot = "game act '{\"type\": \"shoot\", \"aim_deg\": 87.5, \"speed\": 2.0, \"spin_x\": 0.0, \"spin_y\": -0.2, \"call\": \"3:rc\"}' (HTTP POST /act with that body): the cue stick's state at impact, not a target. aim_deg: the direction the stick points and strikes, degrees counter-clockwise from +x (0 = +x, 90 = +y; taken modulo 360); with a centre hit the cue ball leaves in exactly this direction. speed: 0.3-7 m/s; a centre hit sends the cue ball off at about 1.54 x speed; on an empty table a centre-hit cue ball travels (cushions included) about 0.6 m at 0.3, 1.6 m at 0.5, 3.3 m at 1.0 and 5.6 m at 2.0. spin_x, spin_y (default 0): where the tip hits, in ball radii from the centre: spin_x > 0 right english, spin_y > 0 follow, spin_y < 0 draw; sqrt(spin_x^2 + spin_y^2) <= 0.5; sidespin turns the start direction a little (squirt: about 1.2 degrees clockwise seen from above for spin_x = 0.3)"
+ball_in_hand = "cue_x, cue_y (both or neither, only with ball in hand): place the cue ball first. It must lie on the table (R <= x <= W - R, R <= y <= L - R), not touch a ball, not lie in a pocket opening, and with the ball in hand above the head string lie at y < L/4. Without them the cue ball stays where it is; a potted cue ball goes on the head spot (or the nearest free point on the long centre line), or, in hand above the head string, on (W/2, L/4 - 0.05) (or the nearest free point there)"
+call = "required on every shot except the break, refused on the break: BALL:POCKET with a ball you may hit first (e.g. 3:rc, 8:lt), or safety. A refused action (HTTP 400) changes nothing"
+execution_noise_1sigma = { aim_deg = 0.06, speed_rel = 0.02, spin = 0.01, note = "every shot of both players; the n-th shot of the game gets the same random draw whoever shoots it" }
+physics_model = "sliding friction 0.2, rolling resistance 0.01, ball-ball restitution 0.95, cushion restitution 0.85; a ball struck without spin slides first and then rolls; after a full-ball hit a stun cue ball stops, a follow ball keeps rolling forward and a draw ball comes back; in a cut shot the object ball leaves along the line of centres at contact (ghost-ball aim: send the cue ball to the point 2R behind the object ball on the line from the pocket through the object ball), slightly thrown by friction"
+rack = "the 15 object balls in a triangle with the front ball on the foot spot, the 8 in the middle of the third row, one solid and one stripe in the back corners; the order of the others and a small jitter depend on the seed"
+break_rule = "the breaker has ball in hand above the head string; the break is not called; it is legal if a ball is potted or at least four object balls reach a cushion. After a legal break that pots a ball (the 8 included: it is spotted again) the breaker shoots again; the table is open after the break. After an illegal break the balls are racked again in the same order and the other player breaks. A scratch, or an object ball driven off the table, on an otherwise legal break is a foul: the other player has ball in hand above the head string. A spotted ball goes on the long centre line as close as possible to the foot spot, towards the foot rail; if that is blocked, as close as possible above the foot spot"
+called_shots = "you stay at the table only if the called ball is pocketed in the called pocket on a legal shot; other balls pocketed on a legal shot stay down and count for whoever's group they belong to; a safety ends your turn"
+groups = "on an open table you may hit any object ball except the 8 first, unless a group has been completely pocketed: then you may claim that group and shoot (and call) the 8. The groups are decided when a player legally pockets its called ball: that ball's group (solids 1-7 or stripes 9-15) becomes the shooter's, the other group the opponent's"
+fouls = "after the break: the cue ball is potted; an object ball is driven off the table; no ball is hit; the first ball hit is not one you may hit first; after the first contact no ball is potted and no ball reaches a cushion; with ball in hand above the head string, the first ball contacted lies above the head string and the cue ball had not crossed the head string before that contact. Balls potted on a foul stay down; after a foul the other player has ball in hand anywhere"
+eight_ball = "once your group is cleared you are on the 8 and call it into a pocket: you win by pocketing it in the called pocket on a legal shot; you lose if you pocket it before your group is cleared, in a pocket you did not call (or on a safety), on a foul, or drive it off the table"
+shot_limit = "60 shots each; a player who has used all 60 passes (ball in hand stays); when both have, the player with fewer balls left in its group wins (an open table counts as 7), then the player with more chess-clock time left"
+eightball_format = "one player (seat A) against a scripted computer opponent of level RCB_LEVEL 1-3 (`game spec` match.opponent_level). At every level it looks ahead with the physics: it plays real safeties (the legal hit that leaves you the hardest best pot), places the cue ball for a run when it has ball in hand, and when you are on the 8 it pots only near-certain balls and otherwise plays safe. Every stroke it plays is judged by the rules first, also with its own aiming error and the execution scatter (it avoids strokes that risk potting the 8 illegally, a scratch or another foul), and when it has neither a pot nor a safety on a clear path it searches every direction for a legal kick (with none safe enough, the least risky stroke). On the 8 it never calls safety: it calls the pocket the 8 is likeliest to reach. The levels differ: level 1 (aiming error 0.15 degrees) plays no position (it takes the plain stroke of its best pot, never minding where the cue ball stops); level 2 (0.2 degrees) plays position (the pot and stroke whose cue ball leaves the easiest next pot); level 3 (0.1 degrees) plays position and searches its safeties more widely (more cuts and speeds, each kept only if it also works with the aim 0.3 degrees off). A coin toss drawn from the seed decides who breaks (`game spec` match.breaker), at every level; the opponent's chess clock never runs, so a tie at the shot limit goes to it. Success = winning the rack; the continuous score is ball_share (your share of the rack's progress: your group's balls down, plus 1 for the winner, over the same for both players)"
+duel_format = "seat A (player 0) against seat B (player 1); a coin toss drawn from the seed decides who breaks (FIRST_PLAYER if it falls 0, else the other player; `game spec` match.breaker and match.you_break say who)"
+observation = "the state: your group and the opponent's (open, solids, stripes; `(on the 8)` once cleared), the balls left in each group, the shots taken, the balls on the table by number, who broke (the coin toss in the duel), the shots since your last one (who, the call and whether it was made, the first ball hit, the balls potted and their pockets, fouls, the groups assigned, whether the cue ball was placed; no coordinates) and, on your turn, break_shot, ball_in_hand (none, above the head string, anywhere), on_the_8, call_required. One PNG of two camera tiles (observation.tiles): top (1120 x 640, fixed overhead 2.6 m above the table centre looking straight down; image right = +y, image down = +x) and sight (960 x 540, set up at the sight anchor, the cue ball's position rounded to a 5 cm grid (x and y to multiples of 0.05 m), so that its pose gives only the cue ball's cell: an eye 0.75 m behind the anchor and 0.32 m above the cloth looking at the cloth 1.0 m ahead of it along the sighting direction; game observe '{\"aim\": DEG}' chooses it, default from the anchor towards the table centre; the cue stick is drawn along it through the cue ball in both views, and the cue ball appears within about 3.5 cm of the view's axis; with the cue ball off the table it looks from the head spot's cell). Both are ideal pinhole cameras with OpenCV axes; their poses and intrinsics are in the observation's `cameras`: p_cam = R_world_to_camera @ (p_world - position_world), u = fx x / z + cx, v = fy y / z + cy; a ball's image centre is the projection of its centre at z = R. Solids are coloured all over, the 8 black, stripes white with a coloured band; each object ball shows its number on a white disc; the cue ball is plain white"
+
+[tiebreaks]
+order = ["rack", "balls_left", "chess_clock", "did_not_break"]
+text = "the rack is won by potting the 8 legally in the called pocket after clearing your group and lost by an illegal 8 (before your group is cleared, in a pocket not called, on a foul, off the table); at the 60-shot limit the player with fewer balls left in its group wins (an open table counts as 7); if level, the player with more chess-clock time left (eightball: the scripted opponent's clock never runs, so a tie goes to it); if the clocks are equal too, (last resort, not from the rulebook) the player who did not break"
+last_resort_in_prompt = true
+
+[[exploits]]
+id = "E1"
+text = "an out-of-range or malformed shot is refused (HTTP 400) and changes nothing: speed, tip offset beyond 0.5 radii, a lone cue_x, unknown fields, a non-numeric aim"
+test = "test_exploit_bad_shots_are_refused"
+[[exploits]]
+id = "E2"
+text = "shooting out of turn (or before the review of your last shot) is refused (HTTP 409); the turn order cannot be gamed, and neither can the break: the seed's coin toss decides who breaks, whatever the configuration names first or the opponent level"
+test = "test_exploit_out_of_turn"
+[[exploits]]
+id = "E3"
+text = "the observation never holds a ball's coordinates (only the cameras show them): a shot report says whether the cue ball was placed, not where, and the sight camera is set up at the cue ball's 5 cm cell, so its exact pose (position_world + 0.75 m along the aim) and its default aim give the cell, not the ball (billiards-3; the camera behind the ball itself gave its exact position); the sighting query changes nothing"
+test = "test_exploit_no_positions_in_observation"
+[[exploits]]
+id = "E4"
+text = "the rules are enforced before a shot is logged: a call on the break, a missing call after it, a call of a ball you may not hit first, a cue placement without ball in hand or above the head string when it must lie below it are refused (HTTP 400)"
+test = "test_exploit_rules_refused_before_the_shot"
+[[exploits]]
+id = "E5"
+text = "a tie at the shot limit cannot be stalled into a win: the clocks recorded with the last shot decide, equal clocks go to the player who did not break, and in the eightball format the scripted opponent wins a tie"
+test = "test_exploit_tie_rules"
+[[exploits]]
+id = "E6"
+text = "both seats get the same execution scatter for the same shot (the n-th shot of the game), so the seat gives no luck advantage: swapping the seats and the first order gives the mirrored game"
+test = "test_exploit_same_noise_both_seats"
+[[exploits]]
+id = "E7"
+text = "a shot the physics engine cannot resolve neither crashes the match nor changes anything else: it is simulated again with the aim nudged, and if that fails too it is void and replayed (no foul, nothing moves, not counted), deterministically (the replay does the same)"
+test = "test_exploit_engine_failure_is_deterministic"
+[[exploits]]
+id = "E8"
+text = "luring the scripted opponent into losing by itself does not pay: it judges every stroke by the rules before playing it (eightball.verdict, the referee's rules on the simulated outcome, also at its own execution scatter), snookered it plays a legal kick found by a sweep of every direction, not a blind firm hit, and on the 8 it calls a pocket rather than safety; against a program that only plays snookers (research/rerun/billiards_v3/fix, docs/screening/billiards.md section 6) it loses 6-7 % of the racks by itself (against the reference 0-2 %), so that program wins 6-7 % of its racks, far below the reference and the greedy player (billiards-3: the step-5 trials found its fallback safety fouling 5 times out of 5 and an attack that potted the 8 with the called ball)"
+test = "test_exploit_opponent_plays_legal"
+
+[players]
+reference = "reference"
+reference_class = "builtin_players:Reference"
+check = ["random"]
+baselines = ["greedy", "random", "fixed"]   # the simple baselines of step 4 (greedy: billiards-2's reference)
+ablations = ["nosafety", "blindopp"]        # camera capability-sensitivity players (b2: no safeties; blind to the opponent's
+                                            # balls); the measured ones run on the true positions: builtin_players.TRUTH_PLAYERS,
+                                            # screen/hooks.py SENSITIVITY (safety, reading the opponent, position; two strengths)
+
+[fairness]
+policy = "reference"
+matches_per_order = 250               # N = 500: 95% CI about +-4.4 pp
+max_advantage_pp = 5
+mirror = "exact"                      # swapping seats and the first order gives the mirrored game
+
+[official]
+seeds = [1, 2, 3, 4, 5, 6, 7, 8]      # duel: 1, 3, 4 (both first orders); eightball: every level, the seed's coin toss
+                                      # breaks: the player for 2, 3, 4, 6, the scripted opponent for 1, 5, 7, 8 (4 + 4)
+levels = [1, 2, 3]                    # all three pass the step-4 gates (docs/screening/billiards.md §6); the default
+                                      # (RCB_LEVEL unset) is level 1, the lowest official level
+first_any = true
+
+[official.hidden_seeds]                 # registered hidden seed set (tools/seeds.py; public commitments: seed_commitments.json)
+sha256 = "cb6df28190e70aac276e72c8d073acff71a9c3879af0eef349facec58f5fcba0"
+counts = { "duel" = 20, "eightball/L1" = 20, "eightball/L2" = 20, "eightball/L3" = 20 }
+
+[score]                               # the continuous score (core/score.py): larger is better
+name = "ball_share"
+text = "the side's share of the rack's progress: its group's balls down plus 1 for the winner, over the same for both sides (0.5 while nothing counts); the scores are the balls LEFT in each group, lower is better"
+from = "hook"                         # plugin.BilliardsMatch.continuous_score (a share of the scores would invert it)
+forfeit = 0.0
+range = [0, 1]
+
+[reference]                           # tools/check stage 5: the opponent calibration and the camera-only evidence
+match = "refcheck:reference_match"
+seeds = 200                           # seeds 1-200 per official level (one rack each, the seed's coin toss breaks):
+                                      # the gate evidence is 200 racks per level (docs/screening/billiards.md section 6);
+                                      # with 20 the truth reference at L1 (about 60 %) misses the majority 1 time in 4
+                                      # (ws 2026-10-12: 10/20); 200 racks take about 8 CPU-s each (tools/check --jobs N)
+camera_seeds = 20                     # seeds 1-20 at the lowest level (the camera reference won 11/20 on the laptop)
+
+[[reference.camera_wins]]             # model racks won with cameras only (screening step 5 on billiards-3 after the fixes, 2026-10-13)
+format = "eightball"
+level = 1
+who = "GPT-6.1 SOL (sol-sub, Codex 0.158.0, reasoning high), seed 5"
+score = "won (ball share 0.57)"
+evidence = "docs/screening/billiards.md#7-第⑤步模型试跑"
+
+[[reference.camera_wins]]
+format = "eightball"
+level = 2
+who = "GPT-6.1 SOL (sol-sub, Codex 0.158.0, reasoning high), seed 2"
+score = "won (ball share 0.57)"
+evidence = "docs/screening/billiards.md#7-第⑤步模型试跑"
+
+[check]
+stage_timeout_s = 7200                # stage 5's 200 truth racks per level take up to about 3000 s in one container
+
+[golden]
+episodes = "golden"
+
+[[tasks]]
+format = "eightball"
+action_level = "low"
+[[tasks]]
+format = "duel"
+action_level = "low"
+
+[capabilities]                        # docs/capabilities_zh.md: 2 primary, 1 secondary, 0 none
+a1 = 2                                # ball positions from the overhead image (back-projection), the sighting view
+a2 = 2                                # cut angles, spin, cushions, the cue ball's path after contact
+a3 = 2                                # the stroke (direction, speed, tip offset) under execution scatter decides
+a4 = 0                                # turn-based: no time pressure
+b1 = 2                                # calls, groups, fouls, ball in hand, the 8, the break rules
+b2 = 2                                # shot choice: position for the next shot and the opponent's leave (after the
+                                      # step-5 fixes the reference loses 9-14 pp ignoring the leave at every level and
+                                      # 20 / 9 pp without position at L2 / L3; safety play no longer shows; README)
+b3 = 0
+physics = ["collision", "spin_bounce", "friction_rolling"]

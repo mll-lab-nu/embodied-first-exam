@@ -1,0 +1,223 @@
+# curling (docs/framework_zh.md §4.2, §10 stage 1): migrated from the legacy tree (scripts/olympiad/curling/). Two
+# formats: `match` (one seat against the scripted red team, levels 1-3) and `duel` (seat A yellow against seat B red).
+# curling-3 (2026-10-11): the ice's deceleration scale kd is hidden and drawn per seed, scripted level 3; the golden
+# cases were re-recorded (the legacy recordings no longer replay since curling-2). curling-4 (2026-10-12, step-5
+# review C4): level 2 is level 3's planner with a larger execution error (a takeout-only program beat the old level 2),
+# level 1 is a warm-up level (not official), the reference never takes out through a protected guard.
+
+[sport]
+name = "curling"
+title = "Curling"
+summary = "two teams slide granite stones down a sheet of ice towards the house, 4 ends of 5 stones per team; you skip one team and throw every one of its stones (release speed, direction and spin); in the `match` format the other team is a scripted computer team, in the `duel` format another player"
+protocol = "turn"
+revision = "curling-4"                # plugin.REVISION; legacy: turn-2 (match), duel-turn-2 (duel)
+physics = "curling ice model (DigitalCurling FCV1, pure Python, 1 ms steps) with impulse collisions; MuJoCo renders the cameras"
+image = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+status = "sport"
+publish = true
+category = "robotics-sports-arena"
+
+[rulebook]
+name = "World Curling, The Rules of Curling and Rules of Competition"
+version = "July 2025"
+url = "https://worldcurling.org/wp-content/uploads/2025/08/Rules-2025.pdf"
+
+[[deviations]]
+id = "D1"
+rule = "C5, R2(b)"
+text = "4 ends of 5 stones per team (official: 8 or 10 ends of 8 stones)"
+affects_result = true
+[[deviations]]
+id = "D2"
+rule = "R12(a)"
+text = "at most 3 extra ends while tied; then the player with more chess-clock time left wins (official: extra ends until a team scores)"
+affects_result = true
+[[deviations]]
+id = "D3"
+rule = "R8"
+text = "no sweeping"
+affects_result = true
+[[deviations]]
+id = "D4"
+rule = "R5"
+text = "the stone is released at the hack with the given speed, direction and spin (no delivery rules)"
+affects_result = false
+[[deviations]]
+id = "D5"
+rule = "R7"
+text = "no no-tick rule"
+affects_result = true
+[[deviations]]
+id = "D6"
+rule = "R5(a)"
+text = "the team with the hammer in end 1 is decided by a coin toss drawn from the seed (official: a coin toss or a last stone draw). Match format: the toss gives the hammer to you or to the scripted team, and the official seeds are balanced (per level, half of them give you the hammer); duel: FIRST_PLAYER throws the first stone of end 1 if the toss falls 0, else the other player (it falls 0 for the official seeds 1-3), and the other player has the hammer"
+affects_result = true
+[[deviations]]
+id = "D7"
+rule = "R5 (delivery)"
+text = "the stones are thrown by a declared delivery machine, like the real curling robots: Sone and Kawamura's pneumatic stone delivery robot (Shinshu University; J. Robot. Mechatron. 36(4), 864-870, 2024, https://doi.org/10.20965/jrm.2024.p0864) delivers at 2.0 to 4.0 m/s with high repeatability, and Curly (Korea University; Won, Mueller and Lee, Science Robotics 5(46), eabb9764, 2020, https://doi.org/10.1126/scirobotics.abb9764) won 3 of 4 official matches against top-level human teams. Release speed 0.5 to 4.0 m/s: the top is the Sone machine's; below about 2.2 m/s a stone stops short of the far hog line and is removed from play, so every throw that stays in play is within the machine's 2.0 to 4.0 m/s. The spin (always pi/2 rad/s, either way) is within the human range but has no robot source, and the execution scatter is an estimate, not a machine's number"
+affects_result = false
+[[deviations]]
+id = "D8"
+rule = "- (the ice and pre-game practice, not from the rulebook)"
+text = "the ice's deceleration scale kd (hidden, drawn per match from 0.97-1.03, the same for both teams) is learnt during the match: there is no pre-game practice on the sheet. Match format: the scripted computer team plays on the true ice (it knows kd, like a home team on its own ice); you learn it from your throws"
+affects_result = true
+
+[formats.match]
+seats = ["A"]
+opponent = true                       # the scripted team of curling.py (RCB_LEVEL 1-3; official 2-3); success = winning the match
+[formats.duel]
+seats = ["A", "B"]
+first = ["A", "B"]                    # the runner plays both first orders
+
+[modes]
+action_levels = ["low"]               # one level: the release (speed, angle, spin)
+plays = ["program"]
+
+[timing]
+clock_s = 3600                        # each player's chess clock, running only on its own turn
+start_timeout_s = 1800
+
+[observation]
+fields = ["score", "your_colour", "regulation_ends", "ends_so_far", "throws_since_your_last", "end", "extra_end",
+          "throw_in_end", "your_stone", "hammer", "stones_left_to_throw", "stones_in_play"]
+renderer = "mujoco"
+frame_budget_ms = 1500                # measured ~490 ms; house 600 x 1000 + hack 1024 x 576, CPU (osmesa)
+reply_images = "the reply to each of your throws shows the house camera (600 x 1000) right after your stone and every stone it moved came to rest, before the next stone (in the match format the scripted team's reply follows inside your action, so this is the only image of where your stone stopped if the reply moves it)"
+columns = 2
+
+[spec]                                # the rule constants: /spec shows them, the prompt lists them
+world = "metres; the release point (the hack) is the origin, +y runs down the sheet towards the far house, +x is to the right as seen from the hack, z up"
+sheet = "far hog line y = 32.004, tee line y = 38.405 (the tee, the centre of the house, is at (0, 38.405)), back line y = 40.234; the house has radius 1.829 with rings at 1.219 and 0.610 and the button at 0.152; the sheet spans |x| <= 2.375; stones have radius 0.145 and mass 19.96 kg (top of a stone at z = 0.112, handle top at 0.146)"
+throw = "game act '{\"type\": \"throw\", \"speed\": 2.5, \"angle\": 2.0, \"spin\": \"ccw\"}' (HTTP POST /act with that body): the stone's state at release, not a target. speed: release speed at the hack, 0.5-4.0 m/s; angle: release direction in degrees from the centre line, + = to the right (+x), |angle| <= 5; spin: ccw (counter-clockwise seen from above) curls the stone to the left (-x), cw to the right (+x). The numbers are rounded to 6 decimals. Once released the stone cannot be stopped, steered or swept: the simulation runs it, and every stone it moves, to rest inside the action (in the match format the scripted team's stones follow inside the same action). The delivery machine adds only the declared execution scatter (execution_noise_1sigma); it reads nothing of the sheet and never aims or corrects. Refused, changing nothing: a value out of range, not a number, a missing or extra field (HTTP 400); a throw out of turn or before the review of your last action (409); a second action while one is in flight (429)"
+execution_noise_1sigma = { speed_m_s = 0.004, angle_deg = 0.03, note = "about +-14 cm in length for a draw and +-2 cm sideways at the house; each player's execution noise is independent of the opponent's within a match (its own seeded stream, its size the thrower's own); the two matches of a duel pair (the same seed, the first player swapped) swap the noise sequences, so over the pair both players meet the same draws", draw = "every throw: the release speed becomes speed + 0.004 z1 m/s (then kept within 0.1-4.05 m/s) and the direction angle + 0.03 z2 degrees, with z1, z2 independent standard normal numbers, new for every stone; they come from the thrower's own random stream, keyed by the match seed, the end, the stream (match: you 1, the scripted team 2; duel: the player who throws the first stone of end 1 1, the other 2) and the stone's number in the end; the scripted team's sizes are its level's (level 1: 0.020 m/s, 0.08 degrees; level 2: 0.010 m/s, 0.05 degrees; level 3: 0.006 m/s, 0.035 degrees); the spin is never perturbed" }
+ice = "the speed v decreases at a(v) = kd x (0.00200985 / (v + 0.06385782) + 0.00626286) x 9.80665 m/s^2, where kd is this sheet's deceleration scale: one number for the whole match and for both teams, somewhere in 0.97-1.03 (drawn per match, not told; read it off your own throws). A rotating stone curls: the direction of its velocity turns at 0.00820 x v^-0.8 rad/s, towards -x for ccw and +x for cw; every stone is released with |omega| = pi/2 rad/s, the spin decays at 0.025 / v rad/s^2 and this never reverses the curl. The curl is strongest when the stone is slow: a draw curls much more than a takeout. The simulation steps these laws every 1 ms"
+collisions = "elastic (restitution 1, equal masses) with friction 0.2 at the contact; a full hit on a stationary stone roughly stops the thrower and sends the struck stone on at the thrower's speed; glancing hits split the motion"
+in_play = "a delivered stone that does not come to rest completely beyond the far hog line (stone centre y < 32.149) is removed from play unless it struck another stone; a stone that touches the side line (|x| + 0.145 >= 2.375) or completely crosses the back line (y - 0.145 > 40.234) is removed"
+free_guard_zone = "the area between the far hog line and the tee line, excluding the house; before the 6th stone of an end, if a delivered stone moves an opposition stone from the zone out of play (directly or indirectly), the delivered stone is removed and every moved stone is put back"
+scoring = "after all 10 stones of an end, the team with the stone closest to the tee (among stones in the house: centre distance < 1.829 + 0.145) scores one point for each of its stones in the house closer than the other team's closest stone; no stone in the house: a blank end"
+hammer = "the team without the hammer (the last stone of the end) throws first and the teams alternate; after an end the team that scored throws first in the next end; a blank end keeps the hammer"
+match_format = "one player (seat A, yellow) against a scripted computer team (red) of level RCB_LEVEL 1-3 (level 1 is a warm-up level; levels 2 and 3 are the official ones): level 1 draws to the button and takes out your stones, choosing the shot that would score best if the end ended now; levels 2 and 3 choose among draws, takeouts (also off-centre and firm), centre and corner guards, peels of your guards once the free guard zone allows and, with the last stone, throw-aways, by a positional value (the score if the end ended now, discounted early in the end; its centre guards when it lacks the hammer; your guards and stones in the house when it has it; a finished end by its chance to win the match) and look one reply of yours ahead; level 3 throws more precisely than level 2; it plays on the true ice (deviation D8); its execution error is its own size; a coin toss drawn from the seed decides who has the hammer in end 1 (`game spec` match.hammer_end_1 says who); its chess clock never runs. Success = winning the match"
+duel_format = "seat A (yellow) against seat B (red); a coin toss drawn from the seed decides who throws the first stone of end 1 (FIRST_PLAYER when it falls 0, else the other player; `game spec` match.throws_first_in_end_1 says who), and the other player has the hammer in end 1"
+observation = "the score, the end, the throw in the end, the hammer, the stones left to throw and in play, the ends so far and the throws since your last one (what was heard: collisions, stones removed and why; no stone coordinates), and one PNG of two camera tiles: house (straight above the far house, image up = +y, image right = +x) and hack (behind the hack looking down the sheet). Stones are grey granite with a coloured top and handle"
+
+[tiebreaks]
+order = ["points", "chess_clock", "hammer_in_end_1"]
+text = "the higher total after 4 ends wins; if level, extra ends are played until a team scores, at most 3; if still level, the player with more chess-clock time left wins (match format: the scripted team's clock never runs, so a tie goes to it); if the clocks are equal too, (last resort, not from the rulebook) the player who had the hammer in end 1"
+last_resort_in_prompt = true
+
+[[exploits]]
+id = "E1"
+text = "an out-of-range or malformed throw is refused (HTTP 400) and changes nothing"
+test = "test_exploit_bad_throws_are_refused"
+[[exploits]]
+id = "E2"
+text = "throwing out of turn (or before the review of your last throw) is refused (HTTP 409); the turn order cannot be gamed"
+test = "test_exploit_out_of_turn"
+[[exploits]]
+id = "E3"
+text = "the observation never holds a stone's coordinates (only the cameras show them)"
+test = "test_exploit_no_positions_in_observation"
+[[exploits]]
+id = "E4"
+text = "free guard zone: taking out an opposition guard before the 6th stone of an end removes the thrower and puts the stones back"
+test = "test_exploit_free_guard_zone"
+[[exploits]]
+id = "E5"
+text = "a tie after the last extra end cannot be stalled into a win: the clocks recorded with the last throw decide, equal clocks go to the player who had the hammer in end 1, and in the match format the scripted team wins a tie"
+test = "test_exploit_tie_rules"
+[[exploits]]
+id = "E6"
+text = "the opponent's stones tell nothing about your own execution noise: each team draws its own stream (duel: the first player's and the other's, swapped by the two matches of a pair, so over the pair the seat or colour gives no luck advantage; match: the player's and the scripted team's). Until curling-1 the n-th stone of each team got the same draw, which the team throwing later could pre-compensate"
+test = "test_exploit_independent_noise_streams"
+[[exploits]]
+id = "E7"
+text = "the ice's deceleration scale kd is hidden (curling-3): no spec field, observation or reply holds kd or a quantity it can be read off directly (no stone coordinates, no throw durations, no actual release); with the same throws on kd = 0.97 and 1.03, the spec, the observations and the replies are identical while the stones touch nothing (only the camera images differ)"
+test = "test_exploit_hidden_ice"
+[[exploits]]
+id = "E8"
+text = "the reply image of a throw (curling-3) shows that stone and every stone it moved at rest and nothing later: in the match format the scripted team's reply, thrown inside the same action, is not in it (the image cannot be used to see more than the player could see on the ice at that moment); drawing it never changes the match"
+test = "test_reply_image_is_own_throw_at_rest"
+
+[players]
+reference = "reference"
+reference_class = "builtin_players:Reference"
+check = ["random"]
+
+[fairness]
+policy = "reference"
+matches_per_order = 800               # N = 1600: 95% CI about +-2.5 pp (at N = 800 the coin toss of the seeds alone moved the first-player rate by 6 pp)
+max_advantage_pp = 5
+mirror = "statistical"                # A is always yellow (the rules), so a swapped match differs in colour only
+
+[official]
+seeds = [1, 2, 3, 7202, 7212, 7222, 7232, 7303, 7313, 7323, 7343]   # duel: 1-3 (both first orders); match: 4 per official level (L2 72xx, L3 73xx), the hammer in end 1 balanced: the player has it for 7212, 7232, 7303, 7323
+levels = [2, 3]                       # level 1 is a warm-up level (curling-4): the takeout-only program and curling-2's one-step plan win ~70% of it
+first_any = true
+
+[official.hidden_seeds]                 # registered hidden seed set (tools/seeds.py; public commitments: seed_commitments.json)
+sha256 = "8a4ef216b2239be59bf89c68e2eeaf80c03401ed3304d3c5df4bf0544cd9f4b2"
+counts = { "duel" = 20, "match/L2" = 20, "match/L3" = 20 }
+
+[golden]
+episodes = "golden"
+
+[score]                               # the continuous score (core/score.py; grade.py also reports it as stone_share)
+name = "stone_share"
+text = "the share of the match's points the side scored, points for / (points for + points against), 0.5 when nobody scored"
+from = "share"
+forfeit = 0.0
+range = [0, 1]
+
+[reference]                           # tools/check stage 5, the reference check (docs/screening/README.md)
+match = "refcheck:reference_match"    # the built-in reference against the scripted team, truth or camera perception
+seeds = 40                            # per official level (truth)
+camera_seeds = 40                     # the camera reference at the lowest official level
+
+[[reference.camera_wins]]             # model matches won with cameras only (screening step 5 on curling-4, 2026-10-13)
+format = "match"
+level = 2
+who = "GPT-6.1 SOL (sol-sub, Codex 0.158.0, reasoning high), seed 7212"
+score = "4:3"
+evidence = "docs/screening/curling.md#7-第⑤步模型试跑"
+
+[[reference.camera_wins]]
+format = "match"
+level = 2
+who = "GPT-6 Astra (astra-sub, Codex 0.158.0, reasoning high), seed 7212"
+score = "7:1"
+evidence = "docs/screening/curling.md#7-第⑤步模型试跑"
+
+[[reference.camera_wins]]
+format = "match"
+level = 3
+who = "GPT-6.1 SOL (sol-sub, Codex 0.158.0, reasoning high), seed 7303"
+score = "4:1"
+evidence = "docs/screening/curling.md#7-第⑤步模型试跑"
+
+[[reference.camera_wins]]
+format = "match"
+level = 3
+who = "GPT-6 Astra (astra-sub, Codex 0.158.0, reasoning high), seed 7303"
+score = "2:1"
+evidence = "docs/screening/curling.md#7-第⑤步模型试跑"
+
+[[tasks]]
+format = "match"
+action_level = "low"
+[[tasks]]
+format = "duel"
+action_level = "low"
+
+[broadcast]
+camera = { name = "broadcast", pos = [0.0, 30.0, 4.0], lookat = [0.0, 38.4, 0.0], fovy_deg = 40, width = 640, height = 360 }
+
+[capabilities]                        # docs/capabilities_zh.md: 2 primary, 1 secondary, 0 none
+a1 = 1                                # stones from the top-down image (back-projection)
+a2 = 2                                # the ice law (its scale kd hidden: learnt from the throws), the curl, collisions
+a3 = 1                                # curling-4: downgraded (process §6: the execution scatter is the delivery machine's, declared in [spec]; no impairment measured it); what remains is choosing shots that tolerate the declared scatter
+a4 = 0                                # turn-based: no time pressure
+b1 = 1                                # rules (FGZ, scoring, hammer, extra ends) are enforced by the referee; knowing them barely moves winning: R*'s rules lesion changes 4.9% of its throws (74% of matches) with a win-rate effect within +-4.6 pp (240 pairs); the built-in reference's hammer tactics are worth ~14 pp (docs/screening/curling.md section 6)
+b2 = 2                                # shot choice: draw, guard or takeout; the hammer; reading the opponent's stones
+b3 = 0
+physics = ["friction_rolling", "collision"]
