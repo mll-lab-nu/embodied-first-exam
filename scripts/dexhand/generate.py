@@ -1299,6 +1299,8 @@ def change_log(spec: dict, mode: str) -> str:
            if mode == "privileged" else
            "the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s) instead of a "
            "fixed 300 s, which cut the video of episodes longer than ~10k steps.")
+        + (" The video films every 2nd step but at most 1500 frames (a 640x480 OSMesa frame takes ~0.3 s)."
+           if spec["id"].startswith("essential_") else "")
         + " The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.")
     if spec["id"] in HELD_ROTATION_BEFORE:
         bound = spec["invariants"]["body_rotation"][1]
