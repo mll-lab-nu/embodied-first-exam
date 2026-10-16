@@ -43,7 +43,7 @@ BATCH = {"open": "molmo-harder-sol", "navigate-to": "molmo-v2-sol-rby1", "open-d
 # The verifier's replays ran out of time on a loaded host (replay_timed_out, infra_error: before the 2026-10-16 limit):
 # graded again offline, two fresh replays of the trial's trajectory in the task's image without a time limit.
 REGRADED = {"pick-and-place", "pick-and-place-next-to", "pick-and-place-color"}
-REVIEW_PR = 47  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
+REVIEW_PR = 276  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
 
 
 def oracle_evidence(family: str) -> str:

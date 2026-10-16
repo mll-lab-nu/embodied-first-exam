@@ -30,7 +30,7 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): sc
 protocol = "eai-standard/2.2"
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-i00-privileged__bVqNR4u (run codex-gpt6_1_sol-high, batch molmo-harder-sol, 2026-10-16); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-i00-privileged__bVqNR4u (run codex-gpt6_1_sol-high, batch molmo-harder-sol, 2026-10-16); human review in PR #276"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
