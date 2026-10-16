@@ -24,7 +24,8 @@ was graded under (`recorded_under`: the picture rule alone before 2026-10-04, th
 current rules); a recorded success the replay does not reproduce is marked `inconclusive` (look at that trial before using
 its re-grade).
 
-Scope: only the 43 pairs on main at this change (RELEASED below, both modes, including their pre-v1.0 trial names: privileged
+Scope: only the pairs of this version (RELEASED below: the 43 pairs on main at this change, less the 8 oil pairs removed on
+2026-10-15, 35; both modes, including their pre-v1.0 trial names: privileged
 without a suffix, standard `-limited`) are re-graded. A trial of any other RoboPaint task (pruned or earlier targets, pairs
 added later) is listed with `skipped` and the reason. Standard re-grades are conservative ("re-graded under 2026-10-14 rules
 (conservative)"): the agent read the earlier instruction. Output: one JSON line per trial (--out) and a table on stdout."""
@@ -35,17 +36,18 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1] if len(HERE.parents) > 1 else HERE      # inside the worker container the script is /regrade.py
 VERSION = ROOT / "images/robopaint/VERSION"
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robopaint:{VERSION.read_text().strip() if VERSION.is_file() else 'unknown'}"
-# The 43 RoboPaint pairs on main at this change (2026-10-14): robopaint-<family>-<target>-iNN, each -privileged and -standard.
+# The RoboPaint pairs of this version: the 43 on main at this change (2026-10-14) less the 8 oil pairs removed on 2026-10-15
+# (docs/benchmarks/robopaint.md, Removed from this version): robopaint-<family>-<target>-iNN, each -privileged and -standard.
 RELEASED_TARGETS = {
     "acrylic": "applesoranges bedroom bluehorses greatwave kajikazawa plumpark redfuji suddenshower sunflowers vision",
     "caoshu": "beiquelindanshui nangong siwushaonian wen zhen zhongtiangechuifen",
     "kaishu": "linfengguilong yongzibafa",
     "lettering": "aim business commendation diligence liberty virtue",
-    "oil": "bathers cafeterrace cypresses irises milkmaid monalisa pearlearring saintevictoire starrynight temeraire wanderer",
+    "oil": "monalisa pearlearring starrynight",
     "xingshu": "feng he huifenghechang maolinxiuzhu nian shan xian yong",
 }
 RELEASED = sorted(f"robopaint-{f}-{t}-{'i01' if f == 'oil' else 'i00'}" for f, ts in RELEASED_TARGETS.items() for t in ts.split())
-assert len(RELEASED) == 43
+assert len(RELEASED) == 35
 SPLIT_KEYS = ("stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")          # = rcb_brush_strict.SPLIT_KEYS
 SWEEP_KEYS = ("max_scribble", "max_scribble_share", "scribble_min_mm")
 TRAJ_PATHS = {"privileged": ["artifacts/app/output/trajectory.npz"],
@@ -181,7 +183,7 @@ def main() -> int:
     results, by_pair = [], {}
     for t in trials:
         if t["pair"] not in RELEASED:
-            results.append({**t, "skipped": "not one of the 43 pairs on main at this change (the released set): not part of this re-grade"})
+            results.append({**t, "skipped": "not one of the 35 pairs of this version (the released set): not part of this re-grade"})
         elif not t["traj"] and t.get("recorded") is not None and not t["recorded"]:   # the rules only add conditions
             results.append({**t, "old_verdict": False, "new_verdict": False,
                             "why": "recorded failure without a trajectory: stays a failure"})

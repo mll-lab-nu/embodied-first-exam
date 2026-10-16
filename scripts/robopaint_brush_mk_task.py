@@ -23,7 +23,7 @@
         # only the reference solution changes (resolve()), then scripts/robopaint_strict/mk_tasks.py
 
 --template names the family's template pair under --template-root (default tasks/; the defaults: kaishu yongzibafa, xingshu yong,
-caoshu wen, lettering liberty, acrylic redfuji, oil cypresses; --template-family takes the code from another family's pair, for a
+caoshu wen, lettering liberty, acrylic redfuji, oil starrynight; --template-family takes the code from another family's pair, for a
 family's first pair; --solution-dir replaces the template's solution code); any committed pair of the family serves (the code is
 identical within a family,
 scripts/robopaint_strict/ci/advisory-tooling.sh). A painting's program is read from the template's solution/programs_json/, where a pair's
@@ -70,7 +70,7 @@ IMAGE = "ghcr.io/mll-lab-nu/eai-robopaint:" + (ROOT / "images" / "robopaint" / "
 SHEET_MM = 227.1845
 IDENTICAL = ("instance.json", "rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py", "rcb1.py", "server.py", "rcb_client.py", "ARPHICPL.TXT")
 FAMILIES = {"kaishu": {"medium": "calligraphy", "template": "yongzibafa"}, "lettering": {"medium": "pointed_pen", "template": "liberty"},
-            "acrylic": {"medium": "mypaint", "template": "redfuji"}, "oil": {"medium": "mypaint", "template": "cypresses"},
+            "acrylic": {"medium": "mypaint", "template": "redfuji"}, "oil": {"medium": "mypaint", "template": "starrynight"},
             "xingshu": {"medium": "calligraphy", "template": "yong"}, "caoshu": {"medium": "calligraphy", "template": "wen"}}
 SCRIPT_FAMILIES = ("kaishu", "xingshu", "caoshu")      # Chinese calligraphy: exemplar files + per-contact plans; difficulty from the target
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",

@@ -2,9 +2,10 @@
 
 Brush art on ManiSkill 3.0.1 (SAPIEN 3.0.3, PhysX on the CPU): a Panda holding a brush or pen copies a picture onto a paper
 sheet, dipping in an ink stone or paint wells, with a practice sheet beside it. `simulator = "maniskill"`,
-`robot = "franka-panda"`. Six families, 43 targets (Targets): 楷书 kaishu (2 works), 行书 xingshu (8 characters and works),
+`robot = "franka-panda"`. Six families, 35 targets (Targets): 楷书 kaishu (2 works), 行书 xingshu (8 characters and works),
 草书 caoshu (6: 2 characters and 4 works), lettering (6: 臨摹 of engraved English round hand with a pointed pen, 2 flourished
-words and 4 copy lines: Lettering), acrylic (10) and oil (11) paintings. Each target is a privileged task
+words and 4 copy lines: Lettering), acrylic (10) and oil (3) paintings (8 oil paintings removed on 2026-10-15: Removed from this
+version). Each target is a privileged task
 `robopaint-<family>-<target>-i<NN>-privileged` and its standard twin `...-i<NN>-standard` on the same frozen instance (`i00`;
 the oil paintings `i01`, Targets); `[metadata].family = "robopaint_<family>_<target>"`. The line family (9 line drawings) is excluded from the benchmark and
 not in this repository: its tooling serves only rcb-limited/2.0.
@@ -31,6 +32,17 @@ finer:
 - Acrylic is unchanged.
 - The records below (release validation, Validation, Calibration) are of the 82 targets of their time; they are not
   recomputed for the 43 of this version.
+- On 2026-10-15, 8 of the 11 oil paintings were removed (Removed from this version): 35 targets.
+
+## Removed from this version (2026-10-15)
+Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version. Both modes of each
+(`-privileged` and `-standard`, 16 task directories) are deleted and their entries dropped from `rules.json`
+(`reference_path_mm`), so the generator does not write them again; the oil family keeps monalisa, pearlearring and starrynight:
+`robopaint-oil-bathers-i01`, `robopaint-oil-cafeterrace-i01`, `robopaint-oil-cypresses-i01`, `robopaint-oil-irises-i01`,
+`robopaint-oil-milkmaid-i01`, `robopaint-oil-saintevictoire-i01`, `robopaint-oil-temeraire-i01`, `robopaint-oil-wanderer-i01`.
+cypresses was the oil family's template pair; the template is now `starrynight` (the code is identical within the family, and
+`mk_tasks.py --check` regenerates every kept pair unchanged). `scripts/robopaint_strict/regrade.py` re-grades the 35 pairs
+of this version. The records below (oil study, validation, calibration) still name the removed paintings: they are history.
 
 **麟鳳龜龍** (the four auspicious creatures of the 禮記) is denser than 寧靜致遠, the hardest of the works it replaces: 71
 strokes against 53, an exemplar of 8036 mm² against 6730 mm², strokes about 4.2 mm wide against 4.7 mm (the exemplar's area per
@@ -100,7 +112,7 @@ The internal goal was IoU ≥ 0.92, boundary F ≥ 0.90, every region ≥ 0.90 a
   1. `scripts/robopaint_brush_mk_task.py --refresh`, into a temporary directory, rebuilds each pair without the process rules
      from its own frozen files (the instance and the picture, the reference plan and its records).
      - The code comes from the family's template pair: kaishu `yongzibafa`, xingshu `yong`, caoshu `wen`, lettering `liberty`,
-       acrylic `redfuji`, oil `cypresses`. Any committed pair of the family would do. A tooling change is made in the template
+       acrylic `redfuji`, oil `starrynight` (`cypresses` until its removal on 2026-10-15). Any committed pair of the family would do. A tooling change is made in the template
        pair and reaches every task when the script is rerun. A painting's program is read from the template's
        `solution/programs_json/`, where a pair's own entry is its current program, so a painting pair is remade with itself as
        the template.
@@ -132,7 +144,7 @@ The internal goal was IoU ≥ 0.92, boundary F ≥ 0.90, every region ≥ 0.90 a
   - The privileged `solution/solve.sh` replays the frozen reference plan.
   - The standard one streams the same joint targets through the client; it waits out a service restart and continues
     from the control step the service reports.
-  - The oracle label is `partial` on all 86 tasks (see Oracle evidence).
+  - The oracle label is `partial` on all 70 tasks (see Oracle evidence).
   - The generator writes each task's `oracle_evidence` from `scripts/robopaint_strict/rules.json`.
 - CI:
   - `scripts/robopaint_strict/ci/advisory-tooling.sh` keeps every copy of the shared files, `rcb_brush_strict.py` included,
@@ -333,7 +345,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   (`scripts/eai_standard/client.env`, pinned by digest). The agent side installs the exact pins of
   `client-requirements.txt`, inline; the generator writes both (`ci_checks/check-standard-client.sh`).
 - Agent egress is an allowlist (the model APIs and the package registries) on every task, because the sources of some targets are public.
-- Frozen inputs over 2 MB: 9 of the 11 oil reference pictures (`target.png`, 2.0–2.5 MB, 5 copies per pair).
+- Frozen inputs over 2 MB: 2 of the 3 oil reference pictures (`target.png`, 2.0–2.5 MB, 5 copies per pair; 9 of 11 before the removal of 2026-10-15).
   - They are photographic scans, so lossless re-encoding gets only 5 of the 9 under 2 MB.
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.
 
@@ -522,7 +534,8 @@ grader errors. The standard sim service (`environment/sim/server.py`) is main's,
 the rules before this change (`old_verdict`: the instance's `target.success` without the counted-stroke and calligraphy sweep
 keys, exactly the earlier grader) and with the current rules (`new_verdict`); the picture rule alone is `image_success`. A
 trajectory recorded on another instance (its `instance_sha`) is not re-graded, and a recorded success the old rule does not
-reproduce is `inconclusive`. Only the 43 pairs on main (the released set, `RELEASED` in the tool) are re-graded: a trial of any
+reproduce is `inconclusive`. Only the pairs of this version (the released set, `RELEASED` in the tool: the 43 pairs on main at
+that change less the 8 oil pairs removed on 2026-10-15) are re-graded: a trial of any
 other RoboPaint task (pruned or earlier targets, later additions) is listed as `skipped`. Lettering and the paintings re-grade
 to their recorded verdicts. Standard re-grades are conservative ("re-graded under 2026-10-14 rules (conservative)"): the agent
 read the earlier instruction.
