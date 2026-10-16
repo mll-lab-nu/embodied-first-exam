@@ -27,11 +27,12 @@ EVERY = 5  # control steps between two views of the formal match (as table tenni
 MAX_COMMANDS = 1  # one act per view; a `batch` act commands up to five robots at one boundary (the sport's own)
 READY_TIMEOUT_S = 600  # the twin's READY_TIMEOUT_S (sport.toml [timing] ready_timeout_s)
 # The formal match's wall-clock cutoff: the longest match of the screening's 76 camera-reference matches and the
-# calibration's full-state matches ran 107 200 control steps (1072 s of game time) = 10 720 s at S = 10; 12 600 s
-# leaves 18 % for the service's lag on a loaded machine. The program's CPU limit is the same number.
-MATCH_WALL_S = 12600
+# calibration's full-state matches ran 107 200 control steps (1072 s of game time) = 10 720 s at S = 10; 13 500 s
+# leaves 26 % for the service's lag on a loaded machine (12 600 s until 2026-10-16, user decision PRIVALL). The
+# program's CPU limit is the same number.
+MATCH_WALL_S = 13500
 REPLAY_TIMEOUT_S = 1800  # the twin's RO_REPLAY_TIMEOUT_S: a fresh-process replay of a whole match
-# VERIFIER_TIMEOUT_S: the default, MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600 = 16 800 s (4.7 h).
+# VERIFIER_TIMEOUT_S: the default, MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600 = 17 700 s (4.9 h).
 PUBLIC_DROP_FILES = ()  # opponents/ is built on builtin_players.Reference: the development copy needs it
 IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
 ORACLE = "tools/fullsim/oracles/soccer_ssl.py"

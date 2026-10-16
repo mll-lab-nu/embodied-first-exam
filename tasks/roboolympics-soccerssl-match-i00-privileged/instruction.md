@@ -23,7 +23,7 @@ A separate verifier without network runs your final program as an unprivileged p
 match; your program can read a public copy of the simulator for its own predictions, never the referee or the logs.
 There is no formal reset. The original realtime clock runs at S = 10 while your program computes; each
 review (after a point, a goal or another stoppage) freezes the world (at most 600 s). The formal match
-has 12600 s of wall time.
+has 13500 s of wall time.
 The trusted journal is replayed twice in fresh processes; success is a complete win by the original referee with
 matching replays. This fixed instance does not measure generalization to other instances.
 
