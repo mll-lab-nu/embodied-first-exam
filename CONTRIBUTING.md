@@ -18,7 +18,7 @@ One benchmark per pull request. A pull request that adds tasks **and** changes s
 Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
 - **solvable** — a positive example the verifier scores 1: an oracle, an upstream expert or policy, a successful
-  model trial, or a hand-built trajectory (tasks without one are human-reviewed and ranked separately as unvalidated, PROTOCOL §2, §4);
+  model trial, or a hand-built trajectory (tasks without one are human-reviewed and marked unvalidated, PROTOCOL §2, §4);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
 - **reproducible** — bit-exact replay of a frozen scene instance, and the hardware it was checked on;
 - **isolatable** — the verifier can recompute the result in its own sandbox from the declared artifacts;

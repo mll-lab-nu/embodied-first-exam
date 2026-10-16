@@ -25,6 +25,8 @@ recommending, but CI still blocking every convention and the trust-boundary rule
 - The official-run configuration (d7) and the seed policy (d9) moved to RUNNING.md, enforced by the runner and the
   scheduler (batch_eval_live `run_policy.py`); nop / oracle (d10) became a recommendation, and results rank unvalidated
   tasks apart. Results record each trial's effective configuration and are ranked only within comparable ones.
+  Changed on 2026-10-16 (owner, board 0124: "no need for this"): validated and unvalidated tasks are ranked together;
+  `validated` stays in each result's configuration as a marker and a filter, and was never part of `config_key`.
 - Per-benchmark lists removed from shared CI: `scripts/task_dynamics.toml` and `check-dynamics.py` (each task declares
   `[metadata] dynamics`), `NO_TWIN` (the README's Twin row is the declaration), the eight benchmarks of
   `check-standard-texts.sh` and the RoboPaint / ManiGuard leak and tooling checks (now each benchmark's own

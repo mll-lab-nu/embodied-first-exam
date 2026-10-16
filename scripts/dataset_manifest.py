@@ -4,7 +4,7 @@
 Every task carries its own content digest in `tasks/<task>/DIGEST` (written last by scripts/task_conventions.py
 `normalize`; ci_checks/check-dataset-manifest.sh recomputes it) and its own metadata in `task.toml` (mode, family,
 oracle, the agent's cutoff `[agent] timeout_sec`, resources, dynamics, and the settings results are grouped by:
-reset budget, slowdown, network, validated). Nothing in the repository lists the tasks: pull
+reset budget, slowdown, network; and the `validated` marker). Nothing in the repository lists the tasks: pull
 requests that change different tasks never touch a shared file (as in Terminal-Bench, whose list is its tasks/
 directory). After every merge to `main` the workflow `.github/workflows/task-list.yml` writes the list with `list` and
 pushes it to the branch `task-list` (never to `main`); a release attaches the same files (`.github/workflows/release.yml`).
@@ -69,7 +69,7 @@ def entry(t: Path) -> dict:
             "dynamics": md.get("dynamics", ""), "protocol": md.get("protocol", ""), "simulator": md.get("simulator", ""),
             "robot": md.get("robot", ""),
             # the settings results are grouped by (PROTOCOL v2.0 §2, RUNNING.md "Results"): rankings compare only tasks
-            # and results of one configuration, unvalidated tasks apart
+            # and results of one configuration; `validated` is a marker, ranked together
             "reset_budget": tc.reset_budget_of(t), "slowdown": tc.slowdown_of(t), "network": tc.network_of(t),
             "validated": tc.validated_of(t), "protocol_version": tc.PROTOCOL_VERSION,
             "resources": {k: r[k] for k in ("min_cpus", "min_memory_gb", "min_gpu_memory_gb", "gpu_class") if k in r},
@@ -107,9 +107,9 @@ def render_md(rows: list[dict], commit: str) -> str:
                    + f" | {net['allowlist']} / {net['open']} |")
     out += ["", "## Comparable configurations", "",
             "Results are ranked only within one configuration: protocol version, mode, cutoff, reset budget, slowdown S and "
-            "network (`scripts/task_conventions.py` `config_key`; docs/RUNNING.md \"Results\"). Unvalidated tasks (no "
-            "`oracle = \"full\"` and no `[metadata] validated = true`) are reported in a section of their own, never ranked "
-            "with validated ones. Each task's settings are in `tasks.json`.", "",
+            "network (`scripts/task_conventions.py` `config_key`; docs/RUNNING.md \"Results\"). Validated and unvalidated tasks "
+            "(no `oracle = \"full\"` and no `[metadata] validated = true`) are ranked together; the columns below count "
+            "them for reference. Each task's settings are in `tasks.json`.", "",
             "| Mode | Cutoff | Resets | S | Network | Validated tasks | Unvalidated tasks |", "|---|---|---|---|---|---|---|"]
     conf: dict[tuple, list[dict]] = defaultdict(list)
     for r in rows:
