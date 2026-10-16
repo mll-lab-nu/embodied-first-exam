@@ -25,11 +25,14 @@ recommending, but CI still blocking every convention and the trust-boundary rule
 - The official-run configuration (d7) and the seed policy (d9) moved to RUNNING.md, enforced by the runner and the
   scheduler (batch_eval_live `run_policy.py`); nop / oracle (d10) became a recommendation, and results rank unvalidated
   tasks apart. Results record each trial's effective configuration and are ranked only within comparable ones.
+  Changed on 2026-10-16 (owner, board 0124: "no need for this"): validated and unvalidated tasks are ranked together;
+  `validated` stays in each result's configuration as a marker and a filter, and was never part of `config_key`.
 - Per-benchmark lists removed from shared CI: `scripts/task_dynamics.toml` and `check-dynamics.py` (each task declares
   `[metadata] dynamics`), `NO_TWIN` (the README's Twin row is the declaration), the eight benchmarks of
   `check-standard-texts.sh` and the RoboPaint / ManiGuard leak and tooling checks (now each benchmark's own
   `scripts/<bench>/ci/{invariant,advisory}-*` hooks).
 - PROTOCOL.md went from 793 to about 200 lines; v1's runner material is below ("v1.2-rc text not carried into v2.0").
+- Added on 2026-10-16 (owner, board 0136: "every run must end with a video, except a privileged trial that submitted no trajectory"): §4's video row says every graded trial leaves a playable video and the replayable trajectory it was graded on, the one exception, and that the video's time bound covers the longest episode; `ci_checks/check-video.py` (advisory: a video is evidence for people, never the verdict, and a static scan cannot tell whether a render finishes in time) and the runner's `no_video` flag with an after-the-fact render from the trajectory (RUNNING.md "Recordings"). Found by the survey of 7977 graded trials: 114 without a video for reasons other than the exception (DexHand privileged rendered none; render time bounds shorter than long episodes; a RoboOlympics sport without a spectator camera).
 
 **Version: v1.2-rc** (2026-10-10). Changes in this version: the resource monitor sidecar, the docker caps and the
 verifier's limits step are in every task (§2.10; #131, with the review fixes of the same day: an out-of-memory kill is

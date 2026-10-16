@@ -1,1 +1,1 @@
-{"replay_timeout_s": 1400, "video_timeout_s": 300}
+{"collect_timeout_s": 3600, "replay_timeout_s": 1400, "verifier_timeout_s": 3600, "video_timeout_s": 1400}

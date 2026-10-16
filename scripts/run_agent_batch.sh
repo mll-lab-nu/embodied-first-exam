@@ -298,12 +298,13 @@ sys.path.insert(0, str(R / "scripts"))
 import task_conventions as tc, write_task_results as wtr  # noqa: E402
 from task_names import canonical  # noqa: E402
 # RUNNING.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
-# protocol version, mode, cutoff, reset budget, S, network); unvalidated tasks (task_conventions.validated_of) are listed
-# apart and never ranked; a trial that is not a result (infrastructure, voided) never counts in a success rate.
+# protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
+# are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
+# success rate.
 HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|---|")
 f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
-groups = defaultdict(list)          # (validated, config key) -> [(started, row, status)]
+groups = defaultdict(list)          # config key -> [(started, row, status, validated)]
 labels = {}
 for trial in jobs.glob(f"{batch}-*/*__*"):
     if not trial.is_dir():
@@ -328,32 +329,30 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
         cfg = wtr.trial_config(trial, task, r)
     else:
         status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": task.rsplit("-", 1)[-1]})
-    key = (cfg.get("validated") is True, tc.config_key(cfg))
+    key = tc.config_key(cfg)
     labels[key] = tc.config_label(cfg)
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
                                "infra_error", "resumes") if k in rw}
     res = "not a result (voided" + (f": {why}" if why else "") + ")" if status == "not_a_result" else status
-    groups[key].append((r.get("started_at") or "~", f"| {task} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
+    val = cfg.get("validated") is True
+    groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
                         f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
                         f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |",
-                        status))
+                        status, val))
 print(f"# {batch}\n\nOne table per comparable configuration (RUNNING.md \"Results\"); success rates count results only "
-      "(a trial that is not a result is voided and never counted).")
-for validated in (True, False):
-    ks = sorted((k for k in groups if k[0] is validated), key=lambda k: tuple(map(str, k[1])))
-    if not ks:
-        continue
-    if not validated:
-        print("\n## Unvalidated tasks (not ranked)\n\nTasks without a validated oracle (PROTOCOL §2.7, `oracle` not `full` "
-              "and no `[metadata] validated = true`), and trials of a task version this checkout does not have.")
-    for k in ks:
-        rows = groups[k]
-        counted = [s for _, _, s in rows if s in ("success", "fail")]
-        rate = f"{sum(s == 'success' for s in counted)} / {len(counted)}" if counted else "-"
-        print(f"\n{'###' if not validated else '##'} {labels[k]}\n\nSuccess (results only): {rate}; "
-              f"{sum(s == 'not_a_result' for _, _, s in rows)} voided.\n\n{HEAD}")
-        for _, row, _ in sorted(rows):
-            print(row)
+      "(a trial that is not a result is voided and never counted). Validated and unvalidated tasks are ranked together; "
+      "tasks without a validated oracle (`oracle` not `full` and no `[metadata] validated = true`), and trials of a task "
+      "version this checkout does not have, are marked (unvalidated).")
+for k in sorted(groups, key=lambda k: tuple(map(str, k))):
+    rows = groups[k]
+    counted = [(s, v) for _, _, s, v in rows if s in ("success", "fail")]
+    rate = f"{sum(s == 'success' for s, _ in counted)} / {len(counted)}" if counted else "-"
+    cv = [s for s, v in counted if v]
+    vrate = f" (validated tasks: {sum(s == 'success' for s in cv)} / {len(cv)})" if len(cv) != len(counted) else ""
+    print(f"\n## {labels[k]}\n\nSuccess (results only): {rate}{vrate}; "
+          f"{sum(s == 'not_a_result' for _, _, s, _ in rows)} voided.\n\n{HEAD}")
+    for _, row, _, _ in sorted(rows):
+        print(row)
 PY
   mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
 }

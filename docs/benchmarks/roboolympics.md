@@ -456,6 +456,8 @@ Generator: `scripts/roboolympics/fullsim/generate.py` (installed by RoboOlympics
 twins' sim image. Oracle: `partial`, a full-state reference program (the camera-only reference player's serve and
 stroke planner fed the true ball state).
 
+**Replay videos of the matches (fixed here, 2026-10-16, board 0136).** The sim service draws the spectator video after the verdict (`core.spectator`, `RCB_VIDEO_TIMEOUT_S`); the grade never depends on it. Humanoid soccer's full match takes about 8-10 min to replay and draw, so its limit is 1800 s (was 300 s, as wheeled soccer) and the collect hook waits as long. Badminton declares no spectator camera or scene, so the core drew nothing: its tasks run `environment/sim/spectator/sport_video.py` from the collect hook instead (the players' two cameras, the sport's own `Views`, at 10 frames per game second; `video.json` says whether that replay ended in the verdict replay's state). `spectator/` is outside the match's `source_sha` (`core/`, `sport/`), so the match, its replay check and the grade are unchanged and earlier results stand; both are `patched` in `exported.toml` (to be sent upstream: a spectator camera in `sports/badminton/sport.toml` would change the sport's `source_sha`). Table tennis (about 100-420 frames) and wheeled soccer (1800 s) rendered every recorded video and are unchanged.
+
 **Skill tasks' verifier (fixed here, 2026-10-14, board 0111; the #180 review's finding).** The verifier runs the
 delivered skill as `nobody` in its own process, in the container that grades it. A skill could leave a detached process
 behind (double fork, `setsid`) that rewrote `/logs/verifier/report.json` or the reward files after the evaluation

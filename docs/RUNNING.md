@@ -64,8 +64,9 @@ effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`,
 gets its fields from the task at that digest, else `"legacy"`) and `attempts.json`. Rankings (the batch summary,
 the results site) compare trials only within one comparable configuration (`task_conventions.config_key`: protocol
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
-simulation steps), align reasoning effort, `max_turns` and the token budget before comparing agents, and list
-unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) in a section of their own.
+simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
+unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
+every task, the flag is shown as a marker and may be used as a filter.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker
@@ -110,6 +111,13 @@ reasoning summaries, tool calls, images and token use with the robot service's l
 
 ## Recordings
 
+- **Every trial has a video** (PROTOCOL §4): a finished, graded trial without a playable `*.mp4` in `verifier/`,
+  `artifacts/data/` or `artifacts/out/` is flagged by the runner (`no_video`, with the reason it can read), unless it
+  is a privileged trial whose agent submitted no trajectory that replays. A video a trial missed (the render ran out of
+  its time bound, crashed, or the task rendered none) is rendered afterwards from the recorded trajectory in the
+  task's own image, on the same host class when the replay is only reproducible there, and kept only when the replay
+  reaches the recorded final state; `replay.regenerated.json` next to it says how. The grade is never touched, and
+  the agent is never rerun for a video.
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
   each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
   costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
