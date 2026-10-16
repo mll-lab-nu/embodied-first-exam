@@ -48,3 +48,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 Source: RoboOlympics task `soccer-match-wallclock-program-standard`, revision `soccer-2v2-10+core-0.2`. The rules, the referee, the scripted
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
+
+### Change Log
+- 2026-10-16 (board 0136): the replay video only. The sim's spectator render (`core.spectator`, after the verdict) may take 1800 s (`RCB_VIDEO_TIMEOUT_S`, was 300 s) and the collect hook waits as long for `video.json`; `[[verifier.collect]]` `timeout_sec` 2580 s (was 1080 s), `[verifier]` `timeout_sec` 2760 s (was 1260 s). A full match (2 x 5 min, about 30,000 control steps) takes about 8-10 min to replay and draw on a 64-vCPU host, so every trial before this date ended without its video. The match, the replay check, the grader and the pass rule are unchanged (`core/` and `sport/`, the match's `source_sha`, are untouched): earlier results stand.
