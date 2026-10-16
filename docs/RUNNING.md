@@ -64,8 +64,9 @@ effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`,
 gets its fields from the task at that digest, else `"legacy"`) and `attempts.json`. Rankings (the batch summary,
 the results site) compare trials only within one comparable configuration (`task_conventions.config_key`: protocol
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
-simulation steps), align reasoning effort, `max_turns` and the token budget before comparing agents, and list
-unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) in a section of their own.
+simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
+unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
+every task, the flag is shown as a marker and may be used as a filter.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker

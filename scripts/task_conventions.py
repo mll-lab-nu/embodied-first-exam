@@ -1142,9 +1142,9 @@ def slowdown_of(task: Path) -> float | None:
 
 
 def validated_of(task: Path) -> bool:
-    """Whether the task counts as validated for rankings (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated`
-    where the task declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution
-    scores 1 and `nop` 0). Unvalidated tasks are reported in a section of their own, never ranked with validated ones."""
+    """Whether the task counts as validated (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated` where the task
+    declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution scores 1 and `nop`
+    0). A marker recorded with each result: validated and unvalidated tasks are ranked together."""
     md = metadata_of(task)
     if isinstance(md.get("validated"), bool):
         return md["validated"]
@@ -1177,8 +1177,8 @@ CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown
 
 
 def config_key(cfg: dict) -> tuple:
-    """What two results must share to be ranked together (the seed is drawn per trial and is not part of it; the
-    `validated` flag separates the sections). Missing fields of a legacy record are "legacy"."""
+    """What two results must share to be ranked together (the seed is drawn per trial and is not part of it, nor is the
+    `validated` marker). Missing fields of a legacy record are "legacy"."""
     return tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
 
 
