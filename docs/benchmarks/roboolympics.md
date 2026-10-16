@@ -431,10 +431,31 @@ What differs from the 2.x tasks (PROTOCOL §4c, owner 2026-10-14):
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (RoboOlympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10 (`metadata.slowdown`) | results state S |
 | agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02, wheeled soccer and foosball 14400 s (those tasks' own `[agent] timeout_sec`, owner 2026-10-14) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |
 | network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL §2.11 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
-| twin | privileged + standard | none (the README's Twin row says why) | no trajectory deliverable |
+| twin | privileged + standard | none (the README's Twin row says why), except the table-tennis matches i01 / i02: privileged twins with a `policy` deliverable (below) | no trajectory deliverable |
 | skill task | — | mode `standard`, `task_type = "policy"`, no sim service; the verifier runs the simulator and the skill (the turn-based matches are also mode `standard`, with a sim service: see above) | the deliverable is code (`/app/output/skill/hit.py`, `act.py`) |
 | seeds | the instance's | matches: `[metadata.seeds]` default = allowed = the instance's development seed; skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; RoboOlympics' official results are produced by RoboOlympics on its hidden six-digit seeds |
 | metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the D11 proxy's file `metering/think_proxy.py` is in the image's copy but never started) | |
+
+**The privileged twins of the table-tennis matches (2026-10-15).** `roboolympics-tabletennis-match-i01-privileged`
+and `-i02-privileged` are the PROTOCOL §3 twins of `-i01-standard-realtime` (level 2, seed 22) and `-i02-standard-realtime`
+(level 3, seed 12): the same frozen simulator (the verifier's trusted copy is the twin's `environment/sim` byte for byte,
+checked by the generator), seed, level, rules, S = 10 and 7200 s cutoff (H.7). A `policy` task:
+
+| | standard-realtime twin | privileged |
+|---|---|---|
+| development | the robot as a service: camera images, the robot's own state, the referee's messages | the simulator in the agent's container (`/opt/fullsim`, `Session`): any state read or changed, the whole match reset to 0:0 as often as wanted |
+| deliverable | the program that played (the service's journal) | `/app/output/policy/program.py` (+ helper files): `make_policy(config)` -> `.act(view)` |
+| graded match | the live match, S = 10 | a fresh, unmodified match in the verifier: RoboOlympics' original `core.realtime.RealtimeService`, S = 10 (the world does not wait for the program; the review after each point as in the twin), the same scripted opponent; the program sees the full state (ball position, velocity and spin; the full MuJoCo `qpos` / `qvel`; the opponent's paddle position and level parameters) instead of the cameras, nothing about the future |
+| verdict | the service's record, replayed in a fresh process | the same record, replayed twice in fresh processes (H.4); a complete win |
+
+The program runs as `nobody` in its own process in the network-less verifier, reads a public copy of the simulator
+(`/opt/dev`, for its own predictions) and not the trusted one (`/opt/trusted`, root 0700), has no handle on the official
+world, and every process of `nobody` is killed before grading; `/logs/verifier` is made 755 before it starts and the
+reward files are written fresh (the skill tasks' fix below). The agent's copies of the simulator carry no URL (H.2).
+Generator: `scripts/roboolympics/fullsim/generate.py` (installed by RoboOlympics' `tools/tt_fullsim/export.py`;
+`--check` in `check-generated-tasks.sh`). Image: `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` (pinned by digest), the
+twins' sim image. Oracle: `partial`, a full-state reference program (the camera-only reference player's serve and
+stroke planner fed the true ball state).
 
 **Skill tasks' verifier (fixed here, 2026-10-14, board 0111; the #180 review's finding).** The verifier runs the
 delivered skill as `nobody` in its own process, in the container that grades it. A skill could leave a detached process
