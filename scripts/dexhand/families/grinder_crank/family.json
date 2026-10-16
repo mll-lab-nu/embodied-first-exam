@@ -47,11 +47,11 @@
   },
   "control_hz": 50,
   "timeouts": {
-    "verifier_privileged_sec": 1800,
+    "verifier_privileged_sec": 2100,
     "verifier_standard_sec": 600,
-    "collect_sec": 1800,
+    "collect_sec": 2100,
     "replay_sec": 600,
-    "video_sec": 600
+    "video_sec": 1800
   },
   "notes": {
     "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7, radians), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`: the genuine right Sharpa Wave on the right flange and its declared mirror image on the left flange; 20 per hand for `wuji`). The left hand counterholds the grinder, the right hand turns the crank."

@@ -15,6 +15,8 @@ from scene import hands
 # 14 Marvin arm targets (left J1-J7, right J1-J7), then the left and the right hand's native finger actuators.
 WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_LABEL = {"speed": 1}   # the overlay's playback speed, set by replay() from the filmed stride
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 
 
@@ -57,7 +59,8 @@ def overlay(frame, status, phase, hand_label):
         font=font, fill=(244, 214, 157),
     )
     draw.text((round(18 * scale), round(67 * scale)),
-              "Native actuator replay, 1x | free rigid plug + passive cable; hub rests free on the counter",
+              f"Native actuator replay, {VIDEO_LABEL['speed']:g}x | "
+              "free rigid plug + passive cable; hub rests free on the counter",
               font=font, fill=(185, 205, 185))
     return np.asarray(canvas)
 
@@ -98,6 +101,11 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
+        VIDEO_LABEL["speed"] = round(stride * session.control_dt * fps, 3)
     timeline = []
     size = (1280, 720)
     try:
@@ -150,6 +158,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
     return result
 
 

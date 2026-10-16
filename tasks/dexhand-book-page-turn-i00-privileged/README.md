@@ -78,3 +78,6 @@ footprint; the 5 mm corner rounding is visual. Every board lies flat, as in the 
 the book keep the T39 source pose in front of the robot stand; the desk's front legs are set back to x = 0.43 m so they
 stand clear of the robot's base plate. This is a rigid-board / flexible-binding reduced
 model, not a paper continuum, damage or zero-shot claim.
+
+### Change Log
+- 2026-10-16 (board 0136, video only): the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after `reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video. The video films at most 300 steps (a longer episode at a larger stride; an OSMesa frame of an arm scene takes up to ~3.6 s on two cores), and the video, verifier and collect limits cover the longest archive the row limit allows. The verdict, the replays and `reward.json` are unchanged.

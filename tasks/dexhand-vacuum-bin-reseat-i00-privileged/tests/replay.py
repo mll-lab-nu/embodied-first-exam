@@ -17,6 +17,7 @@ TASK = "vacuum_bin_reseat"
 # Six wrist-stage targets followed by the selected hand's native finger actuators.
 WIDTHS = {"sharpa": 56, "wuji": 52}  # two floating hands: (6 stage + 22 fingers) x 2 (Sharpa) or (6 + 20) x 2 (Wuji)
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
 MAX_BYTES = 64_000_000
 
 
@@ -103,6 +104,10 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
     timeline = []
     try:
         if writer:
@@ -151,6 +156,7 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
     return result
 
 

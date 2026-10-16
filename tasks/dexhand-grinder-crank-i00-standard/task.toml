@@ -79,7 +79,7 @@ timeout_sec = 120
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
-timeout_sec = 1800
+timeout_sec = 2100
 
 [agent]
 timeout_sec = 3600.0

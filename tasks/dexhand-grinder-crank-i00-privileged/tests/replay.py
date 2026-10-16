@@ -17,6 +17,8 @@ TASK = "grinder_crank"
 # Two six-axis wrist stages (12 targets) followed by both hands' native finger actuators (right, then left).
 WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_LABEL = {"speed": 1}   # the overlay's playback speed, set by replay() from the filmed stride
 MAX_BYTES = 64_000_000  # the archive file and its expanded members
 
 
@@ -94,7 +96,8 @@ def overlay(frame, f, phase, hand="Sharpa Wave"):
     )
     draw.text(
         (round(18 * scale), round(67 * scale)),
-        f"Native actuator replay, 1x | tilt {f['tilt_deg']:.1f} deg | slide {1000 * f['slide_m']:.1f} mm | "
+        f"Native actuator replay, {VIDEO_LABEL['speed']:g}x | "
+        f"tilt {f['tilt_deg']:.1f} deg | slide {1000 * f['slide_m']:.1f} mm | "
         f"body yaw {f['body_yaw_deg']:.1f} deg",
         font=font,
         fill=(185, 205, 185),
@@ -143,6 +146,11 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
+        VIDEO_LABEL["speed"] = round(stride * session.control_dt * fps, 3)
     timeline = []
     try:
         if writer:
@@ -201,6 +209,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
     return result
 
 

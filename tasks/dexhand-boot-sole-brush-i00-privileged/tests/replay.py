@@ -20,6 +20,7 @@ from runtime import ACTION_DIM, TASK_ID, Session
 from scene import hands
 
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
 MAX_BYTES = 64_000_000
 
 
@@ -90,6 +91,10 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
     height = height or (544 if trusted_service else 720)
     shadows = not trusted_service
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
     label = session.hand_info["model"]
     timeline = []
     try:
@@ -130,6 +135,8 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         if writer:
             writer.close()
         session.close()
+    if video:
+        result.update(video=True, video_stride=stride)
     return result
 
 

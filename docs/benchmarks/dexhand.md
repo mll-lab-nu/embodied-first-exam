@@ -860,6 +860,13 @@ replay renders the replay video (`/logs/verifier/replay.mp4`, its record in `vid
 time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict (board 0136, 2026-10-16: before, the privileged
 verifier rendered no video at all). The essential families' `replay.py` films every 2nd step, at most 1500 frames
 (`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core, so a 28k-step episode took over an hour before).
+The twenty wave-2 families' own `replay.py` film at most 300 steps (`VIDEO_MAX_FRAMES = 300`; a longer episode at a
+larger stride, recorded as `video_stride` and `recording.playback_speed`) and mark the record `"video": true`, which
+`grade.py` requires. A frame of their scenes costs 0.35-3.6 s on the task's two cores (the Marvin-arm scenes are the
+slow ones), measured on an archive that holds the first oracle row for the family's whole row limit; `video_sec`,
+`verifier_privileged_sec` and `collect_sec` cover that longest archive with a 1.5x margin (2026-10-16: raised for
+batter_whisk, book_page_turn, boot_sole_brush, envelope_letter_insert, grinder_crank, jar_lid_open, pancake_serve,
+picture_hang and usb_plug_insert).
 
 **Standard** (`eai-standard/2.2`, docs/STANDARD_MODE.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer

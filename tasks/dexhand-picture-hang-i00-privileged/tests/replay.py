@@ -15,6 +15,7 @@ from scene import hands
 # Two Marvin arms (7 joint targets each) + both hands' finger actuators (22 per Sharpa Wave, 20 per Wuji Hand 2.2).
 WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
 MAX_BYTES = 64_000_000
 
 
@@ -85,6 +86,10 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0  # hide Wuji collision meshes in the picture only
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
     timeline = []
     label = session.hand_info["model"]
     try:
@@ -132,6 +137,7 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(Path(video).read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
     return result
 
 

@@ -15,6 +15,7 @@ from scene import hands
 TASK = "tray_glass_carry"
 WIDTHS = {"sharpa": 56, "wuji": 52}  # 2 x 6 wrist-stage targets + both hands' finger actuators
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
 MAX_BYTES = 64_000_000
 
 
@@ -90,6 +91,10 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
         writer.append_data(overlay(session.render_frame(camera, width, height), session.status(), label))
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
     timeline = []
     try:
         for i, action in enumerate(actions):
@@ -130,6 +135,7 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(Path(video).read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
     return result
 
 

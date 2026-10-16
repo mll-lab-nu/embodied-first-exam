@@ -17,6 +17,8 @@ from scene import hands
 # 14 Marvin arm joint targets (left J1-J7, right J1-J7), then the left and the right hand's finger actuators.
 WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 3000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_LABEL = {"speed": 1}   # the overlay's playback speed, set by replay() from the filmed stride
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (the graders' limit)
 
 
@@ -102,7 +104,7 @@ def overlay(frame, features, phase, hand="Sharpa Wave"):
     )
     draw.text(
         (round(18 * scale), round(67 * scale)),
-        f"Native actuator replay, 1x | hand-book contacts {features['hand_book_contacts']} | "
+        f"Native actuator replay, {VIDEO_LABEL['speed']:g}x | hand-book contacts {features['hand_book_contacts']} | "
         f"book shift {1000 * features['book_shift_m']:.1f} mm, rotation {features['book_rotation_deg']:.2f} deg",
         font=font,
         fill=(185, 205, 185),
@@ -150,6 +152,11 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
+        VIDEO_LABEL["speed"] = round(stride * session.control_dt * fps, 3)
     timeline = []
     try:
         if writer:
@@ -191,7 +198,8 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
             "timeline": timeline,
             "trajectory_sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
             "scene_sha256": hashlib.sha256(session.xml.encode()).hexdigest(),
-            "recording": {"fps": fps, "playback_speed": 1, "width": width, "height": height, "camera": camera}
+            "recording": {"fps": fps, "playback_speed": round(stride * session.control_dt * fps, 3), "width": width,
+                          "height": height, "camera": camera}
             if video
             else None,
         }
@@ -209,6 +217,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
         video.with_suffix(".json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 

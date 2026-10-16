@@ -53,11 +53,11 @@
   },
   "control_hz": 50,
   "timeouts": {
-    "verifier_privileged_sec": 1200,
+    "verifier_privileged_sec": 1800,
     "verifier_standard_sec": 600,
     "collect_sec": 1800,
     "replay_sec": 600,
-    "video_sec": 600
+    "video_sec": 1500
   },
   "notes": {
     "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The right arm/hand picks up and uses the whisk; the left arm/hand may steady the bowl."

@@ -1,4 +1,5 @@
 {
+ "agent_timeout_sec": 3600,
  "caps": {
   "main": {
    "cpus": 2.0,

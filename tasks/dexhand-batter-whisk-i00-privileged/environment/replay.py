@@ -17,6 +17,8 @@ TASK = "batter_whisk"
 # Marvin rig: 14 arm joint targets (left J1-J7, right J1-J7), then the left and the right hand's finger targets.
 WIDTHS = {"sharpa": 58, "wuji": 54}
 MAX_ROWS = 4000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_LABEL = {"speed": 1}   # the overlay's playback speed, set by replay() from the filmed stride
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 
 
@@ -98,7 +100,8 @@ def overlay(frame, status, phase, hand="Sharpa Wave"):
     )
     draw.text(
         (round(18 * scale), round(67 * scale)),
-        "Native actuator replay, 1x | batter not simulated: whisking = whisk-head revolutions in the batter volume",
+        f"Native actuator replay, {VIDEO_LABEL['speed']:g}x | "
+        "batter not simulated: whisking = whisk-head revolutions in the batter volume",
         font=font,
         fill=(185, 205, 185),
     )
@@ -146,6 +149,11 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
+        VIDEO_LABEL["speed"] = round(stride * session.control_dt * fps, 3)
 
     def frame():
         return session.render_frame(camera, width, height, shadows=not trusted_service)
@@ -206,6 +214,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
     return result
 
 

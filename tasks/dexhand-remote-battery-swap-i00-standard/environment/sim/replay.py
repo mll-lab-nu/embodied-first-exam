@@ -17,6 +17,8 @@ TASK = "remote_battery_swap"
 # Marvin layout: 14 arm joint targets (left J1-J7, right J1-J7), then the left and the right hand fingers.
 WIDTHS = {"sharpa": 58, "wuji": 54}  # Marvin arm rig: 14 arm joints + 2 x 22 (Sharpa) or 2 x 20 (Wuji) fingers
 MAX_ROWS = 6000
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_LABEL = {"speed": 1}   # the overlay's playback speed, set by replay() from the filmed stride
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 
 
@@ -98,7 +100,8 @@ def overlay(frame, features, phase, hand="Sharpa Wave"):
     )
     draw.text(
         (round(18 * scale), round(67 * scale)),
-        "Native actuator replay, 1x | passive sliding door (friction detent), free AA cells, remote and tray",
+        f"Native actuator replay, {VIDEO_LABEL['speed']:g}x | "
+        "passive sliding door (friction detent), free AA cells, remote and tray",
         font=font,
         fill=(185, 205, 185),
     )
@@ -156,6 +159,11 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
                 model.geom_rgba[gid, 3] = 0.0
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = round(1 / (session.control_dt * fps))
+    if video:
+        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
+        stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
+        VIDEO_LABEL["speed"] = round(stride * session.control_dt * fps, 3)
     timeline = []
     try:
         if writer:
@@ -203,7 +211,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
             "scene_sha256": hashlib.sha256(session.xml.encode()).hexdigest(),
             "recording": {
                 "fps": fps,
-                "playback_speed": 1,
+                "playback_speed": round(stride * session.control_dt * fps, 3),
                 "width": 960,
                 "height": 544,
                 "shadows": False,
@@ -231,6 +239,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
         session.close()
     if video:
         result["video_sha256"] = hashlib.sha256(video.read_bytes()).hexdigest()
+        result.update(video=True, video_stride=stride)
         video.with_suffix(".json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -249,7 +258,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         # Software rendering in the bounded service collector uses fewer samples.
-        # Both defaults retain 1x playback and execute every original control.
+        # Both defaults execute every original control; the video is 1x up to VIDEO_MAX_FRAMES filmed steps.
         fps = args.fps if args.fps is not None else (5 if args.trusted_service else 10)
         result = replay(args.traj, args.video, args.camera, fps, args.trusted_service, args.hand, args.phases)
     except BadTrajectory as error:  # archive-read / trajectory validation only (L6)
