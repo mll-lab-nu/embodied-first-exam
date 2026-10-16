@@ -108,7 +108,8 @@ def test_results():
         check("EnvironmentStartTimeoutError" in line and "no reward.json" in line, f"the reason names Harbor's exception: {line}")
 
 
-UNVALIDATED = "humanoidbench-loco-walk-i00-standard-realtime"   # oracle = "none": never ranked with validated tasks
+UNVALIDATED = "humanoidbench-loco-walk-i00-standard-realtime"   # oracle = "none": ranked with validated tasks, marked
+VALIDATED_RT = "humanoidbench-loco-sit-simple-i00-standard-realtime"   # oracle = "full", the same configuration as UNVALIDATED
 WTR = [sys.executable, str(ROOT / "scripts/write_task_results.py")]
 
 
@@ -196,22 +197,25 @@ def summary_code() -> str:
 
 
 def test_summary_grouping():
-    """run_agent_batch.sh's summary: one table per comparable configuration, unvalidated tasks apart, voided trials not
-    counted in a success rate."""
+    """run_agent_batch.sh's summary: one table per comparable configuration, unvalidated tasks ranked in it (marked),
+    voided trials not counted in a success rate."""
     with tempfile.TemporaryDirectory() as td:
         td = Path(td); jobs = td / "jobs"
         make_trial(jobs, "bx-standard-a", "t1", TASK, "2026-10-14T01:00:00Z", {"success": 0, "infra_error": 1})
         make_trial(jobs, "bx-standard-a", "t2", TASK, "2026-10-14T02:00:00Z", {"success": 1})
         make_trial(jobs, "bx-privileged-a", "p1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 0})
         make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
+        make_trial(jobs, "bx-standard-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
         r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True)
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
         out = r.stdout
-        head, _, unval = out.partition("## Unvalidated tasks (not ranked)")
-        check(bool(unval) and UNVALIDATED in unval and UNVALIDATED not in head, f"the unvalidated task is not apart:\n{out}")
-        check(head.count("\n## protocol 2.0, ") == 2, f"not one table per configuration:\n{out}")
-        check("Success (results only): 1 / 1; 1 voided." in head, f"a voided trial counted in the success rate:\n{out}")
-        check("not a result (voided" in head, f"the voided trial is not marked:\n{out}")
+        check("## Unvalidated" not in out and out.count("\n## protocol 2.0, ") == 3, f"not one table per configuration:\n{out}")
+        rt = out[out.index("standard-realtime, "):]
+        check(f"| {UNVALIDATED} (unvalidated) |" in rt and f"| {VALIDATED_RT} |" in rt,
+              f"the unvalidated task is not ranked (marked) with the validated one of its configuration:\n{out}")
+        check("Success (results only): 1 / 2 (validated tasks: 0 / 1); 0 voided." in rt, f"the shared table's rate:\n{out}")
+        check("Success (results only): 1 / 1; 1 voided." in out, f"a voided trial counted in the success rate:\n{out}")
+        check("not a result (voided" in out, f"the voided trial is not marked:\n{out}")
 
 
 def caps(task: Path) -> list[str]:
