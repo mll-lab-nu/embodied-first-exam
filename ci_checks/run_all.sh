@@ -104,6 +104,8 @@ add python3 ci_checks/check-realtime.py"$pargs"
 add python3 ci_checks/check-protocol.py"$pargs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
+# issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)
+add python3 ci_checks/check-build-stamps.py
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

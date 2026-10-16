@@ -121,8 +121,24 @@ reasoning summaries, tool calls, images and token use with the robot service's l
   `agent_sessions/` with an `index.json` of all of them (`agent_traces`, `agent_trace_steps`, `agent_trace_videos`
   in reward.json). Self-reported: an agent that teleports objects through `exec_code` will not replay faithfully.
 
+## Building task images: stamp first
+Docker's BuildKit keeps one synced copy of a build context per context directory name and client (Harbor's contexts are
+always `environment/` and `tests/`) and re-sends a file only when its path, size, mode or mtime changed. A task built
+from a tree whose files share mtimes (a git checkout, `git archive`, tar, `cp -r`, a sed loop) can therefore get another
+task's equal-size file in its image, silently, with `--no-cache` too (issue #258; rootless podman builds are not
+affected). **Never build a task image from a tree without stamping it:** `scripts/stamp_mtimes.py` gives every file a
+mtime derived from its content, so different files never share one (content, modes and DIGEST unchanged; git ignores
+mtimes). `scripts/run_agent_batch.sh`, `/validate`, `scripts/task_seed.py materialize`, the benchmarks' kill tests and
+RoboARC's `regrade.py --replay` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
+```bash
+c=$(python3 scripts/stamp_mtimes.py stage tasks/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
+python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
+python3 scripts/check_image_files.py <image> <context dir>   # after building an image yourself: it holds the context's files
+```
+
 ## Running a two-mode batch (privileged + standard)
 ```bash
+python3 scripts/stamp_mtimes.py tasks                   # first ("Building task images" above)
 harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
 harbor run -p tasks -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
 harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
@@ -184,10 +200,9 @@ harbor run -p /tmp/run1/<task> -a <agent> ...
 
 The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`,
 and the copy carries only the drawn one. As of 2026-10-13 every task allows its default seed only, so
-`scripts/run_agent_batch.sh` runs the task directories as they are (or a copy: with the gateway, the copy whose
-egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy with that cap clamped, Resources
-above); it materializes a seed per trial once a
-benchmark allows more than one.
+`scripts/run_agent_batch.sh` runs each job from a stamped copy of the task as it is (with the gateway, the copy's
+egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap clamped, Resources
+above); it materializes a seed per trial once a benchmark allows more than one.
 
 ## The agent's time (the cutoff)
 A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it around the agent's run only
