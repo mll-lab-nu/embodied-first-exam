@@ -8,16 +8,23 @@ On 2026-10-14 the verifier changed in place (Grading and determinism, The verdic
 results are attributed by digest): results recorded under the earlier DIGESTs are not comparable with the current ones.
 
 ## Families
-**In the repository: 15 families, 30 tasks.** The `oracle` level and its evidence are in each `task.toml` (PROTOCOL §2.7);
+**In the repository: 13 families, 26 tasks** (15 and 30 until 2026-10-15; Removed from this version). The `oracle` level and its evidence are in each `task.toml` (PROTOCOL §2.7);
 every task goes through the human review in PR #3.
 - `oracle = "partial"`: dominos, stack_cubes. A written reference solution (`solution/`) scored 1 under `harbor -a oracle`
   in both modes, on earlier versions of these tasks with the same frozen instance and oracle code (`oracle_evidence` cites
   the runs). The grader, the tooling and (standard) the service have changed since, and this version was validated
   statically only (2026-10-01), so the oracle was not re-run on it: `full` needs a run on byte-identical files.
 - `oracle = "none"`, with a graded positive (the PR's review table cites each trial; the runs are on the results site):
-  align_blocks, ball_into_bottle, ball_onto_tower, collect_screws, cover_with_lid, gap_retrieve, hold_cup, move_cube,
-  raise_platform, retrieve_cube, stack_bowls, stand_bulb, stand_pages. The positives are from earlier versions too (same
+  align_blocks, ball_into_bottle, ball_onto_tower, cover_with_lid, gap_retrieve, hold_cup, raise_platform, retrieve_cube,
+  stack_bowls, stand_bulb, stand_pages. The positives are from earlier versions too (same
   frozen instance and predicate).
+
+**Removed from this version: 2 families** (2026-10-15). Removed 2026-10-15 by the benchmark owner after the GPT-6 Astra
+review; not part of this version: `robowits-collect-screws-i00` and `robowits-move-cube-i00`, both modes of each
+(`-privileged` and `-standard`, 4 task directories). Their `families.py` entries stay with `status = "removed"` and a
+`removed` note, so `mk_tasks.py` does not render them; their frozen instances (the one input kept in the task) are in the git
+history of `tasks/robowits-<family>-i00-privileged/environment/instance.json`. Mentions of them below (measurements, records)
+are history.
 
 **Not in the repository: 11 families** without a valid positive. A later PR can add one (an entry in
 `scripts/robowits/families.py`, its predicate with `mk_tasks.py --extract-predicate`, a written success criterion) once it
@@ -41,7 +48,7 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
 - align_chopsticks: its frozen scene hits NaN constraint forces in Genesis within a few steps (excluded before v1.0).
 
 ## Tasks and generator
-- `scripts/robowits/mk_tasks.py` renders both tasks of every family whose status is `pr`; `--check` writes nothing and
+- `scripts/robowits/mk_tasks.py` renders both tasks of every family whose status is `pr` (not `removed`); `--check` writes nothing and
   fails if a task would change (re-running it gives no diff); `--list` prints the table. Inputs, all in the repository:
   - `scripts/robowits/shared/`: the D9 shared sources, copied unchanged into every task: the tooling `rcb_robowits.py`, the
     standard sim adapter `server.py`, the graders `grade_privileged.py` / `grade_standard.py` (as `tests/grade.py`), the
@@ -81,7 +88,7 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
 - `scripts/build_images.sh` builds it as `eai-robowits` (docs/RUNNING.md, "Base images").
 - Standard agent containers and verifiers use the shared client base, pinned by digest, and the shared pip pins
   (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
-- 12 of the 15 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user
+- 10 of the 13 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user
   fetches them with their own key (`scripts/robowits/fetch_blenderkit.sh`) or uses the encrypted research bundle
   (`scripts/robowits/fetch_blenderkit_encrypted.sh`); the tasks mount the folder read-only from `$RCB_ROBOWITS_BLENDERKIT`
   into the verifier and the standard `sim` sidecar. The privileged agent's container never sees that folder or the

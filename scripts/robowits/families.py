@@ -4,7 +4,9 @@ instance is entry `eval_index` of RoboWits' eval_dataset_50/<NN>.json, frozen wi
 
 status
   "pr"       generated and committed (a full oracle, or a graded positive that the human review can check, PROTOCOL §2.7)
-Every family here has tasks. Eleven further families without a valid positive are not in the repository
+  "removed"  not generated: removed from this version (`removed` says when and why); its tasks were deleted, its entry is
+             kept (its frozen instance is in the git history of tasks/robowits-<family>-i00-privileged/environment/)
+Every other family here has tasks. Eleven further families without a valid positive are not in the repository
 (docs/benchmarks/robowits.md, Families); one comes back as a new entry here once it has a positive and a written
 `criterion` (`mk_tasks.py --instance <its instance.json> <family>`).
 DROPPED lists the families that are not coming back, with the reason.
@@ -29,7 +31,7 @@ the RoboWits CPU-backend builds measured 47-234 s across 94 trials on every host
 TABLE = "the table bounds"   # a term of the criterion texts, defined once per instruction (mk_tasks.CRITERION_TERMS)
 
 FAMILIES = {
-    # ------------------------------------------------------------------ in this PR (15)
+    # ------------------------------------------------------------------ in this PR (15; 13 since collect_screws and move_cube were removed on 2026-10-15)
     "align_blocks": dict(
         status="pr", rid="01-align-blocks", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
         objects=["first target cube", "second target cube", "third target cube", "long rigid ruler"],
@@ -95,7 +97,9 @@ FAMILIES = {
             text_vs_code="\"The tower\" is the tower base alone: the rings are not referenced. \"Stably\" is the check window: the conditions above for 2 s, the ball at rest."),
     ),
     "collect_screws": dict(
-        status="pr", rid="10-collect-screws", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
+        status="removed", rid="10-collect-screws",
+        removed="2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/robowits.md, Removed from this version)",
+        eval_index=0, blenderkit=True, backend="cpu", oracle="none",
         objects=["container", "dustpan", "screw"],
         std_objects="Objects here: container, dustpan, screw.",
         difficulty="Collect a screw into a container using a dustpan. The screw is too small to be easily grasped directly. The robot must use the dustpan to collect the screw first and then put it into the container. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
@@ -198,7 +202,9 @@ FAMILIES = {
             text_vs_code="\"Without sliding down\" is the check window: the conditions above for 2 s, with the cup at rest (at most 2 mm in 2 s), not one speed sample."),
     ),
     "move_cube": dict(
-        status="pr", rid="28-move-cube", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
+        status="removed", rid="28-move-cube",
+        removed="2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/robowits.md, Removed from this version)",
+        eval_index=0, blenderkit=True, backend="cpu", oracle="none",
         objects=["cube 1", "cube 2", "cube 3", "goal line", "smooth slope", "rough slope"],
         std_objects="Objects here: cube 1, cube 2, cube 3, goal line, smooth slope, rough slope.",
         difficulty="Move a cube past the goal line using slopes with different friction. This task requires the robot to understand and exploit the friction properties of different surfaces. The smooth slope has very low friction, while the rough slope has very high friction. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",

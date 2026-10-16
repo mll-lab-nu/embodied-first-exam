@@ -48,7 +48,7 @@ after every merge: [`TASKS.md` on the branch `task-list`](../../blob/task-list/T
 | KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 5 | full on 1, none on 4 (human review) |
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 10 (+ 10 standard-realtime, `-standard-realtime`: time does not stop) | full on 1, none on 9 (human review), in each mode |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
-| RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
+| RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 13 | partial on 2, none on 11 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
 | RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2 (standard mode: partial), none on 51 (human review) |
 | YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 10 (2 families × 5 object pairs) | full (upstream human demonstrations) |
