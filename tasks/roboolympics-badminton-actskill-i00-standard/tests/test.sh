@@ -5,6 +5,14 @@ mkdir -p /logs/verifier
 rm -rf /logs/verifier/*
 trap 'p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py verify' EXIT   # resource limits, after the grader (docs/PROTOCOL.md §2.10)
 p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py sanitize /app/output || true   # the agent's files are untrusted input: no link out of /app/output, no FIFO or device (docs/PROTOCOL.md §2.6)
+# the sandbox needs root (the skill runs as nobody, the simulator directory and the report are root-only): a verifier
+# started as another user (e.g. a rootless container runtime) cannot grade, which is the infrastructure's failure
+if [ "$(id -u)" != 0 ]; then
+  echo "verifier must run as root (uid $(id -u)): the skill runs as nobody in a root-only sandbox" > /logs/verifier/evaluate.log
+  echo '{"success": 0, "infra_error": 1, "grader_error": 0, "verifier_not_root": 1}' > /logs/verifier/reward.json
+  echo 0 > /logs/verifier/reward.txt
+  exit 0
+fi
 # the skill runs as nobody: it must not reach the log directory (Harbor makes it 777) nor the report the grade is read from
 chmod 755 /logs/verifier
 install -d -m 700 -o root -g root /var/lib/skilleval && rm -f /var/lib/skilleval/report.json

@@ -4,7 +4,11 @@ Flow (clock, slowdown, freeze and review, seats and turns), rules (formats, mode
 metering) and judgement (outcome, validity). It names no sport and no harness (ci_checks/check-core-purity.sh), computes
 no physics, and changes only in its own commits with a version bump (VERSION) and every sport's golden replay passing.
 """
-VERSION = "0.2.27"   # 0.2.27: player mode "unmetered" (PLAYER_MODE_<seat>: the runner meters the model; no proxy, no meter)
+VERSION = "0.2.29"   # 0.2.29: the replay video's frame rate from sport.toml [broadcast] fps (default 10) and
+# event frames (Match.spectator_frames(), drawn before a step's regular frame; core/spectator.py), spectators only
+# 0.2.28: a sport's own spectator scene for the replay video (Sport.spectator_scene(cfg) with
+# Match.spectator_state(); core/spectator.py), never the players' images (0.2.27: the unmetered player mode, below)
+# 0.2.27: player mode "unmetered" (PLAYER_MODE_<seat>: the runner meters the model; no proxy, no meter)
 # 0.2.26: after the end, observe / act answer 409 with the final state and draw nothing (realtime and
 # turn); after finalization a late draw returns no images and a late failure is only logged, never an error
 # 0.2.25: diagnostic records (information only, never replayed, in no hash; core/diaglog.py):
