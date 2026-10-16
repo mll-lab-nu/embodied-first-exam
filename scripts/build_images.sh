@@ -13,6 +13,7 @@ for dir in images/*/; do
   if [ -f "$dir/BUILD_CONTEXT" ]; then   # a context prepared by a script (BUILD_ONLY images; e.g. images/roboarc/)
     CTX="$dir$(cat "$dir/BUILD_CONTEXT")"; [ -d "$CTX" ] || { echo "skip $name: $CTX missing (see $dir/BUILD_ONLY)"; continue; }
   fi
+  # a base image from images/, not a task dir: no scripts/stamp_mtimes.py stamp needed (issue #258 is about task contexts)
   cmd="docker build -t $REG/eai-$name:$VER -t $REG/eai-$name:latest -f $dir/Dockerfile $CTX"
   echo "+ $cmd"; if [ "$D" = docker ]; then eval "$cmd"; else sg docker -c "$cmd"; fi
 done

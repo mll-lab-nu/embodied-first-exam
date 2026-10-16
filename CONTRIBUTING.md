@@ -76,10 +76,17 @@ python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time c
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty
+python3 scripts/stamp_mtimes.py tasks             # before any image build from the checkout (below)
 harbor run -p tasks/<task> -a oracle               # on a sample: >= 2 tasks per mode
 harbor run -p tasks/<task> -a nop                  # must score 0
 python3 scripts/task_conventions.py tasks/<your tasks>    # after a hand edit: normalize, which also refreshes each DIGEST
 ```
+Never build a task image (a `harbor run`, a `docker build` of `environment/` or `tests/`) from a tree you have not
+stamped with `scripts/stamp_mtimes.py`: Docker's BuildKit reuses another build's same-name context file when its size and
+mtime match, and a checkout gives many files one mtime, so a task can silently run or be graded with another task's file
+(issue #258, RUNNING.md "Building task images"). Tools that build images run from a stamped copy
+(`stamp_mtimes.py stage`); a new one does the same.
+
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
 the matching state hashes.
 
