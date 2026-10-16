@@ -81,7 +81,7 @@ allowed = [7]
 oracle = [7]
 
 [verifier]
-timeout_sec = 1260.0
+timeout_sec = 2760.0
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -101,8 +101,8 @@ timeout_sec = 30
 # ("graded_ready"), then the spectator video.
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 300); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
-timeout_sec = 1080
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 1800); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 2580
 
 [agent]
 timeout_sec = 7200
