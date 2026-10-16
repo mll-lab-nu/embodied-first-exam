@@ -316,7 +316,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 481 s on average (14,428 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "dispose_of_glass": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "positive": {
@@ -338,7 +339,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 307 s on average (9,195 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "hanging_pictures": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
@@ -738,7 +740,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 298 s on average (8,943 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "set_up_a_coffee_station_in_your_kitchen": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
@@ -765,7 +768,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 209 s on average (6,266 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "setting_mousetraps": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "demo": {
@@ -882,7 +886,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 258 s on average (7,739 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "stacking_wood": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "positive": {
@@ -905,7 +910,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 531 s on average (15,939 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "store_honey": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
@@ -972,7 +978,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 274 s on average (8,230 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "tidying_bathroom": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "demo": {
@@ -995,7 +1002,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 433 s on average (13,003 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "tidying_bedroom": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "positive": {
@@ -1282,7 +1290,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 640 s on average (19,187 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "picking_up_toys": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "demo": {
@@ -1347,7 +1356,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 527 s on average (15,808 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "getting_organized_for_work": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "demo": {
@@ -1415,7 +1425,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 505 s on average (15,158 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "moving_boxes_to_storage": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "demo": {
@@ -1456,7 +1467,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 471 s on average (14,145 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "putting_away_Halloween_decorations": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "instance_id": 301,
   "oracle": "none",
   "demo": {
@@ -1856,7 +1868,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 278 s on average (8,346 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "make_microwave_popcorn": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "review_pr": "third_batch",
   "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
@@ -1880,7 +1893,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 108 s on average (3,238 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "chop_an_onion": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "review_pr": "third_batch",
   "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
@@ -2025,7 +2039,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 149 s on average (4,473 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "scrubbing_bathroom_floor": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "review_pr": "third_batch",
   "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
@@ -2155,7 +2170,8 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 289 s on average (8,668 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "installing_a_modem": {
-  "include": true,
+  "include": false,
+  "removed": "removed 2026-10-15 by the benchmark owner after the GPT-6 Astra review; not part of this version (docs/benchmarks/behavior.md, Removed from this version)",
   "added": "2026-10-07",
   "review_pr": "third_batch",
   "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
