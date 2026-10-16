@@ -36,7 +36,7 @@ services:
       RO_SEED_SALT: ""
       RO_SEED_INDEX: ""
       RO_FIRST: "A"
-      RO_LEVEL: "4"
+      RO_LEVEL: "3"
       RO_SLOWDOWN: "20"
       RO_RENDERER: "mujoco"
       RCB_ACTION_LEVEL: "low"

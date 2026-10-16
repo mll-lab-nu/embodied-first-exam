@@ -7,20 +7,20 @@
 | Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
 | Simulator / robot | `mujoco` / `foosball-rods` |
 | Family / instance | `foosball_match` / seed 7 |
-| Oracle | `partial` — level 4 is the fastest scripted team (80 ms reactions), chosen as the hardest level (hub target: standard below 50 %); the screening (foosball-program-v2, docs/screening/foosball.md): our camera-only reference player beat level 4 in 10 of 100 seeds (level 2: 87 of 100, and it won this seed at level 2 5:0 on vanilla Harbor); realtime play varies run to run; the export's live oracle run is in the export report |
+| Oracle | `partial` — the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, mll-4090-1; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
 
 ## Task
-Foosball against the scripted opponent (level 4), program play: table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player.
+Foosball against the scripted opponent (level 3), program play: table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player.
 
 ## Difficulty
-Frozen development instance: seed 7, level 4, slowdown S = 20. Not one of
+Frozen development instance: seed 7, level 3, slowdown S = 20. Not one of
 the sport's official (hidden) seeds, so results here are previews, not official RoboOlympics results.
 
 ## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. level 4 is the fastest scripted team (80 ms reactions), chosen as the hardest level (hub target: standard below 50 %); the screening (foosball-program-v2, docs/screening/foosball.md): our camera-only reference player beat level 4 in 10 of 100 seeds (level 2: 87 of 100, and it won this seed at level 2 5:0 on vanilla Harbor); realtime play varies run to run; the export's live oracle run is in the export report.
+`solution/`: our camera-only reference player through the same HTTP interface. the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, mll-4090-1; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial.
 
 ## Verification
 Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier

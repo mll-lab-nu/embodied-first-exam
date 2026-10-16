@@ -39,28 +39,28 @@ patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14,
 name = "roboolympics-billiards-eightball-i01-standard"
 source_task = "roboolympics/billiards-eightball-program-standard"
 revision = "billiards-3"
-source_commits = ["30554cb116dc"]
+source_commits = ["d71e9f642ead"]
 protocol = "eai-standard-turn/1.0"   # not [protocols]: a turn-based match in mode standard
 
 [[tasks]]
 name = "roboolympics-curling-match-i01-standard"
 source_task = "roboolympics/curling-match-program-standard"
 revision = "curling-4"
-source_commits = ["30554cb116dc"]
+source_commits = ["d71e9f642ead"]
 protocol = "eai-standard-turn/1.0"   # not [protocols]: a turn-based match in mode standard
 
 [[tasks]]
 name = "roboolympics-darts-501-i01-standard"
 source_task = "roboolympics/darts-501-program-standard"
 revision = "darts-7+core-0.2"
-source_commits = ["30554cb116dc"]
+source_commits = ["d71e9f642ead"]
 protocol = "eai-standard-turn/1.0"   # not [protocols]: a turn-based match in mode standard
 
 [[tasks]]
 name = "roboolympics-foosball-match-i01-standard-realtime"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
-source_commits = ["30554cb116dc"]
+source_commits = ["d71e9f642ead"]
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"

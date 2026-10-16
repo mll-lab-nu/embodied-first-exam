@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/roboolympics-foosball-match-i01-standard-realtime"
-description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): foosball, one match against the scripted opponent at level 4, program play (eai-standard-realtime/1.0: the world runs at 1/20 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player. Exported from RoboOlympics task foosball-match-wallclock-program-standard by tools/export_fexam.py."
+description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): foosball, one match against the scripted opponent at level 3, program play (eai-standard-realtime/1.0: the world runs at 1/20 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player. Exported from RoboOlympics task foosball-match-wallclock-program-standard by tools/export_fexam.py."
 authors = [{ name = "RoboOlympics (CHIGUI0)" }]
 keywords = ["robotics", "roboolympics", "sports", "foosball", "mujoco", "standard-realtime-mode", "vision", "real-time"]
 
@@ -27,18 +27,18 @@ dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): sc
 slowdown = 20                     # standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md §4b); RO_SLOWDOWN's default
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 7
-opponent_level = 4
+opponent_level = 3
 revision = "foosball-program-v2+core-0.2"
 play = "program"
 action_level = "low"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
-source_commits = ["30554cb116dc"]
+source_commits = ["d71e9f642ead"]
 exporter = "roboolympics tools/export_fexam.py"
 player_mode = "unmetered"
 official = false
 expert_time_estimate_hours = 0.5
 oracle = "partial"
-oracle_evidence = "level 4 is the fastest scripted team (80 ms reactions), chosen as the hardest level (hub target: standard below 50 %); the screening (foosball-program-v2, docs/screening/foosball.md): our camera-only reference player beat level 4 in 10 of 100 seeds (level 2: 87 of 100, and it won this seed at level 2 5:0 on vanilla Harbor); realtime play varies run to run; the export's live oracle run is in the export report"
+oracle_evidence = "the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, mll-4090-1; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
