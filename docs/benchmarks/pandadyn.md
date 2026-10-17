@@ -155,7 +155,9 @@ before official runs there (PROTOCOL §3).
   (`infra_error` = 1, no verdict on the agent): no, an unreadable or an unfinalized `final.json`, the episode not dumped
   (`dump_error`: no `episode.json` or no `trajectory.npz`), `instance_mismatch`, a give-up after crashes not all inside the
   agent's calls (`sim_crashed`, `resume_failed`). The agent's 0: a failure of the task, a timeout, no actions, a
-  simulator error from a call (`sim_error`), crashes all inside the agent's calls (`sim_crashed_on_call`). A failed or
+  simulator error from a call (`sim_error`; never a success, even where the task's check passes on the failed step's
+  state: `server.py` `finish()`, with backstops in `finalize.sh` and `tests/grade.py`), crashes all inside the agent's
+  calls (`sim_crashed_on_call`). A failed or
   slow video costs only the video. Cost: one scene build and at most the horizon's 3,500 control steps filmed (1-3 min of
   one GPU slot) instead of three passes (two replays, the first one also filmed) and two scene builds.
 - **Standard-realtime** (the shared layer's `rcb_service.py`, `environment/sim/server.py`): graded by the live episode the

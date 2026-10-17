@@ -55,7 +55,8 @@ elif rc != "0":
 else:
     ep = load("episode.json")
     out.update(ep)
-    out.update({**live, "finalized": True, "success": bool(ep.get("success")), "live_success": bool(ep.get("success")),
+    ok = bool(ep.get("success")) and ep.get("reason") != "error"   # a simulator error is never a success (server.py finish)
+    out.update({**live, "finalized": True, "success": ok, "live_success": ok,
                 "state_sha": ep.get("live_sha")})
     if not ep:
         out.update({"success": False, "infra_error": 1, "dump_error": "no episode.json",

@@ -89,7 +89,10 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
+    if reason == "error":
+        # a simulator error ends the episode in the failed step's state, whatever the task's check says of it: no success
+        E["success"] = False
+    elif not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),

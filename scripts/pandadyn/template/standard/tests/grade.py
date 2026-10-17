@@ -41,7 +41,7 @@ mismatch = bool(d.get("instance_mismatch")) or reason.startswith("instance_misma
 dump_error = bool(d.get("dump_error"))
 infra = bool(d.get("infra_error")) or unfinished or mismatch or dump_error
 live = bool(d.get("live_success", d.get("success")))
-ok = bool(d.get("success")) and live and not infra
+ok = bool(d.get("success")) and live and not infra and reason != "error"   # a simulator error is never a success
 write(ok, {"success": int(ok), "live_success": int(live), "graded_by_live": 1, "replays": 0,
            "phases_done": int(num("phase")), "timed_out": int(reason == "timeout"),
            "limit_violation": int(reason == "limit_violation"), "instance_mismatch": int(mismatch),

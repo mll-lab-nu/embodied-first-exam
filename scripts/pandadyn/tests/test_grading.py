@@ -20,6 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PRIV = os.path.join(HERE, "..", "template", "privileged", "tests", "grade.py")
 STD = os.path.join(HERE, "..", "template", "standard", "tests", "grade.py")
 HOOK = os.path.join(HERE, "..", "template", "standard", "environment", "sim", "finalize.sh")
+STD_SERVER = os.path.join(HERE, "..", "template", "standard", "environment", "sim", "server.py")
 GOOD = {"task": "S00-Stub", "actions": np.zeros((5, 8))}
 INSTANCE = {"task": "S00-Stub", "action_dim": 8}
 # name: (trajectory entries (None: no file; a str: raw bytes), STUB_PLAN, want reward, want reward.json subset, replay processes)
@@ -52,6 +53,8 @@ STD_CASES = {
                                        {"success": 0, "limit_violation": 1, "infra_error": 0}),
     "the time was up": ({**LIVE, "success": False, "reason": "timeout"}, 0, {"success": 0, "timed_out": 1, "infra_error": 0}),
     "a simulator error from a call": ({**LIVE, "success": False, "reason": "error"}, 0, {"success": 0, "sim_error": 1, "infra_error": 0}),
+    "a success recorded with a simulator error": ({**LIVE, "success": True, "live_success": True, "reason": "error"}, 0,
+                                                  {"success": 0, "sim_error": 1, "infra_error": 0}),
     "no video: the verdict stands": ({**LIVE, "success": True, "video": False, "video_error": "x"}, 1,
                                      {"success": 1, "video_rendered": 0, "infra_error": 0}),
     "the video still pending: the verdict stands": ({**LIVE, "success": True, "video_pending": True}, 1, {"success": 1, "infra_error": 0}),
@@ -84,6 +87,8 @@ HOOK_CASES = {
                      {"video": False, "video_pending": False, "success": True}, 1),
     "the video is too slow: the verdict stands": (0, SERVICE, EP, True, "sleep", {"RCB_COLLECT_TIMEOUT_S": "63", "RCB_VIDEO_MIN_S": "1"},
                      1, {"success": 1, "video_rendered": 0, "infra_error": 0}, {"video": False, "success": True}, 1),
+    "a success dumped with a simulator error": (0, SERVICE, {**EP, "reason": "error"}, True, "ok", {}, 0,
+                     {"success": 0, "live_success": 0, "sim_error": 1, "infra_error": 0}, {"success": False}, 1),
     "no episode.json": (0, SERVICE, None, True, "ok", {}, 0, {"success": 0, "dump_error": 1, "infra_error": 1}, {"finalized": True}, 0),
     "no trajectory": (0, SERVICE, EP, False, "ok", {}, 0, {"success": 0, "dump_error": 1, "infra_error": 1}, {"finalized": True}, 0),
     "the service never dumped the episode": (1, SERVICE, None, False, "ok", {}, 0, {"success": 0, "infra_error": 1}, {"finalized": True}, 0),
@@ -211,8 +216,26 @@ def check_rt_adapter() -> list:
     return bad
 
 
+def check_std_finish() -> list:
+    """The standard service's finish() (it needs SAPIEN to run the service, so it runs alone, on stubs): an episode ended
+    by a simulator error is no success even when the task's check passes on the failed step's state (review of #309)."""
+    import ast
+    src = open(STD_SERVER).read()
+    fn = next(n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name == "finish")
+    bad = []
+    for reason, want in (("error", False), ("timeout", True)):
+        E = {"done": False, "success": False, "step": 0, "t0": 0.0}
+        ns = {"E": E, "time": __import__("time"), "ctrl_steps": lambda: 0, "check_success": lambda: True,
+              "log": lambda ev: None, "dump": lambda: None, "S": type("S", (), {"u": type("U", (), {"phase": 5})()})()}
+        exec(compile(ast.Module(body=[fn], type_ignores=[]), STD_SERVER, "exec"), ns)
+        ns["finish"](reason)
+        if bool(E["success"]) != want:
+            bad.append(f"standard service: finish({reason!r}) with the task's check passing gives success {E['success']}")
+    return bad
+
+
 def main() -> int:
-    bad = check_rt_adapter()
+    bad = check_rt_adapter() + check_std_finish()
     for name, case in PRIV_CASES.items():
         bad += run_priv("privileged: " + name, *case)
     for name, case in STD_CASES.items():
