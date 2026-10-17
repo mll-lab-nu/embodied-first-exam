@@ -15,7 +15,7 @@ heights above the floor; measured on this scene.)
 - **You are far too slow to steer it turn by turn.** One turn of yours takes seconds. Drive it with a program: a controller of your own (Python in your container, with numpy and the client) that runs a loop, reads the robot and sends commands, started in the background (`setsid nohup python -u /app/output/gen.py > /app/output/run.log 2>&1 < /dev/null &`: `setsid` matters, a plain `nohup ... &` is killed when your shell command returns) so that your session is free while it runs.
 - **One episode, no reset.** `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, 84×84: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
-- There is nothing to hand in: the service records every control step it ran, replays the episode in a fresh simulator and grades the replay. Keep the controller at `/app/output/gen.py` for the record: save it early and keep it current.
+- There is nothing to hand in: the service records every control step it ran and grades the episode as it ran. Keep the controller at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way (and stops your background programs), so do not stop early.
 
 ## Success
@@ -23,8 +23,7 @@ The episode succeeds when the following has held for **1 s (50 control steps in 
 
 The episode ends when the success has held for 1 s (`reason = "success"`), when the pelvis gets more than
 10 m from the scene's origin, on a simulator error, after **1950 control steps** (39 s after its
-clock started), or when your time is up. A fresh replay of the commands the robot actually executed must succeed
-as well and end in the same state.
+clock started), or when your time is up. That live episode is the verdict.
 
 ## Time and streaming
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the plan from control step `at` (an episode step number; by default the next step), replacing whatever was planned from `at` on. When the plan runs out, the robot stands still on your last command; a gap you leave with a later `at` is filled with the plan's last row instead, its walking and turning velocity included. `res.meta["control_steps"]` is the number of steps run so far, `res.meta["proprio"]["now"]` the robot's proprioception now, `res.meta["plan_end_step"]` where the plan now ends.

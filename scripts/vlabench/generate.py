@@ -52,7 +52,7 @@ HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
     "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
-MAX_CONTROL_STEPS = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's timeout)
+MAX_CONTROL_STEPS = 9000  # standard: technical episode cap (the video's pass must fit the collect hook's timeout)
 IMAGE_HW = 320
 MS_STEP, MS_FRAME = 40, 15  # measured in eai-vlabench on the reference machine (docs/benchmarks/vlabench.md)
 PANDA_LIMITS = (
