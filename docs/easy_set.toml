@@ -1,0 +1,470 @@
+# The easy set (docs/PROTOCOL.md §4, docs/RUNNING.md "Results"): task bases KEPT in the repository and run like any
+# other task, but reported apart from the main table and left OUT of the headline statistics.
+#
+# One entry per task base (the task name without its mode suffix); it covers every mode the base ships. Fields:
+#   base       e.g. "behavior-chop-an-onion-i00"
+#   benchmark  the base's label (scripts/task_conventions.py BENCHMARKS)
+#   reason     "shortcut": a success came through a goal looser than the task's text, or a grader shortcut (`note`: the
+#              observed pattern); "owner": the benchmark owner judges the task too easy or not discriminative;
+#              "solved": the screening runs solved it in every mode it ships (`note`: which runs; their core-set numbers
+#              are then filtered against them, so report those runs on all tasks alongside)
+#   note       optional
+# Append entries in the benchmark's block (one PR per benchmark touches only its own lines).
+# Read by scripts/task_conventions.py (`set_of`: "easy" / "core", recorded with each result as `set`, never part of
+# `config_key`) and checked by `python3 scripts/task_conventions.py easy-set --check` (ci_checks/run_all.sh). Marking a
+# task here changes none of its files: its DIGEST and the results recorded against it stay valid. A task leaves the
+# set by deleting its entry (e.g. after a grader fix and a re-grade).
+#
+# 2026-10-16: the first 84 bases (BEHAVIOR-1K 16, ManiGuard 8, RoboARC 31, RoboLab 19, RoboPaint 8, RoboWits 2), the
+# benchmark owner's (Qineng Wang) selection after the GPT-6 Astra review (#265). Several shortcut patterns are closed
+# by grader fixes (#243, #244, #248, #254), so some tasks may move back to the core set after a re-grade; RoboWits is
+# small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
+
+[[task]]
+base = "behavior-chop-an-onion-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Astra P: loose_goal_pass; Opus P: skipped_instructed_step"
+
+[[task]]
+base = "behavior-dispose-of-glass-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus P: held_object_counts_inside"
+
+[[task]]
+base = "behavior-getting-organized-for-work-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus P: loose_goal_pass:chair_knocked_over"
+
+[[task]]
+base = "behavior-hanging-pictures-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "owner"
+
+[[task]]
+base = "behavior-installing-a-modem-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus S: success_while_object_still_grasped"
+
+[[task]]
+base = "behavior-make-microwave-popcorn-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus P: loose_goal_pass"
+
+[[task]]
+base = "behavior-moving-boxes-to-storage-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "owner"
+
+[[task]]
+base = "behavior-picking-up-toys-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "owner"
+
+[[task]]
+base = "behavior-putting-away-Halloween-decorations-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus P: goal_met_mid_carry"
+
+[[task]]
+base = "behavior-scrubbing-bathroom-floor-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "owner"
+
+[[task]]
+base = "behavior-set-up-a-coffee-station-in-your-kitchen-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus S: loose_goal_pass"
+
+[[task]]
+base = "behavior-setting-mousetraps-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "owner"
+
+[[task]]
+base = "behavior-stacking-wood-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Astra P: loose_goal_pass; Astra S: loose_goal_pass; Sol P: loose_goal_pass; Sol6.1 P: loose_goal_pass; Sol6.1 S: loose_goal_pass"
+
+[[task]]
+base = "behavior-store-honey-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "owner"
+
+[[task]]
+base = "behavior-tidying-bathroom-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Opus S: goal_fired_while_held"
+
+[[task]]
+base = "behavior-tidying-bedroom-i00"
+benchmark = "BEHAVIOR-1K"
+reason = "shortcut"
+note = "Sol S: goal_fired_while_held; Sol6.1 S: goal_fired_while_held"
+
+[[task]]
+base = "maniguard-clutter-pickup-i25"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-dusty-transfer-i20"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-jar-transport-i02"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-jar-transport-i09"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-jar-transport-i14"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-lid-transport-i16"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-stack-retrieve-i12"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "maniguard-stack-retrieve-i21"
+benchmark = "ManiGuard"
+reason = "owner"
+
+[[task]]
+base = "roboarc-blanket-flatten-01-i01"
+benchmark = "RoboARC"
+reason = "shortcut"
+note = "Luna P: passed_only_in_replay_hold_tolerance"
+
+[[task]]
+base = "roboarc-blanket-flatten-05-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-blanket-flatten-06-i01"
+benchmark = "RoboARC"
+reason = "shortcut"
+note = "Luna P: passed_only_in_replay_hold_tolerance"
+
+[[task]]
+base = "roboarc-blanket-fold-02-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-buzz-wire-3d-03-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-buzz-wire-3d-05-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-buzz-wire-3d-08-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-coil-01-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-coil-02-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-coil-03-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-coil-05-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-keyhole-01-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-keyhole-02-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-cast-keyhole-06-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-fiber-bundling-01-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-fiber-bundling-02-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-fiber-bundling-03-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-fiber-bundling-05-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-fiber-bundling-08-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-hedgehog-in-cage-03-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-hedgehog-in-cage-04-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-hedgehog-in-cage-08-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-horseshoe-ring-04-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-interlocked-claws-04-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-interlocked-claws-08-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-interlocked-claws-10-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-knot-untying-04-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-lock-picking-02-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-lock-picking-03-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-rope-threading-01-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "roboarc-rope-threading-02-i01"
+benchmark = "RoboARC"
+reason = "owner"
+
+[[task]]
+base = "robolab-banana-in-bowl-i00"
+benchmark = "RoboLab"
+reason = "owner"
+
+[[task]]
+base = "robolab-bananas-in-bin-three-total-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Sol6.1 S: container_tilted_over_object"
+
+[[task]]
+base = "robolab-bananas-out-of-bin-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "GLM S: container_toppled"
+
+[[task]]
+base = "robolab-butter-above-raisin-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-cooking-clear-plate-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna P: outside_but_not_on_table"
+
+[[task]]
+base = "robolab-food-packing2-cans-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Opus S: success_while_still_in_gripper; Sol P: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-fruits-green-limes-on-plate-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-keyboard-out-of-bin-i00"
+benchmark = "RoboLab"
+reason = "owner"
+
+[[task]]
+base = "robolab-larger-object-raisin-box-in-bin-i00"
+benchmark = "RoboLab"
+reason = "owner"
+
+[[task]]
+base = "robolab-mustard-above-raisin-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-mustard-in-left-bin-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Sol S: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-recycle-cartons-vertical-crate-i00"
+benchmark = "RoboLab"
+reason = "owner"
+
+[[task]]
+base = "robolab-reorient-red-mug-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Sol P: success_during_free_fall"
+
+[[task]]
+base = "robolab-rubiks-cube-left-of-bowl-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: success_while_object_airborne"
+
+[[task]]
+base = "robolab-rubiks-cube-then-banana-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-rubiks-cubes-in-bin-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: success_while_still_in_gripper"
+
+[[task]]
+base = "robolab-take-measuring-spoon-out-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Astra S: outside_but_not_on_table; Luna S: outside_but_not_on_table; Sol S: outside_but_not_on_table; Luna P: outside_but_not_on_table"
+
+[[task]]
+base = "robolab-take-mugs-off-of-shelf-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Luna S: knocked_off_not_standing"
+
+[[task]]
+base = "robolab-tools-picking-drill-i00"
+benchmark = "RoboLab"
+reason = "shortcut"
+note = "Opus S: success_from_sim_glitch"
+
+[[task]]
+base = "robopaint-oil-bathers-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-cafeterrace-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-cypresses-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-irises-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-milkmaid-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-saintevictoire-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-temeraire-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robopaint-oil-wanderer-i01"
+benchmark = "RoboPaint"
+reason = "owner"
+
+[[task]]
+base = "robowits-collect-screws-i00"
+benchmark = "RoboWits"
+reason = "shortcut"
+note = "Sol6.1 S: held_above_shortcut; Astra S: held_in_opening_shortcut; Luna S: held_in_opening_shortcut; Luna P: held_in_opening_shortcut; Sol S: held_above_shortcut; Sol P: held_above_shortcut"
+
+[[task]]
+base = "robowits-move-cube-i00"
+benchmark = "RoboWits"
+reason = "shortcut"
+note = "Astra P: pushed_off_table_shortcut; Luna P: pushed_off_table_shortcut"
