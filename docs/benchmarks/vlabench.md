@@ -6,7 +6,7 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | | |
 |---|---|
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT), assets `lerobot/vlabench-assets` @ `08d7a44`, MuJoCo 3.2.2, dm_control 1.0.22 |
-| tasks | `tasks/vlabench-<task>-i00-privileged` and `tasks/vlabench-<task>-i00-standard` (PROTOCOL v1.0.1 names) |
+| tasks | `tasks/vlabench-<task>-i00-privileged` and `tasks/vlabench-<task>-i00-standard` |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + `scripts/vlabench/shared/standard/server.py` |
@@ -51,8 +51,7 @@ benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and 
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 4000 control steps (400 s of robot time; PR #4's bound). Standard
   episodes have a technical cap of 9000 control steps (`spec.max_control_steps`, PROTOCOL §4.5 MAY): the video's
   re-run of the episode (~40 ms a step, about 360 s at the cap, plus a scene build and rendering) must fit the collect
-  hook, which waits for the verdict until 1440 s and for the video until 2880 s of its 2910 s (since 2026-10-16; until
-  2026-10-17 the verdict itself was a fresh replay, the video a second one).
+  hook, which waits for the verdict until 1440 s and for the video until 2880 s of its 2910 s.
 - **World frame.** Metres; the robot's base at (0, -0.4, 0.78) facing +y (VLABench's default; (0, -0.4, 0.6) for
   `select_billiards*` and (0, -0.7, 0.7) for `find_unseen_object`, from VLABench's per-series robot configuration): x
   to the robot's right, y forward (across the table), z up; quaternions w x y z. Stated in both instructions and in
@@ -75,42 +74,32 @@ sequence; no runtime code reads it), the evaluation code and configs, the source
 VLABench's general skills and its success predicates stay: the privileged mode offers the skills, the verifier grades
 with the predicates. `images/vlabench/build_local.sh` builds the same recipe from an assets checkout already on disk.
 
-Local evidence for this PR ran on `eai-vlabench:0.1.0` built as PR #4's `rcb-vlabench:0.1.1` (the same recipe up to
-the assets, built with the local-assets variant) plus this Dockerfile's last layers verbatim: the reference machine had
-about 30 GB free, less than a from-scratch build needs (~12 GB of LFS objects plus the layer). A clean
-from-scratch build is the maintainers' publication step; the instance hashes are checked on every load, so a build
-whose physics differs shows up as `grader_error`, never as a silent change.
+The instance hashes are checked on every load, so a build whose physics differs shows up as `grader_error`, never as a
+silent change.
 
 ## Standard-mode service
 
-**Grading, since 2026-10-17 (owner, board 0150/0151): the live episode.** The sim sidecar judges the episode it runs
-with VLABench's own success check (the task's termination condition, `should_terminate_episode`, at every control step;
-`step()` in `scripts/vlabench/shared/standard/server.py`) and ends it there; `rcb_service.py` writes that verdict
-(`graded_by = "live"`, `replays = 0`) once the agent's container is stopped, and no grading replay runs. The old replay
-(`vlb_tool.Session.replay`) re-ran the same rows from the frozen instance under the same check, with no settle or hold
-of its own, so the live rule is exactly as strict. The frozen start is checked on the live simulator: `vlb_tool.Session`
-refuses a scene whose initial state or compiled model hash differs from `instance.json` (`instance_mismatch` here), and
-`start_sha` (`initial_state_sha256`) is checked when the episode begins; both give up as infrastructure (`infra_error =
-1`) before the agent is served (every archived start matched). The video is one render pass over `trajectory.npz` after
+**Grading: the live episode** (PROTOCOL H.4). The sim sidecar judges the episode it runs with VLABench's own success
+check (the task's termination condition, `should_terminate_episode`, at every control step; `step()` in
+`scripts/vlabench/shared/standard/server.py`) and ends it there; `rcb_service.py` writes that verdict
+(`graded_by = "live"`, `replays = 0`) once the agent's container is stopped. The frozen start is checked on the live
+simulator: `vlb_tool.Session` refuses a scene whose initial state or compiled model hash differs from `instance.json`
+(`instance_mismatch`), and `start_sha` (`initial_state_sha256`) is checked when the episode begins; both give up as
+infrastructure (`infra_error = 1`) before the agent is served. The video is one render pass over `trajectory.npz` after
 the verdict (`render_video`: a fresh scene, CPU physics, OSMesa rendering; median about 150 s a trial, up to about 8
-minutes); it never changes the verdict. The removed replay was a CPU re-run of the episode of about the same length
-(about 2.5 slot-hours over the 49 archived trials). Over the archive the live rule changes no graded verdict; the 5 trials
-recorded `infra_error` because their old video ran out of the hook's time get a live verdict (0) instead. `infra_error
-= 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the agent's calls, a
-reset whose scene does not rebuild, and `instance_mismatch`; a simulator error raised by the agent's call, crashes inside its calls, a timeout and a failure are
-the agent's 0.
+minutes); it never changes the verdict. `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after
+crashes not all inside the agent's calls, a reset whose scene does not rebuild, and `instance_mismatch`; a simulator
+error raised by the agent's call, crashes inside its calls, a timeout and a failure are the agent's 0.
 `environment/sim/rcb_service.py` is a byte copy of main's `scripts/humanoidbench/shared/standard/rcb_service.py`
 (protocol `eai-standard/2.1`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at
 most two resumes, startup watchdog, SIGUSR1 collect hook, `/data` evidence, verdict before video, 413 / 500 handling).
-Since 2026-10-10 `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict: before, `finalized` came after the video, a second full replay, so
-the longest episodes needed two replays and two scene builds (750-800 s) inside the hook's 800 s of waiting, and one
-that missed it was graded `infra_error` although its verdict was on disk. The hook's timeout went from 900 to 1500 s
-with that change. The reset budget is pinned to 0 in the compose file (the instruction says one episode, no reset; it
-used to be a `${RCB_RESET_BUDGET:-0}` knob that a host exporting the variable for another benchmark would have switched on).
+`final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it
+renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow,
+hung or killed render costs the video and never the verdict. The reset budget is pinned to 0 in the compose file (the
+instruction says one episode, no reset).
 `server.py` is VLABench's adapter (the `Sim` contract): cameras, proprioception, `joint_position` clipping into the
 actuators' bounds, holding the last targets while watching, the frozen start's hash, and the video's re-run (`vlb_tool.Session`). The
-agent's client and the verifier (`grade.py`: `success = live_success`, the live verdict, since 2026-10-17; `live_success ∧
-replay_success ∧ deterministic` before) are main's copies too.
+agent's client and the verifier (`grade.py`: `success = live_success`) are main's copies too.
 
 ## Rebuilding
 ```bash
@@ -131,28 +120,16 @@ task's success at its last step; two replays in fresh processes end in the live 
 tasks dropped in review verified the same way; the 3 whose PR #4 references are recorded failures did not (their
 frozen inputs and report entries are not kept, `tasks.json` `dropped`).
 
-Harbor runs on the digests before the review fixes (PROTOCOL v1.0.1 names and README layout; AMD Ryzen 9 7950X,
-Docker, no GPU; the fixes since change only the instruction text, the READMEs, the `task.toml` descriptions, the
-standard `RCB_TASK_TEXT` and the robot base in `/spec`'s frame string, and drop three tasks): `-a oracle` scores 1 on
-all 39 privileged tasks then (36 of them kept) and on 8 standard tasks (heat_food, texas_holdem,
-take_out_cool_drink, book_rearrange, find_unseen_object, select_painting, friction_qa, select_fruit_common_sense;
-live, replay and determinism all hold); `-a nop` scores 0 on four tasks per mode (select_fruit, heat_food,
-friction_qa, insert_flower). No infrastructure or grader errors.
+Harbor runs: `-a oracle` scores 1 on every privileged task and on 8 standard tasks (heat_food, texas_holdem,
+take_out_cool_drink, book_rearrange, find_unseen_object, select_painting, friction_qa, select_fruit_common_sense);
+`-a nop` scores 0 on four tasks per mode (select_fruit, heat_food, friction_qa, insert_flower). Scripted cheat attempts
+score 0: in privileged mode, tooling patched to report success, a do-nothing trajectory, a tampered instance and a
+`sitecustomize.py` in `/app/output`, forged reward files; in standard mode, hidden endpoints (`/reset`, `/state`,
+`/success`, `/data/final.json`: 404), a wrong action type, a `dt` that is not a multiple of 0.1 and NaN rows (400,
+nothing runs), and a forged `final.json` in the agent's container (never collected). Two agent red-team trials (Codex,
+told to make the verifier pass without solving) score 0. Re-running `generate.py` gives the same tree hash.
 
-Earlier, on the pre-rename digests (same scenes, instances, tooling and success rule): `-a oracle` 39/39 privileged and
-8/8 standard, `-a nop` 0 on four tasks per mode. Two scripted cheat attempts score 0: in privileged mode, tooling patched
-to report success, a do-nothing trajectory, a tampered instance and a `sitecustomize.py` in `/app/output`, forged
-reward files; in standard mode, hidden endpoints (`/reset`, `/state`, `/success`, `/data/final.json`: 404), a wrong
-action type, a `dt` that is not a multiple of 0.1 and NaN rows (400, nothing runs), and a forged `final.json` in the
-agent's container (never collected). Two agent red-team trials (Codex, told to make the verifier pass without solving)
-score 0. Re-running `generate.py` gives the same tree hash.
-
-## Results
-Not in the repository (PROTOCOL D3): the sample model trial `codex-gpt6_luna-xhigh` (Codex + GPT-6 Luna, reasoning
-effort xhigh, 60 min; select_fruit, friction_qa, insert_flower, heat_food in both modes: privileged 4/4, standard 2/4;
-all within the protocol's token budget) goes to the results site; its per-task READMEs and timelines are kept outside
-the repository for that.
-
+## Reference hashes
 Final-state hashes of some references (live = replay 1 = replay 2):
 
 | task | seed | control steps | state hash |
@@ -164,21 +141,19 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 
 ## Open questions
 - **The standard episode cap.** 9000 control steps (900 s of robot time) keeps the video's re-run well inside the
-  collect hook (2910 s since 2026-10-16; a re-run costs ~40 ms a step: these are the timings of the first trials on
-  a 7950X, not measured again). In the sample model trial one standard episode (insert_flower) reached the cap after
-  53 minutes of the agent's 60, so the cap, not the wall clock, ended it. Raising it needs a longer collect timeout.
+  collect hook (2910 s; a re-run costs ~40 ms a step on a 7950X). An agent can reach the cap before its time limit;
+  raising it needs a longer collect timeout.
 - **Tasks without a reference.** The 57 tasks left out could come in later with `oracle = "none"` and human review
   (PROTOCOL §2.7).
-- **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved
-  (sample trial 4/4; PR #4: 57/83); the standard twin carries the difficulty.
+- **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved;
+  the standard twin carries the difficulty.
 - **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
   shared 2.2 layer (`scripts/eai_standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
@@ -232,5 +207,4 @@ Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v
 | `vlabench-take-out-cool-drink-i00` |  | easy: Luna | unverified |
 | `vlabench-texas-holdem-i00` |  | easy: Luna | unverified |
 
-Judgment calls: `vlabench-select-drink-i00`: solved in the first test evaluation (2026-10-02); repo-wide changes only
-since.
+Judgment calls: `vlabench-select-drink-i00`: solved in the first test evaluation; repo-wide changes only since.

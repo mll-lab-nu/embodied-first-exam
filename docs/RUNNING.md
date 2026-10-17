@@ -4,11 +4,10 @@ How runs are configured, and what makes a run official. The task contract is [PR
 Appendix H binds every run); the standard-mode wire protocol is [STANDARD_MODE.md](STANDARD_MODE.md). The sections
 "Official runs" to "Results" below are the runner's rules: `scripts/run_agent_batch.sh` applies them by default, and the
 scheduler (batch_eval_live `run_policy.py`, called from the dispatcher's launch and retry paths) refuses a launch that
-breaks one. Moved here from PROTOCOL v1 (§2.10, the gateway part of §2.11, §5, D10, D11; board 0124).
+breaks one.
 
 ## Official runs
-A result is official only when its run had all of these (owner decisions of 2026-10-02 to 2026-10-14; the reasons are in
-PROTOCOL_HISTORY.md):
+A result is official only when its run had all of these:
 - **Harbor's native agents** (`-a codex`, `-a claude-code`, ...), configured through environment variables; no agent
   adapter, no gateway that holds credentials or changes requests.
 - **The usage gateway** (`GATEWAY=1`, below): it forwards model-API calls only and is, with the package registries, the
@@ -17,8 +16,7 @@ PROTOCOL_HISTORY.md):
 - **No tool outside the container**: the harness's web search, account connectors, apps, plugins, image generation and
   cloud agents off (`WEB_SEARCH=disabled`, `scripts/codex_tools_off.py`; below).
 - **Token budget** per trial: 10B input tokens (Harbor `n_input_tokens`: cached input counts in full) and 10B output
-  (reasoning included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`), set so high that it almost never binds (owner
-  2026-10-17, board 0150; 100M / 10M before, PROTOCOL_HISTORY.md); with the gateway, exceeding either stops the agent and
+  (reasoning included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`), set so high that it almost never binds; with the gateway, exceeding either stops the agent and
   fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
   labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
@@ -89,16 +87,14 @@ shown separately (the batch summary marks them in their configuration's table an
 results site and the pool dashboard, outside this repository, are to list them apart). `set` in `config.json` is the value when the result was written; a
 report derives it from `docs/easy_set.toml` at the commit it publishes, so a task that leaves the list (e.g. after a
 grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
-mode by the screening runs its `note` names, or, with `solved_by` (owner 2026-10-17: `"luna"`, codex-gpt6_luna-xhigh),
+mode by the screening runs its `note` names, or, with `solved_by` (`"luna"`: codex-gpt6_luna-xhigh),
 in any mode by that run (`scripts/easy_set_add_solved.py` appends them): core-set numbers of those runs are filtered
 against them (Luna's core-set success rate is 0 by construction), so report those runs on all tasks alongside.
 
-Standard-mode results recorded before the live-grading change (2026-10-17, PROTOCOL H.4) are re-read from their own
-`final.json`: the success the live episode ended with, under that benchmark's live rule, where that version's live
-record applied the task's whole rule (a settle or hold that only the replay ran does not count as checked); the recorded
-verdict (`reward.json`, `result.json`) stays untouched beside it, and a trial whose `final.json` holds no such live
-verdict, whose record shows the episode started off the frozen instance (`instance_mismatch`), or that was re-graded
-later under a stricter rule, keeps the recorded one. Each benchmark's doc says which fields carry the live verdict in each of its versions.
+A standard-mode result recorded while a grading replay still decided is re-read from its own `final.json` (the live
+episode's success, where that record applied the task's whole rule); the recorded verdict stays beside it, and a trial
+without such a live verdict, started off the frozen instance (`instance_mismatch`) or re-graded under a stricter rule
+keeps the recorded one (benchmark docs name their fields where they differ).
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker
@@ -195,7 +191,7 @@ separate verifiers. Results (per-task and batch reports) go to the results site 
 ## Unattended batches (`scripts/run_agent_batch.sh`)
 `scripts/run_agent_batch.sh <batch> <base> ...` runs one Harbor-native agent over `<base>-privileged` and `<base>-standard`
 (and `<base>-standard-realtime` with `MODES="privileged standard standard-realtime"`) for each task base (a missing twin is skipped), one Harbor job per task and mode. Starting the same command again adds a
-lane: every job is claimed by exactly one runner (`$JOBS/.claims/<job>`). The run id is derived as in TAXONOMY (D4) and
+lane: every job is claimed by exactly one runner (`$JOBS/.claims/<job>`). The run id is derived as in TAXONOMY "Run ids" and
 checked. Configuration is Harbor's own:
 
 | what | how |
@@ -209,7 +205,7 @@ checked. Configuration is Harbor's own:
 
 Provider, service tier and other settings go in the results metadata, not in the run id. Use one key per batch with a
 spending cap. After each job the runner scans the job for keys and redacts them, writes the per-task results for the
-results site with `scripts/write_task_results.py --out` outside the repository (D3: `RESULTS`, default `../rcb_results`
+results site with `scripts/write_task_results.py --out` outside the repository (`RESULTS`, default `../rcb_results`
 next to the checkout, gets `<batch>/<task>/<run id>/`; `RESULTS=` skips it), updates `$JOBS/<batch>.summary.md`, and
 stops its lane when a trial shows a model-account failure.
 
@@ -233,7 +229,7 @@ event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
 Every task names its seeds in `task.toml` (`[metadata.seeds]`: `default`, `allowed`, `oracle`; PROTOCOL §2). Each
 seed is an instance (`allowed`: a list, a range `{ from = A, to = B }` or `"any"`); the default one is the task
 directory as committed. To run another allowed seed, or one
-drawn from the allowed list (official batches draw one per trial; the owner's decision of 2026-10-13), let the runner
+drawn from the allowed list (official batches draw one per trial), let the runner
 write a copy and run that:
 
 ```bash
@@ -243,26 +239,49 @@ harbor run -p /tmp/run1/<task> -a <agent> ...
 ```
 
 The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`,
-and the copy carries only the drawn one. As of 2026-10-13 every task allows its default seed only, so
+and the copy carries only the drawn one. Every task allows its default seed only today, so
 `scripts/run_agent_batch.sh` runs each job from a stamped copy of the task as it is (with the gateway, the copy's
 egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap clamped, Resources
 above); it materializes a seed per trial once a benchmark allows more than one.
 
 ## The agent's time (the cutoff)
-A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it around the agent's run only
-(`asyncio.wait_for(agent.run(...), timeout=...)`: after the environment has been built and started and the harness
-installed, each under a timeout of its own, not from the container's start; a standard-mode `sim` service starts with
-the environment, and what it has not finished starting by then is waited out inside the agent's time), stops the agent
-at the cutoff with
-`AgentTimeoutError`, and then collects the artifacts and runs the verifier as after any other end, so the trial is
-graded as it stands. The number is the task's own `[agent] timeout_sec` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
-§2), and the task's instruction states it in its last section, `## Time limit`. Harbor hands `instruction.md` to the
-agent as it is and `scripts/run_agent_batch.sh` adds nothing to it, so that section is the last thing the agent reads. Official runs pass no multiplier or override for it: never
-`--timeout-multiplier`, `--agent-timeout-multiplier` or an agent `override_timeout_sec` (a result is only comparable
-under the stated cutoff, PROTOCOL §2), and no prompt template or extra instruction, in `AK` or elsewhere (they would add text
-after the task's last section).
-`--agent-setup-timeout-multiplier` (in `AK`, for slow harness installs) is fine: set-up is not the agent's time. A trial
-that ends at the cutoff is a result, not an infrastructure failure, and is not run again.
+Every task gives the agent a fixed wall-clock time, its cutoff: Harbor's `[agent] timeout_sec` in the task's own
+`task.toml`, set by the task's author in the pull request that adds or changes the task (a generated benchmark keeps it
+as a constant of its generator, `CUTOFF_SEC` / `CUTOFF`). `ci_checks/check-cutoffs.py` checks per task: a whole number
+of seconds, at most 14400 (`CUTOFF_CAP`), 3600 unless the pull request justifies another; the instruction's closing
+`## Time limit`, the README's `Agent time budget` row and, in the standard modes, the sim service's `RCB_WALL_CLOCK_S`
+state the same number; nothing else in the instruction states the limit as a duration. A task's privileged and
+standard versions have the same cutoff (H.7, the mode registry's `same_cutoff_as`). A benchmark uses one number for all its tasks of a mode unless the pull
+request says why.
+
+**What the agent is told.** `normalize` ends every `instruction.md` with `## Time limit`: "You have N seconds to
+complete this task. Do not cheat by using online solutions or hints specific to this task.", then what the cutoff means
+in the mode (`CUTOFF_NOTE` in `scripts/task_conventions.py`: wall-clock time from the start of the session; at the cutoff
+the agent is stopped and only `/app/output/` (privileged) or the episode as it stands (standard modes) is graded;
+`/run/rcb-limits/usage.json` gives `time_left_s` and `deadline_utc`; long waits in tool calls count). A benchmark's own
+text about its time says "the time limit (`## Time limit`)", never a number.
+
+**When the clock runs.** Harbor counts the cutoff around the agent's run only (`asyncio.wait_for(agent.run(...),
+timeout=...)`): after the environment has been built and started and the harness installed, each under a timeout of its
+own. A standard-mode `sim` service starts with the environment; what it has not finished starting by then is waited out
+inside the agent's time. The service's own clock (`/spec.budget.wall_clock_s`, `meta.time_left_s`) counts the same
+number from the agent's first request to the service (kept through a restart) and never runs out before Harbor's; it only
+reports, except that RoboARC's service ends the episode when its count reaches 0 (docs/benchmarks/roboarc.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
+the trial is graded as it stands: a result, not an infrastructure failure, never run again.
+
+**Official runs** pass no multiplier or override (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
+`override_timeout_sec`) and add nothing to the instruction (no prompt template or extra instruction, in `AK` or
+elsewhere), so `## Time limit` is the last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
+installs) is fine: set-up is not the agent's time.
+
+**Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` (or the generator's constant, then
+re-render) in both twins, run `python3 scripts/task_conventions.py tasks/<task> ...` (it rewrites the closing section, the
+README row, `RCB_WALL_CLOCK_S` and `DIGEST`), and state old -> new and why in the change (label `cutoff-change`). The task
+changes in place and keeps its name; results under another cutoff are a different configuration (`config_key`). Not
+derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
+raising one, look at collect-hook and verifier budgets sized for an episode as long as the agent's time (RoboCasa,
+RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `docs/benchmarks/`
+pages) and, for RoboOlympics' exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
 Every base image is `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>` (PROTOCOL §1): `scripts/build_images.sh`
@@ -270,8 +289,7 @@ builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (
 that has `write:packages`). New packages in the org start private; an org admin makes them public in the package
 settings (the API cannot). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
-a private package for org members. Before 2026-10-02 the images were `rcb-<sim>` (several registries) or `eai-<name>`
-under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker tag` it to the new name.
+a private package for org members.
 
 ## What an agent's container reaches
 Every task's `[agent]` allowlist is one list, `HOSTS` in `scripts/set_agent_egress.py`: the model APIs and the package
@@ -279,8 +297,8 @@ registries (PyPI: pypi.org, files.pythonhosted.org; apt: deb.debian.org, securit
 security.ubuntu.com, snapshot.ubuntu.com). So `pip install` (or `uv pip install` in the images without pip) and
 `apt-get update && apt-get install` work in every agent container, in both modes; GitHub, raw.githubusercontent.com,
 Hugging Face and the general web do not answer (PROTOCOL §5, Appendix H.6: the instruction asks the agent, as an honour rule, not
-to search the web for or download a ready-made solution, and allows it to read whatever is installed in its container; the network keeps the places where solutions are published out of reach). Checked on real
-trials (2026-10-11; Debian 12 and 13, Ubuntu 22.04 images): both installs succeed with and without the usage gateway.
+to search the web for or download a ready-made solution, and allows it to read whatever is installed in its container; the network keeps the places where solutions are published out of reach). Both installs work with and without the
+usage gateway (Debian 12 and 13, Ubuntu 22.04 images).
 In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about NVIDIA's own repository
 (developer.download.nvidia.com is not on the list) and goes on; the Ubuntu archives answer.
 
@@ -359,12 +377,8 @@ succeeds and Codex then stops with "workspace backend must use an HTTPS origin";
 discovery failed"). Such a run keeps `chatgpt.com` (that one host) on the copy's allowlist beside the gateway, so that
 backend's other paths stay reachable directly and the account's connectors are off by the harness's configuration
 alone. Closing it needs a gateway that speaks HTTPS with a certificate the harness trusts; until then prefer API keys,
-which have no connectors, and keep the evaluation accounts' connectors disconnected. Measured 2026-10-11 on a pool host
-(one short trial each, a container probing its own reach): a Codex API key, a Claude subscription token and a
-self-hosted endpoint work with the gateway and the package registries as the only addresses: `pip install` and
-`apt-get install` succeed, and `chatgpt.com`, `api.openai.com`, `api.anthropic.com`, GitHub, raw.githubusercontent.com
-and Hugging Face fail from the container; a ChatGPT login works with the exception, with `chatgpt.com` answering
-directly and the other hosts failing.
+which have no connectors, and keep the evaluation accounts' connectors disconnected. A Codex API key, a Claude
+subscription token and a self-hosted endpoint work with the gateway and the package registries as the only addresses.
 The runner waits `GATEWAY_START_WAIT` seconds (10) for the gateway to come up; raise it on busy shared nodes.
 Before each job it checks that the gateway still runs and answers `/_gateway/health`; a dead gateway is restarted on its
 port (the agents' base URLs keep working), and the lane stops if that fails. A job during which the gateway died gets
@@ -373,7 +387,7 @@ upstream unreachable: the gateway answers 502; the provider's stream broken off;
 `totals.json` (`upstream_failures`; `failures_in_a_row` up to the latest call). A trial that ends on such failures, or
 whose job has `gateway_down.json`, is an infrastructure failure: `write_task_results.py` publishes it as "not a result",
 never the agent's 0, and three or more failed calls in a row at its end stop the lane like an account failure
-(`scripts/account_failure_check.py`; board 0121 M4).
+(`scripts/account_failure_check.py`).
 
 Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
 ```
@@ -385,18 +399,17 @@ Input counts what the model read (Anthropic: input + cache read + cache creation
 included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
 summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
 gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
-before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
+before logging. Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
 (default 10B / 10B; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
 the agent stops; `totals.json` records `over_token_budget = 1` and, from the first refused request, `budget_stop`
 (`limit` input|output, `first_refused_at` / `last_refused_at`, the input / cached / output counts at the stop, `refused`):
 a runner records such a trial as `TokenBudgetExceeded` (not the harness's own exception, which reads as a network or API
 error: Codex `NetworkConnectionError` / `NonZeroAgentExitCodeError`, Claude Code `UnknownApiError`), the batch summary marks it, and `write_task_results.py`
-counts it as failed (Official runs above). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
+counts it as failed (Official runs above). Codex ends its turn on the first refusal, without retrying.
 The raw log stores each conversation item once and a request as references to the items it resends, like Codex's and
 Claude Code's own session files, and is lossless: `scripts/usage_gateway/rawlog.py cat <trial>/gateway` prints every
 request and response in full. The gateway appends to `raw.jsonl.gz` while the trial runs; after each job the runner
-compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file per request, the format before
-2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
+compacts it to `raw.jsonl.xz`.
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
 attempts); Codex's zstd-compressed request bodies are stored as base64, and so not deduplicated, on a runner host

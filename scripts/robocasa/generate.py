@@ -83,7 +83,7 @@ ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 # Standard mode, the sim service's collect hook (shared/finalize.sh): its timeout, and how long it waits for the verdict
 # (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree). A number of its own, not the agent's
 # cutoff: it was sized for the video's render pass (and a crash-resume replay) of an episode as long as a 3600 s agent
-# time limit. Lowering the cutoff (CUTOFF_SEC) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
+# time limit. Lowering the cutoff (CUTOFF_SEC) keeps it safe; look at it when the cutoff is raised (docs/RUNNING.md "The agent's time").
 COLLECT_TIMEOUT_S = 3600
 COLLECT_WAIT_S = 3450
 # README Change Log entries of single tasks (by environment), after those of every task; both modes.
