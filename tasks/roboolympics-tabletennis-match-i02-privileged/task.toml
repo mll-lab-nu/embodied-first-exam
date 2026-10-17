@@ -13,6 +13,7 @@ robot = "franka-panda"
 family = "tabletennis_match"
 mode = "privileged"
 dynamics = "dynamic"
+verifier_wall_clock = true
 instance_seed = 12
 opponent_level = 3
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
@@ -72,7 +73,7 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 8192
 [verifier]
-timeout_sec = 5100.0
+timeout_sec = 10000.0
 environment_mode = "separate"
 network_mode = "no-network"
 

@@ -73,22 +73,25 @@ python -m tools.tt_fullsim.formal --policy /app/output/policy --level 3 --seed 1
 
 Use a new output directory each time. This starts a fresh world and the original
 `core.realtime.RealtimeService` clock, runs your persistent program, and replays
-its trusted journal twice in fresh processes. `--unsafe-local` is a developer
+its trusted journal in a fresh process. `--unsafe-local` is a developer
 self-test, NOT the trusted final grading boundary; your development simulator may
 have been modified. No `.git`/git binary or reference policy is required.
 
 Formal evaluation happens later in Harbor's separate no-network verifier image:
-root owns the private frozen simulator and logs; your code runs as nobody, has a
-separate read-only public simulator copy and a writable scratch directory. Only
+root owns the private frozen simulator and logs (your program cannot read them); your code runs as nobody, has a
+read-only public copy of the full simulator (`/opt/dev`, the same files as `/opt/fullsim`) for its own predictions
+and a writable scratch directory. Only
 legal commands can influence the official world. The world continues at S=10
 while your program computes; original point reviews freeze it. There is no extra
 step mode in this release evaluator. Program load limit is 30s, each input/response
-exchange 5s, review 300s; formal match execution cutoff is 1800s. The program has
-2 GiB address space and 1800 CPU seconds (the match cutoff); development gets the task's overall
-agent resource budget. No model/API calls are available in formal evaluation.
+exchange 5s, review 300s. The match ends as in roboolympics-tabletennis-match-i02-standard-realtime: when it is over, or, unfinished
+and not won, at that task's cutoff (7200 s of wall time). The program has 2 GiB address space, 7200 CPU seconds and
+at most 256 processes and threads; when the match ends every process of its user is killed. Development gets the
+task's overall agent resource budget. No model/API calls are available in formal evaluation. The verdict of this live
+match depends on the verifier host's speed (as in roboolympics-tabletennis-match-i02-standard-realtime); the verifier's CPUs are pinned.
 
 `reward.json` distinguishes valid deterministic losses from wins; success requires
-a complete original-referee win and two fresh matching journal replays. Missing,
+a complete original-referee win and a matching fresh-process journal replay. Missing,
 invalid, stuck or unfinished programs do not win. Files under `evaluation/match/`
 record original final.json/episode/replay; diagnostics and decisions explain errors.
 The submitted artifact is a program, not a trajectory. After the verdict the verifier replays the formal match's record

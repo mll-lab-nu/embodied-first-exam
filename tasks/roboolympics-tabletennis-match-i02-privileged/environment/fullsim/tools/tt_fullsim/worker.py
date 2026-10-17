@@ -6,14 +6,19 @@ This is an API/process boundary, NOT a security boundary against hostile same-ui
 import contextlib
 import importlib.util
 import json
+import os
 import resource
 import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[2]
+NPROC = 256  # processes and threads of uid 65534 (the kernel counts the user's, not this container's): generous
 sys.path.insert(0, str(root))
 resource.setrlimit(resource.RLIMIT_AS, (2 * 1024**3, 2 * 1024**3))
-resource.setrlimit(resource.RLIMIT_CPU, (1800, 1800))  # = the formal match cutoff
+resource.setrlimit(resource.RLIMIT_CPU, (7200, 7200))  # = the formal match's wall bound (the twin's cutoff)
+# H.1 (#282 review): a bounded number of processes for the policy's user; the verifier then ends them all with kill(-1)
+if os.geteuid() == 65534:  # the formal run (for another user the count includes all of that user's own processes)
+    resource.setrlimit(resource.RLIMIT_NPROC, (NPROC, NPROC))
 resource.setrlimit(resource.RLIMIT_NOFILE, (128, 128))
 resource.setrlimit(resource.RLIMIT_FSIZE, (16 * 1024**2, 16 * 1024**2))
 wire = sys.stdout

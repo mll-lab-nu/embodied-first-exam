@@ -1,13 +1,13 @@
 # Full-simulator table tennis: develop a program against L3
 
 Win one complete match against the frozen sport's scripted L3 opponent, seed 12: the same frozen instance
-as `roboolympics-tabletennis-match-i02-standard-realtime` (its privileged twin; there you see only camera images).
+as `roboolympics-tabletennis-match-i02-standard-realtime` (its standard-realtime twin; there you see only camera images).
 The original Franka Panda, high-level actions, serve laws, limits, scoring and opponent are unchanged.
 First to five, win by two from 4:4, cap seven. Full simulator development is allowed; no video is required.
 
 ## Development and deliverable
 Use `from tools.tt_fullsim.session import Session`; `Session(level=3, seed=12)` gives `state()`, `world`,
-`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. Your source and simulator are at `/opt/fullsim`.
+`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. The full simulator (source included) is at `/opt/fullsim`.
 Reset rebuilds the WHOLE same-seed match at 0:0. You may inspect/modify private worlds and develop/search with
 repeated resets within your agent resource and time limits. These changes never enter the formal match.
 Read `/opt/fullsim/README.md` for the complete program API, observation fields, serving phases and game-time units.
@@ -21,13 +21,15 @@ not a pre-recorded trajectory or a claimed score. Write a valid program early an
 
 ## Formal evaluation
 After development, a separate no-network verifier runs your final program as an unprivileged process against a
-fresh unmodified original simulator. It has a separate readable development simulator for private predictions;
-it cannot access the trusted referee or logs. Formal full-state snapshots are read-only values, not a mutable
+fresh unmodified original simulator. Your program may read a public read-only copy of the full simulator
+(`/opt/dev`, the same files as `/opt/fullsim`) for its own predictions; it cannot read the trusted simulator, referee
+or logs. Formal full-state snapshots are read-only values, not a mutable
 world object. Formal reset and score rollback are not allowed. The original realtime clock runs at S=10 even
 while your program computes; point reviews freeze the world under the existing rules. One response per observation,
 one action at a time. See `config["spec"]` and the README for the policy execution, load, review and call limits.
-The independent match has its own execution cutoff; unfinished/error programs do not win. The platform records
-executed actions and replays that trusted journal twice in fresh processes. Success requires a completed win,
+The match ends as in `roboolympics-tabletennis-match-i02-standard-realtime`: when it is over, or at that task's cutoff (7200 s of wall
+time), where an unfinished match is not won; a program error does not win either. The platform records the executed
+actions and replays that trusted journal in a fresh process. Success requires a completed win,
 valid original referee result and matching hashes/scores/steps/outcome. The generated trajectory is evidence,
 not your submission. This fixed-instance result does not measure unseen-instance generalization.
 
