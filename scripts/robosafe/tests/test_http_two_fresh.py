@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -40,6 +41,13 @@ def write_json(path, value):
 def load_methods():
     """Compile both real bound-method bodies unchanged."""
     standard_tree = ast.parse(STANDARD.read_text(), filename=str(STANDARD))
+    # the module's own replay deadline and its waiter, compiled unchanged
+    helpers = {"time": time}
+    nodes = [n for n in standard_tree.body if (isinstance(n, ast.FunctionDef) and n.name == "wait_replays")
+             or (isinstance(n, ast.Assign) and any(getattr(t, "id", None) == "REPLAY_TIMEOUT_S" for t in n.targets))]
+    if len(nodes) != 2:
+        raise AssertionError("Expected REPLAY_TIMEOUT_S and wait_replays in " + str(STANDARD))
+    exec(compile(ast.Module(body=copy.deepcopy(nodes), type_ignores=[]), str(STANDARD), "exec"), helpers)
     common = {
         "json": json,
         "os": os,
@@ -47,7 +55,9 @@ def load_methods():
         "np": np,
         "tempfile": tempfile,
         "subprocess": subprocess,
-        "REPLAY_TIMEOUT_S": 780,
+        "time": time,
+        "REPLAY_TIMEOUT_S": helpers["REPLAY_TIMEOUT_S"],
+        "wait_replays": helpers["wait_replays"],
         "rcb_service": SimpleNamespace(write_json_atomic=write_json),
     }
     server = dict(common, HERE=str(STANDARD.parent), __file__=str(STANDARD))
@@ -66,6 +76,7 @@ def load_methods():
         )
         exec(compile(ast.Module(body=[copy.deepcopy(nodes[0])], type_ignores=[]), str(path), "exec"), namespace)
         methods[clock] = namespace["verify"]
+    methods["_timeout"] = helpers["REPLAY_TIMEOUT_S"]
     return methods
 
 
@@ -114,13 +125,16 @@ class ProductionTwoFreshTests(unittest.TestCase):
             encoded = json.dumps(actual, sort_keys=True).encode()
             process = SimpleNamespace(returncode=None)
 
-            def wait(timeout):
-                self.assertEqual(timeout, 780)
+            def wait(timeout=None):
+                self.assertIsNotNone(timeout)          # one shared deadline, never an unbounded wait
+                self.assertGreater(timeout, 0)
+                self.assertLessEqual(timeout, self.methods["_timeout"])
                 output.write_bytes(encoded)
                 process.returncode = 0
                 return 0
 
             process.wait = wait
+            process.poll = lambda: process.returncode
             launches.append({"argv": list(argv), "output": output, "raw_bytes": encoded})
             return process
 
@@ -130,7 +144,7 @@ class ProductionTwoFreshTests(unittest.TestCase):
         return result
 
     def test_production_always_launches_two_real_witnesses_despite_budget_fields(self):
-        for clock in self.methods:
+        for clock in ("paused", "realtime"):
             for passed in (True, False):
                 for inst in ({"state_sha": START_SHA},marker()):
                     with self.subTest(clock=clock, passed=passed, instance=inst):
@@ -145,7 +159,7 @@ class ProductionTwoFreshTests(unittest.TestCase):
                         for entry in launches:self.assertEqual(entry['output'].read_bytes(),entry['raw_bytes'])
 
     def test_disagreeing_second_witness_still_fails_production(self):
-        for clock in self.methods:
+        for clock in ("paused", "realtime"):
             robot,actual=self.fixture();launches=[]
             original=actual.copy()
             def sideeffect(argv,*,stdout,stderr):
@@ -153,9 +167,9 @@ class ProductionTwoFreshTests(unittest.TestCase):
                 payload=copy.deepcopy(original)
                 if number==2:payload['state_sha']='0'*64
                 process=SimpleNamespace(returncode=None)
-                def wait(timeout):
+                def wait(timeout=None):
                     output.write_text(json.dumps(payload));process.returncode=0;return 0
-                process.wait=wait;launches.append(output);return process
+                process.wait=wait;process.poll=lambda:process.returncode;launches.append(output);return process
             with patch.object(subprocess,'Popen',side_effect=sideeffect):
                 result=self.methods[clock](robot,np.zeros((1,4)))
             self.assertEqual(len(launches),2);self.assertFalse(result['success'])

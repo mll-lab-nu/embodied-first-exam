@@ -284,8 +284,7 @@ def build_service():
                 with open(os.path.join(work, f"replay{i}.err"), "w") as stderr:
                     procs.append(subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json"), pictures_path],
                                                   stdout=subprocess.DEVNULL, stderr=stderr))
-            for p in procs:
-                p.wait(timeout=server.REPLAY_TIMEOUT_S)
+            server.wait_replays(procs, server.REPLAY_TIMEOUT_S)
             outs = []
             for i, p in zip((1, 2), procs):
                 if p.returncode != 0:

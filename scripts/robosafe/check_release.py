@@ -9,7 +9,8 @@ tasks kept as the easy set. This check stands in for the generators' check mode 
 It checks that the rsb-* directories are exactly release.json's tasks; that each task's DIGEST is its recomputed digest
 (scripts/task_conventions.py) and the recorded one; that its compose image is its release's image (and `robosafe_version` 0.5.4 exactly for the 0.5.4 release);
 that the easy set (docs/easy_set.toml) holds every base with no 0.5.4 task and no base with one; and that the files
-kept out of git (scripts/robosafe/assets.json) are the ones images/robosafe/context/robosafe-src.sha256 lists.
+kept out of git (scripts/robosafe/assets.json) are the ones images/robosafe/context/robosafe-src.sha256 lists; and that
+each 0.5.4 task's service, grader and solution helpers are byte for byte the ones in scripts/robosafe/shared/ (shared_problems).
 """
 import json
 import pathlib
@@ -63,7 +64,29 @@ def problems() -> list:
         if ("0.5.4" in releases) == (base in easy):
             bad.append(f"{base}: {'in' if base in easy else 'not in'} the easy set, releases {sorted(releases)}")
     bad += [f"{b}: in the easy set but no rsb-* task has this base" for b in sorted(easy - set(by_base))]
+    bad += [p for name in sorted(set(have) & set(want)) if want[name]["release"] == "0.5.4"
+            for p in shared_problems(have[name])]
     bad += assets_problems()
+    return bad
+
+
+def shared_problems(task: pathlib.Path) -> list:
+    """A 0.5.4 task's service, grader and solution helpers are the files in scripts/robosafe/shared/ (the realtime
+    clock's own first) and scripts/robosafe/, byte for byte, so that a fix there (and its unit tests) is the code the
+    task runs: after editing one, copy it into the 84 tasks, then `task_conventions.py <tasks>` and `check_release.py write`."""
+    realtime = task.name.endswith("-realtime")
+    dirs = ([HERE / "shared/realtime"] if realtime else []) + [HERE / "shared/standard", HERE / "shared/solution", HERE]
+    bad = []
+    for f in sorted(task.rglob("*")):
+        rel = f.relative_to(task).as_posix()
+        if not f.is_file() or not (rel.endswith(".py") or rel == "solution/solve.sh") or rel == "tests/rcb_limits.py" \
+                or rel.startswith("environment/rcb_monitor/"):
+            continue
+        src = [HERE / "shared/standard/grade.py"] if f.name == "grade_rsb.py" else [d / f.name for d in dirs if (d / f.name).is_file()]
+        if not src:
+            bad.append(f"{task.name}/{rel}: no source in scripts/robosafe/shared/ or scripts/robosafe/")
+        elif f.read_bytes() != src[0].read_bytes():
+            bad.append(f"{task.name}/{rel}: differs from {src[0].relative_to(ROOT)}")
     return bad
 
 

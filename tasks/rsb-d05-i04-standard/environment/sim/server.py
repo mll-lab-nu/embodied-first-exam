@@ -44,6 +44,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 
 import numpy as np
 
@@ -53,7 +54,24 @@ import rcb_rsb  # noqa: E402
 import rcb_service  # noqa: E402
 from rcb_service import Refused, main  # noqa: E402
 
-REPLAY_TIMEOUT_S = 780          # each of the two fresh-process replays (they run side by side), inside the hook's 840 s
+# The two fresh-process replays (side by side) share one deadline, inside the collect hook's 3960 s (task.toml). A replay
+# redoes a subset of the live episode's simulator work (every row and, from 0.5.4, every picture check, without the
+# rendering), so it needs at most about the live episode's wall clock: the agent's 3600 s budget, plus a margin. With
+# 780 s, an episode that filmed a few minutes of robot time (video frames on every call) could never be graded.
+REPLAY_TIMEOUT_S = 3900
+
+
+def wait_replays(procs: list, timeout_s: float) -> None:
+    """Wait for the replay processes under one shared deadline; on timeout kill every one still running and raise."""
+    deadline = time.monotonic() + timeout_s
+    try:
+        for p in procs:
+            p.wait(timeout=max(0.0, deadline - time.monotonic()))
+    finally:
+        for p in procs:
+            if p.poll() is None:
+                p.kill()
+                p.wait()
 
 # ---------------------------------------------------------------------------------------------- additions to the layer
 _service_submit, _service_end, _service_status, _service_meta, _service_handle, _service_counters, _service_write_final = (
@@ -85,7 +103,8 @@ def _handle(self, method: str, path: str, body: bytes = b"", content_length: int
         except Exception:  # noqa: BLE001 -- the body is the layer's JSON; anything else is logged without it
             err = None
         self.log("refused", path=path, code=code, error=err)
-        self._write_final()
+        if not getattr(self, "finalized", False):   # a final.json with the verdict in is never rewritten (H.4)
+            self._write_final()
     return code, ctype, out
 
 
@@ -408,8 +427,7 @@ class RoboSafe:
             with open(os.path.join(work, f"replay{i}.err"), "w") as stderr:
                 procs.append(subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json"), pictures_path],
                                               stdout=subprocess.DEVNULL, stderr=stderr))
-        for p in procs:
-            p.wait(timeout=REPLAY_TIMEOUT_S)
+        wait_replays(procs, REPLAY_TIMEOUT_S)
         outs = []
         for i, p in zip((1, 2), procs):
             if p.returncode != 0:
