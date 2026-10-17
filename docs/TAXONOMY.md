@@ -60,8 +60,7 @@ Benchmark-specific fields (optional, PROTOCOL §1):
   HumanoidBench has it for every family with a standard twin; a standard-realtime task's twin is `<base>-privileged`). `<base>` is
   `<simulator>-<family-with-dashes>-i<NN>`, or the benchmark's own task name: `robotwin_2_0_<robotwin_task>`,
   `dextoolbench_<category>_<object>_<task>`, `mujoco_playground_<env>`, `kinder-<family>-i<NN>`,
-  `humanoidbench-<category>-<family>-i<NN>`, `myosuite-<family>-i<NN>`, `dexjoco-<family-with-dashes>-i<NN>` (its easy set:
-  `dexjoco-<family-with-dashes>-i<NN>-easy`, docs/benchmarks/dexjoco.md),
+  `humanoidbench-<category>-<family>-i<NN>`, `myosuite-<family>-i<NN>`, `dexjoco-<family-with-dashes>-i<NN>`,
   `dexhand-<family-with-dashes>-i<NN>`.
 - RoboARC: `<base>` is `roboarc-<family-with-dashes>-<NN>-i<NN>` (e.g. `roboarc-cast-coil-06-i01`): `<NN>` after the
   family is the task's two-digit number within its family (never reused; a removed task leaves a gap), `i01` the MuJoCo
