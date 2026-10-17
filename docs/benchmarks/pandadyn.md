@@ -178,7 +178,7 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras
   (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
   2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
-  scene rebuilt and reset with the instance's seed (exact, about 1 s); 10 by default (PROTOCOL §4b).
+  scene rebuilt and reset with the instance's seed (exact, about 1 s); 3 per trial ("Reset budget" below).
 - **Grading.** The live episode, and a replay of its rows in a **fresh process** (`rcb_pandadyn.py replay`, the standard
   twin's collect-hook replay: a Session holds a SAPIEN scene, one per process), which must succeed and end in the live
   run's state (CPU PhysX with enhanced determinism). The video is filmed afterwards by the live scene and never decides.
@@ -212,6 +212,15 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
   success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
+- **Reset budget: 3** (`RT_RESETS` in `mk_tasks.py`; 10, the mode's default, from 2026-10-14 to 2026-10-17). Every reset
+  restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
+  number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
+  clock that does not stop adds little once the plan is fixed. With 10 resets, the first screening runs (six harness /
+  model runs on nine families, one on all 19) succeeded in 14 of 67 standard-realtime trials against 1 of 87 standard
+  ones (no reset); none of the 14 succeeded in its first episode, 10 in episode 6-11, and 44 of the 53 failed trials used
+  the whole budget. Three resets keep one or two scouting episodes and a real attempt, so the twin still differs
+  from the one-shot standard twin. The check above (three aborted attempts, then the oracle in the fourth episode) uses
+  exactly this budget.
 
 ## Declarations
 - **Tooling: thin wrappers only** (above). No task-level skill (catch, strike, carry) is in the agent's tooling.

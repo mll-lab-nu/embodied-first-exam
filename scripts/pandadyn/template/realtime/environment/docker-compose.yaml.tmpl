@@ -27,7 +27,7 @@ services:
       PYTHONPATH: /srv:/opt/pandadyn
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       RCB_SLOWDOWN: "${RCB_SLOWDOWN:-@@SLOWDOWN@@}"                # S = @@SLOWDOWN@@: the world runs at 1/S of real speed (this family's measured RTF @@RTF@@; PROTOCOL §4b)
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-@@RT_RESETS@@}"        # @@RT_RESETS@@ resets (PROTOCOL §4b default); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-@@RT_RESETS@@}"        # @@RT_RESETS@@ resets (docs/benchmarks/pandadyn.md, "Reset budget"); 0: one episode
     deploy:
       resources:
         reservations:
