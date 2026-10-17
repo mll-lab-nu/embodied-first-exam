@@ -11,15 +11,8 @@
 # directories listed below only.
 [protocols]
 standard-realtime = "eai-standard-realtime/1.0"   # the real-time matches: RoboOlympics' own service and referee
-standard = ["skilleval-api-test/1",               # the skill tasks (task_type = "policy"), graded offline
-            "eai-standard-turn/1.0"]              # the turn-based matches: the world waits for the player whose turn it
+standard = ["eai-standard-turn/1.0"]              # the turn-based matches: the world waits for the player whose turn it
                                                   # is, a chess clock per player (RoboOlympics' own service and referee)
-
-[[tasks]]
-name = "roboolympics-badminton-actskill-i00-standard"
-source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
-revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["5e1a82f3ba61"]
 
 [[tasks]]
 name = "roboolympics-badminton-match-i01-standard-realtime"
@@ -73,12 +66,6 @@ source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
-
-[[tasks]]
-name = "roboolympics-tabletennis-hitskill-i00-standard"
-source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
-revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["5e1a82f3ba61"]
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i01-standard-realtime"
