@@ -689,85 +689,87 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
 
+# roboarc: GPU memory 2 GB for every class (owner 10-17, board 0150 Q26: declared 7-8 GB, measured about 1 GB;
+# batch_eval_live vram_profile roboarc on 24 GB cards: peak 1116 MiB)
 [[rule]]
 match = "^roboarc-.*-privileged$"
 min_cpus = 2.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
+min_gpu_memory_gb = 2.0
 gpu_required = true
 gpu_class = "any"
 recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 5.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+verifier_min_gpu_memory_gb = 2.0
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU); GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 [[rule]]
 match = "^roboarc-.*-standard$"
 min_cpus = 2.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
+min_gpu_memory_gb = 2.0
 gpu_required = true
 gpu_class = "any"
 recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 6.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
+verifier_min_gpu_memory_gb = 2.0
+measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU); GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # roboarc, rigid (privileged): per-class values (user 2026-10-13)
 [[rule]]
 match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-privileged$"
 min_cpus = 4.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+min_gpu_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # roboarc, rigid (standard): per-class values (user 2026-10-13)
 [[rule]]
 match = "^roboarc-(interlocked-claws|buzz-wire-3d|cast-keyhole|cast-coil|hedgehog-in-cage|horseshoe-ring|lock-picking)-.*-standard$"
 min_cpus = 4.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+min_gpu_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # roboarc, rope / chain (privileged): per-class values (user 2026-10-13)
 [[rule]]
 match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-privileged$"
 min_cpus = 4.0
 min_memory_gb = 8.0
-min_gpu_memory_gb = 7.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+min_gpu_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # roboarc, rope / chain (standard): per-class values (user 2026-10-13)
 [[rule]]
 match = "^roboarc-(rope-threading|knot-untying|fiber-bundling|slotted-post-ring|orbits)-.*-standard$"
 min_cpus = 4.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+min_gpu_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # roboarc, cloth (privileged): per-class values (user 2026-10-13)
 [[rule]]
 match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 min_cpus = 4.0
 min_memory_gb = 10.0
-min_gpu_memory_gb = 8.0
-verifier_min_gpu_memory_gb = 8.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+min_gpu_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # roboarc, cloth (standard): per-class values (user 2026-10-13)
 [[rule]]
 match = "^roboarc-(blanket-flatten|blanket-fold)-.*-standard$"
 min_cpus = 6.0
 min_memory_gb = 8.0
-min_gpu_memory_gb = 8.0
-verifier_min_gpu_memory_gb = 8.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+min_gpu_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 # robotwin_2_0, privileged: 47 task(s)
 [[rule]]

@@ -4,30 +4,30 @@
 # commit's simulator source, robot assets and image helpers, and the frozen instances from the HF dataset pinned in
 # scripts/roboarc/assets.json); then scripts/build_images.sh. The only change from Dockerfile.mujoco: the instances
 # are the context's instances/ directory instead of a named build context.
-# RoboARC MuJoCo dev image (local only, never pushed): the published eai-robotangle 0.2.22 plus
+# RoboTangle MuJoCo dev image (local only, never pushed): the published eai-robotangle 0.2.22 plus
 #   - this commit's simulator source (topogym/, with the MuJoCo core topogym/world/mujoco/), pruned as
 #     images/topogym/Dockerfile does: /opt/topogym/SOURCE.json is its hash, which every runtime binding names;
 #   - this commit's robot assets (assets/robots/ -> /opt/topogym-assets/robots/, TOPOGYM_ASSET_ROOT);
 #   - the frozen MuJoCo instances of the ported families (the named build context `instances`, one directory per task
 #     base: instance.json + instance_assets/), each replacing the Genesis instance of the same base in
-#     /opt/robotangle/instances/ (images/roboarc/stage_instance.py stages it into the task). An empty context builds
+#     /opt/robotangle/instances/ (images/robotangle/stage_instance.py stages it into the task). An empty context builds
 #     the image without them: scripts/robotangle/release_rebuild.py makes the release's instances inside that image,
 #     then builds it again with them (every layer but the last is shared, so both have the same runtime).
 #   - the VBD cloth: newton 1.6.1 and warp-lang 1.18.0 (images/robotangle/vbd-requirements.txt, exact versions and wheel
 #     hashes) and their Warp CPU kernels, compiled at build into the read-only cache /opt/warp-cache (WARP_CACHE_PATH) with
-#     the pinned target of topogym/world/mujoco/warp_cpu.py (images/roboarc/README.md, VBD cloth).
+#     the pinned target of topogym/world/mujoco/warp_cpu.py (images/robotangle/README.md, VBD cloth).
 # Everything else is the base image: Genesis 1.2.1 and gs-nyx (the render bridge's Nyx host), libuipc, torch, and the
 # MuJoCo the core is pinned to, mujoco 3.14.0 (a genesis-world dependency; docs/rcb/MUJOCO_CORE.md), plus coacd.
 # The numpy / OpenBLAS SIMD masking of MuJoCo tasks (NPY_DISABLE_CPU_FEATURES, OPENBLAS_CORETYPE) is NOT set here: it
 # belongs to the MuJoCo tasks' containers (agent, sim, verifier), because Genesis families keep their released
-# environment (the masking changes their generated asset bytes). The task generator writes it (scripts/roboarc/mk_tasks.py).
+# environment (the masking changes their generated asset bytes). The task generator writes it (scripts/robotangle/mk_tasks.py).
 #
 # Build on a host that has the base image (from the repository root; the root .dockerignore keeps the context to topogym/,
 # assets/robots/ and images/topogym/prune.py):
 #   docker buildx build --load -f images/robotangle/Dockerfile.mujoco --build-context instances=<dir of instance bases> \
-#     -t eai-roboarc:0.3.0-dev .
+#     -t eai-robotangle:0.3.0-dev .
 ARG BASE=ghcr.io/mll-lab-nu/eai-robotangle:0.2.22@sha256:eb1a75177bf3d11f60540ef5a285c5a47d8cf35e2e99630759bb108b9f05dfad
-FROM ${BASE}
+FROM ${BASE} AS unsquashed
 RUN python -c "import mujoco, coacd; assert mujoco.__version__ == '3.14.0', mujoco.__version__"
 # before the simulator source, so this layer survives source changes
 COPY images/robotangle/vbd-requirements.txt /tmp/vbd-requirements.txt
@@ -46,4 +46,39 @@ RUN --mount=type=bind,source=instances,target=/tmp/mj-instances \
     set -e; for d in /tmp/mj-instances/*/; do [ -d "$d" ] || continue; b=$(basename "$d"); test -f "$d/instance.json"; \
       python -c "import json, sys; assert json.load(open(sys.argv[1]))['simulator']['physics_engine'] == 'mujoco'" "$d/instance.json"; \
       rm -rf "/opt/robotangle/instances/$b"; cp -a "$d" "/opt/robotangle/instances/$b"; \
-      chmod -R a+rX "/opt/robotangle/instances/$b"; echo "MuJoCo instance $b"; done
+      chmod -R a+rX "/opt/robotangle/instances/$b"; echo "MuJoCo instance $b"; done; \
+    if ls /tmp/mj-instances/*/instance.json > /dev/null 2>&1; then \
+      find /opt/robotangle/instances -mindepth 1 -maxdepth 1 -name '*-i00' -exec rm -rf {} + ; \
+      echo "removed the base image's Genesis instances: $(ls /opt/robotangle/instances | grep -c -- '-i00$') left"; fi
+# The release image (instances in the context) drops the Genesis release's -i00 instances inherited from the base: no
+# task of this release uses them (2026-10-13). They are removed from the image's filesystem only: the files remain in the
+# base image's layers, and the image is not smaller (a squashed image is planned). The image without instances keeps them
+# (a new base may read a released instance while it is made).
+
+# The image that ships: one filesystem layer (user 2026-10-13). A stage FROM scratch takes the merged filesystem of the
+# stage above, so files that stage removed (the Genesis -i00 instances inherited from the base) are in no layer of it.
+# FROM scratch keeps no configuration: every field of the stage above is declared again, value for value and in its
+# order (the base image's environment, pinned by its digest above, then this file's own ENV). Build the unsquashed stage
+# with `--target unsquashed` to compare the two.
+FROM scratch
+COPY --from=unsquashed / /
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    LANG=C.UTF-8 \
+    GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D \
+    PYTHON_VERSION=3.11.15 \
+    PYTHON_SHA256=272179ddd9a2e41a0fc8e42e33dfbdca0b3711aa5abf372d3f2d51543d09b625 \
+    TOPOGYM_CUDA_FLAVOR=cu128 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TOPOGYM_VISUAL_ASSET_ROOT=/opt/topogym-visuals \
+    TOPOGYM_ASSET_ROOT=/opt/topogym-assets \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=all \
+    XDG_CACHE_HOME=/opt/rcb-cache \
+    CUDA_CACHE_PATH=/opt/rcb-cache/nv/ComputeCache \
+    PYTHONPATH=/opt/topogym \
+    TOPOGYM_SOURCE=/opt/topogym/SOURCE.json \
+    VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json \
+    WARP_CACHE_PATH=/opt/warp-cache
+WORKDIR /app
+CMD ["python3"]

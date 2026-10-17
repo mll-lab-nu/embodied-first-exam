@@ -7,9 +7,9 @@
 | Twin | `roboarc-buzz-wire-3d-03-i01-standard` |
 | Simulator / robot | `roboarc` / `franka-robotiq-2f85` |
 | Family / instance | `buzz_wire_3d` / seed 0 |
-| Oracle | `none` — No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress round on this instance. |
+| Oracle | `full` |
 | Agent time budget | 10800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-roboarc:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-roboarc:0.2.0` |
 
 ## Task
 RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replayable trajectory. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Frozen scene instance (variation buzz_wire_3d_easy, seed 0).
@@ -18,7 +18,7 @@ RoboARC buzz_wire_3d (Franka Panda + Robotiq 2F-85, MuJoCo): produce one replaya
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 1 s. Grasping: assisted grasping (contact_weld_v1).
 
 ## Reference solution
-No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress round on this instance. `oracle = "none"`: there is no `solution/`, and Harbor checks the nop agent only.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `565180eae29f6f63…`) to `/app/output/`: the MuJoCo reference (the released route re-recorded on MuJoCo with a held tail), which the verifier scored 1 in two fresh-process replays on the release image eai-roboarc 0.1.0, which holds the same frozen instance and reference rows (eai-roboarc 0.2.0 adds speed cuts in the simulator's host code only; its physics is bit-identical) (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in a fresh process, twice; pass iff the
@@ -38,10 +38,10 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 |---|---|---|
 | CPU cores | 4 | 2 |
 | Memory | 7 GB | 5 GB |
-| GPU memory | 7 GB | 7 GB |
+| GPU memory | 2 GB | 2 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
-- Measured: partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending
+- Measured: partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)
 - Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 12 GiB GPU memory, 24 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 12 GiB GPU memory, 24 GiB memory. Limits measured: partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending.
 
 ## Details
@@ -78,11 +78,12 @@ Guide the metal loop along the entire wire from start to finish without touching
 - A failure is reported in `s.status()["episode_end"]` as "wire_touched", "Wand fell below table" or "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
 
 ### Provenance
-- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `05846213` (MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)); bound to this release's runtime (source `37aa7ac0`, tooling `d8692e15`).
-- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `88e0136e1b97`, under `instances/buzz-wire-3d-03-i01/` (scripts/roboarc/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/robotangle_mujoco `b842da320`, image `ghcr.io/mll-lab-nu/eai-roboarc:0.1.0` (images/roboarc/).
+- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `05846213` (MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image eai-roboarc:0.2.0, scripts/robotangle/release_rebuild.py --instances)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).
+- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `cb43201c2832`, under `instances/buzz-wire-3d-03-i01/` (scripts/roboarc/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
+- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/eai-roboarc:0.2.0` (images/roboarc/).
 - Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
 
 ### Change Log
 - 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): the scene, goal and rules of the Genesis 1.2.1 task `buzz-wire-3d-easy-i00` (privileged mode), ported to MuJoCo: its own frozen instance and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the render bridge next to the tooling (Nyx frames).
 - 2026-10-14: tests/grade.py, the same file in every privileged task, requires again that one grading replay reach the goal with the instance's own thresholds within the trajectory's rows (failure analysis 2026-10-14, item 12; docs/benchmarks/roboarc.md, Grading replays). This family has no grading hold: a replay succeeds only within the rows, so every verdict is unchanged. reward.json gains `success_in_hold_only` (always 0 here), and `strict_replay_required` is 1.
+- 2026-10-17: roboarc 0.2.0: a reference solution (`solution/`, release.json oracle `none` -> `full`), recorded on MuJoCo from the frozen instance; the frozen instance and the task text are unchanged.

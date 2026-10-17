@@ -7,9 +7,9 @@
 | Twin | `roboarc-buzz-wire-3d-04-i01-privileged` |
 | Simulator / robot | `roboarc` / `franka-robotiq-2f85` |
 | Family / instance | `buzz_wire_3d` / seed 0 |
-| Oracle | `none` — No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress round on this instance. |
+| Oracle | `full` |
 | Agent time budget | 10800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-roboarc:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-roboarc:0.2.0` |
 
 ## Task
 Standard-mode twin of `roboarc-buzz-wire-3d-04-i01-privileged` (same frozen instance): the agent gets only the `eai-standard/2.4` client
@@ -23,7 +23,7 @@ the privileged task to measure the cost of losing resets, privileged state and t
 Same scene, instance and success rule as `roboarc-buzz-wire-3d-04-i01-privileged` (see its Difficulty). In standard mode the agent loses resets, privileged state and planning primitives: it sees camera images and proprioception only, acts through the client, and gets one episode, so it has to estimate the scene from images and recover from its own mistakes without starting over.
 
 ## Reference solution
-No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress round on this instance. `oracle = "none"`: there is no `solution/`, and Harbor checks the nop agent only.
+`solution/solve.sh` streams the recorded rows of the standard-mode oracle episode (`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`; the same rows as the privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and fresh replay) on the release image eai-roboarc 0.1.0, which holds the same frozen instance and reference rows (eai-roboarc 0.2.0 adds speed cuts in the simulator's host code only; its physics is bit-identical) (2026-10-14; simulator source 37aa7ac0, tooling d8692e15).
 
 ## Verification
 See `tests/grade.py`.
@@ -37,10 +37,10 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 |---|---|---|
 | CPU cores | 4 | 2 |
 | Memory | 7 GB | 6 GB |
-| GPU memory | 7 GB | 7 GB |
+| GPU memory | 2 GB | 2 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
-- Measured: partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending
+- Measured: partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)
 - Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 12 GiB GPU memory, 16 GiB memory. Limits measured: partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending.
 
 ## Details
@@ -75,15 +75,16 @@ Guide the metal loop along the entire wire from start to finish without touching
 |---|---|
 | mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
 | action space | `eai-standard/2.4`: `submit` chunks of `joint_position` (8, streamed at the 40 Hz control rate with the agent's `dt`) or `ee_pose` (8, IK per row); `observe` frames or a watch window; binary RCB1 responses |
-| oracle | none yet (`oracle = "none"`, no `solution/`) |
+| oracle | `full` (`solution/`) |
 | verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; the state hashes are reported, not required (MuJoCo on the CPU replays bit for bit on one host; the rule does not rely on it); `/logs/verifier/replay.mp4` is rendered during that replay |
 | crash recovery | `eai-standard/2.4` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
 
 ### Provenance
-- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `05846213` (MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image eai-roboarc:0.1.0, scripts/robotangle/release_rebuild.py --instances)); bound to this release's runtime (source `37aa7ac0`, tooling `d8692e15`).
-- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `88e0136e1b97`, under `instances/buzz-wire-3d-04-i01/` (scripts/roboarc/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/robotangle_mujoco `b842da320`, image `ghcr.io/mll-lab-nu/eai-roboarc:0.1.0` (images/roboarc/).
+- Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `05846213` (MuJoCo instance made before this image was built (TopoGym source 05846213; its bytes are bound into the release image eai-roboarc:0.2.0, scripts/robotangle/release_rebuild.py --instances)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).
+- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `cb43201c2832`, under `instances/buzz-wire-3d-04-i01/` (scripts/roboarc/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
+- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/eai-roboarc:0.2.0` (images/roboarc/).
 - Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
 
 ### Change Log
 - 2026-10-14: new task of roboarc (RoboARC on MuJoCo 3.14.0, docs/benchmarks/roboarc.md): the scene, goal and rules of the Genesis 1.2.1 task `buzz-wire-3d-medium-i00` (standard mode), ported to MuJoCo: its own frozen instance and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the render bridge next to the tooling (Nyx frames).
+- 2026-10-17: roboarc 0.2.0: a reference solution (`solution/`, release.json oracle `none` -> `full`), recorded on MuJoCo from the frozen instance; the frozen instance and the task text are unchanged.
