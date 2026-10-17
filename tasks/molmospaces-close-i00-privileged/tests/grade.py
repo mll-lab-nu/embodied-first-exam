@@ -123,7 +123,9 @@ def main() -> int:
                 },
             )
             return 0
-        runs = [replay(a.instance, a.traj, None, 2), replay(a.instance, a.traj, None)]
+        runs = [replay(a.instance, a.traj, None, 2)]
+        if "error" not in runs[0]:  # no second replay once the first gave no result: the verdict is infra_error anyway
+            runs.append(replay(a.instance, a.traj, None))
         if any("error" in r for r in runs):
             timed_out = int(any("took over" in str(r.get("error")) for r in runs))
             write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "replay_timed_out": timed_out, **cost})

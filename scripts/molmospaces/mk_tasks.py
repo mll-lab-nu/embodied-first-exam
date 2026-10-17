@@ -43,20 +43,23 @@ BATCH = {"open": "molmo-harder-sol", "navigate-to": "molmo-v2-sol-rby1", "open-d
 # The verifier's replays ran out of time on a loaded host (replay_timed_out, infra_error: before the 2026-10-16 limit):
 # graded again offline, two fresh replays of the trial's trajectory in the task's image without a time limit.
 REGRADED = {"pick-and-place", "pick-and-place-next-to", "pick-and-place-color"}
+IMAGE_OF = {"open": "0.2.4"}  # a trial on an earlier build of the image (not published; same instance, same assets)
 REVIEW_PR = 276  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
 
 
 def oracle_evidence(family: str) -> str:
     regraded = (
-        "; its verifier's replays ran out of time on a loaded host, so it was graded offline: two fresh replays in the "
-        "task's image, both successes with equal final hashes"
+        "; its verifier's replays ran out of time on a loaded host (the earlier 500 s limit), so it was graded 1 "
+        "offline by the verifier's replay: two fresh replays in the task's image, no time limit, both successes with "
+        "equal final hashes"
         if family in REGRADED
         else ""
     )
+    image = f", image {IMAGE_OF[family]}, the same instance" if family in IMAGE_OF else ""
     return (
-        f"no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by "
-        f"the separate verifier: {POSITIVE[family]} (run {RUN}, batch {BATCH.get(family, 'molmo-v2-sol')}, 2026-10-16"
-        f"{regraded}); human review in PR #{REVIEW_PR}"
+        f"no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1"
+        f"{'' if family in REGRADED else ' by the separate verifier'}: {POSITIVE[family]} (run {RUN}, batch "
+        f"{BATCH.get(family, 'molmo-v2-sol')}, 2026-10-16{image}{regraded}); human review in PR #{REVIEW_PR}"
     )
 
 

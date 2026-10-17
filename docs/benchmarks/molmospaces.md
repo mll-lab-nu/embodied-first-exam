@@ -11,13 +11,13 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | score | upstream's `judge_success()` on the state at the episode's end |
 | tasks | 8 families × 2 modes: `tasks/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
-| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes, 2026-10-16), human review in PR #47 |
+| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes, 2026-10-16), human review in PR #276 |
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
 |---|---|---|---|---|---|
 | pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #806: a pie slice among goblets | 303 steps (20 s) |
 | pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #228: a purple bottle into a clear ashtray | 606 (40 s) |
-| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #479: a black rail mount beside a bagel | 455 (30 s) |
+| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #479: a black rail mount beside the bread | 455 (30 s) |
 | pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #299: a small dark bird figurine into the red bowl | 606 (40 s) |
 | open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | drawer / hinged door | #52: a dishwasher's door (one joint counts) | 455 (30 s) |
 | close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | drawer / hinged door | #346: an upper cabinet's hinged door | 455 (30 s) |

@@ -53,7 +53,8 @@ replay() {  # <n> <k> [--video FILE]: one replay in a fresh process, its result 
 echo "[finalize] episode dumped; replaying twice in fresh processes"
 rm -f "$DATA/replay1.json" "$DATA/replay2.json" "$DATA/replay3.json"
 replay 1 2
-replay 2 1
+# no second replay once the first gave no result (the verdict is replay_failed + infra_error anyway): the time goes to the video
+if [ -s "$DATA/replay1.json" ]; then replay 2 1; else echo "[finalize] replay 2: skipped, replay 1 gave no result"; fi
 python - <<'PY'
 import json, os
 d = os.environ.get("RCB_DATA", "/data")
