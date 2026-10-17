@@ -1062,7 +1062,7 @@ From 0.5.4 the `realism_v3` asset pack's textures and meshes (627 `.png` / `.obj
 they are in the public Hugging Face dataset `MLL-Lab/robosafe-assets` (every asset CC0 1.0 or CC BY 4.0, credits in
 the pack's `credits.json`), pinned by commit and by every file's sha256 in `scripts/robosafe/assets.json`, the way
 other benchmarks fetch large upstream assets at build time. Before building the image, run
-`python3 scripts/robosafe/assets.py fetch` (needs `huggingface_hub`, no login): it downloads them, checks every sha256
+`python3 scripts/robosafe/assets.py fetch` (no login; `huggingface_hub` if installed, else a standard-library download of each pinned file): it downloads them, checks every sha256
 and puts them into the build context, where the Dockerfile checks them again with the rest of `robosafe-src.sha256`
 (`check_release.py` keeps `assets.json` and that list in agreement).
 Before the tasks move to another image, `scripts/robosafe/replay_proof.py --image <tag>` replays every task's reference

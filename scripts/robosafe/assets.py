@@ -16,7 +16,9 @@ usage:
                                                          laid out as the dataset (realism_v3/...), to upload
 
 Access: the dataset is public (CC0 1.0 / CC BY 4.0 assets, credits in its realism_v3/credits.json); no login needed. The
-fetch needs huggingface_hub (pip install huggingface_hub); the other commands use the standard library.
+fetch uses huggingface_hub when it is installed and falls back to a standard-library download of each pinned file (its
+public resolve URL at the pinned revision) when it is not or when its download fails; the other commands use the standard
+library.
 """
 from __future__ import annotations
 
@@ -74,19 +76,37 @@ def stage(d: pathlib.Path, pin: dict) -> None:
     print(f"staged {len(pin['files'])} files into {dst.relative_to(ROOT)}")
 
 
+def fetch_plain(d: pathlib.Path, pin: dict) -> None:
+    """Standard-library download of every pinned file from the dataset's public resolve URLs, without content
+    encoding (huggingface_hub 1.x through httpx can fail with a brotli DecodingError; seen 2026-10-17)."""
+    import urllib.request
+    base = f"https://huggingface.co/datasets/{pin['repo']}/resolve/{pin['revision']}/"
+    for rel, want in sorted(pin["files"].items()):
+        out = d / rel
+        if out.is_file() and file_sha(out) == want:
+            continue
+        out.parent.mkdir(parents=True, exist_ok=True)
+        req = urllib.request.Request(base + rel, headers={"Accept-Encoding": "identity"})
+        with urllib.request.urlopen(req, timeout=120) as r, (out.parent / (out.name + ".part")).open("wb") as f:
+            shutil.copyfileobj(r, f)
+        (out.parent / (out.name + ".part")).replace(out)
+
+
 def fetch(d: pathlib.Path, pin: dict) -> None:
     if not pin.get("revision"):
         sys.exit("scripts/robosafe/assets.json has no revision yet (the dataset has not been pinned)")
-    try:
-        from huggingface_hub import snapshot_download
-    except ImportError:
-        sys.exit("fetch needs huggingface_hub: pip install huggingface_hub (then `hf auth login`)")
     d.mkdir(parents=True, exist_ok=True)
     try:
+        from huggingface_hub import snapshot_download
         snapshot_download(repo_id=pin["repo"], repo_type="dataset", revision=pin["revision"], local_dir=str(d),
                           allow_patterns=[pin["prefix"] + "**", "README.md"])
-    except Exception as e:  # noqa: BLE001
-        sys.exit(f"download of {pin['repo']}@{pin['revision'][:12]} failed ({type(e).__name__})")
+    except Exception as e:  # noqa: BLE001  (no huggingface_hub, or its download failed: the plain one)
+        print(f"huggingface_hub download unavailable or failed ({type(e).__name__}); downloading file by file",
+              file=sys.stderr)
+        try:
+            fetch_plain(d, pin)
+        except Exception as e2:  # noqa: BLE001
+            sys.exit(f"download of {pin['repo']}@{pin['revision'][:12]} failed ({type(e2).__name__})")
     stage(d, pin)
 
 
