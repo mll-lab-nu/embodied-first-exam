@@ -1,0 +1,261 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.42,
+    0.994
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.994
+  },
+  "right": {
+   "pos": [
+    0.0,
+    0.42,
+    0.994
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.994
+  }
+ },
+ "parts": {
+  "tabletop": {
+   "pos": [
+    0.0,
+    0.0,
+    1.0432
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "tabletop_g000",
+     "source": "/Table/slab",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 1.0
+  },
+  "leg_0": {
+   "pos": [
+    -0.46,
+    0.19,
+    1.0187
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.7071067811865476,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "leg_0_g001",
+     "source": "/Leg/factory_nut_loose/BodyColliders/upper",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_0_g002",
+     "source": "/Leg/factory_nut_loose/BodyColliders/left",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_0_g003",
+     "source": "/Leg/factory_nut_loose/BodyColliders/right",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_0_g004",
+     "source": "/Leg/factory_nut_loose/BodyColliders/front",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_0_g005",
+     "source": "/Leg/factory_nut_loose/BodyColliders/back",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.11999999731779099
+  },
+  "leg_1": {
+   "pos": [
+    -0.36,
+    0.19,
+    1.0187
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.7071067811865476,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "leg_1_g001",
+     "source": "/Leg/factory_nut_loose/BodyColliders/upper",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_g002",
+     "source": "/Leg/factory_nut_loose/BodyColliders/left",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_g003",
+     "source": "/Leg/factory_nut_loose/BodyColliders/right",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_g004",
+     "source": "/Leg/factory_nut_loose/BodyColliders/front",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_g005",
+     "source": "/Leg/factory_nut_loose/BodyColliders/back",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.11999999731779099
+  },
+  "leg_2": {
+   "pos": [
+    0.36,
+    0.19,
+    1.0187
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.7071067811865476,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "leg_2_g001",
+     "source": "/Leg/factory_nut_loose/BodyColliders/upper",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_g002",
+     "source": "/Leg/factory_nut_loose/BodyColliders/left",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_g003",
+     "source": "/Leg/factory_nut_loose/BodyColliders/right",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_g004",
+     "source": "/Leg/factory_nut_loose/BodyColliders/front",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_g005",
+     "source": "/Leg/factory_nut_loose/BodyColliders/back",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.11999999731779099
+  },
+  "leg_3": {
+   "pos": [
+    0.46,
+    0.19,
+    1.0187
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.7071067811865476,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "leg_3_g001",
+     "source": "/Leg/factory_nut_loose/BodyColliders/upper",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_g002",
+     "source": "/Leg/factory_nut_loose/BodyColliders/left",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_g003",
+     "source": "/Leg/factory_nut_loose/BodyColliders/right",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_g004",
+     "source": "/Leg/factory_nut_loose/BodyColliders/front",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_g005",
+     "source": "/Leg/factory_nut_loose/BodyColliders/back",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.11999999731779099
+  }
+ },
+ "slots_in_tabletop_frame": [
+  [
+   0.24849997500000004,
+   -0.24849991994284382
+  ],
+  [
+   -0.248500049,
+   -0.24849991994284382
+  ],
+  [
+   -0.2485,
+   0.24850011405715622
+  ],
+  [
+   0.2485002,
+   0.24850008905715626
+  ]
+ ],
+ "work_surface_z": 0.994
+}

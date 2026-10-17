@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared-source rules (PROTOCOL §2.1, D9: copies of shared sources are byte-identical). Two parts:
-# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes and AM-Bench: within one benchmark, every mode, every copy of a shared file is byte-identical
+# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes, AM-Bench and IKEA MuJoCo: within one benchmark, every mode, every copy of a shared file is byte-identical
 #    (the generators copy them from the benchmark's template task unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
@@ -13,7 +13,7 @@
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
-#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC) is held to the same rules, with rcb_limited.py and
+#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, IKEA MuJoCo) is held to the same rules, with rcb_limited.py and
 #    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
@@ -45,6 +45,7 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "roboolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
+          "ikea": "rcb_ikea.py",   # IKEA MuJoCo
           "rsb": "rcb_rsb.py"}   # rsb-: RoboSafeBench
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}

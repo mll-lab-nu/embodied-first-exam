@@ -1,0 +1,45 @@
+{
+ "task": "UPPSTA toy hammering block",
+ "parts": [
+  "board",
+  "end_block_a",
+  "end_block_b",
+  "dowel_0",
+  "dowel_1",
+  "dowel_2",
+  "dowel_3",
+  "screw_a",
+  "screw_b",
+  "hex_key",
+  "peg_0",
+  "peg_1",
+  "peg_2",
+  "peg_3",
+  "peg_4",
+  "peg_5",
+  "peg_6",
+  "peg_7",
+  "hammer"
+ ],
+ "keyframes": {
+  "start": "box",
+  "assembled": "assembled"
+ },
+ "substeps_per_source_tick": 8,
+ "fasteners": {
+  "screw_a": {
+   "host": "board",
+   "thread_holes_prefix": "board_thread_a_",
+   "clamped": [
+    "end_block_a"
+   ]
+  },
+  "screw_b": {
+   "host": "board",
+   "thread_holes_prefix": "board_thread_b_",
+   "clamped": [
+    "end_block_b"
+   ]
+  }
+ }
+}
