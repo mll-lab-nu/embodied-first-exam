@@ -58,7 +58,7 @@ def test_grade() -> None:
 def test_grade_main() -> None:
     with tempfile.TemporaryDirectory() as td:
         data, log = Path(td) / "out", Path(td) / "log"; data.mkdir()
-        env = {**os.environ, "RCB_VERIFIER_DATA": str(data), "RCB_VERIFIER_LOG": str(log)}
+        env = {**os.environ, "RCB_DATA": str(data), "RCB_VERIFIER_LOG_DIR": str(log)}
         run = lambda: subprocess.run([sys.executable, str(HERE / "shared/grade.py")], env=env, capture_output=True, text=True, check=True)  # noqa: E731
         run()                                                                     # no final.json: infra, missing_log
         r = json.loads((log / "reward.json").read_text())

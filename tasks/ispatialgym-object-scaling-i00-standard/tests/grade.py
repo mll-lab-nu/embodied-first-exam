@@ -44,7 +44,7 @@ def grade(d: dict) -> tuple[bool, dict]:
 
 def main() -> None:
     os.makedirs(LOG, exist_ok=True)
-    data = os.environ.get("RCB_VERIFIER_DATA") or \
+    data = os.environ.get("RCB_DATA") or \
         next((d for d in ("/out", "/data") if os.path.exists(f"{d}/final.json")), "/out")   # where the artifacts were uploaded
     p = f"{data}/final.json"
     if not os.path.exists(p):
@@ -65,5 +65,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    LOG = os.environ.get("RCB_VERIFIER_LOG", LOG)
+    LOG = os.environ.get("RCB_VERIFIER_LOG_DIR") or LOG
     main()
