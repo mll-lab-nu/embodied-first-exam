@@ -139,8 +139,9 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
     goalkeeper; MyoDex's reference motion (the goal, relative to the object's start) is in `/spec` `reference_motion`;
   - `/kinematics` = the fingertip sites and the camera mounts (world frame; the root's frame for free-standing bodies) and
     fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
-  The episode ends at success, at the task's failure or when the time is up; the collect hook replays the recorded
-  trajectory in two fresh processes. Since 2026-10-10 a malformed request field (a null or non-numeric `dt` /
+  The episode ends at success, at the task's failure or when the time is up; the verdict is the live episode's (see
+  "Grading", since 2026-10-17; before, the collect hook replayed the recorded trajectory in two fresh processes and
+  required both replays to succeed in the live run's final state). Since 2026-10-10 a malformed request field (a null or non-numeric `dt` /
   `seconds`, `cameras` that is not a list of names, a `note` that is not text) is a 400 before anything runs (it was a
   500 that ended the episode; `note`, after the chunk had run), an absent or null `dt` / `seconds` is the default, and
   the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1` (it was the agent's 0);
@@ -284,8 +285,8 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
   muscles and the two pelvis slides, nothing clipped), success rule (the challenge's own event), proprioception
   (`q_`, `qd_`, `act_`, `len_`, `effort_`) and cameras (images and depth; no pose of a camera that rides on a body of
   the scene). Not served: the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. The
-  grade is the live episode, a replay in a fresh `Session` in the same process (MuJoCo on the CPU repeats bit for bit)
-  and their final states equal; the clock's record is evidence only.
+  grade is the live episode's (see "Grading"; until 2026-10-17 also a replay in a fresh `Session` in the same process
+  ending in the live run's final state); the clock's record is evidence only.
 - **Rendering on the GPU.** On a clock that does not stop, a render is time the simulator thread cannot step, and an
   OSMesa frame of this scene takes 1.3 s (1373 visual geoms, 207k mesh vertices; 640 x 480 or 320 x 240 alike) against
   5 ms with EGL on an RTX 4090. The twin therefore reserves a GPU for its `sim` service (`graphics` capability); the image
@@ -302,6 +303,43 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
   in one `submit(..., at=0)` succeeds live and in the fresh replay (deterministic, no stall); streamed one row per call
   from the agent's side it succeeded too; nop (no request) ends `timeout`, not graded a success; the 11 failed
   episodes above replay to the live state. The cutoff is the standard twin's (3600 s).
+
+## Grading (standard and standard-realtime)
+The verdict is the live episode's (owner, 2026-10-17, boards 0150 / 0151; PROTOCOL H.4): `success` = the last episode
+the sim service ran ended in success under the task's rule, as `Session.step` applied it to the steps it executed. The
+rule's windows are part of that predicate, so nothing is left for a replay to add: `hold` families end in success only
+once the goal has held `hold_steps` control steps in a row (1 s; 5 s of orbit for baoding), `track` families (MyoDex)
+only after the whole reference with the on-track share, the final step and the worst error checked, `event` families
+(MyoChallenge) at the challenge's own success event (bimanual: with its contact-history check). The grading replays
+removed on 2026-10-17 replayed exactly these rows through the same `Session.step`, so they applied no window the live
+run had not.
+- **Standard** (`shared/standard/`): the service writes `episode.json` (the live success, `live_sha`) when the episode
+  ends; `finalize.sh` (the collect hook) ends the service and writes `final.json` with `graded_by` = `live`,
+  `replays` = 0, `live_success`, `success`, `state_sha` = `live_sha`, `finalized` = true; then it renders `replay.mp4`
+  in ONE pass over `trajectory.npz` from the frozen instance in a fresh process (`video.py`: the hand close-ups or the
+  default camera, 320 x 240, at most ~1500 frames), with `video_pending` = true while it runs. The render checks
+  nothing and decides nothing; a render that fails or runs out of the hook's time (`RCB_COLLECT_BUDGET_S` = 1800 s,
+  less the end of the episode, less a minute) loses only the video (`video` = false), never infra and never a 0.
+  `tests/grade.py`: pass iff `graded_by` = `live`, `success`, and no infrastructure flag.
+- **Standard-realtime** (`shared/realtime/`): the shared layer writes the same fields from the adapter's step() and
+  renders the video from the trajectory after the verdict; `server.py` has no `verify()` and no `live_verdict()` (no
+  extra window to apply). The collect hook waits 300 s for the verdict (was 840 s, for the replay) and for the video
+  until 870 s.
+- **Start state.** At a fresh episode's start the service compares the built scene's state hash with the frozen
+  instance's recorded one (`instance.npz` `sha`: standard `server.py` before `Episode.begin`, realtime the layer with
+  the adapter's `start_sha`); a mismatch gives up before the agent is served (`instance_mismatch`, `infra_error` = 1,
+  `grader_error` = 1). Checked on the archive before the change: all 103 recorded MyoSuite standard / realtime starts
+  logged the instance's sha. A resume is checked against its own checkpoint, as before.
+- **Infrastructure** (`infra_error` = 1, at most one full retry, H.5): no, an unreadable or an unfinalized `final.json`;
+  the service not ending its episode for the hook; a give-up after crashes not all inside the agent's calls
+  (`sim_crashed`) or a failed resume (`resume_failed`); `instance_mismatch`. The agent's 0, never infra: a crash inside
+  its calls (`sim_crashed_on_call`), a simulator error from its actions (`reason` = `error`), a timeout, a failure. The
+  video is never infra.
+- **Cost.** The two fresh-process verdict replays and the in-process replay before the filming pass are gone: the hook
+  now steps the graded episode's physics once (the render pass) instead of four times (standard), and the realtime
+  service once instead of twice. All CPU (OSMesa); the realtime twin's GPU is for the agent's images.
+- Change log: 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video
+  by one render pass from the trajectory after the verdict.
 
 ## Files
 `scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there; `shared/realtime/`
