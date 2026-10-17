@@ -103,6 +103,8 @@ out["video_replay_sha"], out["video_replay_matches"] = None, False   # step 4 (t
 # a replay that ended on a simulator breakdown (the tooling's BREAKDOWN_* check): a failure, recorded (whether it is
 # infrastructure is the owner's decision, 2026-10-16)
 if a.get("breakdown") or b.get("breakdown") or out.get("sim_breakdown"):
+    # only the live episode broke down and neither replay of its rows did: flagged for the owner's breakdown decision
+    out["breakdown_live_only"] = bool(out.get("sim_breakdown")) and not (a.get("breakdown") or b.get("breakdown"))
     out["sim_breakdown"] = True
     out.setdefault("error", "simulator breakdown in the episode or a replay (" + str(a.get("end_reason") or b.get("end_reason") or out.get("reason")) + ")")
 if r1.get("gpu_lost"):

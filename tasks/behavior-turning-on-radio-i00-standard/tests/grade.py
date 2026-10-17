@@ -38,6 +38,7 @@ try:
            # the agent's episode ended first and the success came from the replays' settle window (finalize.sh)
            "settled_success": int(bool(d.get("settled_success"))),
            "sim_breakdown": int(breakdown),                      # a simulator breakdown ended the episode or a replay
+           "breakdown_live_only": int(bool(d.get("breakdown_live_only"))),   # ... the live episode only, no replay of its rows
            "instance_ok": int(d.get("instance_ok", 1) not in (0, False)),   # 0: a replay's frozen scene did not rebuild (infra_error)
            # the episode ended by a failure rule: the robot fell over ("failure: the robot fell over") or the simulator
            # broke down ("failure: simulator breakdown", sim_breakdown)

@@ -15,7 +15,8 @@ tests/grade.py on it in a fresh container: two fresh-process replays, no video (
   old           the recorded verdict (verifier/reward.json `success`);
   new           the current verdict of the trajectory (`success`; `infra` when the replays did not run or the scene
                 did not rebuild: no verdict; a replay that ended on a simulator breakdown is a 0, labelled `breakdown`);
-  old_rule_here the bare BDDL goal held at some step of the replay here (`goal_first_step` >= 0): the rule before
+  old_rule_here the bare BDDL goal held at some step of the replay's own rows here (0 <= `goal_first_step` <=
+                `n_actions`; a step of the settle window after them does not count): the rule before
                 2026-10-14. old 1, new 0 with old_rule_here 1 is the stricter rule; with old_rule_here 0 the replay
                 went elsewhere on this host (`inconclusive`: re-grade it on the host class it ran on).
 Standard trials: conservative. The verdict there also needed the live episode, which the service ended on the first
@@ -25,6 +26,8 @@ re-grade can only say whether the recorded rows, plus the settle window, reach t
 MAX_ROWS (40,000) cannot be re-graded this way (`skipped`).
 --select candidates (the default) re-grades only the trials whose verdict can change: old
 successes, and failures whose replays succeeded, disagreed, or (standard) whose live episode succeeded.
+The container differs from the verifier's in two ways that do not touch the physics: RCB_TEXTURE_BUDGET=0.1 (so
+re-grades can share a GPU; the verifier leaves Isaac's default) and a cold Kit cache.
 Output: one JSON line per trial (--out, appended; trials already in it are skipped) and a table on stdout.
 Standard library only."""
 from __future__ import annotations
@@ -59,7 +62,7 @@ def task_name(d: pathlib.Path) -> str | None:
 
 def trials(roots: list[str]):
     for r in roots:
-        for rw in sorted(pathlib.Path(r).rglob("verifier/reward.json")):
+        for rw in sorted(pathlib.Path(r).resolve().rglob("verifier/reward.json")):   # absolute: docker -v needs it
             d = rw.parent.parent
             if any(part.startswith("_superseded") for part in d.parts):
                 continue                 # an attempt voided for infrastructure (RUNNING.md): never a result
@@ -122,7 +125,8 @@ def verdict(mode: str, old: dict, new: dict) -> dict:
         n = "infra"
     else:
         n = int(bool(new.get("success")))
-    here = int(new.get("goal_first_step", -1)) >= 0
+    # the old rule held on the agent's own rows (not only in the settle window after them)
+    here = 0 <= int(new.get("goal_first_step", -1)) <= int(new.get("n_actions") or 0)
     label = "unchanged" if n == o else ("infra (no verdict)" if n == "infra" else "now passes" if n == 1 else
                                         "breakdown" if new.get("sim_breakdown") else
                                         "stricter rule" if here else "inconclusive (replay went elsewhere here)")
@@ -139,7 +143,7 @@ def main() -> int:
     ap.add_argument("--select", choices=("candidates", "all"), default="candidates")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
-    data = os.environ.get("RCB_BEHAVIOR_DATA", "")
+    data = os.path.abspath(os.environ["RCB_BEHAVIOR_DATA"]) if os.environ.get("RCB_BEHAVIOR_DATA") else ""
     if not a.dry_run and not data:
         sys.exit("set RCB_BEHAVIOR_DATA to the licensed BEHAVIOR dataset (docs/benchmarks/behavior.md)")
     done = set()
