@@ -7,9 +7,9 @@
 | Twin | `molmospaces-close-i00-privileged` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `close` |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__HWWFXrw (run codex-gpt6_luna-medium, batch molmospaces-luna-1006; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/close/unlimited/); human review in PR #47 |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__8SX5TrW (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16); human review in PR #276 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3` |
+| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` |
 
 ## Task
 Standard-mode twin of `molmospaces-close-i00-privileged` (the same frozen MolmoSpaces episode): Close the cabinet. The agent gets only the
@@ -33,7 +33,7 @@ or when the agent's time is up; then upstream's `judge_success()` on the final s
 replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
 rendered after the verdict. `infra_error = 1` (no verdict on the agent): no, an unreadable or an unfinished `final.json`,
 a service that gave up after crashes between calls or never ended the episode, a replay process without a result, a
-frozen start the image no longer builds. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task
+frozen start the image no longer builds. No oracle; human review in PR #276 (PROTOCOL §2.7: per family, this task
 and its twin, a positive example and the `nop` result).
 
 ## Compute resources
@@ -52,7 +52,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 | | |
 |---|---|
-| Upstream | molmo-spaces 0.2.9, benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 51 |
+| Upstream | molmo-spaces 0.2.9, benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 346 |
 | World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (docs/benchmarks/molmospaces.md) |
 | Generator | `scripts/molmospaces/mk_tasks.py`; docs/benchmarks/molmospaces.md |
 
@@ -61,3 +61,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras="name"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged.
 - 2026-10-10 (review round 3, board 0067): the shared service layer and the client only (`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in `cameras` is rendered and returned once (N copies of one name made the service build N x N images within the frame budget, which could exhaust its memory). A service that has given up on the episode (it could not start it, or could not resume it after its crashes) answers every request with 409 and the reason, and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are unchanged.
 - 2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, `environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta["time_s"]` and `meta["time_left_s"]` count from the agent's first request to the service (any endpoint), and a restarted service keeps that moment; before, they counted from the service's own start of the episode (when its scene was ready). Where the service is ready before the agent's phase begins (the harness is installed in between: a median of 79 s over the recorded standard trials), that clock ran ahead of the agent's and `time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from (`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier results stand.
+- 2026-10-16: the frozen episode, the base image and the replay limit. The frozen episode is the one the 2026-10-16 selection rule picks (docs/benchmarks/molmospaces.md, Instances: the target small in the fixed cameras for the pick families, a longer travel for open and close); for every family but navigate-to and open-door that is a different episode, so results recorded on those tasks before this date are of another episode. Base image 0.2.5 (the assets of the new episodes). `environment/sim/finalize.sh`: the two grading replays share the time left before the hook's deadline (1740 s of its 1800 s; the first gets half of it, about 865 s after a prompt end) instead of 500 s each, which ended genuine successes on a loaded host as `replay_failed` + `infra_error`; the verdict, the pass rule and upstream's success rule are unchanged. `instruction.md` now states the pass rule (live success, both replays succeed and end in the same state), which only this README stated.
