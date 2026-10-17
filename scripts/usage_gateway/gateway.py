@@ -59,7 +59,8 @@ or --budget-output output tokens, totals.json gets over_token_budget = 1 and eve
 is refused with HTTP 400 and a "token budget exceeded" error in the provider's format, without being forwarded, so the
 agent stops; the request in flight when the budget is crossed completes. The first refusal writes totals.json
 "budget_stop" (limit input|output, first/last_refused_at, the counts at the stop, refused): the structured stop record
-the runner maps to TokenBudgetExceeded (issue #229). 0 disables a limit. The refusal avoids 429 and
+the runner maps to TokenBudgetExceeded (issue #229). 0 disables a limit. Defaults 10B / 10B (owner 2026-10-17, board
+0150): cached input counts in full, and the limit almost never binds. The refusal avoids 429 and
 "usage limit" wording on purpose: scripts/account_failure_check.py would read those as an account failure.
 
 Token counts are normalized the way Harbor counts them: input = everything the model read (Anthropic: input +
@@ -784,8 +785,8 @@ def main() -> int:
                    help="the model-API requests to forward, per provider (default: api_paths.json next to this file)")
     p.add_argument("--server-tools", choices=("refuse", "record"), default="refuse",
                    help="a model request that asks the provider to run a tool (api_paths.json): refuse it (default) or only record it")
-    p.add_argument("--budget-input", type=int, default=100_000_000, help="per-trial input tokens; 0 = no limit (D10)")
-    p.add_argument("--budget-output", type=int, default=10_000_000, help="per-trial output tokens; 0 = no limit (D10)")
+    p.add_argument("--budget-input", type=int, default=10_000_000_000, help="per-trial input tokens, cached included; 0 = no limit (D10)")
+    p.add_argument("--budget-output", type=int, default=10_000_000_000, help="per-trial output tokens; 0 = no limit (D10)")
     ARGS = p.parse_args()
     ARGS.jobs = ARGS.jobs.resolve()
     MODEL_HOSTS.extend(h.lower() for h in ARGS.extra_host)
