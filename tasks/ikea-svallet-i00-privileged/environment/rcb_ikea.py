@@ -239,14 +239,20 @@ MAX_SMALL_MEMBER = 1 << 20        # bytes: the members read besides `ctrl` (subs
 MAX_MEMBERS = 64                  # members of the archive (ctrl, substeps, timestep, actuators, and a few of the agent's own)
 
 
+MAX_DIRECTORY = MAX_MEMBERS * (46 + 1024 + 256)   # bytes of the central directory (entry header, name, extra fields)
+
+
 def _zip_entries(path: str) -> int:
     """The number of members the archive's end-of-central-directory record declares, read without parsing the directory
-    (a file of a million empty members takes a GB to parse)."""
+    (a file of a million empty members takes a GB to parse). The directory's declared size is bounded too: zipfile
+    parses the directory by its size, not by the declared count."""
     import zipfile
     with open(path, "rb") as fp:
         rec = zipfile._EndRecData(fp)   # noqa: SLF001 -- the standard library's own EOCD reader (zip64 aware)
     if not rec:
         raise InvalidTrajectory("not an .npz archive")
+    if int(rec[zipfile._ECD_SIZE]) > MAX_DIRECTORY:  # noqa: SLF001
+        raise InvalidTrajectory(f"the archive's directory is {rec[zipfile._ECD_SIZE]} bytes (at most {MAX_DIRECTORY})")  # noqa: SLF001
     return int(rec[zipfile._ECD_ENTRIES_TOTAL])  # noqa: SLF001
 
 
@@ -263,6 +269,8 @@ def _check_members(path: str, nu: int, max_rows: int) -> None:
         raise InvalidTrajectory(f"the archive has {n} members (at most {MAX_MEMBERS})")
     with zipfile.ZipFile(path) as zf:
         names = [i.filename for i in zf.infolist()]
+        if len(names) != n:
+            raise InvalidTrajectory(f"the archive declares {n} members and holds {len(names)}")
         infos = {i.filename: i for i in zf.infolist()}
         keys = [x[:-4] if x.endswith(".npy") else x for x in names]
         if len(set(keys)) != len(keys):

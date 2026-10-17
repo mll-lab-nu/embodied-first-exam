@@ -69,7 +69,7 @@ OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))
 LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get("RCB_LIVE_CAMERA", "cam_high")
-# /spec max_frames_per_call (cameras x frames; a frame with per-frame depth counts double). The recorder holds every frame
+# /spec max_frames_per_call (cameras x frames; a frame with per-frame depth counts DEPTH_WEIGHT more). The recorder holds every frame
 # of a call (848 x 480 RGB = 1.2 MB) and stacks and encodes them again: 1000 keeps one call near 3.7 GB at its peak,
 # inside the sidecar's 8 GB cap (3000 could take the service past it: an OOM kill in the middle of a call).
 MAX_FRAMES = 1000
@@ -640,9 +640,9 @@ CALLS_KEPT = 200     # the last calls' evidence (meta + last frames) on the side
 
 
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
-    old = os.path.join(DATA, "calls", f"{idx - CALLS_KEPT:06d}")
-    if idx > CALLS_KEPT and os.path.isdir(old):
-        shutil.rmtree(old, ignore_errors=True)
+    root = os.path.join(DATA, "calls")
+    for old in sorted(os.listdir(root))[:-CALLS_KEPT] if os.path.isdir(root) else []:
+        shutil.rmtree(os.path.join(root, old), ignore_errors=True)
     dd = os.path.join(DATA, "calls", f"{idx:06d}"); os.makedirs(dd, exist_ok=True)
     json.dump(meta, open(os.path.join(dd, "meta.json"), "w"))
     try:
@@ -736,6 +736,18 @@ def _call(fn):
     return wrapped
 
 
+class EncodeError(OSError):
+    """The response's video / frame encoding failed after the rows ran (imageio / ffmpeg): the service's own fault,
+    infrastructure (infra_exception), never the agent's: the request was validated and its frames bounded."""
+
+
+def encode_parts(rec, video: str, fps: int) -> list:
+    try:
+        return rec.parts(video, fps)
+    except Exception as exc:  # noqa: BLE001
+        raise EncodeError(f"response encoding failed: {exc!r}"[:300]) from exc
+
+
 def req_cameras(meta: dict) -> list:
     """The request's cameras (a list of names; unknown names are dropped, none left = every camera). A malformed field is
     the caller's error, a 400 before anything executes (PROTOCOL §4.6), never a simulator error."""
@@ -814,9 +826,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
              "note": note, "control_steps": ctrl_steps() - before, "n_clipped": n_clipped, "n_slow": n_slow,
              "success": succ, "verdict": E.get("verdict")})
         save_call_evidence(E["calls"], {k_: v for k_, v in out.items() if k_ != "cameras"}, rec)
-        return out, rec.parts(video, fps)
     except ValueError as exc:
         raise RuntimeError(f"simulator error: {exc}") from exc
+    return out, encode_parts(rec, video, fps)
 
 
 @_call
@@ -854,9 +866,9 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
         if seconds > 0:
             save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-        return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
     except ValueError as exc:
         raise RuntimeError(f"simulator error: {exc}") from exc
+    return out, encode_parts(rec, video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
 # ---------------------------------------------------------------- /kinematics (stateless, scratch data, robot frame)

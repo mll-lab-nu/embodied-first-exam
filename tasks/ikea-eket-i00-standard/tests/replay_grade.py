@@ -19,7 +19,7 @@ Failure classes (PROTOCOL H.5: grader_error / infra_error give a free retry, so 
 lands there): a replay that crashed (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT: `replay_crash`) or in which the scene's
 code or MuJoCo raised (`replay_exception`, rcb_ikea.py replay) is a breakdown, the agent's 0; a replay stopped from
 outside (SIGKILL from the OOM killer, SIGTERM: `replay_killed`), a scene, image or runtime that differs from the binding
-(`instance_mismatch`) and a host out of memory are infra_error; anything else that goes wrong in here is grader_error.
+(`instance_mismatch`) are infra_error; a host out of memory and anything else that goes wrong in here is grader_error.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, time
@@ -138,7 +138,8 @@ def main() -> int:
         if any(-c not in CRASH_SIGNALS for c in crashed):
             # SIGKILL, SIGTERM, ...: the host's OOM killer or the runtime stopped a replay from outside (the rows are capped
             # and validated before any replay starts, so their memory is bounded): infrastructure, not a simulator crash
-            out = {"success": 0, "replay_killed": 1, "replay_signal": -min(crashed), "replays": len(codes),
+            out = {"success": 0, "replay_killed": 1, "replay_signal": next(-c for c in crashed if -c not in CRASH_SIGNALS),
+                   "replays": len(codes),
                    "replay_wall_s": round(time.time() - t0, 1), "video_rendered": 0, "grader_error": 0, "infra_error": 1}
             write(False, out)
             return 0

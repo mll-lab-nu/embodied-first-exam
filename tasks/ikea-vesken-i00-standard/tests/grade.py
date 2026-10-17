@@ -83,7 +83,8 @@ if rep.get("infra_error"):      # the verifier image's scene / runtime is not th
     infra = True
 # a live success whose deterministic replays end elsewhere than the live state (or after another row count): the agent
 # cannot change the journal or live_sha, so this is the service's or the host's fault, not the agent's 0
-service_mismatch = bool(d.get("success")) and bool(replays) and bool(rep.get("deterministic")) and not (live_match and rows_match)
+service_mismatch = bool(d.get("success")) and ((bool(replays) and bool(rep.get("deterministic")) and not (live_match and rows_match))
+                                              or bool(rep.get("replay_crash")))   # a live success whose replays crash
 grader_error = (bool(rep.get("grader_error")) or service_mismatch) and not infra
 ok = bool(d.get("success")) and replay_ok and live_match and rows_match and not infra and not mismatch and not grader_error
 write(ok, {"success": int(ok), **base, "replay_success": int(replay_ok), "replays": len(replays),
