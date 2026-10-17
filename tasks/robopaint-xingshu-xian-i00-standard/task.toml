@@ -6,21 +6,17 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/trajectory.npz", service = "sim" },
   { source = "/data/replay.mp4", service = "sim" },
   { source = "/data/replay.last.png", service = "sim" },
-  { source = "/data/canvas.png", service = "sim" },            # the replayed main sheet that was scored
-  { source = "/data/canvas_practice.png", service = "sim" },   # the replayed practice sheet (never scored)
-  { source = "/data/canvas_live.png", service = "sim" },       # the live episode's main sheet
+  { source = "/data/canvas_live.png", service = "sim" },       # the live episode's main sheet, the one that was scored
   { source = "/data/canvas_live_practice.png", service = "sim" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/robopaint-xingshu-xian-i00-standard"
-description = "RoboPaint 行书 臨帖 (running script), STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic calligraphy (ManiSkill 3.0.1 Franka Panda with a Chinese writing brush; the mark is the dynamic virtual brush of Wang et al., IROS 2020, re-implemented) on the same frozen instance as the privileged task: copy the exemplar character 賢 in running script, shown in the picture target.png, onto the main sheet in at most 7 strokes, with a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode, which is replayed twice and scored against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff IoU >= 0.80, boundary F within 1 mm >= 0.75, every region of the exemplar's ink covered >= 0.80, stray ink <= 0.04 and at most 7 strokes, i.e. continuous brush contacts). Process rules: write with brush strokes the way a person writes; colouring in or filling the shapes, zigzag, serpentine or contour-offset fills fail: a brush-tip path on the main sheet longer than 2630 mm made of marks narrower than 1.88 mm on average is colouring in. The stroke cap counts strokes as written (a contact is cut where the brush moves more than 5 mm without marking; a stroke longer than 1930 mm counts as several), and strokes must be sweeps."
+description = "RoboPaint 行书 臨帖 (running script), STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic calligraphy (ManiSkill 3.0.1 Franka Panda with a Chinese writing brush; the mark is the dynamic virtual brush of Wang et al., IROS 2020, re-implemented) on the same frozen instance as the privileged task: copy the exemplar character 賢 in running script, shown in the picture target.png, onto the main sheet in at most 7 strokes, with a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode and scores its main sheet against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff IoU >= 0.80, boundary F within 1 mm >= 0.75, every region of the exemplar's ink covered >= 0.80, stray ink <= 0.04 and at most 7 strokes, i.e. continuous brush contacts). Process rules: write with brush strokes the way a person writes; colouring in or filling the shapes, zigzag, serpentine or contour-offset fills fail: a brush-tip path on the main sheet longer than 2630 mm made of marks narrower than 1.88 mm on average is colouring in. The stroke cap counts strokes as written (a contact is cut where the brush moves more than 5 mm without marking; a stroke longer than 1930 mm counts as several), and strokes must be sweeps."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "calligraphy", "chinese-calligraphy", "xingshu", "running-script", "brush", "franka", "standard-mode", "trajectory", "robopaint_xingshu_xian"]
 
@@ -34,7 +30,7 @@ mode = "standard"                  # camera RGB + proprioception only; no sheet 
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
-oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), re-made on 2026-10-09 (README, Change Log; docs/benchmarks/robopaint.md, Targets). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 1234 and mark_width_mm 4.59, against the colouring-in limits 2630 mm and 1.88 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation)."
+oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), re-made on 2026-10-09 (README, Change Log; docs/benchmarks/robopaint.md, Targets). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1234 and mark_width_mm 4.59, against the colouring-in limits 2630 mm and 1.88 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation)."
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 difficulty = "hard"             # RoboPaint tiers: line easy; xingshu singles hard, works extreme
@@ -95,10 +91,17 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # dump + exit the service, replay twice in fresh processes (+ video), score, write final.json
-timeout_sec = 5400                # ending a service that is resuming (up to 1500 s) + two replays of at most 72,000 control steps
+command = "sh /srv/finalize.sh"   # end the episode: the service scores its live sheet (the verdict), then renders the video once
+timeout_sec = 2820                # ending a service that is resuming (up to 1500 s) + one render pass of at most 72,000 control steps
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2.12)

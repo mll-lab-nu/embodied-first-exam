@@ -2,7 +2,7 @@
 Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
 with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.
 Colouring in or filling the shapes, zigzag or serpentine fills, and contour-offset fills (paths that go round and round inside a
-shape) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the replayed
+shape) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the live
 episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is free):
 - `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together, sampled
   at every physics step);

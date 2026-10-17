@@ -14,7 +14,7 @@ copy the painting shown in the picture `/app/target.png` (a small acrylic painti
 - Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
-- There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
+- There is nothing to hand in: the service records your episode as the trajectory and scores the main sheet as your episode left it. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
   last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()` waits
@@ -45,13 +45,13 @@ copy the painting shown in the picture `/app/target.png` (a small acrylic painti
   (+x), image left = the robot's left (+y): the same orientation as `canvas_cam`. `spec["static"]["target_image"]` repeats these
   facts.
 - Before scoring, the main sheet is aligned with the picture: your painting is moved by the single translation (no rotation or scaling, one shift for the whole sheet, whole pixels up to 5 mm along each axis) that best matches the picture; every quantity below is taken after that shift, which is reported (`register_dx_mm`, `register_dy_mm`). If the best match lies at the 5 mm limit, no shift is applied.
-- The grader compares the main sheet with the picture: both blurred (σ = 1 mm); **ΔE** = the CIELAB colour difference (ΔE*ab) per pixel over the region where either has paint (dilated by 2 mm): its mean and 90th percentile; **SSIM** of the lightness L* (σ 1.5 mm windows); **edge correlation** = the correlation of the lightness-gradient magnitudes of the two blurred pictures over that region; **paint IoU** of the painted areas (paint coverage ≥ 0.5); the **number of strokes** on the main sheet (painted contacts). **Success iff, after the best single shift of the sheet, at most 5 mm along each axis, mean ΔE ≤ 2.0, p90 ΔE ≤ 6.0, SSIM ≥ 0.92, edge correlation ≥ 0.8, paint IoU ≥ 0.95 and at most 390 strokes** (the recorded episode is replayed twice and both replays must agree). The continuous score is max(0, 1 - mean ΔE / 20) (scaled by 390 / strokes above 390). Reported as well: the mean ΔE after a 4 mm blur, the SSIM at a 0.5 mm blur, and per colour region of the picture (the connected areas nearest to one paint, at least 30 mm²) the fraction within ΔE 10: the minimum and the area-weighted mean.
+- The grader compares the main sheet with the picture: both blurred (σ = 1 mm); **ΔE** = the CIELAB colour difference (ΔE*ab) per pixel over the region where either has paint (dilated by 2 mm): its mean and 90th percentile; **SSIM** of the lightness L* (σ 1.5 mm windows); **edge correlation** = the correlation of the lightness-gradient magnitudes of the two blurred pictures over that region; **paint IoU** of the painted areas (paint coverage ≥ 0.5); the **number of strokes** on the main sheet (painted contacts). **Success iff, after the best single shift of the sheet, at most 5 mm along each axis, mean ΔE ≤ 2.0, p90 ΔE ≤ 6.0, SSIM ≥ 0.92, edge correlation ≥ 0.8, paint IoU ≥ 0.95 and at most 390 strokes** (scored on the main sheet as your episode left it). The continuous score is max(0, 1 - mean ΔE / 20) (scaled by 390 / strokes above 390). Reported as well: the mean ΔE after a 4 mm blur, the SSIM at a 0.5 mm blur, and per colour region of the picture (the connected areas nearest to one paint, at least 30 mm²) the fraction within ΔE 10: the minimum and the area-weighted mean.
 
 ## Process rules
 Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
 Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and
 round inside an area) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
-replayed episode with two numbers you can check yourself; only painted strokes on the main sheet count (the practice sheet is
+live episode with two numbers you can check yourself; only painted strokes on the main sheet count (the practice sheet is
 free):
 - **Paint path budget: `path_mm` ≤ 33900 mm.** `path_mm` is the total length of the brush tip's path while it presses
   on the main sheet with paint (all strokes together, sampled at every physics step). The strokes of our reference solution add up
