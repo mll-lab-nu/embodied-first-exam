@@ -176,7 +176,7 @@ def main(argv: list[str]) -> int:
                     shutil.copytree(tmp, task, symlinks=True)
             shutil.rmtree(tmp)
     for p in sorted((HERE / "templates").rglob("*.tmpl")):
-        trel = p.trelative_to(HERE / "templates").as_posix()
+        trel = p.relative_to(HERE / "templates").as_posix()
         name = edit_name(trel)
         if name is None:
             continue
@@ -192,8 +192,7 @@ def main(argv: list[str]) -> int:
         print(f"checked {len(rel)} RoboSafeBench task dirs and the templates: {len(changed)} out of date")
         return 1 if changed else 0
     print(f"updated {len(changed)} of {len(rel)} task dirs and templates")
-    if any(c.startswith("rsb-") for c in changed):
-        check_release.write()
+    check_release.write()                 # also after an earlier run that stopped before it
     return 0
 
 

@@ -192,8 +192,9 @@ picture) on the simulator's thread, which would slow every call and, in the real
 Infrastructure (`infra_error` 1, one full retry): no, an unreadable or an unfinalized `final.json`; a give-up after
 crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`); `instance_mismatch`; a finalize error
 outside the verdict (saving the trajectory). The agent's result, never infra: a failure at the cutoff, an exit that
-fails, a simulator error raised by the agent's rows (`sim_error`), crashes all inside the agent's calls
-(`sim_crashed_on_call`), a verdict that cannot be read off the episode (`live_verdict_error`: a failure, as an episode
+fails, a simulator error raised by the agent's rows (`sim_error`; realtime: by a control step after the agent's first
+command, before it infrastructure), crashes all inside the agent's calls (`sim_crashed_on_call`; realtime: fatal-signal
+crashes after the first command, while kills and OOM stay infrastructure; the layers' rule, STANDARD_MODE Part 3), a verdict that cannot be read off the episode (`live_verdict_error`: a failure, as an episode
 whose judging raised at its end always was). A missing video is never infra.
 
 The bit-exact checks stay offline: `replay.py` (and `rcb_rsb_rt.py replay`) replays a recorded journal in a fresh

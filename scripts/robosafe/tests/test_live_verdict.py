@@ -25,6 +25,7 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import time
 import types
 import unittest
 from unittest import mock
@@ -147,7 +148,7 @@ class Live(unittest.TestCase):
 
     def setUp(self):
         if CLOCK == "realtime" and self._testMethodName not in (
-                "test_realtime_adapter", "test_realtime_service_through_sigusr1",
+                "test_realtime_adapter", "test_realtime_service_through_sigusr1", "test_a_sim_error_in_a_call_is_0_not_infra",
                 "test_a_wrong_realtime_instance_is_instance_mismatch"):
             self.skipTest("paused clock only")
         self.tmp = tempfile.TemporaryDirectory()
@@ -272,13 +273,33 @@ class Live(unittest.TestCase):
         txt, r = self.grade()
         self.assertEqual((txt, r["infra_error"]), ("0", 0))
 
-    def test_a_sim_error_in_a_call_is_0_not_infra(self):
-        _, sim, svc = self.paused()
+    def rt_service(self):
+        import rcb_realtime
+        _, sim, cls = self.service()
+        svc = cls(sim, data=str(self.data))
         svc.start()
-        self.assertEqual(self.submit(svc, "joint_position", [[0.99, 0.0]]), 500 if CLOCK == "paused" else 200)
+        return rcb_realtime, sim, svc
+
+    def test_a_sim_error_in_a_call_is_0_not_infra(self):
+        """Paused: a row of the agent's raised a simulator error inside its call. Realtime (owner 2026-10-17, STANDARD_MODE
+        Part 3): a control step after the agent's first command raised it."""
         if CLOCK == "realtime":
-            return
+            rcb_realtime, sim, svc = self.rt_service()
+            job = rcb_realtime._Job("POST", "/submit", json.dumps({"type": "joint_position", "actions": [[0.99, 0.0]] * 3,
+                                                                    "cameras": []}).encode())
+            svc.dispatch(job)
+            for _ in range(500):
+                if svc.done:
+                    break
+                svc.tick()
+                time.sleep(0.002)
+            self.assertTrue(svc.done)
+        else:
+            _, sim, svc = self.paused()
+            svc.start()
+            self.assertEqual(self.submit(svc, "joint_position", [[0.99, 0.0]]), 500)
         fin = self.finalize(svc)
+        self.assertNotIn("infra_error", fin)
         self.assertEqual(fin["reason"], "error")
         txt, r = self.grade()
         self.assertEqual((txt, r["success"], r["infra_error"], r["sim_error"]), ("0", 0, 0, 1))
@@ -354,9 +375,7 @@ class Live(unittest.TestCase):
         """The realtime service: start, the agent gone (SIGUSR1), poll(): the live verdict, nothing replayed."""
         if CLOCK != "realtime":
             self.skipTest("realtime clock only")
-        _, sim, cls = self.service()
-        svc = cls(sim, data=str(self.data))
-        svc.start()
+        _, sim, svc = self.rt_service()
         sim.s.ep.pass_without_exit = True
         sim.s.ep.pos = [0.8, 0.0]
         fin = self.finalize(svc)
