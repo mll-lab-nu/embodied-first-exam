@@ -1,0 +1,600 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.1,
+    -0.47,
+    0.1845
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.1845
+  },
+  "right": {
+   "pos": [
+    0.1,
+    0.47,
+    0.1845
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.1845
+  }
+ },
+ "parts": {
+  "member_a": {
+   "pos": [
+    0.1,
+    0.0,
+    0.13999999999999999
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "member_a_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g001",
+     "source": "/Part/Shape_001",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g002",
+     "source": "/Part/Shape_002",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g003",
+     "source": "/Part/Shape_003",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g004",
+     "source": "/Part/Shape_004",
+     "kind": "convex_mesh",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g005_*",
+     "source": "/Part/Shape_005",
+     "kind": "coacd",
+     "pieces": 0,
+     "slivers_dropped": 1660
+    },
+    {
+     "geom": "member_a_g006",
+     "source": "/Part/Shape_006",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g007",
+     "source": "/Part/Shape_007",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g008",
+     "source": "/Part/Shape_008",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g009",
+     "source": "/Part/Shape_009",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g010",
+     "source": "/Part/Shape_010",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g011",
+     "source": "/Part/Shape_011",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g012",
+     "source": "/Part/Shape_012",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_g013",
+     "source": "/Part/Shape_013",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_a_thr*",
+     "source": "tools/threads.py M4x0.5 right-hand",
+     "kind": "convex_mesh",
+     "count": 70
+    },
+    {
+     "geom": "member_a_vis014",
+     "source": "/Part/Insert_0",
+     "kind": "visual_only"
+    }
+   ],
+   "mass": 0.04500000178813934
+  },
+  "member_b": {
+   "pos": [
+    -0.15,
+    0.0,
+    0.1402
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "member_b_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g001",
+     "source": "/Part/Shape_001",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g002",
+     "source": "/Part/Shape_002",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g003",
+     "source": "/Part/Shape_003",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g004_*",
+     "source": "/Part/Shape_004",
+     "kind": "coacd",
+     "pieces": 0,
+     "slivers_dropped": 1643
+    },
+    {
+     "geom": "member_b_g005",
+     "source": "/Part/Shape_005",
+     "kind": "convex_mesh",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g006",
+     "source": "/Part/Shape_006",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g007",
+     "source": "/Part/Shape_007",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g008",
+     "source": "/Part/Shape_008",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g009",
+     "source": "/Part/Shape_009",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g010",
+     "source": "/Part/Shape_010",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g011",
+     "source": "/Part/Shape_011",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g012",
+     "source": "/Part/Shape_012",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_g013",
+     "source": "/Part/Shape_013",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "member_b_vis_Shape_014",
+     "source": "/Part/Shape_014",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_015",
+     "source": "/Part/Shape_015",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_016",
+     "source": "/Part/Shape_016",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_017",
+     "source": "/Part/Shape_017",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_018",
+     "source": "/Part/Shape_018",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_019",
+     "source": "/Part/Shape_019",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_020",
+     "source": "/Part/Shape_020",
+     "kind": "visual_only_collision_disabled_in_source"
+    },
+    {
+     "geom": "member_b_vis_Shape_021",
+     "source": "/Part/Shape_021",
+     "kind": "visual_only_collision_disabled_in_source"
+    }
+   ],
+   "mass": 0.04500000178813934
+  },
+  "same_screw": {
+   "pos": [
+    0.1,
+    0.0,
+    0.14125
+   ],
+   "quat": [
+    -0.19951473940051873,
+    0.0,
+    0.0,
+    0.9798948253572641
+   ],
+   "geoms": [
+    {
+     "geom": "same_screw_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "same_screw_thr*",
+     "source": "tools/threads.py M4x0.5 right-hand",
+     "kind": "convex_mesh",
+     "count": 186
+    },
+    {
+     "geom": "same_screw_head_*",
+     "source": "Part/head (r 4 mm, h 2 mm) + tools/screwdrivers.py cross_head",
+     "kind": "convex_mesh",
+     "count": 9
+    },
+    {
+     "geom": "same_screw_vis000",
+     "source": "/Part/Thread",
+     "kind": "visual_only"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "bowl": {
+   "pos": [
+    0.35,
+    0.0,
+    0.1397
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "bowl_g000",
+     "source": "/Part/BowlWall_0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g001",
+     "source": "/Part/BowlWall_1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g002",
+     "source": "/Part/BowlWall_2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g003",
+     "source": "/Part/BowlWall_3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g004",
+     "source": "/Part/BowlWall_4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g005",
+     "source": "/Part/BowlWall_5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g006",
+     "source": "/Part/BowlWall_6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g007",
+     "source": "/Part/BowlWall_7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g008",
+     "source": "/Part/BowlWall_8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g009",
+     "source": "/Part/BowlWall_9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g010",
+     "source": "/Part/BowlWall_10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g011",
+     "source": "/Part/BowlWall_11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g012",
+     "source": "/Part/BowlWall_12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g013",
+     "source": "/Part/BowlWall_13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g014",
+     "source": "/Part/BowlWall_14",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g015",
+     "source": "/Part/BowlWall_15",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g016",
+     "source": "/Part/BowlWall_16",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g017",
+     "source": "/Part/BowlWall_17",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g018",
+     "source": "/Part/BowlWall_18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g019",
+     "source": "/Part/BowlWall_19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g020",
+     "source": "/Part/BowlWall_20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g021",
+     "source": "/Part/BowlWall_21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g022",
+     "source": "/Part/BowlWall_22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g023",
+     "source": "/Part/BowlWall_23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g024",
+     "source": "/Part/BowlWall_24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g025",
+     "source": "/Part/BowlWall_25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g026",
+     "source": "/Part/BowlWall_26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g027",
+     "source": "/Part/BowlWall_27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g028",
+     "source": "/Part/BowlWall_28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g029",
+     "source": "/Part/BowlWall_29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g030",
+     "source": "/Part/BowlWall_30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g031",
+     "source": "/Part/BowlWall_31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "bowl_g032",
+     "source": "/Part/BowlBottom",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.15000000596046448
+  }
+ },
+ "assembly_origin": [
+  0.1,
+  0.0,
+  0.12
+ ],
+ "meta": {
+  "member_a": {
+   "mass": 0.04500000178813934,
+   "inertia": [
+    0.0010000000474974513,
+    0.0010000000474974513,
+    0.0010000000474974513
+   ]
+  },
+  "member_b": {
+   "mass": 0.04500000178813934,
+   "inertia": [
+    0.0010000000474974513,
+    0.0010000000474974513,
+    0.0010000000474974513
+   ]
+  },
+  "same_screw": {
+   "mass": 0.029999999329447746,
+   "inertia": [
+    1.9999999494757503e-05,
+    1.9999999494757503e-05,
+    1.9999999494757503e-05
+   ]
+  },
+  "bowl": {
+   "mass": 0.15000000596046448,
+   "inertia": [
+    0.0010000000474974513,
+    0.0010000000474974513,
+    0.0010000000474974513
+   ]
+  },
+  "screwdriver": {
+   "recess": {
+    "arm_width": 0.001,
+    "arm_radius": 0.002,
+    "depth": 0.0012
+   },
+   "info": {
+    "type": "cross",
+    "length": 0.1217,
+    "grip_z": 0.09670000000000001,
+    "handle_z": [
+     0.0717,
+     0.1217
+    ],
+    "tip_engage": 0.0012,
+    "handle_af": 0.022,
+    "handle_sides": 8
+   }
+  }
+ }
+}

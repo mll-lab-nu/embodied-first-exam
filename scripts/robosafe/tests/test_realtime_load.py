@@ -5,7 +5,7 @@ stalls), the limits on pictures while the clock runs, and the evidence (final.js
 on scripts/humanoidbench/tests/test_realtime_load.py, which tests the layer itself on a toy simulator.
 
 Needs the simulator (RoboSafeBench with the realtime clock and the external-clock hooks, MuJoCo, OSMesa): run it in the
-eai-robosafe image (docs/benchmarks/robosafe.md, "Standard-realtime tasks"):
+eai-robosafebench image (docs/benchmarks/robosafe.md, "Standard-realtime tasks"):
     python scripts/robosafe/tests/test_realtime_load.py [-v] [--instance <slug>-iNN]
 A load test asserts that the clock kept at least KEEP of its nominal steps and did not stall; the numbers it measured
 are printed. The host is shared in the measurements we report; a busy host may need a larger KEEP margin.
@@ -39,7 +39,7 @@ INSTANCE = os.environ.get("RT_INSTANCE") or _default_instance()
 KEEP = float(os.environ.get("RT_KEEP", "0.9"))
 SECONDS = float(os.environ.get("RT_SECONDS", "4"))
 SIM = tempfile.mkdtemp(prefix="rt_load_sim_")           # the task's environment/sim/, as gen_realtime.py assembles it
-for f in ("server.py", "rcb_service.py", "rcb1.py", "rcb_rsb.py", "replay.py"):
+for f in ("server.py", "rcb_service.py", "rcb1.py", "rcb_rsb.py", "replay.py", "picture_delivery.py"):
     shutil.copy(HERE / "shared/standard" / f, SIM)
 for f in ("rcb_realtime.py", "rcb_rsb_rt.py"):
     shutil.copy(HERE / "shared/realtime" / f, SIM)
@@ -220,16 +220,17 @@ class TestClock(Rig):
 
 class TestPictureCharge(Rig):
     def test_back_to_back_snapshots_are_charged(self):
-        """20 snapshots of one camera back to back while the clock runs: each moves the world on by exactly
-        PICTURE_STEPS control steps (the render's wall time forgiven), so a snapshot is no pause, and nothing stalls."""
+        """A fresh camera frame costs PICTURE_STEPS; requests at the same control step share that charge."""
         self.go()
         time.sleep(0.5)
-        n = rcb_rsb_rt.PICTURE_STEPS
+        n = rcb_rsb_rt.picture_steps(self.dt)
         s0, p0, q0, st0, t0 = (len(self.svc.episode), self.svc.picture_steps, self.svc.pictures, self.svc.stalls,
                                time.monotonic())
+        observed_steps = set()
         for _ in range(20):
             code, m = req(self.port, "POST", "/observe", {"cameras": [self.cams[0]], "seconds": 0, "video": "none"})
             self.assertEqual(code, 200, m)
+            observed_steps.add(m["control_steps"])
         wall = time.monotonic() - t0
         time.sleep(0.1)                              # the last picture's steps run with the next tick
         steps = len(self.svc.episode) - s0
@@ -237,7 +238,8 @@ class TestPictureCharge(Rig):
               f"time), of which {self.svc.picture_steps - p0} charged for {self.svc.pictures - q0} pictures; stalls "
               f"{self.svc.stalls - st0}", file=sys.stderr)
         pictures = self.svc.pictures - q0             # requests of one control step share its picture (charged once)
-        self.assertTrue(10 <= pictures <= 20, pictures)
+        self.assertGreater(pictures, 0)
+        self.assertEqual(pictures, len(observed_steps))
         self.assertEqual(self.svc.picture_steps - p0, pictures * n)
         self.assertGreaterEqual(steps, pictures * n)
         self.assertEqual(self.svc.stalls - st0, 0)

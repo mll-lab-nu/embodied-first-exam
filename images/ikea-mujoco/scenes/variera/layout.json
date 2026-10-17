@@ -1,0 +1,653 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.1,
+    -0.47,
+    0.1845
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.1845
+  },
+  "right": {
+   "pos": [
+    0.1,
+    0.47,
+    0.1845
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.1845
+  }
+ },
+ "parts": {
+  "shelf": {
+   "pos": [
+    -0.25,
+    0.0,
+    0.2417000000130385
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "shelf_g000",
+     "source": "/World/shelf/Shape_000",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g001",
+     "source": "/World/shelf/Shape_001",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g002",
+     "source": "/World/shelf/Shape_002",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g003",
+     "source": "/World/shelf/Shape_003",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g004",
+     "source": "/World/shelf/Shape_004",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g005",
+     "source": "/World/shelf/Shape_005",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g006",
+     "source": "/World/shelf/Shape_006",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g007",
+     "source": "/World/shelf/Shape_007",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g008",
+     "source": "/World/shelf/Shape_008",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g009",
+     "source": "/World/shelf/Shape_009",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g010",
+     "source": "/World/shelf/Shape_010",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g011",
+     "source": "/World/shelf/Shape_011",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g012",
+     "source": "/World/shelf/Shape_012",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g013",
+     "source": "/World/shelf/Shape_013",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g014",
+     "source": "/World/shelf/Shape_014",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g015",
+     "source": "/World/shelf/Shape_015",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g016",
+     "source": "/World/shelf/Shape_016",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g017",
+     "source": "/World/shelf/Shape_017",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g018",
+     "source": "/World/shelf/Shape_018",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g019",
+     "source": "/World/shelf/Shape_019",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g020",
+     "source": "/World/shelf/Shape_020",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "shelf_g021_*",
+     "source": "/World/shelf/Shape_021",
+     "kind": "exact_convex_decomposition",
+     "pieces": 24
+    },
+    {
+     "geom": "shelf_g022_*",
+     "source": "/World/shelf/Shape_022",
+     "kind": "exact_convex_decomposition",
+     "pieces": 24
+    },
+    {
+     "geom": "shelf_g023_*",
+     "source": "/World/shelf/Shape_023",
+     "kind": "exact_convex_decomposition",
+     "pieces": 24
+    },
+    {
+     "geom": "shelf_g024_*",
+     "source": "/World/shelf/Shape_024",
+     "kind": "exact_convex_decomposition",
+     "pieces": 24
+    }
+   ],
+   "mass": 0.5
+  },
+  "frame_1": {
+   "pos": [
+    0.37,
+    0.0,
+    0.1996999971985817
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "frame_1_g000",
+     "source": "/World/frame_1/Shape_000",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g001",
+     "source": "/World/frame_1/Shape_001",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g002",
+     "source": "/World/frame_1/Shape_002",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g003",
+     "source": "/World/frame_1/Shape_003",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g004",
+     "source": "/World/frame_1/Shape_004",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g005",
+     "source": "/World/frame_1/Shape_005",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g006",
+     "source": "/World/frame_1/Shape_006",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g007",
+     "source": "/World/frame_1/Shape_007",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g008",
+     "source": "/World/frame_1/Shape_008",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g009",
+     "source": "/World/frame_1/Shape_009",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g010",
+     "source": "/World/frame_1/Shape_010",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g011",
+     "source": "/World/frame_1/Shape_011",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g012",
+     "source": "/World/frame_1/Shape_012",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g013",
+     "source": "/World/frame_1/Shape_013",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g014",
+     "source": "/World/frame_1/Shape_014",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_g015",
+     "source": "/World/frame_1/Shape_015",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_vis_Shape_016",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "frame_1_vis_Shape_017",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.18000000715255737
+  },
+  "frame_2": {
+   "pos": [
+    0.5,
+    0.0,
+    0.1996999971985817
+   ],
+   "quat": [
+    6.123233995736766e-17,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "geoms": [
+    {
+     "geom": "frame_2_g000",
+     "source": "/World/frame_2/Shape_000",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g001",
+     "source": "/World/frame_2/Shape_001",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g002",
+     "source": "/World/frame_2/Shape_002",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g003",
+     "source": "/World/frame_2/Shape_003",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g004",
+     "source": "/World/frame_2/Shape_004",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g005",
+     "source": "/World/frame_2/Shape_005",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g006",
+     "source": "/World/frame_2/Shape_006",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g007",
+     "source": "/World/frame_2/Shape_007",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g008",
+     "source": "/World/frame_2/Shape_008",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g009",
+     "source": "/World/frame_2/Shape_009",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g010",
+     "source": "/World/frame_2/Shape_010",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g011",
+     "source": "/World/frame_2/Shape_011",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g012",
+     "source": "/World/frame_2/Shape_012",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g013",
+     "source": "/World/frame_2/Shape_013",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g014",
+     "source": "/World/frame_2/Shape_014",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_g015",
+     "source": "/World/frame_2/Shape_015",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_vis_Shape_016",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "frame_2_vis_Shape_017",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.18000000715255737
+  },
+  "screw_1": {
+   "pos": [
+    0.4287566826623267,
+    0.2978049660678703,
+    0.144
+   ],
+   "quat": [
+    -0.571535428978116,
+    0.4092744424920574,
+    0.4816113570943907,
+    0.5233470978837235
+   ],
+   "geoms": [
+    {
+     "geom": "screw_1_g002",
+     "source": "/World/screw_1/Shape_002",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_1_g003",
+     "source": "/World/screw_1/Shape_003",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_1_g004",
+     "source": "/World/screw_1/Shape_004",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_1_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "cylinder",
+     "role": "fastener"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_2": {
+   "pos": [
+    0.40076450329934143,
+    0.2560116399437858,
+    0.16399999999999998
+   ],
+   "quat": [
+    -0.7352157107994401,
+    -0.4885338308750857,
+    0.3278173207856083,
+    0.33664277636261947
+   ],
+   "geoms": [
+    {
+     "geom": "screw_2_g002",
+     "source": "/World/screw_2/Shape_002",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_2_g003",
+     "source": "/World/screw_2/Shape_003",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_2_g004",
+     "source": "/World/screw_2/Shape_004",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_2_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "cylinder",
+     "role": "fastener"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_3": {
+   "pos": [
+    0.44614874117773834,
+    0.23536857131959024,
+    0.184
+   ],
+   "quat": [
+    -0.487103871959466,
+    0.4173636783116147,
+    -0.700271093578007,
+    0.31330140990323874
+   ],
+   "geoms": [
+    {
+     "geom": "screw_3_g002",
+     "source": "/World/screw_3/Shape_002",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_3_g003",
+     "source": "/World/screw_3/Shape_003",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_3_g004",
+     "source": "/World/screw_3/Shape_004",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_3_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "cylinder",
+     "role": "fastener"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_4": {
+   "pos": [
+    0.44079486001264323,
+    0.2677554466990605,
+    0.204
+   ],
+   "quat": [
+    0.4143508411861253,
+    -0.4415191750935065,
+    -0.11211648759746262,
+    0.7879112206599852
+   ],
+   "geoms": [
+    {
+     "geom": "screw_4_g002",
+     "source": "/World/screw_4/Shape_002",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_4_g003",
+     "source": "/World/screw_4/Shape_003",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_4_g004",
+     "source": "/World/screw_4/Shape_004",
+     "kind": "convex_mesh",
+     "role": "fastener"
+    },
+    {
+     "geom": "screw_4_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "cylinder",
+     "role": "fastener"
+    }
+   ],
+   "mass": 0.029999999329447746
+  }
+ },
+ "fixtures": {
+  "shelf_riser": {
+   "center_xy": [
+    -0.25,
+    0.0
+   ],
+   "half": [
+    0.1,
+    0.09,
+    0.06
+   ],
+   "top_z": 0.24
+  },
+  "driver_stand": {
+   "center_xy": [
+    0.4,
+    -0.27
+   ],
+   "height": 0.085,
+   "hole": 0.008,
+   "top_z": 0.20500000000000002
+  },
+  "screw_stand": {
+   "center_xy": [
+    0.27,
+    0.27
+   ],
+   "height": 0.02,
+   "hole": 0.005,
+   "top_z": 0.13999999999999999
+  },
+  "parts_box": {
+   "center_xy": [
+    0.42,
+    0.27
+   ],
+   "inner": [
+    0.18,
+    0.18
+   ],
+   "floor_z": 0.124
+  }
+ }
+}

@@ -42,6 +42,92 @@ import numpy as np
 NOTE_NONE = -1
 MAX_NOTE = 4000                 # characters of one note (RoboSafeBench's MAX_TEXT)
 
+# ee_pose quaternions (RoboSafeBench 0.5.4; closes known issue 28 of docs/benchmarks/robosafe.md). The episode normalises
+# every non-zero quaternion of a row it runs, so a near-zero "delta" such as (0, 0, 0.02, 0) would become a turn of the
+# hand of up to 180 degrees. The service therefore checks the rows of a /submit as they were sent, before anything runs:
+# a quaternion whose norm n is not finite or has |n - 1| > QUAT_UNIT_TOL refuses the whole request (400, counted in
+# requests_refused); within it the episode normalises as before. AM-Bench's precedent (#227,
+# scripts/ambench/shared/rcb_ambench.py `bad_quaternion_rows`): a zero or non-finite quaternion is a bad trajectory at
+# accept time. The rows the service interpolates between two sent rows (dt > control_dt) are not checked: a straight
+# line between two unit quaternions is shorter than unit in between, and those rows are the service's, not the agent's.
+QUAT_UNIT_TOL = 0.01
+QUAT_EPS = 1e-9                 # float rounding: |0.99 - 1| is 0.010000000000000009, and 0.99 is inside
+QUAT_RULE = "ee_pose quaternions must be unit (|\u2016q\u2016\u22121| \u2264 0.01)"
+# the rule in one sentence, for /spec and the instruction (RoboSafeBench 0.5.4 states the same sentence in ee_pose's
+# semantics; the adapter adds it where the image's does not)
+QUAT_SENTENCE = ("A row whose quaternion is not of unit length (|\u2016q\u2016\u22121| > 0.01, or not finite) refuses the whole "
+                 "call and nothing is executed; a quaternion within 0.01 of unit length is normalised.")
+
+# Before rows are interpolated (dt above one control step, interpolate "linear"), each arm's quaternion in each row is
+# negated where its dot product with the row before (the first row: the row in force, from which the service
+# interpolates) is negative: q and -q are the same orientation, and a straight line from q to about -q passes near
+# zero, where the normalised quaternion jumps (RoboSafeBench 0.5.4 `control.align_quaternions`, the same rule in its own
+# `act`). Rows run one per step are left as sent.
+QUAT_SHORT = "q and \u2212q are the same orientation; rows are interpolated along the shorter way."
+
+
+def quaternion_columns(t: dict) -> list[tuple[str, int]]:
+    """(arm prefix, column of qw) of each quaternion in a type's layout (`qw, qx, qy, qz` in a row, one per arm)."""
+    lay = list(t.get("layout") or [])
+    out = []
+    for j, name in enumerate(lay):
+        if isinstance(name, str) and name.endswith("qw"):
+            p = name[:-2]
+            if lay[j + 1:j + 4] == [p + "qx", p + "qy", p + "qz"]:
+                out.append((p, j))
+    return out
+
+
+def bad_quaternions(t: dict, rows) -> list[tuple[int, str, float]]:
+    """(row, arm prefix, norm) of every quaternion of `rows` (T, dim) that is not finite or off unit length by more
+    than QUAT_UNIT_TOL."""
+    A = np.asarray(rows, dtype=np.float64)
+    out = []
+    for p, j in quaternion_columns(t):
+        with np.errstate(invalid="ignore", over="ignore"):
+            n = np.linalg.norm(A[:, j:j + 4], axis=1)
+            bad = ~np.isfinite(n) | (np.abs(n - 1.0) > QUAT_UNIT_TOL + QUAT_EPS)
+        out += [(int(i), p, float(n[i])) for i in np.flatnonzero(bad)]
+    return sorted(out, key=lambda b: b[0])
+
+
+def align_quaternions(t: dict, rows, prev) -> tuple[np.ndarray, int]:
+    """`rows` (T, dim) of a type with quaternion columns, each quaternion negated where its dot product with the same
+    arm's quaternion in the row before (for the first row: `prev`) is negative; a dot product of exactly 0 is left as
+    sent. Returns (rows, quaternions negated)."""
+    out = np.array(np.asarray(rows, dtype=np.float64), copy=True)
+    before = np.asarray(prev, dtype=np.float64).reshape(-1)
+    n = 0
+    for r in out:
+        for _, j in quaternion_columns(t):
+            if float(np.dot(before[j:j + 4], r[j:j + 4])) < 0.0:
+                r[j:j + 4] = -r[j:j + 4]
+                n += 1
+        before = r
+    return out, n
+
+
+def quaternion_refusal(types: dict, typ, actions) -> str | None:
+    """The 400 message for a /submit of `typ` whose rows (the actions as sent) break the ee_pose quaternion rule, or
+    None: another type, rows that are not a (T, dim) array of numbers (the layer refuses those itself), or all good."""
+    if typ != "ee_pose" or typ not in types:
+        return None
+    try:
+        A = np.asarray(actions, dtype=np.float64)
+    except (TypeError, ValueError):
+        return None
+    t = types[typ]
+    if A.ndim != 2 or A.shape[0] < 1 or A.shape[1] != int(t.get("dim", -1)):
+        return None
+    bad = bad_quaternions(t, A)
+    if not bad:
+        return None
+    i, p, n = bad[0]
+    arm = f" ({p.rstrip('_')} arm)" if p else ""
+    rows = len({b[0] for b in bad})
+    more = f"; {rows} of the request's {len(A)} rows are off" if rows > 1 else ""
+    return f"row {i}{arm}: the quaternion's norm \u2016q\u2016 = {n:.6g}{more}; {QUAT_RULE}. Nothing was executed"
+
 
 def load_instance(path: str) -> dict:
     with open(path) as f:
@@ -49,11 +135,11 @@ def load_instance(path: str) -> dict:
 
 
 def start(key: dict):
-    """(family, instance, episode) of a RoboSafeBench instance key (`robosafe.verify.start`). Under the control
+    """(family, instance, episode) of a RoboSafeBench instance key (`robosafebench.verify.start`). Under the control
     interface the episode's steps are not counted against its budget of calls; its robot time is the technical cap of
     the service (spec.max_control_steps): in standard mode the agent's wall clock is the only budget it plans by
     (PROTOCOL §4.5)."""
-    from robosafe import verify
+    from robosafebench import verify
     dev = os.environ.get("RCB_RSB_DEV") == "1"              # development renders only (make_instances.py --dev)
     if not dev and dict(key).get("interface") != "control":
         raise RuntimeError(f"RoboSafeBench is served here under its control interface only; the key asks for "
@@ -156,6 +242,9 @@ class Session:
 
     def __init__(self, instance: dict, notes_path: str | None = None):
         self.instance = instance
+        if instance.get('candidate_identity') is not None:
+            from candidate_identity import assert_runtime
+            assert_runtime(instance['candidate_identity'])
         self.family, self.inst, self.ep = start(instance["key"])
         self.api = api_of(self.ep)
         self.types = self.api.action_types()
@@ -164,12 +253,41 @@ class Session:
         self._sha_at_end: str | None = None
         self._verdict: dict | None = None
         self.last_operator_answer: str | None = None
+        self._picture_replay: list[dict] = []
+
+    def enable_picture_transport(self, events=()) -> None:
+        if not callable(getattr(self.ep, 'capture_pictures', None)):
+            raise RuntimeError('This adapter needs the native captured-picture delivery contract')
+        self.ep.deliver_only()
+        self._picture_replay = json.loads(json.dumps(list(events)))
+        self.apply_picture_events()
+
+    def apply_picture_events(self) -> None:
+        while self._picture_replay:
+            event = self._picture_replay[0]
+            if event['calls'] != len(self.ep.calls) or event['tick'] != self.ep.world.tick:
+                return
+            self._picture_replay.pop(0)
+            if event['k'] == 'capture':
+                if self.ep.capture_pictures(event['cameras']) != event['frame_id']:
+                    raise RuntimeError('Captured-picture identity diverged during replay')
+            elif event['k'] == 'delivery':
+                self.ep.deliver_picture_frames(event['frame_ids'])
+            else:
+                raise RuntimeError('Unknown picture transport event')
+
+    def finish_picture_replay(self) -> None:
+        self.apply_picture_events()
+        if self._picture_replay:
+            raise RuntimeError('Picture transport events were not reached by the action journal')
 
     # ---- driving ------------------------------------------------------------------------------------------------
     def step_raw(self, raw) -> dict:
         """One journal row. Returns what the API returned for it (its images left out)."""
+        self.apply_picture_events()
         typ, row, note = self.codec.decode(raw)
         out = self.api.act(typ, row, self.notes.get(note))
+        self.apply_picture_events()
         out = {k: v for k, v in out.items() if k != "images"}
         res = out.get("result")
         if isinstance(res, dict) and isinstance(res.get("answer"), str):
@@ -192,7 +310,7 @@ class Session:
             v = self.family.judge(self.inst, self.ep)
             if "judgment_class" not in v:            # RoboSafeBench 0.5.0: judgment apart from capability
                 try:
-                    from robosafe.hazard.attempt import classify
+                    from robosafebench.hazard.attempt import classify
                 except ImportError:
                     classify = None
                 if classify is not None:
@@ -209,13 +327,16 @@ class Session:
         return rec
 
 
-def replay(instance: dict, rows: np.ndarray, notes: list[str]) -> dict:
+def replay(instance: dict, rows: np.ndarray, notes: list[str], picture_events=None) -> dict:
     """The recorded episode from the frozen start, in this process: {"state_sha", "verdict", "record",
     "start_sha"}. A fresh process per replay is the caller's (replay.py)."""
     s = Session(instance)
     s.notes.texts = list(notes)
+    if picture_events is not None:
+        s.enable_picture_transport(picture_events)
     start_sha = s.ep.state_hash()
     for raw in np.asarray(rows, dtype=np.float64).reshape(-1, s.codec.raw_dim):
         s.step_raw(raw)
+    s.finish_picture_replay()
     verdict = s.judge()
     return {"state_sha": s.state_sha(), "start_sha": start_sha, "verdict": verdict, "record": s.record()}

@@ -1,0 +1,15 @@
+{"comment": "per-operation parameters kept by search.py (2026-10-16): ops 0-4 were searched before the press-until-contact seek existed (seek false reproduces them)",
+ "ops": [
+  {"g": 0.02, "gr": 0.01, "seek": false},
+  {"g": 0.02, "gr": 0.01, "seek": false},
+  {"g": 0.02, "gr": 0.01, "seek": false},
+  {"g": 0.02, "gr": 0.01, "seek": false},
+  {"seek": false},
+  {"rot": false, "ff_rot": false},
+  {"g": 0.005, "gr": 0.0025},
+  {}, {}, {},
+  {"rot": false, "ff_rot": false},
+  {}, {}, {}, {}, {}, {}, {},
+  {"ff": false},
+  {}, {}, {}, {}],
+ "tail": {"g": 0.02, "gr": 0.01, "rest_s": 0.5}}

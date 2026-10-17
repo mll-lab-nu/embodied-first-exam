@@ -1,0 +1,2276 @@
+{
+ "task": "kyrre",
+ "parts": [
+  "seat",
+  "leg_1",
+  "leg_2",
+  "leg_3",
+  "130915_1_1",
+  "130915_1_2",
+  "130915_2_1",
+  "130915_2_2",
+  "130915_3_1",
+  "130915_3_2"
+ ],
+ "root": "seat",
+ "support_geoms": [
+  "table",
+  "floor"
+ ],
+ "operations": [
+  {
+   "key": "s1-leg-1",
+   "manual_step": 1,
+   "part": "leg_1",
+   "host": "seat",
+   "mode": "place",
+   "target_pos": [
+    0.11,
+    0.0,
+    0.009999999999999995
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     -0.039999999999999994,
+     0.0,
+     0.0
+    ],
+    [
+     0.039999999999999994,
+     0.0,
+     0.0
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [],
+   "approach_m": 0.045,
+   "weld": {
+    "eq": "weld_s1-leg-1"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-1-1",
+   "manual_step": 1,
+   "part": "130915_1_1",
+   "host": "seat",
+   "mode": "screw",
+   "target_pos": [
+    0.07,
+    0.0,
+    0.031
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.0,
+     0.0,
+     -0.024000000000000007
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-leg-1"
+   ],
+   "approach_m": 0.012,
+   "weld": {
+    "eq": "weld_s1-screw-1-1"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-1-2",
+   "manual_step": 1,
+   "part": "130915_1_2",
+   "host": "seat",
+   "mode": "screw",
+   "target_pos": [
+    0.15,
+    0.0,
+    0.031
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.0,
+     0.0,
+     -0.024000000000000007
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-screw-1-1"
+   ],
+   "approach_m": 0.012,
+   "weld": {
+    "eq": "weld_s1-screw-1-2"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-leg-2",
+   "manual_step": 1,
+   "part": "leg_2",
+   "host": "seat",
+   "mode": "place",
+   "target_pos": [
+    -0.05499999999999997,
+    0.09526279441628825,
+    0.009999999999999995
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.01999999999999999,
+     -0.034641016151377546,
+     0.0
+    ],
+    [
+     -0.019999999999999983,
+     0.03464101615137756,
+     0.0
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-screw-1-2"
+   ],
+   "approach_m": 0.045,
+   "weld": {
+    "eq": "weld_s1-leg-2"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-2-1",
+   "manual_step": 1,
+   "part": "130915_2_1",
+   "host": "seat",
+   "mode": "screw",
+   "target_pos": [
+    -0.03499999999999998,
+    0.060621778264910706,
+    0.031
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.0,
+     0.0,
+     -0.024000000000000007
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-leg-2"
+   ],
+   "approach_m": 0.012,
+   "weld": {
+    "eq": "weld_s1-screw-2-1"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-2-2",
+   "manual_step": 1,
+   "part": "130915_2_2",
+   "host": "seat",
+   "mode": "screw",
+   "target_pos": [
+    -0.07499999999999996,
+    0.1299038105676658,
+    0.031
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.0,
+     0.0,
+     -0.024000000000000007
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-screw-2-1"
+   ],
+   "approach_m": 0.012,
+   "weld": {
+    "eq": "weld_s1-screw-2-2"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-leg-3",
+   "manual_step": 1,
+   "part": "leg_3",
+   "host": "seat",
+   "mode": "place",
+   "target_pos": [
+    -0.05500000000000005,
+    -0.09526279441628822,
+    0.009999999999999995
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.020000000000000018,
+     0.03464101615137754,
+     0.0
+    ],
+    [
+     -0.020000000000000018,
+     -0.03464101615137753,
+     0.0
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-screw-2-2"
+   ],
+   "approach_m": 0.045,
+   "weld": {
+    "eq": "weld_s1-leg-3"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-3-1",
+   "manual_step": 1,
+   "part": "130915_3_1",
+   "host": "seat",
+   "mode": "screw",
+   "target_pos": [
+    -0.03500000000000003,
+    -0.060621778264910685,
+    0.031
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.0,
+     0.0,
+     -0.024000000000000007
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-leg-3"
+   ],
+   "approach_m": 0.012,
+   "weld": {
+    "eq": "weld_s1-screw-3-1"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-3-2",
+   "manual_step": 1,
+   "part": "130915_3_2",
+   "host": "seat",
+   "mode": "screw",
+   "target_pos": [
+    -0.07500000000000007,
+    -0.12990381056766576,
+    0.031
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "points": [
+    [
+     0.0,
+     0.0,
+     -0.024000000000000007
+    ]
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "counterparts": [
+    "seat"
+   ],
+   "dependencies": [
+    "s1-screw-3-1"
+   ],
+   "approach_m": 0.012,
+   "weld": {
+    "eq": "weld_s1-screw-3-2"
+   },
+   "jaws": [],
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  }
+ ],
+ "mechanisms": [
+  "retention weld per operation (MuJoCo weld equality, off at start), switched on with the current relative pose after the source acceptance gates hold for dwell_s; never switched off",
+  "press-in jaw: spring slider (slide joint, stiffness 1200 N/m, damping 0.8 N s/m, travel 0..2.5 mm) on each leg, as the source prismatic drive (idle: the three press-in pins were removed from the scene, 2026-10-16)"
+ ],
+ "screw": {
+  "pitch_m": 0.0005,
+  "handedness": "right",
+  "major_radius_m": 0.001960421060662968,
+  "z_range_m": [
+   -0.024000000208616257,
+   -0.017774999141693115
+  ],
+  "head_radius_m": 0.006,
+  "head_bearing_z_m": -0.001,
+  "note": "thread tip meets the insert top 6.25 mm above the seated pose: about 12.5 turns to seat"
+ },
+ "final": {
+  "hold_s": 1.5,
+  "hold_drift_m": 0.01,
+  "hold_tilt_deg": 3.0,
+  "relative_drift_m": 0.001,
+  "relative_angle_deg": 1.0
+ },
+ "spec_bodies": {
+  "leg_1": {
+   "name": "leg_1",
+   "center": [
+    0.11,
+    0.0,
+    0.11
+   ],
+   "mass": 0.4,
+   "shapes": [
+    {
+     "kind": "box",
+     "center": [
+      0.0,
+      -0.02,
+      0.01
+     ],
+     "size": [
+      0.12,
+      0.01,
+      0.02
+     ],
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.0,
+      0.02,
+      0.01
+     ],
+     "size": [
+      0.12,
+      0.01,
+      0.02
+     ],
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.056,
+      0.0,
+      0.01
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.02
+     ],
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.056,
+      0.0,
+      0.01
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.02
+     ],
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.07,
+      0.0,
+      0.22
+     ],
+     "size": [
+      0.02,
+      0.044,
+      0.43
+     ],
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.05,
+      0.0,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.03,
+      0.0,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.04,
+      -0.015000000000000001,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.04,
+      0.015000000000000001,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.049,
+      0.0,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.031,
+      0.0,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.04,
+      -0.014,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.04,
+      0.014,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_1_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.03,
+      0.0,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.05,
+      0.0,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.04,
+      -0.015000000000000001,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.04,
+      0.015000000000000001,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.031,
+      0.0,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.049,
+      0.0,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.04,
+      -0.014,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.04,
+      0.014,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_1_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 0.0
+    }
+   ],
+   "color": [
+    0.75,
+    0.65,
+    0.48
+   ],
+   "initial_position": [
+    0.6,
+    -0.4,
+    0.155
+   ],
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "leg_2": {
+   "name": "leg_2",
+   "center": [
+    -0.05499999999999997,
+    0.09526279441628825,
+    0.11
+   ],
+   "mass": 0.4,
+   "shapes": [
+    {
+     "kind": "box",
+     "center": [
+      0.017320508075688773,
+      0.009999999999999995,
+      0.01
+     ],
+     "size": [
+      0.12,
+      0.01,
+      0.02
+     ],
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.017320508075688773,
+      -0.009999999999999995,
+      0.01
+     ],
+     "size": [
+      0.12,
+      0.01,
+      0.02
+     ],
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.027999999999999987,
+      -0.04849742261192857,
+      0.01
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.02
+     ],
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.027999999999999987,
+      0.04849742261192857,
+      0.01
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.02
+     ],
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.03499999999999999,
+      0.06062177826491071,
+      0.22
+     ],
+     "size": [
+      0.02,
+      0.044,
+      0.43
+     ],
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.02499999999999999,
+      -0.04330127018922194,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.014999999999999993,
+      -0.02598076211353316,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.03299038105676657,
+      -0.027141016151377553,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.00700961894323341,
+      -0.042141016151377546,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.02449999999999999,
+      -0.0424352447854375,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.015499999999999993,
+      -0.0268467875173176,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.032124355652982134,
+      -0.027641016151377554,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.00787564434701785,
+      -0.041641016151377545,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_2_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.014999999999999993,
+      0.02598076211353316,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.02499999999999999,
+      0.04330127018922194,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.00700961894323341,
+      0.042141016151377546,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.03299038105676657,
+      0.027141016151377553,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.015499999999999993,
+      0.0268467875173176,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.02449999999999999,
+      0.0424352447854375,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.00787564434701785,
+      0.041641016151377545,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.032124355652982134,
+      0.027641016151377554,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_2_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 2.0943951023931953
+    }
+   ],
+   "color": [
+    0.75,
+    0.65,
+    0.48
+   ],
+   "initial_position": [
+    0.6,
+    0.19999999999999996,
+    0.155
+   ],
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "leg_3": {
+   "name": "leg_3",
+   "center": [
+    -0.05500000000000005,
+    -0.09526279441628822,
+    0.11
+   ],
+   "mass": 0.4,
+   "shapes": [
+    {
+     "kind": "box",
+     "center": [
+      -0.01732050807568877,
+      0.010000000000000009,
+      0.01
+     ],
+     "size": [
+      0.12,
+      0.01,
+      0.02
+     ],
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.01732050807568877,
+      -0.010000000000000009,
+      0.01
+     ],
+     "size": [
+      0.12,
+      0.01,
+      0.02
+     ],
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.028000000000000025,
+      0.04849742261192855,
+      0.01
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.02
+     ],
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.028000000000000025,
+      -0.04849742261192855,
+      0.01
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.02
+     ],
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.03500000000000003,
+      -0.06062177826491069,
+      0.22
+     ],
+     "size": [
+      0.02,
+      0.044,
+      0.43
+     ],
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.025000000000000022,
+      0.04330127018922192,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.015000000000000013,
+      0.02598076211353315,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.0070096189432334415,
+      0.042141016151377546,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.0329903810567666,
+      0.02714101615137753,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.024500000000000022,
+      0.04243524478543748,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.015500000000000014,
+      0.02684678751731759,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.00787564434701788,
+      0.041641016151377545,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      0.032124355652982155,
+      0.02764101615137753,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_3_1",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.015000000000000013,
+      -0.02598076211353315,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.025000000000000022,
+      -0.04330127018922192,
+      0.002
+     ],
+     "size": [
+      0.009999999999999998,
+      0.05,
+      0.004
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.0329903810567666,
+      -0.02714101615137753,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.0070096189432334415,
+      -0.042141016151377546,
+      0.002
+     ],
+     "size": [
+      0.01,
+      0.02,
+      0.004
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.005,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.015500000000000014,
+      -0.02684678751731759,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.024500000000000022,
+      -0.04243524478543748,
+      0.012
+     ],
+     "size": [
+      0.012,
+      0.05,
+      0.016
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.032124355652982155,
+      -0.02764101615137753,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    },
+    {
+     "kind": "box",
+     "center": [
+      -0.00787564434701788,
+      -0.041641016151377545,
+      0.012
+     ],
+     "size": [
+      0.006,
+      0.022000000000000002,
+      0.016
+     ],
+     "bearing_for": "130915_3_2",
+     "bearing_inner_half_m": 0.003,
+     "rotation_z_rad": 4.1887902047863905
+    }
+   ],
+   "color": [
+    0.75,
+    0.65,
+    0.48
+   ],
+   "initial_position": [
+    0.6,
+    0.7999999999999999,
+    0.155
+   ],
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "130915_1_1": {
+   "name": "130915_1_1",
+   "center": [
+    0.07,
+    0.0,
+    0.131
+   ],
+   "mass": 0.015,
+   "shapes": [
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.006,
+     "height": 0.002,
+     "axis": "Z"
+    },
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      -0.011
+     ],
+     "radius": 0.0012,
+     "height": 0.02,
+     "axis": "Z"
+    }
+   ],
+   "color": [
+    0.5,
+    0.53,
+    0.56
+   ],
+   "initial_position": null,
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "130915_1_2": {
+   "name": "130915_1_2",
+   "center": [
+    0.15,
+    0.0,
+    0.131
+   ],
+   "mass": 0.015,
+   "shapes": [
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.006,
+     "height": 0.002,
+     "axis": "Z"
+    },
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      -0.011
+     ],
+     "radius": 0.0012,
+     "height": 0.02,
+     "axis": "Z"
+    }
+   ],
+   "color": [
+    0.5,
+    0.53,
+    0.56
+   ],
+   "initial_position": null,
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "130915_2_1": {
+   "name": "130915_2_1",
+   "center": [
+    -0.03499999999999998,
+    0.060621778264910706,
+    0.131
+   ],
+   "mass": 0.015,
+   "shapes": [
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.006,
+     "height": 0.002,
+     "axis": "Z"
+    },
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      -0.011
+     ],
+     "radius": 0.0012,
+     "height": 0.02,
+     "axis": "Z"
+    }
+   ],
+   "color": [
+    0.5,
+    0.53,
+    0.56
+   ],
+   "initial_position": null,
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "130915_2_2": {
+   "name": "130915_2_2",
+   "center": [
+    -0.07499999999999996,
+    0.1299038105676658,
+    0.131
+   ],
+   "mass": 0.015,
+   "shapes": [
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.006,
+     "height": 0.002,
+     "axis": "Z"
+    },
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      -0.011
+     ],
+     "radius": 0.0012,
+     "height": 0.02,
+     "axis": "Z"
+    }
+   ],
+   "color": [
+    0.5,
+    0.53,
+    0.56
+   ],
+   "initial_position": null,
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "130915_3_1": {
+   "name": "130915_3_1",
+   "center": [
+    -0.03500000000000003,
+    -0.060621778264910685,
+    0.131
+   ],
+   "mass": 0.015,
+   "shapes": [
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.006,
+     "height": 0.002,
+     "axis": "Z"
+    },
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      -0.011
+     ],
+     "radius": 0.0012,
+     "height": 0.02,
+     "axis": "Z"
+    }
+   ],
+   "color": [
+    0.5,
+    0.53,
+    0.56
+   ],
+   "initial_position": null,
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "130915_3_2": {
+   "name": "130915_3_2",
+   "center": [
+    -0.07500000000000007,
+    -0.12990381056766576,
+    0.131
+   ],
+   "mass": 0.015,
+   "shapes": [
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.006,
+     "height": 0.002,
+     "axis": "Z"
+    },
+    {
+     "kind": "cylinder",
+     "center": [
+      0,
+      0,
+      -0.011
+     ],
+     "radius": 0.0012,
+     "height": 0.02,
+     "axis": "Z"
+    }
+   ],
+   "color": [
+    0.5,
+    0.53,
+    0.56
+   ],
+   "initial_position": null,
+   "initial_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "spec_operations": [
+  {
+   "key": "s1-leg-1",
+   "manual_step": 1,
+   "part": "leg_1",
+   "host": "seat",
+   "mode": "place",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.045,
+   "seconds": 12.0,
+   "connectors": [
+    {
+     "point": [
+      0.07,
+      0.0,
+      0.11
+     ]
+    },
+    {
+     "point": [
+      0.15,
+      0.0,
+      0.11
+     ]
+    }
+   ],
+   "dependencies": [],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-1-1",
+   "manual_step": 1,
+   "part": "130915_1_1",
+   "host": "seat",
+   "mode": "screw",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.012,
+   "seconds": 60,
+   "connectors": [
+    {
+     "point": [
+      0.07,
+      0.0,
+      0.107
+     ],
+     "scale": 0.25
+    }
+   ],
+   "dependencies": [
+    "s1-leg-1"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-1-2",
+   "manual_step": 1,
+   "part": "130915_1_2",
+   "host": "seat",
+   "mode": "screw",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.012,
+   "seconds": 60,
+   "connectors": [
+    {
+     "point": [
+      0.15,
+      0.0,
+      0.107
+     ],
+     "scale": 0.25
+    }
+   ],
+   "dependencies": [
+    "s1-screw-1-1"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-leg-2",
+   "manual_step": 1,
+   "part": "leg_2",
+   "host": "seat",
+   "mode": "place",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.045,
+   "seconds": 12.0,
+   "connectors": [
+    {
+     "point": [
+      -0.03499999999999998,
+      0.060621778264910706,
+      0.11
+     ]
+    },
+    {
+     "point": [
+      -0.07499999999999996,
+      0.1299038105676658,
+      0.11
+     ]
+    }
+   ],
+   "dependencies": [
+    "s1-screw-1-2"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-2-1",
+   "manual_step": 1,
+   "part": "130915_2_1",
+   "host": "seat",
+   "mode": "screw",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.012,
+   "seconds": 60,
+   "connectors": [
+    {
+     "point": [
+      -0.03499999999999998,
+      0.060621778264910706,
+      0.107
+     ],
+     "scale": 0.25
+    }
+   ],
+   "dependencies": [
+    "s1-leg-2"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-2-2",
+   "manual_step": 1,
+   "part": "130915_2_2",
+   "host": "seat",
+   "mode": "screw",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.012,
+   "seconds": 60,
+   "connectors": [
+    {
+     "point": [
+      -0.07499999999999996,
+      0.1299038105676658,
+      0.107
+     ],
+     "scale": 0.25
+    }
+   ],
+   "dependencies": [
+    "s1-screw-2-1"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-leg-3",
+   "manual_step": 1,
+   "part": "leg_3",
+   "host": "seat",
+   "mode": "place",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.045,
+   "seconds": 12.0,
+   "connectors": [
+    {
+     "point": [
+      -0.03500000000000003,
+      -0.060621778264910685,
+      0.11
+     ]
+    },
+    {
+     "point": [
+      -0.07500000000000007,
+      -0.12990381056766576,
+      0.11
+     ]
+    }
+   ],
+   "dependencies": [
+    "s1-screw-2-2"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-3-1",
+   "manual_step": 1,
+   "part": "130915_3_1",
+   "host": "seat",
+   "mode": "screw",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.012,
+   "seconds": 60,
+   "connectors": [
+    {
+     "point": [
+      -0.03500000000000003,
+      -0.060621778264910685,
+      0.107
+     ],
+     "scale": 0.25
+    }
+   ],
+   "dependencies": [
+    "s1-leg-3"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-screw-3-2",
+   "manual_step": 1,
+   "part": "130915_3_2",
+   "host": "seat",
+   "mode": "screw",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach": 0.012,
+   "seconds": 60,
+   "connectors": [
+    {
+     "point": [
+      -0.07500000000000007,
+      -0.12990381056766576,
+      0.107
+     ],
+     "scale": 0.25
+    }
+   ],
+   "dependencies": [
+    "s1-screw-3-1"
+   ],
+   "screw_press_N": 0.15,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  }
+ ],
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.5,
+    0.1
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.1
+  },
+  "right": {
+   "pos": [
+    0.0,
+    0.5,
+    0.1
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.1
+  }
+ }
+}

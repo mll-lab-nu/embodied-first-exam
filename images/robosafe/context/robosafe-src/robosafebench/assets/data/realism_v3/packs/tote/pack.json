@@ -1,0 +1,85 @@
+{
+ "kind": "tote",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 5840,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false
+    }
+   ],
+   "raw_triangles": 5840,
+   "after_bbox": [
+    [
+     -0.206,
+     -0.156,
+     0.0
+    ],
+    [
+     0.206,
+     0.156,
+     0.22
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.206,
+     -0.156,
+     0.0
+    ],
+    [
+     0.206,
+     0.156,
+     0.22
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    0.8150323788519764,
+    0.7694178207279253,
+    0.865837796786056
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "shell",
+  "mode": "whole"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Poly Haven",
+   "name": "Plastic Crate 02",
+   "url": "https://polyhaven.com/a/plastic_crate_02",
+   "file_url": "https://api.polyhaven.com/files/plastic_crate_02",
+   "license": "CC0 1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "author": "Fabi_G",
+   "attribution": "\"Plastic Crate 02\" by Fabi_G, Poly Haven (CC0; credit not required)"
+  }
+ },
+ "original_files": {
+  "plastic_crate_02_1k.gltf": "531f7ba7d4b501759b04fb704db1948bcaab34d8342e71e3f5877d9f0340dba7",
+  "plastic_crate_02.bin": "f51696aa04643b5c1948da88be8ce1d4e92596ae4908b0132cd690f8fb8e0b63",
+  "plastic_crate_02_arm_1k.jpg": "f0c667358c7afd46be37b40c30435b63ae3dba8432b45c507f3298fc6f163418",
+  "plastic_crate_02_diff_1k.jpg": "f153478d5f44f39ab27a967850caac27b35ee8f04185d0d4eaf7ad501742fb15",
+  "plastic_crate_02_nor_gl_1k.jpg": "492b4cb03b043fb30a21b5de1cdf91dfbcd9bb7d080957af69a333d622050f30"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "70cb20ad955460896cb27103df93902649b12d69c7df2605df81fe42cbc3fa47",
+  "default_0.png": "a4f0d17cab0c58ed7aebed08214faadd25d76ff9e22d73f13e2fd74b5b0382fb"
+ }
+}

@@ -1,0 +1,79 @@
+{
+ "kind": "bread_loaf",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 10000,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": true
+    }
+   ],
+   "raw_triangles": 78250,
+   "after_bbox": [
+    [
+     -0.19,
+     -0.032,
+     0.0
+    ],
+    [
+     0.19,
+     0.032,
+     0.0474
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.19,
+     -0.032,
+     0.0
+    ],
+    [
+     0.19,
+     0.032,
+     0.04736
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    1.392029193052121,
+    0.6971226258163983,
+    0.7531403618978262
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": null,
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Objaverse 1.0 (Sketchfab upload)",
+   "name": "Baguette",
+   "url": "https://sketchfab.com/3d-models/ba8e9641ce0b433bbcb0416e035a9079",
+   "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-043/ba8e9641ce0b433bbcb0416e035a9079.glb",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "author": "Terrie Simmons-Ehrhardt",
+   "uploader_says": "[![](https://blog.sketchfab.com/scripts/assets/weekly.png)](https://sketchfab.com/blogs/community/sketchfab-weekly/?ref=sfb)\n\nBaguette scanned with Trnio Plus Beta on 6th gen ipad in ARKit mode. The d",
+   "attribution": "\"Baguette\" by Terrie Simmons-Ehrhardt (https://sketchfab.com/3d-models/ba8e9641ce0b433bbcb0416e035a9079), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+  }
+ },
+ "original_files": {
+  "model.glb": "3872aef5d6bad7213a5158b9cef21f870356d78363c41c57ae8611bf6c4cd977"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "469e19c4ec03c4218e43923835c6fe99a4878bc4ae0536da955e5ffc0dca413d",
+  "default_0.png": "101c5ef0e1e6c31db553db49b33b81996429755e3261797e6acce7441739782d"
+ }
+}

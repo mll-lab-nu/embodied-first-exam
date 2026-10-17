@@ -1,0 +1,457 @@
+{
+ "task": "burvik",
+ "parts": [
+  "top",
+  "leg_0",
+  "leg_1",
+  "leg_2",
+  "leg_3",
+  "handle"
+ ],
+ "root": "top",
+ "centers": {
+  "top": [
+   0.0,
+   0.0,
+   0.44
+  ],
+  "handle": [
+   0.0,
+   0.0,
+   0.595
+  ],
+  "leg_0": [
+   -0.12,
+   -0.09,
+   0.425
+  ],
+  "leg_1": [
+   0.12,
+   0.09,
+   0.425
+  ],
+  "leg_2": [
+   -0.12,
+   0.09,
+   0.425
+  ],
+  "leg_3": [
+   0.12,
+   -0.09,
+   0.425
+  ]
+ },
+ "operations": [
+  {
+   "key": "s1-leg-left",
+   "step": 1,
+   "part": "leg_0",
+   "mode": "thread",
+   "host": "top",
+   "point": [
+    -0.12,
+    -0.09,
+    0.425
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "seconds": 18,
+   "contact_host": null
+  },
+  {
+   "key": "s1-leg-right",
+   "step": 1,
+   "part": "leg_1",
+   "mode": "thread",
+   "host": "top",
+   "point": [
+    0.12,
+    0.09,
+    0.425
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "seconds": 18,
+   "contact_host": null
+  },
+  {
+   "key": "s2-turn-side",
+   "step": 2,
+   "part": "top",
+   "mode": "turn",
+   "host": "top",
+   "point": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "seconds": 8,
+   "contact_host": null
+  },
+  {
+   "key": "s2-handle-two-holes",
+   "step": 2,
+   "part": "handle",
+   "mode": "place",
+   "host": "top",
+   "point": [
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "seconds": 12.0,
+   "contact_host": null
+  },
+  {
+   "key": "s2-leg-handle-left",
+   "step": 2,
+   "part": "leg_2",
+   "mode": "thread",
+   "host": "handle",
+   "point": [
+    -0.12,
+    0.09,
+    0.425
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "seconds": 18,
+   "contact_host": null
+  },
+  {
+   "key": "s2-leg-handle-right",
+   "step": 2,
+   "part": "leg_3",
+   "mode": "thread",
+   "host": "handle",
+   "point": [
+    0.12,
+    -0.09,
+    0.425
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "seconds": 18,
+   "contact_host": null
+  },
+  {
+   "key": "finish-turn-upright",
+   "step": 2,
+   "part": "top",
+   "mode": "turn_upright",
+   "host": "top",
+   "point": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "seconds": 8,
+   "contact_host": null
+  }
+ ],
+ "mechanism_operations": [
+  {
+   "key": "s1-leg-left",
+   "part": "leg_0",
+   "host": "top",
+   "weld": {
+    "eq": "weld_leg_0"
+   },
+   "mode": "thread",
+   "counterparts": [
+    "top"
+   ],
+   "target_pos": [
+    -0.12,
+    -0.09,
+    -0.015000000000000013
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.001,
+    "contact_N": 0.01,
+    "contact_window_s": 0.15,
+    "contact_active_fraction": 0.3333333333333333
+   },
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    -1
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25
+  },
+  {
+   "key": "s1-leg-right",
+   "part": "leg_1",
+   "host": "top",
+   "weld": {
+    "eq": "weld_leg_1"
+   },
+   "mode": "thread",
+   "counterparts": [
+    "top"
+   ],
+   "target_pos": [
+    0.12,
+    0.09,
+    -0.015000000000000013
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.001,
+    "contact_N": 0.01,
+    "contact_window_s": 0.15,
+    "contact_active_fraction": 0.3333333333333333
+   },
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    -1
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25
+  },
+  {
+   "key": "s2-handle-two-holes",
+   "part": "handle",
+   "host": "top",
+   "weld": {
+    "eq": "weld_handle"
+   },
+   "mode": "place",
+   "counterparts": [
+    "top"
+   ],
+   "target_pos": [
+    0.0,
+    0.0,
+    0.15499999999999997
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.001,
+    "contact_N": 0.01,
+    "contact_window_s": 0.15,
+    "contact_active_fraction": 0.3333333333333333
+   },
+   "tilt": "full",
+   "two_hole_points": [
+    [
+     -0.12,
+     0.09,
+     0.44
+    ],
+    [
+     0.12,
+     -0.09,
+     0.44
+    ]
+   ],
+   "dependencies": [
+    "s2-leg-handle-left",
+    "s2-leg-handle-right"
+   ]
+  },
+  {
+   "key": "s2-leg-handle-left",
+   "part": "leg_2",
+   "host": "top",
+   "weld": {
+    "eq": "weld_leg_2"
+   },
+   "mode": "thread",
+   "counterparts": [
+    "handle"
+   ],
+   "target_pos": [
+    -0.12,
+    0.09,
+    -0.015000000000000013
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.001,
+    "contact_N": 0.01,
+    "contact_window_s": 0.15,
+    "contact_active_fraction": 0.3333333333333333
+   },
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    -1
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25
+  },
+  {
+   "key": "s2-leg-handle-right",
+   "part": "leg_3",
+   "host": "top",
+   "weld": {
+    "eq": "weld_leg_3"
+   },
+   "mode": "thread",
+   "counterparts": [
+    "handle"
+   ],
+   "target_pos": [
+    0.12,
+    -0.09,
+    -0.015000000000000013
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.001,
+    "contact_N": 0.01,
+    "contact_window_s": 0.15,
+    "contact_active_fraction": 0.3333333333333333
+   },
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    -1
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25
+  }
+ ],
+ "acceptance": {
+  "gap_m": 0.0008,
+  "lateral_m": 0.001,
+  "axis_deg": 2,
+  "linear_speed": 0.025,
+  "dwell_steps": 36,
+  "min_thread_turns": 0.25,
+  "min_travel_m": 0.001,
+  "min_contact_N": 0.01,
+  "contact_counterpart": "op.host explicit exact rigid-body path",
+  "contact_window_steps": 36,
+  "min_contact_active_steps": 12,
+  "reset_drop_m": 0.01,
+  "support_seconds": 2,
+  "retention_drift_m": 0.001,
+  "retention_angle_deg": 1
+ },
+ "thread": {
+  "nominal_diameter_m": 0.008,
+  "lead_m": 0.001,
+  "handedness": "right",
+  "factory_scale": 0.5,
+  "engagement_turns_to_seat": 12.5
+ },
+ "upright": {
+  "axis_deg": 2.0,
+  "note": "source: angle(top quat, identity) < 2 deg; ported as tilt of the top normal from world +z"
+ }
+}

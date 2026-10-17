@@ -1,0 +1,586 @@
+{
+ "task": "stenerik",
+ "parts": [
+  "support_1",
+  "support_2",
+  "crossbar",
+  "screw_1",
+  "screw_2",
+  "screw_3",
+  "screw_4",
+  "screw_5",
+  "screw_6",
+  "backing",
+  "pad_1",
+  "pad_2",
+  "pad_3",
+  "pad_4"
+ ],
+ "included": [
+  "support_1",
+  "support_2",
+  "crossbar",
+  "screw_1",
+  "screw_2",
+  "screw_3",
+  "screw_4",
+  "screw_5",
+  "screw_6",
+  "pad_1",
+  "pad_2",
+  "pad_3",
+  "pad_4"
+ ],
+ "root": "crossbar",
+ "world_offset": [
+  0.0,
+  0.0,
+  0.12
+ ],
+ "world_targets": {
+  "support_1": [
+   -0.109,
+   0.0,
+   0.19
+  ],
+  "support_2": [
+   0.109,
+   0.0,
+   0.19
+  ],
+  "crossbar": [
+   0.0,
+   -0.077,
+   0.203
+  ]
+ },
+ "operations": [
+  {
+   "key": "place_left_support",
+   "part": "support_1",
+   "mode": "place",
+   "host": null,
+   "expected_contacts": [
+    "bench"
+   ],
+   "seat_contacts": [
+    "bench"
+   ]
+  },
+  {
+   "key": "place_right_support",
+   "part": "support_2",
+   "mode": "place",
+   "host": null,
+   "expected_contacts": [
+    "bench"
+   ],
+   "seat_contacts": [
+    "bench"
+   ]
+  },
+  {
+   "key": "mate_crossbar",
+   "part": "crossbar",
+   "mode": "place",
+   "host": null,
+   "direction": -1,
+   "expected_contacts": [
+    "support_1",
+    "support_2"
+   ],
+   "seat_contacts": [
+    "support_1",
+    "support_2"
+   ]
+  },
+  {
+   "key": "screw_1",
+   "part": "screw_1",
+   "mode": "thread",
+   "host": "crossbar",
+   "through": "support_1",
+   "joins": null,
+   "expected_contacts": [
+    "crossbar"
+   ],
+   "seat_contacts": [
+    "crossbar",
+    "support_1"
+   ]
+  },
+  {
+   "key": "screw_2",
+   "part": "screw_2",
+   "mode": "thread",
+   "host": "crossbar",
+   "through": "support_1",
+   "joins": null,
+   "expected_contacts": [
+    "crossbar"
+   ],
+   "seat_contacts": [
+    "crossbar",
+    "support_1"
+   ]
+  },
+  {
+   "key": "screw_3",
+   "part": "screw_3",
+   "mode": "thread",
+   "host": "crossbar",
+   "through": "support_1",
+   "joins": [
+    "crossbar",
+    "support_1"
+   ],
+   "expected_contacts": [
+    "crossbar"
+   ],
+   "seat_contacts": [
+    "crossbar",
+    "support_1"
+   ]
+  },
+  {
+   "key": "screw_4",
+   "part": "screw_4",
+   "mode": "thread",
+   "host": "crossbar",
+   "through": "support_2",
+   "joins": null,
+   "expected_contacts": [
+    "crossbar"
+   ],
+   "seat_contacts": [
+    "crossbar",
+    "support_2"
+   ]
+  },
+  {
+   "key": "screw_5",
+   "part": "screw_5",
+   "mode": "thread",
+   "host": "crossbar",
+   "through": "support_2",
+   "joins": null,
+   "expected_contacts": [
+    "crossbar"
+   ],
+   "seat_contacts": [
+    "crossbar",
+    "support_2"
+   ]
+  },
+  {
+   "key": "screw_6",
+   "part": "screw_6",
+   "mode": "thread",
+   "host": "crossbar",
+   "through": "support_2",
+   "joins": [
+    "crossbar",
+    "support_2"
+   ],
+   "expected_contacts": [
+    "crossbar"
+   ],
+   "seat_contacts": [
+    "crossbar",
+    "support_2"
+   ]
+  },
+  {
+   "key": "release_pad_1",
+   "part": "pad_1",
+   "mode": "peel",
+   "host": "backing",
+   "expected_contacts": [],
+   "seat_contacts": []
+  },
+  {
+   "key": "press_pad_1",
+   "part": "pad_1",
+   "mode": "pad",
+   "host": "support_1",
+   "expected_contacts": [
+    "support_1"
+   ],
+   "seat_contacts": [
+    "support_1"
+   ]
+  },
+  {
+   "key": "release_pad_2",
+   "part": "pad_2",
+   "mode": "peel",
+   "host": "backing",
+   "expected_contacts": [],
+   "seat_contacts": []
+  },
+  {
+   "key": "press_pad_2",
+   "part": "pad_2",
+   "mode": "pad",
+   "host": "support_1",
+   "expected_contacts": [
+    "support_1"
+   ],
+   "seat_contacts": [
+    "support_1"
+   ]
+  },
+  {
+   "key": "release_pad_3",
+   "part": "pad_3",
+   "mode": "peel",
+   "host": "backing",
+   "expected_contacts": [],
+   "seat_contacts": []
+  },
+  {
+   "key": "press_pad_3",
+   "part": "pad_3",
+   "mode": "pad",
+   "host": "support_2",
+   "expected_contacts": [
+    "support_2"
+   ],
+   "seat_contacts": [
+    "support_2"
+   ]
+  },
+  {
+   "key": "release_pad_4",
+   "part": "pad_4",
+   "mode": "peel",
+   "host": "backing",
+   "expected_contacts": [],
+   "seat_contacts": []
+  },
+  {
+   "key": "press_pad_4",
+   "part": "pad_4",
+   "mode": "pad",
+   "host": "support_2",
+   "expected_contacts": [
+    "support_2"
+   ],
+   "seat_contacts": [
+    "support_2"
+   ]
+  }
+ ],
+ "inserts": [
+  [
+   -0.118,
+   -0.008999999999999994,
+   -0.004750000000000004
+  ],
+  [
+   -0.1,
+   -0.008999999999999994,
+   -0.004750000000000004
+  ],
+  [
+   -0.109,
+   0.008999999999999994,
+   -0.004750000000000004
+  ],
+  [
+   0.1,
+   -0.008999999999999994,
+   -0.004750000000000004
+  ],
+  [
+   0.118,
+   -0.008999999999999994,
+   -0.004750000000000004
+  ],
+  [
+   0.109,
+   0.008999999999999994,
+   -0.004750000000000004
+  ]
+ ],
+ "insert_side": [
+  "L",
+  "L",
+  "L",
+  "R",
+  "R",
+  "R"
+ ],
+ "side_support_rel_crossbar": {
+  "L": [
+   -0.109,
+   0.077,
+   -0.012999999999999998
+  ],
+  "R": [
+   0.109,
+   0.077,
+   -0.012999999999999998
+  ]
+ },
+ "pad_sites": [
+  {
+   "site": 0,
+   "source_pad": "pad_1",
+   "side": "L",
+   "pos": [
+    0.0,
+    -0.078,
+    0.025999999999999995
+   ],
+   "box_quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "site": 1,
+   "source_pad": "pad_2",
+   "side": "L",
+   "pos": [
+    0.0,
+    0.078,
+    0.057678882032022066
+   ],
+   "box_quat": [
+    0.992507556682903,
+    0.12218326369570447,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "site": 2,
+   "source_pad": "pad_3",
+   "side": "R",
+   "pos": [
+    0.0,
+    -0.078,
+    0.025999999999999995
+   ],
+   "box_quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "site": 3,
+   "source_pad": "pad_4",
+   "side": "R",
+   "pos": [
+    0.0,
+    0.078,
+    0.057678882032022066
+   ],
+   "box_quat": [
+    0.992507556682903,
+    0.12218326369570447,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "pad_box_quat": {
+  "pad_1": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "pad_2": [
+   0.992507556682903,
+   0.12218326369570447,
+   0.0,
+   0.0
+  ],
+  "pad_3": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "pad_4": [
+   0.992507556682903,
+   0.12218326369570447,
+   0.0,
+   0.0
+  ]
+ },
+ "welds": [
+  {
+   "eq": "ret_crossbar_screw_1",
+   "body1": "crossbar",
+   "body2": "screw_1",
+   "initially_active": false
+  },
+  {
+   "eq": "ret_crossbar_screw_2",
+   "body1": "crossbar",
+   "body2": "screw_2",
+   "initially_active": false
+  },
+  {
+   "eq": "ret_crossbar_screw_3",
+   "body1": "crossbar",
+   "body2": "screw_3",
+   "initially_active": false
+  },
+  {
+   "eq": "ret_crossbar_screw_4",
+   "body1": "crossbar",
+   "body2": "screw_4",
+   "initially_active": false
+  },
+  {
+   "eq": "ret_crossbar_screw_5",
+   "body1": "crossbar",
+   "body2": "screw_5",
+   "initially_active": false
+  },
+  {
+   "eq": "ret_crossbar_screw_6",
+   "body1": "crossbar",
+   "body2": "screw_6",
+   "initially_active": false
+  },
+  {
+   "eq": "join_crossbar_support_1",
+   "body1": "crossbar",
+   "body2": "support_1",
+   "initially_active": false
+  },
+  {
+   "eq": "join_crossbar_support_2",
+   "body1": "crossbar",
+   "body2": "support_2",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_1_pad_1",
+   "body1": "support_1",
+   "body2": "pad_1",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_1_pad_2",
+   "body1": "support_1",
+   "body2": "pad_2",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_1_pad_3",
+   "body1": "support_1",
+   "body2": "pad_3",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_1_pad_4",
+   "body1": "support_1",
+   "body2": "pad_4",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_2_pad_1",
+   "body1": "support_2",
+   "body2": "pad_1",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_2_pad_2",
+   "body1": "support_2",
+   "body2": "pad_2",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_2_pad_3",
+   "body1": "support_2",
+   "body2": "pad_3",
+   "initially_active": false
+  },
+  {
+   "eq": "adhesive_support_2_pad_4",
+   "body1": "support_2",
+   "body2": "pad_4",
+   "initially_active": false
+  },
+  {
+   "eq": "backing_pad_1",
+   "body1": "backing",
+   "body2": "pad_1",
+   "initially_active": true
+  },
+  {
+   "eq": "backing_pad_2",
+   "body1": "backing",
+   "body2": "pad_2",
+   "initially_active": true
+  },
+  {
+   "eq": "backing_pad_3",
+   "body1": "backing",
+   "body2": "pad_3",
+   "initially_active": true
+  },
+  {
+   "eq": "backing_pad_4",
+   "body1": "backing",
+   "body2": "pad_4",
+   "initially_active": true
+  }
+ ],
+ "gates": {
+  "axial_m": 0.0001,
+  "lateral_m": 0.0006,
+  "axis_deg": 1.5,
+  "speed_m_s": 0.02,
+  "dwell_s": 0.15,
+  "contact_N": 0.01,
+  "travel_m": 0.001,
+  "turns": 0.4,
+  "work_J": 1e-05,
+  "contact_window_s": 0.048,
+  "pad_dwell_s": 0.3,
+  "pad_contact_N": 1.0,
+  "pad_min_gap_m": -0.0005,
+  "release_force_N": 1.5,
+  "release_s": 0.25,
+  "settled_speed_m_s": 0.025,
+  "support_load_N": 2.0,
+  "support_tol_abs_N": 0.05,
+  "support_tol_rel": 0.02
+ },
+ "screw": {
+  "pitch_m": 0.0005,
+  "major_diameter_m": 0.00392,
+  "thread_length_m": 0.00623,
+  "head_bearing_z_m": 0.01475,
+  "head_top_z_m": 0.01675,
+  "handedness": "right",
+  "com": "thread tip (source physics:centerOfMass = 0)"
+ },
+ "masses": {
+  "support_1": 0.20000000298023224,
+  "support_2": 0.20000000298023224,
+  "crossbar": 0.11999999731779099,
+  "backing": 0.014999999664723873,
+  "pad_1": 0.006000000052154064,
+  "pad_2": 0.006000000052154064,
+  "pad_3": 0.006000000052154064,
+  "pad_4": 0.006000000052154064,
+  "screw_1": 0.029999999329447746,
+  "screw_2": 0.029999999329447746,
+  "screw_3": 0.029999999329447746,
+  "screw_4": 0.029999999329447746,
+  "screw_5": 0.029999999329447746,
+  "screw_6": 0.029999999329447746
+ }
+}

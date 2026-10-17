@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/robowits-stand-pages-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits stand_pages on the same frozen instance as the privileged task (evaluation scene 0 of task 7). Assemble the two pages using the stabilizing bar to create a standing hinge structure. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits stand_pages on the same frozen instance as the privileged task (evaluation scene 0 of task 7). Stand the two pages up on the table so that they brace each other. They start joined like an open book: the stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "standard-mode", "trajectory", "stand_pages"]
 
