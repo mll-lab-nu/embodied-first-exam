@@ -60,6 +60,8 @@ for t in test_054_reporting test_admission_import test_release_export test_realt
 done
 # DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
 if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
+# IKEA MuJoCo's privileged grader on a stub replay that crashes or not (its tasks pull request adds the test)
+if [ -f "$root/scripts/ikea_mujoco/tests/test_grade.py" ]; then run 300 ikea_mujoco/tests/test_grade.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
 if [ $all -eq 1 ]; then run 900 robolab/tests/test_finalize.py; fi
 
