@@ -17,7 +17,8 @@ replayed from the frozen instance (`Session.replay`, exact in-process on Genesis
                live episode ended at the first call after which it held, so the recording ends there),
   new_verdict  the current verdict: ONE settle window (Session.settle_check: 1 s hold, then 2 s in which the predicate
                holds with the graded objects released and within 2 mm), deterministic, instance ok. Privileged: the
-               window after the last row. Standard (replay_standard, the service's grading_replay since 2026-10-17): when
+               window after the last row. Standard (replay_standard: the service's grading replay of 2026-10-17, which the live verdict
+               replaced the same day, board 0151): when
                the live episode ended on a settle window (reason "success", or the window at the end of the agent's
                phase), that window is the last `final_window` recorded rows and is checked again over them; at the step
                cap (reason "step_guard") there is no window (a failure); otherwise the window after the last row. The
@@ -104,8 +105,8 @@ def episode_end(d: pathlib.Path, traj: pathlib.Path | None = None) -> dict:
 
 
 def replay_standard(s, acts, window, reason: str | None) -> dict:
-    """The standard service's grading replay (shared/server.py grading_replay, which this repeats on a Session of the
-    current tooling): the recorded rows and ONE settle window. Returns success, settle, predicate (RoboWits' predicate
+    """The standard service's grading replay of 2026-10-17 (shared/server.py grading_replay until board 0151 replaced it
+    with the live verdict; this repeats it on a Session of the current tooling): the recorded rows and ONE settle window. Returns success, settle, predicate (RoboWits' predicate
     right after the last recorded row) and state_sha (the state then)."""
     import numpy as np
     acts = np.asarray(acts, dtype=np.float32)
