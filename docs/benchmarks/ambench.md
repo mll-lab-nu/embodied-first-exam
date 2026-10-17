@@ -84,7 +84,8 @@ only those, OpenDoor's 395, left a replay that needed one step more nothing to r
 expert reads the simulator's state between steps, so its own live episode is not the reference: two fresh-process
 replays with the grader's CLI must both succeed and end in the same state before an instance is frozen.
 
-Standard mode (board 0130, 2026-10-15): a live success ends the episode at its success step, so the trajectory the
+Standard mode (board 0130, 2026-10-15, until 2026-10-17; since then no replay grades the episode, the trajectory is what
+ran, `hold_pad_rows` = 0, and any live GPU fault is an infrastructure failure: Grading): a live success ends the episode at its success step, so the trajectory the
 sim sidecar saves for the graders holds the last command for up to 2 s after it (`hold_pad_rows` in `episode.json`), as
 the privileged reference does; a replay stops at its own success, so the padding runs only where the race of
 Determinism delays it. A live episode that logged GPU faults and did not succeed is an infrastructure failure, not
@@ -171,7 +172,8 @@ rows); others that logged them still matched. So the tooling knows the pattern (
 trajectory can cause itself, such as non-finite forces), and a replay whose output shows any is no result: both graders
 run it once more, then report an infrastructure error (`replay_gpu_fault`), never the agent's 0 or 1. The standard
 service's own output (`server.log`; the render worker logs to `render_worker.log`) is counted too (`live_gpu_faults`):
-a live episode with GPU faults whose outcome differs from its two clean replays is an infrastructure error.
+until 2026-10-17 a live episode with GPU faults whose outcome differed from its two clean replays was an infrastructure
+error; since then (no replay) a live episode with any GPU fault is (Grading).
 How it was missed at first: the first probes hashed the state after the last step, which Isaac Lab had already reset to the
 next start (End state, above), and the expert's own live episode, which reads the state between steps, happened to keep
 the race in order.
@@ -199,14 +201,40 @@ those of this GPU model; another GPU model may differ in the last bits (BUILD_ON
   (`replay_gpu_fault`, above) or `instance_ok = 0` is `grader_error = infra_error = 1`; a replay process that ends
   without a result or with GPU faults is run once more. Each process has max(1800 s, 1500 s + runnable rows / 4);
   `[verifier] timeout_sec` = four of those (7800-13200 s by episode length).
-- **Standard**: YAMLab's grading. The service dumps the episode when the collect hook signals it; the hook
-  (`environment/sim/finalize.sh`) replays it in two fresh processes and films it; success = live ∧ both replays ∧
-  deterministic (the same outcome in both), `state_identical` and `live_matches_replay` (hashes) reported, as
-  privileged. PullLever's `instance.json` says `"determinism": "verdict"`: it is graded by its live episode (the trusted
-  record of H.4, `graded_by_live`; success = `live_success`), as RoboDojo's six; its two replays are reported and never decide,
-  its crash recovery is `approx`, and a live episode with GPU faults gives no verdict (`infra_error`).
+- **Standard** (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay, the same
+  rule for all nine tasks: success = `live_success`, AM-Bench's check as the service ran it after every control step (no
+  end-of-episode hold: AM-Bench has none, and the replays applied none). The service dumps the episode when the collect
+  hook signals it and exits; the hook (`environment/sim/finalize.sh`) writes `final.json` from `episode.json`
+  (`graded_by` "live", `replays` 0), then films the rows once (`rcb_ambench.py film`: a fresh process with the render
+  worker, `replay.mp4`) as the video only: nothing of the film is compared, it is not run again, its failure or its time
+  limit (`RCB_FILM_LIMIT_S` 1800 s) costs the video. The live service does not film: rendering inside the physics process
+  makes AM-Bench's GPU physics timing-dependent (Determinism), and its cameras are drawn by the render worker only for
+  the agent's own frames. No verdict on the agent (`infra_error`): a missing, unreadable or unfinalized `final.json`, no
+  `episode.json`, a give-up after crashes between calls, the episode never ending, GPU faults in the live episode's
+  physics (`live_gpu_faults` > 0, counted in the service's output from its marker before `EP.begin` to the end of
+  that start, so a start that died while building the scene and was restarted does not count: before, they voided a task graded by verdict, and the
+  others when the live outcome differed from the replays' or the live episode failed; with no replay to compare, any
+  fault voids the episode. The validation below saw one such line in a live oracle episode, so this can cost a retry),
+  and the start check: before it serves, the service compares the rebuilt scene's state hash with `instance.json`'s
+  `initial_sha` (`instance_matches`, the check the replays made too) and gives up as infra (`instance_mismatch`) on a
+  mismatch. A crash inside the agent's calls and a simulator error raised by them stay its 0. The trajectory is what
+  ran: the padding after a live success (`hold_pad_rows`, up to 2 s of the last command, for the race above) was for the
+  grading replays and is gone (`hold_pad_rows` = 0).
+  Until 2026-10-17 (YAMLab's grading): two camera-free fresh-process replays and a film; success = live ∧ both replays ∧
+  deterministic (the same outcome), PullLever (`"determinism": "verdict"`) graded by its live episode already.
+  Re-scoring such a trial by its live episode: `final.json` `success` (merged from episode.json), `infra_error` only for a
+  missing live record, a give-up with `infra_error`, or `live_gpu_faults` > 0; `replay_error`, `replay_gpu_faults`, `gpu_lost`
+  and `instance_mismatch` found by a replay are not the live episode's. Cost saved: the two replays, 62 s (median) to
+  ~100 s each, measured on the 9 archived standard trials (the film, 77 s median, stays).
 - Both verifiers run with `network_mode = "no-network"`; every web asset the scenes load is in the image (BUILD_ONLY,
   Data).
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one film
+  pass after the verdict (`replay.mp4`, video only). The start-state check moved to the episode's start
+  (`instance_mismatch` = a give-up as infra before serving); live GPU faults are infra for every task. Collect hook
+  7200 s -> 4800 s. The `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged.
+  The 9 standard task dirs regenerated in place (new DIGESTs; the instructions do not change).
 
 ## Validation (Harbor, RTX 4090 shared with other users' Isaac jobs, 2026-10-14)
 Oracle, with this tooling and these graders before their port onto main's v2.0 conventions (the port adds main's

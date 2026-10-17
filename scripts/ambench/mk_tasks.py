@@ -31,14 +31,15 @@ MODES = ("privileged", "standard")
 COORD = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*(?:,\s*-?\d+(?:\.\d+)?\s*)?\)")
 
 
-VERIFY_REPLAY = ("`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the "
-                 "sidecar's collect hook. The live service runs the same camera-free physics as the replays (its cameras are drawn "
-                 "by a separate render process), so the live episode and the replays are one computation.")
-VERIFY_VERDICT = ("Graded by the live episode (PROTOCOL §4.8): GPU PhysX does not replay this task bit for bit (measured: the "
-                  "same rows, from identical states and identical controller outputs, resolve the first gripper contact "
-                  "differently in fresh processes), so `success` = the live episode's success; the collect hook's two fresh-process "
-                  "replays are still run and reported (`replay_success`, `deterministic`) but never decide (`graded_by_live` = 1). "
-                  "The task is standard-only: an open-loop trajectory of it cannot be graded reproducibly.")
+VERIFY_REPLAY = ("Graded by the live episode (owner 2026-10-17, board 0151): `success` = the live episode's success, judged by "
+                 "the sim service on the episode the agent ran, with no grading replay (until 2026-10-17: live success ∧ two "
+                 "fresh-process replays that succeed and agree on the outcome). The live service runs camera-free physics (its "
+                 "cameras are drawn by a separate render process), the same computation as a fresh-process replay of its rows.")
+VERIFY_VERDICT = ("Graded by the live episode, like every standard task since 2026-10-17 (owner, board 0151), and this one "
+                  "before too: GPU PhysX does not replay it bit for bit (measured: the same rows, from identical states and "
+                  "identical controller outputs, resolve the first gripper contact differently in fresh processes), so "
+                  "`success` = the live episode's success, and no replay runs. The task is standard-only: an open-loop "
+                  "trajectory of it cannot be graded reproducibly.")
 
 
 def toml_str(s: str) -> str:
@@ -126,13 +127,14 @@ def plan_instance(task: str, R: dict, version: str, modes) -> dict[str, dict[str
         "STD_DIFFICULTY": (f"That of {priv} (its README), without resets, object poses or the success signal: {D['standard_notes']}" if twin else
                            f"{D['difficulty_note']} Here without resets, object poses or the success signal: {D['standard_notes']}"),
         "REF_ROWS": "the privileged oracle's rows" if twin else "the reference rows",
-        "ORACLE_END": (f"the live\nepisode and both replays end in the privileged oracle's end state (hash `{common['ORACLE_SHA']}`)." if twin else
+        "ORACLE_END": (f"the live\nepisode ended in the privileged oracle's end state (hash `{common['ORACLE_SHA']}`; under the "
+                        f"earlier rule both replays did too)." if twin else
                        f"the reference rows succeed in every fresh process measured but do not end in the same state "
                        f"({len(ends)} different end states in {sum(ends.values())} replays): only the outcome is reproducible, which is "
                        f"why the live episode decides."),
         "RESUME_CLASS": ("`approx` (GPU PhysX replays the journal to the checkpointed state almost always; a rare race can "
                          "leave the last bits different, so a resume's deviation is recorded, `resume_state_mismatch`, and the "
-                         "episode continues; the verdict comes from fresh replays of the whole trajectory)" if twin else
+                         "episode continues; the live state after it is graded)" if twin else
                          "`approx` (the physics does not replay bit for bit: a resume's deviation from the "
                          "checkpointed state is recorded, `resume_state_mismatch`, and the live state after it is graded)"),
         "RESUME_STATE": ("the state after the last call it completed (to the last bits: a rare GPU race\n  can leave those "
@@ -141,9 +143,9 @@ def plan_instance(task: str, R: dict, version: str, modes) -> dict[str, dict[str
                          "replay bit for bit)"),
         "TOML_INSTANCE": ("on the same frozen instance as the privileged task." if twin else
                           "on its frozen instance; standard only, no privileged twin."),
-        "TOML_GRADING": ("the sim service records the episode as a trajectory and grades it." if twin else
+        "TOML_GRADING": ("the sim service records the episode as a trajectory and grades the live episode." if twin else
                          "the sim service records the episode and grades it as it happened live (the physics does not replay "
-                         "bit for bit; the replays are recorded only)."),
+                         "bit for bit)."),
     })
     texts = {"task_text": f"{D['title']}: {D['summary']} Success: {D['success']}" + (f" Goal geometry: {D['goal_fixed']}" if D.get("goal_fixed") else ""),
              "episode": (f"one episode, no reset: it ends at the first control step where AM-Bench's success check holds, when the task's "
