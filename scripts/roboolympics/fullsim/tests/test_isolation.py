@@ -10,7 +10,6 @@ Always with --pids-limit: the fork loop is real (bounded here by RLIMIT_NPROC as
 
 import os
 import resource
-import signal
 import sys
 import time
 import unittest
@@ -60,8 +59,7 @@ class EndProcesses(unittest.TestCase):
     def test_a_fork_loop_is_ended(self):
         from tools.tt_fullsim.formal import _alive_of, end_uid_processes
 
-        signal.signal(signal.SIGCHLD, signal.SIG_IGN)   # the test's own child: no zombie
-        fork_loop_as_nobody()
+        os.waitpid(fork_loop_as_nobody(), 0)   # its first child exits at once; the loop lives on, detached
         time.sleep(1.0)
         self.assertTrue(_alive_of(NOBODY), "the fork loop did not start")
         self.assertTrue(end_uid_processes(NOBODY))

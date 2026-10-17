@@ -86,7 +86,11 @@ def end_uid_processes(uid, rounds=50):
     for _ in range(rounds):
         if not _alive_of(uid):
             return True
-        pid = os.fork()
+        try:
+            pid = os.fork()
+        except OSError:  # no process slot for the killer this round: try again
+            time.sleep(0.05)
+            continue
         if pid == 0:  # the killer: as `uid`, kill(-1) signals exactly that user's processes (and not itself)
             try:
                 os.setgroups([])
@@ -96,7 +100,10 @@ def end_uid_processes(uid, rounds=50):
             except OSError:
                 pass
             os._exit(0)
-        os.waitpid(pid, 0)
+        try:
+            os.waitpid(pid, 0)
+        except ChildProcessError:  # already reaped (SIGCHLD ignored)
+            pass
         time.sleep(0.05)
     return not _alive_of(uid)
 
