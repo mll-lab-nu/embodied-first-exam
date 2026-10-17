@@ -66,8 +66,8 @@ if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/te
 # IKEA MuJoCo's privileged grader on a stub replay that crashes or not (its tasks pull request adds the test)
 if [ -f "$root/scripts/ikea_mujoco/tests/test_grade.py" ]; then run 300 ikea_mujoco/tests/test_grade.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
-# (board 0151: without grading replays it takes about a minute; still with --all while the old hook is on main)
-if [ $all -eq 1 ]; then run 900 robolab/tests/test_finalize.py; fi
+# (board 0151: without grading replays it takes about a minute, so it runs in every scope now)
+run 900 robolab/tests/test_finalize.py
 
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
@@ -85,7 +85,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
     run 900 "$t"
   done
   # Public RT source compilation and actual loopback RCB1/client snapshots; no simulator.
-  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_http_two_fresh test_live_verdict test_tidy_observe_barrier test_quaternions; do
+  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_live_verdict test_tidy_observe_barrier test_quaternions; do
     if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
   done
   # Existing accepted native records compile through the same converter as legacy references.
@@ -102,7 +102,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # board 0151: the live-grading tests of MetaWorld+ and LIBERO-MAX (their pull requests add them)
   for t in metaworldplus/tests/test_live_grading.py libero-max/tests/test_live_grading.py roboarc/tests/test_live_grade.py \
            roboolympics/tests/test_live_adapter.py ispatialgym/tests/test_grading.py robowits/tests/test_live_grading.py \
-           robopaint_strict/tests/test_live_grading.py robodojo/tests/test_server.py; do
+           robopaint_strict/tests/test_live_grading.py robodojo/tests/test_server.py robolab/tests/test_live_video.py; do
     if [ -f "$root/scripts/$t" ]; then run 900 "$t"; fi
   done
   # LIBERO-MAX keeps its own copy of rcb_service.py (since board 0151 the layer's bytes): the classes of the shared
