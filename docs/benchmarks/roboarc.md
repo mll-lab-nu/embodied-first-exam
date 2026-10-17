@@ -123,7 +123,7 @@ recorded in `episode.json`. No grading replay runs. `finalize.sh` writes `final.
 (`graded_by` live, `replays` 0, `state_sha` = the live end-state hash, `video_pending` 1), then runs ONE video-only pass
 (`replay.py`: a plain fresh-process replay of the live rows on the sidecar's GPU that renders `replay.mp4` and, for a
 success held for review, the frames around its live review events; record `replay.video.json`). It never changes the
-verdict, and a failed, killed or GPU-less pass loses only the video. `tests/grade.py` transcribes the result.
+verdict, and a failed, killed or GPU-less pass loses only the video. `tests/grade.py` transcribes the result. In `final.json`, `live_success` is the live episode's own success and `success` the verdict: false with an infrastructure failure or when the success is held for review (`held_for_review`). A service that dumped its episode but did not exit in time keeps that live verdict (`service_exit_timed_out`, no video). A missing `trajectory.npz` is recorded (`dump_error`) and changes no verdict. Non-finite numbers are written as null.
 - **Hold.** The grading replay's hold (up to 2 s of the final targets, with `REPLAY_TOLERANCES` in the hold) applied only
   after a live success, to let a replay that lagged the live episode confirm it. It never turned a live failure into a
   success, so dropping it loosens nothing. Holding live would loosen the rule, because the privileged twin needs a strict

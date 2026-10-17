@@ -12,7 +12,7 @@ STD = HERE.parent / "shared/standard"
 TOPO = '''
 import json, os
 def atomic_json(p, obj):
-    t = p + ".tmp"; json.dump(obj, open(t, "w")); os.replace(t, p)
+    t = p + ".tmp"; json.dump(obj, open(t, "w"), allow_nan=False); os.replace(t, p)   # as the tooling: no NaN
 def breakdown_words(ev): return "a cloth particle too fast"
 '''
 REPLAY = r'''
@@ -54,7 +54,7 @@ def run(case: dict) -> tuple[dict, dict, dict | None]:
             v = case.get(key, STARTUP if key == "startup" else None)
             if v is not None:
                 (data / name).write_text(v if isinstance(v, str) else json.dumps(v))
-        if case.get("episode") is not None:
+        if case.get("episode") is not None and case.get("traj", True):
             (data / "trajectory.npz").write_bytes(b"x")
         env = dict(os.environ, RCB_DATA=str(data), RCB_TASK="blanket_flatten", RCB_INSTANCE="/srv/instance.json",
                    END_RC=str(case.get("rc", 0)), STUB_DIR=str(bin_), VIDEO=case.get("video", "ok"),
@@ -92,9 +92,21 @@ def main() -> int:
     assert r["success"] == 0 and r["infra_error"] == 1 and r["simulator_instability"] == 1, r
     assert fin["error"].startswith("simulator_instability"), fin
     # a live success with a deep task contact -> held for review (success 0, pending 1)
-    _, r, _ = run({"episode": dict(LIVE_OK, review={"count": 2, "max_depth_mm": 3.5, "events": []}, forcing={"count": 1, "events": []})})
+    fin, r, _ = run({"episode": dict(LIVE_OK, review={"count": 2, "max_depth_mm": 3.5, "events": []}, forcing={"count": 1, "events": []})})
     assert r["success"] == 0 and r["success_pending_review"] == 1 and r["review_events"] == 2 and r["forcing_events"] == 1, r
-    assert r["infra_error"] == 0, r
+    assert r["infra_error"] == 0 and fin["success"] is False and fin["live_success"] is True and fin["held_for_review"], (fin, r)
+    # the service dumped the episode but did not exit in time (end rc 1): the live verdict stands, no video pass
+    fin, r, st = run({"episode": LIVE_OK, "rc": 1})
+    assert r["success"] == 1 and r["infra_error"] == 0 and fin["service_exit_timed_out"] and st is None, (fin, r)
+    # no trajectory.npz dumped: recorded in final.json (dump_error), the live verdict unchanged
+    fin, r, _ = run({"episode": LIVE_OK, "traj": False})
+    assert fin["dump_error"] and r["success"] == 1, (fin, r)
+    # a non-finite number in the live record never leaves final.json unfinalized
+    fin, r, _ = run({"episode": dict(LIVE_OK, sim_time_s=float("nan"), instability={"v": float("inf")})})
+    assert fin["finalized"] and r["success"] == 1 and fin["sim_time_s"] is None, (fin, r)
+    # an infrastructure end: final.json success false, the raw live value kept in live_success
+    fin, r, _ = run({"episode": dict(LIVE_OK, reason="error", infra_error=1)})
+    assert fin["success"] is False and fin["live_success"] is True and r["infra_error"] == 1 and r["success"] == 0, (fin, r)
     # give-up after crashes not all inside the agent's calls -> infra, no video pass
     gave = {"success": False, "done": True, "finalized": True, "gave_up": True, "reason": "sim_crashed", "infra_error": 1}
     fin, r, st = run({"final": gave, "rc": 2})
@@ -114,7 +126,7 @@ def main() -> int:
     fin, r, _ = run({"episode": LIVE_OK, "video": "crash"})
     assert r["success"] == 1 and r["video_rendered"] == 0 and r["infra_error"] == 0, r
     assert fin["media_status"] == "error" and fin["video_pending"] is False, fin
-    # the service did not end in time -> infra, no video pass
+    # the service did not end in time and dumped nothing -> infra, no video pass
     _, r, st = run({"final": {"finalized": False, "success": True}, "rc": 1})
     assert r["success"] == 0 and r["infra_error"] == 1 and st is None, r
     # an old-style record: replay success and determinism do not stand in for a live failure

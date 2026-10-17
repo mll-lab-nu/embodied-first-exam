@@ -53,7 +53,8 @@ def grade() -> None:
         write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 1,
                       "infra_error": 1, "grader_error": 1}); return
     # `success` decides (a live rule recorded beside the live success can only take it away)
-    live = bool(d.get("success")) and bool(d.get("live_success", True)) and not d.get("gave_up")
+    live = (bool(d.get("success")) or bool(d.get("held_for_review"))) and bool(d.get("live_success", True)) \
+        and not d.get("gave_up")   # a success held for review is recorded success false, held_for_review true
     # infrastructure: the service gave up after crashes it caused (sim_crashed, resume_failed), the simulation became
     # numerically unstable live (simulator_instability), a simulator error, or the episode was never finalized
     infra = bool(d.get("infra_error")) or not (d.get("finalized") or d.get("gave_up"))
