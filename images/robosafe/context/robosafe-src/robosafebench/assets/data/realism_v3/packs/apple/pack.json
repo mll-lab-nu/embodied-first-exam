@@ -1,0 +1,89 @@
+{
+ "kind": "apple",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 7012,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false,
+     "material": {
+      "specular": "0.4",
+      "shininess": "0.5"
+     }
+    }
+   ],
+   "raw_triangles": 7012,
+   "after_bbox": [
+    [
+     -0.0425,
+     -0.0426,
+     0.0
+    ],
+    [
+     0.0429,
+     0.0414,
+     0.0748
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.036,
+     -0.036,
+     0.0
+    ],
+    [
+     0.036,
+     0.036,
+     0.0748
+    ]
+   ],
+   "fit": "z",
+   "scale": [
+    0.8759813680853873,
+    0.8759813680853873,
+    0.8759813680853873
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "apple",
+  "mode": "saturated"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Poly Haven",
+   "name": "Food Apple 01",
+   "url": "https://polyhaven.com/a/food_apple_01",
+   "file_url": "https://api.polyhaven.com/files/food_apple_01",
+   "license": "CC0 1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "author": "Oliver Harries",
+   "attribution": "\"Food Apple 01\" by Oliver Harries, Poly Haven (CC0; credit not required)"
+  }
+ },
+ "original_files": {
+  "food_apple_01_1k.gltf": "6a7dc1cda1271c8b08e36e2b9fd44371b7149cca6262c71bc36d971cdac4325f",
+  "food_apple_01.bin": "f14ff9647fdd9f5a59ef325f94154e91f1f14cc2563cd3fb572c4fe9ce5756ca",
+  "food_apple_01_diff_1k.jpg": "b7fc17cfb5013958167bbc089ea4d1c193fb1c61ea4f3c974a9894ed9ba82e8a",
+  "food_apple_01_nor_gl_1k.jpg": "c81b1e51ce7e789b65bfde2f046dcb5ba5773b5c6be3e572313be0600c51721b",
+  "food_apple_01_rough_1k.jpg": "2e5a503af38df7b570b0e81cc9563125f0913b466e01140d4e24ea5ebdbec587"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "65a69eca5d28f2775e43e5a469e71efe0bea3d85113f17c497c410b04b9d56f4",
+  "default_0.png": "31893b3e2c6bdc576cabb105e9c675a7d9d1dbdc9c7497e6f4981e80a1d2c3be"
+ }
+}

@@ -20,7 +20,7 @@ services:
       RCB_STARTUP_TIMEOUT_S: "300"                      # the scene builds in a few seconds
       RCB_RESET_BUDGET: "0"                             # RoboSafeBench grades one episode: no reset
       # Knob: ${NAME:-default} takes NAME from the shell that runs harbor; results under another setting are reported apart.
-      RCB_SLOWDOWN: "${RCB_SLOWDOWN:-1}"                # 1: real time (official); S: one step every S x control_dt s
+      RCB_SLOWDOWN: "${RCB_SLOWDOWN:-@@SLOWDOWN@@}"                # 1: real time (official); S: one step every S x control_dt s
       PYTHONPATH: /srv
       MUJOCO_GL: osmesa
       PYOPENGL_PLATFORM: osmesa

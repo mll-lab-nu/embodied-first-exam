@@ -56,6 +56,10 @@ def submit(svc, typ: str, rows, note: str = "") -> tuple[int, dict]:
     body = rcb1.encode({"type": typ, "interpolate": "hold", "video": "none", "cameras": [svc.sim.cameras[0]], "note": note},
                        [rcb1.array_part("actions", a)])
     code, ctype, out = svc.handle("POST", "/submit", body)
+    if ctype == 'application/x-rcb1':
+        # This direct service test consumes the complete response in process; the HTTP tests cover socket delivery.
+        import picture_delivery
+        svc.sim.pictures_transport_completed(picture_delivery.frame_ids(out))
     meta = rcb1.decode(out)[0] if ctype == "application/x-rcb1" else json.loads(out)
     return code, meta
 

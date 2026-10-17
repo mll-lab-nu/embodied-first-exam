@@ -1,0 +1,86 @@
+{
+ "kind": "chair",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 10000,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": true
+    }
+   ],
+   "raw_triangles": 22013,
+   "after_bbox": [
+    [
+     -0.2004,
+     -0.2665,
+     0.0
+    ],
+    [
+     0.2004,
+     0.2665,
+     0.9
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.22,
+     -0.22,
+     0.0
+    ],
+    [
+     0.22,
+     0.22,
+     0.9
+    ]
+   ],
+   "fit": "z",
+   "scale": [
+    0.9246153980163978,
+    0.9246153980163978,
+    0.9246153980163978
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "seat_board",
+  "mode": "whole",
+  "keep_if": "wood"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Poly Haven",
+   "name": "Dining Chair 02",
+   "url": "https://polyhaven.com/a/dining_chair_02",
+   "file_url": "https://api.polyhaven.com/files/dining_chair_02",
+   "license": "CC0 1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "author": "James Ray Cock",
+   "attribution": "\"Dining Chair 02\" by James Ray Cock, Poly Haven (CC0; credit not required)"
+  }
+ },
+ "original_files": {
+  "dining_chair_02_1k.gltf": "88352a44a17319846f61fe03ce75c79fb1849aa508b6a262366c149c1bbd06b8",
+  "dining_chair_02.bin": "c7f1ef858f73815176d2ab304472a69ccf6097e971e5258eb924a75f841d4af5",
+  "dining_chair_02_arm_1k.jpg": "0a81c0c886baa1e65d94fb6fb90ab4751bee319888ecf1c428ae62042d8a5b15",
+  "dining_chair_02_diff_1k.jpg": "343990f764790da1149485a422dee2bc6797945a6af06a37d02d7a7de041acf5",
+  "dining_chair_02_nor_gl_1k.jpg": "348703512ca1215f8389e9108419c2d1a46537663db25f423c3ef900d20cfe61"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "a3c4f37c34d84b2e96cf17cfc278551a209087e73a95b60212dba87b7fcecc8c",
+  "default_0.png": "d9b174eb14064739b4c271efa3b5b097d118d2e00908f5911a8273c61ab7b3d1"
+ }
+}

@@ -2,7 +2,7 @@
 """The served /spec of every rendered standard-realtime task (needs the simulator: run it in the release image after
 gen_realtime.py render; check_leaks.py checks the same texts statically).
 
-    python scripts/robosafe/check_rt_spec.py [task dirs...]      # default: every tasks/cell-*-standard-realtime
+    python scripts/robosafe/check_rt_spec.py [task dirs...]      # default: every tasks/rsb-*-standard-realtime
 
 Each task's own environment/sim/ is started in a fresh process (its rcb_rsb_rt.py service on its instance.json) and
 its /spec read: protocol eai-standard/2.3, `task_text` equal to instance.json's and found byte for byte in
@@ -62,7 +62,7 @@ def one(t: pathlib.Path) -> list[str]:
 
 
 def main() -> int:
-    tasks = [pathlib.Path(a) for a in sys.argv[1:]] or sorted((ROOT / "tasks").glob("cell-*-standard-realtime"))
+    tasks = [pathlib.Path(a) for a in sys.argv[1:]] or sorted((ROOT / "tasks").glob("rsb-*-standard-realtime"))
     with ThreadPoolExecutor(int(os.environ.get("JOBS", "8"))) as ex:
         bad = [b for res in ex.map(one, tasks) for b in res]
     for b in bad:

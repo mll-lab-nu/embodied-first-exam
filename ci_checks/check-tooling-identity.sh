@@ -45,7 +45,7 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "roboolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
-          "cell": "rcb_rsb.py"}   # cell-: RoboSafeBench
+          "rsb": "rcb_rsb.py"}   # rsb-: RoboSafeBench
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
@@ -161,7 +161,7 @@ for t in sorted(os.listdir(tasks)):
     if bench not in MODULE:
         continue
     module = MODULE[bench]
-    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c): its own sources
+    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; RoboSafeBench 0.5.4): its own sources
         bench += " (exported)"
     dirs[bench] += 1
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
