@@ -43,12 +43,14 @@ name = "roboolympics-fencing-bout-i01-standard"
 source_task = "roboolympics/fencing-bout-wallclock-program-standard"
 revision = "fencing-7+core-0.2"
 source_commits = ["a6712a675343"]
+patched = ["task.toml", "environment/docker-compose.yaml"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "roboolympics-fencing-bout-i02-standard"
 source_task = "roboolympics/fencing-bout-wallclock-program-standard"
 revision = "fencing-7+core-0.2"
 source_commits = ["a6712a675343"]
+patched = ["task.toml", "environment/docker-compose.yaml"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
