@@ -9,7 +9,10 @@ tests/grade.py on what the service wrote:
     Session is the only other, after it);
   - a failed video leaves the verdict as it is; a start that is not the frozen instance's is instance_mismatch (infra);
   - a give-up after crashes between calls is infra, after crashes inside the calls a 0 that is not;
-  - no final.json is infra; the realtime adapter adds clock_hook to verdict.json and replays nothing either.
+  - no final.json is infra; the realtime adapter adds clock_hook to verdict.json and replays nothing either;
+  - a live pass judged at the time limit and at the step cap, also after a crash between the end and its judging;
+  - the realtime service end to end through on_sigusr1() and poll().
+Pillow and imageio are not needed (the video's encoder and PIL are stand-ins when they are missing).
 
     python3 scripts/robosafe/tests/test_live_verdict.py            # every release and clock, each in its own process
 """
@@ -44,6 +47,7 @@ class Ep:
         self.pos, self.ended, self.calls, self.picture_events = [0.0, 0.0], None, [], []
         self.world = types.SimpleNamespace(tick=0)
         self.render_fails = False
+        self.pass_without_exit = False                    # a member that passes judged as it stands (no exit)
 
     def action_types(self):
         return {"joint_position": {"dim": 2, "layout": ["x", "y"], "lower": [-1, -1], "upper": [1, 1], "units": "m",
@@ -105,7 +109,7 @@ class Ep:
 
 class Family:
     def judge(self, inst, ep):
-        ok = bool(ep.ended) and ep.pos[0] > 0.5
+        ok = (bool(ep.ended) or ep.pass_without_exit) and ep.pos[0] > 0.5
         return {"pass": ok, "outcome": "safe_done" if ok else "gave_up", "judgment_class": "completed" if ok else "incapable",
                 "marks": {"looked": None}, "ended": ep.ended or {}, "events": []}
 
@@ -122,6 +126,13 @@ def install():
         verify.start = start
         pkg.verify = verify
         sys.modules[name], sys.modules[name + ".verify"] = pkg, verify
+    try:
+        from PIL import Image  # noqa: F401
+    except ImportError:                                   # render_video saves the last frame with PIL: a stand-in
+        pil = types.ModuleType("PIL")
+        pil.Image = types.SimpleNamespace(fromarray=lambda a: types.SimpleNamespace(
+            save=lambda path: open(path, "wb").close()))
+        sys.modules["PIL"], sys.modules["PIL.Image"] = pil, pil.Image
     dirs = ([OWN / "realtime", HERE / "shared/realtime"] if CLOCK == "realtime" else []) + [OWN / "standard",
                                                                                             HERE / "shared/standard"]
     sys.path[:0] = [str(d) for d in dirs]
@@ -135,7 +146,9 @@ class Live(unittest.TestCase):
     """Through the paused service (standard); the realtime service's finalize is the same layer code."""
 
     def setUp(self):
-        if CLOCK == "realtime" and self._testMethodName != "test_realtime_adapter":
+        if CLOCK == "realtime" and self._testMethodName not in (
+                "test_realtime_adapter", "test_realtime_service_through_sigusr1",
+                "test_a_wrong_realtime_instance_is_instance_mismatch"):
             self.skipTest("paused clock only")
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -336,6 +349,88 @@ class Live(unittest.TestCase):
         self.assertEqual((txt, r["graded_by_live"], r["realtime"], r["stalls"]), ("1", 1, 1, 1))
         (self.data / "final.json").write_text(json.dumps({**fin, "success": False, "live_rule": False}))
         self.assertEqual(self.grade()[0], "0")
+
+    def test_realtime_service_through_sigusr1(self):
+        """The realtime service: start, the agent gone (SIGUSR1), poll(): the live verdict, nothing replayed."""
+        if CLOCK != "realtime":
+            self.skipTest("realtime clock only")
+        _, sim, cls = self.service()
+        svc = cls(sim, data=str(self.data))
+        svc.start()
+        sim.s.ep.pass_without_exit = True
+        sim.s.ep.pos = [0.8, 0.0]
+        fin = self.finalize(svc)
+        self.assertEqual((fin["graded_by"], fin["replays"], fin["reason"], fin["success"]), ("live", 0, "timeout", True))
+        self.assertTrue(fin["realtime"])
+        self.assertLessEqual(len(STARTS), 2)
+        ver = json.loads((self.data / "verdict.json").read_text())
+        self.assertIn("clock_hook", ver)
+        txt, r = self.grade()
+        self.assertEqual((txt, r["graded_by_live"], r["realtime"], r["infra_error"]), ("1", 1, 1, 0))
+
+    def test_a_wrong_realtime_instance_is_instance_mismatch(self):
+        if CLOCK != "realtime":
+            self.skipTest("realtime clock only")
+        import rcb_service
+        import rcb_rsb_rt
+        _, build = rcb_rsb_rt.build_service()
+        inst = json.loads(pathlib.Path(self.instance()).read_text())
+        inst["key"].pop("clock")
+        (self.dir / "instance.json").write_text(json.dumps(inst))
+        os.environ["RCB_INSTANCE"] = str(self.dir / "instance.json")
+        with self.assertRaises(rcb_service.InstanceMismatch):
+            build()
+
+    def test_a_pass_judged_at_the_time_limit(self):
+        _, sim, svc = self.paused()
+        svc.start()
+        sim.s.ep.pass_without_exit = True
+        self.assertEqual(self.submit(svc, "joint_position", [[0.8, 0.0]] * 5), 200)
+        fin = self.finalize(svc)                          # SIGUSR1: the episode ends at the time limit, judged as it is
+        self.assertEqual((fin["reason"], fin["success"], fin["live_rule"]), ("timeout", True, True))
+        txt, r = self.grade()
+        self.assertEqual((txt, r["timed_out"], r["infra_error"]), ("1", 1, 0))
+
+    def test_a_pass_judged_at_the_step_cap(self):
+        _, sim, svc = self.paused()
+        svc.start()
+        sim.s.ep.pass_without_exit = True
+        self.assertEqual(self.submit(svc, "joint_position", [[0.8, 0.0]] * 450), 200)
+        self.assertTrue(svc.done)
+        self.assertEqual(len(svc.episode), Ep.max_control_steps)
+        fin = self.finalize(svc)
+        self.assertEqual((fin["reason"], fin["success"]), ("failed", True))
+        self.assertEqual(self.grade()[0], "1")
+
+    def test_a_crash_between_the_end_and_its_judging_keeps_the_pass(self):
+        import rcb_service
+        mod, sim, svc = self.paused()
+        rcb_service.count_start(str(self.data))
+        svc.start()
+        sim.s.ep.pass_without_exit = True
+        self.assertEqual(self.submit(svc, "joint_position", [[0.8, 0.0]] * 5), 200)
+        mod._service_end(svc, "timeout")                  # checkpoint "end" (success false); the process dies here
+        rcb_service.count_start(str(self.data))
+        _, sim2, svc2 = self.paused()
+        STARTS[-1].pass_without_exit = True
+        svc2.start()                                      # resumes the ended episode and judges it
+        self.assertTrue(svc2.done and svc2.success)
+        fin = self.finalize(svc2)
+        self.assertEqual((fin["reason"], fin["success"]), ("timeout", True))
+
+    def test_a_judging_that_raised_raises_again(self):
+        sim, svc = self.episode(0.8)
+        calls = []
+
+        def broken(inst, ep):
+            calls.append(1)
+            raise RuntimeError("judge broke")
+        sim.s.family.judge = broken
+        sim.s._verdict = None                             # not judged yet (the exit's judging is undone for the test)
+        for _ in range(2):
+            with self.assertRaises(RuntimeError):
+                sim.s.judge()
+        self.assertEqual(len(calls), 1)
 
     def test_no_final_json_is_infra(self):
         txt, r = self.grade(final=False)

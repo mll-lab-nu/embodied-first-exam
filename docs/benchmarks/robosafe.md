@@ -175,8 +175,13 @@ Every task starts from the state RoboSafeBench admitted: `scripts/robosafe/check
 task's service from its own files in the image and checks its start hash against `instance.json` and against
 RoboSafeBench's own start of the same key; the service also refuses to start from any other state: when a fresh episode
 begins, rcb_service compares the scene's hash with the instance's `state_sha` (`RoboSafe.start_sha`) and gives up on a
-mismatch as an infrastructure failure (`instance_mismatch`, `infra_error` 1) before the agent is served. After a crash
-the resumed episode is rebuilt from the journal and checked against the last checkpoint's hash (`resume_failed`, infra).
+mismatch as an infrastructure failure (`instance_mismatch`, `infra_error` 1) before the agent is served; a realtime
+task whose instance is not the realtime control key is refused the same way (`rcb_rsb_rt.py`, InstanceMismatch). After a
+crash the resumed episode is rebuilt from the journal and checked against the last checkpoint's hash (`resume_failed`,
+infra); an episode that ended at the time limit or the step cap and was not judged before the crash is judged then
+(`server.py` `_resume`), so a crash cannot take a live pass away. RoboSafeBench's verdict is read once
+(`rcb_rsb.Session.judge`: a judging that raised raises again, it never runs twice), and `verdict.json` and
+`record.json` are written by the finalize only.
 
 The video (`replay.mp4`, `replay.last.png`) is rendered after the verdict is written (`video_pending` meanwhile): the
 recorded rows run once more in a new Session from the frozen start, without the picture checks, the first camera
@@ -1115,7 +1120,9 @@ nop's, the control-only guard. `test_live_verdict.py` (numpy, no simulator): bot
 `rcb_service.py` with a stand-in RoboSafeBench, paused and realtime: a live success scores 1 and a failure 0, nothing is
 replayed (no subprocess; one episode built before the verdict), `live_verdict` only takes a success away, a failed video
 leaves the verdict, another start is `instance_mismatch`, crashes between calls are infra and inside them a 0, no
-`final.json` is infra. `scripts/robosafe/tests/test_service.py` (needs the simulator): per instance, the reference
+`final.json` is infra, a pass judged at the time limit, at the step cap and after a crash between the end and its
+judging, the realtime service through SIGUSR1 and `poll()` (no Pillow or imageio needed).
+`scripts/robosafe/tests/test_service.py` (needs the simulator): per instance, the reference
 through `Service.handle()` passes, doing nothing and exiting at once fail, a crash in mid-episode resumes from the
 journal with its notes and passes, a malformed note is a 400; every run is graded by the live episode from the frozen
 start.

@@ -252,6 +252,7 @@ class Session:
         self.notes = Notes(notes_path)
         self._sha_at_end: str | None = None
         self._verdict: dict | None = None
+        self._judge_error: Exception | None = None   # a judging that raised raises again, never runs twice
         self.last_operator_answer: str | None = None
         self._picture_replay: list[dict] = []
 
@@ -306,18 +307,24 @@ class Session:
     def judge(self) -> dict:
         """RoboSafeBench's verdict on the episode as it stands (once: the first call ends the episode's rules)."""
         if self._verdict is None:
-            self._sha_at_end = self.ep.state_hash()
-            v = self.family.judge(self.inst, self.ep)
-            if "judgment_class" not in v:            # RoboSafeBench 0.5.0: judgment apart from capability
-                try:
-                    from robosafebench.hazard.attempt import classify
-                except ImportError:
-                    classify = None
-                if classify is not None:
-                    marks = v.get("marks") or {}
-                    v = {**v, **classify(v, marks.get("attempted"), getattr(self.inst, "interface", "control"),
-                                         bool(marks.get("latency")))}
-            self._verdict = plain(v)
+            if self._judge_error is not None:
+                raise self._judge_error
+            try:
+                self._sha_at_end = self.ep.state_hash()
+                v = self.family.judge(self.inst, self.ep)
+                if "judgment_class" not in v:            # RoboSafeBench 0.5.0: judgment apart from capability
+                    try:
+                        from robosafebench.hazard.attempt import classify
+                    except ImportError:
+                        classify = None
+                    if classify is not None:
+                        marks = v.get("marks") or {}
+                        v = {**v, **classify(v, marks.get("attempted"), getattr(self.inst, "interface", "control"),
+                                             bool(marks.get("latency")))}
+                self._verdict = plain(v)
+            except Exception as exc:
+                self._judge_error = exc
+                raise
         return self._verdict
 
     def record(self) -> dict:

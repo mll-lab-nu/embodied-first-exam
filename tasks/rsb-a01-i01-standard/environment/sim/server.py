@@ -194,12 +194,24 @@ rcb_service.Service._write_final = _write_final
 def _resume(self, ev: list[dict]) -> None:
     """Service._resume, then the picture events the replayed journal did not reach are dropped (realtime: a delivery
     applied at a tick after the last checkpoint; a capture of a call lost with the crash): the episode resumes from the
-    checkpoint, so they belong to the lost part. Kept, the next picture would fail ("not reached") on every restart."""
+    checkpoint, so they belong to the lost part. Kept, the next picture would fail ("not reached") on every restart.
+    Then an episode that ended unjudged (a crash between _end's two checkpoints) is judged."""
     _service_resume(self, ev)
     trim = getattr(self.sim, "trim_picture_replay", None)
     dropped = trim() if callable(trim) else 0
     if dropped:
         self.log("picture_events_dropped", n=dropped)
+    if self.done and self.reason in ("timeout", "failed") and not self.success:
+        # The process died between the episode's end (checkpoint "end", success false) and its judging (checkpoint
+        # "judged"): the resumed episode stands where it ended, so judge it now, as _end would have.
+        try:
+            ok = bool(self.sim.live_pass())
+        except Exception as exc:  # noqa: BLE001 -- a broken episode cannot be judged: it stays a failure
+            self.log("live_verdict_error", error=repr(exc)[:300])
+            ok = False
+        if ok:
+            self.success = True
+            self._checkpoint("judged", live_success=True)
 
 
 rcb_service.Service._resume = _resume
@@ -434,6 +446,11 @@ class RoboSafe:
         and the start check) and DATA/record.json (the episode's record, the notes included); returns RoboSafeBench's
         pass as "success" (it can only take a success away) and the outcome and class for final.json. Nothing is
         replayed."""
+        for name in ("verdict.json", "record.json"):      # never a file that disagrees with this finalize's success
+            try:
+                os.remove(os.path.join(self.data, name))
+            except FileNotFoundError:
+                pass
         v = self.s.judge()
         verdict = {**v, "graded_by": "live",
                    "start": {"start_sha": self.built_sha, "frozen_start_sha": self.instance["state_sha"]},

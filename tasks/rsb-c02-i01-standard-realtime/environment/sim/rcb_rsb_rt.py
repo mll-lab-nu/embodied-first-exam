@@ -201,6 +201,7 @@ def build_service():
     """server.py's adapter and rcb_realtime's service, with the additions above (the sidecar; an offline replay process
     needs rcb_rsb's patch alone: `python rcb_rsb_rt.py replay ...`, below)."""
     import rcb_realtime
+    import rcb_service
     import server
     from rcb_service import Refused
 
@@ -211,14 +212,14 @@ def build_service():
         def __init__(self, instance: str):
             key = rcb_rsb.load_instance(instance).get("key") or {}
             if key.get("interface") != "control" or key.get("clock") != CLOCK:   # before anything is built
-                raise RuntimeError(f"a standard-realtime task serves RoboSafeBench's control interface under the realtime "
+                raise rcb_service.InstanceMismatch(f"a standard-realtime task serves RoboSafeBench's control interface under the realtime "
                                    f"clock; this instance's key has interface={key.get('interface')!r}, "
                                    f"clock={key.get('clock')!r}")
             super().__init__(instance)
             self.robot = key.get("robot")
             ep = self.s.ep
             if getattr(ep, "interface", None) != "control" or getattr(ep, "clock", None) != CLOCK:
-                raise RuntimeError(f"the episode built has interface={getattr(ep, 'interface', None)!r}, "
+                raise rcb_service.InstanceMismatch(f"the episode built has interface={getattr(ep, 'interface', None)!r}, "
                                    f"clock={getattr(ep, 'clock', None)!r}: control and realtime required")
             self.call_notes: dict[int, str] = {}       # call id -> its note
             self.call_note_ids: dict[int, int] = {}    # call id -> its line of notes.jsonl, once a row of it ran

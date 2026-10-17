@@ -11,10 +11,10 @@ release tooling and the 0.5.3 tasks were rendered by gen_tasks.py / gen_realtime
 1. Code: every .py file and solution/solve.sh of a task is copied from its release's source (check_release.source_of:
    scripts/robosafe/shared-0.5.3/ first for a 0.5.3 task, then scripts/robosafe/shared/, the realtime clock's own
    first, then scripts/robosafe/), so that check_release.py's byte-for-byte check holds.
-2. Text: EDITS, dated changes of task.toml, README.md and instruction.md (each an exact old -> new pair). A file that
-   has the new text is left as it is, one with the old text gets the new, one with neither fails: the edit no longer
-   fits the release and is made by hand in this table, never in the tasks. The same edits are applied to the 0.5.3
-   templates (scripts/robosafe/templates/), where their text is.
+2. Text: EDITS, dated changes of task.toml, README.md, instruction.md and tests/Dockerfile (each an exact old -> new
+   pair). A file that has the new text is left as it is, one with the old text gets the new, one with neither fails:
+   the edit no longer fits the release and is made by hand in this table, never in the tasks. The same edits are
+   applied to the 0.5.3 templates (every scripts/robosafe/templates/**/<file>.tmpl, the room templates included).
 3. scripts/task_conventions.py normalize on every task that changed (DIGEST), then check_release.py write.
 """
 from __future__ import annotations
@@ -96,6 +96,9 @@ EDITS = [
      "operator told by a decline, a question or a report).\n\n",
      "operator told by a decline, a question or a report). The video (`replay.mp4`) is rendered after the verdict from the\n"
      "recorded rows and decides nothing.\n\n"),
+    ("tests/Dockerfile",
+     "needs nothing but Python (the sim service replayed and judged the episode).",
+     "needs nothing but Python (the sim service judged the live episode)."),
     ("instruction.md",
      "- There is nothing to hand in: the service records the episode, replays it in fresh simulators and judges the replay\n"
      "  on what physically happened and on how the episode ended.",
@@ -103,7 +106,13 @@ EDITS = [
      "  and on how the episode ended."),
 ]
 CHANGE_LOG = [_CHANGE_0151]           # README Change Log entries, newest first, added under the heading once
-TEMPLATES = {"task.toml": "task.toml.tmpl", "README.md": "README.md.tmpl", "instruction.md": "instruction.md.tmpl"}
+FILES = sorted({e[0] for e in EDITS})
+
+
+def edit_name(rel: str):
+    """The EDITS file name a task file or template (relative path, .tmpl dropped) is edited as, or None."""
+    rel = rel[:-5] if rel.endswith(".tmpl") else rel
+    return next((n for n in FILES if rel == n or rel.endswith("/" + n)), None)
 
 
 def apply_edits(name: str, text: str, where: str) -> str:
@@ -119,7 +128,7 @@ def apply_edits(name: str, text: str, where: str) -> str:
             raise SystemExit(f"FAIL {where}/{name}: edit {alts[0][0][:60]!r}... fits {len(fits)} times")
         old, new = fits[0]
         text = text.replace(old, new)
-    if name in ("README.md", "README.md.tmpl"):
+    if name == "README.md":
         m = re.search(r"^#{2,3} Change Log\n", text, re.M)
         if not m:
             raise SystemExit(f"FAIL {where}/{name}: no Change Log")
@@ -137,7 +146,7 @@ def update(task: pathlib.Path, release: str) -> None:
             raise SystemExit(f"FAIL {task.name}/{rel}: no source")
         if (task / rel).read_bytes() != src.read_bytes():
             shutil.copyfile(src, task / rel)
-    for name in ("task.toml", "README.md", "instruction.md"):
+    for name in FILES:
         p = task / name
         text = p.read_text()
         new = apply_edits(name, text, task.name)
@@ -166,15 +175,17 @@ def main(argv: list[str]) -> int:
                     shutil.rmtree(task)
                     shutil.copytree(tmp, task, symlinks=True)
             shutil.rmtree(tmp)
-    for kind in ("standard", "realtime"):
-        for name, tmpl in TEMPLATES.items():
-            p = HERE / "templates" / kind / tmpl
-            text = p.read_text()
-            new = apply_edits(name if tmpl != "README.md.tmpl" else "README.md", text, f"templates/{kind}")
-            if new != text:
-                changed.append(f"templates/{kind}/{tmpl}")
-                if not check:
-                    p.write_text(new)
+    for p in sorted((HERE / "templates").rglob("*.tmpl")):
+        trel = p.trelative_to(HERE / "templates").as_posix()
+        name = edit_name(trel)
+        if name is None:
+            continue
+        text = p.read_text()
+        new = apply_edits(name, text, f"templates/{trel}")
+        if new != text:
+            changed.append(f"templates/{trel}")
+            if not check:
+                p.write_text(new)
     if check:
         for c in changed:
             print(f"FAIL {c}: not up to date (run scripts/robosafe/sync_release.py)")
