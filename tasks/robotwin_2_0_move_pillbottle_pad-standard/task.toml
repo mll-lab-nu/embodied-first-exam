@@ -85,10 +85,23 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
+# episode at once (RoboTwin's check_success on the episode it ran; nothing is replayed). The loops run on the clock,
+# inside timeout_sec: the verdict ("finalized": true, written before any video) may take until 840 s (a service that
+# crashed resumes the episode from its journal first); then the hook waits for the one render pass of the trajectory
+# (replay.mp4 + live.mp4, "video_pending") until 2200 s, which covers an episode whose physics filled the agent's whole
+# 1800 s -- a video that is not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
-command = "end=$(( $(date +%s) + 860 )); i=0; while [ $(date +%s) -lt $end ]; do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; if [ -f /data/server.pid ]; then [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i + 1)); fi; sleep 2; done; cat /data/final.json"
-timeout_sec = 900
+command = "t0=$(date +%s); i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do if [ -f /data/server.pid ]; then [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i + 1)); fi; sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 2200 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 2260
 
 [agent]
 timeout_sec = 1800.0
