@@ -213,7 +213,10 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
               "FROZEN": f"{task}-i{i:02d}", "MAX_ROWS": f"{MAX_ROWS:,}", "MODULE_PATH": module.replace(".", "/") + ".py"}
     priv = {"SCENE_PRIVILEGED": D["scene_privileged"], "PARAMS": params, "GOALS": goals_priv, "SUMMARY": D["summary"],
             "ROBOT_SETUP": D["robot_setup"], "SCENE": D["scene"], "PHASES_BLOCK": phases_block(False), "FAILURES_BLOCK": fails_block(False),
-            "CONTACT_RULES": D["contact_rules"]}
+            "CONTACT_RULES": D["contact_rules"],
+            # only the dynamic families (REALTIME) start moving on their own; in the static ones nothing moves by itself
+            "SCENE_MOTION": " Things move by themselves from the first control step on: the scene does not wait for the robot."
+                            if code in REALTIME else ""}
     std = {"GOALS_STD": goals_std, "STANDARD_NOTES": std_text(D["standard_notes"], f"{code} standard_notes"),
            "SUMMARY": std_text(D["summary"], f"{code} summary"), "ROBOT_SETUP": std_text(D["robot_setup"], f"{code} robot_setup"),
            "SCENE": std_text(D["scene"], f"{code} scene"), "PHASES_BLOCK": phases_block(True), "FAILURES_BLOCK": fails_block(True),
