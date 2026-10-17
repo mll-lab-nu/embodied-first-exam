@@ -30,7 +30,7 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): sc
 protocol = "eai-standard/2.2"
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i00-priv__mENe7qn (run codex-gpt6_luna-medium, batch molmospaces-luna-1006b; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/navigate_to/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i00-priv__YWMd22o (run codex-gpt6_1_sol-high, batch molmo-v2-sol-rby1, 2026-10-16); human review in PR #276"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
@@ -87,8 +87,9 @@ timeout_sec = 120
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 1800                # the end (up to 900 s through a resume) + replays of 20-120 s each; finalize.sh ends a replay
-                                  # at 500 s and never starts one past 1740 s, so final.json is always completed in time
+timeout_sec = 1800                # the end (up to 900 s through a resume) + replays of 20-120 s each (over 500 s on a loaded
+                                  # host); finalize.sh shares the time left before 1740 s between the two grading replays
+                                  # and never runs one past it, so final.json is always completed in time
 
 [agent]
 timeout_sec = 3600.0

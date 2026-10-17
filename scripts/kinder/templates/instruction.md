@@ -51,4 +51,5 @@ CLI equivalent: `python /opt/tools/rcb_kinder.py replay --traj /app/output/traje
 The trajectory is replayed **open-loop**, but nothing stops you from *generating* it closed-loop: replayed from
 `s.reset()`, KinDER on CPU is bit-exact, so actions recorded from a feedback controller reproduce exactly. Use whatever
 you like -- scripted motions, feedback control, search, optimisation. One {{max_steps}}-step episode costs about
-{{episode_seconds}} s of one core and the container has 16. {{set_state_note}}
+{{episode_seconds}} s of one core, measured on a lightly loaded host (slower when the host is busy), and the container
+has 16. {{set_state_note}}

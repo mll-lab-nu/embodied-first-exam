@@ -8,9 +8,10 @@
 #   3. merge everything into final.json, the only thing the verifier sandbox grades;
 #   4. a third replay renders replay.mp4, after the verdict is on disk (it never changes it).
 # final.json is always written whole and renamed into place (a hook ended mid-write never leaves half a file). A replay
-# that takes longer than its limit is ended (a replay takes 20-120 s; the limit is 500 s, the privileged verifier's, and
-# never past this hook's own deadline: task.toml gives it 1800 s): it then has no result, which is recorded as
-# replay_failed + infra_error, not as the agent's 0, in a finalized final.json.
+# that takes longer than its limit is ended (a replay takes 20-120 s, over 500 s on a loaded host; replay 1 gets half
+# the time left before this hook's own deadline, replay 2 and the video replay what is left then: task.toml gives the
+# hook 1800 s): it then has no result, which is recorded as replay_failed + infra_error, not as the agent's 0, in a
+# finalized final.json.
 set -u
 DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; INSTANCE="${RCB_INSTANCE:?}"
 T0=$(date +%s); HOOK_BUDGET_S="${RCB_HOOK_BUDGET_S:-1740}"   # task.toml's collect timeout_sec (1800) minus a margin
@@ -38,9 +39,9 @@ print(json.dumps(out))
 PY
     exit 0
 fi
-replay() {  # <n> [--video FILE]: one replay in a fresh process, its result in $DATA/replay<n>.json
-    n=$1; shift
-    left=$((T0 + HOOK_BUDGET_S - $(date +%s))); [ "$left" -gt 500 ] && left=500
+replay() {  # <n> <k> [--video FILE]: one replay in a fresh process, its result in $DATA/replay<n>.json; limit: 1/k of
+    n=$1; k=$2; shift 2   # the time left before the hook's deadline (k = the replays still to grade, so they share it)
+    left=$(( (T0 + HOOK_BUDGET_S - $(date +%s)) / k ))
     if [ "$left" -lt 20 ]; then
         echo "[finalize] replay $n: no time left before the hook's deadline"; return
     fi
@@ -50,9 +51,10 @@ replay() {  # <n> [--video FILE]: one replay in a fresh process, its result in $
     echo "[finalize] replay $n exit $? (limit $left s; 124 or 137: ended at the limit, no result)"
 }
 echo "[finalize] episode dumped; replaying twice in fresh processes"
-rm -f "$DATA/replay1.json" "$DATA/replay2.json" "$DATA/replay3.json"
-replay 1
-replay 2
+rm -f "$DATA/replay1.json" "$DATA/replay2.json" "$DATA/replay3.json" "$DATA/replay1.log" "$DATA/replay2.log" "$DATA/replay3.log"
+replay 1 2
+# no second replay once the first gave no result (the verdict is replay_failed + infra_error anyway): the time goes to the video
+if [ -s "$DATA/replay1.json" ]; then replay 2 1; else echo "[finalize] replay 2: skipped, replay 1 gave no result"; fi
 python - <<'PY'
 import json, os
 d = os.environ.get("RCB_DATA", "/data")
@@ -84,7 +86,7 @@ with open(p + ".tmp", "w") as f:
 os.replace(p + ".tmp", p)
 print(json.dumps(out))
 PY
-replay 3 --video "$DATA/replay.mp4"
+replay 3 1 --video "$DATA/replay.mp4"
 python - <<'PY'
 import json, os
 d = os.environ.get("RCB_DATA", "/data")
