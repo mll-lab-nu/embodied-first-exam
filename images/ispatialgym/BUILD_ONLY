@@ -1,0 +1,24 @@
+eai-ispatialgym is BUILD_ONLY (PROTOCOL §2.4): it is never pushed to a registry, and every host that runs iSpatialGym
+tasks builds it locally.
+
+Why: it is eai-behavior (the official stanfordvl/behavior:3.9.2 by digest + ffmpeg: NVIDIA Isaac Sim 5.1.0 and Omniverse
+Kit, whose licences forbid redistribution) with iSpatialGym's BEHAVIOR-1K fork and iSpatialGym on top.
+
+Build (from the repository root; Docker with BuildKit):
+  1. eai-behavior, as images/behavior/BUILD_ONLY says:
+       docker build -t ghcr.io/mll-lab-nu/eai-behavior:$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
+  2. docker build -t ghcr.io/mll-lab-nu/eai-ispatialgym:$(cat images/ispatialgym/VERSION) -f images/ispatialgym/Dockerfile .
+The BEHAVIOR-1K fork (kmy17518/BEHAVIOR-1K) and iSpatialGym (kmy17518/iSpatialGym) are fetched by commit during the build;
+constraints.txt fixes the versions of what setup.sh --omnigibson adds on eai-behavior (a rebuild on 2026-10-16 gave the
+same `pip freeze`).
+
+Licences the builder accepts: the NVIDIA Isaac Sim / Omniverse terms of the official image. BEHAVIOR-1K's code and
+iSpatialGym's are MIT.
+
+Data, needed to run (never in the image): the licensed BEHAVIOR Data Bundle, mounted read-only at run time from
+$RCB_BEHAVIOR_DATA: omnigibson-robot-assets/ (3.8.2), behavior-1k-assets/ (3.9.0) and omnigibson.key, the same directory
+BEHAVIOR-1K's tasks mount. The image itself holds iSpatialGym's small `ispatialgym-assets` dataset at /data. The tasks'
+frozen instances are in the task directories (from iSpatialGym's eval data, Hugging Face kmy17518/ispatialgym-eval-data
+v1.0); nothing is downloaded at run time.
+
+GPU: an RTX-class NVIDIA GPU (Isaac Sim needs one even headless) and the NVIDIA container toolkit.
