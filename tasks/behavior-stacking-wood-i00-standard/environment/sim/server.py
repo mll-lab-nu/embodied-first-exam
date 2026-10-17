@@ -199,7 +199,7 @@ SPEC = {
     "episode": ("one episode, no reset: it ends as a success once the task's goal has held for "
                 f"{M.REST_STEPS / CTRL_HZ:g} s of simulated time in a row ({M.REST_STEPS} control steps) with no goal object in a "
                 f"gripper (assisted grasping lets go when both fingers are commanded open) and every goal object at rest (slower "
-                f"than {M.REST_SPEED_M_S:g} m/s); when your episode ends first (you stop, or your time is up), each grading replay holds "
+                f"than {M.REST_SPEED_M_S:g} m/s; the goal objects: every object the goal names, a tool or appliance it names (even inside a `not`) included); when your episode ends first (you stop, or your time is up), each grading replay holds "
                 f"the robot still (your last command, the base at 0) for up to {M.SETTLE_STEPS / CTRL_HZ:g} s after your last row, and a "
                 "goal that settles there in both replays counts as a success; when the robot has fallen over, i.e. its "
                 f"base has been tilted more than {math.degrees(math.acos(M.FALL_TILT_TOLERANCE)):.1f} degrees from upright (the z of its up "

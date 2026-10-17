@@ -8,13 +8,15 @@ released and at rest (Rules).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
-  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+  your time is up, on a simulator error or breakdown, or at the runaway guard. Whatever you knock over or push away stays where it ends up.
 - **Success is a settled scene**: the goal has held for 1 s of simulated time in a row (30 control steps) with no goal
   object in a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal object at
   rest (slower than 0.05 m/s); then the episode ends (`meta["reason"]` "success"). An object still in the hand, or a
   goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
-  `r.get_obs(seconds=2.0)`). When your episode ends first, each grading replay holds the robot still (your last
-  command, the base at 0) for up to 5 s after your last row, and a goal that settles there counts.
+  `r.get_obs(seconds=2.0)`). The goal objects are every object the goal names, a tool or appliance it names (even
+  inside a `not`) included. When your episode ends first, each grading replay holds the robot still (your last
+  command, the base at 0) for up to 5 s after your last row, and a goal that settles there counts (when both replays
+  reproduce your episode's state at your last row).
 - A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
   "failure: simulator breakdown") ends the episode as a failure.
 - **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over

@@ -196,9 +196,11 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
 - **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI;
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
   replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
-  `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below). Since 2026-10-14
-  52200 s (since 2026-10-16; 41400 s on 10-14): plus the video replay (up to 4 h), which runs after `final.json` holds
-  the verdict, in the hook's remaining time (two very long graded replays can leave it less; the verdict never waits).
+  `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below). Since 2026-10-16
+  (41400 s from 10-14) it is 52200 s: plus the video replay (up to 4 h), which runs after `final.json` holds the verdict,
+  in the hook's remaining time. Known limit: each replay gets what the hook has left, so a very long episode (the
+  longest standard one recorded had 118,050 rows; at the slowest measured 1.88 steps/s a replay of it would take
+  ~17 h) can leave the second replay or the video short; the verdict never waits for the video.
 
 ## Kit cache: one per trial
 Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every compose file names its cache volume without a

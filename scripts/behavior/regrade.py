@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Re-grade recorded BEHAVIOR-1K trials with the current grader (2026-10-14 rules: the goal held 1 s released and at rest,
-the settle window, stable hashing, a simulator breakdown as infrastructure; docs/benchmarks/behavior.md) from their
+the settle window, stable hashing, a simulator breakdown as a recorded failure; docs/benchmarks/behavior.md) from their
 recorded trajectories, instead of re-running the agents.
 
     python3 scripts/behavior/regrade.py JOBS_DIR [JOBS_DIR ...] [--out regrade.jsonl] [--gpus 0,1] [--select candidates]

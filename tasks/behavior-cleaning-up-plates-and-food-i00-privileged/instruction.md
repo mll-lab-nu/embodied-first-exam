@@ -110,7 +110,8 @@ replay with the challenge cameras only renders the video and never affects the s
   goal object attached to a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal
   object at rest (slower than 0.05 m/s); the episode ends there. The goal's literals being true for one frame, or with the
   object still in the hand, is not success: `s.status()["goal"]` is the bare goal, `goal_objects_held` /
-  `goal_objects_moving` say what is missing. After your last row the grader holds the robot still (your last command, the
+  `goal_objects_moving` say what is missing (`s.goal_objects`: every object the goal names, a tool or appliance it
+  names, even inside a `not`, included). After your last row the grader holds the robot still (your last command, the
   base at 0) for up to 5 s (`s.settle()`; `s.replay()` and the replay CLI do it too), so you need not record that wait.
   A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles) ends the
   episode as a failure (`s.status()["breakdown"]`). The episode also ends, as a failure, when the robot has fallen over: its base

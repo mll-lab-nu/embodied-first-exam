@@ -1,6 +1,8 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote:
 /out/final.json (live success, two fresh-process replays of the recorded trajectory, determinism, the crash-recovery
-record), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic.
+record), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, where
+the live success is the service's, or (2026-10-14, finalize.sh `settled_success`) one the replays' settle window brought
+after the agent's episode ended on the live rows.
 Numeric-only reward.json (docs/PROTOCOL.md §2.6, §4.8; docs/STANDARD_MODE.md §13.2).
 
 infra_error = 1 means no verdict on the agent (2026-10-10): final.json is the trusted sidecar's own file, so when it is
@@ -26,7 +28,7 @@ try:
     breakdown = bool(d.get("sim_breakdown")) or str(d.get("reason") or "").startswith("failure: simulator breakdown")
     infra = bool(d.get("infra_error")) or bool(d.get("gpu_lost")) or replay_error or not finalized
     ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not d.get("gave_up") and not infra
-    out = {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
+    out = {"success": int(ok), "live_success": int(bool(d.get("success")) and not d.get("settled_success")), "replay_success": int(bool(d.get("replay_success"))),
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
            "finalized": int(finalized), "missing_log": 0, "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps") or 0),
            "physics_steps": int(d.get("physics_steps") or 0), "steps": int(d.get("steps") or 0), "elapsed_s": num("elapsed_s"),
@@ -37,7 +39,8 @@ try:
            "settled_success": int(bool(d.get("settled_success"))),
            "sim_breakdown": int(breakdown),                      # a simulator breakdown ended the episode or a replay
            "instance_ok": int(d.get("instance_ok", 1) not in (0, False)),   # 0: a replay's frozen scene did not rebuild (infra_error)
-           # the episode ended by the task's failure rule: the robot fell over (reason "failure: the robot fell over")
+           # the episode ended by a failure rule: the robot fell over ("failure: the robot fell over") or the simulator
+           # broke down ("failure: simulator breakdown", sim_breakdown)
            "task_failure": int(str(d.get("reason") or "").startswith("failure")),
            "q_score": num("q_score"),   # progress (the challenge's q_score of the replays), 2026-09-27
            # crash recovery (eai-standard/2.2): service starts, resumes, whether a resumed state differed and by how much,
