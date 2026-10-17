@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Crash-recovery acceptance test for one Panda Dynamic Scenes standard task (docs/STANDARD_MODE.md §13; resume class exact):
-# run the task's oracle with Harbor, kill -9 the sim service in the middle of the episode (once N calls are checkpointed,
-# while the next call runs), and check that the service resumed the same episode exactly, the oracle carried on, the
-# episode was graded as usual (live), and the video pass's run ends in the live state (video_matches_live).
+# Crash-recovery acceptance test for one Panda Dynamic Scenes standard task (the shared service layer, rcb_service.py;
+# since board 0153): run the task's oracle with Harbor, kill -9 the sim service in the middle of the episode (once N
+# submit calls are checkpointed, while the next call runs), and check that the service resumed the same episode (its
+# journal replayed to the logged state hash, else it gives up: resume_failed), the oracle carried on, and the last
+# episode was graded as usual (live) with its resets and a video.
 #   usage: scripts/pandadyn/kill_test.sh [task dir] [jobs dir] [N checkpoints before the kill]
 #   default: tasks/pandadyn-s02-plate-catch-transport-release-i00-standard, $PWD/jobs/kill_test, 4
 # Needs the eai-pandadyn image on the host (images/pandadyn/), harbor and docker.
@@ -26,11 +27,11 @@ done
 [ -n "$c" ] || { echo "[kill_test] no sim container for project $proj"; exit 1; }
 echo "[kill_test] trial $trial, sim container $c"
 count() { dk exec "$c" sh -c "grep -c '\"ev\": \"$1\"' /data/episode.jsonl 2>/dev/null || true" | tr -d '\r'; }
-for _ in $(seq 3600); do k="$(count checkpoint)"; [ "${k:-0}" -ge "$N" ] && break; sleep 1; done
+for _ in $(seq 3600); do k="$(count submit)"; [ "${k:-0}" -ge "$N" ] && break; sleep 1; done
 sleep 0.5
 before="$(dk exec "$c" sh -c 'tail -3 /data/episode.jsonl')"
 pid="$(dk exec "$c" cat /data/server.pid | tr -d '\r')"
-echo "[kill_test] $(count checkpoint) checkpoints; kill -9 service pid $pid"; echo "$before" | cut -c1-200
+echo "[kill_test] $(count submit) submit checkpoints; kill -9 service pid $pid"; echo "$before" | cut -c1-200
 dk exec "$c" sh -c "kill -9 $pid"
 wait "$hp"; echo "[kill_test] harbor exited $?"
 T="$JOBS/$job/$trial"
@@ -40,11 +41,12 @@ t = pathlib.Path(sys.argv[1])
 rw = json.load(open(t / "verifier/reward.json"))
 ev = [json.loads(l) for l in open(t / "artifacts/data/episode.jsonl") if l.strip().startswith("{")]
 rs = [e for e in ev if e.get("ev") == "resumed"]
-ck = sum(1 for e in ev if e.get("ev") == "checkpoint")
-want = {"success": 1, "graded_by_live": 1, "replays": 0, "video_matches_live": 1, "resumes": 1, "sim_startups": 2, "resume_state_mismatch": 0, "infra_error": 0}
+ck = sum(1 for e in ev if e.get("ev") == "submit")
+want = {"success": 1, "graded_by_live": 1, "replays": 0, "video_rendered": 1, "sim_startups": 2, "infra_error": 0,
+        "resets": rw.get("reset_budget")}
 bad = {k: rw.get(k) for k, v in want.items() if rw.get(k) != v}
-print(json.dumps({"reward": rw, "resumed": rs, "checkpoints": ck}, indent=1))
-ok = not bad and len(rs) == 1 and rs[0].get("exact") is True
+print(json.dumps({"reward": rw, "resumed": rs, "submit_checkpoints": ck}, indent=1))
+ok = not bad and len(rs) == 1
 print("[kill_test]", "PASS" if ok else f"FAIL {bad} resumed={rs}")
 sys.exit(0 if ok else 1)
 PY

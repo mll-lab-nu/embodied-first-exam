@@ -973,7 +973,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene; after the verdict the collect hook builds one more to film the video (until 2026-10-17: two fresh-process replays, one after the other); CPU: one core per scene + one for the agent"
+measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, rebuilt on every reset and once after the verdict to film the graded episode in the same process (board 0153; until 2026-10-17 a second scene in the collect hook, before it two fresh-process replays); CPU: one core per scene + one for the agent"
 
 [[rule]]
 match = "^pandadyn-.*-standard-realtime$"

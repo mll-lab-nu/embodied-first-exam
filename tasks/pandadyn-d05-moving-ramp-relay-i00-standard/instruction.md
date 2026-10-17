@@ -1,7 +1,8 @@
-# Panda Dynamic Scenes · Moving ramp relay (D05) — STANDARD MODE (robot as a service, eai-standard/2.2)
+# Panda Dynamic Scenes · Moving ramp relay (D05) — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control two simulated **Franka Panda** arms (`panda-0` on the left, `panda-1` on the right; each with its standard hand and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
-1000 Hz) runs in a service you cannot open. You get one client and one episode.
+1000 Hz) runs in a service you cannot open, and you reach it only through a client. You get one client, one episode at a
+time and 3 resets.
 **Task:** An orange ball rests in the left Panda's cup, and the right Panda holds a straight channel that is open at both ends. The left arm must pass the ball into the inlet part of the channel. The ball must then leave the channel by its outlet end and be caught again in free flight by the left cup. The relay is then repeated with the channel held at a clearly different orientation from the first time. After the second catch, the left cup must deliver the ball into a fixed basin, where it must come to rest.
 
 ## Scene
@@ -12,12 +13,11 @@ An orange ball (radius 18 mm) rests at a slightly random spot on the floor of th
 **Goal geometry.** All phase geometry is relative to the channel, the cup and the basin.
 
 ## Time in this scene
-The scene is dynamic: from the first control step on, things move by themselves (as described above), and they do not
-wait for the robot. The simulated clock advances **only through your calls**: every row of a `submit` and every second of an
-`observe` watch runs control steps (10 ms each); between calls the world is frozen, however long you think. A call that
-runs control steps runs them all, whatever happens meanwhile, and returns what the cameras saw. The episode lasts at most
-**25 s of simulated time** (the task's horizon, 2500 control steps): when it is reached before the task
-is complete, the task has failed. Nothing moves at t = 0: the ball rests in the left cup. Once the ball is in the channel it rolls on its own toward whichever end is lower, and it leaves the outlet within moments.
+The simulated clock advances **only through your calls**: every row of a `submit` and
+every second of an `observe` watch runs control steps (10 ms each); between calls the world is frozen, however long you
+think. A call that runs control steps runs them all (unless the episode ends during it), whatever happens meanwhile, and
+returns what the cameras saw. The episode lasts at most **25 s of robot time** (the task's horizon,
+2500 control steps): when it is reached before the task is complete, the task has failed. Nothing moves at t = 0: the ball rests in the left cup. Once the ball is in the channel it rolls on its own toward whichever end is lower, and it leaves the outlet within moments.
 
 ## Success
 The task has 6 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
@@ -30,7 +30,8 @@ The task has 6 phases. They are checked after every physics step (1 ms) and must
 6. **second_catch_and_delivery**: First the ball is caught again in the left cup exactly as in first_catch. That is: an entry after at least 0.025 s of free flight (counted from the start of this phase) through the plane 0.073 m above the cup floor within 0.052 m of the centre on both axes, then contained in the cup for 0.18 s without interruption. After that catch, the ball must be contained in the basin and not touch the cup, for 0.7 s without interruption. Contained in the basin means all of the following, in the basin's frame (origin at the centre of its floor's top surface, axes = world axes): |x| and |y| of the ball centre below 0.0669 m (0.075 - 0.45 x radius); height above the basin floor between 0.014 m and 0.0578 m; in contact with the basin within the last 25 ms; speed below 0.09 m/s. This completes the task.
 
 The episode **ends by itself** at the first control step where the last phase is complete (success) or where the task has
-failed (`meta["done"]`, `meta["reason"]`: `success` or the failure's name).
+failed (`meta["done"]`; `meta["reason"]`: `success`, `failed`, or `error` after a simulator error; the `submit` that
+ended it also names the failure in `meta["why"]`).
 
 **The task fails** (the episode ends, reward 0) as soon as any of these happens:
 - when the ball meets the first_moving_exit or second_moving_exit condition, the world speed of the channel's outlet tip is below `outlet_min_speed`. The outlet tip is the tool-frame point (`right_tool_half`, 0, 0). At this instance `outlet_min_speed` = 0, so this failure cannot occur (`static_outlet_exit`);
@@ -47,7 +48,7 @@ failed (`meta["done"]`, `meta["reason"]`: `success` or the failure's name).
 task's objects and the fixtures the task allows (`forbidden_tool_fixture_contact`), and no contact penetrates deeper than
 4 mm (`excessive_penetration`).
 
-**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `spec["robot_spec"]["controller"]["safety_limits"]`):
+**Safety limits** (the Franka Panda's own limits, checked every 1 ms on each arm; `spec()["robot_spec"]["safety_limits"]`):
 measured joint positions within the joint limits (+0.002 rad); measured joint speeds at most 1.01 x (2.175, 2.175, 2.175,
 2.175, 2.61, 2.61, 2.61) rad/s; finger speeds at most 0.051 m/s; the hand's TCP at most 1.01 x 1.7 m/s and 1.01 x
 2.5 rad/s; joint accelerations (measured over every 20 ms window) at most 1.05 x (15, 7.5, 10, 12.5, 15, 20, 20) rad/s²
@@ -57,61 +58,82 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
 (a catch, a strike) moves the arm too: what is measured counts, whatever was commanded.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, on a failure, when your time is up, or
-  on a simulator error. A dropped object stays dropped.
+- **Episodes and resets.** The first episode starts when the service comes up. An episode ends on success, on a failure,
+  when your time is up, or on a simulator error. You have **3 resets** (`spec()["budget"]["reset"]`, which is
+  authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the robot and the scene
+  back on the same frozen starting state (the scene is rebuilt, about a second; no robot time passes) and starts a new
+  episode, either abandoning the running episode or after one has ended; it returns the start's frames and
+  proprioception. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives
+  `resets_left`) until you reset. **Only the last episode is graded**: an episode you reset away is never graded, a
+  success ends the run at once (no reset after it), and when your time is up the episode then running is the one graded.
+  The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the episodes.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
-  (joints, fingers, hand TCP and tool poses, velocities, motor torques, the current targets). No object poses, no success
-  signal before the end.
-- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`). Actions and simulated
-  time are reported as cost.
-- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
-  `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
-  until it answers again, then check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
+  (joints, fingers, hand TCP and tool poses, velocities, motor torques, the targets in force). No object poses, no success
+  signal before the end: the service tells you that an episode ended and why (`meta["done"]`, `meta["reason"]`:
+  `"success"`, `"error"` after a simulator error, else `"failed"`).
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran.
+  Keep the program that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current. Do
+  not stop early: while the episode runs, or a reset is left, the run can still pass.
+- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`). Actions and
+  simulated time are reported as cost.
+- **If the service crashes**, a call fails with a connection error (or a 5xx): it restarts and resumes the SAME episode
+  (never a reset) in the state after the last call it completed, which you may not have received. `r.status()` answers
+  again once it is back; check `control_steps` before you continue (`spec()["on_service_error"]`).
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+Your whole interface to the robot. Its docstring (`python -c "import rcb_client; help(rcb_client)"`) lists the calls and
+their arguments; it is the client of every `eai-standard/2.1` service, so the robot facts it names as examples are not
+this robot's: this robot's are in `r.spec()` and below. The calls and the endpoints they use:
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
+| `r.spec()` | `GET /spec` | the robot's facts: the action layout and limits, `control_dt` (0.01 s), `max_chunk_s`, `max_watch_s`, the cameras and their calibration, `proprio_layout` / `proprio_groups`, `robot_spec` (bases, servo and safety limits), `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
+| `r.submit("joint_position", A, dt=0.01, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of 16 targets `dt` seconds apart (a chunk covers at most 10 s), and returns what the cameras saw meanwhile; stops early when the episode ends |
+| `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free, no time passes), or hold the last targets and watch for `seconds` (at most 30) |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state (at most 3 in all); returns the start's frames |
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
+`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during a watch),
+`res.depth[camera]` (with `include_depth=True`, metres), `res.proprio` (proprioception rows: one at the call's start, one
+every 1/`video_fps` s of robot time, one at its end). `video_fps` (1..30, default 10) sets how many frames a call returns; a call may
+return at most `spec()["max_frames_per_call"]` images. A malformed request raises `ValueError` and runs nothing; once an
+episode has ended, `submit` raises `EpisodeOver` (409) and `get_obs` still answers (no time passes).
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (the service builds the scene in a few seconds)
-spec = r.spec()                               # action type, layout, joint limits, cameras, budget, robot spec, servo and safety limits
-
-obs = r.get_obs()                             # current frames: obs.last["overview"], obs.last["closeup"] -> uint8 (480, 640, 3); no time passes
-obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: joints, fingers, TCP / tool poses, velocities, torques, targets
-obs.meta["cameras"]                           # per camera: intrinsic_cv / extrinsic_cv / cam2world_gl (static cameras)
-obs = r.get_obs(seconds=0.2, video="frames", video_fps=50)   # hold the current targets and watch 0.2 s (at most 10 s): obs.frames[cam]
-
-res = r.submit("joint_position", A, dt=0.01)  # A: (T, 16) rows dt seconds apart, executed at 100 Hz (hold or linear between rows)
-res.meta["done"], res.meta["reason"], res.meta["clipped"], res.meta["control_steps_chunk"], res.meta["sim_time_s"]
-res.frames["overview"]                        # uint8 (N, H, W, 3) at video_fps, if video="frames" | "both"; res.video[cam]: mp4 bytes
-res.last["closeup"]; res.proprio              # last frame per camera; float32 (N, D) proprio at each frame; res.frame_time_s
-res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
-r.fk(q); r.ik({"panda-0_tool": pose7}, seed=q) # stateless kinematics of the arms' own models (no physics, no simulated time)
+import numpy as np
+r = Robot()
+obs = r.get_obs(cameras="overview")                                    # the robot at the frozen start (no time passes)
+q0 = np.asarray(obs.meta["proprio"]["now"])
+rows = ...                                                             # (T, 16) targets, one per control step
+res = r.submit("joint_position", rows, dt=0.01, interpolate="hold", cameras="closeup", video="frames", video_fps=25)
+res.frames["closeup"], res.proprio, res.meta["done"], res.meta["reason"]
+if res.meta["done"] and not res.meta["reason"] == "success":
+    r.reset()                                                          # a new episode (while resets are left)
 ```
-Cameras (640×480 RGB, static): `overview` (the whole workspace) and `closeup` (the task's working area); z-depth on
-request (`r.get_obs(depth=True)` -> `obs.last_depth[cam]` metres; `r.submit(..., depth="frames")`). `video_fps` (1..50,
-default 10) sets how many frames a call returns; a call may return at most `spec["max_frames_per_call"]` images.
+Cameras (640×480 RGB, static): `overview` (the whole workspace) and `closeup` (the task's working area), with their
+calibration in `spec()["cameras"]` (`intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`); z-depth on request.
+`cameras=None` (or `[]`) means both: name the one you need. `video="none"` returns only the last frame (the fastest call).
 
 ### Action type
 - `joint_position` (16 per row): `[panda-0 joint1..7, panda-0 aperture, panda-1 joint1..7, panda-1 aperture]`. Each arm's 8 values are its 7 absolute joint-position targets
   (rad, `panda_joint1..7`) and its total gripper aperture target (m, 0 = closed .. 0.08 = open; each finger moves at most
-  0.025 m/s). Rows are `dt` apart (`0.01 ≤ dt ≤ 0.5` s, a multiple of the 0.01 s control period; any other `dt` is
-  rejected, never rounded); `interpolate="linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit
-  values are clipped and listed in `meta["clipped"]` (limits in the spec). The service executes the rows as float64;
-  `r.submit` sends them as float32 (a float64 `actions` array part is taken as it is). `observe` with
-  `seconds > 0` keeps the last targets in force.
+  0.025 m/s). Rows are `dt` apart (a multiple of the 0.01 s control period); `interpolate="linear"` (default: a straight
+  line from the targets in force) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed
+  in `meta["clipped"]` (limits in `spec()["action_types"]["joint_position"]`). The client sends the rows as float64, and
+  the service executes them as sent. `observe` with `seconds > 0` keeps the last targets in force.
 - The servo: every control step, each arm's latest target is turned into a smooth reference motion by a jerk-limited
   trajectory generator (Ruckig, the joints synchronised to arrive together) within 65 % (speed), 55 % (acceleration) and 5 % (jerk) of the Panda's joint
   speed, acceleration and jerk limits, and the arm tracks that reference with torque control (PD + inverse dynamics, the
   Panda's torque and torque-rate limits). A new target replans from the current reference motion, so a target far away is
-  reached smoothly, not in one step. `spec["robot_spec"]["controller"]` has the exact limits and gains.
-- A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
+  reached smoothly, not in one step. `spec()["robot_spec"]["servo"]` has the exact limits and gains.
 
 ## Conventions
 - World frame: metres, z up, the table top is the plane z = 0; quaternions are **wxyz**. Each arm's base pose is in the robot spec (`arms`).
-- `spec["proprio_groups"]` names the proprio columns: `joint_pos` (per arm joint1..7, finger_left, finger_right), `tcp_pose`
+- `spec()["proprio_groups"]` names the proprio columns: `joint_pos` (per arm joint1..7, finger_left, finger_right), `tcp_pose`
   (the hand TCP, between the fingertips), `joint_vel`, `gripper_opening`, `joint_effort` (motor torques), `tool_pose` (the
   task tool's frame), `target` (the targets in force). The arms are listed panda-0 first.
 - Control runs at 100 Hz (10 ms per row), physics at 1000 Hz.
