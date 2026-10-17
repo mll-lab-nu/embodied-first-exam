@@ -21,6 +21,16 @@ budget     : there is no step budget: the agent's wall clock is the limit. The c
 falls      : the episode also ends, as a failure, when the robot has fallen over: OmniGibson's own Falling rule (its base
              more than 3 cm below the floor, or its up axis tilted more than 41.4 degrees from vertical) holding for
              FALL_HOLD_STEPS consecutive control steps (10 s of simulated time); status()["fallen"]. A replay ends there too.
+success    : (2026-10-14) the BDDL goal must hold for REST_STEPS consecutive control steps (1 s of simulated time) with no
+             goal object attached to a gripper and every goal object at rest (REST_SPEED_M_S); the episode ends at the end
+             of that window, not on the first frame the goal's literals are true. When the actions run out (a trajectory's
+             last row; the replays of a standard-mode episode the agent ended) the robot holds still for up to SETTLE_STEPS control steps
+             (settle()) so that a goal reached on the last rows can settle; status()["success"] is this rule,
+             status()["goal"] the BDDL goal at this step.
+breakdown  : (2026-10-14) a non-finite or runaway robot or goal-object state (BREAKDOWN_*) ends the episode as a simulator
+             breakdown (status()["breakdown"], reason BREAKDOWN_REASON): a failure, recorded as `sim_breakdown` (2026-10-16,
+             review of #254: whether it is the agent's 0 or an infrastructure failure is the owner's decision; until then it
+             stays what a simulator error was before, the agent's 0).
 
 CLI
 ---
@@ -44,8 +54,9 @@ Python (what the agent gets)
   s.robot_spec(); s.robot_state()    # joints with real limits, gripper rule, drive gains, TCP, mobile base; measured q/qd/effort, poses
   s.kinematics({"op": "fk", "q": q}) # stateless FK / IK in the robot base frame (s.kinematics_spec()); the standard mode's /kinematics
   s.record_start(); ...; actions = s.record_stop()   # (T, 25) low-level actions, one row per env step
-  s.status()                         # {'success': bool, 'fallen': bool, 'q_score': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
-  s.replay(actions)                  # the first replay in a process is exact; the CLI `replay` (fresh process) is the grader's view
+  s.status()                         # {'success': bool, 'goal': bool, 'fallen': bool, 'breakdown': bool, 'q_score': float, 'sim_steps': int, ...}
+  s.settle()                         # hold still up to SETTLE_STEPS control steps (what the grader does after the last action)
+  s.replay(actions)                  # actions + settle(); the first replay in a process is exact; the CLI `replay` (fresh process) is the grader's view
   s.save_trajectory(actions, "/app/output/trajectory.npz")
 """
 from __future__ import annotations
@@ -55,12 +66,14 @@ os.environ.setdefault("OMNIGIBSON_HEADLESS", "1")
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")  # before torch initialises CUDA
 
 import argparse
+import contextlib
 import hashlib
 import json
 import math
 import subprocess
 import sys
 import time
+import zlib
 from pathlib import Path
 from typing import Any, Callable
 
@@ -84,6 +97,20 @@ FALL_HEIGHT_M = 0.03            # the base more than this below the floor (the s
 FALL_TILT_TOLERANCE = 0.75      # the z of the base's up axis below this: tilted more than 41.4 degrees
 FALL_HOLD_STEPS = 300           # 10 s at the 30 Hz control rate (simulated time: a fresh-process replay ends at the same step)
 FALL_REASON = "failure: the robot fell over"
+# Success with release and rest (2026-10-14, failure analysis item 20: successes fired on the first frame the literals held,
+# some with the object still in the gripper). The goal objects are the BDDL objects the :goal block names (by instance or by
+# the category a quantifier ranges over), the robot and the floors it does not name excluded.
+REST_STEPS = 30                 # 1 s at the 30 Hz control rate: the goal holds, released and at rest, this many steps in a row
+REST_SPEED_M_S = 0.05           # a goal object whose base link moves faster than this is not at rest
+SETTLE_STEPS = 150              # 5 s: after the last action the robot holds still (hold_action) up to this long (settle())
+# Simulator breakdown (2026-10-14, failure analysis item 25: NaN after tumbling, a body at z = 1.7e16 m with the episode
+# still running): the episode ends there, a failure recorded as `sim_breakdown` (2026-10-16: most breakdowns seen were
+# the agent's own tumbles, e.g. 23 GLM standard episodes ended on a NaN base orientation; whether a breakdown is
+# infrastructure, voided and retried under PROTOCOL H.5, is the owner's decision). Checked on the robot every control step and on the goal objects every BREAKDOWN_OBJECT_EVERY steps.
+BREAKDOWN_POS_M = 1.0e4         # a robot or goal-object position farther than 10 km from the origin
+BREAKDOWN_SPEED_M_S = 100.0     # the robot base faster than 100 m/s
+BREAKDOWN_OBJECT_EVERY = 30
+BREAKDOWN_REASON = "failure: simulator breakdown"
 
 
 def up_z(quat_xyzw) -> float:
@@ -115,6 +142,52 @@ class FallWatch:
         if not self.fallen and self.run >= self.hold:
             self.fallen, self.fallen_step = True, self.steps
         return self.fallen
+
+
+class RestWatch:
+    """The success rule's window: update() once per control step with whether the BDDL goal holds, whether no goal object is
+    attached to a gripper and whether every goal object is at rest; `done` latches (until reset()) once all three have held
+    for `hold` consecutive steps."""
+
+    def __init__(self, hold: int = REST_STEPS):
+        self.hold = int(hold)
+        self.reset()
+
+    def reset(self) -> None:
+        self.run, self.done, self.done_step, self.steps = 0, False, None, 0
+
+    def update(self, goal: bool, released: bool, still: bool) -> bool:
+        self.steps += 1
+        self.run = self.run + 1 if (goal and released and still) else 0
+        if not self.done and self.run >= self.hold:
+            self.done, self.done_step = True, self.steps
+        return self.done
+
+
+def goal_tokens(parsed) -> set[str]:
+    """Every symbol of a parsed BDDL :goal (nested lists of strings), without the leading '?' of variables."""
+    out: set[str] = set()
+
+    def walk(x):
+        if isinstance(x, (list, tuple)):
+            for y in x:
+                walk(y)
+        elif isinstance(x, str):
+            out.add(x.lstrip("?"))
+    walk(parsed)
+    return out
+
+
+def goal_object_names(scope_names, tokens: set[str]) -> list[str]:
+    """The scope's BDDL instances the goal names: an instance itself (`ashcan.n.01_1`) or one of a category a quantifier
+    ranges over (`can__of__soda.n.01` -> `can__of__soda.n.01_1`, ...); never the agent."""
+    out = []
+    for name in scope_names:
+        if name.startswith("agent."):
+            continue
+        if name in tokens or name.rsplit("_", 1)[0] in tokens:
+            out.append(name)
+    return out
 
 
 def _slog(ev: str, **kw) -> None:
@@ -1091,6 +1164,41 @@ def _fragmented_video_writer() -> None:
 
     ev_mod.create_video_writer = create
 
+STABLE_HASHES = os.environ.get("RCB_STABLE_HASHES", "1") != "0"   # "0" only for the determinism probe (test-only)
+
+
+def _stable_name_hash(self) -> int:
+    n = self.__dict__.get("_name")
+    return zlib.crc32(n.encode()) if isinstance(n, str) else object.__hash__(self)
+
+
+def _stable_rule_hash(self) -> int:
+    return zlib.crc32(type(self).__name__.encode())
+
+
+def _stable_hashes() -> None:
+    """Make OmniGibson's iteration over sets of simulator objects the same in every process (2026-10-14, failure analysis
+    item 16). OmniGibson keeps scene objects, particle systems and transition rules in Python sets and iterates them to
+    update object states every control step (simulator.py: `for obj in scene.get_objects_with_state(state_type)`, a set
+    from the object registry) and to apply transition rules (transition_rules.py: `for rule in tuple(self.active_rules)`
+    and the rules' candidate sets). None of these classes defines __hash__, so a set's order follows the objects' memory
+    addresses, which differ between processes whose allocation histories differ (a cold or warm Kit cache, other cameras,
+    a status() call, a service answering HTTP). Several of those updates do not commute: every heat source in turn pulls
+    the temperatures it reaches towards its own (Temperature.update_temperature_from_heatsource_or_sink), and rules create
+    and remove objects in their iteration order. So the same actions could set a fire, slice or cook one control step
+    earlier in one process than in another, and the replays' state hashes differed. Here every prim and system hashes by
+    its unique name and every rule by its class name (crc32: the same in every process), so a set built by the same
+    sequence of insertions iterates in the same order everywhere. Membership and equality are unchanged (identity)."""
+    if not STABLE_HASHES:
+        return
+    from omnigibson.prims.prim_base import BasePrim
+    from omnigibson.systems.system_base import BaseSystem
+    from omnigibson.transition_rules import BaseTransitionRule
+    BasePrim.__hash__ = _stable_name_hash
+    BaseSystem.__hash__ = _stable_name_hash
+    BaseTransitionRule.__hash__ = _stable_rule_hash
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, instance_id: int | None = None,
                  mode: str = "public_test", robot_config: str | Path | None = None, cameras: str = "default",
@@ -1108,6 +1216,9 @@ class Session:
         from omnigibson.eval.utils.eval_utils import DEFAULT_EVAL_SEED, seed_everything
         from omnigibson.eval.evaluator import Evaluator, resolve_instance_ids
         _fragmented_video_writer()
+        _stable_hashes()                   # before any scene object exists (item 16: set order across processes)
+        if os.environ.get("PYTHONHASHSEED") != "0":
+            _log("WARNING: PYTHONHASHSEED is not 0: sets of strings iterate in a per-process order (the images set it)")
         self.th, self.og = th, og
 
         inst = None
@@ -1190,7 +1301,17 @@ class Session:
         except Exception:  # noqa: BLE001
             floor_z = 0.0
         self._fall = FallWatch(FALL_HOLD_STEPS, floor_z)   # the fall rule (FALL_*); its end is self.end_reason
+        self._rest = RestWatch(REST_STEPS)                 # the success rule (REST_*): goal + release + rest for 1 s
+        self._rest_info: dict = {"held": [], "moving": []}
+        self.goal_first_step: int | None = None            # the first control step the bare BDDL goal held (the rule before 10-14)
+        self.breakdown: str | None = None                  # what broke down (BREAKDOWN_*), None while the simulator is sane
         self.end_reason: str | None = None
+        try:
+            toks = goal_tokens(self.env.task.compiled_task.conditions.parsed_goal_conditions)
+        except Exception as exc:  # noqa: BLE001 -- never seen; every non-agent task object then counts
+            _log("goal objects: the parsed goal is unavailable, using every task object:", repr(exc)[:120]); toks = None
+        names = [n for n in self._scope() if not n.startswith("agent.")]
+        self.goal_objects = goal_object_names(names, toks) if toks is not None else names
         _log(f"instance {self.instance_id} loaded; state_sha={self.instance_sha}; max_steps={self.max_steps}")
 
     def _poses_match(self, inst: dict, pos_tol: float = 2e-3, quat_tol: float = 2e-2) -> bool:
@@ -1247,6 +1368,10 @@ class Session:
         self._last_action = None
         self._stepped = False
         self._fall.reset()
+        self._rest.reset()
+        self._rest_info = {"held": [], "moving": []}
+        self.goal_first_step = None
+        self.breakdown = None
         self.end_reason = None
         self._policy.reset()
         self.ev.reset()
@@ -1265,12 +1390,95 @@ class Session:
         self._stepped = True
         self._last_action = a.clone()
         self._policy.next = a
-        terminated, truncated = self.ev.step()
-        if not (terminated or truncated) and self._fall_step():   # the BDDL goal first: a success on the same step stands
-            terminated = True
-        if terminated or truncated:
+        _, truncated = self.ev.step()       # OmniGibson's own `terminated` is the bare BDDL goal: the success rule decides
+        # the order: a breakdown first (nothing else means anything then), the success rule (a success on the same step as
+        # a fall stands), the fall rule
+        ended = self._breakdown_step() or self._success_step() or self._fall_step()
+        if ended or truncated:
             self.episode_done = True
-        return terminated, truncated
+        return bool(ended), bool(truncated)
+
+    @property
+    def succeeded(self) -> bool:
+        """The success rule (REST_*): the BDDL goal has held for REST_STEPS control steps in a row, released and at rest."""
+        return bool(self._rest.done)
+
+    def _goal_entities(self):
+        for name in self.goal_objects:
+            ent = self._scope().get(name)
+            obj = getattr(ent, "wrapped_obj", ent) if ent is not None else None
+            if obj is None or obj is self.robot or not hasattr(obj, "get_linear_velocity"):
+                continue                  # a substance (particle system), an object sliced away or not yet created
+            yield name, obj
+
+    def _success_step(self) -> bool:
+        """The success rule for the control step just taken; True on the step its window closes (the episode ends there)."""
+        goal, held, moving = bool(self.env.task.success), [], []
+        if goal and getattr(self, "goal_first_step", None) is None:
+            self.goal_first_step = int(self.env.episode_steps)
+        if goal:
+            ag = getattr(self.robot, "_ag_obj_in_hand", None) or {}
+            in_hand = {id(o) for o in ag.values() if o is not None}
+            for name, obj in self._goal_entities():
+                try:
+                    if id(obj) in in_hand:
+                        held.append(name)
+                    elif float(np.linalg.norm(_np(obj.get_linear_velocity()).astype(np.float64))) > REST_SPEED_M_S:
+                        moving.append(name)
+                except Exception:  # noqa: BLE001 -- an object removed by a transition this step
+                    continue
+        self._rest_info = {"held": held, "moving": moving}
+        was = self._rest.done
+        if self._rest.update(goal, not held, not moving) and not was:
+            _slog("success", task=self.task, sim_steps=int(self.env.episode_steps), rest_steps=REST_STEPS)
+            return True
+        return False
+
+    def _breakdown_step(self) -> bool:
+        """A simulator breakdown (BREAKDOWN_*) at the control step just taken; True on the step it is found."""
+        if self.breakdown is not None:
+            return False
+        why = None
+        try:
+            pos, quat = self.robot.get_position_orientation()
+            pos = _np(pos).astype(np.float64).reshape(-1)
+            v = _np(self.robot.get_linear_velocity()).astype(np.float64).reshape(-1)
+            st = np.concatenate([pos, _np(quat).astype(np.float64).reshape(-1), v,
+                                 _np(self.robot.get_joint_positions()).astype(np.float64).reshape(-1)])
+            if not np.all(np.isfinite(st)):
+                why = "robot state not finite"
+            elif float(np.max(np.abs(pos))) > BREAKDOWN_POS_M:
+                why = f"robot base at {[round(float(x), 1) for x in pos]} m"
+            elif float(np.linalg.norm(v)) > BREAKDOWN_SPEED_M_S:
+                why = f"robot base at {float(np.linalg.norm(v)):.0f} m/s"
+            if why is None and int(self.env.episode_steps) % BREAKDOWN_OBJECT_EVERY == 0:
+                for name, obj in self._goal_entities():
+                    try:
+                        p = _np(obj.get_position_orientation()[0]).astype(np.float64).reshape(-1)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if not np.all(np.isfinite(p)) or float(np.max(np.abs(p))) > BREAKDOWN_POS_M:
+                        why = f"{name} at {[float(x) for x in p]}"; break
+        except Exception as exc:  # noqa: BLE001 -- a read that fails is no evidence of a breakdown: the check stands down
+            if not getattr(self, "_breakdown_read_error", None):
+                self._breakdown_read_error = repr(exc)[:200]; _log("breakdown check: could not read the state:", repr(exc)[:200])
+            return False
+        if why is None:
+            return False
+        self.breakdown, self.end_reason = why, f"{BREAKDOWN_REASON} ({why})"
+        _slog("breakdown", task=self.task, sim_steps=int(self.env.episode_steps), why=why)
+        _log("simulator breakdown:", why)
+        return True
+
+    def settle(self, steps: int = SETTLE_STEPS) -> int:
+        """The actions are over: the robot holds still (hold_action(): the last command, the base at 0) for up to `steps`
+        control steps, so that a goal reached on the last rows can satisfy the success rule; stops when the episode ends.
+        The verifiers' replays do this after every trajectory (privileged and standard), so a
+        trajectory need not wait out the rest window itself. Returns the control steps taken."""
+        n = 0
+        while n < int(steps) and self._stepped and not self.episode_done:
+            self.step(self.hold_action()); n += 1
+        return n
 
     def _fall_step(self) -> bool:
         """The fall rule for the control step just taken; True on the step its hold is reached (the episode ends there)."""
@@ -1306,14 +1514,43 @@ class Session:
         a[idx["base"]] = 0.0
         return a
 
-    def status(self) -> dict[str, Any]:
-        out = {"success": bool(self.env.task.success), "fallen": bool(self._fall.fallen), "sim_steps": int(self.env.episode_steps),
-               "resets": self._resets, "state_sha": self.state_sha(), "q_score": None}
+    @contextlib.contextmanager
+    def _states_untouched(self):
+        """Keep every object state's value cache as it was. Evaluating predicates (the q_score's partial-goal count) fills
+        the caches of the states it reads, and a cached value can be reused at later steps while the objects have moved
+        less than a tolerance, so an evaluation at an arbitrary step could change what transition rules and the goal see
+        afterwards (failure analysis item 17: a fire outcome changed with s.status() calls). Restored on exit."""
+        saved = []
         try:
-            for m in self.ev.metrics:
-                agg = m.aggregate(self.env)
-                if isinstance(agg, dict) and "q_score" in agg:
-                    out["q_score"] = float(agg["q_score"].get("final", 0.0))
+            for obj in list(self.env.scene.objects):
+                for st in (getattr(obj, "states", None) or {}).values():
+                    saved.append((st, {k: (dict(v) if isinstance(v, dict) else v) for k, v in
+                                       ((a, getattr(st, a)) for a in ("_cache", "_changed", "_last_t_updated") if hasattr(st, a))}))
+        except Exception as exc:  # noqa: BLE001
+            _log("status: could not snapshot object-state caches:", repr(exc)[:120])
+        try:
+            yield
+        finally:
+            for st, attrs in saved:
+                for k, v in attrs.items():
+                    setattr(st, k, v)
+
+    def status(self) -> dict[str, Any]:
+        """The episode's state, read without changing the simulation (the q_score's predicate evaluation runs with the
+        object-state caches restored afterwards): `success` is the success rule (REST_*), `goal` the BDDL goal at this
+        step, `goal_held_steps` how long goal + release + rest have held, `goal_objects_held` / `goal_objects_moving` what
+        keeps the window from closing."""
+        out = {"success": self.succeeded, "goal": bool(self.env.task.success), "goal_held_steps": int(self._rest.run),
+               "goal_objects_held": list(self._rest_info["held"]), "goal_objects_moving": list(self._rest_info["moving"]),
+               "goal_first_step": getattr(self, "goal_first_step", None),  # the first step the bare goal held (the rule before 2026-10-14; re-grades)
+               "fallen": bool(self._fall.fallen), "breakdown": self.breakdown is not None, "end_reason": self.end_reason,
+               "sim_steps": int(self.env.episode_steps), "resets": self._resets, "state_sha": self.state_sha(), "q_score": None}
+        try:
+            with self._states_untouched():
+                for m in self.ev.metrics:
+                    agg = m.aggregate(self.env)
+                    if isinstance(agg, dict) and "q_score" in agg:
+                        out["q_score"] = float(agg["q_score"].get("final", 0.0))
         except Exception as exc:  # noqa: BLE001
             out["q_score_error"] = repr(exc)[:120]
         return out
@@ -1325,7 +1562,7 @@ class Session:
     def record_stop(self) -> np.ndarray:
         acts = self.th.stack(self._recording).numpy() if self._recording else np.zeros((0, self.action_dim), np.float32)
         self._recording = None
-        _slog("record", task=self.task, n_actions=int(len(acts)), success=bool(self.env.task.success))
+        _slog("record", task=self.task, n_actions=int(len(acts)), success=self.succeeded)
         return acts.astype(np.float32)
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
@@ -1345,7 +1582,9 @@ class Session:
             terminated, truncated = self.step(a)
             if terminated or truncated:
                 break
-        st = self.status()
+        actions_sha = self.state_sha()      # the state at the last row (a live run that stopped there ends here)
+        settled = self.settle()             # the actions are over: the success rule's settle window (SETTLE_STEPS)
+        st = {**self.status(), "settle_steps": settled, "actions_sha": actions_sha}
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st
 
@@ -1645,6 +1884,11 @@ class Session:
                 frames.append(grab())
             if terminated or truncated:
                 break
+        k = 0                               # the settle window, as replay() runs it
+        while k < SETTLE_STEPS and self._stepped and not self.episode_done:
+            self.step(self.hold_action()); k += 1
+            if k % every == 0 or self.episode_done:
+                frames.append(grab())
         path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
         with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1,
                                 output_params=["-movflags", MP4_FRAGMENTED]) as w:
