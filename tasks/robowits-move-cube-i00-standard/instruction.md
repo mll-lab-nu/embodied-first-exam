@@ -12,15 +12,20 @@ when they hold, it keeps your last command for a settle window, inside the same 
 s in which every condition must hold at every 6th control step and at the last one, with each graded object staying
 within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the episode ends as a
 success; if not, the episode goes on and `meta["settle"]` says why. When your session ends, the same window decides
-once more. The service then replays your recorded episode, which must end in the same state and pass again.
+once more, after your last command. The window's steps are part of your recorded episode. The service then replays the
+recorded episode, which must end in the same state, and checks the window that ended it again over the same recorded
+steps: the replay adds no second window.
 
 - At least one of the three cubes has its centre past the goal line, on the line's far side from the robot.
 - On the table, released and at rest: the cube past the line has the bottom of its bounding box no more than 2 cm
   below the table top (a cube pushed off the table does not count), no part of the robot touches it, and it moves at
-  most 2 mm during the check window.
+  most 2 mm during the check window. The cubes that count (past the line and on the table) are taken when the check
+  window begins and must stay the same through it: a further cube that crosses the line, or a counted cube that leaves
+  the table or comes back over the line, fails the window when a checked step (every 6th control step of those 2 s and
+  the last) finds the set changed.
 
 Not checked: anything else: whether the cube is on the table top or still on a slope, its height and orientation, and
-the other two cubes.
+the other two cubes (except that neither may become a counted cube during the check window).
 
 Task text vs grader ("Move any of the three cubes to the left of the goal line."): "To the left of the goal line"
 means beyond it, farther from the robot than the line, not to the left as the robot sees it.
@@ -40,8 +45,9 @@ not give: keeping clear of the table's edges satisfies it).
 - **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
   1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
-  that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded
-  as it stands. Use the time: ending your session before the task is done ends the episode as a failure.
+  that watches counts too). The call that reaches it stops there and the episode ends (`reason` "step_guard"); no
+  settle window runs after the cap, so such an episode is graded without one, as a failure. Use the time: ending your
+  session before the task is done ends the episode as a failure.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
