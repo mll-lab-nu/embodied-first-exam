@@ -99,7 +99,8 @@ same point, so the rule is the one it applied (H.7); there is no settle window a
 ## Change log
 - 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one render
   pass over the trajectory after the verdict (Grading in standard mode, above). The start state is checked against
-  `RCB_START_SHA`; the collect hook waits 300 s for the verdict (was 840 s) and until 1680 s for the video, as before.
+  `RCB_START_SHA`; the collect hook still waits up to 840 s for the verdict (a service that crashed late in a long
+  episode resumes it from the journal first: 400-800 s for 200,000 steps) and until 1680 s for the video, as before.
   The scene, instances, physics, pass rule, reward and what the agent sees are unchanged, so the tasks keep their names;
   `final.json` / `reward.json` drop `deterministic`. Each standard task's README has the entry.
 - 2026-10-13 (owner decision, board 0099): standard tasks grant 20 resets (above). `server_mj.py` gained the reset

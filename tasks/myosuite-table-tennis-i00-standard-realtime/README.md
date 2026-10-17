@@ -35,7 +35,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any NVIDIA GPU with EGL (RTX 4090 / L4).
-- Measured: as the standard twin (sim 1.2-1.4 GB, docker stats, board 0112); the GPU only renders the cameras over EGL (5 ms a frame; board 0112, 2026-10-14, mll-4090-1); the sim keeps the GPU through the collect hook (fresh replay and video)
+- Measured: as the standard twin (sim 1.2-1.4 GB, docker stats, board 0112); the GPU only renders the cameras over EGL (5 ms a frame; board 0112, 2026-10-14, mll-4090-1); the sim keeps the GPU through the collect hook (the video render; no replay since 2026-10-17)
 - Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 14 GiB memory. Limits measured: GPU: EGL rendering only, under 1 GiB (board 0112) -> peak + 4; memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details

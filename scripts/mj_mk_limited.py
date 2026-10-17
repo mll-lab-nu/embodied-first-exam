@@ -53,13 +53,15 @@ CLIENT_RESET = '''    def reset(self, cameras=None, include_depth: bool = False,
 
     def status(self) -> dict:'''
 # The sim's collect hook: wait (at most 180 s) for the service's PID file, then send SIGUSR1 every 30 s until final.json is
-# `finalized` (the verdict), inside a 300 s deadline: the verdict is the live episode's, read off the live simulator once
-# the episode ends (seconds; nothing is replayed, board 0151; it was 840 s while a replay decided it). Then, with a verdict
+# `finalized` (the verdict), inside an 840 s deadline: the verdict is the live episode's, read off the live simulator once
+# the episode ends (seconds; nothing is replayed, board 0151), but a service that crashed late in a long episode first
+# replays its journal to resume it and writes server.pid only then (a 200,000-step DexToolBench resume: 400-800 s), so
+# the deadline stays what it was while a replay decided the verdict. Then, with a verdict
 # on disk, wait for `video_done` (the video, one render pass over the episode after the verdict) until 1680 s, so the loops
 # always end before the hook's timeout_sec = 1710: the longest archived episode (200,000 control steps) took 400-800 s
 # for a replay and a render together. Board 0136: one deadline for verdict and video together lost the video of every long
 # episode. A hook that stops early leaves the verdict on disk as it is.
-COLLECT = ("t0=$(date +%s); left() { echo $(( 300 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 120 ]; do sleep 2; done; "
+COLLECT = ("t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 120 ]; do sleep 2; done; "
            "i=0; while [ $(left) -gt 0 ]; do grep -q '\\\"finalized\\\": true' /data/final.json 2>/dev/null && break; "
            "[ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; "
            "if grep -q '\\\"finalized\\\": true' /data/final.json 2>/dev/null; then while [ $(( 1680 - $(date +%s) + t0 )) -gt 0 ] && "
@@ -101,7 +103,7 @@ CHANGES_LIVE = ("2026-10-17 (owner, boards 0150 and 0151): **graded by the live 
                 "same: the replay ran the same rows through the same per-step tracker and the same check. The frozen start is "
                 "checked when the episode begins ({start}); a mismatch gets no episode (`instance_mismatch`, infrastructure). A new "
                 "collect hook on `main` (`kill -9 -1`, before the sim's) stops whatever the agent left running before the episode "
-                "is ended and judged (PROTOCOL H.4). The collect hook waits 300 s for the verdict (was 840 s) and until 1680 s for the video, as before. The scene, the "
+                "is ended and judged (PROTOCOL H.4). The collect hook still waits up to 840 s for the verdict (a crashed service resumes the episode first) and until 1680 s for the video. The scene, the "
                 "instance, the pass rule and what the agent sees are unchanged, so the task keeps its name; `final.json` and "
                 "`reward.json` no longer have `deterministic`.")
 CHANGES_ALOHA = [
@@ -393,6 +395,8 @@ def instruction(src, inst, tool) -> str:
     intro = u.split("\n\n")[1].strip()
     score = re.search(r"## (Scoring \(the benchmark's own rule\)|Success)\n(.*?)\n\n", u, re.S)
     score_txt = score.group(2).replace("`s.check()` computes exactly this.", "The service applies exactly this rule.").strip() if score else ""
+    # the privileged twin's verifier replays the trajectory; the service judges the live episode (no replay, board 0151)
+    score_txt = score_txt.replace(" (and the replay is deterministic)", "")
     if tool == "rcb_dtb":
         score_txt = re.sub(r"Each goal has \*\*30 s \(1,800 control steps\)\*\*;.*?at most 360,000 control steps\.",
                            "In this mode goals have **no time limit** (the benchmark gives each goal 10 s). "

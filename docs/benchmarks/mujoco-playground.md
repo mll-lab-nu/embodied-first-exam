@@ -230,7 +230,8 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   differ by nondeterminism, which no archived trial showed. The frozen start is now checked when the episode begins
   (the start's state hash against the instance's `state_sha`; DexToolBench's instances have none, its compose files
   carry `RCB_START_SHA`): a mismatch is no episode, `instance_mismatch`, `infra_error = 1`. The collect hooks wait
-  300 s for the verdict (2.2: the end of the service, then the hook writes it; `server_mj.py` / realtime: 840 -> 300 s)
+  300 s for the verdict (2.2: the end of the service, then the hook writes it; realtime: 840 -> 300 s; `server_mj.py`
+  keeps 840 s, since a service that crashed late in a long episode resumes it from the journal first)
   and as long as before for the video. Scenes, instances, pass rules and what the agent sees are unchanged (the realtime
   instruction's grading sentence says "as it ran" instead of "replays"); the tasks keep their names.
 

@@ -102,7 +102,8 @@ def _graded(fin: dict) -> bool:
 
 
 def _give_up(reason: str, infra: bool, **extra) -> None:
-    """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and idle."""
+    """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and answer every
+    request with the refusal (409) until the container is removed."""
     log({"ev": "restart_refused", "reason": reason})
     try: prev = json.load(open(os.path.join(DATA, "final.json")))
     except Exception: prev = {}  # noqa
@@ -116,6 +117,38 @@ def _give_up(reason: str, infra: bool, **extra) -> None:
     _write_json(os.path.join(DATA, "final.json"), prev)
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
     signal.signal(signal.SIGUSR1, lambda *_: None); print(f"restart refused: {reason}", flush=True)
+    _refuse_forever(reason, infra)
+
+
+def _refuse_forever(reason: str, infra: bool) -> None:
+    """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container is
+    removed (as the 2.2 layer's rcb_limited.refuse_forever), so the agent's client stops at once (EpisodeOver) instead of
+    waiting out its timeout for a service that will never serve. The verdict is on disk already; this never changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True, "infra_error": int(bool(infra))}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30                                                # a client that stops sending must not hold the thread
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= 64 << 20: self.rfile.read(n)            # take the request first: the client then sees the answer
+                self.send_response(409); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            except (OSError, ValueError): pass
+            self.close_connection = True
+        do_GET = do_POST = _refuse
+        def log_message(self, *a): pass
+
+    def answer():
+        port = int(os.environ.get("RCB_PORT", "8000"))
+        while True:                                                 # the port may still be held: wait for it
+            try: HTTPServer(("0.0.0.0", port), Refusal).serve_forever(); return
+            except OSError as exc:
+                if exc.errno != errno.EADDRINUSE: traceback.print_exc(); return
+            time.sleep(1.0)
+
+    threading.Thread(target=answer, daemon=True).start()
     while True: time.sleep(3600)
 
 
@@ -562,18 +595,21 @@ def finalize() -> None:
     with LOCK:
         A = None
         try:
-            A = np.asarray(RECORD, float).reshape(-1, N); live_sha = S.state_sha(); live = S.progress() if KIND == "dtb" else S.check()
+            err = E["reason"] == "error"   # a simulator error ended the episode: the state after it is never judged
+            A = np.asarray(RECORD, float).reshape(-1, N); live_sha = S.state_sha()
+            live = {} if err else (S.progress() if KIND == "dtb" else S.check())
             np.savez(os.path.join(DATA, "trajectory.npz"), actions=A, tool=TOOL.__name__, meta=json.dumps({"source": "standard-mode episode", "reason": E["reason"],
                                                                                                           "episode": E["resets"] + 1, "reset_budget": RESET_BUDGET}))
             v = {"graded_by": "live", "replays": 0, "n_actions": int(len(A)), "live_state_sha": live_sha, "state_sha": live_sha,
                  "video": False, "video_pending": True, "video_source": "render"}
-            err = E["reason"] == "error"   # a simulator error ended the episode: the state after it is never a success
-            if KIND == "dtb":
-                ok = bool(live["done"]) and not err
+            if err:
+                v.update(success=False, live_success=False)
+            elif KIND == "dtb":
+                ok = bool(live["done"])
                 v.update(success=ok, live_success=ok, progress=round(float(live["progress"]), 4), goals_reached=int(live["reached"]),
                          n_goals=int(live["n_goals"]), failed_on_timeout=bool(live["failed"]), live_goals_reached=int(live["reached"]))
             else:
-                v.update(success=bool(live["success"]) and not err, live_success=bool(live["success"]) and not err,
+                v.update(success=bool(live["success"]), live_success=bool(live["success"]),
                          **{k: val for k, val in live.items() if k not in ("success", "state_sha", "steps") and isinstance(val, (int, float, bool))})
             # The verdict is final and on disk (finalized) before any video is rendered: the video never changes, hides or
             # delays it (a slow or failing render, or a collect hook that stops waiting, leaves the verdict as it is).

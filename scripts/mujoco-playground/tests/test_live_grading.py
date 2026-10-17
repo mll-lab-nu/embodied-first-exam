@@ -201,6 +201,17 @@ class ServerMj(unittest.TestCase):
         self.assertFalse(any(json.loads(x).get("ev") == "start" for x in (self.data / "episode.jsonl").read_text().splitlines()))
         txt, rw = self.grade()
         self.assertEqual((txt, rw["infra_error"], rw["instance_mismatch"]), ("0", 1, 1))
+        # the agent's client gets the refusal at once (409 with the reason), not a silent port
+        body = None
+        for _ in range(100):
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{self.port}/status", timeout=5)
+            except urllib.error.HTTPError as e:
+                body = json.loads(e.read()); break
+            except OSError:
+                time.sleep(0.1)
+        self.assertEqual((body or {}).get("reason"), "instance_mismatch")
+        self.assertTrue(body["gave_up"]); self.assertEqual(body["infra_error"], 1)
 
     def test_the_right_start_state_is_served(self):
         sha = __import__("hashlib").sha1(b"\0" * 32).hexdigest()[:16]    # the stand-in's start: q = targets = 0 (2 + 2 doubles)
