@@ -10,7 +10,10 @@ Every family here has tasks. Eleven further families without a valid positive ar
 DROPPED lists the families that are not coming back, with the reason.
 
 change_log (optional): {"priv": [...], "std": [...]}, README Change Log entries of this family alone, after those of every
-family (mk_tasks.CHANGE_LOG).
+family (mk_tasks.CHANGE_LOG). late_change_log (optional, same form): this family's entries after the 2026-10-14 in-place
+entry (mk_tasks.I01), before the later entries of every family (mk_tasks.LATE_CHANGE_LOG); newest last.
+
+goal (optional): the task sentence of BOTH modes, in place of RoboWits' text (std_goal: the standard mode's alone).
 
 host_cpu_vendor (optional): the family's frozen instance is rebuilt within tolerance only on CPUs of this vendor (the
 `vendor_id` of /proc/cpuinfo; docs/benchmarks/robowits.md, Hosts). mk_tasks.py writes it to `[metadata].host_cpu_vendor`
@@ -208,9 +211,10 @@ FAMILIES = {
         criterion=dict(
             priv=["At least one of the three cubes has its position at x > 0.9 m. The goal line is the strip at x = 0.9 m (x points away from the robot), so the cube's centre must be past it, on its far side from the robot."],
             std=["At least one of the three cubes has its centre past the goal line, on the line's far side from the robot."],
-            unchecked="anything else: whether the cube is on the table top or still on a slope, its height and orientation, and the other two cubes",
-            rest="On the table, released and at rest: the cube past the line has the bottom of its bounding box no more than 2 cm below the table top (a cube pushed off the table does not count), no part of the robot touches it, and it moves at most 2 mm during the check window.",
+            unchecked="anything else: whether the cube is on the table top or still on a slope, its height and orientation, and the other two cubes (except that neither may become a counted cube during the check window)",
+            rest="On the table, released and at rest: the cube past the line has the bottom of its bounding box no more than 2 cm below the table top (a cube pushed off the table does not count), no part of the robot touches it, and it moves at most 2 mm during the check window. The cubes that count (past the line and on the table) are taken when the check window begins and must stay the same through it: a further cube that crosses the line, or a counted cube that leaves the table or comes back over the line, fails the window when a checked step (every 6th control step of those 2 s and the last) finds the set changed.",
             text_vs_code="\"To the left of the goal line\" means beyond it, farther from the robot than the line, not to the left as the robot sees it."),
+        late_change_log={m: ["2026-10-17 (instruction audit M10): the success criterion states that the set of cubes that count (past the line and on the table) must not change during the check window, as the grader requires (`rcb_robowits.Session.settle_check`: \"the graded objects changed\"). Text only: the scene, the frozen instance, the tooling, the predicate and the verifier are unchanged."] for m in ("priv", "std")},
     ),
     "raise_platform": dict(
         status="pr", rid="24-raise-platform", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
@@ -332,9 +336,10 @@ FAMILIES = {
     "stand_pages": dict(
         status="pr", rid="07-stand-pages", eval_index=0, blenderkit=False, backend="cpu", oracle="none",
         objects=["page A with eyelets", "page B with eyelets", "stabilizing bar"],
-        std_goal="Stand the two pages up on the table so that they brace each other. They start joined like an open book: the stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted.",
+        goal="Stand the two pages up on the table so that they brace each other. They start joined like an open book: the stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted.",
         std_objects="Objects here: two thin grey pages with a row of eyelets along one edge and a grey bar (20 cm long, 1.5 cm square\nsection) that already runs through the eyelets of both pages, all lying flat on the table in front of the robot.",
-        priv_note="In this scene the stabilizing bar already runs through the eyelets of both pages at the start (they lie flat, joined like an open book): the hinge is assembled, nothing has to be inserted.",
+        priv_note="RoboWits' own text for this task (in its env file) reads \"Assemble the two pages using the stabilizing bar to create a standing hinge structure.\" In this scene that hinge is already assembled, so what is left is the task above; the grading is the success criterion below.",
+        late_change_log={m: ["2026-10-17 (instruction audit M13): the task sentence is the same in both modes (\"Stand the two pages up on the table so that they brace each other ...\"); the privileged instruction used RoboWits' \"Assemble the two pages using the stabilizing bar to create a standing hinge structure\" (now quoted in a note), the standard one this sentence, while both grade the same criterion. Text only: the scene, the frozen instance, the tooling, the predicate and the verifier are unchanged."] for m in ("priv", "std")},
         difficulty="Physical reasoning with a mechanical constraint: two thin, light pages (meshes with eyelets along one edge) lie flat on the table, joined like an open book by a 20 cm bar that already runs through the eyelets of both. A page cannot stand on its own; the hinged pages have to be stood up so that they brace each other, and at the end both pages must stand upright (Euler x and y within 15° of 0° or 180°), rest on the table, lie inside the table bounds, and be released (no robot contact with the pages or the bar) and at rest. It takes bimanual coordination with thin objects, and the tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
         oracle_evidence="No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-stand-pages-i00__npAKeQv (calib-high-1944, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7).",
         build_s=[51.7, 55.1], predicate_sha="74545fcf0c97cd76",
