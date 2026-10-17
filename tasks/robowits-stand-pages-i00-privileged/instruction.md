@@ -1,10 +1,11 @@
 # RoboWits · stand_pages — frozen instance
 
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
-0.4.7 physics) via Python. **Task:** Assemble the two pages using the stabilizing bar to create a standing hinge
-structure.
+0.4.7 physics) via Python. **Task:** Stand the two pages up on the table so that they brace each other. They start
+joined like an open book: the stabilizing bar already runs through the eyelets of both pages as a hinge pin, so
+nothing has to be inserted.
 
-In this scene the stabilizing bar already runs through the eyelets of both pages at the start (they lie flat, joined like an open book): the hinge is assembled, nothing has to be inserted.
+RoboWits' own text for this task (in its env file) reads "Assemble the two pages using the stabilizing bar to create a standing hinge structure." In this scene that hinge is already assembled, so what is left is the task above; the grading is the success criterion below.
 
 The scene objects are the env's entities (`s.objects()`: `page A with eyelets`, `page B with eyelets`, `stabilizing bar`; see
 `/opt/robowits/gs_gym/envs/robowits/07_stand_pages.py`). RoboWits' success predicate is `_check_success` in that file:
@@ -92,10 +93,10 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
 Not checked: any connection between the pages (the hinge) and where the bar ends up.
 
-Task text vs grader ("Assemble the two pages using the stabilizing bar to create a standing hinge structure."): The
-hinge is not checked: two pages standing upright on the table, released and at rest, pass with or without the bar
-through their eyelets. In this scene the bar already runs through the eyelets of both pages at the start (they lie
-open like a book): nothing has to be inserted.
+Task text vs grader ("Stand the two pages up on the table so that they brace each other."): The hinge is not checked:
+two pages standing upright on the table, released and at rest, pass with or without the bar through their eyelets. In
+this scene the bar already runs through the eyelets of both pages at the start (they lie open like a book): nothing
+has to be inserted.
 
 Terms: a *footprint* is an object's outline seen from above (the 2D convex hull of its collision mesh in the x-y
 plane); *not held* means that neither gripper tip (`Gripper_Tip_R` / `Gripper_Tip_L`, the frames of `s.ee_pose`) is

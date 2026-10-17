@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/robowits-stand-pages-i00-privileged"
-description = "RoboWits stand_pages (bimanual Marvin, Genesis): produce one replayable trajectory. Assemble the two pages using the stabilizing bar to create a standing hinge structure. Frozen scene instance (RoboWits evaluation scene 0 of task 7)."
+description = "RoboWits stand_pages (bimanual Marvin, Genesis): produce one replayable trajectory. Stand the two pages up on the table so that they brace each other. They start joined like an open book: the stabilizing bar already runs through the eyelets of both pages as a hinge pin, so nothing has to be inserted. Frozen scene instance (RoboWits evaluation scene 0 of task 7)."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "stand_pages"]
 
