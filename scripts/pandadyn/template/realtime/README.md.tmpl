@@ -51,4 +51,8 @@ and decides nothing. `nop`: the episode never starts (its clock starts at the fi
 
 ### Change Log
 - 2026-10-14 (owner, board 0112): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime
-  twin with S = @@SLOWDOWN@@ and @@RT_RESETS@@ resets.
+  twin with S = @@SLOWDOWN@@ and 10 resets.
+- 2026-10-17: reset budget 10 -> @@RT_RESETS@@. Every reset restores the same frozen start, so the budget is the number of
+  times an agent can rerun and tune a plan on a deterministic scene; with 10, realtime trials succeeded far more often
+  than standard ones (no reset), mostly on a late episode (docs/benchmarks/pandadyn.md, "Reset budget"). Instance,
+  scene, success check and S are unchanged; results under 10 resets are ranked separately.

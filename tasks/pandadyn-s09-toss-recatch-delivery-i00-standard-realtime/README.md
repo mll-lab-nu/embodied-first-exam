@@ -9,20 +9,20 @@
 | Family / instance | `s09_toss_recatch_delivery` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
+| Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-pandadyn:0.1.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-s09-toss-recatch-delivery-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s09-toss-recatch-delivery-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/STANDARD_MODE.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-10 resets (only the last episode is graded). A ball is thrown high into the air when the episode starts and comes down near the robot. Catch it in the shallow cup the Panda holds, which has one open side. Bring the cup to a launch region and toss the ball straight up out of the cup with a real throw: it must leave the cup floor while rising. Move the cup sideways and catch the ball again. Finally, release it into an open box that slides back and forth along a rail, where it must settle while the box is moving.
+3 resets (only the last episode is graded). A ball is thrown high into the air when the episode starts and comes down near the robot. Catch it in the shallow cup the Panda holds, which has one open side. Bring the cup to a launch region and toss the ball straight up out of the cup with a real throw: it must leave the cup floor while rising. Move the cup sideways and catch the ball again. Finally, release it into an open box that slides back and forth along a rail, where it must settle while the box is moving.
 
 ## Difficulty
 That of `pandadyn-s09-toss-recatch-delivery-i00-standard`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
 the robot's servos run whatever the agent does, so the agent has to plan or stream the targets from a program of its own
 (the task's horizon is 25 s of robot time, about 50 s of wall-clock time at S = 2), and
-learn the scene from 11 real attempts.
+learn the scene from 4 real attempts.
 
 ## Reference solution
 `solution/oracle_plan.py` plans the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step,
@@ -55,7 +55,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 | | |
 |---|---|
-| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 10 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
+| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
 | Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
 | Images | the `sim` sidecar runs eai-pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
@@ -65,3 +65,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ### Change Log
 - 2026-10-14 (owner, board 0112): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime
   twin with S = 2 and 10 resets.
+- 2026-10-17: reset budget 10 -> 3. Every reset restores the same frozen start, so the budget is the number of
+  times an agent can rerun and tune a plan on a deterministic scene; with 10, realtime trials succeeded far more often
+  than standard ones (no reset), mostly on a late episode (docs/benchmarks/pandadyn.md, "Reset budget"). Instance,
+  scene, success check and S are unchanged; results under 10 resets are ranked separately.
