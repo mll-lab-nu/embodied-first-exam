@@ -15,7 +15,7 @@ client and one episode. **Task (臨帖):** copy the exemplar work **北闕臨丹
 - Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
-- There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
+- There is nothing to hand in: the service records your episode as the trajectory and scores the main sheet as your episode left it. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
   last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()` waits
@@ -55,14 +55,14 @@ client and one episode. **Task (臨帖):** copy the exemplar work **北闕臨丹
   worst one counts); **stray ink**
   (ink more than 1 mm away from the exemplar's ink, as a fraction of the exemplar's inked area); the **number of strokes** on the
   main sheet. **Success iff IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80, stray ink ≤ 0.04 and at most
-  12 strokes (continuous brush contacts) on the main sheet** (the recorded episode is replayed twice and both replays must agree). The continuous score
+  12 strokes (continuous brush contacts) on the main sheet** (scored on the main sheet as your episode left it). The continuous score
   is the IoU (scaled by 12 / strokes above 12 strokes).
 
 ## Process rules
 Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
 with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.
 Colouring in or filling the shapes, zigzag or serpentine fills, and contour-offset fills (paths that go round and round inside a
-shape) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the replayed
+shape) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the live
 episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is free):
 - `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together, sampled
   at every physics step);
