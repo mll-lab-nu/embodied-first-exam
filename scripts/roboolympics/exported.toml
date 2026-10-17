@@ -68,6 +68,18 @@ patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14,
            "task.toml", "environment/docker-compose.yaml", "README.md"]   # 2026-10-16, board 0136: the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
+name = "roboolympics-soccer-jointcpu-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["1dbd9cf39221"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+
+[[tasks]]
+name = "roboolympics-soccer-jointgpu-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["1dbd9cf39221"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+
+[[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
