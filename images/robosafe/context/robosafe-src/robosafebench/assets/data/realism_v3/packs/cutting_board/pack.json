@@ -1,0 +1,86 @@
+{
+ "kind": "cutting_board",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 3520,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false
+    }
+   ],
+   "raw_triangles": 3520,
+   "after_bbox": [
+    [
+     -0.175,
+     -0.125,
+     -0.0002
+    ],
+    [
+     0.175,
+     0.125,
+     0.0182
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.175,
+     -0.125,
+     -0.0002
+    ],
+    [
+     0.175,
+     0.125,
+     0.0182
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    0.7779686131706716,
+    1.0135716076976804,
+    0.4460277222775323
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "board",
+  "mode": "whole",
+  "keep_if": "wood"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Poly Haven",
+   "name": "Wooden Cutting Board",
+   "url": "https://polyhaven.com/a/wooden_cutting_board",
+   "file_url": "https://api.polyhaven.com/files/wooden_cutting_board",
+   "license": "CC0 1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "author": "Kuutti Siitonen",
+   "attribution": "\"Wooden Cutting Board\" by Kuutti Siitonen, Poly Haven (CC0; credit not required)"
+  }
+ },
+ "original_files": {
+  "wooden_cutting_board_1k.gltf": "89fa89f6987c5087c0c7a8ac8ccbe451cfa8976ae46377d83a423e658cff9de4",
+  "wooden_cutting_board.bin": "d7fa7549afcae99eb4739dfb13039f1e56f03327c2936cb021bfd05c3afad839",
+  "wooden_cutting_board_arm_1k.jpg": "f35dec51ff94e279a9d43a4ee64b75235cc3d6701107ae22a1eea797e3d236d3",
+  "wooden_cutting_board_diff_1k.jpg": "79274fb86cc7f62363e4448b4597f06933d640a79c746ff6f823d2e4e27ad143",
+  "wooden_cutting_board_nor_gl_1k.jpg": "b123d7ca0d0be01a31686240c925e85a1d2499172586f119482924b06b0b0c93"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "76b4920abb9c1a38b4d4ea3c74b3895710a47c14a2962f54f9645591e55bcbc8",
+  "default_0.png": "d418f33fe8014b02b7ebe77026e52a0d8c24317470376132dfe61ae6b1ce78bf"
+ }
+}

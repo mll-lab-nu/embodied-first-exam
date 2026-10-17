@@ -31,7 +31,7 @@ authoritative). Call `spec()` first: it has every number this page refers to.
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the service is ready |
 | `r.spec()` | `GET /spec` | the facts: `task_text`, `action_types` (each type's `dim`, `layout`, `lower`, `upper`, `units`, `semantics`, whether it is `interpolable` and whether it `takes_note`), `control_dt` (@@CONTROL_DT@@ s), `max_control_steps`, `cameras`, `proprio_layout`, `control` (the robot's frame, tool point, joints, speed limits and gripper) |
-| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `last_operator_answer` |
+| `r.status()` | `GET /status` | before the exit `calls`, `rows`, `control_steps`, `done`, `elapsed_s`, `last_operator_answer`; after it only `{"status": "exited"}` |
 @@ARMS_OBSERVE_ROW@@
 | `r.submit(type, A, dt=@@CONTROL_DT@@, interpolate="linear", cameras=None, video="mp4", include_depth=False, note="")` | `POST /submit` | runs `A`, rows of that action type `dt` seconds apart (a multiple of `control_dt`; a chunk covers at most 10 s); `note` is the text that goes with the rows (below) |
 

@@ -1,6 +1,6 @@
 """One fresh-process replay of a recorded RoboSafeBench episode (server.py's finalize runs two side by side).
 
-    python replay.py INSTANCE.json ROWS.npy NOTES.json OUT.json
+    python replay.py INSTANCE.json ROWS.npy NOTES.json OUT.json [PICTURE_EVENTS.json]
 
 Rebuilds the frozen instance, executes the journal rows (rcb_rsb.Codec) with the notes table, judges the episode with
 RoboSafeBench's verdict and writes {"state_sha", "start_sha", "verdict", "record"} (state_sha: the hash of the end
@@ -17,7 +17,8 @@ import rcb_rsb  # noqa: E402
 
 def main() -> None:
     inst_path, rows_path, notes_path, out_path = sys.argv[1:5]
-    out = rcb_rsb.replay(rcb_rsb.load_instance(inst_path), np.load(rows_path), json.load(open(notes_path)))
+    pictures = json.load(open(sys.argv[5])) if len(sys.argv) > 5 else None
+    out = rcb_rsb.replay(rcb_rsb.load_instance(inst_path), np.load(rows_path), json.load(open(notes_path)), pictures)
     tmp = out_path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(rcb_rsb.plain(out), f)
