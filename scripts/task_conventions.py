@@ -759,6 +759,13 @@ def _shared_sources() -> set[bytes]:
     return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (scripts/rcb_monitor/)
 
 
+def _is_layer_copy(f: Path) -> bool:
+    """A copy of some version of scripts/eai_standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
+    list): board 0151 changed the layer, and the tasks of each benchmark move onto the new bytes only when it regenerates."""
+    t = read_text(f) or ""
+    return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))
+
+
 def normalize_text_files(task: Path) -> None:
     shared = _shared_sources()
     for f in sorted(task.rglob("*")):
@@ -766,6 +773,9 @@ def normalize_text_files(task: Path) -> None:
             continue
         if f.read_bytes() in shared:
             continue
+        if f.name == "rcb_limited.py" and _is_layer_copy(f):
+            continue                    # an earlier version of the shared layer (a benchmark not yet regenerated onto the
+                                        # current one): never rewritten either (its COMPAT list names rcb-limited/2.x on purpose)
         s = read_text(f)
         if s is None:
             continue
