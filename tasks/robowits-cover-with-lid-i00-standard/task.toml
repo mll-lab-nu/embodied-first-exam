@@ -83,12 +83,20 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-# end the episode (SIGUSR1 to the live service, through a crash resume if one is under way), wait for the in-process
-# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
+# end the episode (SIGUSR1 to the live service, through a crash resume if one is under way): the service runs the settle
+# window after the agent's last command on the live simulator and writes the live verdict (nothing is replayed), then
+# renders the video once; wait for it (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout 2280; cat /data/final.json"
-timeout_sec = 2400                # service up (a resume replays the journal first), the grading replay, then the video
+timeout_sec = 2400                # service up (a resume replays the journal first), the settle window, then the video
 
 [agent]
 timeout_sec = 3600.0             # RoboWits budget (why: docs/benchmarks/robowits.md)
