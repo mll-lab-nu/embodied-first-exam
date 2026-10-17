@@ -21,8 +21,10 @@ A strike needs the ball in the pocket beside the head pin, a few centimetres wid
 None (as `roboolympics-bowling-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The lane is 1.0541 m wide and runs 18.288 m from the foul line to the head pin's spot, with a gutter 0.235 m wide and 0.047 m deep on each side; behind the foul line the approach, level with the lane, is 4.572 m long. Ten pins (0.381 m tall, 1.53 kg each) stand in the triangle of four rows, 0.3048 m apart, its point towards you. The ball (0.218 m across, 2.72 kg) hangs from your right hand. The lane is oiled (friction 0.04) for the first 13.5 m in its middle, less far on its outside boards, and dry (friction 0.2) beyond. A delivery: you let go of the ball (once: it cannot be gripped again) and it crosses the foul line. It is a foul if any part of you touches the lane, a gutter or anything else on or beyond the foul line, at any time. Pins count only if the ball reaches them on the lane: a ball that touches a gutter before it has touched a pin knocks down nothing. A pin is down when it is tilted more than 20.0 degrees or is no longer on the lane's surface; the pins are counted 5.0 s after the ball first touches one. You succeed with a strike: all ten pins down. You fail on a foul; on a gutter ball; if fewer than ten pins are down at the count; if any part of you touches the ball after the release (your right arm may still brush it during the first 0.2 s); if you fall before the count (your pelvis lower than 0.5 m above the approach, or any part of you other than your feet on the approach or the floor); or after 40 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

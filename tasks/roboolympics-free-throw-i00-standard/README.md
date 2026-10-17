@@ -21,8 +21,10 @@ From a hand about a metre above the floor the 0.62 kg ball needs to leave at abo
 None (as `roboolympics-free-throw-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The official basket: a rigid ring of 0.45 m inner diameter (0.018 m metal), its top edge 3.05 m above the floor, its centre 0.375 m in front of a backboard 1.8 m wide and 1.05 m high whose lower edge is 2.9 m above the floor. The ball is a size-7 basketball (0.239 m across, 0.62 kg, it keeps 0.85 of its speed in a bounce on the floor); it flies in air (drag and spin lift). It starts gripped in your right hand and is at your disposal at the start. The free-throw line's edge nearest to you is 4.225 m from the point under the ring's centre; the free-throw semi-circle has a radius of 1.8 m round the middle of that edge. You succeed when, after you have let go of the ball, its centre goes down through the ring's plane inside the ring and on down to one ball diameter below it. You fail if you have not let go of the ball within 5.0 s; if, before the ball has touched the ring or entered the basket, any part of you touches the floor on or beyond the free-throw line's near edge or outside the semi-circle; if any part of you touches the ball more than 0.05 s after you let go of it (it cannot be gripped again); if the ball touches the floor before it is through the ring; if the ball's centre comes up through the ring from below; if you fall before the ball is through (a fall: your pelvis lower than 0.35 m above the floor, or any part of you other than your feet on the floor); or after 12 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

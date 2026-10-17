@@ -11,8 +11,9 @@
 ## Verification
 The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
-recorded, and after the agent's time the service replays the last attempt in a fresh simulator; `tests/grade.py` reads
-`/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The clock's record
+recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
+grading replay, owner 2026-10-17, board 0151); the video is rendered from the recorded attempt afterwards.
+`tests/grade.py` reads `/data/final.json`: pass iff the live attempt succeeded. The clock's record
 (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the attempt never starts (its
 clock starts at the first submit), reward 0. The
 rules: @@RULES@@ @@REVIEW@@

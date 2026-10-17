@@ -21,8 +21,10 @@ Forty metres with three reversals in 30 s: the walking gait covers 19 m in that 
 None (as `roboolympics-shuttle-run-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: Two lines cross the floor: the start line x = 0 and the far line x = 10.0 m (the planes meant are the edges of the painted lines that face each other). The clock starts at t = 0. You run four legs: to the far line, back to the start line, to the far line, back to the start line. At each of the three turns you must put a foot on the ground wholly beyond the line: every part of that foot at x > 10.0 m at the far line (turns 1 and 3), at x < 0 at the start line (turn 2); a foot on the line does not count. The turns count in this order only. After the third turn you finish at the moment the leading point of your torso (not the head, arms, legs or feet) reaches the start line. Which way you face and how you turn is up to you. You succeed when you finish within 30 s of robot time. A fall does not end the attempt: you are down while your pelvis is below 0.4 m, you may get up and go on, but 10.0 s down in a row end it. You fail when down for 10.0 s, or after 30 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

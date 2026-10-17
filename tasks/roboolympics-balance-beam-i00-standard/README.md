@@ -21,8 +21,10 @@ The beam is 0.1 m wide and the robot's built-in stance and gait keep the feet 0.
 None (as `roboolympics-balance-beam-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The beam is a competition balance beam: 5.0 m long, 0.1 m wide on top and 0.16 m deep, its top 1.25 m above the floor; it runs along +x from x = 0 to x = 5.0 m, centred on y = 0, on two supports. You must get from the end you start on to the far end on your feet. The far end is the last 0.5 m of the beam. You succeed when both feet are on the beam with every point at which they touch it inside the far end, and you then stand there for 2.0 s without a break: only your feet touch the beam, your torso is within 20.0 degrees of vertical and your pelvis moves slower than 0.35 m/s. You fail the moment any part of you touches the floor or the beam's supports (a fall from the beam), the moment any part of you other than a foot touches the beam (a fall on the beam: no hands, knees or sitting), or after 90 s. Leaving the beam with both feet (a hop) is allowed as long as you come down on it on your feet. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

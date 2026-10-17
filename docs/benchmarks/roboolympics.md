@@ -191,7 +191,7 @@ reproduce the referee's decisions and not only the physics.
 | mode | the agent gets | attempts | graded |
 |---|---|---|---|
 | privileged | the world in its own container: the simulator and its full state, the referee's live record, this family's rules as code, unlimited resets | unlimited | `trajectory.npz` (sim rows), replayed twice in fresh processes: both must succeed and end in the same state |
-| standard | a client: the robot's two head cameras (depth on the left one), joint encoders, motor torques, two IMUs, grip state, the venue's fixed camera; action chunks | 50 resets | the last attempt, recorded by the sidecar and replayed in a fresh simulator |
+| standard | a client: the robot's two head cameras (depth on the left one), joint encoders, motor torques, two IMUs, grip state, the venue's fixed camera; action chunks | 50 resets | the last attempt as the sidecar's referee called it live (no grading replay since 2026-10-17) |
 | standard-realtime (13 dynamic families) | as standard, on a clock that does not stop (S = 1): `submit` plans rows from step `at` and answers at once | 10 resets | as standard; the clock's record is evidence only |
 
 **World-frame information (PROTOCOL D7).** Privileged tasks give everything through the tooling. Standard tasks give
@@ -219,8 +219,9 @@ a ball launched, served, thrown or released on the venue's clock, or a keeper dr
 table-tennis-return, tennis-return, trap-ball, volley-shot, volleyball-bump, volleyball-set, volleyball-spike.
 - **Service.** The standard twin's `server.py` (`rcb_service.Sim` on `rcb_rfo.Episode`), unchanged, started by the
   shared realtime layer (`shared/realtime/rcb_realtime.py`, `rcb_client.py`: HumanoidBench's, byte for byte;
-  `command: python /srv/rcb_realtime.py`). Same instance, referee, actions, observations and grading (live attempt +
-  fresh replay, same final state); the clock's record goes to `reward.json` and decides nothing.
+  `command: python /srv/rcb_realtime.py`). Same instance, referee, actions, observations and grading (the live
+  attempt's referee call; until 2026-10-17 also a fresh replay ending in the same state); the clock's record goes to
+  `reward.json` and decides nothing.
 - **Rendering on the GPU.** An OSMesa frame of these venues takes about 1.6 s, which on a clock that does not stop is a
   stall of its own; the twins render with EGL on the `sim` service's GPU (`MUJOCO_GL=egl`, `graphics` capability).
   Image 0.2.1 adds `libegl1` and the NVIDIA EGL ICD manifest; everything else in it is 0.2.0's (the standard and
@@ -269,10 +270,18 @@ measure. What follows:
 The world is deterministic on the CPU: the same sim rows from the frozen start give the same state hash (simulator
 state, controllers' memory, grips, the referee's record). Privileged: `tests/grade.py` replays the trajectory in two
 fresh processes; `success` = both succeed ∧ the final hashes agree; an unreadable file or a row that is no sim row is
-the agent's 0 (`bad_trajectory`), a replay that does not finish is `grader_error`. Standard: the sidecar journals every
-executed sim row, the collect hook ends the episode, the service replays the last attempt in a fresh world and writes
-the verdict before the video; `tests/grade.py` reads `final.json` (`success` = live ∧ replay ∧ deterministic). A crash
+the agent's 0 (`bad_trajectory`), a replay that does not finish is `grader_error`. Standard and standard-realtime (owner,
+2026-10-17, board 0150/0151): the live episode is the verdict. The sidecar journals every executed sim row, the collect
+hook ends the episode, and the service writes the verdict from the live attempt (`final.json`: `graded_by` live,
+`replays` 0, `success` = the referee's live call, the referee's record in `referee`) before the video, which is one render
+pass from `trajectory.npz` (`video_source` render). No grading replay runs. The referee latches a success the moment it
+happens and ends the attempt, so the live rule is the replay's: there is no hold or settle window to move. The frozen
+start is checked on the live simulator. `server.py`'s build() refuses a world that does not start at the instance's
+`t0.state_sha` (InstanceMismatch), and `start_sha` makes the layer void a graded attempt begun by a reset that did not
+return there; both are `instance_mismatch`, `infra_error 1`. In the archive, 185 of 185 standard trials with resets
+replayed bit-exactly from a fresh world, so a reset returns to that hash. `tests/grade.py` reads `final.json`. A crash
 resumes the same attempt from the journal (`rcb_service.py`, shared with HumanoidBench, KinDER, VLABench and BiGym 2.0).
+`scripts/roboolympics/tests/test_live_adapter.py` (numpy, no image) tests the adapter's part.
 
 Across CPUs: the image pins the numerical kernels the policies run on (`OPENBLAS_CORETYPE`, numpy's CPU dispatch) so
 that hosts with and without AVX-512 compute the same; a trial is still graded on the host it ran on. The standard
@@ -471,3 +480,8 @@ G1 model and meshes: MuJoCo Menagerie, BSD-3-Clause. Unitree's walking policy (u
 running policy (C1801SYQ/g1_running): Apache-2.0. FALCON's G1 policy (LeCAR-Lab/FALCON): MIT. WBC-AGILE's G1
 velocity-height policy (nvidia-isaac/WBC-AGILE): Apache-2.0. Every licence file is next to its files in the image
 (`images/robofunolympics/roboolympics/SOURCE.md`); the image can be published.
+
+## Change log
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay (the native
+  standard and standard-realtime tasks: `rcb_service.py`'s live finalize, the adapter's start check and live referee
+  record); video by one render pass from the trajectory after the verdict.
