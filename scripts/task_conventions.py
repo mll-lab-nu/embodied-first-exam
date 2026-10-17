@@ -83,6 +83,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
+    ("ikea-", "IKEA MuJoCo"),
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:

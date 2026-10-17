@@ -2711,3 +2711,69 @@ measured = "privileged prototype trials, GPT-6 Luna, RTX 4090, 2026-10-16 (docke
 [[cap]]
 match = "^ispatialgym-.*-privileged$"
 main = { cpus = 12.0, memory_gb = 40.0, pids = 16384 }
+# IKEA MuJoCo, privileged: 8 task(s). MuJoCo on the CPU; the verifier also renders the replay video on the CPU (OSMesa) in a third process.
+[[rule]]
+match = "^ikea-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 3.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "peak RSS of one Session 0.27-0.45 GB per scene (3000 reference rows + final_check, laptop, 2026-10-15); the verifier runs two replays and the video replay at once; x 1.2 and rounded up"
+
+# IKEA MuJoCo, standard: 8 task(s). Physics on the CPU; the sim sidecar renders RGB with Nyx (path tracer, Vulkan) and
+# depth with MuJoCo's EGL raster on one GPU.
+[[rule]]
+match = "^ikea-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 3.0
+min_gpu_memory_gb = 1.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "RTX 4090 24GB / L4 24GB (an NVIDIA GPU with Vulkan and EGL)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "Harbor standard oracle of svallet on an RTX 4090 host, 2026-10-17 (docker stats and nvidia-smi per process every 20 s): the sim sidecar peaked at 1.8 GiB of memory and 0.8 GiB of GPU memory (the Nyx render process), the agent's container (the client) below 0.1 GiB; the privileged verifier of the same task (two replays and the video replay) at 1.6 GiB; x 1.5 and rounded up"
+
+[[limit]]
+match = "^ikea-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "the privileged peaks with room for an agent's own replays (four Sessions at once)"
+
+[[limit]]
+match = "^ikea-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 16.0
+measured = "the sidecar's measured peaks (1.8 GiB, 0.8 GiB of GPU memory, svallet) with room for the longer scenes and an agent's own client processes; the agent's container runs the client only"
+
+[[cap]]
+match = "^ikea-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^ikea-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }

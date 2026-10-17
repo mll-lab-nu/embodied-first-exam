@@ -2,7 +2,9 @@
 # Build every base image under images/<name>/ as ghcr.io/mll-lab-nu/eai-<name>:<version> (+ :latest). The version is
 # images/<name>/VERSION if present, else images/VERSION. images/<name>/.build-context-self builds with the
 # image directory as context (eai-mujoco COPYs its asset tree rcb_mj/, see prepare_assets.sh); images/<name>/BUILD_CONTEXT names
-# a context directory a script prepares (skipped while it is missing); else the repo root.
+# a context directory a script prepares (skipped while it is missing); else the repo root. A subdirectory
+# images/<name>/<sub>/ with its own Dockerfile and VERSION is a second image, eai-<name>-<sub>:<its version>, built after
+# <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM eai-ikea-mujoco).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 REG="${RCB_IMAGE_REGISTRY:-ghcr.io/mll-lab-nu}"
@@ -16,4 +18,10 @@ for dir in images/*/; do
   # a base image from images/, not a task dir: no scripts/stamp_mtimes.py stamp needed (issue #258 is about task contexts)
   cmd="docker build -t $REG/eai-$name:$VER -t $REG/eai-$name:latest -f $dir/Dockerfile $CTX"
   echo "+ $cmd"; if [ "$D" = docker ]; then eval "$cmd"; else sg docker -c "$cmd"; fi
+  for sub in "$dir"*/; do
+    [ -f "$sub/Dockerfile" ] && [ -f "$sub/VERSION" ] || continue
+    s="$(basename "$sub")"; SV="$(cat "$sub/VERSION")"
+    cmd="docker build -t $REG/eai-$name-$s:$SV -t $REG/eai-$name-$s:latest -f $sub/Dockerfile $sub"
+    echo "+ $cmd"; if [ "$D" = docker ]; then eval "$cmd"; else sg docker -c "$cmd"; fi
+  done
 done

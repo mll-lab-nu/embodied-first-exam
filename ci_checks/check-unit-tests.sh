@@ -56,6 +56,8 @@ if [ -f "$root/scripts/robosafe/tests/test_grade.py" ]; then run 300 robosafe/te
 if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe/tests/test_grade_rt.py; fi
 # DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
 if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
+# IKEA MuJoCo's privileged grader on a stub replay that crashes or not (its tasks pull request adds the test)
+if [ -f "$root/scripts/ikea_mujoco/tests/test_grade.py" ]; then run 300 ikea_mujoco/tests/test_grade.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
 if [ $all -eq 1 ]; then run 900 robolab/tests/test_finalize.py; fi
 
