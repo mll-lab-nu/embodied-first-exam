@@ -691,6 +691,28 @@ class TestCrashOwner(unittest.TestCase):
         self.assertTrue(rcb_service.crashed_in_step(rec.replace(b"in images", b"in _step")))
 
 
+class TestWatchImageCap(ByHand):
+    """Concurrent watches together stay within the frame budget (review round 3: an agent could otherwise exhaust the
+    sidecar's memory, and an OOM kill counts as infrastructure)."""
+
+    def make_sim(self):
+        return FastSim()
+
+    def test_watches_beyond_the_budget_in_flight_are_429(self):
+        self.svc.max_frames = 120                            # 100 control steps at 30 fps: 35 images a camera
+        ok = self.post("/observe", seconds=1.0, cameras=["cam"], video_fps=30)   # 35
+        self.assertFalse(ok.done.is_set())
+        second = self.post("/observe", seconds=1.0, cameras=["cam", "side"], video_fps=30)   # + 70 = 105
+        self.assertFalse(second.done.is_set())
+        third = self.post("/observe", seconds=1.0, cameras=["cam", "side"], video_fps=30)    # + 70 > 120
+        self.assertEqual(third.reply[1], 429)
+        self.assertIn("images_in_flight", json.loads(third.reply[3]))
+        self.run_steps(100)                                  # the watches complete
+        self.assertTrue(ok.done.is_set() and second.done.is_set())
+        again = self.post("/observe", seconds=1.0, cameras=["cam", "side"], video_fps=30)
+        self.assertFalse(again.done.is_set())                # room again
+
+
 class TestFirstCommand(ByHand):
     def make_sim(self):
         return FastSim()
