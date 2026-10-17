@@ -61,7 +61,7 @@ allowed = [0]
 oracle = [0]
 
 [verifier]
-timeout_sec = 12126.0
+timeout_sec = 21120.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"
 

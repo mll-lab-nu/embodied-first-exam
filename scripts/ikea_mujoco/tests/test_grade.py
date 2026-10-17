@@ -18,6 +18,13 @@ if __name__ == "__main__":
     k = int(out.rsplit("_", 1)[1].split(".")[0])
     if os.environ["FAKE_CRASH"][k] == "1":
         os.kill(os.getpid(), signal.SIGSEGV)
+    if os.environ["FAKE_CRASH"][k] == "2":    # the scene's code raised on the rows (rcb_ikea.py replay records it)
+        json.dump({"initial_state_sha": "s0", "success": False, "replay_exception": "ValueError: math domain error",
+                   "rows": 1, "state_sha": "e"}, open(out, "w"))
+        sys.exit(0)
+    if os.environ["FAKE_CRASH"][k] == "3":    # another initial state on this host
+        json.dump({"initial_state_sha": "other", "success": True, "state_sha": "e", "settled_sha": "f", "rows": 1}, open(out, "w"))
+        sys.exit(0)
     json.dump({"initial_state_sha": "s0", "success": True, "state_sha": "e", "settled_sha": "f", "rows": 1,
                "settled": {"goal": True, "released": True, "at_rest": True}, "goal": True, "released": True,
                "at_rest": True, "terminal": {}}, open(out, "w"))
@@ -48,7 +55,13 @@ def main() -> int:
         assert r["success"] == 0 and r["sim_breakdown"] == 1 and r["replay_crash"] == 1, (crash, r)
         assert r["grader_error"] == 0 and r["infra_error"] == 0 and r["deterministic"] == det, (crash, r)
         assert r["replays_crashed"] == crash.count("1") and r["replay_signal"] == 11, (crash, r)
-    print("test_grade: ok (no crash, one of two, the other one, both)")
+    for crash, det in (("22", 1), ("02", 0)):     # an exception in the scene's code: the agent's 0, no free retry
+        r = run(crash)
+        assert r["success"] == 0 and r["sim_breakdown"] == 1 and r["replay_exception"] == 1, (crash, r)
+        assert r["grader_error"] == 0 and r["infra_error"] == 0 and r["deterministic"] == det, (crash, r)
+    r = run("33")                                 # the host builds another initial state: infrastructure
+    assert r["success"] == 0 and r["infra_error"] == 1 and r["instance_mismatch"] == 1, r
+    print("test_grade: ok (no crash, one of two, the other one, both; scene exceptions; instance mismatch)")
     return 0
 
 

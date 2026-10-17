@@ -158,19 +158,33 @@ def name(t: str, mode: str = "privileged") -> str:
     return f"ikea-{t}-i00-{mode}"
 
 
-def verifier_timeout(t: str) -> int:
+def _base_timeout(t: str) -> int:
     wall = EVID.get(t, {}).get("replay_wall_s")
     return int(max(3600, 3 * wall + 600)) if wall else 7200
 
 
+def verifier_timeout(t: str) -> int:
+    """The verifier's time limit: room for the reference's replays on the Harbor host (3 x its wall + 600 s, at least
+    3600 s) and for a trajectory of row_cap(t) rows on a slow trial-class CPU (evidence.json `slow_replay_wall_s`: one
+    unobserved reference replay on a dedicated Xeon Gold 6230R core, the CPU-only pool hosts' class) with a 1.5x margin and
+    600 s to spare. A verifier that times out writes no verdict (an infrastructure failure), so the limit must cover the
+    longest trajectory the grader accepts on every host it runs on."""
+    e = EVID.get(t, {})
+    base, cap = _base_timeout(t), row_cap(t)
+    if cap and e.get("slow_replay_wall_s"):
+        base = max(base, int(1.5 * cap * e["slow_replay_wall_s"] / e["rows"] + 600) // 60 * 60 + 60)
+    return base
+
+
 def row_cap(t: str) -> int | None:
     """The most rows a trajectory may have: what the verifier's two replays (measured on the reference, at the same time,
-    plus the video replay) fit in its timeout with a 1.5x margin and 600 s to spare. None without a measurement (WIP)."""
+    plus the video replay) fit in the Harbor host's timeout with a 1.5x margin and 600 s to spare. None without a
+    measurement (WIP). verifier_timeout() then also covers this many rows on a slow host."""
     e = EVID.get(t, {})
     if not (e.get("replay_wall_s") and e.get("rows")):
         return None
     per_row = e["replay_wall_s"] / e["rows"]
-    return int((verifier_timeout(t) - 600) / (1.5 * per_row)) // 1000 * 1000
+    return int((_base_timeout(t) - 600) / (1.5 * per_row)) // 1000 * 1000
 
 
 def cap_text(t: str) -> str:
@@ -503,7 +517,7 @@ rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/rcb
 # The agent's files are untrusted input (PROTOCOL v2.0 H.1): no link out of /app/output, no FIFO, socket or device.
 find /app/output -mindepth 1 \\( -type l -o -type p -o -type s -o -type b -o -type c \\) -delete 2>/dev/null || true
 mkdir -p /logs/verifier
-python /tests/grade.py --task {t} --binding /tests/runtime_binding.json --traj /app/output/trajectory.npz --repeat 2{max_rows_arg(t)} \\
+python /tests/grade.py --task {t} --binding /tests/runtime_binding.json --traj /app/output/trajectory.npz --repeat 2{max_rows_arg(t)} --budget-s {verifier_timeout(t)} \\
   2> /logs/verifier/grade.log
 chmod 0644 /logs/verifier/reward.txt /logs/verifier/reward.json
 '''

@@ -392,10 +392,21 @@ def replay_cli(a) -> int:
     except InvalidTrajectory as exc:
         out.update(bad_trajectory=str(exc))
     else:
-        s.run(ctrl)
-        fc = s.final_check()
-        out.update(fc["end"], success=fc["success"], settled=fc["settled"], settled_sha=fc["settled_sha"],
-                   settle_s=fc["settle_s"], sim_steps=len(ctrl) * SUBSTEPS, wall_s=round(time.time() - t0, 1))
+        try:
+            s.run(ctrl)
+            fc = s.final_check()
+        except (MemoryError, OSError):
+            raise                       # the host's problem: the grader reports it as its own error
+        except Exception as exc:  # noqa: BLE001
+            # The scene's own code (mechanism, success.py) or MuJoCo raised on the state these rows drove it into: a
+            # simulator breakdown caused by the deliverable (the agent's 0), never a grader error (PROTOCOL H.5).
+            out.update(success=False, goal=False, replay_exception=f"{type(exc).__name__}: {exc}"[:500],
+                       breakdown=dict(kind="exception", error=type(exc).__name__, row=len(s.rows)), rows=len(s.rows),
+                       state_sha=s.state_sha(), settled_sha=None, sim_steps=len(s.rows) * SUBSTEPS,
+                       wall_s=round(time.time() - t0, 1))
+        else:
+            out.update(fc["end"], success=fc["success"], settled=fc["settled"], settled_sha=fc["settled_sha"],
+                       settle_s=fc["settle_s"], sim_steps=len(ctrl) * SUBSTEPS, wall_s=round(time.time() - t0, 1))
     text = json.dumps(out, default=_plain)
     if a.out:
         tmp = a.out + ".tmp"

@@ -67,8 +67,13 @@ open-loop in two fresh processes from the frozen keyframe. Success needs all of:
 - These hold at the end of the rows **and** again after the grader holds the last row for 1.0 s
   (`rcb_ikea.Session.final_check()`).
 - Both replays end in the same state hashes, before and after the hold.
-- A replay that crashes in every process (a simulator crash) is a breakdown (`sim_breakdown 1`, reward 0), not a
-  grader error.
+- A replay that crashes (a simulator crash, `replay_crash`) or in which the scene's code or MuJoCo raises on the state
+  the rows drove it into (`replay_exception`) is a breakdown (`sim_breakdown 1`, reward 0), not a grader error: a
+  grader or infrastructure error gives the trial a free retry (PROTOCOL H.5), which the deliverable's own failures must
+  not get. A scene that differs from the binding or builds to another initial state is `infra_error 1`.
+- The privileged verifier's time limit covers a trajectory of the task's row cap on a slow trial-class CPU (one
+  reference replay on a Xeon Gold 6230R core, `evidence.json` `slow_replay_wall_s`, with a 1.5x margin), not only the
+  Harbor host's timing: a verifier that times out writes no verdict.
 - The verifier checks the scene in its image file by file against `tests/runtime_binding.json` (`instance_exact`) and
   its initial-state hash (`instance_ok`).
 

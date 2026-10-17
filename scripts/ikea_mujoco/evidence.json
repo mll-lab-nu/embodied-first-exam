@@ -24,6 +24,7 @@
   "replay_wall_s": 294.9,
   "rows": 70210,
   "sim_time_s": 175.5,
+  "slow_replay_wall_s": 472.0,
   "timing": {
    "text": "one unobserved replay 472 s (4.4 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'."
   }
@@ -53,6 +54,7 @@
   "replay_wall_s": 3168.4,
   "rows": 168628,
   "sim_time_s": 421.6,
+  "slow_replay_wall_s": 5636.0,
   "timing": {
    "text": "one unobserved replay 5636 s (52.2 %, OVER the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'; 2882 s (26.7 %) on a quiet i9-14900HX laptop."
   }
@@ -82,6 +84,7 @@
   "replay_wall_s": 359.5,
   "rows": 89126,
   "sim_time_s": 222.8,
+  "slow_replay_wall_s": 604.0,
   "timing": {
    "text": "one unobserved replay 604 s (5.6 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'."
   }
@@ -111,6 +114,7 @@
   "replay_wall_s": 530.7,
   "rows": 63697,
   "sim_time_s": 159.2,
+  "slow_replay_wall_s": 923.0,
   "timing": {
    "text": "one unobserved replay 923 s (8.5 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'."
   }
@@ -139,6 +143,7 @@
   "replay_wall_s": 1508.1,
   "rows": 357221,
   "sim_time_s": 893.05,
+  "slow_replay_wall_s": 3160.0,
   "timing": {
    "text": "one unobserved replay 3160 s (29.3 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'; 3245-3518 s in earlier Quest runs, 1612 s on vast EPYC 9354."
   }
@@ -168,6 +173,7 @@
   "replay_wall_s": 308.7,
   "rows": 69414,
   "sim_time_s": 173.5,
+  "slow_replay_wall_s": 478.0,
   "timing": {
    "text": "one unobserved replay 478 s (4.4 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'."
   }
@@ -197,6 +203,7 @@
   "replay_wall_s": 3842.0,
   "rows": 231903,
   "sim_time_s": 579.8,
+  "slow_replay_wall_s": 6839.0,
   "timing": {
    "text": "one unobserved replay 6839 s (63.3 %, OVER the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'; 3413 s (31.6 %) on a quiet i9-14900HX laptop."
   }
@@ -226,6 +233,7 @@
   "replay_wall_s": 712.9,
   "rows": 353125,
   "sim_time_s": 882.8,
+  "slow_replay_wall_s": 1288.0,
   "timing": {
    "text": "one unobserved replay 1288 s (11.9 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'."
   }
