@@ -5,7 +5,9 @@ invariant itself (the verdict from a trusted source) is held by check-verifier-i
 standard task whose grader still follows the replay rule, and a grader that breaks the infrastructure rule of
 RUNNING.md ("Infrastructure failures"). For every standard / standard-realtime task:
   - static: its verifier code (tests/*.py) reports `graded_by_live` and reads no `replay_success` (a verdict that waits
-    for a replay, or a replay that can decide);
+    for a replay, or a replay that can decide); task.toml has a `[[verifier.collect]]` hook on `main` (the agent's
+    container: `kill -9 -1`, stopping what the agent left running) before the first hook on the sim sidecar, so
+    nothing the agent left running moves the robot before the service is signalled (H.4);
   - run: each distinct tests/grade.py (one run per content, standard library only) is given synthetic records in a
     temporary directory (RCB_DATA, RCB_VERIFIER_LOG_DIR) and must answer
       a finalized live success, no replay fields                -> reward 1, infra_error 0 (no replay is waited for)
@@ -31,6 +33,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -103,6 +106,17 @@ def check(tasks: list[Path]) -> list[str]:
         if "graded_by_live" not in src:
             errs.append(f"{task.name}: its verifier reports no `graded_by_live` (the standard modes are graded by the "
                         "live episode, PROTOCOL H.4)")
+        try:
+            hooks = (tomllib.loads((task / "task.toml").read_text()).get("verifier") or {}).get("collect") or []
+        except (OSError, tomllib.TOMLDecodeError):
+            hooks = []
+        svc = [h.get("service") for h in hooks if isinstance(h, dict)]
+        first_sim = next((i for i, x in enumerate(svc) if x not in ("main", "rcb_monitor")), None)
+        kill = next((i for i, h in enumerate(hooks) if isinstance(h, dict) and h.get("service") == "main"
+                     and "kill" in str(h.get("command") or "")), None)
+        if first_sim is not None and (kill is None or kill > first_sim):
+            errs.append(f"{task.name}: no collect hook stops the agent's processes (`main`: kill -9 -1) before the sim "
+                        "sidecar is signalled (PROTOCOL H.4)")
         if re.search(r"""["']replay_success["']""", src):
             errs.append(f"{task.name}: its verifier reads `replay_success` (no replay grades a standard episode)")
         grader = task / "tests" / "grade.py"
