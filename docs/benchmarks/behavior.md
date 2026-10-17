@@ -258,10 +258,30 @@ its log has no failed download: the scene loads from the mounted dataset alone.
 - Privileged: the verifier replays `trajectory.npz` from the frozen instance in **two fresh processes** (an in-process
   reset is approximate; the first replay in a fresh process reproduces a live run bit for bit) and needs the goal after
   both, equal final-state hashes and `instance_ok`.
-- Standard: the service dumps the episode (artifacts under `/out`, since `/data` is the dataset) and exits on the collect
-  hook's signal; the hook replays it in two fresh processes (`environment/sim/finalize.sh`); `success = live ∧ replay ∧
-  deterministic`, `live_matches_replay` reported separately. OmniGibson declares rollouts nondeterministic; measured so
-  far, a live run and its fresh replay agree.
+- **Standard: graded by the live episode (2026-10-17, owner, board 0150/0151).** `success` = the live episode's success,
+  judged by the sim service at every control step with the success rule below; nothing replays the episode. On the
+  collect hook's signal (after `main`'s `kill -9 -1` hook has stopped the agent's processes) the signal's thread only
+  stops the HTTP loop (Isaac steps on the request thread); the request thread then ends the episode
+  (`server.py end_live`): an episode still running gets the success rule's settle window on the live simulator, the
+  robot held still for up to 5 s (not journaled, not in `trajectory.npz`), and a goal that settles there is the
+  episode's success (`settled_success`, `settle_steps`); a fall or breakdown in the window ends it as one. The service
+  writes `trajectory.npz` (the agent's rows) and `episode.json`, closes the video and exits; `finalize.sh` writes
+  `final.json` from `episode.json` (`graded_by` "live", `replays` 0). The frozen start is checked when the service builds
+  the scene (the instance's state hash, else every task object's pose within tolerance; `Session.instance_matches`): a
+  mismatch gives up as `instance_mismatch` (`infra_error`) before the agent is served (before: the service crashed on it
+  until compose gave up, and the replays checked it again). Video: recorded live (`/out/live.mp4`): the robot's three
+  cameras at 224 px, the frames every control step renders for the agent anyway, tiled, every third control step
+  (10 fps), copied in the control loop and encoded by a thread (PyAV, fragmented MP4: a crash leaves a playable
+  prefix); a resume records it anew while replaying the journal. Only when it is missing or does not play does
+  `finalize.sh` run ONE video-only render (the tooling's `replay --video`, `replay.mp4`) after the verdict, whose
+  success and hash are not read. Saved: the two graded fresh-process Isaac replays and the video replay (each a 10-20 min
+  Isaac start + the episode at 1.9-3.5 control steps/s on an 8-vCPU L40S; board 0136 measured about 630 slot-hours of
+  BEHAVIOR collect time over 553 standard trials). `[[verifier.collect]] timeout_sec` = 23400 s (was 52200 s): the end
+  (up to 2 h through a resume) + the video render when it runs (up to 4 h) + 30 min. Before 2026-10-17 (below):
+  `success = live ∧ replay ∧ deterministic`, two fresh-process replays in the hook. The settle window is logged as a call
+  (`/settle`), so a crash there counts as inside the agent's calls; known limit: a native crash (segfault) of the service
+  in the window restarts the sim container and with it ends the collect hook running there (no finalized `final.json`:
+  infrastructure).
 - **Replays that agree (2026-10-14, failure analysis item 16).** 15 trials of the 10-08..10-14 runs (7 privileged, 8
   standard) completed the task live or in a replay and scored 0 because their two fresh-process replays (or the live run
   and a replay) ended in different states; all are transition or heat tasks (setting_the_fire, slicing_vegetables,
@@ -282,7 +302,7 @@ its log has no failed download: the scene loads from the mounted dataset alone.
   tooling now hashes every prim and particle system by its unique name and every rule by its class name (crc32, the same
   in every process; `_stable_hashes()`) before the scene loads; equality stays identity. Every simulator process also runs
   with `PYTHONHASHSEED=0` (sets of strings).
-- **The graded replays run alike (2026-10-14).** Until then the video was recorded during one of
+- **The graded replays run alike (2026-10-14; standard mode until 2026-10-17, when its replays were removed).** Until then the video was recorded during one of
   the two graded replays (privileged: the second, standard: the first), and the replay CLI builds that Session with the
   challenge cameras (`cameras="default"`, 224x224) instead of the tiny ones, so the two replays the hash check compares
   ran different configurations (not the cause of the 15 above, but no basis for comparing hashes either). Now both graded
@@ -307,10 +327,11 @@ quantifier's category; a tool the goal does not name may stay in the hand) is at
 and every goal object's base link is slower than `REST_SPEED_M_S` = 0.05 m/s. The episode ends at the end of that window.
 When the actions run out first (a trajectory's last row; a standard episode the agent ended), the robot holds still (the
 last command, the base at 0) for up to `SETTLE_STEPS` = 150 control steps (5 s, `Session.settle()`; every replay runs it
-after the last row; in standard mode, when the agent's episode ended first (reason `timeout`), a success both replays reach
-there is the episode's, `settled_success` (since the review of 2026-10-16 only when both replays ran the settle window,
-`settle_steps` > 0, and their state at the last row is the live one, `live_matches_replay`): the service itself cannot step after the end signal, since Isaac steps only on
-its request thread and a step from the end signal's thread deadlocked it), so a trajectory recorded to the first
+after the last row; in standard mode, when the agent's episode is still running at its end, the sim service runs it on
+the live simulator after the agent's container is stopped and a success there is the episode's, `settled_success`
+(since 2026-10-17: the end signal's thread stops the HTTP loop and the request thread steps the window, as a step from
+the signal's thread deadlocked Isaac; from 2026-10-14 to 2026-10-17 the two graded replays ran the window and a success
+both reached on the live rows counted), so a trajectory recorded to the first
 frame of the goal with the objects released still passes once they settle. `status()["goal"]` is the bare goal,
 `goal_objects_held` / `goal_objects_moving` what keeps the window open; `reward.json` `goal`, `settle_steps`. The BDDL
 goals themselves are the challenge's and unchanged; goals looser than their task texts (stacking_wood, chop_an_onion,
@@ -344,7 +365,8 @@ breakdown is a 0 with `sim_breakdown` (see Simulator breakdown); `regrade.py` la
 
 ### Whose failure a 0 is (2026-10-10, review of board 0067)
 The pass rules are unchanged; what changed is how a 0 that is not the agent's is reported (`reward.json`).
-- **Standard.** `final.json` is the trusted sidecar's own file, so `tests/grade.py` reports `infra_error` = 1 (no verdict on
+- **Standard** (as of 2026-10-10; since 2026-10-17 there is no replay, so `replay_error` and `gpu_lost` are gone and a
+  frozen start that does not rebuild is the service's `instance_mismatch` give-up). `final.json` is the trusted sidecar's own file, so `tests/grade.py` reports `infra_error` = 1 (no verdict on
   the agent) when it is missing (`missing_log`: the service never came up, or its container was gone), unreadable
   (`grader_error` too), not finalized (the collect hook did not finish; the file is the service's own copy without the
   replays), or says a fresh-process replay did not run to its result (`replay_error`: the process died, printed no result
@@ -479,7 +501,7 @@ Per-simulator notes (former STANDARD_MODE §16):
 | depth | OmniGibson `depth_linear` |
 | `/kinematics` | numpy model of the articulation (trunk + arms), cuRobo fallback |
 | proprio columns (2.0 → 2.2) | 49 → 121 |
-| grading replays | two fresh processes |
+| grading replays | none since 2026-10-17 (graded live; a video-only render when the live video is missing); two fresh processes before |
 | resume class (STANDARD_MODE §13.1) | `approx` |
 
 Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
@@ -487,3 +509,9 @@ Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the en
 | benchmark | measured | build | note |
 |---|---|---|---|
 | BEHAVIOR-1K | 6 families (12 trials) | 130–404 s (scene load); cold builds on a loaded lab host 433–519 s | `RCB_STARTUP_TIMEOUT_S` = 1800: each trial starts with a cold Kit cache (its own `*_trusted` volume), about 250 s more |
+
+## Change log
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay (the collect hook's
+  two fresh-process replays and its video replay are gone); the success rule's settle window runs on the live simulator
+  after the agent's container is stopped; the start state is checked at the live start (`instance_mismatch`); video
+  recorded live by the sim service (`live.mp4`), a video-only render only when that is missing.

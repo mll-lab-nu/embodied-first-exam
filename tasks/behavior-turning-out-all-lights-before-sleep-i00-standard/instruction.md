@@ -12,9 +12,10 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
   rest (slower than 0.05 m/s); then the episode ends (`meta["reason"]` "success"). An object still in the hand, or a
   goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
   `r.get_obs(seconds=2.0)`). The goal objects are every object the goal names, a tool or appliance it names (even
-  inside a `not`) included. When your episode ends first, each grading replay holds the robot still (your last
-  command, the base at 0) for up to 5 s after your last row, and a goal that settles there counts (when both replays
-  reproduce your episode's state at your last row).
+  inside a `not`) included. When your episode is still running at the end of your time (you stopped early, or your
+  time ran out), the service holds the robot still (your last command, the
+  base at 0) for up to 5 s more on the same simulator, and a goal that settles there counts; the service judges the
+  episode itself, nothing is replayed.
 - A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
   "failure: simulator breakdown") ends the episode as a failure.
 - **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
