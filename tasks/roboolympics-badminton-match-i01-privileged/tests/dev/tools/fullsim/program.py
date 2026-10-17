@@ -123,14 +123,15 @@ class Program:
 
 
 def uid_processes(uid):
+    """The live processes of `uid` (a zombie is dead already: its parent, or the container's init, reaps it)."""
     alive = []
     for d in Path("/proc").iterdir():
         if not d.name.isdigit():
             continue
         try:
-            if d.stat().st_uid == uid:
+            if d.stat().st_uid == uid and (d / "stat").read_text().rsplit(")", 1)[1].split()[0] not in ("Z", "X"):
                 alive.append(int(d.name))
-        except OSError:
+        except (OSError, IndexError):
             continue
     return alive
 
