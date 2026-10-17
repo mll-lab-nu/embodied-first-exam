@@ -8,15 +8,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
-  { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video pass, which renders replay.mp4
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/dexjoco-water-plant-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo water_plant (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-water-plant-i00-privileged. Pick up the spray bottle, point its nozzle at the potted plant and squeeze the trigger. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo water_plant (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-water-plant-i00-privileged. Pick up the spray bottle, point its nozzle at the potted plant and squeeze the trigger. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "standard-mode", "robot-as-a-service", "water_plant"]
 
@@ -83,10 +81,17 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 7200                # two replays of an episode without a step cap, then the video (finalize.sh: RCB_COLLECT_BUDGET_S)
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict into final.json, then the video
+timeout_sec = 5580                # the service's end (<= 900 s) + one video pass of the longest episode (finalize.sh: RCB_COLLECT_BUDGET_S)
 
 [agent]
 timeout_sec = 3600.0
