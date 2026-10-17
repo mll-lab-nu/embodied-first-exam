@@ -255,8 +255,7 @@ def reference_text(key: str, T: dict, mode: str) -> str:
     note = ((T.get("oracle_note") or {}).get("standard") or "").strip()
     return ("The privileged twin's reference trajectory, streamed through this task's service by `solution/oracle_replay.py`: "
             "one-second `joint_position` chunks of its rows (`dt` = 1/20 s, `interpolate=\"hold\"`, one row per control step), "
-            "the same commands the privileged replay feeds; the service records them and the collect hook replays the recording "
-            "twice. " + (note + " " if note else "") + "Where the trajectory comes from:\n\n" + src)
+            "the same commands the privileged replay feeds; the service records them and grades the live episode. " + (note + " " if note else "") + "Where the trajectory comes from:\n\n" + src)
 
 
 def review_note(level: str) -> str:

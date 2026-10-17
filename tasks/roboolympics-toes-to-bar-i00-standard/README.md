@@ -21,8 +21,10 @@ The bar is 0.80 m above your pelvis and your legs are 0.75 m long: hip flexion a
 `solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded by scripts/roboolympics/make_oracles.py). Reference: a knee-tuck snap with bent elbows, timed on the back-swing: 5 repetitions in 7.8 s; 12 of 12 variants when it was written. The privileged twin's reference rows (778 control steps, success after 7.78 s) streamed through the client.
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The bar is 0.028 m thick, 2.8 m above the floor, 2.4 m long between its two uprights, along the y axis; it turns freely about its own axis. Both hands grip it from the start. A repetition has two parts, in this order. The touch: both feet touch the bar at the same moment, each at a point between your two hands (shins, knees or anything else on the bar is not a touch, and does not fail). The hang: afterwards the centres of both feet are at least 1.4 m below the bar and behind it (x less than the bar's; the heels back behind the bar), both at the same moment (in your dead hang they are 1.55 m below it). You succeed when the hang of repetition 5 is reached. Swinging is allowed (a kip is legal), as is bending the knees on the way. You fail the moment either hand no longer grips the bar, any part of you touches the uprights, the mats or the floor, or after 60 s.
 
 ## Compute resources

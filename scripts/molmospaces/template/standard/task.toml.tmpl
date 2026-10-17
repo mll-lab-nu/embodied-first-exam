@@ -7,9 +7,7 @@ artifacts = [
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
-  { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video-only pass, which renders replay.mp4
   "/app/output/",
 ]
 
@@ -36,12 +34,19 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 1800                # the end (up to 900 s through a resume) + replays of 20-120 s each (over 500 s on a loaded
-                                  # host); finalize.sh shares the time left before 1740 s between the two grading replays
-                                  # and never runs one past it, so final.json is always completed in time
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode, then the video
+timeout_sec = 1800                # the end (up to 900 s through a resume) + the merge; the video-only pass (a fresh-process
+                                  # render of the whole episode: 20-120 s, over 500 s on a loaded host) gets the time left
+                                  # before 1740 s; final.json is written before it, so the verdict never waits on it
 
 [agent]
 timeout_sec = 3600.0

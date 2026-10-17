@@ -49,6 +49,10 @@ run 120 account_failure_check.py --selftest   # the runner's lane stop and infra
 # RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
 # grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
+# board 0151: RoboOlympics' exported-task live grading and IKEA MuJoCo's standard grader (their pull requests add them)
+for t in roboolympics/tests/test_live_export.py ikea_mujoco/tests/test_standard_grade.py ambench/tests/test_standard_grading.py; do
+  if [ -f "$root/scripts/$t" ]; then run 300 "$t"; fi
+done
 # RoboSafeBench's standard grader (its tasks pull request adds the test)
 if [ -f "$root/scripts/robosafe/tests/test_grade.py" ]; then run 300 robosafe/tests/test_grade.py; run 300 robosafe/tests/test_score.py; fi
 # ... and its standard-realtime grader (the realtime tasks' commit adds the test)
@@ -62,7 +66,8 @@ if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/te
 # IKEA MuJoCo's privileged grader on a stub replay that crashes or not (its tasks pull request adds the test)
 if [ -f "$root/scripts/ikea_mujoco/tests/test_grade.py" ]; then run 300 ikea_mujoco/tests/test_grade.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
-if [ $all -eq 1 ]; then run 900 robolab/tests/test_finalize.py; fi
+# (board 0151: without grading replays it takes about a minute, so it runs in every scope now)
+run 900 robolab/tests/test_finalize.py
 
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
@@ -80,7 +85,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
     run 900 "$t"
   done
   # Public RT source compilation and actual loopback RCB1/client snapshots; no simulator.
-  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_http_two_fresh test_tidy_observe_barrier test_quaternions; do
+  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_live_verdict test_tidy_observe_barrier test_quaternions; do
     if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
   done
   # Existing accepted native records compile through the same converter as legacy references.
@@ -94,7 +99,13 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # iSpatialGym's frozen instances: goal.json restores upstream's TRO, nothing answer-like in instance.json, the start-only
   # BDDL states no goal (its tasks pull request adds the test)
   if [ -f "$root/scripts/ispatialgym/tests/test_instance.py" ]; then run 300 ispatialgym/tests/test_instance.py; fi
-  # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
+  # board 0151: the live-grading tests of MetaWorld+ and LIBERO-MAX (their pull requests add them)
+  for t in metaworldplus/tests/test_live_grading.py libero-max/tests/test_live_grading.py roboarc/tests/test_live_grade.py \
+           roboolympics/tests/test_live_adapter.py ispatialgym/tests/test_grading.py robowits/tests/test_live_grading.py \
+           robopaint_strict/tests/test_live_grading.py robodojo/tests/test_server.py robolab/tests/test_live_video.py; do
+    if [ -f "$root/scripts/$t" ]; then run 900 "$t"; fi
+  done
+  # LIBERO-MAX keeps its own copy of rcb_service.py (since board 0151 the layer's bytes): the classes of the shared
   # service test that apply to it, run against that copy
   want humanoidbench/tests/test_standard_service.py libero-max/shared/standard &&
     cmds+="@lane:port RCB_SERVICE_DIR=$(printf %q "$root/scripts/libero-max/shared/standard") bash $self --one 900 humanoidbench/tests/test_standard_service.py Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot"$'\n'

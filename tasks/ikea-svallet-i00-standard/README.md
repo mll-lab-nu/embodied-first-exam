@@ -34,13 +34,13 @@ row; S.step(4)`), applies the joint-speed rule, evaluates the grader's terminal 
 success.py, released, at rest, no breakdown) after every call and, when they hold, `Session.final_check()` (the same after
 a 1.0 s hold of the last row), both on a snapshot restored bit-exactly afterwards, ends the episode at the first settled
 success or at a breakdown, and journals every executed control step; at the end it writes
-`/data/trajectory.npz` (all executed control steps, float64) and the final state hash. The verifier (`tests/grade.py`,
-separate sandbox, no network, the `ghcr.io/mll-lab-nu/eai-ikea-mujoco:0.3.0` image) replays the trajectory in two fresh processes with the privileged
-grader (`tests/replay_grade.py`: `final_check()`, the terminal rules at the end of the rows and after a 1.0 s hold; the
-scene checked file by file and by its initial state). Pass iff the live episode succeeded, both replays succeed, and they
-end in the live final state (`live_matches_replay`, `deterministic`).
+`/data/trajectory.npz` (all executed control steps, float64: the replayable deliverable) and the final state hash; an
+episode that ends otherwise (timeout) is judged as it stands by the same two checks. Before the episode the service checks
+the scene file by file against `runtime_binding.json` and by its initial-state hash (`instance_mismatch`, infrastructure).
+The verifier (`tests/grade.py`, separate sandbox, no network, the shared client base) transcribes `final.json`: pass iff
+the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs (owner, 2026-10-17, board 0151).
 
-Harbor checks on ws (ws-1: RTX 4090; shared, loaded) (oracle), ws2 (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0.4.0 (Nyx RGB; built per host from one context: ws2 a466a594c463, ws3 53d8800bfa22, ws 3f9218fb9864); the live, replay and settled hashes equal the 0.3.0 (EGL) run's (2026-10-16): `oracle` scored 1 (sim 0.4.0 (Nyx): live settled success at control step 68000 (17 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1), live end hash = the 0.3.0 run's; live service time 397 s, verifier replays 353 s); `nop` scored 0.
+Before 2026-10-17 (graded then by the verifier's two replays; history, not re-run since): Harbor checks on ws (ws-1: RTX 4090; shared, loaded) (oracle), ws2 (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0.4.0 (Nyx RGB; built per host from one context: ws2 a466a594c463, ws3 53d8800bfa22, ws 3f9218fb9864); the live, replay and settled hashes equal the 0.3.0 (EGL) run's (2026-10-16): `oracle` scored 1 (sim 0.4.0 (Nyx): live settled success at control step 68000 (17 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1), live end hash = the 0.3.0 run's; live service time 397 s, verifier replays 353 s); `nop` scored 0.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -59,11 +59,11 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | | |
 |---|---|
 | Grasping | physical (finger friction), no assist |
-| Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown): live after every call, and on the replays at the end of the rows and after a 1.0 s hold |
+| Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), on the live episode: after every call and at its end, at the last row and again after a 1.0 s hold of it (on a copy) |
 | Frame | every pose the agent gets or gives is in the robot frame: origin at the left arm's base link, +z up (`spec.world`); the scene's own world frame never leaves the sim service |
 | Speed rule | targets within the robot's real limits (3.14159 rad/s on every arm joint; the table and its sources: `rcb_ikea.JOINT_SPEED_LIMITS_RAD_S` / `GRIPPER_SPEED_LIMITS`), clamped per control step, as the privileged twin's Session; faster rows take the control steps they need (`meta.clipped`), as RoboARC's rule |
 | Cameras | `cam_high`, `cam_low` (static), `cam_left_wrist`, `cam_right_wrist` (on the hands); 848 x 480, fovy 58 deg; added at service start (`environment/sim/ikea_rig.py`, `rig.json`), the model is unchanged; RGB: Nyx, RoboARC's renderer and look (path tracer, 32 spp, denoised; studio HDRI and point lights; `environment/sim/ikea_nyx.py` with RoboARC's `nyx_direct.py`); depth: MuJoCo's raster; on the sidecar's GPU |
-| Live video | `/data/live.mp4` (cam_high, 10 frames per simulated second), copied to the verifier logs; never affects the verdict |
+| Video | `/data/live.mp4` (cam_high, 10 frames per simulated second, recorded during the live episode), copied to the verifier logs; never affects the verdict |
 | Scene | `/opt/ikea/scenes/svallet/` in the images; digest `0ac62b72465133c4…` |
 | Initial state | sha256 `22360c69fb8a50ef…` of the mjSTATE_INTEGRATION vector |
 
@@ -73,9 +73,9 @@ counts the same limit from the agent's first request (`spec.budget.wall_clock_s`
 episode with reason `timeout` when it runs out; that count never runs out before Harbor's.
 
 ### Deviations
-- The verifier image is the IKEA MuJoCo image, not the shared client base: it replays the trajectory itself.
 - `ee_pose` is not offered (only `joint_position`, the scene's actuator layout); `/kinematics` gives FK / IK.
-- No fresh-process replay inside the sidecar (finalize.sh only ends the service): the verifier's replays decide.
+- Graded by the live episode (the settled check on the live simulator); no grading replay, in the sidecar or the
+  verifier (owner, 2026-10-17, board 0150/0151).
 
 ### Goal
 Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats.

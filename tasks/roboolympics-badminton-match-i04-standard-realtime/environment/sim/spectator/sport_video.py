@@ -7,8 +7,8 @@ A fresh process replays /data/episode.jsonl with the task's own core.episode.rep
 draws the players' cameras (sport.worker_init("render"): the Views the match service uses for the players' images, its
 own MuJoCo model and data) from a read-only snapshot of the match. Nothing here is read back by the match, the replay
 or the grader, and this directory is not part of the match's source_sha (core/ and sport/ are): the replay check and
-the verdict are those of the unchanged service. video.json records whether this replay ended in the verdict replay's
-state (replay_check.json state_sha, scores, k). Written as replay.part.mp4 and renamed when complete.
+the verdict are those of the unchanged service. video.json records whether this replay ended in the live match's
+recorded state (final.json state_sha, scores, steps; board 0151: no verdict replay). Written as replay.part.mp4 and renamed when complete.
 """
 from __future__ import annotations
 
@@ -63,13 +63,14 @@ def render(plugin: str, data: Path, fps: int = 10) -> dict:
     finally:
         w.close()
     part.replace(out)
-    try:
-        rc = json.loads((Path(data) / "replay_check.json").read_text())
+    try:                                    # robot_coding_bench (board 0151): the live record, no verdict replay
+        fin = json.loads((Path(data) / "final.json").read_text())
     except (OSError, ValueError):
-        rc = {}
-    same = bool(rc) and all(res.get(k) == rc.get(k) for k in ("state_sha", "scores", "k"))
+        fin = {}
+    same = bool(fin) and res.get("state_sha") == fin.get("state_sha") and res.get("scores") == fin.get("scores") \
+        and res.get("k") == fin.get("steps")
     info = {"video": n > 0, "frames": n, "fps": fps, "renderer": "plugin.Views", "camera": "players' cameras",
-            "scene": "players", "label": None, "matches_verdict_replay": same, "by": "spectator/sport_video.py"}
+            "scene": "players", "label": None, "matches_live_record": same, "by": "spectator/sport_video.py"}
     (Path(data) / "video.json").write_text(json.dumps(info))
     return info
 

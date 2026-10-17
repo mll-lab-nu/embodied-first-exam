@@ -106,6 +106,18 @@ CODE_CHANGES = {
         "2026-10-14 (failure analysis of 2026-10-14): the graders' `rcb_brush_strict.py`, the same file in every RoboPaint "
         "task, gained the calligraphy families' counted strokes (their own entry, where it applies); a task without those rule "
         "keys in `target.success` (lettering and the paintings) is graded exactly as before.",
+        "2026-10-17 (owner, board 0150/0151; in place: a new DIGEST): standard mode graded by the live episode; no grading "
+        "replay; video by one render pass after the verdict. When the collect hook ends the episode (after the new `main` "
+        "hook has stopped the agent's container with `kill -9 -1`), the sim service commits a stroke still pressed and scores "
+        "its live main sheet with the graders' `rcb_brush_strict.py`, the same scorer and rule (picture rule and process "
+        "rules) the two fresh-process replays used, and writes `final.json` at once (`graded_by = \"live\"`, `replays = 0`, "
+        "`success`, `metrics`); then it renders the recorded trajectory once into `replay.mp4` (`video_pending`, "
+        "`video_done`). Before, the service exited and the collect hook replayed the trajectory twice, scored the replayed "
+        "sheet and required both replays to agree (`replay_success`, `deterministic`, `live_matches_replay`, `gpu_lost`: "
+        "gone); the live service's own score then had the picture rule only. A frozen instance that does not rebuild in the "
+        "sidecar is refused at the start (`instance_mismatch`, `infra_error = 1`) instead of crash-looping. The collect "
+        "hook's time is 2820 s (was 5400 s). The scene, the frozen instance, the rules and the client are unchanged; the "
+        "instruction says that the main sheet is scored as the episode left it.",
     ],
 }
 # README "Change Log" entries of the pairs of one group (GROUP), both modes, after CODE_CHANGES.
@@ -283,7 +295,11 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
         m = re.search(r"^## Target and score\n.*?(?=^## )", ins, re.S | re.M)
         if not m:
             raise SystemExit(f"{src}/instruction.md: no '## Target and score' section")
-        files["instruction.md"][0] = (ins[: m.end()] + block + ins[m.end() :]).encode()
+        ins = ins[: m.end()] + block + ins[m.end() :]
+        if mode == "standard":   # the live verdict (board 0151): the paintings' criterion text comes from their frozen programs
+            ins = ins.replace("(the recorded episode is replayed twice and both replays must agree)",
+                              "(scored on the main sheet as your episode left it)")
+        files["instruction.md"][0] = ins.encode()
         rd = files["README.md"][0].decode()
         if mode == "privileged":
             rd = sub1(
@@ -341,6 +357,9 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
         tt = files["task.toml"][0].decode()
         sentence = render(texts[f"toml_{GROUP[fam]}.md"], v).strip().replace('"', '\\"')
         tt = sub_re1(tt, r'^(description = ".*)"$', lambda mm: mm.group(1) + " " + sentence + '"', "task.toml")
+        if mode == "standard":   # the live verdict (board 0151): the paintings' descriptions come from their frozen programs
+            tt = tt.replace("the sim service records the episode, which is replayed twice and scored ",
+                            "the sim service records the episode and scores its main sheet ")
         evs = (
             cfg.get("oracle_evidence_pairs", {}).get(base)
             or cfg.get("oracle_evidence_family", {}).get(fam)

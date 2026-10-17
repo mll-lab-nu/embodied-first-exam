@@ -226,13 +226,25 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
             "oracle_note": f"No oracle; human review in {review}. `nop` scores 0."}
 
 
+# The standard twin's line for the live grading rule (owner, board 0150/0151)
+LIVE_GRADING = ("- 2026-10-17 (owner, board 0150/0151): graded by the live episode: `success` = KinDER's goal check "
+                'reached during the episode the sim service ran (the same rule, judged as it ran), and no grading '
+                'replay runs (no `replay_success` / `deterministic` any more; `final.json` has `graded_by = "live"`, '
+                '`replays = 0`, `reward.json` `graded_by_live = 1`). The video is one render pass over the trajectory'
+                " after the verdict, as before. The scene's start is checked when the episode begins: a scene that "
+                "does not build to the frozen instance's recorded state (`scene_sha`) gives up as infrastructure "
+                "(`instance_mismatch`). The scene, instance, pass rule and the agent's interface are unchanged, so "
+                'the task keeps its name; every archived verdict is the same under the live rule.')
+
+
 def change_log(t: dict, d: dict, mode: str) -> str:
     """The README's Change Log: a task that keeps its instance lists the changes made to it in place; a task with a new
     instance tag starts its own log, naming the one it replaces."""
+    live = [LIVE_GRADING] if mode == "standard" else []
     if t.get("instance_tag", d["instance_tag"]) != d["instance_tag"]:
-        return (f"- 2026-10-16: first version, a new instance replacing `kinder-{t['family']}-{d['instance_tag']}-{mode}` "
-                f"({t['replaces']}): the scene changed, so the task "
-                "has a new name (PROTOCOL §1, H.8). Agent time limit 1800 s" + ("; no reset." if mode == "standard" else "."))
+        return "\n".join([f"- 2026-10-16: first version, a new instance replacing `kinder-{t['family']}-{d['instance_tag']}-"
+                          f"{mode}` ({t['replaces']}): the scene changed, so the task has a new name (PROTOCOL §1, H.8). "
+                          "Agent time limit 1800 s" + ("; no reset." if mode == "standard" else ".")] + live)
     log = ["- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5, docs/benchmarks/kinder.md); the "
            "service already had `POST /reset`. The scene, instance, pass rule and verifier are unchanged, so the task keeps its "
            "name; runs recorded before this date had no reset and are reported separately."] if mode == "standard" else []
@@ -243,6 +255,7 @@ def change_log(t: dict, d: dict, mode: str) -> str:
                   "the odometry frame" if mode == "standard" and "goal_mark" in t else "")
                + ". The scene, instance, pass rule and verifier logic are unchanged (`tests/rcb_limits.json` carries the "
                "new cutoff), so the task keeps its name; runs recorded before this date are reported separately.")
+    log += live
     return "\n".join(log)
 
 
@@ -256,7 +269,7 @@ def reset_text(n: int, steps: int) -> dict:
                               "graded**: a success ends the run at once, and when your time is up it is graded as it "
                               "stands. Once it has ended, `submit` raises `EpisodeOver`.",
                 "reset_row": "", "reset_left": "", "reset_summary": "No reset: one episode, which is graded.",
-                "status_extra": "", "recorded": "records the episode, replays it"}
+                "status_extra": "", "recorded": "records the episode and grades it as it ran"}
     return {"reset_rule": "- **Episodes and resets.** The episode starts when the service comes up. It ends when the task "
                           "succeeds, after",
             "reset_rule_tail": f"You have **{n} resets** (`spec()[\"budget\"][\"reset\"]`, which is authoritative: if it "
@@ -271,7 +284,7 @@ def reset_text(n: int, steps: int) -> dict:
                          f"state (at most {n} in all); returns the start's frames |",
             "reset_left": ", or a reset is left", "reset_summary": f"{n} resets; only the last episode is graded.",
             "status_extra": ", and `episode`, `resets_left`, `control_steps_total` (all episodes)",
-            "recorded": "records every episode, replays the last one"}
+            "recorded": "records every episode and grades the last one as it ran"}
 
 
 def context(t: dict, d: dict, f: dict) -> dict:
@@ -549,7 +562,7 @@ def probe_standard(inst: Path, work: Path, images: Path) -> dict:
             time.sleep(1)
         # iterate, not list(): the reader reports its length as infinite, and list() would preallocate for it
         frames = [f for f in imageio.get_reader(str(data / "replay.mp4"), format="FFMPEG")] if final.get("video") else []
-        out["finalize_deterministic"] = bool(final.get("deterministic")) and final.get("sim_startups") == 2
+        out["finalize_live"] = final.get("graded_by") == "live" and final.get("sim_startups") == 2   # no replay
         out["finalize_video"] = len(frames) > 1 and float(frames[-1].mean()) > 5.0
         return out
     finally:

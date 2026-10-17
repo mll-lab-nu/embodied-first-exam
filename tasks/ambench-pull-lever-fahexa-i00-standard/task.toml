@@ -9,14 +9,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/film.log", service = "sim" },              # the collect hook's film pass (the video; never decides anything)
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/ambench-pull-lever-fahexa-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench PullLever-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on its frozen instance; standard only, no privileged twin. Task: A wall stands in front of the hovering aerial manipulator with a lever mounted on its front face: a bar sticking straight out of the wall toward the robot from a small dark-grey base, ending in a horizontal crossbar handle. The lever pivots at the base about a horizontal axis parallel to the wall. Pull the lever up: rotate it so its free end rises by more than 40 degrees from its starting direction, perpendicular to the wall (its travel ends at 45 degrees). The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode and grades it as it happened live (the physics does not replay bit for bit; the replays are recorded only)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench PullLever-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on its frozen instance; standard only, no privileged twin. Task: A wall stands in front of the hovering aerial manipulator with a lever mounted on its front face: a bar sticking straight out of the wall toward the robot from a small dark-grey base, ending in a horizontal crossbar handle. The lever pivots at the base about a horizontal axis parallel to the wall. Pull the lever up: rotate it so its free end rises by more than 40 degrees from its starting direction, perpendicular to the wall (its travel ends at 45 degrees). The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode and grades it as it happened live (the physics does not replay bit for bit)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]
 
@@ -45,7 +44,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 20.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then (board 0151) it only films, through the render worker (4.6 GiB)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -86,13 +85,20 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, film, write final.json
-timeout_sec = 7200                # = finalize.sh's HOOK_BUDGET_S (RCB_COLLECT_TIMEOUT_S; keep them equal): the episode end (up to
-                                  # 2700 s through a resume) + two camera-free fresh-process replays of at most one episode
-                                  # (an Isaac start, 1.5-6 min, + up to 7200 control steps at 10-15 steps/s) + the filmed
-                                  # illustration; finalize.sh ends a replay that would pass this deadline and records it
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode (no replay), then film once
+timeout_sec = 4800                # = finalize.sh's HOOK_BUDGET_S (RCB_COLLECT_TIMEOUT_S; keep them equal): the episode end (up to
+                                  # 2700 s through a resume) + ONE film pass (the video only, at most 1800 s: an Isaac start and
+                                  # the render worker's, 1.5-6 min, + at most one episode, 7200 control steps at 10-15 steps/s)
+                                  # + a margin; graded by the live episode since 2026-10-17 (7200 s with two replays before)
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2.12)

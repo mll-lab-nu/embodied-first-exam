@@ -15,7 +15,7 @@ ink, **in at most 9 strokes**.
 - Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
-- There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
+- There is nothing to hand in: the service records your episode as the trajectory and scores the main sheet as your episode left it. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
   last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()` waits
@@ -58,7 +58,7 @@ ink, **in at most 9 strokes**.
   away from the exemplar's ink, as a fraction of the exemplar's inked area; the **number of strokes** on the main sheet (inked
   contacts).
   **Success iff IoU ≥ 0.85, boundary F ≥ 0.80, every region covered ≥ 0.75, stray ink
-  ≤ 0.04 and at most 9 strokes on the main sheet.** (The recorded episode is replayed twice and both replays must agree.) The continuous score is the IoU
+  ≤ 0.04 and at most 9 strokes on the main sheet.** (Scored on the main sheet as your episode left it.) The continuous score is the IoU
   (scaled by 9 / strokes above 9 strokes).
 
 ## Process rules
@@ -66,7 +66,7 @@ Letter the exemplar with pen strokes, the way a scribe writes it: each stroke of
 coming from the pen (the pressure on the pointed pen and the direction of travel); going over a stroke again
 is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills (back-and-forth passes across a stroke), and
 contour-offset fills are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
-replayed episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is
+live episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is
 free):
 - `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together, sampled
   at every physics step);

@@ -13,9 +13,8 @@ client and one episode.
   5 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`), when you submit `done`
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The task has to hold at the
-  end: met earlier and undone by then does not count, so end the episode with `done` once it holds. The recorded
-  episode is then replayed from the same start in a fresh process, twice: it scores 1 only if the live episode and
-  both replays succeed and the two replays end in the same state.
+  end: met earlier and undone by then does not count, so end the episode with `done` once it holds. The service
+  judges your episode itself, on the state it ends in; it scores 1 if that state succeeds.
 - Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s` and `time_left_s`
   count from your first request to it, so `time_left_s` never reaches 0 before your time is up: plan by it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).

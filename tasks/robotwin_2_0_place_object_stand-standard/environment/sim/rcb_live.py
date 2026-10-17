@@ -7,16 +7,17 @@ nothing in the scene moves.
 
 Two capture modes (RCB_LIVE):
   replay (default)  During the episode only the call boundaries are logged (physics-step ranges, wall-clock times),
-                    which costs nothing. At episode end the recorded trajectory is replayed once (the simulation is
-                    bit-exact deterministic, so this is the same motion) and rendered. Zero overhead for the agent;
-                    if the container dies first, /data/trajectory_live.f64 + /data/live_segments.jsonl still allow
-                    rendering it offline.
+                    which costs nothing. After the verdict the recorded trajectory is rendered once (the simulation is
+                    bit-exact deterministic, so this is the same motion): render_videos() writes live.mp4 and the
+                    six-view replay.mp4 in the same pass. Zero overhead for the agent; if the container dies first,
+                    /data/trajectory_live.f64 + /data/live_segments.jsonl still allow rendering it offline.
   realtime          Frames are rendered while the episode runs (crash-proof video, but each frame costs ~150 ms of the
                     agent's wall clock: a 10 s chunk takes ~4x longer).
   off               No live.mp4.
 Other knobs: RCB_LIVE_FILTER = moving | all, RCB_LIVE_FPS (default 10 frames per simulated second),
 RCB_LIVE_SIZE (per-camera tile, default 213x160), RCB_LIVE_MOVE_EPS (default 1e-3), RCB_LIVE_MAX_FRAMES (default 1500), RCB_LIVE_BUDGET_S (replay mode:
-rendering stops after this many seconds and the video ends there, default 240; live_truncated reports it).
+live.mp4 takes no frames after this many seconds of rendering and ends there, default 240; live_truncated reports it;
+replay.mp4 goes on to the end).
 
 Files: live.mp4 (fragmented MP4), live_timeline.jsonl (one line per frame: frame, wall_s, sim_step, sim_s, call, label),
 live_segments.jsonl (one line per call: call, label, step0, step1, wall0, wall1).
@@ -131,7 +132,7 @@ class LiveRecorder:
             f.write(json.dumps({"frame": self.n_frames, "wall_s": round(wall, 3), "sim_step": sim, "sim_s": round(sim / PHYS_HZ, 3), "call": call, "label": label}) + "\n")
         self.n_frames += 1
 
-    # ---- at episode end (before the verification replay)
+    # ---- at episode end (before the verdict)
     def close(self) -> dict:
         self._end_seg()
         if self._w is not None:
@@ -177,3 +178,71 @@ class LiveRecorder:
         except Exception as exc:  # noqa: BLE001
             self.error = repr(exc)
         return self.info()
+
+    def render_videos(self, acts: np.ndarray, replay_path: str, every: int = 10, fps: int = 25,
+                      size: tuple[int, int] = (320, 240)) -> dict:
+        """The one render pass after the verdict (it never changes it): rebuild the frozen instance, step the recorded
+        trajectory once, and write the six-view replay.mp4 (+ .last.png: a frame every `every` steps and the last one,
+        as rcb_traj.Session.render_video, streamed to the file) and, in replay mode, the labelled live.mp4 (as render_from_trajectory) from
+        the same physics. Returns this recorder's info() plus "video" (replay.mp4 written)."""
+        import imageio.v2 as imageio
+        from PIL import Image
+        acts = np.asarray(acts, dtype=np.float64)
+        live = self.mode == "replay"
+        try:
+            segs = [json.loads(l) for l in open(self.seg_path).read().splitlines() if l.strip()] if live and os.path.exists(self.seg_path) else []
+        except Exception: segs = []  # noqa: BLE001
+        live_every = max(self.every, int(np.ceil(len(acts) / max(1, self.max_frames))))
+        self.S.reset(); self._last = None; self.truncated = False
+        lw = None
+        if live:
+            try: lw = _Writer(self.path, self.fps)
+            except Exception as exc: self.error = repr(exc)  # noqa: BLE001 — live.mp4 lost, replay.mp4 goes on
+        def seg_at(step):
+            for sg in segs:
+                if sg["step0"] < step <= sg["step1"]: return sg
+            return None
+        def wall_at(sg, step):
+            span = max(1, sg["step1"] - sg["step0"]); return sg["wall0"] + (sg["wall1"] - sg["wall0"]) * (step - sg["step0"]) / span
+        def live_frame(grid, step, call, label, wall):
+            nonlocal lw
+            if lw is None: return
+            try:
+                small = np.asarray(Image.fromarray(np.ascontiguousarray(grid[..., :3])).resize((self.size[0] * 3, self.size[1] * 2), Image.BILINEAR))
+                lw.add(small, _text(call, label, step, wall)); self._log(step, wall, call, label)
+            except Exception as exc:  # noqa: BLE001
+                self.error = repr(exc); lw = None
+        grab = lambda: self.S.render_grid(CAMS, cols=3, size=size)
+        rw = imageio.get_writer(str(replay_path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1)
+        put = lambda f: rw.append_data(np.ascontiguousarray(f[..., :3]))   # streamed: no frame list in memory
+        try:
+            g = grab(); put(g)
+            live_frame(g, 0, 0, "start", 0.0)
+            if self.filter == "moving": self._last = self.S._state_vector()
+            t_start = time.time()
+            for i, row in enumerate(acts):
+                self.S.step(row); step = i + 1; last = step == len(acts)
+                want_replay = step % every == 0
+                want_live = False
+                if lw is not None and not self.truncated:
+                    if time.time() - t_start > self.budget_s: self.truncated = True
+                    elif (step % live_every == 0 or last):
+                        sg = seg_at(step)
+                        if sg is not None or last:
+                            if last or self._moving(): want_live = True
+                            else: self.n_skipped += 1
+                if not (want_replay or want_live): continue
+                g = grab()
+                if want_replay: put(g)
+                if want_live:
+                    call, label = (sg["call"], sg["label"]) if sg else (self.call, "end")
+                    wall = wall_at(sg, step) if sg else (segs[-1]["wall1"] if segs else 0.0)
+                    live_frame(g, step, call, label, wall)
+            g = grab(); put(g)
+        finally:   # both writers are closed whatever happened (a fragment written so far stays playable)
+            if lw is not None:
+                try: lw.close()
+                except Exception as exc: self.error = repr(exc)  # noqa: BLE001 — live.mp4 only
+            rw.close()   # a failure here is replay.mp4's: it reaches the service (video_error)
+        imageio.imwrite(os.path.splitext(str(replay_path))[0] + ".last.png", np.ascontiguousarray(g[..., :3]))
+        return {**self.info(), "video": True}

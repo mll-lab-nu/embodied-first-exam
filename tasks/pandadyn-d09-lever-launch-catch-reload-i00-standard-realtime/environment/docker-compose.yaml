@@ -27,7 +27,6 @@ services:
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_TEXTS: /srv/texts.json
-      RCB_TOOL: /srv/rcb_pandadyn.py
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "3600"   # = task.toml [agent] timeout_sec (reported only: spec budget, meta time_left_s)
       RCB_STARTUP_TIMEOUT_S: "600"

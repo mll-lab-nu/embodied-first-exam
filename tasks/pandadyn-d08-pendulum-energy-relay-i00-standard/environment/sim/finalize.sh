@@ -1,176 +1,128 @@
 #!/bin/sh
-# [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
+# [[verifier.collect]] hook, run inside the `sim` sidecar once the agent's processes are stopped (task.toml: the monitor's
+# seal, then `kill -9 -1` in the agent's container, then this).
+# The verdict is the live episode's (owner, 2026-10-17, board 0151; docs/benchmarks/pandadyn.md "Grading"): nothing is
+# replayed to grade it.
 #   1. `rcb_limited.py end` (the shared first half, docs/STANDARD_MODE.md §13.3): SIGUSR1 to the service, which ends
-#      the episode, writes trajectory.npz + episode.json (live result, final-state hash) and exits, releasing the
-#      simulator. It waits through a crash-recovery resume (no PID file until the service is ready again), signals only
-#      the newest service process, resends every 30 s, and exits 2 when final.json already holds the verdict (the
-#      service gave up after crashes): that verdict stays, nothing is replayed.
-#   2. replay the trajectory from the frozen instance in TWO fresh processes with the tooling's own `replay` CLI (the
-#      privileged verifier's check): determinism is fresh process == fresh process; `live_matches_replay` reports
-#      live == replay separately. The first replay also films replay.mp4 after it has printed its result; the tooling
-#      never lets the filming decide the replay's result.
-#   3. merge everything into final.json, the only thing the verifier sandbox grades. final.json is always replaced
-#      atomically (a temporary file + rename), so the verifier never reads a half-written one.
-# A replay is the infrastructure's job: the trajectory was recorded by this trusted service. A replay process that ends
-# without a result (SAPIEN died at startup, out of memory, its time limit) is retried once when it did not time out; if it
-# still has no result, final.json says `replay_error` and `infra_error` = 1 (no verdict on the agent), never a silent 0.
-# Time: the hook has HOOK_BUDGET_S (task.toml's [[verifier.collect]] timeout_sec; keep the two equal). Each replay gets
-# what is left before that deadline, minus MERGE_MARGIN_S for step 3, shared between the replays still to run: a replay
-# that is too slow is ended here and recorded, instead of Harbor killing the hook and leaving an unfinalized final.json.
+#      the episode, writes trajectory.npz + episode.json (the live result: the task's event ledger as the episode ended,
+#      the final state hash) and exits, releasing the simulator. It waits through a crash-recovery resume (no PID file
+#      until the service is ready again), signals only the newest service process, resends every 30 s, and exits 2 when
+#      final.json already holds the verdict (the service gave up after crashes, or refused a scene that did not rebuild
+#      the frozen start): that verdict stays.
+#   2. the verdict: episode.json merged into final.json with "finalized": true, "graded_by": "live", "replays": 0 and
+#      success = the live success, in one atomic write (a temporary file + rename: the verifier never reads a half-written
+#      one). No episode.json or no trajectory.npz (the service could not dump the episode it ran) is the infrastructure's
+#      failure: infra_error = 1, no verdict on the agent.
+#   3. the video, for people only: one more process rebuilds the frozen scene and films the trajectory (render_video,
+#      overview camera, 25 fps) into replay.mp4 + replay.last.png; "video_pending" is true while it runs. It never touches
+#      the verdict: a failed, slow or killed render (a lost GPU, its time limit, the hook's deadline) costs only the video.
+#      `video_matches_live` records whether the filmed run ended in the live state hash (the determinism witness the
+#      grading replays used to give); it decides nothing.
+# Time: the hook has HOOK_BUDGET_S (task.toml's [[verifier.collect]] timeout_sec; keep the two equal): the episode's end
+# (up to RCB_COLLECT_END_TIMEOUT_S, 900 s, through a resume that replays the journal: at most the task's horizon, 3500
+# control steps, ~40-150 per second), the verdict (a second), then the video with what is left minus MERGE_MARGIN_S
+# (a scene build, 5-15 s, + at most 3500 filmed control steps: 1-3 min measured).
 set -u
-DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; INSTANCE="${RCB_INSTANCE:?}"
-HOOK_BUDGET_S="${RCB_COLLECT_TIMEOUT_S:-2400}"; MERGE_MARGIN_S=120; T0=$(date +%s)
-# A resume replays the whole episode first (at most the task's horizon: 3500 control steps, ~40-150 per second); the two
-# replays below take as long each, the first one filmed.
-python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-900}"; rc=$?
-if [ "$rc" = 2 ]; then
-    echo "[finalize] final.json already holds the verdict; no replay"; exit 0
-fi
-if [ "$rc" != 0 ]; then
-    echo "[finalize] the service did not end and dump the episode in time (rc $rc): an infrastructure failure"
-    python - <<'PY'
+DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; INSTANCE="${RCB_INSTANCE:?}"; SRV="${RCB_SRV:-/srv}"
+HOOK_BUDGET_S="${RCB_COLLECT_TIMEOUT_S:-2400}"; MERGE_MARGIN_S="${RCB_MERGE_MARGIN_S:-60}"; VIDEO_MIN_S="${RCB_VIDEO_MIN_S:-30}"
+T0=$(date +%s)
+export DATA TOOL INSTANCE
+python "$SRV/rcb_limited.py" end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-900}"; rc=$?
+# 2. the verdict (rc 0: the dump; rc 2: the service's own verdict, kept; anything else: the service never dumped)
+RC="$rc" python - <<'PY'
 import json, os
-d = os.environ.get("RCB_DATA", "/data"); p = os.path.join(d, "final.json")
-try:
-    out = json.load(open(p))
-    if not isinstance(out, dict): out = {}
-except Exception:
-    out = {}
-out.update({"finalized": True, "success": False, "replay_success": False, "deterministic": False, "infra_error": 1,
-            "error": "collect hook: the sim service did not end and dump the episode in time"})
+d = os.environ["DATA"]; rc = os.environ["RC"]; p = os.path.join(d, "final.json")
+def load(name):
+    try:
+        v = json.load(open(os.path.join(d, name)))
+        return v if isinstance(v, dict) else {}
+    except Exception:
+        return {}
+out = load("final.json")
+live = {"graded_by": "live", "replays": 0, "video": False, "video_pending": False, "video_source": "render"}
+if rc == "2":
+    # the service's own record (a give-up after crashes, a refused start): its success and infra_error stand
+    for k, v in live.items():
+        out.setdefault(k, v)
+    out["live_success"] = bool(out.get("success"))
+    if str(out.get("reason") or "").startswith("instance_mismatch"):
+        out["instance_mismatch"] = True
+    print("[finalize] final.json already holds the service's verdict; nothing to render")
+elif rc != "0":
+    out.update({**live, "finalized": True, "success": False, "live_success": False, "infra_error": 1,
+                "error": "collect hook: the sim service did not end and dump the episode in time"})
+    print(f"[finalize] the service did not end and dump the episode in time (rc {rc}): an infrastructure failure")
+else:
+    ep = load("episode.json")
+    out.update(ep)
+    ok = bool(ep.get("success")) and ep.get("reason") != "error"   # a simulator error is never a success (server.py finish)
+    out.update({**live, "finalized": True, "success": ok, "live_success": ok,
+                "state_sha": ep.get("live_sha")})
+    if not ep:
+        out.update({"success": False, "infra_error": 1, "dump_error": "no episode.json",
+                    "error": "infrastructure: the service ended without writing the live result (episode.json)"})
+    elif not os.path.exists(os.path.join(d, "trajectory.npz")):
+        out.update({"success": False, "infra_error": 1, "dump_error": "no trajectory.npz",
+                    "error": "infrastructure: the service ended without saving the episode's trajectory"})
+    else:
+        out["video_pending"] = True                 # announced with the verdict: the video is rendered next
 tmp = f"{p}.{os.getpid()}.tmp"
 with open(tmp, "w") as f:
     json.dump(out, f); f.flush(); os.fsync(f.fileno())
 os.replace(tmp, p)
-print(json.dumps(out))
 PY
-    exit 0
-fi
-echo "[finalize] episode dumped; replaying twice in fresh processes"
-rm -f "$DATA/replay1.json" "$DATA/replay2.json" "$DATA/replay1.rc" "$DATA/replay2.rc"
-
-has_result() {   # the replay CLI printed its result line (a crash at SAPIEN's shutdown after that line still counts)
-    grep -q '"state_sha"' "$1" 2>/dev/null
-}
-
-run_replay() {   # run_replay <n> <replays still to run, this one included> [extra replay arguments]
-    n=$1; share=$2; shift 2
-    for attempt in 1 2; do
-        left=$(( T0 + HOOK_BUDGET_S - MERGE_MARGIN_S - $(date +%s) ))
-        limit=$(( left / share ))
-        if [ "$limit" -lt 60 ]; then
-            echo "[finalize] replay $n: no time left before the hook's deadline"; echo "124 0 $limit" > "$DATA/replay$n.rc"; return
-        fi
-        t_start=$(date +%s)
-        if command -v timeout >/dev/null 2>&1; then
-            RCB_SESSION_LOG= timeout -k 30 "$limit" python "$TOOL" replay --instance "$INSTANCE" --traj "$DATA/trajectory.npz" "$@" > "$DATA/replay$n.json" 2>> "$DATA/replay$n.log"
-        else
-            RCB_SESSION_LOG= python "$TOOL" replay --instance "$INSTANCE" --traj "$DATA/trajectory.npz" "$@" > "$DATA/replay$n.json" 2>> "$DATA/replay$n.log"
-        fi
-        rrc=$?; took=$(( $(date +%s) - t_start ))
-        echo "$rrc $took $limit" > "$DATA/replay$n.rc"                 # exit code, seconds it ran, its limit
-        echo "[finalize] replay $n attempt $attempt exit $rrc after ${took} s (limit ${limit} s)"
-        if has_result "$DATA/replay$n.json"; then return; fi
-        # out of time (124, or 137 when it had to be killed at the limit): a second attempt would be too. Any other end
-        # without a result (a crash at SAPIEN's start, the out-of-memory killer's 137) gets one more attempt.
-        if [ "$rrc" = 124 ] || { [ "$rrc" = 137 ] && [ "$took" -ge "$limit" ]; }; then return; fi
-        echo "[finalize] replay $n ended without a result" >> "$DATA/replay$n.log"
-    done
-}
-
-# A host systemd reload while this long-running container is up (a snap or apt update, with Docker's systemd cgroup
-# driver) makes the GPU refuse processes started afterwards: record that as an infrastructure failure, not the agent's 0.
-if python - <<'PY'
-import os, sys
-for dev in ("/dev/nvidiactl", "/dev/nvidia0"):
-    if os.path.exists(dev):
-        try:
-            open(dev, "rb").close()
-        except OSError as exc:
-            print(f"[finalize] cannot open {dev}: {exc}", file=sys.stderr); sys.exit(1)
+# 3. the video (only after a dump with a verdict: video_pending)
+if grep -q '"video_pending": true' "$DATA/final.json" 2>/dev/null; then
+    left=$(( T0 + HOOK_BUDGET_S - MERGE_MARGIN_S - $(date +%s) ))
+    rm -f "$DATA/replay.tmp.mp4" "$DATA/replay.tmp.last.png"
+    if [ "$left" -ge "$VIDEO_MIN_S" ]; then
+        echo "[finalize] verdict written; rendering the video (at most ${left} s)"
+        TO=""; command -v timeout >/dev/null 2>&1 && TO="timeout -k 20 $left"
+        RCB_SESSION_LOG= $TO python - > "$DATA/video.json" 2>> "$DATA/video.log" <<'PY'
+import json, os, sys, time
+t0 = time.time()
+tool = os.environ["TOOL"]; d = os.environ["DATA"]
+sys.path.insert(0, os.path.dirname(os.path.abspath(tool)))
+import rcb_pandadyn as M
+M.SESSION_LOG = ""
+s = M.Session(os.environ["INSTANCE"])
+A = M.load_trajectory(os.path.join(d, "trajectory.npz"), s.task, s.dim)
+tmp = os.path.join(d, "replay.tmp.mp4")
+st = s.render_video(A, tmp, fps=25, camera="overview")
+from PIL import Image
+Image.fromarray(s.render_frame("overview")).save(os.path.join(d, "replay.tmp.last.png"))
+os.replace(os.path.join(d, "replay.tmp.last.png"), os.path.join(d, "replay.last.png"))
+os.replace(tmp, os.path.join(d, "replay.mp4"))
+print(json.dumps({"video_ok": True, "video_sha": st["state_sha"], "video_s": round(time.time() - t0, 1)}), flush=True)
+s.close()
 PY
-then
-    : > "$DATA/replay1.log"; : > "$DATA/replay2.log"
-    run_replay 1 2 --video "$DATA/replay.mp4"
-    if has_result "$DATA/replay1.json"; then
-        run_replay 2 1
+        echo "[finalize] video pass exit $?"
     else
-        echo "[finalize] replay 1 gave no result: replay 2 not run (no verdict either way)"
+        echo "[finalize] no time left for the video"
     fi
-else
-    echo '{"gpu_lost": true}' > "$DATA/replay1.json"; echo '{"gpu_lost": true}' > "$DATA/replay2.json"
-fi
-python - <<'PY'
+    python - <<'PY'
 import json, os
-d = os.environ.get("RCB_DATA", "/data")
-def last_json(name):
-    out = {}
-    try:
-        for line in open(os.path.join(d, name)):
-            if line.strip().startswith("{"):
-                try:
-                    v = json.loads(line)
-                except ValueError:
-                    continue
-                if isinstance(v, dict): out = v
-    except Exception:
-        pass
-    return out
-def exit_info(n):
-    """(exit code, timed out) of replay n's last attempt; (None, False) when it was never run."""
-    try:
-        rc, took, limit = (int(x) for x in open(os.path.join(d, f"replay{n}.rc")).read().split()[:3])
-        return rc, rc == 124 or (rc == 137 and took >= limit)
-    except Exception:
-        return None, False
-def result(r):
-    """The replay's own result (the first entry of `replays`), or None when the process printed none."""
-    reps = r.get("replays")
-    ok = isinstance(reps, list) and reps and isinstance(reps[0], dict) and reps[0].get("state_sha")
-    return reps[0] if ok else None
-out = {"finalized": True, "replay_success": False, "deterministic": False, "video": False}
-errors = []
+d = os.environ["DATA"]; p = os.path.join(d, "final.json")
+out = json.load(open(p))
+v = {}
 try:
-    ep = json.load(open(os.path.join(d, "episode.json")))
-    if not isinstance(ep, dict): raise ValueError("not an object")
-    out.update(ep)
-except Exception as exc:
-    errors.append(f"no episode.json: {exc!r}")
-r1, r2 = last_json("replay1.json"), last_json("replay2.json")
-a, b = result(r1), result(r2)
-gpu_lost = bool(r1.get("gpu_lost"))
-out["replay_rc"] = [exit_info(1)[0], exit_info(2)[0]]
-if not gpu_lost:
-    for n, r, res in ((1, r1, a), (2, r2, b)):
-        if res is None:
-            rc, timed_out = exit_info(n)
-            why = "not run" if rc is None else f"exit code {rc}" + (", its time limit" if timed_out else "")
-            errors.append(f"replay {n} gave no result ({why}" + (f": {str(r['error'])[:200]}" if r.get("error") else "") + ")")
-            if timed_out: out["replay_timed_out"] = True
-            if n == 1: break                    # replay 2 is not run after a replay 1 without a result
-out["replay_success"] = bool(a and a.get("success")) and bool(b and b.get("success"))
-out["replay_sha"], out["replay_sha2"] = (a or {}).get("state_sha"), (b or {}).get("state_sha")
-out["deterministic"] = bool(a and b) and a["state_sha"] == b["state_sha"]
-out["live_matches_replay"] = bool(a) and a["state_sha"] == out.get("live_sha")
-# each replay process rebuilds the frozen scene and checks it against the instance's recorded start: a replay that did not
-# start from it gives no verdict (this host, not the agent)
-mismatch = [n for n, r, res in ((1, r1, a), (2, r2, b)) if res is not None and r.get("instance_matches") is False]
-if mismatch:
-    out["instance_mismatch"] = True
-    errors.append(f"replay {mismatch} rebuilt a scene that differs from the frozen instance (initial state hash)")
+    for line in open(os.path.join(d, "video.json")):
+        if line.strip().startswith("{"):
+            v = json.loads(line)
+except Exception:
+    pass
 mp4 = os.path.join(d, "replay.mp4")
-out["video"] = bool(a) and r1.get("video_ok") is not False and os.path.exists(mp4) and os.path.getsize(mp4) > 0
-if gpu_lost:
-    out["gpu_lost"] = True; out["infra_error"] = 1
-    out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"
-elif errors:
-    # the trajectory is the trusted service's own record: a replay (or a dump) that produced nothing is not the agent's 0
-    out["replay_error"] = "; ".join(errors); out["infra_error"] = 1
-    out["error"] = "infrastructure: the episode could not be replayed to a verdict: " + out["replay_error"]
-out["finalized"] = True
-p = os.path.join(d, "final.json"); tmp = f"{p}.{os.getpid()}.tmp"
+ok = bool(v.get("video_ok")) and os.path.exists(mp4) and os.path.getsize(mp4) > 0
+# video fields only: the verdict above is final
+out.update({"video": ok, "video_pending": False})
+if ok:
+    out["video_matches_live"] = v.get("video_sha") == out.get("live_sha"); out["video_s"] = v.get("video_s")
+else:
+    out["video_error"] = "the video pass gave no video (video.log)"
+tmp = f"{p}.{os.getpid()}.tmp"
 with open(tmp, "w") as f:
     json.dump(out, f); f.flush(); os.fsync(f.fileno())
 os.replace(tmp, p)
-print(json.dumps(out))
 PY
+fi
+cat "$DATA/final.json"

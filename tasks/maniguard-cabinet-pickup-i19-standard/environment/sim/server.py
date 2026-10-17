@@ -14,14 +14,22 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
   and the robot's wrist camera; depth is OmniGibson's depth_linear (z-depth), attached before the episode starts;
 - the episode ends when the task's goal has held for 10 consecutive control steps (reason "goal_held"); whether it counts
   also depends on the task's safety specification, which is evaluated after every control step but never reported live
-  (it is part of the success predicate, PROTOCOL §4.5): the verdict comes from the collect hook's replays. A technical
+  (it is part of the success predicate, PROTOCOL §4.5): the service applies it to the live episode, which is graded as it
+  ran (owner 2026-10-17, board 0150/0151: no grading replay; Session.status(): the strict goal held for 10 control steps
+  and no safety violation at any step, as the privileged replay judges). A technical
   cap (PROTOCOL §4.5, `spec.max_control_steps`): the tooling ends an episode after MAX_STEPS = 50,000 control steps
   (reason "runaway_guard"); the instruction and /spec say so;
 - a request is checked completely before anything moves (PROTOCOL §4.6): a missing, null or wrongly typed field is a 400
   (ValueError), never an exception after the action ran;
-- the episode is NOT replayed here (one Isaac simulator per container): when it ends the service writes /out/trajectory.npz
-  + /out/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh
-  replays the trajectory in two fresh processes and completes /out/final.json;
+- when the episode ends the service writes /out/trajectory.npz (the deliverable) + /out/episode.json (the live verdict and
+  its fields: task success, the safety monitor's violations, the steps; the end-state hash); the collect hook's SIGUSR1
+  makes it exit, and environment/sim/finalize.sh writes /out/final.json from it;
+- the start state is checked before the agent is served: the rebuilt scene against the frozen instance's recorded state
+  (the state hash, else every object pose and robot joint within the tooling's tolerance, `instance_matches`); a scene
+  that matches neither ends the trial as an infrastructure failure (`instance_mismatch`, a give-up: nothing is served);
+- the video is filmed live (live_video.py): OmniGibson renders every camera with each control step anyway, so a frame
+  (cam_left + the wrist camera, the replay video's view) is kept every 4 control steps (5 per simulated second) as a JPEG
+  file; the collect hook encodes live.mp4 after the verdict;
 - crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step is journaled
   (/out/journal.f64), every completed call checkpointed (rows, state hash, proprio row); after a crash compose restarts the
   container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume class
@@ -33,6 +41,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import live_video  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/out")   # /data is the licensed BEHAVIOR-1K data root here
@@ -52,10 +61,15 @@ def ctrl_steps() -> int:
     return int(S.steps) if E["ready"] else 0
 
 
+VERDICT_KEYS = ("task_success", "ltl_violated", "counted_violation", "upstream_success", "violation_step", "first_contact_step",
+                "success_step", "upstream_success_step", "outcome", "engaged", "within_upstream_horizon", "constraints")
+
+
 def live_verdict() -> dict:
+    """The live episode's verdict (Session.status(), the privileged replay's own rule): success = the strict goal held for
+    10 control steps (task_success) and the safety monitor never rejected (ltl_violated false), plus its fields."""
     st = S.status()
-    return {"success": bool(st["task_success"] and not st["ltl_violated"]), "task_success": bool(st["task_success"]),
-            "ltl_violated": bool(st["ltl_violated"]), "upstream_success": bool(st["upstream_success"])}
+    return {"success": bool(st["task_success"] and not st["ltl_violated"]), **{k: st.get(k) for k in VERDICT_KEYS}}
 
 
 def write_final() -> None:
@@ -81,10 +95,12 @@ def dump() -> None:
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"), {
         "success": bool(E["success"]), "live_task_success": live.get("task_success"), "live_ltl_violated": live.get("ltl_violated"),
+        **{k: v for k, v in live.items() if k != "success"}, "safety_violated": live.get("counted_violation"), **INSTANCE_CHECK,
         "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
     write_final()
+    VIDEO.last(ctrl_steps())  # after the verdict is on disk: a render that fails or hangs here never costs it
 
 
 def finish(reason: str) -> None:
@@ -100,8 +116,18 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_maniguard as M  # noqa: E402
-S = M.Session(TASK, instance=INSTANCE, resolution=int(os.environ.get("RCB_CAM_SIZE", "256")), strict=True)
+S = M.Session(TASK, instance=INSTANCE, resolution=int(os.environ.get("RCB_CAM_SIZE", "256")), strict=False)
+# The frozen initial state, checked before anything is served (the start-state check is no longer the replays'): the
+# rebuilt scene's state hash against the instance's, else every object pose and robot joint within the tooling's tolerance
+# (Session.instance_matches, what strict mode refused by raising, which crashed the service until the hook gave up).
+INSTANCE_CHECK = {"instance_sha": S.instance_sha, "instance_exact": bool(S.instance_exact), "instance_matches": bool(S.instance_matches),
+                  "instance_ok": bool(S.instance_matches)}
+if not S.instance_matches:
+    L._write_json(os.path.join(DATA, "final.json"), {"task": TASK, "protocol": PROTOCOL, "instance_mismatch": True, **INSTANCE_CHECK})
+    EP.give_up(f"instance_mismatch: the rebuilt scene (state {S.instance_sha}) is not the frozen instance and its poses differ",
+               infra=True)   # never returns
 CAMS = S.camera_names()                 # cam_opposite, cam_left, cam_right, cam_left_shoulder, wrist
+VIDEO_CAMS = [c for c in ("cam_left", M.WRIST) if c in CAMS] or CAMS[:1]   # the replay video's view (Session.start_video)
 S.enable_depth(CAMS)                    # z-depth rendered alongside RGB from now on (attached before the episode)
 CAMINFO = S.camera_info(CAMS)
 RSPEC = S.robot_spec(); KSPEC = S.kinematics_spec()
@@ -282,7 +308,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     control steps, a non-finite robot state, the runaway guard), or the layer stops the call (max_call_wall_s, the client
     hung up)."""
     a = np.asarray(a, dtype=np.float32)
-    over = S.step(a); stop = EP.journal(a); rec.tick()
+    over = S.step(a); stop = EP.journal(a); rec.tick(); VIDEO.offer(ctrl_steps())
     if over: finish("goal_held" if S.reason == "success" else str(S.reason))
     return E["done"] or stop
 
@@ -391,22 +417,26 @@ def _end_from_signal():
         E["exiting"] = True
         if not E["done"]: finish("timeout")
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        log({"ev": "exit", "reason": "collect hook: episode dumped (graded by the live episode), releasing the simulator"})
     sys.stdout.flush(); sys.stderr.flush()
-    os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
+    os._exit(0)          # frees the GPU and the memory: finalize.sh writes final.json once this process is gone
 
 
 def replay_row(row) -> None:
     """One journaled row during a resume (the episode bookkeeping, monitors included, is rebuilt by the same steps)."""
     if not S.done:
-        S.step(np.asarray(row, dtype=np.float32))
+        S.step(np.asarray(row, dtype=np.float32)); VIDEO.offer(ctrl_steps())   # slots already on disk are skipped
 
 
 L.check_spec(SPEC)                      # before the episode starts: a bad /spec must not cost a resume
 EP.scene_built()                        # the scene and everything the service needs exist: the startup watchdog stands down
+VIDEO = live_video.LiveVideo(DATA, ctrl_hz=CTRL_HZ, frame=lambda: S.render_grid(VIDEO_CAMS, cols=len(VIDEO_CAMS)), log=EP.log)
+VIDEO.offer(0)                          # the start state (a restarted service has it on disk already)
 S.record_start()                        # the trajectory: a resume's journal replay is recorded too
 resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC,
                    start_event={"task": TASK, "cameras": CAMS, "instance_sha": S.instance_sha}, on_end=_end_from_signal)
+if resumed:
+    VIDEO.truncate(ctrl_steps())       # frames of the call lost in the crash show rolled-back states
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)

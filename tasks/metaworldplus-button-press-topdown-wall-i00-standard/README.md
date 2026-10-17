@@ -26,8 +26,15 @@ is. Success is judged on the final state, so the agent must also end the episode
 submitted through the client, one row per control step.
 
 ## Verification
-The sim service replays the recorded episode in a fresh simulator; `tests/grade.py` (separate sandbox, no network)
-reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`.
+Graded by the live episode, nothing replayed (owner 2026-10-17, board 0150/0151): when the episode ends, the sim
+service applies Meta-World's success check to the live state after the last executed control step and writes the
+verdict to its `final.json` (`graded_by = "live"`, `replays = 0`); `tests/grade.py` (separate sandbox, no network)
+reads it: `success = live_success`, `infra_error = 1` when there is no verdict on the agent. The frozen start is
+checked when the episode begins (instance hash, starting-state hash). The video is rendered from the recorded
+trajectory in one pass after the verdict and decides nothing. After the agent's time the collect hooks stop the
+agent's processes; the service writes the verdict at once (no grading replay), then renders the video (a scene build,
+the episode's physics and at most about 600 frames of one camera, on the CPU; typically under a minute), all inside the
+sim hook's 840 s.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -55,3 +62,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-10 (review 0067): the instruction states this environment's success condition (what is compared with the target point, in which axes, with which tolerance) instead of "a tolerance of a few centimetres".
 - 2026-10-10 (review 0067): a malformed request (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list of names, actions that are not a numeric array) is answered 400 before any physics; before, some of them (e.g. `dt = Infinity`) were a 500 that ended the episode. `meta["time_left_s"]` counts from the agent's first request, not from the service's start. `final.json` is finalized as soon as the verdict is in it (the video is rendered after it and cannot delay or void it); a missing, unreadable or verdict-less `final.json` is graded `infra_error = 1`, never a plain 0; the collect hook's wait fits inside its timeout.
 - 2026-10-10 (review round 3, board 0067): the sim service's request handling only (`environment/sim/server_mw.py`). A negative or non-numeric `Content-Length` is answered 400 without reading the body (the service read until the client hung up, without a bound, which could exhaust its memory); a camera named more than once in `cameras` is rendered and returned once (N copies of one name made it build N x N images within the frame budget); a port that is still held when the service restarts is waited for, not counted as a crash; a JSON `true` or `false` where `dt` or `seconds` takes a number is a 400 (`true` ran as 1 second). An episode's physics, the grader and the pass rule are unchanged.
+- 2026-10-17 (owner, board 0150/0151): standard mode is graded by the live episode; no grading replay. `success` is Meta-World's check on the live simulator's state after the last executed control step (`live_success`, the same rule as before; the fresh replay that also had to succeed and end in the same state no longer runs). The video is rendered from the recorded trajectory in one pass after the verdict. The frozen start is checked when the episode begins (the instance's hash and the starting state's hash; a mismatch is an infrastructure failure), and the agent's leftover processes are stopped before the episode ends. What the agent sees and does is unchanged; only the instruction's scoring sentence is new.

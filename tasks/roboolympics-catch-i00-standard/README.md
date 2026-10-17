@@ -21,8 +21,10 @@ The ball is in the air for three seconds and comes down at about 17 m/s more tha
 None (as `roboolympics-catch-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: A baseball (0.073 m across, 0.145 kg, it flies in air with drag) rests on a launcher 40.0 m in front of you, 1.0 m above the ground, and is launched at t = 1.0 s at 21.35 m/s, 45.0 degrees above the horizon, 1.18 degrees to the left of the line from the launcher to you, so that untouched it would come down within 3.0 m of where you stand at the start. A catch is a hand's grip closing on the ball in flight after it has passed the top of its arc: the grip holds a ball whose surface is within 3.5 cm of the palm and that moves no faster than 6 m/s relative to it. Before the grip the ball may touch only your hands and forearms. You succeed when a hand has gripped the ball and kept it for 1.0 s without a break. You fail if the ball touches the ground, or any part of you other than a hand or a forearm, before it is gripped; if you let go of it after the catch; if you fall (your pelvis lower than 0.5 m above the ground, or any part of you other than your feet on the ground) before the end; or after 9 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

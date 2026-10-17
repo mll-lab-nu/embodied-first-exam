@@ -4,7 +4,7 @@
 # the task's own client) as Harbor's oracle on a copy of the task, kills -9 the sim service in the middle of the episode
 # (once N calls are checkpointed, while the next call runs), and checks that the service resumed the same episode exactly
 # (state hash = the checkpointed one), the driver carried on, the episode was graded as usual (finalized, no infrastructure
-# error), and the live run still equals its fresh-process replay (live_matches_replay, deterministic). The driver
+# error; graded by the live episode, graded_by_live = 1, no replay since 2026-10-17). The driver
 # does not solve the task: the reward's `success` is not part of the check.
 #   usage: scripts/robodojo/kill_test.sh [task dir] [jobs dir] [N checkpoints before the kill]
 #   default: tasks/robodojo-general-pickup-i00-standard, $PWD/jobs/kill_test, 4
@@ -72,7 +72,7 @@ ev = [json.loads(l) for l in open(t / "artifacts/data/episode.jsonl") if l.strip
 rs = [e for e in ev if e.get("ev") == "resumed"]
 ck = sum(1 for e in ev if e.get("ev") == "checkpoint")
 n_submit = sum(1 for e in ev if e.get("ev") == "submit")
-want = {"finalized": 1, "deterministic": 1, "live_matches_replay": 1, "resumes": 1, "sim_startups": 2, "resume_state_mismatch": 0, "infra_error": 0}
+want = {"finalized": 1, "graded_by_live": 1, "replays": 0, "resumes": 1, "sim_startups": 2, "resume_state_mismatch": 0, "infra_error": 0}
 bad = {k: rw.get(k) for k, v in want.items() if rw.get(k) != v}
 print(json.dumps({"reward": rw, "resumed": rs, "checkpoints": ck, "submits": n_submit}, indent=1))
 # the killed call is answered with an error and rolled back to the last checkpoint; the driver's 11 other chunks all ran

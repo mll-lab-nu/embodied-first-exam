@@ -631,7 +631,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 19.0
 verifier_min_gpu_memory_gb = 11.0
-measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10; the verifier phase replays as the privileged verifier does (docker peak 15.7 GiB, GPU 9.6 GiB)"
+measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10 (the verifier phase then replayed as the privileged verifier does: docker peak 15.7 GiB, GPU 9.6 GiB); since 2026-10-17 (board 0151) the collect hook replays nothing: after the service exits it only encodes the live video on the CPU, so the sidecar's peak is the live service's"
 
 # robolab, privileged: 53 task(s)
 [[rule]]
@@ -971,7 +971,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, the collect hook replays in fresh processes one after the other; CPU: one core per scene + one for the agent"
+measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene; after the verdict the collect hook builds one more to film the video (until 2026-10-17: two fresh-process replays, one after the other); CPU: one core per scene + one for the agent"
 
 [[rule]]
 match = "^pandadyn-.*-standard-realtime$"
@@ -1012,7 +1012,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 20.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then (board 0151) it only films, through the render worker (4.6 GiB)"
 
 # ambench, standard
 [[rule]]
@@ -1026,7 +1026,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 20.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then (board 0151) it only films, through the render worker (4.6 GiB)"
 
 [[limit]]
 match = "^roboolympics-.*-privileged$"
@@ -2120,7 +2120,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 14.0
-measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the replays' scenes); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the video pass's scene); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [[limit]]
 match = "^pandadyn-.*-standard-realtime$"
@@ -2135,7 +2135,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 14.0
-measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the replays' scenes); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the video pass's scene); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [[limit]]
 match = "^ambench-.*-privileged$"
@@ -2521,7 +2521,7 @@ gpu_class = "none"
 verifier_min_cpus = 1.0
 verifier_min_memory_gb = 1.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)"
+measured = "measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (then two replays side by side + the video; from 2026-10-17 the video only, board 0151), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)"
 
 [[limit]]
 match = "^rsb-.*-standard$"
@@ -2539,7 +2539,8 @@ trial_max_memory_gb = 14.0
 measured = "author estimate, with the measurements above: the agent's container held 0.74 GB PSS at most without an agent (oracle, nop) and 0.68 GB in the one agent trial sampled; 6 GiB under its 8 GiB cap leaves room for the harness and the client; whole trial: measured 4.75 GB, 14 GiB with the sim service's 8 GiB cap; processes 512: design default"
 
 [[cap]]
-# sim: p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling
+# sim: p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling;
+# from 2026-10-17 (board 0151) the finalize renders the video only (one process); the 6-CPU cap is kept, not re-measured
 match = "^rsb-.*-standard$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
@@ -2576,7 +2577,8 @@ trial_max_memory_gb = 14.0
 measured = "author estimate, the standard tasks' (the same client and harness in the agent's container): 6 GiB under its 8 GiB cap; whole trial 14 GiB with the sim service's 8 GiB cap; processes 512: design default"
 
 [[cap]]
-# as the standard tasks: the finalize's two replays side by side and the video
+# as the standard tasks (measured with the finalize's two replays side by side and the video; from 2026-10-17 the video
+# only, board 0151; the cap is kept, not re-measured)
 match = "^rsb-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
@@ -2624,7 +2626,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 6.0
 verifier_min_memory_gb = 16.0
 verifier_min_gpu_memory_gb = 6.0
-measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only"
+measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process (plus the live video's encoder, 540 px at 10 fps, not measured), the collect hook replays nothing (graded live, 2026-10-17); the agent's container runs the client only"
 
 [[limit]]
 match = "^ispatialgym-.*-standard$"
@@ -2639,7 +2641,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 9.0
 trial_max_memory_gb = 21.0
-measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults"
+measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process (plus the live video's encoder, 540 px at 10 fps, not measured), the collect hook replays nothing (graded live, 2026-10-17); the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults"
 
 
 [[cap]]

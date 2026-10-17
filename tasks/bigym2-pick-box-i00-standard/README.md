@@ -24,8 +24,11 @@ None (as `bigym2-pick-box-i00-privileged`).
 
 ## Verification
 The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
-no fall), then replays the recorded episode in a fresh simulator; `tests/grade.py` reads `/data/final.json`: pass iff
-the live run and the replay succeed and end in the same state. Success condition: the box rests on the kitchen counter's top: touching it, its centre above the counter top, its lowest point within 0.03 m of the top's height; held by neither gripper. No oracle; human review in PR #123 (PROTOCOL §2.7).
+no fall) and writes that verdict to `/data/final.json` (`graded_by = "live"`); nothing is replayed to grade it (owner,
+2026-10-17, board 0151). The scene's start is checked against the frozen instance (`instance.json`'s `t0`) when an
+episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `final.json`: pass iff the
+live episode succeeded. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and
+never changes it. Success condition: the box rests on the kitchen counter's top: touching it, its centre above the counter top, its lowest point within 0.03 m of the top's height; held by neither gripper. No oracle; human review in PR #123 (PROTOCOL §2.7).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -55,3 +58,10 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   docs/benchmarks/bigym2.md): one episode, which the practice and the graded attempt share; the instruction says there
   is no reset. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded
   with 10 resets are reported separately.
+- 2026-10-17 (owner, board 0150/0151): graded by the live episode: `success` = BiGym's own `is_success` in the episode
+  the sim service ran (the same rule, judged as it ran), and no grading replay runs (no `replay_success` /
+  `deterministic` any more; `final.json` has `graded_by = "live"`, `replays = 0`, `reward.json` `graded_by_live = 1`).
+  The video is one render pass over the trajectory after the verdict, as before. The scene's start is checked when an
+  episode begins: a scene that does not rebuild the frozen instance's starting state (exactly, or within upstream's
+  tolerance on another CPU) gives up as infrastructure (`instance_mismatch`). The scene, instance, pass rule and the
+  agent's interface are unchanged, so the task keeps its name; every archived verdict is the same under the live rule.

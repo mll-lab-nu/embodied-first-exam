@@ -40,7 +40,31 @@ recommending, but CI still blocking every convention and the trust-boundary rule
   (their DIGEST, H.8) and a rename new tasks, and either would detach the results already recorded against them
   (`write_task_results.py`'s `digest_match` turns a default-seed trial of another digest into "legacy"; the pool keys
   results by directory name); the list changes no task.
+- Changed on 2026-10-17 (owner, boards 0150 / 0151: "standard不需要回放了呀 直接用live的分数"; "privilege用verifier
+  standard用live"): the standard modes are graded by the sim sidecar's record of the live episode (H.4). Before, the
+  collect hook replayed the journal one or two times in the sidecar and most benchmarks graded `live ∧ replay ∧
+  deterministic` (the live record alone only where a task declared it: RoboDojo's six, AM-Bench's one); the collect
+  hooks took about 1,240 slot-hours over 4,863 trials, most of it these replays (board 0136), and the live and replay
+  verdicts differed in 12 of 4,453 trials (board 0148). No grading replay runs any more; the success is the
+  live episode's under the task's own rule (a settle or hold window it declares runs on the live simulator after the
+  agent's container stops); the frozen start state is checked when the episode begins (`instance_mismatch`, an
+  infrastructure failure); the trajectory stays recorded as the deliverable; the video is recorded live where that is
+  cheap, else rendered from the trajectory once after the verdict (§4). What keeps the record trusted is unchanged: the
+  agent cannot write the sidecar's state, the evidence comes only from the sidecar, the agent's container stops before
+  the sidecar finalizes. H.1 and H.4 reworded; decision 2 of 2026-10-02 (the standard-mode verifier double check, never
+  implemented) withdrawn. Results recorded before the change are re-read from their own `final.json` (RUNNING.md
+  "Results"). The shared layers (`rcb_limited.py` `final_verdict` and `give_up`, the toy server) changed with the
+  text; the benchmarks' pull requests of board 0151 carry the migration of their tasks (until each merges, its tasks
+  still replay).
 - Added on 2026-10-16 (owner, board 0136: "every run must end with a video, except a privileged trial that submitted no trajectory"): §4's video row says every graded trial leaves a playable video and the replayable trajectory it was graded on, the one exception, and that the video's time bound covers the longest episode; `ci_checks/check-video.py` (advisory: a video is evidence for people, never the verdict, and a static scan cannot tell whether a render finishes in time) and the runner's `no_video` flag with an after-the-fact render from the trajectory (RUNNING.md "Recordings"). Found by the survey of 7977 graded trials: 114 without a video for reasons other than the exception (DexHand privileged rendered none; render time bounds shorter than long episodes; a RoboOlympics sport without a spectator camera).
+- Changed on 2026-10-17 (owner, board 0150 Q12: "所有task默认budget设置为很高 cached input也算 ... input budget默认设置1B甚至10B"):
+  the default token budget went from 100M input / 10M output to 10B / 10B per trial (`TOKEN_BUDGET_IN` /
+  `TOKEN_BUDGET_OUT`, the gateway's `--budget-input` / `--budget-output`). Cached input keeps counting in full, as it
+  always did (input = everything the model read). Issue #229: the 100M limit stopped 82 BEHAVIOR trials, all on input
+  and a median 98.7% cache hits; the agent was never told its budget, so no task changed.
+- Changed on 2026-10-17 (owner, board 0150 Q24: "CONTRIBUTING'换场景即新任务'可以取消"): CONTRIBUTING's "a published
+  task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task" is gone. A task may be
+  changed in place, its scene included, with a new DIGEST (H.8, unchanged); saying what changed is a recommendation.
 
 **Version: v1.2-rc** (2026-10-10). Changes in this version: the resource monitor sidecar, the docker caps and the
 verifier's limits step are in every task (§2.10; #131, with the review fixes of the same day: an out-of-memory kill is
@@ -461,10 +485,10 @@ Decided (owner, 2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
    episode return, goal count), stated in its instructions and `docs/benchmarks/<bench>.md`; the protocol does not impose
    one rule across benchmarks.
-2. Not yet implemented — standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its
-   own sandbox; the sidecar's verdict stays authoritative, and a verifier replay that disagrees is reported as a warning
-   (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
-   image (§2.4) and to read the trajectory (§4.8).
+2. ~~Standard-mode double check~~ withdrawn (owner, 2026-10-17, boards 0150 / 0151; never implemented): the verifier was
+   to replay the recorded `trajectory.npz` once more in its own sandbox, the sidecar's verdict authoritative, a
+   disagreement a warning (`replay_mismatch`). Since 2026-10-17 the standard modes are graded by the live episode and
+   nothing replays to grade them (H.4).
 3. Kept as they are: one frozen instance per task (no per-run seeds), and what each benchmark exposes to the agent in
    privileged mode (no hiding of reward or success checks). Changed for seeds on 2026-10-13 (owner, §2.13): a task has
    a default seed and may allow others, each a frozen instance; the runner draws one per trial; reference solutions
@@ -622,7 +646,7 @@ Open:
 Decided (2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
    episode return, goal count), stated in its instructions and `docs/benchmarks/<bench>.md`.
-2. Not yet implemented — standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its
-   own sandbox; the sidecar's verdict stays authoritative, and a disagreement is a warning (`replay_mismatch`).
+2. ~~Standard-mode double check~~ withdrawn (owner, 2026-10-17; never implemented): the standard modes are graded by the
+   live episode (H.4).
 3. What each benchmark exposes to the agent in privileged mode is its own (no hiding of reward or success checks).
    Seeds: §2.13.

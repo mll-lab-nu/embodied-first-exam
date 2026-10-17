@@ -121,6 +121,18 @@ LATE_CHANGE_LOG = {
         "`final_window` (the window's length in recorded rows) and `replay_settle`. The scene, the frozen instance, the "
         "predicate, the live service's success rule and the client are unchanged; recorded trials are re-graded from their "
         "trajectories with `scripts/robowits/regrade.py`.",
+        "2026-10-17 (owner, board 0150/0151; in place: a new DIGEST): standard mode graded by the live episode; no grading "
+        "replay; video by one render pass after the verdict. `success` is the live service's own rule, unchanged: the settle "
+        "window that ended the episode passed on the live simulator (inside the agent's last call, or after its last "
+        "command when its phase is over). The in-process grading replay of the recorded rows, whose success and "
+        "determinism also had to hold, is gone; `final.json` drops `replay_success`, `deterministic`, `replay_sha` and "
+        "`replay_settle` and adds `graded_by = \"live\"`, `replays = 0`, `live_success`, `video_pending`, `video_source`. "
+        "The video is the recorded rows rendered once after the verdict (before, the replay ran the rows and, for an "
+        "episode without a recorded window, a window after them). The collect hook first stops what the agent left "
+        "running in its container (`kill -9 -1`), so the settle window after the agent's last command runs with "
+        "nothing else driving the robot; that window runs as the end of the agent's last call, so a simulator crash inside "
+        "it counts as a crash inside the agent's calls (`sim_crashed_on_call` when it repeats), not as an infrastructure crash. The scene, the frozen instance, the predicate, the settle window and the "
+        "client are unchanged; the instruction's grading sentence says that nothing is replayed.",
     ],
 }
 # Fixes to the published tasks (PROTOCOL §2.8): one README Change Log entry per mode, newest last.
@@ -268,9 +280,8 @@ CRITERION_LEAD = {
             "checked, then 2 s in which every condition must hold at every 6th control step and at the last one, with each graded "
             "object staying within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the "
             "episode ends as a success; if not, the episode goes on and `meta[\"settle\"]` says why. When your session ends, the "
-            "same window decides once more, after your last command. The window's steps are part of your recorded episode. "
-            "The service then replays the recorded episode, which must end in the same state, and checks the window that "
-            "ended it again over the same recorded steps: the replay adds no second window."),
+            "same window decides once more, after your last command. The window's steps are part of your recorded episode, "
+            "and its result on the live simulator is the verdict: nothing is replayed to grade it."),
 }
 
 
@@ -582,10 +593,12 @@ def priv_readme(fam: str, f: dict) -> str:
 
 
 def std_readme(fam: str, f: dict) -> str:
-    det = ("the in-process replay is bit-exact on Genesis' CPU backend" if f["backend"] == "cpu" else
-           "Genesis' GPU backend is not bit-exact here: determinism is reported, not required")
-    ver = wrap(f"`success` = live success ∧ replay success ∧ deterministic ({det}), computed inside the sidecar, and no "
-               f"infrastructure failure (`tests/grade.py` reads the sidecar's `final.json`); `/logs/verifier/replay.mp4`. What is "
+    ver = wrap("`success` = the live episode's: the settle window that ended it passed on the sidecar's simulator (inside the "
+               "agent's last call, or after its last command when its phase is over, once the collect hook has stopped the agent's "
+               "container), and no infrastructure failure (`tests/grade.py` reads the sidecar's `final.json`: `graded_by = \"live\"`, "
+               "`replays = 0`); nothing is replayed to grade it. The frozen instance is checked when the scene is built, before the "
+               "agent is served (`instance_mismatch`, an infrastructure failure). After the verdict the sidecar renders the recorded "
+               "trajectory once into `/logs/verifier/replay.mp4`; a failed video never changes the verdict. What is "
                f"checked, in words: `instruction.md`, \"Success criterion (as graded)\"."
                + (" The oracle scores 1 and `nop` scores 0." if f["oracle"] == "full" else ""))
     ver += review_line(f, ", with its privileged twin")
@@ -601,7 +614,7 @@ def std_readme(fam: str, f: dict) -> str:
     task = wrap(f"{f.get('goal') or f_text(fam)} The same frozen instance as `{priv_dir(fam)}`, as a robot service (`{PROTOCOL}`): the simulator runs "
                 "in the `sim` sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the "
                 "client (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar "
-                "records the episode as the trajectory, replays it and renders the video; the success criterion as graded is in "
+                "judges the live episode, records it as the trajectory and renders the video from it; the success criterion as graded is in "
                 "`instruction.md`.")
     diff = wrap(f"That of `{priv_dir(fam)}` (its Difficulty), without resets, privileged state or the tooling's primitives: the agent "
                 "perceives the scene through calibrated RGB-D cameras and its own proprioception, and every action it sends is part of "
@@ -710,12 +723,20 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-# end the episode (SIGUSR1 to the live service, through a crash resume if one is under way), wait for the in-process
-# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
+# end the episode (SIGUSR1 to the live service, through a crash resume if one is under way): the service runs the settle
+# window after the agent's last command on the live simulator and writes the live verdict (nothing is replayed), then
+# renders the video once; wait for it (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout {ct - 120}; cat /data/final.json"
-timeout_sec = {ct}                # service up (a resume replays the journal first), the grading replay, then the video
+timeout_sec = {ct}                # service up (a resume replays the journal first), the settle window, then the video
 
 [agent]
 timeout_sec = {float(CUTOFF["standard"])}             # RoboWits budget (why: docs/benchmarks/robowits.md)

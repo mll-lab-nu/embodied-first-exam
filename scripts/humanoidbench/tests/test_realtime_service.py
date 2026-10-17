@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import signal
 import sys
 import tempfile
 import threading
@@ -23,6 +24,7 @@ from test_standard_service import FakeSim  # noqa: E402   (puts shared/standard/
 REALTIME = HERE.parents[0] / "shared" / "realtime"
 sys.path.append(str(REALTIME))                     # appended: `import rcb_client` elsewhere stays the standard client
 import rcb_realtime  # noqa: E402
+import rcb_service  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("rcb_client_realtime", REALTIME / "rcb_client.py")
 rcb_client_realtime = importlib.util.module_from_spec(_spec)
@@ -141,8 +143,9 @@ class TestPlan(Live):
         np.testing.assert_array_equal(j[:20], 1.0)
         np.testing.assert_array_equal(j[20:25], -1.0)
         np.testing.assert_array_equal(j[25:], -1.0)        # then held
-        self.assertTrue(fin["deterministic"])
-        self.assertEqual(fin["realtime"], 1)
+        self.assertEqual((fin["graded_by"], fin["replays"], fin["realtime"]), ("live", 0, 1))
+        self.assertNotIn("deterministic", fin)
+        self.assertEqual(self.svc.sim.replays, 0)            # the verdict is the live episode's: nothing replayed
 
     def test_a_late_chunk_drops_the_rows_whose_steps_are_gone(self):
         self.r.submit("move", [[0.0]], cameras=[])
@@ -196,8 +199,19 @@ class TestEnd(Live):
         with self.assertRaises(EpisodeOver):
             self.r.submit("move", [[1.0]], cameras=[])
         fin = self.finalize()
-        self.assertTrue(fin["success"])
+        self.assertEqual((fin["success"], fin["live_success"], fin["graded_by"], fin["replays"]), (True, True, "live", 0))
         self.assertEqual(fin["protocol"], "eai-standard/2.3")
+        self.assertNotIn("infra_error", fin)
+        self.assertEqual(self.svc.sim.replays, 0)
+
+    def test_live_verdict_can_take_the_success_away(self):
+        """A settle window on the live simulator, run after the clock stopped (live_verdict); the verdict stays live."""
+        sim = self.svc.sim
+        sim.live_verdict = lambda rows, success: {"success": False, "settled": 0}
+        self.r.submit("move", [[1.0]] * 10, interpolate="hold", cameras=[])
+        time.sleep(0.15)
+        fin = self.finalize()
+        self.assertEqual((fin["live_success"], fin["live_rule"], fin["success"], fin["settled"]), (True, False, False, 0))
         self.assertNotIn("infra_error", fin)
 
     def test_a_watch_ends_with_the_episode(self):
@@ -208,7 +222,8 @@ class TestEnd(Live):
 
 
 class TestSimulatorError(Live):
-    """PROTOCOL §4b: a simulator error that ends the graded episode is infrastructure, not the agent's failure."""
+    """A simulator error raised by a control step after the agent's first command is the agent's 0 (owner, 2026-10-17;
+    STANDARD_MODE Part 3; before, every error that ended the graded episode was infrastructure)."""
 
     def make_sim(self):
         def boom(sim):
@@ -218,15 +233,26 @@ class TestSimulatorError(Live):
         sim.on_step = boom
         return sim
 
-    def test_a_simulator_error_is_an_infra_error(self):
+    def test_an_error_after_the_first_command_is_the_agents(self):
         self.r.submit("move", [[1.0]] * 10, interpolate="hold", cameras=[])
         time.sleep(0.15)
         st = self.r.status()
         self.assertTrue(st["done"])
         self.assertEqual(st["reason"], "error")
         fin = self.finalize()
-        self.assertEqual(fin["infra_error"], 1)
+        self.assertNotIn("infra_error", fin)
         self.assertFalse(fin["success"])
+        self.assertIn("first_command", [json.loads(x)["ev"] for x in Path(self.data, "episode.jsonl").read_text().splitlines()])
+
+    def test_an_error_before_any_command_is_infrastructure(self):
+        """The clock started by a watch (get_obs(seconds)): only held steps ran, none the agent planned."""
+        try:
+            self.r.get_obs(cameras=[], seconds=0.2)          # held steps; the fifth raises
+        except Exception:  # noqa: BLE001 -- the watch may end with the episode or answer 500
+            pass
+        time.sleep(0.1)
+        fin = self.finalize()
+        self.assertEqual((fin["reason"], fin.get("infra_error")), ("error", 1))
 
 
 class TestResetAndResume(Live):
@@ -267,6 +293,7 @@ class SportSim:
     proprio_layout = ["step", "mallet_x", "mallet_y"]
     raw_dim = 3
     DIMS = {"mallet": 2, "stroke": 10, "toss": 4, "stop": 1}
+    replay_free = True     # its verify() raises: nothing may call it
 
     def __init__(self):
         self.reset()
@@ -324,10 +351,7 @@ class SportSim:
         return f"{self.t}:{self.target}"
 
     def verify(self, rows) -> dict:
-        s = SportSim()
-        for r in rows:
-            s.step(r)
-        return {"success": False, "state_sha": s.state_sha()}
+        raise AssertionError("a grading replay ran: the standard modes are graded by the live episode (board 0151)")
 
     def save_trajectory(self, rows, path, meta) -> None:
         np.savez(path, rows=rows)
@@ -393,7 +417,7 @@ class TestMixedActionTypes(ByHand):
         self.assertFalse(self.svc.done, self.svc.reason)
         self.assertEqual(len(self.svc.episode), steps)
         fin = self.finalize()
-        self.assertEqual((fin["reason"], fin["deterministic"]), ("timeout", True))
+        self.assertEqual((fin["reason"], fin["graded_by"], fin["replays"], fin["success"]), ("timeout", "live", 0, False))
         self.assertNotIn("infra_error", fin)
         return fin
 
@@ -568,6 +592,210 @@ class TestCountersSurviveACrash(ByHand):
         self.assertEqual((fin["stalls"], fin["late_steps"], fin["held_steps"], fin["max_lag_s"]), (3, 2, 96, 0.75))
 
 
+# One process of a trial's realtime sidecar, as rcb_service.main() runs it (crash.log), that dies by a signal: "step"
+# inside a control step of the agent's command (sim.step kills it), "build" after building and resuming but before
+# any control step, "held" inside a control step with no command of the agent's (the hold row).
+CHILD = r"""
+import os, sys
+tests, realtime, data, sig, where = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5]
+sys.path.insert(0, tests)
+sys.path.append(realtime)
+from test_standard_service import FakeSim
+import json, rcb_realtime, rcb_service
+rcb_service.enable_crash_log(data)
+
+class S(FakeSim):
+    control_dt, max_control_steps = 0.01, 10 ** 6
+
+sim = S(goal=1e9)
+svc = rcb_realtime.RealtimeService(sim, data=data, slowdown=1000.0)
+svc.start()
+if where == "build":
+    os.kill(os.getpid(), sig)
+if where == "step":
+    job = rcb_realtime._Job("POST", "/submit", json.dumps({"type": "move", "actions": [[0.1]] * 3,
+                                                           "cameras": []}).encode())
+    svc.dispatch(job)
+sim.on_step = lambda s: os.kill(os.getpid(), sig)
+svc.tick()
+"""
+
+
+def die_in(data: str, sig: int, where: str) -> None:
+    """A sidecar process of this trial (counted, as main() counts it) that dies by `sig` at `where`."""
+    import subprocess
+    rcb_service.count_start(data)
+    r = subprocess.run([sys.executable, "-c", CHILD, str(HERE), str(REALTIME), data, str(int(sig)), where],
+                       capture_output=True, timeout=120)
+    assert r.returncode == -sig, (r.returncode, r.stderr[-500:])
+
+
+class TestCrashOwner(unittest.TestCase):
+    """A simulator crash inside a control step (crash.log's record shows _step on the crashing thread) after the agent's
+    first command is the agent's; a kill, a crash outside a control step (building, resuming, resetting, rendering,
+    finalizing) and any crash before the first command are infrastructure (owner, 2026-10-17; review round 2)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.data = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def outcome(self, *deaths) -> dict:
+        for sig, where in deaths:
+            die_in(self.data, sig, where)
+        rcb_service.count_start(self.data)                   # the restart that finds the deaths
+        with self.assertRaises(rcb_service.GiveUp):
+            svc = rcb_realtime.RealtimeService(FastSim(), data=self.data, slowdown=1000.0)
+            svc.start()
+        return json.loads(Path(self.data, "final.json").read_text())
+
+    def test_segfaults_in_the_agents_steps_are_the_agents(self):
+        fin = self.outcome(*[(signal.SIGSEGV, "step")] * 3)
+        self.assertEqual((fin["reason"], fin.get("infra_error", 0), fin["success"]), ("sim_crashed_on_call", 0, False))
+        died = rcb_service.deaths(self.data)
+        self.assertEqual([(d["fatal_signal"], d["in_step"]) for d in died], [(True, True)] * 3)
+        ev = [json.loads(x) for x in Path(self.data, "episode.jsonl").read_text().splitlines()]
+        self.assertEqual([e["fatal_signal"] for e in ev if e["ev"] == "resuming"], [True, True])
+        self.assertIn("first_command", [e["ev"] for e in ev])
+
+    def test_aborts_in_the_agents_steps_are_the_agents(self):
+        self.assertEqual(self.outcome(*[(signal.SIGABRT, "step")] * 3)["reason"], "sim_crashed_on_call")
+
+    def test_kills_are_infrastructure(self):
+        fin = self.outcome(*[(signal.SIGKILL, "step")] * 3)
+        self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+
+    def test_segfaults_outside_a_step_are_infrastructure(self):
+        """One agent-time segfault, then two in processes that never got past building and resuming (review repro)."""
+        fin = self.outcome((signal.SIGSEGV, "step"), (signal.SIGSEGV, "build"), (signal.SIGSEGV, "build"))
+        self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+        self.assertEqual([d["in_step"] for d in rcb_service.deaths(self.data)], [True, False, False])
+
+    def test_segfaults_before_the_first_command_are_infrastructure(self):
+        fin = self.outcome(*[(signal.SIGSEGV, "held")] * 3)
+        self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+        ev = [json.loads(x) for x in Path(self.data, "episode.jsonl").read_text().splitlines()]
+        self.assertNotIn("first_command", [e["ev"] for e in ev])
+
+    def test_a_kill_among_segfaults_is_infrastructure(self):
+        fin = self.outcome((signal.SIGSEGV, "step"), (signal.SIGKILL, "step"), (signal.SIGSEGV, "step"))
+        self.assertEqual(fin["reason"], "sim_crashed")
+
+    def test_the_record_must_show_a_step_on_the_crashing_thread(self):
+        rec = (b"Fatal Python error: Segmentation fault\n\nThread 0x1 (most recent call first):\n"
+               b'  File "rcb_service.py", line 1 in _step\n\nCurrent thread 0x2 (most recent call first):\n'
+               b'  File "server.py", line 9 in images\n  File "rcb_realtime.py", line 5 in dispatch\n\n')
+        self.assertFalse(rcb_service.crashed_in_step(rec))
+        self.assertTrue(rcb_service.crashed_in_step(rec.replace(b"in images", b"in _step")))
+
+
+class TestWatchImageCap(ByHand):
+    """Concurrent watches together stay within the frame budget (review round 3: an agent could otherwise exhaust the
+    sidecar's memory, and an OOM kill counts as infrastructure)."""
+
+    def make_sim(self):
+        return FastSim()
+
+    def test_watches_beyond_the_budget_in_flight_are_429(self):
+        self.svc.max_frames = 120                            # 100 control steps at 30 fps: 35 images a camera
+        ok = self.post("/observe", seconds=1.0, cameras=["cam"], video_fps=30)   # 35
+        self.assertFalse(ok.done.is_set())
+        second = self.post("/observe", seconds=1.0, cameras=["cam", "side"], video_fps=30)   # + 70 = 105
+        self.assertFalse(second.done.is_set())
+        third = self.post("/observe", seconds=1.0, cameras=["cam", "side"], video_fps=30)    # + 70 > 120
+        self.assertEqual(third.reply[1], 429)
+        self.assertIn("images_in_flight", json.loads(third.reply[3]))
+        self.run_steps(100)                                  # the watches complete
+        self.assertTrue(ok.done.is_set() and second.done.is_set())
+        again = self.post("/observe", seconds=1.0, cameras=["cam", "side"], video_fps=30)
+        self.assertFalse(again.done.is_set())                # room again
+
+
+class TestFirstCommand(ByHand):
+    def make_sim(self):
+        return FastSim()
+
+    def test_a_gap_before_a_later_at_is_no_command(self):
+        """A target held through a gap (call -1) or the hold row runs before the agent's row: not its first command."""
+        self.submit("move", [[0.1]] * 3, at=5)
+        self.run_steps(5)
+        self.assertFalse(self.svc.commanded)
+        self.run_steps(1)
+        self.assertTrue(self.svc.commanded)
+
+    def test_a_row_the_simulator_refuses_to_clip_is_a_400(self):
+        def bad(typ, rows):
+            raise ValueError("a row of the wrong layout")
+        self.sim.clip = bad
+        code, body = self.submit("move", [[0.1]])
+        self.assertEqual(code, 400)
+        self.assertFalse(self.svc.done)
+
+
+class TestResetFailure(ByHand):
+    reset_budget = 1
+
+    def make_sim(self):
+        return FastSim()
+
+    def test_a_reset_that_fails_to_rebuild_is_infrastructure(self):
+        """After the first command too: the scene's rebuild failed, not a control step of the agent's commands."""
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(5)
+
+        def boom():
+            raise RuntimeError("the scene did not build")
+        self.sim.reset = boom
+        self.post("/reset", cameras=[])
+        fin = self.finalize()
+        self.assertEqual((fin["reason"], fin.get("infra_error")), ("error", 1))
+
+
+class TestLiveGrading(ByHand):
+    """Board 0151: the realtime verdict is the live episode's too; the frozen start is checked on the live simulator."""
+
+    def make_sim(self):
+        return FastSim()
+
+    def test_a_scene_off_the_frozen_start_gives_up_before_serving(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            sim = FastSim()
+            sim.start_sha = "not-this-one"
+            svc = rcb_realtime.RealtimeService(sim, data=tmp.name, slowdown=1000.0)
+            with self.assertRaises(rcb_service.GiveUp):
+                svc.start()
+            fin = json.loads(Path(tmp.name, "final.json").read_text())
+            self.assertEqual((fin["finalized"], fin["success"], fin["infra_error"]), (True, False, 1))
+            self.assertTrue(fin["reason"].startswith("instance_mismatch"))
+        finally:
+            tmp.cleanup()
+
+    def test_more_crashes_than_resumes_are_infrastructure(self):
+        """No call spans a crash in realtime mode (submit answers at once): a give-up after crashes is sim_crashed."""
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(100)                                  # a checkpoint
+        rcb_service.count_start(self.data)                   # (setUp's process start)
+        for _ in range(2):
+            rcb_service.count_start(self.data)
+            self.service(FastSim())
+        rcb_service.count_start(self.data)
+        with self.assertRaises(rcb_service.GiveUp):
+            self.service(FastSim())
+        fin = json.loads(Path(self.data, "final.json").read_text())
+        self.assertEqual((fin["reason"], fin["infra_error"], fin["success"]), ("sim_crashed", 1, False))
+
+    def test_a_timeout_is_graded_live_and_nothing_is_replayed(self):
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(10)
+        fin = self.finalize()
+        self.assertEqual((fin["reason"], fin["graded_by"], fin["replays"], fin["success"], fin["n_actions"]),
+                         ("timeout", "live", 0, False, 10))
+        self.assertEqual(self.sim.replays, 0)
+
+
 class TestVideoNeverDecides(ByHand):
     def test_the_realtime_verdict_is_finalized_before_the_video(self):
         seen = {}
@@ -575,8 +803,8 @@ class TestVideoNeverDecides(ByHand):
         self.submit("mallet", [[0.2, 0.0]])
         self.run_steps(3)
         fin = self.finalize()
-        self.assertEqual((seen["finalized"], seen["video_pending"], seen["deterministic"], seen["realtime"]),
-                         (True, True, True, 1))
+        self.assertEqual((seen["finalized"], seen["video_pending"], seen["graded_by"], seen["realtime"]),
+                         (True, True, "live", 1))
         self.assertEqual((fin["finalized"], fin["video_pending"], fin["video"], fin["protocol"]),
                          (True, False, True, "eai-standard/2.3"))
 

@@ -6,10 +6,13 @@ simulator (stub_sim.py): no SAPIEN, no GPU. The service and graders under test a
 Covers: malformed requests are 400s that leave the episode alive (a zero-row chunk, dt / video_fps / cameras of the
 wrong type or not finite; a negative Content-Length, which would be read without a bound); a camera named many times
 is rendered once, before the frame budget is counted; a port held by another process is waited for; the calibration in every response is the current one (the wrist camera moves); the agent's
-clock starts at its first request; the verdict is written before the videos, survives a restart, and is graded without
-`finalized`; a failed verification replay and an instance that does not rebuild are infra_error, not the agent's 0; a
+clock starts at its first request; the verdict is the live episode's (board 0151: success 1 / failure 0, nothing is
+replayed: the stand-in leaves a marker when it replays), written before the video and survives a restart; a failed or
+slow video never changes it; an instance that does not rebuild, a give-up after crashes between calls and a missing
+final.json are infra_error, crashes inside the agent's calls and a simulator error from its call are the agent's 0; a
 crash around a successful call never turns the success into the agent's 0 (the call is lost whole, or its success ends
-the resumed episode; an end logged past the last checkpoint is dropped by the resume).
+the resumed episode; an end logged past the last checkpoint is dropped by the resume). With imageio installed, the
+real rcb_live.render_videos (the one render pass for replay.mp4 + live.mp4) runs on the stand-in too.
 """
 from __future__ import annotations
 
@@ -45,8 +48,10 @@ class LiveRecorder:
     def set_label(self, *a): pass
     def end_call(self): pass
     def close(self): return {}
-    def render_from_trajectory(self, acts): return {"live_video": False}
+    def render_videos(self, acts, path, **kw):        # the stand-in's render_video: RCB_STUB_VIDEO_S / RCB_STUB_VIDEO_FAIL
+        self.S.render_video(acts, path); return {"live_video": False, "video": True}
 '''
+LIVE_STUB = LIVE_STUB.replace("def __init__(self, *a, **k): pass", "def __init__(self, S, *a, **k): self.S = S")
 
 
 def free_port() -> int:
@@ -155,9 +160,14 @@ class Service:
         out = json.loads((log / "reward.json").read_text())
         assert (log / "reward.txt").read_text().strip() == str(out["success"])
         assert all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in out.values()), out
-        for k in ("success", "deterministic", "infra_error", "sim_error", "grader_error"):
+        for k in ("success", "live_success", "graded_by_live", "replays", "finalized", "missing_log", "infra_error", "sim_error", "grader_error"):
             assert k in out, (k, out)
+        assert "deterministic" not in out and "replay_success" not in out, out      # no replay in the standard mode
+        assert out["replays"] == 0, out
         return out
+
+    def replayed(self) -> bool:
+        return (self.data / "stub_replayed").exists()
 
 
 def row(j1: float = 0.0, grip: float = 0.0) -> list:
@@ -310,35 +320,75 @@ class Verdicts(ServiceCase):
         code, m, _ = s.post("/submit", {"type": "joint_position", "dt": 0.1, "video": "none"}, [row(0.6, 1.0)])
         self.assertEqual((code, m["done"], m["reason"]), (200, True, "success"))
 
+    def video_done(self, s: Service) -> dict:
+        t0 = time.time()
+        while s.final().get("video_pending") is not False:
+            self.assertLess(time.time() - t0, 30, s.final()); time.sleep(0.05)
+        return s.final()
+
     def test_success_is_graded_1(self):
-        s = self.service()
+        s = self.service(RCB_STUB_REPLAY_FAIL=1)          # a replay would raise: none runs
         self.succeed(s)
-        d = s.wait_final()
-        self.assertEqual((d["success"], d["replay_success"], d["deterministic"], d["video"]), (True, True, True, True))
+        d = self.video_done(s)
+        self.assertEqual((d["success"], d["live_success"], d["graded_by"], d["replays"], d["video"], d["finalized"]),
+                         (True, True, "live", 0, True, True))
+        self.assertNotIn("replay_success", d); self.assertNotIn("deterministic", d); self.assertTrue(d["live_sha"])
+        self.assertTrue((s.data / "trajectory.npz").exists()); self.assertTrue((s.data / "replay.mp4").exists())
         out = s.grade()
-        self.assertEqual((out["success"], out["deterministic"], out["infra_error"], out["finalized"]), (1, 1, 0, 1))
+        self.assertEqual((out["success"], out["live_success"], out["graded_by_live"], out["infra_error"], out["finalized"]), (1, 1, 1, 0, 1))
+        self.assertFalse(s.replayed())
         code, err, _ = s.post("/submit", {"type": "joint_position"}, [row()])
         self.assertEqual(code, 409)
+
+    def test_a_live_failure_is_graded_0(self):
+        s = self.service()
+        s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.6, 0.0)])   # arm there, gripper closed
+        os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook: time is up
+        d = s.wait_final()
+        self.assertEqual((d["success"], d["reason"], d["graded_by"]), (False, "timeout", "live"))
+        out = s.grade()
+        self.assertEqual((out["success"], out["live_success"], out["infra_error"], out["sim_error"]), (0, 0, 0, 0))
+        self.assertFalse(s.replayed())
+
+    def test_a_simulator_error_from_the_agents_call_is_its_0(self):
+        s = self.service(RCB_STUB_STEP_RAISE=1)
+        code, err, _ = s.post("/submit", {"type": "joint_position", "dt": 0.004, "video": "none"}, [row(-2.9)])
+        self.assertEqual((code, err.get("error")), (500, "simulator error"))
+        d = s.wait_final()
+        self.assertEqual((d["reason"], d["success"], d["graded_by"]), ("error", False, "live")); self.assertNotIn("infra_error", d)
+        out = s.grade()
+        self.assertEqual((out["success"], out["sim_error"], out["infra_error"]), (0, 1, 0))
+
+    def test_a_failed_video_keeps_the_verdict(self):
+        s = self.service(RCB_STUB_VIDEO_FAIL=1)
+        self.succeed(s)
+        d = self.video_done(s)
+        self.assertEqual((d["success"], d["video"], d["graded_by"]), (True, False, "live"))
+        self.assertIn("video_error", d)
+        out = s.grade()
+        self.assertEqual((out["success"], out["video_rendered"], out["infra_error"], out["grader_error"]), (1, 0, 0, 0))
 
     def test_nothing_done_is_the_agents_0(self):
         s = self.service()
         os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook: time is up
         d = s.wait_final()
-        self.assertEqual((d["reason"], d["replay_success"], d["deterministic"]), ("timeout", False, True))
+        self.assertEqual((d["reason"], d["success"], d["graded_by"], d["n_actions"]), ("timeout", False, "live", 0))
         out = s.grade()
         self.assertEqual((out["success"], out["infra_error"], out["grader_error"]), (0, 0, 0))
 
     def test_a_verdict_on_disk_is_graded_before_the_videos_and_survives_a_restart(self):
         s = self.service(RCB_STUB_VIDEO_S=60)
         self.succeed(s)
-        d = s.wait_final("replay_success")                # the verdict is written; the video is still rendering
-        self.assertEqual((d["finalized"], d["deterministic"]), (False, True))
+        d = s.wait_final("graded_by")                     # the verdict is written; the video is still rendering
+        self.assertEqual((d["finalized"], d["video_pending"], d["video"]), (True, True, False))
         out = s.grade()
-        self.assertEqual((out["success"], out["finalized"], out["infra_error"]), (1, 0, 0))
+        self.assertEqual((out["success"], out["finalized"], out["video_pending"], out["infra_error"]), (1, 1, 1, 0))
         s.stop()                                          # the service dies while rendering; compose restarts it
+        built = (s.data / "stub_session.jsonl").read_text().count("\n")
         s.start(serve=False)                              # it keeps the verdict and idles (does not serve)
+        self.assertEqual((s.data / "stub_session.jsonl").read_text().count("\n"), built)   # without rebuilding the scene
         d = s.final()
-        self.assertEqual((d["success"], d["replay_success"], d["deterministic"], d["finalized"]), (True, True, True, True))
+        self.assertEqual((d["success"], d["graded_by"], d["finalized"], d["video_pending"]), (True, "live", True, False))
         self.assertEqual(s.grade()["success"], 1)
         os.kill(s.proc.pid, signal.SIGUSR1); time.sleep(0.3)      # the collect hook's signal changes nothing
         self.assertEqual(s.final(), d)
@@ -370,7 +420,7 @@ class Verdicts(ServiceCase):
         code, m, _ = s.post("/observe", {"seconds": 1.0, "video": "none"})
         self.assertEqual((code, m["done"], m["reason"]), (200, True, "success"))
         d = s.wait_final()
-        self.assertEqual((d["success"], d["replay_success"], d["deterministic"]), (True, True, True))
+        self.assertEqual((d["success"], d["graded_by"]), (True, "live"))
         out = s.grade()
         self.assertEqual((out["success"], out["infra_error"]), (1, 0))
 
@@ -388,7 +438,7 @@ class Verdicts(ServiceCase):
         self.assertEqual([e.get("on_resume") for e in self.events(s) if e["ev"] == "end"], [True])
         os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook
         d = s.wait_final()
-        self.assertEqual((d["success"], d["replay_success"], d["deterministic"], d["reason"]), (True, True, True, "success"))
+        self.assertEqual((d["success"], d["graded_by"], d["reason"]), (True, "live", "success"))
         self.assertEqual(s.grade()["success"], 1)
 
     def test_an_end_past_the_last_checkpoint_is_dropped_on_resume(self):
@@ -408,19 +458,34 @@ class Verdicts(ServiceCase):
         self.assertTrue(s.wait_final()["success"])
         self.assertEqual(s.grade()["success"], 1)
 
-    def test_a_failed_verification_replay_is_infra_error(self):
-        s = self.service(RCB_STUB_REPLAY_FAIL=1)
-        self.succeed(s)
-        d = s.wait_final()
-        self.assertEqual((d["success"], d["replay_success"], d["finalize_error"], d["infra_error"]), (True, None, 1, 1))
-        out = s.grade()
-        self.assertEqual((out["success"], out["infra_error"], out["grader_error"], out["live_success"]), (0, 1, 1, 1))
+    def give_up_after(self, crashed_in_call: bool) -> dict:
+        """Two resumes and a third crash, all inside the agent's calls or not (the journal as they leave it)."""
+        s = self.service()
+        s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)])
+        s.stop()
+        with open(s.data / "episode.jsonl", "a") as f:
+            for e in [{"ev": "resumed", "rows": 0, "crashed_in_call": crashed_in_call}] * 2 + ([{"ev": "call_begin", "path": "/observe", "call": 2}] if crashed_in_call else []):
+                f.write(json.dumps({"ts": time.time(), **e}) + "\n")
+        s.start(serve=False)
+        return s.final()
+
+    def test_a_give_up_after_crashes_between_calls_is_infra(self):
+        d = self.give_up_after(crashed_in_call=False)
+        self.assertEqual((d["reason"], d["finalized"], d["infra_error"]), ("sim_crashed", True, 1))
+        out = self.svc.grade()
+        self.assertEqual((out["success"], out["infra_error"]), (0, 1))
+
+    def test_crashes_inside_the_agents_calls_are_its_0(self):
+        d = self.give_up_after(crashed_in_call=True)
+        self.assertEqual((d["reason"], d["finalized"]), ("sim_crashed_on_call", True)); self.assertNotIn("infra_error", d)
+        out = self.svc.grade()
+        self.assertEqual((out["success"], out["infra_error"], out["sim_crashed_on_call"]), (0, 0, 1))
 
     def test_an_unfinished_finalize_is_infra_error(self):
         s = self.service()
         s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)])
         d = s.final()                                     # the collect hook gave up before any verdict: final.json as the episode left it
-        self.assertEqual((d["done"], d["finalized"], d["replay_success"]), (False, False, None))
+        self.assertEqual((d["done"], d["finalized"], d.get("graded_by")), (False, False, None))
         out = s.grade()
         self.assertEqual((out["success"], out["infra_error"], out["missing_log"]), (0, 1, 0))
 
@@ -436,6 +501,22 @@ class Verdicts(ServiceCase):
         out = s.grade()
         self.assertEqual((out["success"], out["infra_error"], out["instance_mismatch"]), (0, 1, 1))
 
+    def test_an_instance_that_does_not_rebuild_on_a_resume_is_reported_at_once(self):
+        s = self.service()
+        s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)])
+        s.stop()                                          # a crash; the host no longer rebuilds the frozen instance
+        s.env["RCB_STUB_HASH_MISMATCH"] = "1"
+        s.start(serve=False)                              # the first restart gives up (no crash loop)
+        d = s.final()
+        self.assertTrue(d["reason"].startswith("instance_mismatch"), d)
+        self.assertEqual((d["finalized"], d["infra_error"], d["success"]), (True, 1, False))
+        self.assertEqual(s.grade()["infra_error"], 1)
+
+    def test_a_give_up_on_disk_is_kept_on_a_restart(self):
+        d = self.give_up_after(crashed_in_call=False)
+        self.svc.stop(); self.svc.start(serve=False)
+        self.assertEqual(self.svc.final(), d)
+
     def test_the_tools_row_cap_is_not_the_episodes(self):
         """rcb_traj.Session refuses to save or replay more rows than the privileged verifier grades (MAX_T). A standard
         episode has no row cap, so the service lifts it for its own Session: a longer episode still gets its verdict."""
@@ -445,8 +526,64 @@ class Verdicts(ServiceCase):
         os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook: save, replay, verdict
         d = s.wait_final()
         self.assertGreater(d["n_actions"], 3)
-        self.assertEqual((d.get("finalize_error"), d["replay_success"], d["deterministic"]), (None, False, True))
+        self.assertEqual((d.get("finalize_error"), d.get("trajectory_error"), d["success"], d["graded_by"]), (None, None, False, "live"))
         self.assertEqual(s.grade()["infra_error"], 0)
+
+
+try:
+    import imageio.v2 as _imageio  # noqa: F401 — the real render pass needs imageio (+ its ffmpeg) and Pillow
+    HAVE_IMAGEIO = True
+except ImportError:
+    HAVE_IMAGEIO = False
+
+
+@unittest.skipUnless(HAVE_IMAGEIO, "imageio not installed: the service tests use a stand-in for rcb_live")
+class RenderPass(unittest.TestCase):
+    """The shipped rcb_live.LiveRecorder.render_videos on the stand-in simulator: one pass over the trajectory writes
+    replay.mp4 (+ .last.png) and the labelled live.mp4."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="rcb-robotwin-render-"))
+        self.mods = {}
+        for name, src in (("rcb_traj", HERE / "stub_sim.py"), ("rcb_live", STD / "environment/sim/rcb_live.py")):
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(f"_t_{name}", src); m = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(m); self.mods[name] = m
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def episode(self):
+        S = self.mods["rcb_traj"].Session("stack_blocks_two", instance=str(STD / "environment/sim/instance.json"))
+        live = self.mods["rcb_live"].LiveRecorder(S, str(self.tmp)); live.open()
+        S.record_start()
+        live.set_label(1, "submit joint_position x30")
+        for k in range(30):
+            r = np.zeros(34); r[0] = k / 10; S.step(r)
+        live.end_call()
+        for _ in range(5):                                   # physics outside any call (no live frames there)
+            S.step()
+        return S, live, S.record_stop()
+
+    def test_one_pass_writes_both_videos(self):
+        S, live, acts = self.episode()
+        info = live.render_videos(acts, str(self.tmp / "replay.mp4"), every=10, fps=25)
+        self.assertTrue(info["video"]); self.assertTrue(info["live_video"], info)
+        self.assertGreater(info["live_frames"], 1)
+        for f in ("replay.mp4", "replay.last.png", "live.mp4", "live_timeline.jsonl"):
+            self.assertGreater((self.tmp / f).stat().st_size, 0, f)
+        n = sum(1 for _ in _imageio.get_reader(str(self.tmp / "replay.mp4")))
+        self.assertEqual(n, 1 + len(acts) // 10 + 1)          # the start, every 10th step, the end
+        self.assertEqual(S._sim_steps, len(acts))             # the pass stepped the trajectory once
+
+    def test_a_render_failure_raises_for_the_service_to_record(self):
+        S, live, acts = self.episode()
+        os.environ["RCB_STUB_VIDEO_FAIL"] = "1"
+        try:
+            with self.assertRaises(RuntimeError):
+                live.render_videos(acts, str(self.tmp / "replay.mp4"))
+        finally:
+            del os.environ["RCB_STUB_VIDEO_FAIL"]
 
 
 class StandardGrader(unittest.TestCase):
@@ -460,20 +597,22 @@ class StandardGrader(unittest.TestCase):
             return s.grade()
 
     def test_cases(self):
-        ok = {"success": True, "replay_success": True, "deterministic": True, "finalized": True, "reason": "success", "done": True}
+        ok = {"success": True, "live_success": True, "graded_by": "live", "replays": 0, "finalized": True, "reason": "success", "done": True}
         g = self.grade
         self.assertEqual(g(ok)["success"], 1)
         out = g(None); self.assertEqual((out["success"], out["missing_log"], out["infra_error"]), (0, 1, 1))
         for corrupt in ('{"success": true, "repl', "", "[1, 2]", "null"):
             out = g(corrupt); self.assertEqual((out["success"], out["infra_error"], out["grader_error"]), (0, 1, 1), corrupt)
-        self.assertEqual(g({**ok, "finalized": False})["success"], 1)                         # the verdict stands without the videos
-        self.assertEqual(g({**ok, "deterministic": False})["success"], 0)
-        self.assertEqual(g({**ok, "deterministic": False})["infra_error"], 0)
+        self.assertEqual(g({**ok, "video_pending": True})["success"], 1)                      # the verdict stands without the videos
+        self.assertEqual(g({**ok, "success": False, "live_success": False})["success"], 0)
+        self.assertEqual(g({**ok, "success": False, "live_success": False})["infra_error"], 0)
+        # a final.json of the old two-part rule (no "graded_by") is no live verdict
+        self.assertEqual(g({"success": True, "replay_success": True, "deterministic": True, "finalized": True, "reason": "success", "done": True})["infra_error"], 1)
         self.assertEqual(g({**ok, "success": False, "reason": "timeout"})["infra_error"], 0)
-        out = g({**ok, "success": False, "reason": "error"}); self.assertEqual((out["success"], out["sim_error"], out["infra_error"]), (0, 1, 0))
+        out = g({**ok, "success": False, "live_success": False, "reason": "error"}); self.assertEqual((out["success"], out["sim_error"], out["infra_error"]), (0, 1, 0))
         for no_verdict in ({"success": True, "done": True, "reason": "success", "finalized": False},
                            {"success": False, "done": False, "reason": None, "finalized": False},
-                           {"success": True, "done": True, "reason": "success", "finalized": True, "replay_success": None, "deterministic": None}):
+                           {"success": True, "done": True, "reason": "success", "finalized": True, "finalize_error": 1}):
             out = g(no_verdict); self.assertEqual((out["success"], out["infra_error"]), (0, 1), no_verdict)
         for reason in ("sim_crashed", "resume_failed: journal shorter than the log", "resume_failed: replayed state differs from the logged one"):
             out = g({"success": False, "done": True, "reason": reason, "finalized": True, "infra_error": 1})

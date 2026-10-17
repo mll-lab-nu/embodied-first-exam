@@ -36,9 +36,9 @@ walk to the door, press the handle, pull the door open towards the robot, and wa
   simulator error, else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's
   range, each joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the
   IMU's frame, each camera's field of view and pose.
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a
-  fresh simulator and grades the replay. Keep the controller that drives the robot at `/app/output/gen.py` for
-  the record: save it early and keep it current.
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it
+  ran. Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early and
+  keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
   earlier ends the run the same way (and stops your background programs), so do not stop early: while the
   episode runs, or a reset is left, the run can still pass.
@@ -69,8 +69,7 @@ HumanoidBench scores the *whole episode*, not a final state: it passes iff the s
 sum rather than a product, so partial credit is real: getting the door open and getting the torso past the
 doorway are the two large terms, with reaching for the handle, moving the handle, and posture as small ones.
 The bar cannot be reached without opening the door. The service ends the episode the moment the pass mark is
-reached (`reason = "success"`), and a fresh replay of the recorded episode, the servo targets the robot
-actually executed at each control step, must reach it as well and end in the same state.
+reached (`reason = "success"`); that live episode is the verdict.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
 Your whole interface to the robot. Its docstring is the full reference

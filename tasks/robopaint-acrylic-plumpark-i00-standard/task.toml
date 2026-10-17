@@ -6,21 +6,17 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/trajectory.npz", service = "sim" },
   { source = "/data/replay.mp4", service = "sim" },
   { source = "/data/replay.last.png", service = "sim" },
-  { source = "/data/canvas.png", service = "sim" },            # the replayed main sheet that was scored
-  { source = "/data/canvas_practice.png", service = "sim" },   # the replayed practice sheet (never scored)
-  { source = "/data/canvas_live.png", service = "sim" },       # the live episode's main sheet
+  { source = "/data/canvas_live.png", service = "sim" },       # the live episode's main sheet, the one that was scored
   { source = "/data/canvas_live_practice.png", service = "sim" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/robopaint-acrylic-plumpark-i00-standard"
-description = "RoboPaint acrylic stroke copy, STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic acrylic painting (ManiSkill 3.0.1 Franka Panda with a round acrylic brush; libmypaint 1.6.1 paints) on the same frozen instance as the privileged task: copy the painting shown in the picture target.png (a small acrylic painting after Utagawa Hiroshige's woodblock print Plum Park in Kameido, 1857) onto the main sheet in at most 384 strokes, with 10 premixed paints and a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode, which is replayed twice and scored at a 1 mm scale against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 384 strokes). Process rules: paint with brush strokes the way a person paints; colouring in or filling areas with a thin line, zigzag, serpentine or contour-offset fills fail; the brush tip's path pressed on the main sheet with paint is at most 42300 mm in total, and at most 10 % of it in strokes longer than 2.5 x the diagonal of their bounding box."
+description = "RoboPaint acrylic stroke copy, STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic acrylic painting (ManiSkill 3.0.1 Franka Panda with a round acrylic brush; libmypaint 1.6.1 paints) on the same frozen instance as the privileged task: copy the painting shown in the picture target.png (a small acrylic painting after Utagawa Hiroshige's woodblock print Plum Park in Kameido, 1857) onto the main sheet in at most 384 strokes, with 10 premixed paints and a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode and scores its main sheet at a 1 mm scale against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 384 strokes). Process rules: paint with brush strokes the way a person paints; colouring in or filling areas with a thin line, zigzag, serpentine or contour-offset fills fail; the brush tip's path pressed on the main sheet with paint is at most 42300 mm in total, and at most 10 % of it in strokes longer than 2.5 x the diagonal of their bounding box."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "painting", "acrylic-painting", "mypaint", "brush", "stroke-copy", "franka", "standard-mode", "trajectory", "robopaint_acrylic_plumpark"]
 
@@ -34,7 +30,7 @@ mode = "standard"                  # camera RGB + proprioception only; no sheet 
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
-oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 14099 of the 42300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation)."
+oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet) (ws3, 2026-10-05): path_mm 14099 of the 42300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation)."
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 difficulty = "hard"             # RoboPaint tiers: acrylic stroke copy hard, oil paint-from-reference extreme
@@ -100,10 +96,17 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # dump + exit the service, replay twice in fresh processes (+ video), score, write final.json
-timeout_sec = 5400                # ending a service that is resuming (up to 1500 s) + two replays of at most 72,000 control steps
+command = "sh /srv/finalize.sh"   # end the episode: the service scores its live sheet (the verdict), then renders the video once
+timeout_sec = 2820                # ending a service that is resuming (up to 1500 s) + one render pass of at most 72,000 control steps
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2.12)

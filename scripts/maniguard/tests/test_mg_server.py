@@ -1,8 +1,12 @@
 """ManiGuard standard service (the real environment/sim/server.py + the real shared layer) on a stub Session: a malformed
-request is a 400 before anything moves, never a 500 that ends the episode; the step cap is in /spec and ends the episode."""
+request is a 400 before anything moves, never a 500 that ends the episode; the step cap is in /spec and ends the episode.
+Graded by the live episode (board 0151): the dumped episode.json carries the live verdict's fields and the start check, the
+live video's frames are taken every 4 control steps; a scene that is not the frozen instance is a give-up as infra before
+anything is served (a second service process, FAKE_INSTANCE=mismatch)."""
 import json, os, runpy, sys, tempfile, threading
 from http.server import HTTPServer
 import numpy as np, requests
+sys.dont_write_bytecode = True       # no __pycache__ in the task dir (its leak check allows only the generator's files)
 REPO, HERE = (sys.argv[1] if len(sys.argv) > 1 else os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))), os.path.dirname(os.path.abspath(__file__))
 SIM = os.path.join(REPO, "tasks/maniguard-jar-transport-i14-standard/environment/sim")
 sys.path[:0] = [os.path.join(HERE, "stub_mg"), SIM]
@@ -79,4 +83,21 @@ ep = json.load(open(os.path.join(os.environ["RCB_DATA"], "episode.json"))); fin 
 check(ep["reason"] == "runaway_guard" and ep["n_actions"] == 120 and fin["finalized"] is False and fin["reason"] == "runaway_guard", "the service dumped the capped episode; its own final.json is not finalized", (ep, fin))
 log = [json.loads(l) for l in open(os.path.join(os.environ["RCB_DATA"], "episode.jsonl"))]
 check(not any(e.get("ev") == "error" for e in log), "no simulator error was logged by any malformed request")
+check(all(k in ep for k in ("task_success", "ltl_violated", "violation_step", "constraints", "outcome", "instance_ok", "instance_exact")) and ep["instance_ok"],
+      "episode.json carries the live verdict's fields and the start check", ep)
+vd = os.path.join(os.environ["RCB_DATA"], "live_video"); steps = sorted(int(f[:-4]) for f in os.listdir(vd) if f[:-4].isdigit())
+check(steps[0] == 0 and len(steps) == 120 // 4 + 1 and all(s % 4 == 0 for s in steps) and os.path.exists(os.path.join(vd, "last.jpg")),
+      f"the live video: a frame every 4 control steps over the episode's 120 ({len(steps)}), the end state at the dump", steps[:5])
+import subprocess
+d2 = tempfile.mkdtemp(); code = (f"import os, runpy, sys; sys.path[:0] = [{os.path.join(HERE, 'stub_mg')!r}, {SIM!r}]; "
+                                 f"import rcb_limited as L; L.refuse_forever = lambda *a, **k: os._exit(7); import importlib.util as u; "
+                                 f"sp = u.spec_from_file_location('rcb_maniguard', {os.path.join(HERE, 'stub_mg', 'rcb_maniguard.py')!r}); "
+                                 f"m = u.module_from_spec(sp); sp.loader.exec_module(m); sys.modules['rcb_maniguard'] = m; "
+                                 f"runpy.run_path({os.path.join(SIM, 'server.py')!r}, run_name='server')")
+p2 = subprocess.run([sys.executable, "-c", code], env={**os.environ, "RCB_DATA": d2, "FAKE_INSTANCE": "mismatch"}, capture_output=True, text=True, timeout=120)
+assert os.path.exists(os.path.join(d2, "final.json")), (p2.returncode, p2.stdout[-500:], p2.stderr[-1500:])
+fin2 = json.load(open(os.path.join(d2, "final.json")))
+ev2 = [json.loads(l) for l in open(os.path.join(d2, "episode.jsonl"))] if os.path.exists(os.path.join(d2, "episode.jsonl")) else []
+check(p2.returncode == 7 and fin2.get("gave_up") and fin2.get("infra_error") == 1 and fin2.get("instance_mismatch") and fin2.get("finalized")
+      and not any(e.get("ev") == "start" for e in ev2), "a scene that is not the frozen instance: a give-up as infra before serving", (p2.returncode, fin2, p2.stderr[-300:]))
 print(f"\n{n_ok} checks passed"); sys.stdout.flush(); os._exit(0)

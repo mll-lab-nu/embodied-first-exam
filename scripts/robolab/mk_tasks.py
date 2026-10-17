@@ -139,6 +139,10 @@ def review_note(F: dict, mode: str) -> str:
 # The texts below state rules the grader applies, read from the grader's own sources so that they cannot drift from it
 # (2026-10-16 instruction audit): the on-table families of the tooling, and the standard collect hook and verifier.
 _TOOL_SRC = (HERE / "shared/rcb_robolab.py").read_text()
+_SETTLE = re.search(r"(?m)^SETTLE_STEPS = (\d+)", _TOOL_SRC)
+if not _SETTLE:
+    raise RuntimeError("shared/rcb_robolab.py: SETTLE_STEPS not found")
+SETTLE_STEPS = int(_SETTLE.group(1))
 _ON_TABLE = re.search(r"(?m)^ON_TABLE = \(([^)]*)\)", _TOOL_SRC)
 ON_TABLE = tuple(re.findall(r'"([^"]+)"', _ON_TABLE.group(1))) if _ON_TABLE else ()
 if not ON_TABLE or 'term.params = {**params, "surface": "table"}' not in _TOOL_SRC:
@@ -192,20 +196,20 @@ def tolerance_text(F: dict) -> str:
 
 
 def standard_grading() -> str:
-    """The standard mode's pass rule, read from the collect hook (finalize.sh) and the verifier (grade.py)."""
+    """The standard mode's pass rule, read from the collect hook (finalize.sh), the service (server.py) and the verifier
+    (grade.py): graded by the live episode (owner 2026-10-17, board 0151), no grading replay."""
     fin = (HERE / "template/standard/environment/sim/finalize.sh").read_text()
+    srv = (HERE / "template/standard/environment/sim/server.py").read_text()
     grade = (HERE / "template/standard/tests/grade.py").read_text()
-    n = len(re.findall(r"(?m)^\s*run_replay \d+ \d+ --no-settle\b", fin))
     ok = re.search(r"(?m)^ok = (.*)$", grade)
-    need = ('out["replay_success"] = bool(a and a.get("success")) and bool(b and b.get("success"))',
-            'out["deterministic"] = bool(a and b) and a["state_sha"] == b["state_sha"]')
-    rule = 'bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not infra'
-    if n != 2 or not ok or ok.group(1).strip() != rule or not all(x in fin for x in need):
+    code = fin.split("set -u", 1)[-1]
+    if (not ok or ok.group(1).strip() != 'bool(d.get("success")) and not infra' or "RCB_TOOL" in code or " replay " in code
+            or '"graded_by": "live"' not in fin or 'if reason == "timeout" and not E["success"]' not in srv
+            or "M.SETTLE_STEPS" not in srv):
         raise RuntimeError("standard grader changed: update standard_grading()")
-    return ("- **Grading.** When the episode ends, the service's record of it (every control step it ran, including the\n"
-            "  hold at the end of your session) is replayed open-loop from the same initial state in two fresh simulator\n"
-            "  processes, exactly as recorded; it scores 1 only if the live episode succeeded, both replays succeed and both\n"
-            "  end in the same state (equal state hashes), else 0.")
+    return ("- **Grading.** Your episode is graded as it ran: the service judges the live episode itself, with no replay.\n"
+            "  It scores 1 if RoboLab's success term held at a control step of it, including the hold of your last\n"
+            f"  command for {SETTLE_STEPS} more control steps after your time is up, else 0.")
 
 
 def objects_block(fam: str, F: dict) -> str:

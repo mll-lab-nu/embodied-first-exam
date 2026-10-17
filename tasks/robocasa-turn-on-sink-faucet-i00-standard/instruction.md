@@ -18,10 +18,9 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
-the environment's own success check for `TurnOnSinkFaucet` to the state **after the last executed control step**; it must hold
-in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
-want graded and stop submitting.
+The episode runs until your time is up. The service then applies the environment's own success check for `TurnOnSinkFaucet` to
+the state of the live episode **after the last executed control step**: the episode as the service ran it, nothing is
+replayed. A success reached earlier and then lost does not count: end in the state you want graded and stop submitting.
 
 What `TurnOnSinkFaucet`'s check requires (RoboCasa @ 756598a), all on that final state:
 - The water is on: the faucet handle's angle on its on / off hinge (mod 360°) is between 0.40 rad (about 23°) and π from its off position (the handle turns on two hinges at one pivot: the on / off hinge, whose range is 0 to 0.52 rad (so 0.40 rad is near the end of its travel), and a temperature hinge (about ±0.79 rad) that moves the handle in another direction and never turns the water on or off; which way each hinge turns depends on the sink model).

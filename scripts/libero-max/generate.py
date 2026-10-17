@@ -54,8 +54,8 @@ HOSTS = [
 ]  # fmt: skip
 SUITE_MAX_STEPS = {"libero_spatial": 220, "libero_object": 280, "libero_goal": 300, "libero_10": 520}
 SUITE_SHORT = {"libero_spatial": "spatial", "libero_object": "object", "libero_goal": "goal", "libero_10": "long"}
-STD_CAP = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's wait)
-# The collect hook's wait for the grading replay's verdict (finalize.sh RCB_COLLECT_WAIT_S; "Collect budget" in
+STD_CAP = 9000  # standard: technical episode cap (the episode's video pass must fit the collect hook's wait)
+# The collect hook's wait for the verdict and the video pass after it (finalize.sh RCB_COLLECT_WAIT_S; "Grading" in
 # docs/benchmarks/libero-max.md): STD_CAP steps x 0.5 s on a busy host + 180 s to build the scene + 240 s of video
 # (lmx_tool.VIDEO_BUDGET_S) = 4920 s, 480 s to spare. The hook's timeout adds 180 s (the PID file) and 120 s.
 COLLECT_WAIT_S = 5400
@@ -190,6 +190,18 @@ CHANGE_FAIL_VIDEO = ("- 2026-10-16 (board 0136): the collect hook waits for the 
                      "stopped at 900 s, so most failed episodes had no `replay.mp4`. Video only: a failure is graded 0 whatever its "
                      "replay says, so the verdict, the physics and the pass rule are unchanged and results from before this date "
                      "stay valid.\n")
+CHANGE_LIVE = ("- 2026-10-17 (owner, board 0150/0151): graded by the live episode, no grading replay. `success = live_success`: "
+               "LIBERO's success check held in the episode the sim service ran (it ends the episode the moment the check "
+               "holds; the replay applied no other rule, so the rule is unchanged); `final.json` has `graded_by = \"live\"`, "
+               "`replays = 0` and the live event record (`event_fired`, `event_step`); `replay_success`, `deterministic` and "
+               "the replay's event fields are gone, from `reward.json` too (`graded_by_live`, `replays`, `instance_mismatch`, "
+               "`event_fired`, `event_step` added). The frozen start is checked when the episode begins (the instance's "
+               "start-state hash; a mismatch is `instance_mismatch`, `infra_error = 1`), no longer only when a replay "
+               "rebuilt it. Video by one video-only replay of `trajectory.npz` in a fresh process after the verdict "
+               "(`replay.video.json` says whether it ended in the live state); a failed or slow video costs only the "
+               "video. The collect hook stops at 5,400 s overall as before (`RCB_FAIL_WAIT_S`, `RCB_VIDEO_GRACE_S` gone). "
+               "The instance, the event, the reference solution and the agent's interface are unchanged, so the task keeps "
+               "its name.\n")
 
 def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     """(short words, what happens) for a LIBERO-MAX change."""
@@ -398,6 +410,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         priv_log += CHANGE_TELEPORT.format(what="receptacle")
     std_log += CHANGE_TELEPORT.format(what="object or receptacle")   # the standard text is the same for every case
     std_log += CHANGE_FAIL_VIDEO
+    std_log += CHANGE_LIVE
 
     p = out / f"{name}-privileged"
     reset_dir(p)
