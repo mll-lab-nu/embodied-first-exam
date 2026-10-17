@@ -16,7 +16,7 @@ robot = "tidybot-plus-plus"
 # KinDER env kinder/Dynamo3D-o3-v0
 family = "dynamo"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): the task's own declaration
 # scene = environment/instance.json (KinDER's seed + a digest of the scene it builds); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 2.0
@@ -80,7 +80,7 @@ cpus = 4
 memory_mb = 8192
 
 [agent]
-timeout_sec = 3600.0
+timeout_sec = 1800.0
 # The model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS): KinDER and its baselines are public.
 network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
