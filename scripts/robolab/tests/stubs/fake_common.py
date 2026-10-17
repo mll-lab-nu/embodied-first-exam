@@ -15,6 +15,10 @@ class Base:
     def _init(self):
         self.n_steps = 0; self.episode_done = False; self._targets = np.zeros(self.DIM); self._rec = None
         self.kinematics_check = {"ok": True}; self.seed = 0; self.assets = {}; self.spec = {"text": "do the task"}
+        # FAKE_INSTANCE=mismatch: the rebuilt scene is not the frozen instance (hash and poses differ); =sha: only the hash
+        fi = os.environ.get("FAKE_INSTANCE", "exact")
+        self.instance_sha = "aa" if fi == "exact" else "bb"; self.instance_exact = fi == "exact"; self.instance_matches = fi != "mismatch"
+        self.frames_rendered = 0
     def step(self, a):
         a = np.asarray(a, dtype=np.float32).reshape(-1); assert a.size == self.DIM and np.all(np.isfinite(a))
         if self.episode_done: raise RuntimeError("episode is over")
@@ -23,6 +27,9 @@ class Base:
         if self.n_steps >= MAX_STEPS: self.episode_done = True
         return self.episode_done
     def hold_action(self): return self._targets.copy()
+    def _video_frame(self):
+        if os.environ.get("FAKE_VIDEO") == "broken": raise RuntimeError("camera gone")
+        self.frames_rendered += 1; return np.full((24, 64, 3), self.n_steps % 255, np.uint8)
     def state_sha(self): return hashlib.sha1(self._targets.tobytes() + str(self.n_steps).encode()).hexdigest()
     def record_start(self): self._rec = []
     def record_stop(self):

@@ -20,10 +20,9 @@ let go of it.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
-- **Grading.** When the episode ends, the service's record of it (every control step it ran, including the
-  hold at the end of your session) is replayed open-loop from the same initial state in two fresh simulator
-  processes, exactly as recorded; it scores 1 only if the live episode succeeded, both replays succeed and both
-  end in the same state (equal state hashes), else 0.
+- **Grading.** Your episode is graded as it ran: the service judges the live episode itself, with no replay.
+  It scores 1 if RoboLab's success term held at a control step of it, including the hold of your last
+  command for 30 more control steps after your time is up, else 0.
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs (a long `submit` or
   a watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for
   it, `r.status()` from another process included. A client-side timeout while a call is in flight (for example

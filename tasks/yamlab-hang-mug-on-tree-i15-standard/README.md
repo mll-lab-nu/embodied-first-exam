@@ -16,8 +16,8 @@ Standard-mode twin of `yamlab-hang-mug-on-tree-i15-privileged` (same frozen inst
 demonstration `hangmug_015.hdf5 demo_0`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
 (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 14) trajectory of YAMLab's own actions. The collect hook
-(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes and
-writes `final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts. Compare against
+(`environment/sim/finalize.sh`) ends the episode, lets the service exit, writes `final.json` from the live episode's record
+(no replay) and encodes the live video; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts. Compare against
 the privileged task to measure the cost of losing resets, privileged state and primitives.
 
 ## Difficulty
@@ -32,12 +32,18 @@ pose and the recorded teleoperation demonstration `hangmug_015.hdf5 demo_0`, one
 control step the service reports.
 
 ## Verification
-`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar's
-collect hook; `tests/grade.py` reads `final.json` with no network and writes the reward fields (with `infra_error` and the
-crash-recovery fields), plus `/logs/verifier/replay.mp4`. YAMLab's success check (evaluation thresholds) is evaluated after
-every control step; the episode ends at the first step where every stage has latched, live and in the replays. Oracle: the
-live episode and both replays end in the privileged oracle's final state (hash `88753272376676eb`). `nop`: the episode ends
-on the time-out with no stage reached, reward 0.
+Graded by the live episode (owner 2026-10-17, board 0151): `success` = the live episode's success, judged by the sim
+service on the episode the agent ran, with no grading replay. YAMLab's success check (evaluation thresholds) is evaluated
+after every control step; the episode ends at the first step where every stage has latched. Before serving, the service
+checks the rebuilt scene against the frozen instance (`instance.json` `state_sha`, else every object pose and joint within
+tolerance); a mismatch is an infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json` with no
+network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus
+`/logs/verifier/live.mp4`: the service keeps a frame (top + both wrist cameras) at the control steps the agent's own calls
+rendered (at most one per 6 steps; no extra render for the video), and the collect hook encodes it after the verdict (a
+failed encode costs the video only). Compute: the collect hook needs no GPU after the service exits (it replayed the
+episode in two fresh Isaac processes before 2026-10-17). Oracle: the live episode ended in the privileged oracle's final
+state (hash `88753272376676eb`; under the earlier rule both replays did too). `nop`: the episode ends on the time-out with no
+stage reached, reward 0.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -79,3 +85,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   text named such a file; the reference solution replays that demonstration). Nothing reads the entry: the scene, its
   state hash, the tooling's behaviour and the pass rule are unchanged, so the task keeps its name.
 - 2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, `environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta["time_s"]` and `meta["time_left_s"]` count from the agent's first request to the service (any endpoint), and a restarted service keeps that moment; before, they counted from the service's own start of the episode (when its scene was ready). Where the service is ready before the agent's phase begins (the harness is installed in between: a median of 79 s over the recorded standard trials), that clock ran ahead of the agent's and `time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from (`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier results stand.
+- 2026-10-17 (owner, boards 0150/0151; in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8): standard modes graded by the live episode; no grading replay; video by the sim service during the live episode (`live.mp4`). `success` is the live episode's success as the service judged it (YAMLab's success check, every stage latched at a control step); it was live success ∧ both of two fresh-process replays successful ∧ equal end-state hashes. The collect hook no longer replays the trajectory: its time limit is 3600 s (was 15000 s) and it needs no GPU after the service exits. The start-state check is made by the service before it serves the agent: a rebuilt scene that is not the frozen instance ends the trial as an infrastructure failure (`instance_mismatch`, a give-up); before, the strict check made the service crash and restart until the hook timed out. The video (`replay.mp4` before) is kept by the service during the episode, a frame at the control steps the agent's own calls rendered (no extra render), and encoded after the verdict; it never decides anything. A collect hook on `main` (`kill -9 -1`) now stops whatever the agent left running in its container before the service ends the episode (PROTOCOL H.4), so nothing moves the robot after the deadline or during the hold. reward.json: `graded_by_live` = 1, `replays` = 0, no `replay_success` / `deterministic`. The scene, the frozen instance, the YAMLab success rule, the agent's interface and the time limit are unchanged; a trial recorded before this date scored live ∧ replay ∧ deterministic (docs/benchmarks/yamlab.md, Grading, says how to re-score it by its live episode).

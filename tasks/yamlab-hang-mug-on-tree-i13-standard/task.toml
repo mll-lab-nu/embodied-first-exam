@@ -4,19 +4,18 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/final.json", service = "sim" },
   { source = "/data/episode.jsonl", service = "sim" },
   { source = "/data/trajectory.npz", service = "sim" },
-  { source = "/data/replay.mp4", service = "sim" },
-  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/live.mp4", service = "sim" },               # the live episode's video (filmed by the service)
+  { source = "/data/live.last.png", service = "sim" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video encode (never decides anything)
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i13-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): YAMLab HangMugOnTree-v0 on the same frozen instance as the privileged task (`mug` = `Mug/mug_013` and `mug_tree` = `MugTree/mug_tree_013`). Task: pick up the mug with the left arm, hand it over to the right arm, and hang it on the mug tree. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): YAMLab HangMugOnTree-v0 on the same frozen instance as the privileged task (`mug` = `Mug/mug_013` and `mug_tree` = `MugTree/mug_tree_013`). Task: pick up the mug with the left arm, hand it over to the right arm, and hang it on the mug tree. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "yamlab", "isaac-lab", "isaac-sim", "bimanual", "i2rt-yam", "standard-mode", "trajectory"]
 
@@ -85,14 +84,19 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
-timeout_sec = 15000               # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
-                                  # resume) + two fresh-process replays of up to 5700 s each (an Isaac start, 629 s measured on
-                                  # a loaded host, + up to 100,000 control steps at 60-120 steps/s, half that on a busy host,
-                                  # the first one filmed) + 900 s; finalize.sh ends a replay that would pass this deadline and
-                                  # records it (replay_error, infra_error)
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode (no replay), encode live.mp4
+timeout_sec = 3600                # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
+                                  # resume) + the video encode (at most 600 s, at most 3001 frames, CPU) + a margin; graded by
+                                  # the live episode since 2026-10-17 (15000 s with two fresh-process replays before)
 
 [agent]
 timeout_sec = 3600.0              # YAMLab budget, both modes (docs/benchmarks/yamlab.md)
