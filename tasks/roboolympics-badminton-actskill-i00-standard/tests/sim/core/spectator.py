@@ -23,6 +23,18 @@ the players' scene, untagged: it is the competition picture); otherwise a task's
 re-renders from a checkout get the presentation. Every frame drawn from a spectators-only presentation scene carries
 the presentation tag (renderer rule 6), whatever the renderer.
 The players' images never use it (observe.CameraWorker).
+
+A sport's own spectator scene (core 0.2.28): when the sport defines Sport.spectator_scene(cfg), the video draws that
+scene (no presentation dressing) with Match.spectator_state() (default render_state()) - e.g. bodies the players'
+scene leaves out (e.g. the vehicles, as mocap bodies, over a course scene without them). The players'
+images and the replayed match never use either.
+
+Frame rate and event frames (core 0.2.29): the video's frame rate is sport.toml [broadcast] fps (default 10; a
+realtime sport draws every round(1 / (fps x dt)) control steps). A sport may define Match.spectator_frames(): called
+after every replayed step, it returns the extra states (each a render state like render_state()'s, in the scene the
+video draws) to draw before that step's regular frame, e.g. the physics step of a contact that falls between two
+regular frames. Each extra frame lengthens the video by one frame; video.json counts them (event_frames). Sports
+that do not define it are unchanged; the match never calls it.
 """
 from __future__ import annotations
 
@@ -93,6 +105,11 @@ def video_camera(sport, cfg, m, decl) -> dict | None:
 def spectator_scene(sport, plugin: str, cfg):
     """(scene, what): the scene spectators see, what = "match" | "presentation" | "match (presentation unavailable:
     ...)". Spectator output only: a failure here falls back to the match scene."""
+    if hasattr(sport, "spectator_scene") and os.environ.get("RO_VIDEO_SCENE", "presentation") != "match":
+        try:
+            return sport.spectator_scene(cfg), "spectator"
+        except Exception as exc:  # noqa: BLE001  (spectator output only: the match scene)
+            return sport.scene(cfg), f"match (spectator scene unavailable: {exc})"
     base = sport.scene(cfg)
     if os.environ.get("RO_VIDEO_SCENE", "presentation") == "match":
         return base, "match"
@@ -106,13 +123,15 @@ def spectator_scene(sport, plugin: str, cfg):
     return (scene, "presentation") if scene is not None else (base, "match")
 
 
-def render_video(plugin: str, data: Path, fps: int = 10, hold_s: float = 1.0) -> dict:
+def render_video(plugin: str, data: Path, fps: int | None = None, hold_s: float = 1.0) -> dict:
     """Replay data/episode.jsonl and draw the spectator camera -> data/replay.mp4 (+ video.json)."""
     from .episode import header_cfg, load_plugin, read_rows, replay
     sport = load_plugin(plugin)
     decl = spec_mod.load(plugin)
     rows = read_rows(Path(data) / "episode.jsonl")
     cfg = header_cfg(next(r for r in rows if r["ev"] == "header"))
+    if fps is None:
+        fps = int((decl.get("broadcast") or {}).get("fps", 10))
     m0 = sport.build(cfg)
     cam = video_camera(sport, cfg, m0, decl)
     if cam is None or not hasattr(sport, "scene"):
@@ -130,7 +149,7 @@ def render_video(plugin: str, data: Path, fps: int = 10, hold_s: float = 1.0) ->
     out = Path(data) / "replay.mp4"
     part = out.with_suffix(".part.mp4")            # renamed once complete: a killed render leaves no replay.mp4
     w = imageio.get_writer(str(part), fps=fps, codec="libx264", quality=7, macro_block_size=8)
-    n = 0
+    n = n_event = 0
     from renderers.label import frame_label
     tag = frame_label(R, scene)                    # None: the default renderer on the match scene (no tag)
     stamp = None
@@ -139,10 +158,17 @@ def render_video(plugin: str, data: Path, fps: int = 10, hold_s: float = 1.0) ->
         stamp = stamp_fn
 
     def draw(match, *_):
-        nonlocal n
+        nonlocal n, n_event
+        extra = match.spectator_frames() if hasattr(match, "spectator_frames") else ()
+        for st in extra or ():                     # event frames (e.g. a contact between two regular frames)
+            img = R.render(st, [cd])[0]
+            w.append_data(stamp(img, tag) if stamp is not None else img)
+            n += 1
+            n_event += 1
         if sport.protocol == "realtime" and match.k % every and match.phase().state != FINISHED:
             return
-        img = R.render(match.render_state(), [cd])[0]
+        own = scene_what == "spectator" and hasattr(match, "spectator_state")
+        img = R.render(match.spectator_state() if own else match.render_state(), [cd])[0]
         if stamp is not None:
             img = stamp(img, tag)
         for _ in range(repeat):
@@ -155,7 +181,7 @@ def render_video(plugin: str, data: Path, fps: int = 10, hold_s: float = 1.0) ->
         w.close()
     part.replace(out)
     info = {"video": n > 0, "frames": n, "fps": fps, "renderer": name, "camera": cam["name"] if "name" in cam else "",
-            "scene": scene_what, "label": tag}
+            "scene": scene_what, "label": tag, "event_frames": n_event}
     (Path(data) / "video.json").write_text(json.dumps(info))
     return info
 

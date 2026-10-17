@@ -894,7 +894,7 @@ measured = "author estimate (mll-4090-1, 2026-10-11): CPU-only MuJoCo with OSMes
 
 # roboolympics, standard: 50 task(s)
 [[rule]]
-match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-).*-standard$"   # not the exported skill tasks (their rules follow)
+match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-|fencing-bout-i[0-9]{2}-).*-standard$"   # not the exported skill tasks and turn-based matches (their rules follow)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -905,9 +905,9 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "author estimate (mll-4090-1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
 
-# roboolympics, exported matches (standard-realtime): 6 task(s)
+# roboolympics, exported matches (standard-realtime): 13 task(s)
 [[rule]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 min_cpus = 8.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -931,9 +931,22 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "RoboOlympics' exported skill tasks (scripts/roboolympics/exported.toml; mll-4090-1/2, 2026-10): no sim service, the agent 2 CPUs; the verifier runs the simulator and the skill; CPU only"
 
+# roboolympics, exported turn-based matches (standard, eai-standard-turn/1.0): 2 task(s)
+[[rule]]
+match = "^roboolympics-fencing-bout-i[0-9]{2}-standard$"
+min_cpus = 3.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "vanilla Harbor 0.23.0 on mll-4090-3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: RoboOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
+
 # roboolympics, standard-realtime: 13 task(s)
 [[rule]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 1.0
@@ -998,7 +1011,35 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 16.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "freezing the instances and three oracle trials (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 10 s, rcb_monitor): a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.9 GiB of memory and 3.2 GiB of GPU memory (oracle trials: 2.8 / 3.1); with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) 13.2 GiB and 6.4 GiB; 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on process"
+measured = "freezing the instances, oracle trials and replays (RTX 4090, 2026-10-13/14, docker stats and nvidia-smi every 2-10 s, rcb_monitor): with one environment's PhysX buffers (the tooling's), a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.0 GiB of memory and 1.2 GiB of GPU memory (Isaac Lab's default buffers: 2.9 / 3.2); the render worker that draws the cameras (Session(cameras=True), the verifier's filmed illustration) adds 11.9 GiB and 3.4 GiB (3.3-3.6 under every RTX preset tried); 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time. The minimums cover one camera-on Session"
+
+# ambench, standard
+[[rule]]
+match = "^ambench-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 24.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 20.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
+
+# ambench, standard
+[[rule]]
+match = "^ambench-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 24.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 20.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replays camera-free (1.2 GiB), then films through the render worker (4.6 GiB)"
 
 [[limit]]
 match = "^roboolympics-.*-privileged$"
@@ -1016,7 +1057,7 @@ trial_max_memory_gb = 13.0
 measured = "author estimate: no trials yet; memory under the 16 GiB cap by the margin the monitor needs (an agent may run several worlds at once or train a controller); disk 20 GiB for downloaded tools and controllers; processes 512: design default"
 
 [[limit]]
-match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-).*-standard$"   # not the exported skill tasks (their rules follow)
+match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-|fencing-bout-i[0-9]{2}-).*-standard$"   # not the exported skill tasks and turn-based matches (their rules follow)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -1031,7 +1072,7 @@ trial_max_memory_gb = 16.0
 measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
 
 [[limit]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 4.0
@@ -1061,7 +1102,22 @@ trial_max_memory_gb = 4.0
 measured = "design defaults of RoboOlympics' exported tasks (no sim service)"
 
 [[limit]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-fencing-bout-i[0-9]{2}-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+measured = "design defaults of RoboOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
+
+[[limit]]
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2122,7 +2178,37 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 28.0
-measured = "a camera-on Isaac process peaks at 13.2 GiB of memory and 6.4 GiB of GPU memory, a camera-free one at 2.9 / 3.2 (the rule's measurement); the agent may run two processes at once (a Session and the replay CLI): at most 26.4 GiB, 12.8 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "a Session with cameras peaks at 14 GiB of memory and 4.6 GiB of GPU memory (its render worker included), a camera-free one at 2.0 / 1.2 (the rule's measurement); the agent may run two Sessions with cameras at once: at most 28 GiB, 9.2 GiB -> memory 28 GiB (the container's cap 34 GiB: 34 / 1.2 >= 28), GPU 16 GiB (at least 16 for Isaac Sim); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^ambench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 30.0
+measured = "the agent's container holds Python and the client only (as every standard task's); the whole trial adds the sim sidecar (physics + render worker, the rule's measurement): provisional"
+
+[[limit]]
+match = "^ambench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 30.0
+measured = "the agent's container holds Python and the client only (as every standard task's); the whole trial adds the sim sidecar (physics + render worker, the rule's measurement): provisional"
 
 [[cap]]
 match = "^behavior-.*-privileged$"
@@ -2392,7 +2478,7 @@ match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2413,6 +2499,12 @@ sim = { cpus = 6.0, memory_gb = 10.0, pids = 8192 }
 [[cap]]
 match = "^robowits-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+# the `blenderkit` service of the privileged RoboWits tasks whose scenes load BlenderKit models (2026-10-14): decrypts this
+# family's models once (imports gs_gym) and serves them on localhost; the three families without such models have none
+match = "^robowits-(?!dominos-|stack-cubes-|stand-pages-).*-privileged$"
+blenderkit = { cpus = 1.0, memory_gb = 4.0, pids = 4096 }
 
 [[cap]]
 match = "^robowits-.*-standard$"
@@ -2442,7 +2534,7 @@ match = "^roboolympics-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-).*-standard$"   # not the exported skill tasks (their rules follow)
+match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-|fencing-bout-i[0-9]{2}-).*-standard$"   # not the exported skill tasks and turn-based matches (their rules follow)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2517,13 +2609,18 @@ match = "^cell-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (RoboOlympics' exported docker-compose.yaml)
 
 [[cap]]
 match = "^roboolympics-(tabletennis-hitskill|badminton-actskill)-i[0-9]{2}-standard$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+
+[[cap]]
+match = "^roboolympics-fencing-bout-i[0-9]{2}-standard$"
+main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }   # the sim service's own cpus and pids_limit (RoboOlympics' exported docker-compose.yaml)
 
 [[cap]]
 match = "^pandadyn-.*-privileged$"
@@ -2542,3 +2639,75 @@ sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
 match = "^ambench-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 34.0, pids = 16384 }
+
+[[cap]]
+match = "^ambench-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
+# ispatialgym, standard: 12 task(s)
+[[rule]]
+match = "^ispatialgym-.*-standard$"
+min_cpus = 6.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 6.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 6.0
+measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only"
+
+[[limit]]
+match = "^ispatialgym-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 9.0
+trial_max_memory_gb = 21.0
+measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults"
+
+
+[[cap]]
+match = "^ispatialgym-.*-standard$"
+main = { cpus = 8.0, memory_gb = 16.0, pids = 16384 }
+sim = { cpus = 12.0, memory_gb = 32.0, pids = 16384 }
+
+# ispatialgym, privileged: 12 task(s)
+[[rule]]
+match = "^ispatialgym-.*-privileged$"
+min_cpus = 6.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 6.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 6.0
+measured = "privileged prototype trials, GPT-6 Luna, RTX 4090, 2026-10-16 (docker stats and nvidia-smi per process every 30 s, 9 trials and their verifiers): the agent container peaked at 14.2 GiB of memory, 14.6 GiB of GPU memory and 12 cores (an agent may run two Isaac processes of about 13 GiB / 4.6 GiB each), the verifier at 14.4 GiB and 12 cores; limits max(1.5 x peak, peak + 4), memory kept at 32 GiB for two processes"
+
+[[limit]]
+match = "^ispatialgym-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 22.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 22.0
+trial_max_memory_gb = 32.0
+measured = "privileged prototype trials, GPT-6 Luna, RTX 4090, 2026-10-16 (docker stats and nvidia-smi per process every 30 s, 9 trials and their verifiers): the agent container peaked at 14.2 GiB of memory, 14.6 GiB of GPU memory and 12 cores (an agent may run two Isaac processes of about 13 GiB / 4.6 GiB each), the verifier at 14.4 GiB and 12 cores; limits max(1.5 x peak, peak + 4), memory kept at 32 GiB for two processes"
+
+[[cap]]
+match = "^ispatialgym-.*-privileged$"
+main = { cpus = 12.0, memory_gb = 40.0, pids = 16384 }

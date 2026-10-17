@@ -18,9 +18,11 @@ instance   : one RoboLab benchmark task (e.g. BananaInBowlTask, registered as Ro
 trajectory : the (T, 8) low-level actions handed to `env.step`, one row per control step (15 Hz: sim dt 1/120 s, decimation 8):
              7 absolute Franka joint-position targets (rad, panda_joint1..7, PD-tracked) + 1 gripper command (0 = open,
              1 = close; RoboLab's binary Robotiq action). Physics is PhysX on the CPU by default (`RCB_ROBOLAB_DEVICE`,
-             frozen into instance.json): a live run, in-process replays and fresh-process replays of the same actions
-             then all end in the same state. On the GPU pipeline they do not (contact-rich scenes amplify last-bit
-             differences), which is why physics is pinned to the CPU.
+             frozen into instance.json): the first episode of a process (a live run before any reset(), or the first
+             replay) and a fresh-process replay of the same actions end in the same state; an episode after reset()
+             can end differently (not every PhysX internal is restored). On the GPU pipeline even fresh processes do
+             not agree in-process (contact-rich scenes amplify last-bit differences), which is why physics is pinned to
+             the CPU. A replay holds the last row for SETTLE_STEPS more control steps (stopping at termination).
              Only actions enter scoring: the task's own success predicate (RoboLab termination term `success`) is evaluated
              on the replayed final state.
 budget     : there is no step budget: the agent's wall clock is the limit. MAX_STEPS only stops runaway trajectories
@@ -103,9 +105,13 @@ def _slog(ev: str, **kw) -> None:
         except OSError:
             pass
 
-# PhysX runs on the CPU by default: measured bit-exact (live == in-process replay == fresh-process replay) and, for these one-env
-# tabletop scenes, faster than the GPU pipeline (~15 vs ~8 control steps/s incl. rendering). GPU PhysX reproduces a live run in a
-# fresh process too, but in-process replays after reset_to drift by ~1 mm on the manipulated object. Rendering always uses the GPU.
+# PhysX runs on the CPU by default: measured bit-exact for the FIRST episode of a process (a live run before any reset() ==
+# the first in-process replay == a fresh-process replay) and, for these one-env tabletop scenes, faster than the GPU pipeline
+# (~15 vs ~8 control steps/s incl. rendering). reset() restores the state but not every PhysX internal: an episode after a
+# reset (a live run or a later replay) can end differently from the fresh-process replay (agents saw it in >= 10 trials of
+# the 10-14 results), so the graders replay in fresh processes and the instruction says to record from a fresh process.
+# GPU PhysX reproduces a live run in a fresh process too, but in-process replays after reset_to drift by ~1 mm on the
+# manipulated object. Rendering always uses the GPU.
 DEFAULT_PHYSICS = {"device": os.environ.get("RCB_ROBOLAB_DEVICE", "cpu"),                          # PhysX on "cpu" or "cuda:0"
                    "enhanced_determinism": os.environ.get("RCB_ROBOLAB_ENHANCED_DETERMINISM", "0") == "1"}
 
@@ -647,6 +653,25 @@ DEFAULT_SEED = 0
 MAX_STEPS = 100_000                  # no step budget (the wall clock is); this only stops a runaway trajectory (~1.9 h of sim time)
 MAX_VIDEO_FRAMES = 9000              # the `replay` CLI's video holds at most this many frames (10 min at 15 fps): a longer
                                      # trajectory is filmed as a time lapse, so filming never multiplies a long replay's cost
+# --------------------------------------------------------------------------- the success term (2026-10-14)
+# RoboLab's DROID robot declares ONE finger as "the gripper" for every contact check (robolab/robots/droid.py:
+# contact_gripper = {"gripper": ".../left_inner_finger"}), so `require_gripper_detached` read an object pinched by the
+# other finger as released and a success fired mid-carry (failure analysis of the 10-14 results: 9 successes with the
+# object still clamped). RoboLab's own alias groups (WorldState.resolve_contact_bodies: a list-valued entry means "any
+# member") make "gripper" both fingers: an object is detached only when it touches neither. Set before the env is
+# registered (auto_register_droid_envs reads droid.contact_gripper then); each finger gets RoboLab's own sensors.
+GRIPPER_CONTACT = {"gripper_left": "{ENV_REGEX_NS}/robot/Gripper/Robotiq_2F_85/left_inner_finger",
+                   "gripper_right": "{ENV_REGEX_NS}/robot/Gripper/Robotiq_2F_85/right_inner_finger",
+                   "gripper": ["gripper_left", "gripper_right"]}
+# Families whose words say "put it on the table" but whose RoboLab term is `object_outside_of` (an object lifted out of the
+# container, or knocked off the table, counted): their term becomes RoboLab's own `object_outside_of_and_on_surface` with
+# the same parameters and surface "table" (the table supports it: contact force upwards, within 45 deg of vertical).
+ON_TABLE = ("take_measuring_spoon_out", "cooking_clear_plate")
+# After the last row of a replayed trajectory (and, in standard mode, when the agent's phase ends) the robot holds that
+# row for SETTLE_STEPS more control steps (2 s), the success term still checked at every step, so that a release in the
+# last rows completes; a trajectory that ends holding the object goes on holding it.
+SETTLE_STEPS = 30
+
 ARM_SLICE = slice(0, 7)
 GRIP_INDEX = 7
 GRIPPER_OPEN, GRIPPER_CLOSE = 0.0, 1.0
@@ -907,6 +932,8 @@ class Session:
         from robolab.core.environments.factory import get_envs
         from robolab.core.environments.runtime import create_env
         from robolab.core.world.world_state import get_world
+        import robolab.robots.droid as _droid
+        _droid.contact_gripper = dict(GRIPPER_CONTACT)          # both fingers (GRIPPER_CONTACT above)
         auto_register_droid_envs(task=self.spec["robolab_task"])
         envs = get_envs(task=self.spec["robolab_task"])
         if not envs:
@@ -925,6 +952,14 @@ class Session:
             _log(f"episode_length_s raised to {cfg.episode_length_s:.1f} s so the {int(max_steps)}-step budget ends first")
         if self.physics.get("enhanced_determinism") and hasattr(cfg.sim.physx, "enable_enhanced_determinism"):
             cfg.sim.physx.enable_enhanced_determinism = True
+        # RoboLab's own success term as upstream declares it (func, params), before the changes above: regrade.py evaluates it
+        # with the one-finger contact ("gripper_left" = upstream's "gripper") to tell what the earlier verdict was
+        self.upstream_term = (cfg.terminations.success.func, dict(cfg.terminations.success.params))
+        if task in ON_TABLE:                # ON_TABLE above: RoboLab's own compound term, the same parameters, on the table
+            from robolab.core.task.conditionals import object_outside_of_and_on_surface
+            term = cfg.terminations.success
+            params = {k: v for k, v in dict(term.params).items() if k != "require_contact_with"}
+            term.func = object_outside_of_and_on_surface; term.params = {**params, "surface": "table"}
         if self.depth_enabled:              # every camera also renders z-depth (read by render_depth; never touches physics)
             from isaaclab.sensors import CameraCfg
             for name, cam in list(vars(cfg.scene).items()):
@@ -1137,15 +1172,26 @@ class Session:
                  seed=self.seed, instance_sha=self.instance_sha, action_dim=ACTION_DIM, action_layout=ACTION_LAYOUT,
                  meta=json.dumps(meta or {}))
 
-    def replay(self, actions: np.ndarray) -> dict[str, Any]:
-        """Open-loop replay after reset(). The FIRST replay in a process reproduces a fresh process (and the live run) bit
-        for bit; later in-process replays can differ in the last bits (env.reset_to does not restore every PhysX internal),
-        which is why the verifier replays in two fresh processes. Stops when the task terminates (success ends the episode)."""
+    def settle(self) -> int:
+        """Hold the last command for up to SETTLE_STEPS control steps, stopping when the task terminates. Returns the steps run."""
+        hold, n = self.hold_action(), 0
+        while n < SETTLE_STEPS and not self.episode_done:
+            n += 1
+            if self.step(hold):
+                break
+        return n
+
+    def replay(self, actions: np.ndarray, settle: bool = True) -> dict[str, Any]:
+        """Open-loop replay after reset(), then (settle=True) the last row held for up to SETTLE_STEPS control steps while the
+        task has not terminated. The FIRST replay in a process reproduces a fresh process (and the live run) bit for bit;
+        later in-process replays can differ in the last bits (env.reset_to does not restore every PhysX internal), which is
+        why the verifier replays in two fresh processes. Stops when the task terminates (success ends the episode)."""
         self.reset()
         for a in np.asarray(actions, dtype=np.float32):
             if self.step(a):
                 break
-        st = self.status()
+        settled = self.settle() if settle and len(actions) else 0
+        st = self.status(); st["settle_steps"] = settled
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st
 
@@ -2051,7 +2097,7 @@ def cmd_replay(a) -> None:
                 s.start_video(a.video, fps=a.fps, every=_video_every(len(acts), a.fps)); filming = True
             except Exception as exc:  # noqa: BLE001
                 s._video = None; video_ok = False; _log("video: not started:", repr(exc)[:200])
-        outs.append(s.replay(acts))
+        outs.append(s.replay(acts, settle=not getattr(a, "no_settle", False)))
         if filming:
             try:
                 video_ok = s.stop_video() is not None
@@ -2104,7 +2150,9 @@ def main() -> None:
     q.add_argument("--code", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
     q = sub.add_parser("replay"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)
     q.add_argument("--repeat", type=int, default=1, help="in-process repeats; only the first is fresh-process exact"); q.add_argument("--video", default=None); q.add_argument("--fps", type=int, default=15)
-    q.add_argument("--strict", action="store_true", help="fail if the rebuilt frozen scene does not match instance.json (poses within tolerance)"); q.set_defaults(fn=cmd_replay)
+    q.add_argument("--strict", action="store_true", help="fail if the rebuilt frozen scene does not match instance.json (poses within tolerance)")
+    q.add_argument("--no-settle", action="store_true", help="the rows only, without holding the last one for SETTLE_STEPS (the standard "
+                   "service's episodes, whose end already held it)"); q.set_defaults(fn=cmd_replay)
     q = sub.add_parser("render"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)
     q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=1); q.add_argument("--fps", type=int, default=15)
     q.add_argument("--cameras", default=None); q.add_argument("--cols", type=int, default=3); q.set_defaults(fn=cmd_render)

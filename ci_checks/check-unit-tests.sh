@@ -41,8 +41,8 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: 
 }
 for t in robolab/tests/test_grade_standard.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
-         robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
-         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py tests/test_retry_policy.py \
+         robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py usage_gateway/tests/test_budget_stop.py \
+         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py tests/test_retry_policy.py tests/test_stamp_mtimes.py \
          roboolympics/tests/test_skill_sandbox.py; do
   run 300 "$t"
 done
@@ -78,6 +78,9 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   if [ -f "$root/scripts/robosafe/tests/test_interface_guard.py" ]; then run 300 robosafe/tests/test_interface_guard.py; fi
   # Panda Dynamic Scenes' graders, privileged and standard (its tasks pull request adds the test)
   if [ -f "$root/scripts/pandadyn/tests/test_grading.py" ]; then run 300 pandadyn/tests/test_grading.py; fi
+  # iSpatialGym's frozen instances: goal.json restores upstream's TRO, nothing answer-like in instance.json, the start-only
+  # BDDL states no goal (its tasks pull request adds the test)
+  if [ -f "$root/scripts/ispatialgym/tests/test_instance.py" ]; then run 300 ispatialgym/tests/test_instance.py; fi
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
   # service test that apply to it, run against that copy
   want humanoidbench/tests/test_standard_service.py libero-max/shared/standard &&

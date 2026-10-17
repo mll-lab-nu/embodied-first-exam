@@ -64,3 +64,6 @@ tomato have rigid cylinder contacts; cheese and lettuce have three passive elast
 approximation of thin-sheet bending, not continuum soft-food, crushing or tearing simulation. The bottom bun starts on
 the plate; preparation supports give access to the other ingredients. This is assembly feasibility on a floating wrist
 stage, not a gripper-superiority, full-arm or zero-shot claim.
+
+### Change Log
+- 2026-10-16 (board 0136, video only): the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after `reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video. The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.

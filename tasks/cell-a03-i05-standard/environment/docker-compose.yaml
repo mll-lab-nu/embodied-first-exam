@@ -12,7 +12,7 @@ services:
     cpus: 6   # rcb-monitor
     mem_limit: 8192m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/eai-robosafe:0.5.2
+    image: ghcr.io/mll-lab-nu/eai-robosafe:0.5.3
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

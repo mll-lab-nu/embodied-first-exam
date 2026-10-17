@@ -51,3 +51,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 | Instruction | restated; VLABench's own: "We're playing Texas hodl'em game! What's your largest cards? Show me on the placemat" (graded: the cards VLABench's get_largest_combination picks (the first five-card combination of the highest rank in its enumeration order: the 6-to-10 straight with the 9 of hearts; the higher 7-to-jack straight on the table does not count) all inside the placemat (contain)) |
+
+### Change Log
+- 2026-10-16 (board 0136): the sim collect hook waits for the replay video until 2880 s after the episode ends (was 1470 s; `timeout_sec` 1500 -> 2910); the verdict keeps its 1440 s bound. The video replays the graded episode once more after the verdict, so a slow verdict left it no time. Video only: the verdict, the physics and the pass rule are unchanged, so results from before this date stay valid.

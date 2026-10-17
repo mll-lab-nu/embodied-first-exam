@@ -16,6 +16,7 @@ robot = "{{robot_id}}"
 # KinDER env {{env_id}}
 family = "{{family}}"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): the task's own declaration
 # scene = environment/instance.json (KinDER's seed + a digest of the scene it builds); identity = the dataset.toml digest
 instance_seed = {{seed}}
 expert_time_estimate_hours = {{expert_hours}}

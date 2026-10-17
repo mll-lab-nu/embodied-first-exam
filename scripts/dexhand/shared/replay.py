@@ -15,6 +15,7 @@ from runtime import SUPPORTED_HANDS, Session, actuator_targets_in_range, locked_
 
 ACTION_DIM = 6 + 22
 MAX_ROWS = 50_000
+VIDEO_MAX_FRAMES = 1500   # the replay video's frame budget (60 s at 25 fps)
 
 
 def load_actions(path: str | Path, max_rows: int | None = MAX_ROWS) -> np.ndarray:
@@ -112,16 +113,26 @@ def main() -> None:
     if args.video:
         import imageio.v2 as imageio
 
+        # Every 2nd step, but at most VIDEO_MAX_FRAMES frames (board 0136): a 640x480 OSMesa frame costs ~0.3 s on
+        # one core, so a 28k-step episode took over an hour to film. Rendering only reads the scene; the verdict above
+        # is already written and this pass is a separate replay from the reset.
+        steps = int(result.get("steps") or len(actions))   # the verdict pass's executed steps (an episode may end early)
+        stride = max(2, -(-steps // VIDEO_MAX_FRAMES))
         session.reset()
         with imageio.get_writer(args.video, fps=25, codec="libx264", macro_block_size=1) as writer:
             writer.append_data(session.render_frame("overview"))
+            index = last = -1
             for index, action in enumerate(actions):
                 session.step(action)
-                if index % 2 == 0:
+                if index % stride == 0:
                     writer.append_data(session.render_frame("overview"))
+                    last = index
                 if session.status()["done"]:
                     break
+            if last != index:
+                writer.append_data(session.render_frame("overview"))   # the final state
         result["video"] = True
+        result["video_stride"] = stride
         Path(args.out).write_text(json.dumps(result, sort_keys=True))
 
 

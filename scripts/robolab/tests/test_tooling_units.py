@@ -67,7 +67,7 @@ for bench, mod, dim in (("robolab", "rcb_robolab", 8), ("yamlab", "rcb_yamlab", 
             self._video = {"every": every}
         def step(self, row): self.n += 1; return False
         def status(self): return {"success": True, "state_sha": "aa", "sim_steps": self.n}
-        def replay(self, acts):
+        def replay(self, acts, settle=True):
             self.reset()
             for a in acts: self.step(a)
             return self.status()

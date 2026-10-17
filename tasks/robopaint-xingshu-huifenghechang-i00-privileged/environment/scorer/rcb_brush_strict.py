@@ -20,14 +20,24 @@ texts; a rule whose keys are absent is off):
   sweeps (paintings: max_scribble, max_scribble_share, scribble_min_mm): a stroke's scribble ratio = its length / the diagonal of
                       its bounding box (at least scribble_min_mm); scribble_share = the share of path_mm in strokes whose ratio
                       exceeds max_scribble (zigzags, back-and-forth fills, spirals, loops) must be <= max_scribble_share.
+  strokes counted (calligraphy, 2026-10-14: stroke_gap_mm, mark_min_width_mm, max_stroke_path_mm): the stroke cap
+                      (target.success max_strokes) counts strokes, not contacts. A contact is cut into two strokes wherever
+                      the brush moves more than stroke_gap_mm along the sheet without marking it (its mark narrower than
+                      mark_min_width_mm: a press too light to ink, which joined separately written pieces into one contact),
+                      and a stroke longer than max_stroke_path_mm counts as ceil(length / max_stroke_path_mm) strokes (one
+                      contact held down to write and re-write for minutes). n_strokes_counted <= max_strokes; the sweep rule
+                      (max_scribble ...) is then measured on these strokes.
 success = the picture rule (image_success) and every process rule (strict_ok). final_reward = the picture rule's continuous score
-x min(1, max_path_mm / path_mm) when the colouring-in or path rule fails x (1 - scribble_share) when the sweep rule fails:
-rule-abiding work keeps the picture rule's score.
+x min(1, max_path_mm / path_mm) when the colouring-in or path rule fails x (1 - scribble_share) when the sweep rule fails, with
+the stroke cap's scaling taken on the counted strokes (max_strokes / n_strokes_counted): rule-abiding work keeps the picture
+rule's score.
 
 CLI: the same as rcb_brush.py (replay / render / run-oracle / selftest), scored with the rules.
 """
 
 from __future__ import annotations
+
+import math
 
 import numpy as np
 
@@ -50,8 +60,15 @@ STRICT_KEYS = (
     "max_scribble",
     "max_scribble_share",
     "scribble_ok",
+    "n_strokes_counted",
+    "strokes_counted_ok",
+    "n_marked_pieces",
+    "longest_counted_stroke_mm",
+    "max_stroke_path_mm",
 )
-RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
+RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm",
+             "stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")
+SPLIT_KEYS = ("stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")   # the counted strokes (calligraphy): all three or none
 
 
 def stroke_stats(strokes: list[dict], cur: dict | None = None, px_mm2: float = 0.0) -> list[tuple[float, float, float]]:
@@ -75,9 +92,56 @@ def stroke_stats(strokes: list[dict], cur: dict | None = None, px_mm2: float = 0
     return out
 
 
-def process_metrics(stats: list[tuple[float, float, float]], cfg: dict, marks: bool = True) -> dict:
+def _path_mm(P: np.ndarray) -> float:
+    return float(np.sum(np.hypot(np.diff(P[:, 0]), np.diff(P[:, 1])))) * 1000.0 if len(P) > 1 else 0.0
+
+
+def marked_pieces(P: np.ndarray, min_w_mm: float, gap_mm: float) -> list[tuple[int, int]]:
+    """Sample ranges [a, b) of the marked pieces of one contact (samples P (N, 9), column 3 = the mark's width in m): runs of
+    samples whose mark is at least min_w_mm wide, joined across the samples between them unless the tip moves more than gap_mm
+    there. Samples before the first and after the last marking one belong to no piece (the touch-down and the lift)."""
+    idx = np.flatnonzero(P[:, 3] >= min_w_mm / 1000.0) if len(P) else np.zeros(0, np.int64)
+    if not len(idx):
+        return []
+    out, a, prev = [], int(idx[0]), int(idx[0])
+    for i in idx[1:]:
+        i = int(i)
+        if i != prev + 1 and _path_mm(P[prev:i + 1]) > gap_mm:
+            out.append((a, prev + 1))
+            a = i
+        prev = i
+    out.append((a, prev + 1))
+    return out
+
+
+def piece_stats(strokes: list[dict], cur: dict | None, cfg: dict) -> list[tuple[float, float]] | None:
+    """(length mm, bounding-box diagonal mm) of every marked piece of the main sheet's inked strokes, or None when the rule has
+    no counted strokes (SPLIT_KEYS absent)."""
+    if not all(k in cfg for k in SPLIT_KEYS):
+        return None
+    out = []
+    for s in list(strokes) + ([cur] if cur is not None else []):
+        if s.get("sheet") != "main" or not s.get("inked"):
+            continue
+        P = np.asarray(s.get("samples", ()), np.float64).reshape(-1, 9)
+        for a, b in marked_pieces(P, float(cfg["mark_min_width_mm"]), float(cfg["stroke_gap_mm"])):
+            Q = P[a:b]
+            d = float(np.hypot(*(Q[:, :2].max(0) - Q[:, :2].min(0)))) * 1000.0 if len(Q) > 1 else 0.0
+            out.append((_path_mm(Q), d))
+    return out
+
+
+def counted_strokes(pieces: list[tuple[float, float]], cfg: dict) -> int:
+    """The strokes the cap counts: one per marked piece, ceil(length / max_stroke_path_mm) for a longer one."""
+    lim = float(cfg["max_stroke_path_mm"])
+    return int(sum(max(1, math.ceil(L / lim - 1e-9)) for L, _ in pieces))
+
+
+def process_metrics(stats: list[tuple[float, float, float]], cfg: dict, marks: bool = True,
+                    pieces: list[tuple[float, float]] | None = None) -> dict:
     """The rules' quantities and verdicts from the main sheet's inked strokes (stroke_stats) and the rule (cfg). marks: the medium
-    keeps each stroke's own mark (calligraphy, broad nib, pointed pen; not the paint engine)."""
+    keeps each stroke's own mark (calligraphy, broad nib, pointed pen; not the paint engine). pieces: the marked pieces
+    (piece_stats) where the rule counts strokes: the cap and the sweep rule are then taken on them."""
     L = np.asarray([x[0] for x in stats], np.float64)
     D = np.asarray([x[1] for x in stats], np.float64)
     A = np.asarray([x[2] for x in stats], np.float64)
@@ -94,10 +158,21 @@ def process_metrics(stats: list[tuple[float, float, float]], cfg: dict, marks: b
         m["max_path_mm"] = float(cfg["max_path_mm"])
         m["path_budget_ok"] = float(total <= m["max_path_mm"])
         ok = ok and bool(m["path_budget_ok"])
+    if pieces is not None:  # the counted strokes (calligraphy): the cap and the sweep rule on the marked pieces
+        L = np.asarray([x[0] for x in pieces], np.float64)
+        D = np.asarray([x[1] for x in pieces], np.float64)
+        n = counted_strokes(pieces, cfg)
+        m["n_marked_pieces"] = float(len(pieces))
+        m["n_strokes_counted"] = float(n)
+        m["max_stroke_path_mm"] = float(cfg["max_stroke_path_mm"])
+        m["longest_counted_stroke_mm"] = round(float(L.max()), 2) if len(L) else 0.0
+        m["strokes_counted_ok"] = float(n <= int(cfg["max_strokes"]))
+        ok = ok and bool(m["strokes_counted_ok"])
     ratio = L / np.maximum(D, float(cfg.get("scribble_min_mm", 10.0))) if len(L) else L
     m["scribble_max"] = round(float(ratio.max()), 4) if len(L) else 0.0
     if "max_scribble" in cfg:
-        share = float(L[ratio > float(cfg["max_scribble"])].sum() / total) if total > 0 else 0.0
+        tot = float(L.sum())       # = path_mm; on the marked pieces, without the touch-downs, lifts and unmarked moves
+        share = float(L[ratio > float(cfg["max_scribble"])].sum() / tot) if tot > 0 else 0.0
         m["scribble_share"] = round(share, 6)
         m["max_scribble"] = float(cfg["max_scribble"])
         m["max_scribble_share"] = float(cfg.get("max_scribble_share", 0.0))
@@ -107,10 +182,11 @@ def process_metrics(stats: list[tuple[float, float, float]], cfg: dict, marks: b
     return m
 
 
-def apply_rules(m: dict, stats: list[tuple[float, float, float]], cfg: dict, marks: bool = True) -> dict:
+def apply_rules(m: dict, stats: list[tuple[float, float, float]], cfg: dict, marks: bool = True,
+                pieces: list[tuple[float, float]] | None = None) -> dict:
     """RoboPaint's metrics m (success, final_reward) -> the same with the process rules: success = image success and the rules."""
     out = dict(m)
-    pm = process_metrics(stats, cfg, marks)
+    pm = process_metrics(stats, cfg, marks, pieces)
     out.update(pm)
     out["image_success"] = float(bool(m.get("success")))
     out["image_final_reward"] = float(m.get("final_reward") or 0.0)
@@ -120,6 +196,9 @@ def apply_rules(m: dict, stats: list[tuple[float, float, float]], cfg: dict, mar
         f *= pm["max_path_mm"] / pm["path_mm"]
     if not pm.get("scribble_ok", 1.0):
         f *= 1.0 - pm["scribble_share"]
+    if "n_strokes_counted" in pm:  # the cap's scaling on the counted strokes instead of the contacts
+        cap, n_raw, n = float(cfg["max_strokes"]), float(m.get("n_strokes") or 0.0), pm["n_strokes_counted"]
+        f *= min(1.0, cap / n if n > 0 else 1.0) / min(1.0, cap / n_raw if n_raw > 0 else 1.0)
     out["final_reward"] = round(f, 6)
     return out
 
@@ -143,11 +222,13 @@ class Session(B.Session):
                 "acc": acc[bb[0] : bb[1], bb[2] : bb[3]] if (acc is not None and bb is not None) else None,
             }
         px_mm2 = (float(self.geo.px_m) * 1000.0) ** 2
+        cfg = self.inst["target"]["success"]
         return apply_rules(
             m,
             stroke_stats(self.painter.strokes, cur_s, px_mm2),
-            self.inst["target"]["success"],
+            cfg,
             marks=self.medium != "mypaint",
+            pieces=piece_stats(self.painter.strokes, cur_s, cfg),
         )
 
 

@@ -10,12 +10,17 @@ the GPU, whose contact solver is not bit-exact (the rule of robot_coding_bench's
 the task. Initial state and runtime binding must match exactly; final-state determinism is reported separately.
 The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v16): for the GPU families the rows run
 with the instance's own thresholds and, if the episode has not ended after the last row, the final targets are held for up
-to 2 s with the replay tolerances (rcb_topogym.REPLAY_TOLERANCES). R-hold (the user's decision, 2026-10-05): every replay
-may confirm within that hold, exactly as in standard mode, and no replay has to meet the strict goal within the rows any
-more (the recording ends on the live success tick, so that replay had zero margin); the live run stays strict. The strict
-goal is still reported (`strict_goal_reached`, `strict_goal_row`; verdict.json `evidence.strict_goal`), and
-`strict_replay_required` 0 marks the rule. Each replay's "grading" record is in verdict.json; `replay_hold_steps` /
-`replay_tolerance_needed` summarize them.
+to 2 s with the replay tolerances (rcb_topogym.REPLAY_TOLERANCES). Success needs both replays to succeed AND at least one
+of them to reach the goal with the instance's own (strict) thresholds within the trajectory's rows (2026-10-14, the rule of
+tooling v16 again): the hold only confirms, as in standard mode, where the live episode is strict and its replay may
+confirm in the hold. R-hold (2026-10-05 to 2026-10-14) let every replay confirm within the hold and required no strict
+goal; privileged mode has no graded live run, so the hold's relaxed thresholds became the effective goal (blanket-flatten:
+92 % coverage instead of 95 %; failure analysis 2026-10-14, item 12). The cloth step runs on a deterministic solver and the
+MuJoCo families on the CPU, so a replay reproduces the agent's own run, and a recording that stops on its own (strict)
+success reaches it within its rows. The strict goal is reported (`strict_goal_reached`, `strict_goal_row`; verdict.json
+`evidence.strict_goal`), `strict_replay_required` 1 marks the rule, and `success_in_hold_only` 1 a trajectory whose replays
+all succeeded but only within the hold (not credited). Each replay's "grading" record is in verdict.json;
+`replay_hold_steps` / `replay_tolerance_needed` summarize them.
 Task-contact penetration is evidence, not a verdict (tooling v16): a success during whose replays a task contact went deep
 (rcb_topogym.CONTACT_RULE, each replay's status "review") is not credited automatically: success 0 with
 `success_pending_review` 1, the events in verdict.json `evidence.review` and frames around them in review_frames/ (one more
@@ -120,9 +125,9 @@ def main() -> int:
         # A replay that ended in a numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY) is an infrastructure
         # failure: never success, never the task's failure (the evidence is in verdict.json's replays[].instability).
         unstable = any(o.get("episode_end") == "simulator_instability" for o in outs)
-        # R-hold (2026-10-05): each replay may confirm within the tolerant hold (as in standard); the strict goal is reported only
+        # both replays succeed AND one of them reaches the strict goal within the rows (the hold only confirms, as in standard)
         goal = strict_goal(outs)
-        ok = all_success and bool(s.instance_matches) and not unstable
+        ok = all_success and goal is not None and bool(s.instance_matches) and not unstable
         # a success with a deep task contact in either replay is held for review, not credited automatically
         reviews = [o.get("review") for o in outs]
         pending = ok and any(reviews)
@@ -146,7 +151,7 @@ def main() -> int:
                "replay_hold_steps": max(int(g.get("hold_steps", 0)) for g in grading),
                "replay_tolerance_needed": int(any(g.get("tolerance_needed") for g in grading)),
                "strict_goal_reached": int(goal is not None), "strict_goal_row": goal[1] if goal else 0,
-               "strict_replay_required": 0, **cost}
+               "strict_replay_required": 1, "success_in_hold_only": int(all_success and goal is None and not unstable), **cost}
         import hashlib, uuid
         from pathlib import Path
         evidence = dict(commit_id=uuid.uuid4().hex, replays=outs,

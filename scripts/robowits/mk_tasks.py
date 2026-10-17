@@ -76,6 +76,32 @@ EGRESS_CHANGE = (
     "agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the "
     "frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this "
     "date were obtained with open egress.")
+# 2026-10-14: the verdict's settle window and release clause, in place (PROTOCOL v2.0 §1, H.8: a new DIGEST, results are
+# attributed by digest; same names and instances).
+I01 = {
+    "priv": ("2026-10-14 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; the verifier changed). From the failure analysis of the "
+             "10-14 results (25 of 84 RoboWits successes did not do the task: an object held in place at the end, a trajectory cut "
+             "while things still moved, a gripper propping the pages from just outside the 3 cm zone, a cube knocked off the table). "
+             "(1) A settle window after the last action (`rcb_robowits.Session.settle_check`, the verifier's `replay`): the last command "
+             "is held for 1 s, then for 2 s the goal must hold at every 6th control step and at the last, and every graded object stay "
+             "within 2 mm (at rest); before, the predicate was checked once, on the state right after the last action. (2) The goal is "
+             "RoboWits' predicate (unchanged) with the graded objects released: no robot contact with them (Genesis' contact list); "
+             "move_cube's cube must also be on the table. (3) The BlenderKit models reach the agent's container through a `blenderkit` "
+             "service that writes this family's models alone into a volume; the host's folder, its key and the rest of the bundle are "
+             "no longer mounted in the agent's container. The frozen instance, RoboWits' predicate and the time limit are unchanged; "
+             "results recorded before this date (the earlier DIGEST) are not comparable with this version."),
+    "std": ("2026-10-14 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; the service's success rule changed). From the "
+            "failure analysis of the 10-14 results (an object held in the goal region ended the episode as a success; a creeping cup "
+            "passed one speed sample). (1) The goal is RoboWits' predicate (unchanged) with the graded objects released: no robot "
+            "contact with them; move_cube's cube must also be on the table. (2) When the goal holds after a call, the service holds "
+            "the last command for a settle window inside that call (1 s, then 2 s in which the goal must hold and every graded object "
+            "stay within 2 mm); only then does the episode end as a success, else it goes on (`meta[\"settle\"]` says why). When the "
+            "agent's phase ends, the same window decides. (3) `final.json` `reason` is \"agent_exit\" when the agent ended its session "
+            "with more than 60 s left, \"timeout\" at the time limit (before: \"timeout\" in both cases), with `agent_time_s` and "
+            "`settle`. (4) The instruction says that a client timeout while a call is in flight means the single-threaded service "
+            "is busy, not crashed. The frozen instance, RoboWits' predicate and the time limit are unchanged; results recorded "
+            "before this date (the earlier DIGEST) are not comparable with this version."),
+}
 # Fixes to the published tasks (PROTOCOL §2.8): one README Change Log entry per mode, newest last.
 CHANGE_LOG = {
     "priv": [
@@ -207,14 +233,22 @@ CRITERION_TERMS = {
 }
 CRITERION_LEAD = {
     "priv": ("This is exactly what the grader checks, written from the predicate above (RoboWits' `_check_success`, which the "
-             "grader runs). Where the task text says something else, this section and the predicate are what count. It is "
-             "evaluated once per replay, on the state right after the last action of your trajectory (no settle steps are "
-             "added: let things come to rest inside the trajectory), and must hold after both replays."),
-    "std": ("This is exactly what the grader checks (RoboWits' success predicate, stated in words). Where the task text says "
-            "something else, this section is what counts. The service evaluates it after every `submit` and after every "
-            "`get_obs` that watches (`seconds` > 0), and once more when the episode ends; the first time it holds, the episode "
-            "ends as a success. The service then replays your recorded episode, which must end in the same state and satisfy "
-            "it again."),
+             "grader runs) and the release and rest condition the grader adds (the last item). Where the task text says something "
+             "else, this section and the code are what count. After the last action of your trajectory the grader holds that "
+             "action's command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in "
+             "which every condition below must hold at every 6th control step and at the last one, with each graded object staying "
+             "within 2 mm of where it was when those 2 s began (the *check window*). It must pass in both replays. "
+             "`s.replay(actions)` runs exactly this and returns the verdict as `success` (and why in `settle`); "
+             "`s.status()[\"success\"]` is the same conditions at one instant, without the window (`predicate`: RoboWits' alone)."),
+    "std": ("This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest "
+            "condition the grader adds: the last item). Where the task text says something else, this section is what counts. "
+            "After every `submit` and every `get_obs` that watches (`seconds` > 0) the service checks the conditions at that "
+            "instant; when they hold, it keeps your last command for a settle window, inside the same call: 1 s with nothing "
+            "checked, then 2 s in which every condition must hold at every 6th control step and at the last one, with each graded "
+            "object staying within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the "
+            "episode ends as a success; if not, the episode goes on and `meta[\"settle\"]` says why. When your session ends, the "
+            "same window decides once more. The service then replays your recorded episode, which must end in the same state "
+            "and pass again."),
 }
 
 
@@ -224,7 +258,7 @@ def criterion_section(fam: str, f: dict, mode: str) -> str:
     first = re.match(r"(.+?[.!?])(\s|$)", text)                  # the task text's first sentence (dominos adds a scene description)
     quoted = json.dumps(first.group(1) if first else text, ensure_ascii=False)
     return (f"## Success criterion (as graded)\n{wrap(CRITERION_LEAD[mode])}\n\n"
-            f"{bullets(c[mode])}\n\n"
+            f"{bullets(c[mode] + [per_mode(c['rest'], mode)])}\n\n"
             f"{wrap('Not checked: ' + per_mode(c['unchecked'], mode) + '.')}\n\n"
             f"{wrap('Task text vs grader (' + quoted + '): ' + per_mode(c['text_vs_code'], mode))}\n\n"
             f"{wrap(CRITERION_TERMS[mode])}\n")
@@ -250,7 +284,7 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+completed after the replay: the settle window of the success criterion above, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
 one.
 
@@ -274,8 +308,8 @@ s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object'
 p["set_joint_targets"](q16, steps=1); p["close_gripper"]("left"); p["gripper_quat"](yaw, approach)   # more thin wrappers: help(p[...])
 s.step(action)                     # one low-level action (16 joint targets, below) = one control step (1/30 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 16) actions, one row per control step
-s.status()                         # {'success': bool, 'progress': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
-s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.status()                         # {'success': the conditions hold now, 'predicate', 'touching', 'progress', 'sim_steps', 'resets', 'state_sha'}
+s.replay(actions)                  # resets, replays open-loop, then the settle window: the verdict  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
 ```
@@ -312,7 +346,7 @@ STD_INSTRUCTION = """# RoboWits · @FAM@ — STANDARD MODE (robot as a service, 
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
-  (`meta["done"]`, `reason` "success") the first time it holds.
+  (`meta["done"]`, `reason` "success") the first time it holds through the settle window.
 - **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most @MAXSTEPS@ control steps (about
   @MAXHOURS@ h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
@@ -322,7 +356,10 @@ STD_INSTRUCTION = """# RoboWits · @FAM@ — STANDARD MODE (robot as a service, 
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
-- **If the service crashes** (a connection error or a 5xx instead of an answer), it restarts and resumes the SAME
+- **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other
+  request waits for it (`r.status()` from another process included), and a client-side timeout during that time means
+  "busy", not "crashed": nothing restarts, the call runs to its end and the episode goes on from there.
+- **If the service crashes** (the connection is refused or reset instead of an answer), it restarts and resumes the SAME
   episode, never a reset, in the state after the last call it completed. `r.wait_ready()` waits until it answers again
   (resuming replays the episode so far: about a second per 700 control steps); then check `r.status()` (`calls`,
   `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]` stops at the next control
@@ -458,7 +495,7 @@ def readme(title: str, rows: list[tuple[str, str]], task: str, difficulty: str, 
     table (benchmark, mode, twin, simulator / robot, family / instance, oracle, budget, base image) from task.toml and the
     Dockerfiles, and moves these extra rows and the Change Log (PROTOCOL §2.8) into ## Details."""
     table = "\n".join(["| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows])
-    log = "\n".join(f"- {e}" for e in [*CHANGE_LOG[mode], *extra])   # extra: the family's own entries (families.py change_log)
+    log = "\n".join(f"- {e}" for e in [*CHANGE_LOG[mode], *extra, I01[mode]])   # extra: the family's own entries (families.py change_log)
     return (f"# {title}\n\n{table}\n\n## Task\n{task}\n\n## Difficulty\n{difficulty}\n\n## Reference solution\n{reference}\n\n"
             f"## Verification\n{verification}\n\n## Change Log\n{log}\n")
 
@@ -544,13 +581,19 @@ def std_readme(fam: str, f: dict) -> str:
                   f.get("change_log", {}).get("std", ()))
 
 
+def evidence(f: dict, mode: str) -> str:
+    """task.toml oracle_evidence: the earlier evidence (families.py oracle_evidence) and what the 2026-10-14 re-grades
+    found (families.py i01_evidence)."""
+    return per_mode(f["oracle_evidence"], mode) + (" " + per_mode(f["i01_evidence"], mode) if f.get("i01_evidence") else "")
+
+
 def toml_str(s: str) -> str:
     return json.dumps(s, ensure_ascii=False)
 
 
 def priv_toml(fam: str, f: dict) -> str:
     s = priv_dir(fam)
-    oracle = f'oracle = "{f["oracle"]}"' + (f"\noracle_evidence = {toml_str(per_mode(f['oracle_evidence'], 'priv'))}" if f["oracle"] != "full" else "")
+    oracle = f'oracle = "{f["oracle"]}"' + (f"\noracle_evidence = {toml_str(evidence(f, 'priv'))}" if f["oracle"] != "full" else "")
     desc = (f"RoboWits {fam} (bimanual Marvin, Genesis): produce one replayable trajectory. {f_text(fam)} Frozen scene instance "
             f"(RoboWits evaluation scene {f['eval_index']} of task {int(num(f))}).")
     vt = f.get("verifier_timeout_s") or 1800
@@ -596,7 +639,7 @@ build_timeout_sec = 1800.0
 
 def std_toml(fam: str, f: dict) -> str:
     s = slug(fam)   # the standard directory is s + "-standard"
-    oracle = f'oracle = "{f["oracle"]}"' + (f"\noracle_evidence = {toml_str(per_mode(f['oracle_evidence'], 'std'))}" if f["oracle"] != "full" else "")
+    oracle = f'oracle = "{f["oracle"]}"' + (f"\noracle_evidence = {toml_str(evidence(f, 'std'))}" if f["oracle"] != "full" else "")
     desc = (f"STANDARD MODE (robot as a service, {PROTOCOL}): RoboWits {fam} on the same frozen instance as the privileged task "
             f"(evaluation scene {f['eval_index']} of task {int(num(f))}). {f_text(fam)} The agent only gets a client: get_obs (RGB, optional "
             f"depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, "
@@ -661,12 +704,26 @@ def gpu_service(indent: str = "    ") -> str:
             f"{indent}        - driver: nvidia\n{indent}          count: 1\n{indent}          capabilities: [gpu]\n")
 
 
-def priv_compose(f: dict, tests: bool) -> str:
+BK_AGENT_NOTE = ("# The agent's container never sees that folder or its key (since 2026-10-14): only the `blenderkit` service mounts it; it\n"
+                 "# decrypts the models this family loads and serves them on localhost:8765, from where the tooling in `main`\n"
+                 "# fetches them for each scene build (RCB_BLENDERKIT_URL; rcb_robowits.py blenderkit-serve).\n")
+
+
+def priv_compose(fam: str, f: dict, tests: bool) -> str:
     head = ("# The verifier replays in the simulator, which needs the GPU for Genesis' EGL cameras (the replay video).\n" if tests else
             "# Genesis renders camera images through EGL on the GPU (the physics runs on its bit-deterministic CPU backend). Harbor's\n"
             "# local docker sandbox rejects [environment].gpus, but merging this onto the main service passes the device through.\n")
-    vol = f"    volumes:\n      - {BK_VOLUME}\n" if f["blenderkit"] else ""
-    return head + (BK_NOTE if f["blenderkit"] else "") + "services:\n  main:\n    shm_size: \"2gb\"\n" + vol + gpu_service()
+    if not f["blenderkit"]:
+        return head + "services:\n  main:\n    shm_size: \"2gb\"\n" + gpu_service()
+    if tests:
+        return head + BK_NOTE + "services:\n  main:\n    shm_size: \"2gb\"\n" + f"    volumes:\n      - {BK_VOLUME}\n" + gpu_service()
+    host = BK_VOLUME.rsplit(":/opt/robowits/assets/blender_kit:ro", 1)[0]
+    return (head + BK_NOTE + BK_AGENT_NOTE + "services:\n  main:\n    shm_size: \"2gb\"\n    depends_on: [blenderkit]\n"
+            "    environment:\n      RCB_BLENDERKIT_URL: http://127.0.0.1:8765\n" + gpu_service() +
+            f"  blenderkit:\n    image: {IMAGE}\n    working_dir: /tmp\n"
+            f"    volumes:\n      - {host}:/bk:ro\n      - ./rcb_robowits.py:/srv/rcb_robowits.py:ro\n"
+            "    restart: on-failure:3\n"
+            f"    command: [\"python\", \"/srv/rcb_robowits.py\", \"blenderkit-serve\", \"--task\", \"{fam}\", \"--src\", \"/bk\", \"--port\", \"8765\"]\n")
 
 
 def std_compose(fam: str, f: dict) -> str:
@@ -791,9 +848,9 @@ def files_for(fam: str, f: dict, inst: bytes) -> dict[str, dict[str, tuple[bytes
     t = lambda s, mode=FILE: (s.encode(), mode)            # noqa: E731
     priv = {
         "task.toml": t(priv_toml(fam, f)), "instruction.md": t(priv_instruction(fam, f)), "README.md": t(priv_readme(fam, f)),
-        "environment/Dockerfile": t(priv_dockerfile(f)), "environment/docker-compose.yaml": t(priv_compose(f, tests=False)),
+        "environment/Dockerfile": t(priv_dockerfile(f)), "environment/docker-compose.yaml": t(priv_compose(fam, f, tests=False)),
         "environment/instance.json": (inst, FILE), "environment/rcb_robowits.py": sh("rcb_robowits.py"),
-        "tests/Dockerfile": t(priv_tests_dockerfile(f)), "tests/docker-compose.yaml": t(priv_compose(f, tests=True)),
+        "tests/Dockerfile": t(priv_tests_dockerfile(f)), "tests/docker-compose.yaml": t(priv_compose(fam, f, tests=True)),
         "tests/grade.py": sh("grade_privileged.py"), "tests/instance.json": (inst, FILE), "tests/rcb_robowits.py": sh("rcb_robowits.py"),
         "tests/test.sh": t(priv_test_sh(fam), EXEC),
     }

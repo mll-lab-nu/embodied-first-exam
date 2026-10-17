@@ -17,7 +17,15 @@ Every tick (5 s; disk every 60 s) it samples, per container and summed over the 
 compute and graphics), memory (cgroup anon+shmem when the container has its own cgroup, else PSS anon+shmem), processes
 (TGIDs, zombies included), disk growth under the limits' disk_paths in the agent's container (complete walks only, in
 slices between the samples), CPU (recorded only). It appends to /var/rcb-monitor/samples.jsonl and
-events.jsonl and writes the agent-visible /run/rcb-limits/usage.json.
+events.jsonl and writes the agent-visible /run/rcb-limits/usage.json: the current values, the limits and the agent's
+clock (`elapsed_s`, `time_left_s`, `deadline_utc`: the task's `[agent] timeout_sec`, counted from the monitor's start,
+which is the trial environment's start, a little before the agent's session starts, so it never overstates the time left).
+
+The agent-side session log (robot_coding_bench #233): the privileged tooling writes /app/output/rcb_session_log.jsonl
+from the agent's own process, so the agent can delete or rewrite it. Every tick the monitor copies what was appended to
+it, append-only, into its record (session_log/<segment>.jsonl; a truncated, replaced or rewritten file starts a new
+segment, a removed one keeps its copy; `session_log_rewritten` / `session_log_removed` events). The verifier step
+(rcb_limits.sanitize, before the grader) gives the grader that copy when the agent's file is not what was written.
 
 Kernel OOM kills (`oom` events) are read from each watched container's cgroup `memory.events` by a thread of its own
 (OomWatch), many times a second: a kill that takes the container's main process with it ends the container, and compose
@@ -38,6 +46,9 @@ largest process once the scope is above its declared memory caps.
 
     python3 monitor.py run            # the service's command
     python3 monitor.py seal --wait 90 # the first sidecar collect hook: seal the record (summary.json), print it
+    python3 monitor.py beacon         # for a runner whose container runtime cannot run the monitor (no `pid: host`,
+                                      # e.g. rootless podman without cgroups): the same service without pid/cgroup host,
+                                      # writing only the agent's clock and `"measured": false` to usage.json
 """
 import ctypes
 import json
@@ -69,6 +80,9 @@ OOM_HOT_SEC = 0.002             # ... and this often for OOM_HOT_FOR_SEC after a
 OOM_HOT_FOR_SEC = 2.0
 OOM_CAP_WINDOW_SEC = 10.0       # a kill is the container's own cap's when its `oom` counter rose with it or this shortly before
 OOM_FORGET_SEC = 600.0          # a cgroup not seen by the sampler for this long is no longer watched
+SESSION_LOG = "app/output/rcb_session_log.jsonl"    # in the agent's container (rcb_limits.SESSION_LOG_NAME)
+SESSION_LOG_MAX = 64 * 2 ** 20  # bytes copied at most (rcb_limits.MAX_SESSION_LOG: what a grader is given to read)
+SESSION_LOG_TAIL = 4096         # bytes of the copied tail compared at every tick (a rewrite of what was copied)
 
 
 # --------------------------------------------------------------------------------------------------- small helpers
@@ -148,6 +162,96 @@ def write_json(path, obj):
 def event(kind, **kw):
     kw.update(t=round(now(), 2), event=kind)
     append("events.jsonl", kw)
+
+
+def clock(t, start, timeout):
+    """The agent's clock for usage.json (robot_coding_bench #231): seconds since `start` (the trial environment's start)
+    and, with the task's time limit, the time left and the deadline. Counted from before the agent's session starts, so
+    `time_left_s` is never more than the agent really has."""
+    out = {"elapsed_s": round(max(0.0, t - start), 1)}
+    if timeout:
+        out.update(time_limit_s=int(timeout), time_left_s=round(max(0.0, start + timeout - t), 1),
+                   deadline_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start + timeout)))
+    return out
+
+
+def usage_limits(lim):
+    return {k: lim.get(k) for k in ("max_gpu_memory_gb", "max_memory_gb", "max_processes", "max_disk_gb", "sustain_sec",
+                                    "window_sec")}
+
+
+def open_in_root(root, rel):
+    """A read-only fd of the regular file `rel` under the directory `root` (a container's /proc/<pid>/root), never
+    through a symbolic link (an absolute link would resolve in the monitor's own file system), or None."""
+    fd = None
+    try:
+        fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+        parts = rel.split("/")
+        for part in parts[:-1]:
+            nfd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            os.close(fd)
+            fd = nfd
+        f = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+        if not stat_mod.S_ISREG(os.fstat(f).st_mode):
+            os.close(f)
+            return None
+        return f
+    except OSError:
+        return None
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
+class SessionLogCopy:
+    """Append-only copy of the agent's session log into the record (#233). State (inode, offset, segment, tail hash)
+    lives in the record's state.json, so a restarted monitor goes on where it was."""
+
+    def __init__(self, state=None):
+        self.s = dict(state or {"ino": None, "off": 0, "seg": 0, "tail": "", "copied": 0, "gone": False})
+
+    def step(self, root):
+        import hashlib
+        fd = open_in_root(root, SESSION_LOG)
+        if fd is None:
+            if self.s["ino"] is not None and not self.s["gone"]:
+                self.s["gone"] = True
+                event("session_log_removed", copied=self.s["copied"], segment=self.s["seg"])
+            return
+        try:
+            st = os.fstat(fd)
+            s = self.s
+
+            def tail_of(end):
+                os.lseek(fd, max(0, end - SESSION_LOG_TAIL), 0)
+                return hashlib.sha256(os.read(fd, min(SESSION_LOG_TAIL, end))).hexdigest()
+
+            if s["ino"] is not None and (st.st_ino != s["ino"] or st.st_size < s["off"] or s["gone"]
+                                         or (s["off"] and tail_of(s["off"]) != s["tail"])):
+                event("session_log_rewritten", copied=s["off"], size=st.st_size, segment=s["seg"] + 1,
+                      why="replaced" if st.st_ino != s["ino"] else "truncated" if st.st_size < s["off"] else
+                      "back after removal" if s["gone"] else "rewritten")
+                s.update(off=0, seg=s["seg"] + 1, tail="")
+            s.update(ino=st.st_ino, gone=False)
+            n = min(st.st_size - s["off"], SESSION_LOG_MAX - s["copied"])
+            if n <= 0:
+                return
+            os.lseek(fd, s["off"], 0)
+            data = b""
+            while len(data) < n:
+                chunk = os.read(fd, n - len(data))
+                if not chunk:
+                    break
+                data += chunk
+            d = os.path.join(REC, "session_log")
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, "%d.jsonl" % s["seg"]), "ab") as out:
+                out.write(data)
+            s["off"] += len(data)
+            s["copied"] += len(data)
+            s["tail"] = tail_of(s["off"])
+        finally:
+            os.close(fd)
 
 
 def no_dump():
@@ -447,6 +551,7 @@ class Monitor:
         self.disk_last = 0.0
         self.disk_gb = None
         self.walk = None         # (DiskWalk, mnt ns, proc path, starttime) of the measurement under way
+        self.slog = SessionLogCopy()
         self.series = []         # [(t, {metric: value})] of the last window, for enforcement decisions
         self.confirmed = {}      # metric -> time
         self.kill_until = 0.0
@@ -463,6 +568,9 @@ class Monitor:
         self.caps["nvml"] = int(self.nvml is not None)
         self.caps["nvml_devices"] = len(self.nvml.handles) if self.nvml else 0
         self.t0 = now()
+        self.clock_t0 = self.t0  # the agent's clock (usage.json): the first start's, across restarts (run())
+        self.timeout = float(self.lim.get("agent_timeout_sec") or 0)
+        self._usage_vals = None
         self._last_measures, self._gpu_per = [], {}
         self.fatal_scope = False
 
@@ -690,7 +798,7 @@ class Monitor:
     # ---- state that must outlive a restart of the monitor (restart: on-failure)
     def save_state(self):
         try:
-            write_json(os.path.join(REC, "state.json"), {"disk_base": self.disk_base})
+            write_json(os.path.join(REC, "state.json"), {"disk_base": self.disk_base, "session_log": self.slog.s})
         except OSError:
             pass
 
@@ -700,6 +808,8 @@ class Monitor:
         st = rcb_limits.read_json(os.path.join(REC, "state.json")) or {}
         if isinstance(st.get("disk_base"), (int, float)):
             self.disk_base = float(st["disk_base"])
+        if isinstance(st.get("session_log"), dict):
+            self.slog = SessionLogCopy(st["session_log"])
         _, samples, events = rcb_limits.load_record(REC)
         window = float(self.lim.get("window_sec", 2 * float(self.lim.get("sustain_sec", 60))))
         self.series = [(s["t"], s.get("scope") or {}) for s in samples
@@ -837,6 +947,7 @@ class Monitor:
         if self.switch_error:
             meta["switch_error"] = self.switch_error
         if restarted:
+            self.clock_t0 = (rcb_limits.read_json(os.path.join(REC, "meta.json")) or {}).get("started") or self.t0
             self.restore()
             event("restart", capabilities=self.caps)
         else:
@@ -858,6 +969,7 @@ class Monitor:
                 import traceback
                 traceback.print_exc()
                 event("error", why=f"{type(e).__name__}: {e}"[:300])
+            self.write_usage(t)                        # every tick, a failed one too: the agent's clock never stops
             for p in list(self.prev_cpu):
                 if t - self.prev_cpu[p][2] > 60:
                     del self.prev_cpu[p]
@@ -882,6 +994,12 @@ class Monitor:
             self.fatal_scope = True
             event("fatal", why="no container mounting the trial's beacon found within 120 s")
         disk_now = self.disk_step(t, groups)
+        _, pid = self.main_proc(groups)
+        if pid is not None:
+            before = dict(self.slog.s)
+            self.slog.step(self.base(pid) + "/root")
+            if self.slog.s != before:
+                self.save_state()
         vals = {"gpu_memory_gb": round(sum(m["gpu_memory_gb"] for m in scope), 3),
                 "memory_gb": round(sum(m["memory_gb"] for m in scope), 3),
                 "processes": sum(m["processes"] for m in scope), "disk_gb": disk_now}
@@ -898,16 +1016,22 @@ class Monitor:
                                              "memory_gb": round(sum(m["memory_gb"] for m in obs), 3),
                                              "processes": sum(m["processes"] for m in obs)},
                                  "cards": {str(k): v for k, v in cards.items()}, "containers": ms})
+        self._usage_vals = vals
         self.check(t, vals, groups)
+
+    def write_usage(self, t):
+        """The agent-visible /run/rcb-limits/usage.json: the last sample's values (none before the first one), the
+        limits, what enforcement did, and the agent's clock."""
+        vals = self._usage_vals or {}
+        u = {"t": round(t, 2), "measured": bool(vals)}
+        u.update({k: vals.get(k) for k in ("gpu_memory_gb", "memory_gb", "processes")})
+        u.update(disk_gb=self.disk_gb, enforced=self.enforce, limits=usage_limits(self.lim),
+                 violations=sorted(self.confirmed),
+                 # processes the monitor killed at once to protect the host (not violations by themselves)
+                 emergency_kills=len(self.emergency), last_emergency_kill=(self.emergency or [None])[-1])
+        u.update(clock(t, self.clock_t0, self.timeout))
         try:
-            write_json(SCOPE_BEACON + "/usage.json", {
-                "t": round(t, 2), "gpu_memory_gb": vals["gpu_memory_gb"], "memory_gb": vals["memory_gb"],
-                "processes": vals["processes"], "disk_gb": self.disk_gb, "enforced": self.enforce,
-                "limits": {k: self.lim.get(k) for k in ("max_gpu_memory_gb", "max_memory_gb", "max_processes",
-                                                        "max_disk_gb", "sustain_sec", "window_sec")},
-                "violations": sorted(self.confirmed),
-                # processes the monitor killed at once to protect the host (not violations by themselves)
-                "emergency_kills": len(self.emergency), "last_emergency_kill": (self.emergency or [None])[-1]})
+            write_json(SCOPE_BEACON + "/usage.json", u)
         except OSError:
             pass
 
@@ -950,7 +1074,44 @@ def seal_cmd(wait):
     return 0
 
 
+BEACON_WHY = ("this runner cannot run the resource monitor (its container runtime refuses `pid: host`): usage is not "
+              "measured and the limits are not enforced; the clock is kept")
+
+
+def beacon(rounds=None):
+    """`monitor.py beacon`: usage.json with the agent's clock and `"measured": false`, every tick, for a runner whose
+    container runtime cannot create the monitor service (it rewrites the service to run this instead of `run`). The
+    start is kept in the service's own /var/rcb-monitor/beacon.json, so a restart does not reset the clock."""
+    lim = rcb_limits.read_json(LIMITS) or {}
+    tick, timeout = float(lim.get("tick_sec", 5)), float(lim.get("agent_timeout_sec") or 0)
+    start = now()
+    try:
+        os.makedirs(REC, exist_ok=True)
+        st = rcb_limits.read_json(os.path.join(REC, "beacon.json")) or {}
+        if isinstance(st.get("started"), (int, float)):
+            start = float(st["started"])
+        else:
+            write_json(os.path.join(REC, "beacon.json"), {"started": round(start, 2)})
+    except OSError:
+        pass
+    n = 0
+    while rounds is None or n < rounds:
+        t = now()
+        u = {"t": round(t, 2), "measured": False, "why": BEACON_WHY, "enforced": 0, "limits": usage_limits(lim)}
+        u.update(clock(t, start, timeout))
+        try:
+            write_json(SCOPE_BEACON + "/usage.json", u)
+        except OSError:
+            pass
+        n += 1
+        if rounds is None or n < rounds:
+            time.sleep(tick)
+    return 0
+
+
 def main(argv):
+    if argv[:1] == ["beacon"]:
+        return beacon()
     if argv[:1] == ["seal"]:
         wait = float(argv[argv.index("--wait") + 1]) if "--wait" in argv else 90.0
         return seal_cmd(wait)

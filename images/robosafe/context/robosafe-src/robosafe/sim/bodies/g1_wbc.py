@@ -23,7 +23,12 @@ Differences from BiGym 2.0, all outside the dynamics of the legs:
 - the two shapes that spell the maker's name on the chest (`logo_link`, one drawn, one colliding) are deleted, as on
   the gliding G1, so that no picture shows it;
 - the cameras are added by `robosafe.sim.world` under the bench's names (`head`, `wrist_left`, `wrist_right`) at
-  BiGym's mounts (`CAMERAS`; BiGym names them `head`, `left_wrist`, `right_wrist`).
+  BiGym's mounts (`CAMERAS`; BiGym names them `head`, `left_wrist`, `right_wrist`). BiGym's eulers are radians, read
+  under the robot file's compiler (`angle="radian"`); the world's scene is a fresh `MjSpec`, whose compiler reads
+  degrees, so `add_cameras` converts them there (before 0.5.3 it did not: the head looked straight down, 89.4 degrees
+  below the horizon, its picture turned a quarter, and the wrists' pictures were turned too). At BiGym's mounts the head
+  looks ahead and about 60 degrees down (0.52 rad off straight down) and upright; each wrist camera looks along the
+  hand, tilted 0.87 rad towards its back, upright (with the arms at the home posture they look ahead and up).
 
     spec, changes = make_spec()              # a mujoco.MjSpec to attach into a world under the prefix "g1/"
     model, changes = build()                 # compiled, standing on a floor of its own
@@ -79,7 +84,8 @@ PINCH_QUAT = (math.sqrt(0.5), 0.0, math.sqrt(0.5), 0.0)  # z_site = x_wrist (out
 OPTIONS = {"timestep": 0.001, "iterations": 50, "solver": "newton", "cone": "elliptic", "impratio": 10.0, "noslip_iterations": 2,
            "integrator": "implicitfast", "tolerance": 1e-8, "ls_iterations": 50, "ls_tolerance": 0.01, "noslip_tolerance": 1e-6}
 
-# BiGym's cameras (`G1Dex1._on_loaded`): body, position, euler (radians, MuJoCo's default sequence), fovy 60.
+# BiGym's cameras (`G1Dex1._on_loaded`): body, position, euler (radians, MuJoCo's default sequence `xyz`, read under the
+# G1 file's `<compiler angle="radian"/>`), fovy 60.
 CAMERAS = {
     "head": ("torso_link", (0.12, 0.0, 0.37), (0.0, -0.52, -1.57)),
     "wrist_left": ("left_wrist_yaw_link", (0.12, 0.0, 0.04), (0.0, -0.87, -1.57)),
@@ -111,11 +117,17 @@ def apply_options(s: mujoco.MjSpec) -> None:
 
 
 def add_cameras(s: mujoco.MjSpec, prefix: str = "") -> None:
-    """BiGym's three cameras under the bench's names, on the bodies of a robot attached under `prefix`."""
+    """BiGym's three cameras under the bench's names, on the bodies of a robot attached under `prefix`. A camera added
+    to `s` is compiled under `s`'s own compiler: the robot file's (radians) in `make_spec`, but a fresh `MjSpec`'s
+    (degrees, MuJoCo's default) in the world's scene, where the radians of `CAMERAS` are converted (0.5.3)."""
+    seq = "".join(s.compiler.eulerseq)
+    if seq != "xyz":
+        raise ValueError(f"BiGym's camera eulers are in MuJoCo's default sequence 'xyz', the spec reads {seq!r}")
+    unit = math.degrees if s.compiler.degree else float
     for name, (body, pos, euler) in CAMERAS.items():
         cam = s.body(prefix + body).add_camera(name=name, fovy=CAMERA_FOVY, pos=list(pos))
         cam.alt.type = mujoco.mjtOrientation.mjORIENTATION_EULER
-        cam.alt.euler = list(euler)
+        cam.alt.euler = [unit(v) for v in euler]
 
 
 def make_spec(hide_logo: bool = True, root: Path | None = None, cameras: bool = False):

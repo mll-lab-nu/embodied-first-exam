@@ -33,12 +33,16 @@ CLIENT_RESET = '''    def reset(self, cameras=None, include_depth: bool = False,
         return self._post("/reset", meta, [], timeout=600)
 
     def status(self) -> dict:'''
-# The sim's collect hook: wait (at most 180 s) for the service's PID file, then send SIGUSR1 every 30 s until final.json says
-# video_done (the verdict is `finalized` before the video is rendered; video_done follows), all inside one 840 s deadline, so
-# the loop always ends before the hook's timeout_sec = 900. A hook that stops early leaves the verdict on disk as it is.
+# The sim's collect hook: wait (at most 180 s) for the service's PID file, then send SIGUSR1 every 30 s until final.json is
+# `finalized` (the verdict), inside an 840 s deadline; then, with a verdict on disk, wait for `video_done` (the video is
+# rendered after the verdict and replays the episode once more) until 1680 s, as long again as the verdict may take, so
+# the loops always end before the hook's timeout_sec = 1710. Board 0136: one 840 s deadline for verdict and video together
+# lost the video of every long episode. A hook that stops early leaves the verdict on disk as it is.
 COLLECT = ("t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 660 ]; do sleep 2; done; "
-           "i=0; while [ $(left) -gt 0 ]; do grep -q '\\\"video_done\\\": true' /data/final.json 2>/dev/null && break; "
-           "[ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; cat /data/final.json")
+           "i=0; while [ $(left) -gt 0 ]; do grep -q '\\\"finalized\\\": true' /data/final.json 2>/dev/null && break; "
+           "[ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; "
+           "if grep -q '\\\"finalized\\\": true' /data/final.json 2>/dev/null; then while [ $(( 1680 - $(date +%s) + t0 )) -gt 0 ] && "
+           "! grep -q '\\\"video_done\\\": true' /data/final.json 2>/dev/null; do sleep 2; done; fi; cat /data/final.json")
 # README Change Log (PROTOCOL §2.8: published tasks fixed in place; results before a change are not retested), oldest first.
 CHANGES = [
     "2026-10-10 (review 0067): the camera calibration in `meta[\"cameras\"]` now gives the pose of the viewpoint the image is "
@@ -64,6 +68,10 @@ CHANGES = [
     "counted as a crash; a JSON `true` or `false` where `dt` or `seconds` takes a number is a 400 (`true` ran as 1 "
     "second). An episode's physics, the grader and the pass rule are unchanged.",
 ]
+CHANGES_VIDEO = ("2026-10-16 (board 0136): the sim collect hook waits for the replay video until 1680 s after the episode "
+                 "ends (`timeout_sec` 900 -> 1710); the verdict keeps its 840 s bound. One 840 s deadline covered the verdict and the "
+                 "video, which replays the episode once more after it, so long episodes lost their video. Video only: the verdict, "
+                 "the physics and the pass rule are unchanged, so results from before this date stay valid.")
 CHANGES_ALOHA = [
     "2026-10-10 (review 0067): the calibration is recomputed for every response. Before, it was computed once at start-up, so "
     "the wrist cameras' poses were those of the home pose however the arms had moved; a response with several frames now "
@@ -290,7 +298,7 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "{COLLECT}"
-timeout_sec = 900
+timeout_sec = 1710
 
 [agent]
 timeout_sec = {cutoff_for(src)}.0
@@ -318,7 +326,7 @@ build_timeout_sec = 600.0
                                                                  + ([] if dtb else [EGRESS_CHANGE])
                                                                  + (CHANGES_ALOHA_K if tool == "rcb_aloha" else CHANGES_OTHER)
                                                                  + (CHANGES_PEG if base.endswith("aloha_single_peg_insertion") else [])
-                                                                 + (CHANGES_RESETS_DTB if dtb else CHANGES_RESETS_OTHER)))
+                                                                 + (CHANGES_RESETS_DTB if dtb else CHANGES_RESETS_OTHER) + [CHANGES_VIDEO]))
     normalize(dst); normalize(src)   # protocol v1.0 conventions; the privileged twin's README gets its Twin row
     return dst
 

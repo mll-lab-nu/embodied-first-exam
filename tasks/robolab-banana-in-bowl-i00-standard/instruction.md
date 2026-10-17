@@ -7,7 +7,10 @@ let go of it.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
-  success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over.
+  success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over. When
+  your session ends the service holds your last command for 30 more control steps (2 s) while it checks the condition,
+  so a release you sent last completes. "The gripper" in the success condition is both Robotiq fingers: an object that
+  touches either finger is still held.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (joints, gripper, end-effector pose, velocities, drive efforts). No object poses, no success predicate.
 - There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`). Actions and simulated time
@@ -17,10 +20,16 @@ let go of it.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
-- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
-  (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
-  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
-  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
+- **A busy service has not crashed.** The service answers one request at a time: while a call runs (a long `submit` or
+  a watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for
+  it, `r.status()` from another process included. A client-side timeout while a call is in flight (for example
+  `requests` ReadTimeout on `r.status()`) means "busy": nothing restarts, the call runs to its end and the episode goes
+  on from there. Keep one client process and wait for your call's answer.
+- **If the service crashes**, the connection is refused or reset and the call is lost: the
+  simulator restarts and resumes the SAME episode (never a reset) in the state after the last call it completed, which
+  you may not have received. `r.wait_ready()` waits until it answers again (resuming replays the episode so far, which
+  can take minutes; the wall clock keeps running), then check `r.status()["control_steps"]` before you continue
+  (`spec["on_service_error"]`).
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 
@@ -85,4 +94,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

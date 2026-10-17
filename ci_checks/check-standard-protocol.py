@@ -413,9 +413,12 @@ def check_live(rep: Report, url: str, task: Path | None, client_dir: Path, out: 
     for body, what in (({"depth": "sideways"}, "bad depth value"), ({"seconds": -1}, "negative seconds"), ({"video": "gif"}, "bad video")):
         code = raw_post(url, "/observe", body).status_code
         rep.ok(code == 400, f"http.observe.400[{what}]", str(code))
-    dim = spec["action_types"]["joint_position"]["dim"]
+    # a malformed chunk of the service's first action type (joint_position where offered; AM-Bench offers only ee_pose)
+    atypes = [k for k, v in (spec.get("action_types") or {}).items() if isinstance(v, dict) and "dim" in v]
+    atype = "joint_position" if "joint_position" in atypes else atypes[0]
+    dim = spec["action_types"][atype]["dim"]
     for a, what in ((np.zeros((2, dim + 1), np.float32), "wrong dim"), (np.full((2, dim), np.nan, np.float32), "NaN")):
-        rb = rcb1.encode({"type": "joint_position", "dt": 1.0 / hz}, [rcb1.array_part("actions", a)])
+        rb = rcb1.encode({"type": atype, "dt": 1.0 / hz}, [rcb1.array_part("actions", a)])
         code = requests.post(url + "/submit", data=rb, headers={"Content-Type": "application/x-rcb1"}, timeout=60).status_code
         rep.ok(code in (400, 409), f"http.submit.400[{what}]", str(code))
     # depth last

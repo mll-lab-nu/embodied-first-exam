@@ -69,7 +69,7 @@ fin, r, _, _ = finalize("fail", {"1": "fail", "2": "fail"}); check(not fin["repl
 fin, r, _, _ = finalize("die", {"2": "die"}); check(fin.get("replay_failed") == 1 and fin["infra_error"] == 1 and r["infra_error"] == 1 and r["grader_error"] == 1, "finalize: a replay process that died -> replay_failed + infra_error", (fin, r))
 fin, r, _, _ = finalize("mismatch", {"1": "mismatch"}); check(fin.get("instance_mismatch") == 1 and r["infra_error"] == 1, "finalize: replay not from the t = 0 state -> instance_mismatch + infra_error", (fin, r))
 fin, r, _, _ = finalize("nondet", {"2": "othersha"}); check(not fin["deterministic"] and r["success"] == 0 and r["infra_error"] == 0, "finalize: replays ending in different states -> deterministic 0", (fin, r))
-fin, r, dt, out = finalize("hang", {"1": "hang"}, budget=25); check(fin["finalized"] and fin.get("replay_failed") == 1 and fin["infra_error"] == 1 and r["infra_error"] == 1 and dt < 60, f"finalize: a hanging replay is ended at the hook's deadline ({dt:.0f} s) and recorded as infra_error in a finalized final.json", (fin, r, out))
+fin, r, dt, out = finalize("hang", {"1": "hang"}, budget=44); check(fin["finalized"] and fin.get("replay_failed") == 1 and fin["infra_error"] == 1 and r["infra_error"] == 1 and dt < 60, f"finalize: a hanging replay is ended at its share of the hook's time ({dt:.0f} s) and recorded as infra_error in a finalized final.json", (fin, r, out))
 fin, r, _, _ = finalize("endrc1", {}, end_rc=1, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and fin["infra_error"] == 1 and r["infra_error"] == 1 and r["success"] == 0, "finalize: the service never ended the episode -> infra_error", (fin, r))
 gave = {"success": False, "finalized": True, "gave_up": True, "reason": "sim_crashed_on_call"}
 fin, r, _, _ = finalize("endrc2", {}, end_rc=2, pre_final=gave); check(fin == gave and r["infra_error"] == 0, "finalize: a give-up verdict on disk is kept", (fin, r))
@@ -78,7 +78,7 @@ hb = float(re.search(r"RCB_HOOK_BUDGET_S:-(\d+)", open(os.path.join(T_STD, "envi
 check(hb < ct, "finalize: the hook's own deadline is before the collect timeout", (hb, ct))
 
 # ------------------------------------------------------------------ privileged grade.py
-def priv_grade(name, make_traj, beh=None, log_bytes=None):
+def priv_grade(name, make_traj, beh=None, log_bytes=None, budget=None):
     d = os.path.join(td, "priv_" + name); tests, log = os.path.join(d, "tests"), os.path.join(d, "log"); os.makedirs(tests); os.makedirs(log)
     traj = os.path.join(d, "trajectory.npz")
     if make_traj: make_traj(traj)
@@ -88,14 +88,15 @@ def priv_grade(name, make_traj, beh=None, log_bytes=None):
         src = open(g).read(); assert '"/app/output/rcb_session_log.jsonl"' in src; open(g, "w").write(src.replace('"/app/output/rcb_session_log.jsonl"', repr(slog)))
     json.dump({"family": "pick", "t0": {"action_dim": 8}}, open(os.path.join(tests, "instance.json"), "w"))
     open(os.path.join(tests, "rcb_molmospaces.py"), "w").write(textwrap.dedent("""
-        import json, os, sys
+        import json, os, sys, time
         out = sys.argv[sys.argv.index("--out") + 1]; beh = os.environ.get("STUB", "ok")
         if beh == "die": os._exit(137)
+        if beh == "hang": time.sleep(600)
         res = {"success": beh != "fail", "state_sha": "abc", "instance_ok": beh != "mismatch", "executed_rows": 30, "horizon": 30, "reached_horizon": True, "replay_s": 1.0, "video": "--video" in sys.argv}
         open(out, "w").write(json.dumps(res))
         """))
     p = subprocess.run([PY, os.path.join(tests, "grade.py"), "--instance", os.path.join(tests, "instance.json"), "--traj", traj], capture_output=True, text=True,
-                       env={**os.environ, "RCB_VERIFIER_LOG_DIR": log, "STUB": beh or "ok"}, timeout=120)
+                       env={**os.environ, "RCB_VERIFIER_LOG_DIR": log, "STUB": beh or "ok", **({"RCB_VERIFIER_BUDGET_S": str(budget)} if budget else {})}, timeout=120)
     assert p.returncode == 0, p.stderr
     r = json.load(open(os.path.join(log, "reward.json"))); txt = open(os.path.join(log, "reward.txt")).read().strip()
     assert all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in r.values()), r
@@ -113,6 +114,8 @@ r = priv_grade("noactions", lambda p: np.savez(p, rows=A)); check(r.get("bad_tra
 r = priv_grade("shape", lambda p: np.savez(p, actions=np.zeros((30, 7)))); check(r.get("bad_trajectory") == 1 and r["n_actions"] == 30, "privileged: wrong width -> bad_trajectory", r)
 r = priv_grade("family", lambda p: np.savez(p, actions=A, family="open")); check(r.get("wrong_family") == 1 and r["grader_error"] == 0, "privileged: wrong_family", r)
 r = priv_grade("die", lambda p: np.savez(p, actions=A), "die"); check(r["grader_error"] == 1 and r["success"] == 0, "privileged: a replay process that died -> grader_error", r)
+t0 = time.time(); r = priv_grade("hang", lambda p: np.savez(p, actions=A), "hang", budget=44); dt = time.time() - t0
+check(r["grader_error"] == 1 and r["replay_timed_out"] == 1 and r["infra_error"] == 1 and dt < 60, f"privileged: hanging replays share the verifier's budget and end at it ({dt:.0f} s) -> replay_timed_out + infra_error", r)
 r = priv_grade("mismatch", lambda p: np.savez(p, actions=A), "mismatch"); check(r["grader_error"] == 1 and r["instance_mismatch"] == 1, "privileged: instance_mismatch -> grader_error", r)
 BAD_LOG = b'{"ev": "session_start"}\n{"ev": "reset", "note": "\xff\xfe"}\n\x00\n{"ev": "session_start"}\n' + b"x" * 2**20 + b"\n"   # not UTF-8, a NUL, a 1 MB line
 r = priv_grade("badlog_pass", lambda p: np.savez(p, actions=A, family="pick"), log_bytes=BAD_LOG); check(r["success"] == 1 and r["grader_error"] == 0 and r["agent_sessions"] == 2 and r["agent_resets"] == 1, "privileged: a session log that is not UTF-8 costs no verdict (was no reward file)", r)

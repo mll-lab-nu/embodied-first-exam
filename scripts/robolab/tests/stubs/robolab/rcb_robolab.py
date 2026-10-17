@@ -1,5 +1,6 @@
 import numpy as np
 from fake_common import Base, MAX_STEPS  # noqa: F401
+SETTLE_STEPS = 30                                            # the real tooling's end-of-episode hold
 class _T:                                                    # the two torch calls the server makes on the joint limits
     def __init__(self, a): self.a = np.asarray(a)
     def __getitem__(self, k): return _T(self.a[k])

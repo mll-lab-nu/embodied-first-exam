@@ -1,0 +1,6 @@
+{
+ "env_id": "kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0",
+ "seed": 0,
+ "max_steps": 1000,
+ "scene_sha": "b73343bb8019907a"
+}

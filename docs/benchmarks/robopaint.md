@@ -379,6 +379,7 @@ Only inked (painted) strokes on the main sheet count; practice-sheet strokes are
 | Families | Rule (each task states its own numbers) |
 |---|---|
 | kaishu, xingshu, caoshu, lettering | **Colouring in fails:** `path_mm` > `max_path_mm` (3 × the reference solution's `path_mm`, rounded up to 10 mm) **and** `mark_width_mm` < `min_mark_width_mm` (0.3 × the reference's, rounded down to 0.01 mm). `mark_width_mm` = the area each stroke inks on its own (its own mark, coverage ≥ 0.5; overlaps between different strokes count again), summed over the strokes, / `path_mm`: the marks' average width. |
+| kaishu, xingshu, caoshu (2026-10-14) | **Strokes are counted as written:** the stroke cap counts the marked pieces of the contacts: a contact is cut where the brush moves more than `stroke_gap_mm` (5 mm) along the main sheet without marking it (its mark narrower than `mark_min_width_mm`, 0.1 mm), and a piece longer than `max_stroke_path_mm` (5 × the reference solution's longest piece, rounded up to 10 mm) counts as ⌈length / `max_stroke_path_mm`⌉ strokes; `n_strokes_counted` ≤ `max_strokes`. **Strokes are sweeps** (the paintings' rule on these pieces): `scribble_share` ≤ 0.10 with the ratio 12 (Counted strokes in calligraphy). |
 | acrylic, oil | **Path budget:** `path_mm` ≤ `max_path_mm` (3 × the reference's, rounded up to 100 mm). **Strokes are sweeps:** `scribble_share` ≤ 0.10, the share of `path_mm` in strokes longer than 2.5 × the diagonal of their bounding box (taken as at least 10 mm): zigzags, back-and-forth fills, spirals, loops (a sweep out and back along one line is about 2). |
 
 The numbers per task: `max_path_mm` 3230–7880 mm (kaishu), 1200–6060 mm (xingshu), 810–2680 mm (caoshu), 3000–7940 mm
@@ -439,6 +440,92 @@ Margins (a value / its task's limit):
 - Known limitation: the closest colour-in run (Astra lettering omnium, standard) sits at 0.97 of its mark-width limit, so a fill
   with a slightly wider nib could pass; the rule chooses leniency on purpose. Likewise the closest painting fill (Astra oil bathers)
   is only 1.43× the sweep limit.
+
+## Counted strokes in calligraphy (2026-10-14)
+The failure analysis of 2026-10-14 (agents' runs of 10-05 to 10-14, item 9 of its "Decisions needed") found that the
+calligraphy families' stroke cap counted contacts, not strokes, and that the colouring-in rule (a long path of thin marks) was
+the only bound on what one contact did:
+- **Ink-free connectors.** The Wang brush leaves no mark below a press of about 0.25 mm (Width(z) = 1.187 z − 0.03 cm), but the
+  contact stays open. Opus 5.5's privileged caoshu-beiquelindanshui success joined 31 separately written pieces into 10 contacts
+  (cap 12) "at a 0.18 mm press, which makes no mark"; Luna standard kaishu-linfengguilong retraced 69 strokes in 2 contacts
+  this way (it failed for other reasons).
+- **Held contacts.** Astra 5's standard xingshu-yong kept one contact on the paper for ~39 min to retrace and re-pose the arm.
+- **Fills.** GLM's serpentine and dot fills passed the colouring-in numbers (they failed on the picture, and the dot fill on the
+  cap).
+
+**The rule** (`rcb_brush_strict.py`; the numbers in every graders' copy of `target.success`, stated in each instruction; the
+agent's own privileged copy of the instance holds no counting numbers):
+- a contact's samples mark when the brush's mark is at least `mark_min_width_mm` = 0.1 mm wide (column 3 of the samples,
+  `w`: less than half a 0.22 mm pixel, which never reaches the 0.5 ink coverage the score counts). Its marked pieces are the
+  runs of marking samples, joined across non-marking samples unless the tip moves more than `stroke_gap_mm` = 5 mm there; the
+  touch-down and the lift before the first and after the last marking sample belong to no piece;
+- each piece counts as one stroke, or ⌈length / `max_stroke_path_mm`⌉ when it is longer than `max_stroke_path_mm` =
+  5 × the reference's longest piece (rules.json `reference_longest_stroke_mm`, `measure_reference.py`), rounded up to 10 mm:
+  600–2240 mm; `strokes_counted_ok` = `n_strokes_counted` ≤ `max_strokes`;
+- the paintings' sweep rule on the pieces: at most 10 % of the pieces' path in pieces longer than 12 × their bounding-box
+  diagonal (at least 10 mm);
+- `final_reward`'s cap scaling is taken on the counted strokes. The picture rule keeps its own contact count
+  (`n_strokes`, `stroke_count_ok`).
+- Lettering and the paintings carry none of these keys: their verdicts and `final_reward` are unchanged (checked on the 16
+  lettering and acrylic references and on every recorded run below).
+
+**Why these numbers.** On the 16 current references, the 9 earlier references of the kept pairs (10-05) and GPT-6 Luna's 27
+genuine calligraphy runs (0928b / 0929, on the same instances), every contact is exactly one piece (the references' longest
+non-marking stretch inside a contact is 2.9 mm, a light turn); the longest piece is at most 2.98 × the reference's (Luna's
+privileged xingshu-nian success); the largest scribble ratio is 4.96 (references) and 9.95 (a Luna failure that retraces
+heavily, xingshu-xian standard). The 14 GPT-6 Astra colouring-in runs of 10-03/04 on these instances (already failed by the
+colouring-in rule) are each failed again by a new rule, independently: counted strokes 7–690 against caps 6–21, or a
+scribble share of 0.69–1.0.
+
+**Re-grade of the recorded runs** (eai-robopaint:0.2.0 runtime, the graders' copy, one replay each; 82 trajectories):
+| Population | Runs | Success before → after | Changed |
+|---|---|---|---|
+| current references (calligraphy 16, lettering 6, acrylic 10) | 32 | 32 → 32 | none (`final_reward` equal) |
+| earlier references of the 9 kept calligraphy pairs | 9 | 9 → 9 | none |
+| GPT-6 Luna calligraphy (privileged + standard) | 27 | 3 → 3 | none |
+| GPT-6 Astra colouring in (10-03/04) | 14 | 0 → 0 | none (now 2–3 failing rules each) |
+
+**The loopholes, by construction** (the trajectories of the recorded agent runs are not retrievable from the evaluation
+dashboard: `trajectory.npz`, `journal.f64` and `episode.jsonl` answer 404, and privileged runs keep none; so each loophole was
+built from the pair's reference solution in the base image (a construction script outside the repository) and graded by the
+graders' copy before and after the change):
+
+| Construction (the agents' pattern) | Pair | Before: success / process rules / contacts | After: success / process rules / counted strokes, scribble share |
+|---|---|---|---|
+| Each contact written, then re-written after a move back at a 0.2 mm press (no mark): twice the strokes in the cap's contacts (Opus's connectors) | caoshu wen | 1 / ok / 2 of 2 | 0 / fail / 4 of 2 |
+| same | caoshu nangong | 1 / ok / 5 of 5 | 0 / fail / 10 of 5 |
+| same | kaishu 永字八法 | 1 / ok / 21 of 21 | 0 / fail / 42 of 21 |
+| same | caoshu 北闕臨丹水 | 0 / ok / 14 of 12 (two connectors lifted off) | 0 / fail / 24 of 12 |
+| Consecutive contacts joined at a 0.2 mm press, nothing written twice (no extra strokes) | caoshu 北闕臨丹水 | 1 / ok / 5 of 12 | 1 / ok / 12 of 12 (not penalised) |
+| The longest contact gone over back and forth 6 times without lifting (a held contact) | caoshu 北闕臨丹水 | 0 (picture) / ok / 12 of 12 | 0 / fail / 14 of 12, 0.75 |
+| same, 2 times | xingshu 永 | 0 (picture) / ok / 6 of 6 | 0 / fail / 6 of 6, 0.74 |
+| same, 2 times | caoshu 文 | 0 (picture) / ok / 2 of 2 | 0 (picture) / ok / 2 of 2 (704 of 720 mm: within the margin) |
+| Dot fill of the exemplar in one contact: dabs pressed 2–4 mm deep on a 1.2–2.4 mm grid, joined at a 0.2 mm press (GLM's dots) | xingshu 永, 年; caoshu 文, 北闕臨丹水; kaishu 永字八法 (15 variants) | 0 / fail (colouring in: the joining moves count in `path_mm`) / 1 contact | 0 / fail / 20–249 counted strokes |
+
+The picture verdicts of the held and dotted constructions are their own (a brush dragged back and forth smears); the process
+rules are what the rows show. A dot fill written as separate contacts was already over the cap (GLM's).
+
+**Not caught (accepted).** A contact may still go over its own stroke a few times: up to 5 × the reference's longest piece
+it counts once (Luna's genuine 2.98 × retrace sets that margin), unless its back-and-forth makes it a scribble (ratio > 12).
+
+**Validation (Harbor).** 2026-10-14, Harbor on ws3 (RTX 4090, `eai-robopaint:0.2.0`, Harbor's
+`-a oracle` / `-a nop`, jobs `rpv1-{oracle,nop}-<task>`), with this version's rules and scoring code (`rcb_brush_strict.py`
+and the instances in `tests/`, `environment/scorer/` and `environment/sim/`; the draft then also held a helper for a
+standard-service stroke counter, taken out since with that counter): the 16 calligraphy pairs in both modes, oracle 32 of 32
+success (deterministic; `n_strokes_counted` = the cap's contacts; standard: `live_matches_replay` 1) and nop 0 of 32;
+lettering liberty and acrylic redfuji (graders unchanged in verdict) in both modes, oracle 4 of 4 and nop 0 of 4; no infra or
+grader errors. The standard sim service (`environment/sim/server.py`) is main's, unchanged.
+
+**Re-grading existing results** (nothing is re-run). `scripts/robopaint_strict/regrade.py JOBS_DIR ... [--traj PATH.npz]
+--out regrade.jsonl` replays every recorded RoboPaint trajectory once with the current task's graders' copy (`tests/`:
+`rcb_brush_strict.py` and the frozen instance) in the base image (docker, GPU) and scores the same final state twice: with
+the rules before this change (`old_verdict`: the instance's `target.success` without the counted-stroke and calligraphy sweep
+keys, exactly the earlier grader) and with the current rules (`new_verdict`); the picture rule alone is `image_success`. A
+trajectory recorded on another instance (its `instance_sha`) is not re-graded, and a recorded success the old rule does not
+reproduce is `inconclusive`. Only the 43 pairs on main (the released set, `RELEASED` in the tool) are re-graded: a trial of any
+other RoboPaint task (pruned or earlier targets, later additions) is listed as `skipped`. Lettering and the paintings re-grade
+to their recorded verdicts. Standard re-grades are conservative ("re-graded under 2026-10-14 rules (conservative)"): the agent
+read the earlier instruction.
 
 ## Oil: the pointed brush (2026-10-09)
 The oil family was saturated (GPT-6 Astra, high: 11 of 11 in both modes, 2026-10-08) and its paintings looked coarse next to the
@@ -613,6 +700,10 @@ No task directory holds results (PROTOCOL §5); they are published on the result
 (<https://embodied-agent-interface-v2-internal.github.io/runs/robopaint/>), with videos and full trials on the HF dataset
 `eai-v2-internal/agent-runs`.
 - This version: no runs yet.
+- 2026-10-14: the calligraphy pairs' process rules count strokes as written (Counted strokes in calligraphy). Runs graded
+  before that date on kaishu, xingshu and caoshu were graded under the contact cap; they are re-graded from their recorded
+  trajectories with `scripts/robopaint_strict/regrade.py`, nothing is re-run. Lettering and the paintings are graded as
+  before.
 - The runs on record are of the earlier version (picture rule only) and are not comparable with this one. Their trajectories
   re-grade under the process rules (Calibration). `codex-gpt6_luna-xhigh` (Codex CLI 0.157.0, GPT-6 Luna, reasoning xhigh):
   - they ran on pre-v1.0 versions of the tasks (privileged without a suffix, standard twins `-limited`): batch

@@ -58,6 +58,9 @@ jobs:
           echo "pull request #$PR at $sha; changed task dirs: ${dirs:-none}"
       - uses: actions/checkout@v4
         with: { ref: "${{ env.HEAD_SHA || github.sha }}" }
+      # the stamp tool from this workflow's own commit (a pull request's head may predate it, issue #258)
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.sha }}", path: _rcb_tooling, sparse-checkout: scripts/stamp_mtimes.py, sparse-checkout-cone-mode: false }
       - uses: astral-sh/setup-uv@v5
       - run: uv tool install "harbor==$HARBOR_VERSION"
       - name: Resolve task list
@@ -78,14 +81,19 @@ jobs:
           rc=0; : > "$RUNNER_TEMP/results.md"
           for t in $TASK_LIST; do
             n=$(basename "$t")
+            # Harbor builds from a stamped copy (scripts/stamp_mtimes.py, issue #258): with the checkout's mtimes BuildKit
+            # can put another task's equal-size file into this task's image
+            st="$RUNNER_TEMP/stamped-$n"; rm -rf "$st"
+            c=$(python3 _rcb_tooling/scripts/stamp_mtimes.py stage "$t" "$st") || { echo "| \`$n\` | stamp failed | stamp failed |" >> "$RUNNER_TEMP/results.md"; rc=1; continue; }
             if grep -Eq '^oracle *= *"full"' "$t/task.toml"; then
-              harbor run -p "$t" -a oracle -o "$JOBS" --job-name "oracle-$n" || true
+              harbor run -p "$c" -a oracle -o "$JOBS" --job-name "oracle-$n" || true
               r=$(cat "$JOBS/oracle-$n"/*/verifier/reward.txt 2>/dev/null | head -1)
               [ "$r" = 1 ] && o="1 (ok)" || { o="${r:-no reward} (FAIL)"; rc=1; }
             else
               o="— (oracle is not full)"
             fi
-            harbor run -p "$t" -a nop -o "$JOBS" --job-name "nop-$n" || true
+            harbor run -p "$c" -a nop -o "$JOBS" --job-name "nop-$n" || true
+            rm -rf "$st"
             r=$(cat "$JOBS/nop-$n"/*/verifier/reward.txt 2>/dev/null | head -1)
             [ "$r" = 0 ] && z="0 (ok)" || { z="${r:-no reward} (FAIL)"; rc=1; }
             echo "| \`$n\` | $o | $z |" >> "$RUNNER_TEMP/results.md"

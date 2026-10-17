@@ -3,7 +3,10 @@
 [NVIDIA RoboLab](https://github.com/NVlabs/RoboLab) v0.3.1 on Isaac Lab 2.3.2 / Isaac Sim 5.1: tabletop language-goal tasks
 for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "robolab"`, `robot = "franka-robotiq-2f85"`.
 53 families, each as a privileged task `robolab-<family>-i00-privileged` and its standard twin
-`robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance.
+`robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance. On 2026-10-14 the success rule changed
+in place (Success semantics; PROTOCOL v2.0 §1, H.8: a new DIGEST, results are attributed by digest): results recorded
+under the earlier DIGESTs are not comparable with the current ones; `scripts/robolab/regrade.py` re-grades them
+(Re-grading).
 
 ## Tasks and generator
 - One generator: `python3 scripts/robolab/mk_tasks.py` writes every RoboLab task dir (both modes) from
@@ -48,9 +51,24 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
 RoboLab evaluates its `success` term after every control step and terminates the episode at the first step where it
 holds (its termination freezes the env); the replay stops there and later rows are never executed. So a goal state that
 holds at a single control step counts, in both modes. This is "success at any step" rather than "at the end of the
-replay" (PROTOCOL §3): we keep RoboLab's own definition so the predicate is upstream's, unchanged. Most predicates require
+replay" (PROTOCOL §3): we keep RoboLab's own definition so the predicate is upstream's. Most predicates require
 the gripper to have released the object (`require_gripper_detached`), which rules out holding an object through the goal
-region; the instructions state the rule in both modes.
+region; the instructions state the rule in both modes. Three changes on 2026-10-14 ( the failure analysis of the
+10-14 results found 19 of 194 successes that fired before the task was done), all in the tooling (`rcb_robolab.py`):
+- **"The gripper" is both fingers.** RoboLab's DROID robot declares one contact body, `left_inner_finger`
+  (`robolab/robots/droid.py`, "Use one finger only": an Isaac Lab contact sensor with filters takes one prim), so an
+  object pinched by the right finger or the pads read as released and 9 successes fired with the object still clamped.
+  `GRIPPER_CONTACT` declares both inner fingers and makes "gripper" RoboLab's own alias group of the two
+  (`WorldState.resolve_contact_bodies`: any member), set before the env is registered; each finger gets RoboLab's own
+  sensors. Every family's term is otherwise upstream's.
+- **On the table where the words say so.** `take_measuring_spoon_out` ("... and put it on the table") and
+  `cooking_clear_plate` (RoboLab's specific wording: "place each on the table surface") use RoboLab's own
+  `object_outside_of_and_on_surface` with surface `table` and their own parameters instead of `object_outside_of`,
+  which counted an object lifted out of the container or knocked off the table (5 successes).
+- **A settle hold at the end.** After a trajectory's last row the replay holds it for `SETTLE_STEPS` (30 control steps,
+  2 s), the term still checked at every step, so a release in the last rows completes (a trajectory recorded before
+  that ended at the old success step ends the same way); in standard mode the service holds the last command as long
+  when the agent's phase ends, and the fresh-process replays run the recorded episode as it is (`replay --no-settle`).
 
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
@@ -219,14 +237,30 @@ sees it and still ends the episode with a 500.
   privileged trajectory may hold at most that many rows.
 - An `ee_pose` submit has no frame cap: a long one at a high `video_fps` keeps many frames in memory (the client's
   defaults, 5 fps and mp4, stay small).
-- RoboLab's success terms are upstream's and stay as they are (owner, 2026-10-14: "the original simulator decides"),
-  including two that are looser than their words (board 0086): `require_gripper_detached` can read an object that is
-  still pinched or wedged in the gripper as detached, and "inside" extends without limit along the container's up axis
-  (the instructions state the latter). `tools_picking_drill`'s term names the left bin while the drill starts in the
+- RoboLab's success terms are upstream's (owner, 2026-10-14: "the original simulator decides"), except what 2026-10-14
+  changes (Success semantics: both fingers, two on-table terms, the settle hold). Still looser than their words (board
+  0086): "inside" extends without limit along the container's up axis (the instructions state it), so a toppled or
+  tilted container can count objects as outside or inside; `object_upright` has no support term (an object in free fall
+  passes); `is_supported_on_surface` accepts a mug lying on its side as "standing". `tools_picking_drill`'s term names the left bin while the drill starts in the
   right bin; the instruction says so (2026-10-14).
 - Contact can make the physics diverge (joint readings of 1e6 and more, objects thrown off the table) after a grasp
   that looks ordinary; in standard mode that episode is lost (board 0086 saw it once in about 350 trials). A
   privileged `s.reset()` does not restore the start bit for bit; the verifier replays in a fresh process.
+
+
+## Re-grading recorded trials (2026-10-14)
+`scripts/robolab/regrade.py JOBS_DIR ... [--parallel N] [--cache-volume V] [--out regrade.jsonl]` re-grades recorded
+trials under the current success term without re-running them. It finds every RoboLab trial in a Harbor jobs tree and
+reads its recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; standard: the sidecar's
+`trajectory.npz`, or its `journal.f64`) and its recorded verdict. It replays each trajectory once, in a fresh Isaac
+process, with the current task's own tooling copy. At every control step it watches RoboLab's upstream term with the
+one-finger contact (the old verdict) and the current term (the new verdict, settle hold included), and reports where
+each first held.
+- **Same host class.** A trial is graded on the host it ran on (Grading and determinism). The tool prints the host's CPU
+  and GPU and flags a trial `inconclusive` when its recorded success does not reproduce under the old rule here.
+- **Standard trials are conservative.** Under the current rule an early success would not have ended the episode, and
+  the agent could still have released the object; the label is "re-graded under 2026-10-14 rules (conservative)".
+- **Privileged trials are close to exact.**
 
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA

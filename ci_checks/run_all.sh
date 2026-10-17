@@ -100,10 +100,17 @@ add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
 # PROTOCOL §4b: a standard-realtime task states its slowdown S ([metadata] slowdown, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
+# PROTOCOL §4 (board 0136): every task renders a replay video and the runner can collect it; a declared video time
+# bound is not shorter than the verdict replay's
+add python3 ci_checks/check-video.py"$targs"
 # The task protocol (docs/PROTOCOL.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths
 add python3 ci_checks/check-protocol.py"$pargs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
+# issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)
+add python3 ci_checks/check-build-stamps.py
+# PROTOCOL §4: the easy set (docs/easy_set.toml) names existing task bases, with a known reason and their benchmark label
+add python3 scripts/task_conventions.py easy-set --check
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

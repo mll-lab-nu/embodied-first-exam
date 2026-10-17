@@ -73,7 +73,8 @@ def write_final() -> None:
         "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
         "deterministic": E.get("deterministic"), "live_sha": E.get("live_sha"), "replay_sha": E.get("replay_sha"), "video": bool(E.get("video")),
         "video_done": bool(E.get("video_done")), "backend": BACKEND, "grade_error": bool(E.get("grade_error")),
-        "instance_exact": E.get("instance_exact"), **EP.final_fields()})
+        "instance_exact": E.get("instance_exact"), "settle": E.get("settle"), "agent_time_s": E.get("agent_time_s"),
+        **EP.final_fields()})
 
 
 VERDICT_KEYS = ("success", "replay_success", "deterministic", "grade_error", "n_actions", "live_sha", "replay_sha", "reason")
@@ -87,7 +88,10 @@ def finalize() -> None:
             S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
                                                                                "reason": E["reason"], "resumes": EP.resumes})
             E["n_actions"] = int(len(acts)); E["live_sha"] = live_sha
-            rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha"]; E["deterministic"] = rep["state_sha"] == live_sha
+            # the recorded rows hold the live settle window too; the replay adds its own window after them (a scene at rest
+            # stays at rest) and its state after the rows is what must equal the live final state
+            rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha_rows"]
+            E["deterministic"] = rep["state_sha_rows"] == live_sha
             log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
         except Exception as exc:  # noqa
             # The episode was not graded. The record is a complete verdict all the same (`deterministic` False, never None:
@@ -125,12 +129,32 @@ def start_finalize() -> None:
     E["finalizing"] = True; threading.Thread(target=finalize, daemon=True).start()
 
 
+def journal_step(a) -> bool:
+    """One control step outside a call (the end-of-episode settle window): executed, journaled and recorded."""
+    row = np.asarray(a, dtype=np.float32); guard = S.step(row); EP.journal(row)
+    return guard
+
+
+def settle(step) -> bool:
+    """The verdict's settle window (rcb_robowits.Session.settle_check): the robot holds its last command for 1 s, then the
+    goal must hold for 2 s, the graded objects released and at rest. Its steps are part of the episode (journaled and
+    recorded, so the grading replay runs them too). Remembers the result for final.json and the call's meta."""
+    r = S.settle_check(step=step); E["settle"] = r
+    log({"ev": "settle", **r})
+    return bool(r["success"])
+
+
 def finish(reason: str) -> None:
     if E["done"]: return
-    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
-        try: E["success"] = check_success()
-        except Exception: pass
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+    if not E["success"] and reason in ("timeout", "agent_exit"):
+        # the agent phase is over: the last command is held for the settle window and the verdict taken there (as the
+        # privileged grader does after the last action of a trajectory); never after a simulator error or at the step cap
+        try:
+            E["success"] = settle(journal_step)
+        except Exception:  # noqa
+            traceback.print_exc()
+    E["episode_control_steps"] = ctrl_steps()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
     write_final(); start_finalize()
 
@@ -231,15 +255,22 @@ SPEC = {
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
               "source": "Genesis rasterizer depth of the same camera (the distance along the optical axis)"},
-    "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the wall-clock budget is used up, on a simulator error, or after max_control_steps control steps (a technical "
-                "cap, reason \"step_guard\": the call in progress stops there); the recorded trajectory is then replayed and graded"),
+    "episode": ("ends at the first success: after every /submit and every /observe that watches, the goal is checked (the task "
+                "predicate, the graded objects released by the robot); when it holds, the service holds the last command for a "
+                "settle window (1 s, then 2 s in which the goal must hold and the graded objects stay at rest, within 2 mm; part "
+                "of the call and of the episode) and the episode ends with reason \"success\" if the window passes, else it goes "
+                "on (meta[\"settle\"] says why). It also ends when the agent's phase ends (the same window then decides; reason "
+                "\"agent_exit\" when the agent ended its session with time left, \"timeout\" at the time limit), on a simulator "
+                "error, or after max_control_steps control steps (a technical cap, reason \"step_guard\": the call in progress "
+                "stops there); the recorded trajectory is then replayed and graded"),
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
 
 
 def check_success() -> bool:
-    return bool(S.env._check_success().item())
+    """The goal right now (rcb_robowits.Session.goal): the predicate with the graded objects released. Not the verdict:
+    settle() decides."""
+    return bool(S.goal()["success"])
 
 
 def proprio_row() -> np.ndarray:
@@ -441,11 +472,14 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     before = ctrl_steps(); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
+    succ = False; settled = None
+    if not E["done"] and not EP.stopping and check_success():
+        succ = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
     rec.tick(force=True, last=True)
-    succ = check_success(); E["success"] = E["success"] or succ
+    E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
-           **({"frames_skipped": rec.skipped} if rec.skipped else {})}
+           **({"frames_skipped": rec.skipped} if rec.skipped else {}), **({"settle": settled} if settled else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
@@ -460,19 +494,21 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     watch = seconds > 0 and not E["done"]
     frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)   # (the depth mode is checked here: ValueError)
-    rec = recorder(cams, fps, meta); before = ctrl_steps()
+    rec = recorder(cams, fps, meta); before = ctrl_steps(); settled = None
     # ---- the request is valid
     rec.tick(force=True, last=not watch)
     if watch:
         hold = np.asarray(S.hold_action(), dtype=np.float64)
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
+        if not E["done"] and not EP.stopping and check_success():
+            E["success"] = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
         rec.tick(force=True, last=True)
-        succ = check_success(); E["success"] = E["success"] or succ
-        if succ: finish("success")
+        if E["success"]: finish("success")
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {})}
+           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {}),
+           **({"settle": settled} if settled else {})}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
@@ -488,10 +524,21 @@ def status() -> dict:
             "elapsed_s": round(time.time() - E["t0"], 1)}
 
 
+AGENT_EXIT_MARGIN_S = 60.0    # more time left than this when the agent phase ended: the agent ended its own session
+
+
 def end_from_signal() -> None:
-    """The collect hook's SIGUSR1 (the agent phase is over): end the episode, then grade in-process (finalize)."""
+    """The collect hook's SIGUSR1 (the agent phase is over): end the episode, then grade in-process (finalize). The reason
+    says who ended it: "agent_exit" when the agent ended its session with more than AGENT_EXIT_MARGIN_S left (by the
+    service's clock of the agent, meta time_left_s), "timeout" at the time limit (the reason was "timeout" in both cases
+    before 2026-10-14)."""
     with LOCK:
-        if not E["done"]: finish("timeout")
+        if not E["done"]:
+            # the agent's clock (from its first request); an agent that never sent one: the service's own uptime, which
+            # starts before the agent's phase and so overstates the agent's time
+            used = L.agent_time(E) if E.get("t_first") is not None else time.time() - E["t0"]
+            E["agent_time_s"] = round(used, 1)
+            finish("agent_exit" if SPEC["budget"]["wall_clock_s"] - used > AGENT_EXIT_MARGIN_S else "timeout")
         else: start_finalize()
 
 

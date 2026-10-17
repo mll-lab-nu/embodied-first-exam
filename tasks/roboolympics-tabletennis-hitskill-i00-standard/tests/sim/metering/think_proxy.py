@@ -37,6 +37,7 @@ Standard library only.
 """
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import uuid
@@ -106,10 +107,17 @@ HOP_BY_HOP = {"connection", "keep-alive", "transfer-encoding", "te", "trailer", 
               "content-length", "host", "accept-encoding", "authorization", "x-api-key", "api-key", "chatgpt-account-id"}
 # Azure deployment failover (program play tasks): AZURE_DEPLOYMENTS lists replicas of one model (e.g.
 # "gpt-6-astra,gpt-6-astra-2,gpt-6-astra-3"; empty = no failover). Each deployment has its own per-minute token
-# limit, and Azure may report an exceeded limit inside an HTTP 200 stream. When a deployment answers 429/503, or its
-# stream opens with a rate-limit failure, the request is sent to the next deployment before any byte reaches the agent;
-# the proxy then stays on the deployment that worked. Switches are recorded (rec["azure_failovers"],
-# USAGE["azure_failovers"]); they are not model failures and do not count as rate_limit_retries.
+# limit, and Azure may report an exceeded limit inside an HTTP 200 stream. The request is sent to the next deployment,
+# before any byte reaches the agent, when a deployment
+#   * answers HTTP 408, 429, 500, 502, 503 or 504 (AZURE_FAILOVER_STATUS; Azure's own 408 "The operation was timeout."
+#     came ~21 s into a request in the 2026-10-14 soccer pilots),
+#   * times out or drops the connection (socket timeout, connection reset) before its response headers, or during the
+#     first events of a stream, which the proxy reads before it relays anything (azure_peek),
+#   * opens its stream with a rate-limit / overload / server-error failure, or closes it before any output.
+# A failure after the first byte was relayed to the agent is never retried: the agent sees it as before. The last
+# deployment tried answers the agent whatever it is (its error included). The proxy then stays on the deployment that
+# worked. Switches are recorded (rec["azure_failovers"] with the reason, USAGE["azure_failovers"]); they are not model
+# failures and do not count as rate_limit_retries. Empty AZURE_DEPLOYMENTS, and every non-Azure upstream: no failover.
 AZURE_POOL = [d.strip() for d in os.environ.get(AZURE_POOL_VAR, "").split(",") if d.strip()]
 AZURE_CURRENT = [0]
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -121,6 +129,22 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 OPENER = urllib.request.build_opener(_NoRedirect)            # replaces the default (following) redirect handler
 AZURE_RATE_WORDS = ("rate limit", "rate_limit", "too_many_requests", "server_is_overloaded", '"429"')
+# A failed stream's error object (not the whole response, which echoes the instructions) naming a server-side fault.
+AZURE_SERVER_WORDS = ("server_error", "internal_error", "service_unavailable", "overloaded", "timeout", "timed out",
+                      '"408"', '"500"', '"502"', '"503"', '"504"')
+AZURE_FAILOVER_STATUS = (408, 429, 500, 502, 503, 504)
+UPSTREAM_TIMEOUT_S = float(os.environ.get("THINK_UPSTREAM_TIMEOUT_S", "") or 600)   # socket timeout per upstream read
+
+
+def upstream_fault(exc) -> str | None:
+    """A short reason when `exc` is a timeout or a dropped connection of the upstream (worth another deployment)."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return None
+    if isinstance(exc, urllib.error.URLError) and isinstance(exc.reason, BaseException):
+        exc = exc.reason
+    if isinstance(exc, (TimeoutError, ConnectionError, http.client.IncompleteRead)):
+        return type(exc).__name__
+    return None
 
 
 def azure_peek(resp, limit=1 << 20):
@@ -130,8 +154,9 @@ def azure_peek(resp, limit=1 << 20):
     read = getattr(resp, "read1", resp.read)
     while len(buf) < limit:
         chunk = read(65536)
-        if not chunk:
-            return buf, None
+        if not chunk:                                    # closed before any output: a stream always ends with an event
+            head = buf.lstrip()
+            return buf, ("stream closed before output" if not head or head.startswith((b"event:", b"data:")) else None)
         buf += chunk
         events = buf.replace(b"\r\n", b"\n").split(b"\n\n")[:-1]
         for ev in events[seen:]:
@@ -145,9 +170,12 @@ def azure_peek(resp, limit=1 << 20):
             if t in ("response.created", "response.in_progress", ""):
                 continue
             text = json.dumps(d).lower()
-            if t in ("error", "response.failed") and any(k in text for k in AZURE_RATE_WORDS):
-                err = (d.get("response") or {}).get("error") or d.get("error") or {}
-                return buf, f"{t} ({(err.get('code') if isinstance(err, dict) else '') or 'rate limit'})"
+            if t in ("error", "response.failed"):
+                err = (d.get("response") or {}).get("error") or d.get("error") or (d if t == "error" else {})
+                if any(k in text for k in AZURE_RATE_WORDS):
+                    return buf, f"{t} ({(err.get('code') if isinstance(err, dict) else '') or 'rate limit'})"
+                if any(k in json.dumps(err).lower() for k in AZURE_SERVER_WORDS):
+                    return buf, f"{t} ({(err.get('code') if isinstance(err, dict) else '') or 'server error'})"
             return buf, None
     return buf, None
 
@@ -571,7 +599,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             for attempt in (range(len(RATE_LIMIT_WAITS_S) + 1) if resp is None else ()):
                 try:
-                    resp = OPENER.open(req, timeout=600); break
+                    resp = OPENER.open(req, timeout=UPSTREAM_TIMEOUT_S); break
                 except urllib.error.HTTPError as err:
                     resp = err
                     if err.code != 429 or attempt >= len(RATE_LIMIT_WAITS_S):
@@ -644,7 +672,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def _azure_failover(self, url, body, headers, rec):
-        '''Send to the current deployment; on 429/503 or an in-stream rate-limit failure, try the next one.'''
+        '''Send to the current deployment; on a transient failure before any byte was relayed (HTTP 408/429/5xx, a
+        timeout or dropped connection, an in-stream rate-limit / server failure or an empty stream), try the next one.
+        The last deployment's answer, or its exception, goes to the agent as it is.'''
         try:
             data = json.loads(body)
         except ValueError:
@@ -666,16 +696,28 @@ class Handler(BaseHTTPRequestHandler):
             req = urllib.request.Request(url, data=payload, method="POST", headers=h)
             last = i == n - 1
             try:
-                resp = OPENER.open(req, timeout=600)
+                resp = OPENER.open(req, timeout=UPSTREAM_TIMEOUT_S)
             except urllib.error.HTTPError as err:
                 resp = err
-                if err.code in (429, 503) and not last:
+                if err.code in AZURE_FAILOVER_STATUS and not last:
                     err.close()
                     self._azure_switch(rec, idx, f"HTTP {err.code}")
                     continue
                 break
+            except Exception as exc:  # noqa: BLE001
+                fault = upstream_fault(exc)
+                if fault is None or last:
+                    raise
+                self._azure_switch(rec, idx, fault)
+                continue
             if data.get("stream") and not last:
-                head, failed = azure_peek(resp)
+                try:
+                    head, failed = azure_peek(resp)        # nothing has been relayed to the agent yet
+                except Exception as exc:  # noqa: BLE001
+                    failed = upstream_fault(exc)
+                    if failed is None:
+                        resp.close()
+                        raise
                 if failed:
                     resp.close()
                     self._azure_switch(rec, idx, failed)

@@ -82,6 +82,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
+    ("ispatialgym-", "iSpatialGym"),
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
@@ -90,12 +91,21 @@ BENCHMARKS = [  # (directory prefix, label)
 # (CUTOFF_NOTE_TASK below):
 RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
                      "roboolympics-badminton-match-i01-standard-realtime",
+                     "roboolympics-badminton-duelrl-i01-standard-realtime",
                      "roboolympics-badminton-match-i02-standard-realtime",
+                     "roboolympics-badminton-match-i04-standard-realtime",
+                     "roboolympics-fencing-bout-i01-standard",
+                     "roboolympics-fencing-bout-i02-standard",
+                     "roboolympics-foosball-match-i01-standard-realtime",
                      "roboolympics-soccer-match-i00-standard-realtime",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
+                     "roboolympics-soccerssl-match-i01-standard-realtime",
+                     "roboolympics-tabletennis-duelrl-i01-standard-realtime",
                      "roboolympics-tabletennis-hitskill-i00-standard",
                      "roboolympics-tabletennis-match-i01-standard-realtime",
-                     "roboolympics-tabletennis-match-i02-standard-realtime")
+                     "roboolympics-tabletennis-match-i02-standard-realtime",
+                     "roboolympics-tabletennis-match-i03-standard-realtime",
+                     "roboolympics-tabletennis-match-i04-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
@@ -197,18 +207,33 @@ CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text 
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
 # owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
-_CUTOFF_CLOCK = (" Your session started when you received this task: run `date` now, and again before you decide that time "
-                 "is short; work out the time left from those readings, never from a guess.")
+# robot_coding_bench #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
+# monitor now shows the clock itself (scripts/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
+# never overstates the time left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
+_CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
+                 "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
+                 "little before your session started, so it never gives you more time than you have: read it (or run "
+                 "`date`) before you decide that time is short, never guess.")
+# robot_coding_bench #237 (10-15): agents that keep a simulator open as an interactive REPL sent each command with
+# Codex's write_stdin(yield_time_ms=30000); Codex 0.160.1 returns from a write to a still-running process only when the
+# yield is over (196 of 196 such calls in one Luna RoboARC trial took 30.0 s; ~98 min of a 3 h budget), and has no
+# config knob to cap it (background_terminal_max_timeout caps only empty polls). Harness-neutral advice, same text for
+# every agent; no duration in it (ci_checks/check-cutoffs.py).
+_CUTOFF_WAITS = (" Waiting counts too: a tool call that sends input to a process that keeps running (an interactive "
+                 "interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for "
+                 "example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short "
+                 "wait and poll again if the output is not complete, or run one-shot scripts that exit when they are "
+                 "done.")
 CUTOFF_NOTE = {
     "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
                    "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
                    "graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better "
-                   "one." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
+                   "one." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
     "standard": ("This is wall-clock time from the start of your session; the time you wait for the simulator service "
                  "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
                  "moment. The service's `time_left_s` counts the same limit from your first request to the service, so "
                  "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
-                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_CLOSE),
+                 "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §2.12)"
@@ -219,14 +244,14 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service "
     "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 # RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
 # RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
 CUTOFF_NOTE_TASK = {n: (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
     "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
-    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_CLOSE)
+    "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
     for n in RO_EXPORTED_TASKS}
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
@@ -1127,13 +1152,92 @@ def slowdown_of(task: Path) -> float | None:
 
 
 def validated_of(task: Path) -> bool:
-    """Whether the task counts as validated for rankings (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated`
-    where the task declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution
-    scores 1 and `nop` 0). Unvalidated tasks are reported in a section of their own, never ranked with validated ones."""
+    """Whether the task counts as validated (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated` where the task
+    declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution scores 1 and `nop`
+    0). A marker recorded with each result: validated and unvalidated tasks are ranked together."""
     md = metadata_of(task)
     if isinstance(md.get("validated"), bool):
         return md["validated"]
     return md.get("oracle") == "full"
+
+
+# The easy set (PROTOCOL §4, RUNNING.md "Results"): task bases kept in the repository and run like any other, but reported
+# apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
+# field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
+EASY_SET_FILE = Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml"
+EASY_REASONS = {
+    "shortcut": "a success came through a goal looser than the task's text, or a grader shortcut (`note`: the pattern)",
+    "owner": "the benchmark owner judges the task too easy or not discriminative",
+    "solved": "the screening runs solved the task in every mode it ships (`note`: which runs)",
+}
+
+
+def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
+    """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
+    mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
+    optional `note`. ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
+    version of the file (its mtime), so a long-running reader sees an edited list."""
+    try:
+        mtime = path.stat().st_mtime_ns
+    except FileNotFoundError:
+        return {}
+    return dict(_easy_set(path, mtime))
+
+
+@functools.lru_cache(maxsize=8)
+def _easy_set(path: Path, mtime: int) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
+        b = e.get("base") if isinstance(e, dict) else None
+        if not isinstance(b, str) or not b:
+            raise ValueError(f"{path.name}: an entry without a base: {e!r}")
+        if b in out:
+            raise ValueError(f"{path.name}: {b} listed twice")
+        out[b] = e
+    return out
+
+
+def set_of(task: Path) -> str:
+    """`easy` when the task's base is in the easy set (docs/easy_set.toml), else `core`. A marker like `validated`,
+    never part of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value
+    when it was written; reports re-derive it from the list at the commit they publish. A malformed list never stops a
+    result from being written (a warning, and `core`): `easy-set --check` reports it."""
+    try:
+        es = easy_set()
+    except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
+        if str(e) not in _EASY_WARNED:
+            _EASY_WARNED.add(str(e))
+            print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
+                  file=sys.stderr)
+        return "core"
+    return "easy" if base_of(Path(task)) in es else "core"
+
+
+_EASY_WARNED: set[str] = set()
+
+
+def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:
+    """What is wrong with the easy set: an unknown reason, a base no task directory has, a benchmark label that is not
+    the base's."""
+    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+    try:
+        es = easy_set(path)
+    except (ValueError, OSError) as e:
+        return [str(e)]
+    names = {p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file()}
+    have = {base_of(Path(n)) for n in names}
+    bad = []
+    for b, e in es.items():
+        if not isinstance(e.get("reason"), str) or e["reason"] not in EASY_REASONS:
+            bad.append(f"{b}: reason {e.get('reason')!r} is not one of {', '.join(EASY_REASONS)}")
+        if b not in have:
+            bad.append(f"{b}: no task directory {b}-<mode> under tasks/")
+        if e.get("benchmark") != bench_of(Path(b)):
+            bad.append(f"{b}: benchmark {e.get('benchmark')!r}, its label is {bench_of(Path(b))!r}")
+        unknown = set(e) - {"base", "benchmark", "reason", "note"}
+        if unknown:
+            bad.append(f"{b}: unknown field(s) {', '.join(sorted(unknown))}")
+    return bad
 
 
 def effective_config(task: Path, seed: int | None = None, env: dict | None = None) -> dict:
@@ -1154,16 +1258,16 @@ def effective_config(task: Path, seed: int | None = None, env: dict | None = Non
     dg = read_text(task / DIGEST_FILE)
     return {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
             "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
-            "validated": validated_of(task), "oracle": md.get("oracle", ""), "service_protocol": md.get("protocol", ""),
-            "digest": (dg or "").strip()}
+            "validated": validated_of(task), "set": set_of(task), "oracle": md.get("oracle", ""),
+            "service_protocol": md.get("protocol", ""), "digest": (dg or "").strip()}
 
 
 CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown", "network")
 
 
 def config_key(cfg: dict) -> tuple:
-    """What two results must share to be ranked together (the seed is drawn per trial and is not part of it; the
-    `validated` flag separates the sections). Missing fields of a legacy record are "legacy"."""
+    """What two results must share to be ranked together (the seed is drawn per trial and is not part of it, nor is the
+    `validated` marker). Missing fields of a legacy record are "legacy"."""
     return tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
 
 
@@ -1228,6 +1332,18 @@ def snapshot(task: Path) -> dict[str, bytes]:
 def main(argv: list[str]) -> int:
     if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.16)
         print(modes_table())
+        return 0
+    if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
+        if "--check" in argv:
+            bad = check_easy_set()
+            for b in bad:
+                print(f"FAIL docs/easy_set.toml: {b}")
+            if not bad:
+                print(f"ok docs/easy_set.toml: {len(easy_set())} task bases")
+            return 1 if bad else 0
+        root = Path(__file__).resolve().parents[1] / "tasks"
+        for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file() and set_of(p) == "easy"):
+            print(t.name)
         return 0
     check = "--check" in argv
     dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]

@@ -10,8 +10,9 @@
 task, else the task itself) in every place the task runs and grades from: privileged `environment/` and `tests/`;
 standard and standard-realtime `environment/sim/`; RoboPaint's `environment/scorer/`. The copy's `[metadata.seeds]`
 `default` (and `instance_seed`, where present) say the seed it runs from, so a result records it; its `tests/seeds/`
-is removed. A seed without a committed instance, of a task with `build = "runtime"`, is written instead as a file
-`seed` (the integer) in each of those places, from which the task builds the seed's instance itself. A seed that is
+is removed, and every file gets its content-derived mtime (scripts/stamp_mtimes.py, issue #258). A seed without a
+committed instance, of a task with `build = "runtime"`, is written instead as a file `seed` (the integer) in each of
+those places, from which the task builds the seed's instance itself. A seed that is
 not allowed (a list, a range `{ from, to }` or "any") is refused. `--seed draw` draws one uniformly (with `--rng`;
 "any" draws from 0 to 2**31 - 1). Standard library only.
 """
@@ -26,6 +27,7 @@ import tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import stamp_mtimes  # noqa: E402
 import task_conventions as tc  # noqa: E402
 
 
@@ -88,6 +90,8 @@ def materialize(task: Path, seed: int, out: Path) -> Path:
     s = re.sub(r"(?m)^(\[metadata\.seeds\](?:\n#.*)*\ndefault = )-?\d+", rf"\g<1>{seed}", s, count=1)
     s = re.sub(r"(?m)^instance_seed = -?\d+", f"instance_seed = {seed}", s, count=1)
     p.write_text(s)
+    if stamp_mtimes.stamp_tree(str(dst), full=True)["err"]:     # Harbor builds from this copy: content-derived mtimes (issue #258)
+        raise SystemExit(f"{dst}: could not stamp its files (scripts/stamp_mtimes.py)")
     return dst
 
 

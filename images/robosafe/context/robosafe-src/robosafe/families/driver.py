@@ -158,6 +158,7 @@ class Driver:
     # table. Every step is an ordinary tool call; on a one-arm robot nothing here applies.
     LOOK_INSTEAD = {"front": ("above", "back"), "left": ("above", "back"), "right": ("above", "back"), "back": ("above",), "above": ("back",)}
     CANNOT = ("ik_", "path_blocked", "unreachable_view")
+    PASS_REACH = 0.40         # m: a spot to pass a thing from hand to hand is this near both arms' bases (docs/FAMILIES.md)
 
     def _two(self, kw: dict) -> bool:
         return bool(self.mirror.world.arm_names) and "arm" not in kw
@@ -256,18 +257,23 @@ class Driver:
         w = self.mirror.world
         obj, other = self.mirror.held(arm), self._other(arm)
         lo, hi = w.box(obj)
-        half = float(max(hi[0] - lo[0], hi[1] - lo[1])) / 2.0 + 0.03
-        spot = None
-        for y in (0.0, -0.05, 0.05, -0.10, 0.10, 0.14):
-            for x in (0.0, -0.04, 0.04):
-                free = all(n == obj or w.objects[n].get("mocap") or float(w.box(n)[1][2]) < 0.004 or
-                           x + half < w.box(n)[0][0] or x - half > w.box(n)[1][0] or y + half < w.box(n)[0][1] or y - half > w.box(n)[1][1]
-                           for n in w.objects)
-                if free:
-                    spot = [x, y, 0.0]
-                    break
-            if spot is not None:
-                break
+        size = float(max(hi[0] - lo[0], hi[1] - lo[1])) / 2.0
+
+        def free(x, y, margin=0.03):
+            half = size + margin
+            return all(n == obj or w.objects[n].get("mocap") or float(w.box(n)[1][2]) < 0.004 or
+                       x + half < w.box(n)[0][0] or x - half > w.box(n)[1][0] or y + half < w.box(n)[0][1] or y - half > w.box(n)[1][1]
+                       for n in w.objects)
+        spot = next(([x, y, 0.0] for y in (0.0, -0.05, 0.05, -0.10, 0.10, 0.14) for x in (0.0, -0.04, 0.04) if free(x, y)), None)
+        if spot is None:
+            # the middle strip has no room with 3 cm to spare (a wide basin reaches into it, a long block is passed):
+            # a finer search with 1.5 cm to spare, out to where both hands still reach (within PASS_REACH of each
+            # arm's base, seen from above), nearest the middle first (lane/bodies 123ed56; the first search unchanged)
+            bases = [np.asarray(m["pos"][:2], dtype=np.float64) for m in w._mounts]
+            near = lambda x, y: all(float(np.hypot(x - b[0], y - b[1])) <= self.PASS_REACH for b in bases)
+            spots = sorted(((x, y) for y in (0.0, 0.05, 0.10, -0.05, 0.14) for x in (0.0, 0.02, -0.02, 0.04, -0.04, 0.06, -0.06, 0.08, -0.08)),
+                           key=lambda p: (round(abs(p[0]) + 0.5 * abs(p[1]), 3)))
+            spot = next(([x, y, 0.0] for x, y in spots if near(x, y) and free(x, y, 0.015)), None)
         if spot is None:
             raise DriverError("no free spot in the middle of the table to pass the thing from hand to hand")
         self.mirror.use({"arm": arm})

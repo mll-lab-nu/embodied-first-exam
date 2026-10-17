@@ -4,6 +4,8 @@
 bimanual Marvin robot. `simulator = "robowits"`, `robot = "marvin-bimanual"`. Each family (one RoboWits seed task, one
 success predicate) is a privileged task `robowits-<family>-i00-privileged` and its standard twin
 `robowits-<family>-i00-standard`, on the same frozen evaluation scene (entry 0 of RoboWits' `eval_dataset_50/<NN>.json`).
+On 2026-10-14 the verifier changed in place (Grading and determinism, The verdict; PROTOCOL v2.0 §1, H.8: a new DIGEST,
+results are attributed by digest): results recorded under the earlier DIGESTs are not comparable with the current ones.
 
 ## Families
 **In the repository: 15 families, 30 tasks.** The `oracle` level and its evidence are in each `task.toml` (PROTOCOL §2.7);
@@ -81,7 +83,12 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
   (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
 - 12 of the 15 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user
   fetches them with their own key (`scripts/robowits/fetch_blenderkit.sh`) or uses the encrypted research bundle
-  (`scripts/robowits/fetch_blenderkit_encrypted.sh`); the tasks mount the folder read-only from `$RCB_ROBOWITS_BLENDERKIT`.
+  (`scripts/robowits/fetch_blenderkit_encrypted.sh`); the tasks mount the folder read-only from `$RCB_ROBOWITS_BLENDERKIT`
+  into the verifier and the standard `sim` sidecar. The privileged agent's container never sees that folder or the
+  bundle's key (since 2026-10-14): the task's `blenderkit` service runs `rcb_robowits.py blenderkit-serve`, which decrypts the
+  models of this family alone and serves them on localhost:8765; the tooling in `main` fetches them for each scene build
+  (`RCB_BLENDERKIT_URL`) into a private tmpfs dir and deletes them after it. Before, `main` mounted the whole folder,
+  the key included, and two agents decrypted models with it.
   dominos, stand_pages and stack_cubes need only the image.
 
 ## Hosts: one CPU vendor
@@ -113,6 +120,21 @@ replays the episode on the agent's clock. Results are reported with this budget.
 each task's own `[agent] timeout_sec`, written by the generator (history in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Grading and determinism
+- **The verdict (since 2026-10-14).** RoboWits' predicates are instantaneous and most have no release or speed term; the
+  failure analysis of the 10-14 results found 25 of 84 successes that did not do the task (an object held in the goal
+  region at the end, a trajectory cut while things still moved, a gripper propping the pages from just outside the 3 cm
+  "held" zone, a cube knocked off the table). Both modes now take the verdict after a settle window
+  (`rcb_robowits.Session.settle_check`): the last command is held for 1 s (`SETTLE_STEPS` 30, nothing checked), then for
+  2 s (`CHECK_STEPS` 60) the goal must hold at every 6th control step and at the last one, and every graded object must
+  stay within 2 mm (`REST_M`) of where it was when those 2 s began. The goal (`Session.goal`) is RoboWits' predicate,
+  unchanged, AND no robot contact with the family's graded objects (`GRADED`: Genesis' contact list; stand_pages also the
+  bar) AND, for move_cube, the cube past the line still on the table (its bounding box's bottom no more than 2 cm below
+  the table top). Privileged: the verifier runs the window after the trajectory's last row (`replay`); its state hash is
+  taken after the window. Standard: after a call that leaves the goal holding, the service runs the window inside that
+  call (its steps are part of the episode, journaled and recorded) and ends the episode only if it passes
+  (`meta["settle"]` says why not); when the agent's phase ends the window decides once more; the grading replay must end
+  the recorded rows in the live state (`state_sha_rows`) and pass its own window. Re-grades of the recorded positives:
+  the pull request that made this change, and `scripts/robowits/regrade.py` re-grades recorded trials (Re-grading).
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier
   replays the trajectory twice in a fresh process and compares the final-state hashes and the rebuilt frozen scene; it
   writes the verdict before it renders the video. The standard service grades in-process (its replay of the recorded
@@ -219,6 +241,22 @@ recorded through custom Harbor agent adapters (removed by D11):
 - `codex-gpt6_luna-xhigh` (ChatGPT login) and `codex-gpt6_luna-high` (stand_pages): the positives of the review table;
 - `codex-gpt6_luna-medium` (OpenRouter, provider route `openai/flex`, 2026-09-25): the earlier runs of six families.
 
+
+## Re-grading recorded trials (2026-10-14)
+`scripts/robowits/regrade.py JOBS_DIR ... [--parallel N] [--out regrade.jsonl]` re-grades recorded trials under the
+current verdict without re-running them. It finds every RoboWits trial in a Harbor jobs tree and reads two things from it:
+the recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; standard: the sidecar's `trajectory.npz`, or
+its `journal.f64`) and the recorded verdict. Per family it starts one container of the image with the current task's own
+grader copies (`tests/`). It replays each trajectory twice from the frozen instance and reports three things: the old
+verdict (RoboWits' predicate after the last row), the new verdict (the settle window, deterministic, instance ok) and the
+window's reason. The 12 BlenderKit families need `$RCB_ROBOWITS_BLENDERKIT`.
+- **Same CPU vendor.** Genesis' CPU backend is bit-exact within one vendor only (Hosts). The tool prints the host's
+  vendor and flags a trial `inconclusive` when its recorded success does not reproduce under the old rule here.
+- **Standard trials are conservative.** Under the current rule a failed window does not end the episode, and the agent
+  could have gone on; the label is "re-graded under 2026-10-14 rules (conservative)". The stand_pages and hold_cup texts
+  also changed, and the recorded agents never read them.
+- **Privileged trials are close to exact.** The deliverable is the trajectory; only the window after its last row is new.
+
 ## Licences
 RoboWits: MIT (declared in its pyproject.toml); Genesis: Apache-2.0; RoboWits' asset bundle: Apache-2.0; BlenderKit models:
 licensed to whoever downloads them, never in the image or the repository (`images/robowits/NOTICE`).
@@ -237,7 +275,12 @@ licensed to whoever downloads them, never in the image or the repository (`image
   instruction says so since 2026-10-14; a thicker collision base would change the frozen scene and has not been made.
 - During the standard service's in-process grading replay, a late `/status` reports the replay's counter.
 - The predicates are RoboWits' own and some are looser than their task text (the criterion sections say where); the
-  review checks each family's predicate (PROTOCOL §2.7).
+  review checks each family's predicate (PROTOCOL §2.7). Since 2026-10-14 the verdict adds the release and rest window to
+  every family (Grading and determinism); what it still does not check (stack_bowls' nesting order, the stand_pages
+  hinge, the hold_cup coaster) is in each criterion's "Not checked".
+- Standard `final.json` `reason` (since 2026-10-14): "agent_exit" when the collect hook ended the episode while the service's
+  clock of the agent (`meta["time_left_s"]`) still had more than 60 s, "timeout" otherwise; `agent_time_s` is that clock.
+  docs/STANDARD_MODE.md still names the end of the agent's phase `timeout` for every service.
 
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 

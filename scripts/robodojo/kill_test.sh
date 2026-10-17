@@ -41,6 +41,7 @@ for k in range(12):
 print("status", r.status(), flush=True)
 PY
 SH
+python3 "$(dirname "$0")/../stamp_mtimes.py" --full "$TASK" >/dev/null || exit 1   # Harbor builds from a stamped copy (issue #258)
 job="kill-$(basename "$TASK")-$(date +%m%d-%H%M%S)"
 echo "[kill_test] $TASK -> $JOBS/$job (kill after $N checkpoints)"
 harbor run -y -p "$TASK" -a oracle -o "$JOBS" --job-name "$job" > "$JOBS/$job.harbor.log" 2>&1 &

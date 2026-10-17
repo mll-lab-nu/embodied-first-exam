@@ -16,16 +16,15 @@ simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / 
 robot = "ambench-fahexa"
 family = "@@FAMILY@@"
 mode = "privileged"
+dynamics = "static"               # scene dynamics (PROTOCOL §2): nothing but the robot does work on the scene
 oracle = "full"
 instance_seed = @@SEED@@
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 9000.0              # tests/grade.py's limits for the longest episode (3120 rows: 1500 s + 3120 / 4 = 2280 s per
-                                  # process): two fresh-process replays (no cameras), one rerun of a replay that died early,
-                                  # and the filmed illustration (cameras on; its time-out only costs the video); measured:
-                                  # 1.5-6 min of Isaac start, the verifier's first one compiling its shaders, + 9-12 control
-                                  # steps/s
+# 4 x tests/grade.py's per-process limit for this episode (@@EPISODE_ROWS@@ rows: max(1800 s, 1500 s + rows / 4)): two fresh-process
+# replays (camera-free), one rerun of a replay that died early or had GPU faults, and the filmed illustration
+timeout_sec = @@VERIFIER_TIMEOUT_S@@.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image (images/ambench/web_assets.txt)
 

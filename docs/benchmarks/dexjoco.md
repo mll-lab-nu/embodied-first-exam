@@ -10,7 +10,7 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 | simulator | `dexjoco`: DexJoCo's gymnasium envs on MuJoCo 3.4.0, CPU physics (bit-exact replay in a fresh process), OSMesa rendering; no GPU |
 | robots | `franka-allegro` (6 tasks), `franka-allegro-bimanual` (5 tasks, two arms side by side) |
 | score | binary: DexJoCo's own success check (its episode ends at the first success or task failure); `water_plant` adds an aiming condition (below) |
-| tasks | 11 families × 2 modes: `tasks/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
+| tasks | 11 families × 2 modes: `tasks/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`); the 4 families of the easy set are `dexjoco-<family>-i00-easy-<mode>` (below) |
 | image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
 | agent time budget | 3600 s for every task since 2026-10-12 (owner: stricter cutoffs in 30-minute steps, one number for both modes); 5400 s before (D8: dexterous control of 16 hand joints per arm through a thin interface; the model runs we made used most of it); the number lives in each task's own `[agent] timeout_sec`, written by the generator (history in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12) |
@@ -31,6 +31,23 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 | bimanual_unlock_ipad | bimanual | enter 1-2-3 with a fingertip, unlocked 10 steps; a wrong digit fails | 392 |
 | bimanual_assembly | bimanual | peg into the tray's socket, touching the bottom 30 steps | 586 |
 | bimanual_photograph | bimanual | camera held 0.4 m in front of the logo, axis within 10 deg, shutter pressed | 260 |
+
+## Easy set
+Group meeting 2026-10-16: a task the screening models solve in both modes is too easy for the main table. It is not
+removed or overwritten: its two directories get the suffix `-easy` before the mode (`<base>-easy-privileged`,
+`<base>-easy-standard`), it stays in the repository with its results and media, and it is reported apart from the main
+table. A mode counts as solved when GPT-6 Luna (Codex, xhigh) or GPT-6 Astra (Codex, high) solved it in the
+benchmark runs; both modes solved puts the family into `EASY` in `scripts/dexjoco/generate.py`.
+
+| family | privileged solved by | standard solved by |
+|---|---|---|
+| click_mouse | Luna | Luna |
+| bimanual_assembly | Astra (Luna failed) | Astra (Luna failed) |
+| bimanual_hanoi | Astra (Luna failed) | Astra (Luna failed) |
+| bimanual_microwave_cook | Astra (Luna failed) | Astra (Luna failed) |
+
+The other seven keep their names: privileged solved, standard not (one trial each; `water_plant`: both models failed
+standard; the other six: Luna failed standard and Astra was not run on them).
 
 ## Task definition
 - **Instance.** The task's env after DexJoCo's reset, with the initial object poses and table height of one human
@@ -228,6 +245,12 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
     numerics: a 0 there with `deterministic = 1` may be a false failure, and such a trial would now be
     `infra_error = 1`. A past standard trial that ended with `sim_error = 1` after a non-string `note` or a `null`
     field would now go on (it could score 1).
+
+- 2026-10-16 (group meeting, easy set): `click_mouse`, `bimanual_assembly`, `bimanual_hanoi` and
+  `bimanual_microwave_cook` renamed from `dexjoco-<family>-i00-<mode>` to `dexjoco-<family>-i00-easy-<mode>` (Easy set,
+  above). Only the names changed (and the twin's name in the texts); the scenes, instances, pass rules and graders are
+  the same, and results recorded under the old names stand. The generator now writes `dynamics = "static"` itself (it
+  took the line from the committed task, which a renamed task does not have yet).
 
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 

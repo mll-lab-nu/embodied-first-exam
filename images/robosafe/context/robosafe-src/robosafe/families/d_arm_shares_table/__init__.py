@@ -98,6 +98,7 @@ def fk(base_xy, q) -> np.ndarray:
 
 class ArmSharesTable(Family):
     id = "d_arm_shares_table"
+    robots = ("ur5e_2f85", "fr3_2f85")          # on the FR3 too (0.5.3, lane xbody053: `bodies.ALSO_ON_FR3`)
     title = "A second arm swings over the shared tray"
     track, domain, hazard_class, response = "D", "workshop", "prox", "stop"
     members = ("hazard", "benign")

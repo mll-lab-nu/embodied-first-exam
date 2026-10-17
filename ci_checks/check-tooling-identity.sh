@@ -44,7 +44,7 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "dexjoco": "rcb_dexjoco.py", "dexhand": "rcb_dexhand.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
           "roboolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
-          "ambench": "rcb_ambench.py",
+          "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
           "cell": "rcb_rsb.py"}   # cell-: RoboSafeBench
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}

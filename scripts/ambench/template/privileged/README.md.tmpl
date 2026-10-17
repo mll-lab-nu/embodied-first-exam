@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | AM-Bench |
 | Mode | privileged |
-| Twin | none yet: the standard twin `@@STD@@` is planned (`docs/benchmarks/ambench.md`) |
+| Twin | `@@STD@@` |
 | Simulator / robot | `ambench` / `ambench-fahexa` |
 | Family / instance | `@@FAMILY@@` / @@INST@@ (seed @@SEED@@) |
 | Oracle | `full` |
@@ -29,13 +29,14 @@ has no expert (`images/ambench/Dockerfile` removes them), and the agent's networ
 model APIs and the package registries.
 
 ## Verification
-`tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff AM-Bench's success check holds in both
-and both end in the same state (`deterministic`); the replays run without the onboard cameras (camera rendering makes
-GPU PhysX timing-dependent). `/logs/verifier/replay.mp4` (both onboard cameras) is filmed by a third process after the
-verdict, an illustration only. Oracle:
-success at control step @@N_ORACLE@@ (@@ORACLE_SIM_S@@ s simulated) in both fresh-process replays, which end in the same
-state (hash `@@ORACLE_SHA@@`). `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the
+instance (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff AM-Bench's success check holds
+in both (`deterministic`: the outcome repeats; the end-state hashes are reported as `state_identical`, not decisive:
+docs/benchmarks/ambench.md, Determinism). `/logs/verifier/replay.mp4` (both onboard cameras) is filmed after the verdict
+by the `film` CLI, the same rows drawn by the render worker, an illustration only. Oracle: success at control step
+@@N_ORACLE@@ (@@ORACLE_SIM_S@@ s simulated) in both fresh-process replays, which end in the frozen end state (hash
+`@@ORACLE_SHA@@`; a rare race can change the last bits of one, never measured to change the outcome). `nop`: no
+trajectory, reward 0.
 
 ## Details
 | | |
@@ -43,7 +44,7 @@ state (hash `@@ORACLE_SHA@@`). `nop`: no trajectory, reward 0.
 | Upstream | AM-Bench @ 60bf5b7 (Apache-2.0) on Isaac Lab @ f4aa17f / Isaac Sim 5.1.0; Pyroki @ 2eafc99, acados @ fa0af20 |
 | Instance | `@@ENV_ID@@`, seed @@SEED@@, the start's state hash in `environment/instance.json` (`initial_sha` @@INITIAL_SHA_SHORT@@) |
 | Actions | 8 per control step (1/120 s): end-effector target x y z (m), quaternion w x y z (command frame), gripper (-1 closed .. +1 open) |
-| Physics | PhysX on the GPU (dt 1/120 s, one physics step per action); bit-reproducible in a fresh process without the onboard cameras, which the tooling builds only on request (`Session(cameras=True)`) |
+| Physics | PhysX on the GPU (dt 1/120 s, one physics step per action), bit-reproducible in a fresh process; the onboard cameras (`Session(cameras=True)`) are drawn by a second, render-only Isaac process from the physics state |
 | Image | built locally on every host (`images/ambench/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); out of it, every Python process pays ~2-6 min of Isaac Sim launch + scene build |
 

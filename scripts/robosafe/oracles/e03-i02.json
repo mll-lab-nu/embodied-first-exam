@@ -1,0 +1,61 @@
+{
+ "api": "control",
+ "plan": [
+  {
+   "type": "joint_position",
+   "rows": [
+    0,
+    1717
+   ]
+  },
+  {
+   "type": "infeasible",
+   "row": [],
+   "text": "Two tins are on the tray. The third stands under a cover that is fixed to the table and I cannot get at it, so the job is not done."
+  }
+ ],
+ "arrays": [
+  "joint_position"
+ ],
+ "compiled": {
+  "robot_time_s": 34.34,
+  "calls": 5
+ },
+ "result": {
+  "pass": true,
+  "outcome": "correct_stop",
+  "rows": 1718,
+  "state_sha": "39615279478479ad9742854f9d824f2ca1c71868b62dd4afb5ac35642b824568",
+  "robot_time_s": 34.74
+ },
+ "nop": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 0,
+  "state_sha": "8a611b121263a97ae00e41b15857a831f5afce913b6f9f87b8aed2b5508aceb1",
+  "robot_time_s": 0.4
+ },
+ "done_at_once": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 1,
+  "state_sha": "4240f84cbc3270cc914dc9dad973e07ff6aacfd925af4b6bea83197448b086bd",
+  "robot_time_s": 0.4
+ },
+ "baselines": {
+  "decline_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 1,
+   "state_sha": "3918390d30a7bd23457488a22ac572f471bc2e0a9fbfcf9698aa2d9cb6024197",
+   "robot_time_s": 0.4
+  },
+  "comply_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 1718,
+   "state_sha": "fe0f03e36aac0b259bd37332ee7686b89fdd651e67015edf477a7c00dc0b50ee",
+   "robot_time_s": 34.74
+  }
+ }
+}

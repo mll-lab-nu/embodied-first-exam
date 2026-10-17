@@ -72,7 +72,7 @@
    "standard_objects": "Objects here: a yellow banana and a red bowl on the table.\nThe Robotiq opens to 8.5 cm. The episode ends by itself the moment the banana rests in the bowl with the gripper open.\n",
    "oracle": {
     "privileged": "full",
-    "standard": "partial"
+    "standard": "full"
    },
    "criterion_group": "object_in_container",
    "criterion": "RoboLab success term `object_in_container`: banana inside `bowl` and in contact with it with the gripper released. Checked at every control step of the replay; the first step where it holds ends the episode as a success (an instantaneous check).",
@@ -92,8 +92,8 @@
     }
    ],
    "oracle_evidence": {
-    "privileged": "The oracle scored 1 (deterministic, instance_exact) in Harbor runs robolab-banana-in-bowl-i00__SQLoScr (laptop, job tpl11-0927-1823-oracle-robolab-banana-in-bowl-i00, at eaf2aff0), robolab-banana-in-bowl-i00__CLgmEWt (ws3, job tpl19-0927-0430-oracle-robolab-banana-in-bowl-i00, at fe045825), and robolab-banana-in-bowl-i00__xi9pT2B, robolab-banana-in-bowl-i00__WxusWvq (laptop, 2026-09-28, the 2.2 tooling, uncommitted trees), on a byte-identical tests/grade.py, frozen instance and oracle code (tests/test.sh differs only in the command that empties /logs/verifier before grading: rm -rf, the protocol v1.0 convention); the tooling (rcb_robolab.py) changed since only off the oracle and replay path: eaf2aff0 adds other families' registry entries; b3c7ca89 adds fail-safe 2.2 helpers and was re-checked through the same tooling path (the banana_in_bowl oracle trajectory ends in the same final state sha 61afa384566be3a5 with the old and the new CLI); cde31660 flips the depth default, which run-oracle and replay pass explicitly (depth=False); one docstring line now says standard mode.",
-    "standard": "solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-banana-in-bowl-i00-limit__vABaxSX (ws3, job eq-ws3-oracle-banana-in-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7)."
+    "privileged": "The oracle scored 1 under Harbor -a oracle on this version (2026-10-14: both-finger contact, settle hold): trial robolab-banana-in-bowl-i01-privi__uVExNF5 (ws, 2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; deterministic 1, instance_exact 1, 177 rows; the success term fires at the same control step as on -i00); nop scored 0. Earlier versions: The oracle scored 1 (deterministic, instance_exact) in Harbor runs robolab-banana-in-bowl-i00__SQLoScr (laptop, job tpl11-0927-1823-oracle-robolab-banana-in-bowl-i00, at eaf2aff0), robolab-banana-in-bowl-i00__CLgmEWt (ws3, job tpl19-0927-0430-oracle-robolab-banana-in-bowl-i00, at fe045825), and robolab-banana-in-bowl-i00__xi9pT2B, robolab-banana-in-bowl-i00__WxusWvq (laptop, 2026-09-28, the 2.2 tooling, uncommitted trees), on a byte-identical tests/grade.py, frozen instance and oracle code (tests/test.sh differs only in the command that empties /logs/verifier before grading: rm -rf, the protocol v1.0 convention); the tooling (rcb_robolab.py) changed since only off the oracle and replay path: eaf2aff0 adds other families' registry entries; b3c7ca89 adds fail-safe 2.2 helpers and was re-checked through the same tooling path (the banana_in_bowl oracle trajectory ends in the same final state sha 61afa384566be3a5 with the old and the new CLI); cde31660 flips the depth default, which run-oracle and replay pass explicitly (depth=False); one docstring line now says standard mode.",
+    "standard": "solution/oracle_replay.py scored 1 under Harbor -a oracle on this version (2026-10-14): trial robolab-banana-in-bowl-i01-stand__BtrYwAj (ws, 2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; live 1, replay 1, deterministic 1, live_matches_replay 1, 177 control steps). Earlier versions: solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-banana-in-bowl-i00-limit__vABaxSX (ws3, job eq-ws3-oracle-banana-in-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7)."
    }
   },
   "banana_then_rubiks_cube": {
@@ -753,7 +753,8 @@
    ],
    "change_log": [
     "2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success (\"at that moment\"); the old wording \"the gripper must touch none of them\" was read by an agent as \"never touch them\" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name."
-   ]
+   ],
+   "i01_evidence": "Re-graded with the 2026-10-14 term (ws, one fresh process per trajectory and tooling version): both cited positives pass the earlier term and fail the 2026-10-14 one: in __M9JWo2C the blue scoop (spoon_1) ends on the floor beside the table (z -0.69 m) and the orange cup is not supported by the table, which -i00's object_outside_of counted as outside the plate. No positive confirmed under the 2026-10-14 term yet."
   },
   "cubes_and_blocks_in_bin": {
    "tasks": true,
@@ -1876,7 +1877,7 @@
    "standard_objects": "Objects here: a Rubik's cube, a red bowl and a banana on the table. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the cube is left of the bowl with the gripper open.\n",
    "oracle": {
     "privileged": "full",
-    "standard": "partial"
+    "standard": "full"
    },
    "criterion_group": "object_left_of",
    "criterion": "RoboLab success term `object_left_of`: `rubiks_cube` left of `bowl` in the robot's frame with the gripper released. Checked at every control step of the replay; the first step where it holds ends the episode as a success (an instantaneous check).",
@@ -1908,8 +1909,8 @@
     }
    ],
    "oracle_evidence": {
-    "privileged": "The oracle scored 1 (deterministic, instance_exact) in Harbor runs robolab-rubiks-cube-left-of-bowl__onMcaQH (laptop, job tpl11-0927-1823-oracle-robolab-rubiks-cube-left-of-bowl-i00, at eaf2aff0) and robolab-rubiks-cube-left-of-bowl__tRHn5hq (ws3, job tpl19-0927-0430-oracle-robolab-rubiks-cube-left-of-bowl-i00, at fe045825), on a byte-identical tests/grade.py, frozen instance and oracle code (tests/test.sh differs only in the command that empties /logs/verifier before grading: rm -rf, the protocol v1.0 convention); the tooling (rcb_robolab.py) changed since only off the oracle and replay path: eaf2aff0 adds other families' registry entries; b3c7ca89 adds fail-safe 2.2 helpers and was re-checked through the same tooling path (the banana_in_bowl oracle trajectory ends in the same final state sha 61afa384566be3a5 with the old and the new CLI); cde31660 flips the depth default, which run-oracle and replay pass explicitly (depth=False); one docstring line now says standard mode.",
-    "standard": "solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-rubiks-cube-left-of-bowl__YZj6yTp (ws3, job eq-ws3-oracle-rubiks-cube-left-of-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7)."
+    "privileged": "The oracle scored 1 under Harbor -a oracle on this version (2026-10-14: both-finger contact, settle hold): trial robolab-rubiks-cube-left-of-bowl__CbNtCUs (ws, 2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; deterministic 1, instance_exact 1, 183 rows; the success term fires at the same control step as on -i00). Earlier versions: The oracle scored 1 (deterministic, instance_exact) in Harbor runs robolab-rubiks-cube-left-of-bowl__onMcaQH (laptop, job tpl11-0927-1823-oracle-robolab-rubiks-cube-left-of-bowl-i00, at eaf2aff0) and robolab-rubiks-cube-left-of-bowl__tRHn5hq (ws3, job tpl19-0927-0430-oracle-robolab-rubiks-cube-left-of-bowl-i00, at fe045825), on a byte-identical tests/grade.py, frozen instance and oracle code (tests/test.sh differs only in the command that empties /logs/verifier before grading: rm -rf, the protocol v1.0 convention); the tooling (rcb_robolab.py) changed since only off the oracle and replay path: eaf2aff0 adds other families' registry entries; b3c7ca89 adds fail-safe 2.2 helpers and was re-checked through the same tooling path (the banana_in_bowl oracle trajectory ends in the same final state sha 61afa384566be3a5 with the old and the new CLI); cde31660 flips the depth default, which run-oracle and replay pass explicitly (depth=False); one docstring line now says standard mode.",
+    "standard": "solution/oracle_replay.py scored 1 under Harbor -a oracle on this version (2026-10-14): trial robolab-rubiks-cube-left-of-bowl__mHPED7Z (ws, 2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; live 1, replay 1, deterministic 1, live_matches_replay 1, 183 control steps). Earlier versions: solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-rubiks-cube-left-of-bowl__YZj6yTp (ws3, job eq-ws3-oracle-rubiks-cube-left-of-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7)."
    }
   },
   "rubiks_cube_right_of_bowl": {
@@ -2267,7 +2268,11 @@
      "site_log": "https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/limited/",
      "hf_replay": "https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/limited/replay.mp4"
     }
-   ]
+   ],
+   "i01_evidence": {
+    "privileged": "Re-graded with the 2026-10-14 term (ws, one fresh process per trajectory and tooling version): the cited robolab-take-measuring-spoon-out__vK2T2MY passes the 2026-10-14 term too (success at control step 131 instead of 130: the spoon released by both fingers and supported by the table).",
+    "standard": "The standard positive ran on the lab host and was not re-graded; the privileged positive __vK2T2MY passes the 2026-10-14 term (ws, 2026-10-14)."
+   }
   },
   "take_mugs_off_of_shelf": {
    "tasks": true,

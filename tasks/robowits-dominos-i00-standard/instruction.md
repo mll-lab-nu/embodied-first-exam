@@ -6,19 +6,24 @@ the green target area. White blocks 3, 2 and 1 and the red block stand upright i
 short of the green target area; white block 4 stands on its own, closer to the robot.
 
 ## Success criterion (as graded)
-This is exactly what the grader checks (RoboWits' success predicate, stated in words). Where the task text says
-something else, this section is what counts. The service evaluates it after every `submit` and after every `get_obs`
-that watches (`seconds` > 0), and once more when the episode ends; the first time it holds, the episode ends as a
-success. The service then replays your recorded episode, which must end in the same state and satisfy it again.
+This is exactly what the grader checks (RoboWits' success predicate, stated in words, and the release and rest
+condition the grader adds: the last item). Where the task text says something else, this section is what counts. After
+every `submit` and every `get_obs` that watches (`seconds` > 0) the service checks the conditions at that instant;
+when they hold, it keeps your last command for a settle window, inside the same call: 1 s with nothing checked, then 2
+s in which every condition must hold at every 6th control step and at the last one, with each graded object staying
+within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the episode ends as a
+success; if not, the episode goes on and `meta["settle"]` says why. When your session ends, the same window decides
+once more. The service then replays your recorded episode, which must end in the same state and pass again.
 
 - At least half of the red block's footprint area lies over the green target area's footprint.
+- Released and at rest: no part of the robot touches the red block, and it moves at most 2 mm during the check window.
 
-Not checked: anything else: the red block's height, orientation, whether it rests on the table or is held, the white
-blocks, and the table bounds.
+Not checked: anything else: the red block's height, orientation, whether it rests on the table, the white blocks, and
+the table bounds.
 
 Task text vs grader ("Push the red block onto the green target area."): Only where the red block is, seen from above,
-is checked: how it got there is not (the red block lifted or held over the target also counts). RoboWits' docstring
-says 30 %; the code requires 50 %.
+is checked, once it is released and at rest: how it got there is not. RoboWits' docstring says 30 %; the code requires
+50 %.
 
 Terms: a *footprint* is an object's outline seen from above; *not held* means that neither gripper tip (the `tcp_pose`
 points of your proprioception) is inside the object's bounding box grown by 3 cm on every side; the *table bounds* are
@@ -31,7 +36,7 @@ not give: keeping clear of the table's edges satisfies it).
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
-  (`meta["done"]`, `reason` "success") the first time it holds.
+  (`meta["done"]`, `reason` "success") the first time it holds through the settle window.
 - **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
   1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
@@ -41,7 +46,10 @@ not give: keeping clear of the table's edges satisfies it).
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
-- **If the service crashes** (a connection error or a 5xx instead of an answer), it restarts and resumes the SAME
+- **A busy service has not crashed.** The service answers one request at a time: while a call runs, every other
+  request waits for it (`r.status()` from another process included), and a client-side timeout during that time means
+  "busy", not "crashed": nothing restarts, the call runs to its end and the episode goes on from there.
+- **If the service crashes** (the connection is refused or reset instead of an answer), it restarts and resumes the SAME
   episode, never a reset, in the state after the last call it completed. `r.wait_ready()` waits until it answers again
   (resuming replays the episode so far: about a second per 700 control steps); then check `r.status()` (`calls`,
   `control_steps`) before you continue. A call that runs longer than `spec["max_call_wall_s"]` stops at the next control
@@ -117,4 +125,4 @@ Limits for your agent environment, your own container only (the simulator in the
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task: run `date` now, and again before you decide that time is short; work out the time left from those readings, never from a guess. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

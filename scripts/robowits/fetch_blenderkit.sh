@@ -27,6 +27,7 @@ D=docker; docker ps >/dev/null 2>&1 || D="sg docker -c"
 mkdir -p -m 700 "$DEST"
 # the build fails unless every model in RoboWits' assets/metadata.json arrived (a Full Plan key is needed); MIN_MODELS is
 # only the download pass's sanity floor (67 = the free models); PASS=<anything new> re-downloads
+# a context under images/, not a task dir: no scripts/stamp_mtimes.py stamp needed (issue #258)
 cmd="docker build --secret id=blenderkit_api_key,env=BLENDERKIT_API_KEY --build-arg MIN_MODELS=${MIN_MODELS:-67} --build-arg PASS=${PASS:-1} --output type=local,dest=$DEST -f $ROOT/images/robowits/blenderkit/Dockerfile $ROOT/images/robowits/blenderkit"
 echo "+ $cmd"; if [ "$D" = docker ]; then eval "$cmd"; else sg docker -c "$cmd"; fi
 if (cd "$DEST" && sha256sum --quiet -c "$ROOT/images/robowits/blenderkit.sha256"); then

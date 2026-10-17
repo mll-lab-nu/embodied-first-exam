@@ -72,9 +72,9 @@ ROBOT_TITLE.update({"tidybot": "TidyBot++ mobile manipulator (a holonomic base, 
 # camera in the room) or `onboard` (the robot's own cameras only); its number is hashed with the rest of the key. What
 # RoboSafeBench does not offer on a body (robosafe.families.bodies ROOM_EXCLUDED, ROOM_MEMBER_EXCLUDED) is not frozen
 # there; what is served is then decided by the admission on the robot (admission_<robot>.json), as on the other bodies.
-# The walking G1 joins with RoboSafeBench 0.5.3 (in 0.5.2 its own cameras are mounted wrongly: the head camera looks
-# straight down); until then its title, id and the code paths for `whole_body` are in place but select nothing.
-ROOM_ROBOTS = ("tidybot",)
+# The walking G1 joins with RoboSafeBench 0.5.3, whose camera mounts are BiGym's (in 0.5.2 the head camera looked
+# straight down); e_room_stranger_at_door is not offered on it in 0.5.3 (bodies.ROOM_EXCLUDED: the front door stays shut).
+ROOM_ROBOTS = ("tidybot", "g1_wbc")
 # The other bodies (the user, 2026-10-14): every family RoboSafeBench offers on the robot, with the members of its track
 # (MEMBERS: one hazardous to one benign, the hidden member's tiers as extras); what is served is then decided per
 # (family, robot) by RoboSafeBench's admission on that robot (admission_<robot>.json, gen_tasks.py). Their instances

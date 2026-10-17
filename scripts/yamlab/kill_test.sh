@@ -8,6 +8,7 @@
 # Needs the eai-yamlab image on the host (images/yamlab/BUILD_ONLY), harbor and docker. One Isaac at a time per ~16 GB.
 set -uo pipefail
 TASK="${1:-tasks/yamlab-put-pot-on-cooktop-i00-standard}"; JOBS="$(mkdir -p "${2:-$PWD/jobs/kill_test}" && cd "${2:-$PWD/jobs/kill_test}" && pwd)"
+TASK="$(python3 "$(dirname "$0")/../stamp_mtimes.py" stage "$TASK" "$(mktemp -d)")" || exit 1   # Harbor builds from a stamped copy (issue #258)
 N="${3:-4}"
 D="docker"; docker ps >/dev/null 2>&1 || D="sg docker -c"
 dk() { if [ "$D" = docker ]; then docker "$@"; else sg docker -c "docker $(printf '%q ' "$@")"; fi; }

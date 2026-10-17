@@ -185,6 +185,11 @@ CHANGE_TELEPORT = ("- 2026-10-14 (board 0113, from board 0086): the instruction 
                    "a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check "
                    "and the verifier are unchanged, so the task keeps its name.\n")
 
+CHANGE_FAIL_VIDEO = ("- 2026-10-16 (board 0136): the collect hook waits for the replay (and its video) of an episode that ended "
+                     "without a live success as long as for any other (`RCB_FAIL_WAIT_S` 900 -> 5400 s, the overall wait): it "
+                     "stopped at 900 s, so most failed episodes had no `replay.mp4`. Video only: a failure is graded 0 whatever its "
+                     "replay says, so the verdict, the physics and the pass rule are unchanged and results from before this date "
+                     "stay valid.\n")
 
 def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     """(short words, what happens) for a LIBERO-MAX change."""
@@ -392,6 +397,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     if case["scenario"]["change_type"] == "receptacle_relocation":
         priv_log += CHANGE_TELEPORT.format(what="receptacle")
     std_log += CHANGE_TELEPORT.format(what="object or receptacle")   # the standard text is the same for every case
+    std_log += CHANGE_FAIL_VIDEO
 
     p = out / f"{name}-privileged"
     reset_dir(p)

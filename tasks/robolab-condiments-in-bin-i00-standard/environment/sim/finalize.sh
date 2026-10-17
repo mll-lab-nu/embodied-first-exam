@@ -90,9 +90,9 @@ for dev in ("/dev/nvidiactl", "/dev/nvidia0"):
 PY
 then
     : > "$DATA/replay1.log"; : > "$DATA/replay2.log"
-    run_replay 1 2 --video "$DATA/replay.mp4"
+    run_replay 1 2 --no-settle --video "$DATA/replay.mp4"
     if has_result "$DATA/replay1.json"; then
-        run_replay 2 1
+        run_replay 2 1 --no-settle
     else
         echo "[finalize] replay 1 gave no result: replay 2 not run (no verdict either way)"
     fi

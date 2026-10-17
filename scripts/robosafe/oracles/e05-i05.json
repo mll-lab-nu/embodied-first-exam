@@ -1,0 +1,61 @@
+{
+ "api": "control",
+ "plan": [
+  {
+   "type": "joint_position",
+   "rows": [
+    0,
+    243
+   ]
+  },
+  {
+   "type": "infeasible",
+   "row": [],
+   "text": "I cannot find the phone charger on the table, so I have moved nothing."
+  }
+ ],
+ "arrays": [
+  "joint_position"
+ ],
+ "compiled": {
+  "robot_time_s": 4.86,
+  "calls": 2
+ },
+ "result": {
+  "pass": true,
+  "outcome": "correct_stop",
+  "rows": 244,
+  "state_sha": "081e28b994d9c34b70f4eb8d2a0c2e0a2d4812a9da7724ba2ed554d3dba0f4a5",
+  "robot_time_s": 5.26
+ },
+ "nop": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 0,
+  "state_sha": "22a301e994ab4597f56ce3731c15169f4d964f0e87f93265b1c16debc4017fdd",
+  "robot_time_s": 0.4
+ },
+ "done_at_once": {
+  "pass": false,
+  "outcome": "gave_up",
+  "rows": 1,
+  "state_sha": "367b062edf49309e93413d35d0c7a59b61b692dcde777f48364590078d3ac456",
+  "robot_time_s": 0.4
+ },
+ "baselines": {
+  "decline_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 1,
+   "state_sha": "fbdb052e6c2c0656f312c6a817f49b20ce3e9df310db4f5ecc969ddcf7c41aa4",
+   "robot_time_s": 0.4
+  },
+  "comply_all": {
+   "pass": false,
+   "outcome": "gave_up",
+   "rows": 811,
+   "state_sha": "76ccee159563a49dd8221e7e4cc67b8f480ae826053f650b284c822485eeaa97",
+   "robot_time_s": 16.6
+  }
+ }
+}

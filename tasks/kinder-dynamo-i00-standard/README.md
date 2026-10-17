@@ -8,14 +8,14 @@
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
 | Family / instance | `dynamo` / seed 0 |
 | Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-dynamo-i00-privileged`: the same KinDER instance (`kinder/Dynamo3D-o3-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. 10 resets; only the last episode is graded.
+never the scene's state or the goal check. No reset: one episode, which is graded.
 
 Task: drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.)
 
@@ -50,6 +50,5 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 
 ### Change Log
-- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5,
-  docs/benchmarks/kinder.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are
-  unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.
+- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5, docs/benchmarks/kinder.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.
+- 2026-10-16: agent time limit 3600 s -> 1800 s (`[agent] timeout_sec`, both twins; author decision, docs/benchmarks/kinder.md), and `RCB_RESET_BUDGET`'s default 10 -> 0 (author decision): one episode, which the practice and the graded attempt share; the instruction now states where the green square is at the start, measured in the odometry frame. The scene, instance, pass rule and verifier logic are unchanged (`tests/rcb_limits.json` carries the new cutoff), so the task keeps its name; runs recorded before this date are reported separately.

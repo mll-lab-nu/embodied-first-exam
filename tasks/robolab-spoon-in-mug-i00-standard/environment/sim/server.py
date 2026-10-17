@@ -70,13 +70,24 @@ def dump() -> None:
     L._write_json(os.path.join(DATA, "episode.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "settle_steps": E.get("settle_steps"), **EP.final_fields()})
     write_final()
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
+    if reason == "timeout" and not E["success"] and not S.episode_done and ctrl_steps():
+        # the agent's phase is over: the last command is held for up to SETTLE_STEPS control steps (journaled and recorded,
+        # so the replays run them too) while RoboLab's term is checked, as the replay does after a trajectory's last row
+        try:
+            hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0
+            while n < M.SETTLE_STEPS and not S.episode_done:
+                n += 1; S.step(hold); EP.journal(hold)
+            E["settle_steps"] = n
+        except Exception:  # noqa
+            traceback.print_exc()
+    E["episode_control_steps"] = ctrl_steps()
     if not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
@@ -160,7 +171,8 @@ SPEC = {
     # MAX_STEPS control steps (reason "step_guard"); at this service's 3-15 control steps/s the wall clock ends it first.
     "max_control_steps": int(M.MAX_STEPS),
     "episode": "one episode, no reset: it ends at the first control step where RoboLab's success term holds (checked after every "
-               f"control step), when your time is up, on a simulator error, or after {int(M.MAX_STEPS):,} control steps "
+               "control step; \"the gripper\" is both Robotiq fingers), when your time is up (the last command is then held for "
+               f"{M.SETTLE_STEPS} more control steps while the term is checked), on a simulator error, or after {int(M.MAX_STEPS):,} control steps "
                f"({M.MAX_STEPS / CTRL_HZ / 60:.0f} min of simulated time: a technical cap, reason \"step_guard\", "
                "spec.max_control_steps; graded as it stands)",
     "robot_spec": S.robot_spec(),
