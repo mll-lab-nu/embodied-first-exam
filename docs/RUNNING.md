@@ -154,8 +154,8 @@ reasoning summaries, tool calls, images and token use with the robot service's l
   says which, and what it costs). Either way the verdict is on disk first (`final.json` `finalized`; `video_pending`
   while the render runs) and `final.json` says `video_source` (`live` / `render`).
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
-  each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
-  costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
+  each stamped with the agent's call and wall/sim time; rendered from the trajectory after the verdict, in the same pass
+  as `replay.mp4`, so it costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
   and a crash-safe trajectory. Details: `docs/STANDARD_MODE.md` (Live recording). Protocol 2.1 also gives the
   agent measured proprioception (encoders, gripper opening, TCP pose, drive effort) and optional depth noise.
 - **Privileged mode:** the agent owns the simulator, so nothing it produces is evidence. `rcb_traj.Session` still dumps every
