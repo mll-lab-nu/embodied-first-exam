@@ -1,0 +1,3627 @@
+{
+  "credits": "credits.json",
+  "files": {
+    "credits.json": {
+      "bytes": 25140,
+      "sha256": "d0b6973a7c61a7564f946e73b4e7e94a8a8505f432b675b17a2dc13585e987f9"
+    },
+    "licenses/CC-BY-4.0.txt": {
+      "bytes": 18657,
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+    },
+    "matlib/brushed_metal.png": {
+      "bytes": 38775,
+      "sha256": "6db6de25d3de3b994afe9ae6c6ee066d6422125d5a54c822008f200e048607ba"
+    },
+    "matlib/cardboard.png": {
+      "bytes": 146253,
+      "sha256": "2099f04e65decbaa74392d3b292bdd413c00cf50d187c127151006fc4956dad9"
+    },
+    "matlib/carpet.png": {
+      "bytes": 1896058,
+      "sha256": "6dbdc94ab8ec47bc7d127ccd004e2216bcc999eabb7f282470fd58b88ee3372b"
+    },
+    "matlib/ceramic.png": {
+      "bytes": 107063,
+      "sha256": "0999645d39d7b3877798d27f04208a215740c696255938b85db9d07d9343bafc"
+    },
+    "matlib/denim.png": {
+      "bytes": 2700826,
+      "sha256": "cc7c8984b6752887dc6a635bf138fdb9a3e6b4f6f6a391f73f1e8bd59670a31a"
+    },
+    "matlib/fabric.png": {
+      "bytes": 73060,
+      "sha256": "70258ed6e36c551c83d185dae191147f382d54cd202262d85e8031383e5ee851"
+    },
+    "matlib/fabric_coarse.png": {
+      "bytes": 121759,
+      "sha256": "d8fb39c2ca4d8fc0d4a6601d50748a4f6d38e041b34a69da277d658cb2d9d6fe"
+    },
+    "matlib/floor_concrete.png": {
+      "bytes": 1959449,
+      "sha256": "9b9ee7301779773b92d154d55b657932b4e457702841cbb07c3d351978629a43"
+    },
+    "matlib/floor_laminate.png": {
+      "bytes": 1417713,
+      "sha256": "97548b1460e565ec63981fed7ee75bc92ebfa0807e0df3f8a68a59b92e3be083"
+    },
+    "matlib/granite.png": {
+      "bytes": 1463995,
+      "sha256": "298f318ccaff644d946efebc19b6ad4e99fc5d81ab791916169d85fcb1c35f04"
+    },
+    "matlib/leather.png": {
+      "bytes": 1778151,
+      "sha256": "2f2eda8691b0c2113877fd7d154473532ba156d18f7598b77edbdc8dd6e7016c"
+    },
+    "matlib/leather_t.png": {
+      "bytes": 139285,
+      "sha256": "5e71975f94840eac408df960e483ae3cdd223c1463b99eff5ca7dc59e9ba1775"
+    },
+    "matlib/marble.png": {
+      "bytes": 1136708,
+      "sha256": "ab388132a4d1b2353bea37caeaf44fa2551fda5a0614111c8668a3e18da78cef"
+    },
+    "matlib/matlib.json": {
+      "bytes": 10864,
+      "sha256": "465c29b4e5a6bc2a34926e8dd25c95ed1697ba453cbf662a31aa0cdaa2528fd6"
+    },
+    "matlib/painted.png": {
+      "bytes": 130166,
+      "sha256": "9a22a41e234bc9785ba64ed1e328a26feea40e5ae614965aeec8050b9d2b03f8"
+    },
+    "matlib/paper.png": {
+      "bytes": 177192,
+      "sha256": "c5fa126b6dff97f86ad3212dd3395aa0a2ef3b121cbb6d3b6aafe7314ad8f18a"
+    },
+    "matlib/plastic.png": {
+      "bytes": 146574,
+      "sha256": "35e5b7a33a1af1325ac2bfa16118fe9a5c72473fc949917495d3df91ba10d8ff"
+    },
+    "matlib/plywood.png": {
+      "bytes": 1853634,
+      "sha256": "f7cb05a5e18844b2237ecf13bac7847b775c867f44e087f94977b718624302dd"
+    },
+    "matlib/rubber.png": {
+      "bytes": 121565,
+      "sha256": "c48e5dfcb7d77b00df9275f22c7b568163c6ae331dd1fb10c7695ad29dee881a"
+    },
+    "matlib/soil.png": {
+      "bytes": 1645536,
+      "sha256": "e0fd59a9856978f01666823d0277af83d2dc9ba938fa28836a87a963598b95f3"
+    },
+    "matlib/table_wood.png": {
+      "bytes": 1171563,
+      "sha256": "82a4dd1e6227bc086411a9689ed31c6fd4ad6edc69c6af66f59c8028a99f45e0"
+    },
+    "matlib/terracotta.png": {
+      "bytes": 774501,
+      "sha256": "7789e327122600730d4ea27bb6fb8666c84a3c1e9a6269e543e3f873a9aad108"
+    },
+    "matlib/wall_paint.png": {
+      "bytes": 1425068,
+      "sha256": "8df625bb23166a44e36c2c3cb245379d88f6d44683ccc7f048b74817b6f56fca"
+    },
+    "matlib/wall_plaster.png": {
+      "bytes": 178086,
+      "sha256": "7d349bcf6a4018db981b7256391dde7e45f46c84f8bfc736b980ed1c39b53017"
+    },
+    "matlib/wall_tiles.png": {
+      "bytes": 1535653,
+      "sha256": "8905364f5188e1056d69bdd0ce534e4c2bcd1cdfab326d37841dca7df6d4703b"
+    },
+    "matlib/wax.png": {
+      "bytes": 70987,
+      "sha256": "c33d20e6531669e686a04502f899fb529fb400eba6f8578a725e4e93cf44ad8c"
+    },
+    "matlib/wood_dark.png": {
+      "bytes": 1107454,
+      "sha256": "c9f5be70791a5d268b34cef83b989335c384c4ab82822110c4979ff2e2c332f7"
+    },
+    "matlib/wood_light.png": {
+      "bytes": 1087151,
+      "sha256": "f338a8de30c39e3692dd6a12b7fbd725922daa51804e6ab493951171f621273e"
+    },
+    "packs/apple/default_0.obj": {
+      "bytes": 631961,
+      "sha256": "65a69eca5d28f2775e43e5a469e71efe0bea3d85113f17c497c410b04b9d56f4"
+    },
+    "packs/apple/default_0.png": {
+      "bytes": 1228908,
+      "sha256": "31893b3e2c6bdc576cabb105e9c675a7d9d1dbdc9c7497e6f4981e80a1d2c3be"
+    },
+    "packs/apple/pack.json": {
+      "bytes": 2036,
+      "sha256": "54d50e19494db49822949a2ddd88ddad972c12d5b3bf131bdf09e23bfe15b910"
+    },
+    "packs/bowl/default_0.obj": {
+      "bytes": 903980,
+      "sha256": "ea4aebd998ef5dde8d14337ca9977b938c1692cfcde08c64b31bc9665957ea46"
+    },
+    "packs/bowl/default_0.png": {
+      "bytes": 667525,
+      "sha256": "b14c3d1c73e4d02268b0171f072c588a75d05bfb969be5113f26c579c5b97c5b"
+    },
+    "packs/bowl/pack.json": {
+      "bytes": 1909,
+      "sha256": "755980a42e017ec89c9e44d14e92ffaa5e6e1198f8d05b95e6f204c2c31ae16d"
+    },
+    "packs/bread_loaf/default_0.obj": {
+      "bytes": 1016826,
+      "sha256": "469e19c4ec03c4218e43923835c6fe99a4878bc4ae0536da955e5ffc0dca413d"
+    },
+    "packs/bread_loaf/default_0.png": {
+      "bytes": 971484,
+      "sha256": "101c5ef0e1e6c31db553db49b33b81996429755e3261797e6acce7441739782d"
+    },
+    "packs/bread_loaf/pack.json": {
+      "bytes": 1957,
+      "sha256": "0718f848cf4ff10849403e04a180ddcad27ca64829695325d70ff0b8489196ff"
+    },
+    "packs/cat/lying_0.obj": {
+      "bytes": 1347393,
+      "sha256": "d9bfc01dc2ed6de5fd22a9abf3bb98fe25879624fa45c52db39869cd186977b9"
+    },
+    "packs/cat/lying_0.png": {
+      "bytes": 1626148,
+      "sha256": "922c2874d92645d994e0a21b978b3c5e5cfdfb8755da7c1af6dfb80df7136474"
+    },
+    "packs/cat/pack.json": {
+      "bytes": 4120,
+      "sha256": "6168460dfaae4f3620dead6c01f2d9a13bf0f427dba95101265a263debc99337"
+    },
+    "packs/cat/standing_0.obj": {
+      "bytes": 724822,
+      "sha256": "4fe84791cd8f08597761630e8a26877e202667f2f5841e2388f77b6386628371"
+    },
+    "packs/cat/standing_0.png": {
+      "bytes": 736665,
+      "sha256": "586fd7ba47fd9bd7e61e35c1ceb36cb828bb32a22fe3d68cd568fb7d6f8e8005"
+    },
+    "packs/chair/default_0.obj": {
+      "bytes": 1114339,
+      "sha256": "a3c4f37c34d84b2e96cf17cfc278551a209087e73a95b60212dba87b7fcecc8c"
+    },
+    "packs/chair/default_0.png": {
+      "bytes": 502740,
+      "sha256": "d9b174eb14064739b4c271efa3b5b097d118d2e00908f5911a8273c61ab7b3d1"
+    },
+    "packs/chair/pack.json": {
+      "bytes": 1988,
+      "sha256": "fce554a0f1ae655917aa5d27e3776c669f3e93493205e940dbfd673cc48f8168"
+    },
+    "packs/cutting_board/default_0.obj": {
+      "bytes": 331557,
+      "sha256": "76b4920abb9c1a38b4d4ea3c74b3895710a47c14a2962f54f9645591e55bcbc8"
+    },
+    "packs/cutting_board/default_0.png": {
+      "bytes": 1641318,
+      "sha256": "d418f33fe8014b02b7ebe77026e52a0d8c24317470376132dfe61ae6b1ce78bf"
+    },
+    "packs/cutting_board/pack.json": {
+      "bytes": 2053,
+      "sha256": "269a1477d62ea6df606ba359d39b886b840e9c105e10e70fab3458b4db031acd"
+    },
+    "packs/dining_table/default_0.obj": {
+      "bytes": 126525,
+      "sha256": "3464ed3e70eafd27df5e5eea9735fc25c66b34e58457e0ef5226bb5b4a57381b"
+    },
+    "packs/dining_table/default_0.png": {
+      "bytes": 1147068,
+      "sha256": "0ab86a535bee0d5bce0f2b9714fe39c1a59a523e99b7a2b8dc312b8f1a3aa5e9"
+    },
+    "packs/dining_table/pack.json": {
+      "bytes": 1965,
+      "sha256": "4b601ee712b93b318df970af098fa4ad6edae9d5039d8ae6bfb49fc0df5c2eeb"
+    },
+    "packs/dog/lying_0.obj": {
+      "bytes": 2038669,
+      "sha256": "9f45a937a55ee58261c8581782af6f5ffce5b3eba3fb37f47b20747a756da13c"
+    },
+    "packs/dog/lying_0.png": {
+      "bytes": 752772,
+      "sha256": "a79167e3d23629392359179deefa860732673443c8f97abb00141d5046c072c9"
+    },
+    "packs/dog/pack.json": {
+      "bytes": 3369,
+      "sha256": "c1143b550ee91c577d0342466acd9f368102ead807b337eeb3b382bf08b01f1c"
+    },
+    "packs/dog/standing_0.obj": {
+      "bytes": 1900736,
+      "sha256": "5069d2922eb372ccbb1994fb8288dcad732273c94d8efc030d3742c30ee44979"
+    },
+    "packs/dog/standing_0.png": {
+      "bytes": 665341,
+      "sha256": "ed31f991839c3c7dede8f0cde2d000ccb39cacdd4c68f5c1cfcabcfcdb057f50"
+    },
+    "packs/dog_bowl/default_0.obj": {
+      "bytes": 388274,
+      "sha256": "f0cb99361f3e8fcaa01a50bbff26cdb35883796b0d3fd4c82c12cc046acdafe8"
+    },
+    "packs/dog_bowl/default_0.png": {
+      "bytes": 355560,
+      "sha256": "60aa5677327f164fdaaeb4d9b96cfc238451b897b79b45ab2401adfc0df0b17c"
+    },
+    "packs/dog_bowl/pack.json": {
+      "bytes": 1989,
+      "sha256": "152036fee6d61edc11b2be92bfecb15c6e298691c8cabf6a2704bf24f3743ed8"
+    },
+    "packs/eyeglasses/default_0.obj": {
+      "bytes": 1035405,
+      "sha256": "00848268e3da082af6f482f923ae2ace2df5d33f3a9e47c15e012bc03672be82"
+    },
+    "packs/eyeglasses/default_0.png": {
+      "bytes": 876421,
+      "sha256": "2e4a3fcf9177595a340e135c2f50ff6f62eebda0d4a5d207e1b4227b27e0c873"
+    },
+    "packs/eyeglasses/default_1.obj": {
+      "bytes": 110211,
+      "sha256": "2333d20dcca6cdbbe6a29ec20a263826cd33af72728922dfcd1703ae270aecf2"
+    },
+    "packs/eyeglasses/default_1.png": {
+      "bytes": 876421,
+      "sha256": "2e4a3fcf9177595a340e135c2f50ff6f62eebda0d4a5d207e1b4227b27e0c873"
+    },
+    "packs/eyeglasses/optics_manifest.json": {
+      "bytes": 1176,
+      "sha256": "8bb20c7a9383e1667589fd42e89f1b71e0860a1396a9640cd3faf58411a55ec1"
+    },
+    "packs/eyeglasses/pack.json": {
+      "bytes": 2829,
+      "sha256": "497a01f2df1995fa7d9ae21b0af201e8160163867e3f910f0203dab6f0acffa5"
+    },
+    "packs/flower_pot/default_0.obj": {
+      "bytes": 499680,
+      "sha256": "b4e09ba07f74943dc0a0a348f1630943a5d28abf315220f9ea013e31414ad19f"
+    },
+    "packs/flower_pot/default_0.png": {
+      "bytes": 398281,
+      "sha256": "0818abe224f2677cd8d77bae26094f7dedca798f9dd9783fa5fbca7121001a03"
+    },
+    "packs/flower_pot/pack.json": {
+      "bytes": 1809,
+      "sha256": "b1f06e8069722e613d07f987968101850206ba206236243dd891baae2960dda9"
+    },
+    "packs/hand/hd_L_0.obj": {
+      "bytes": 959810,
+      "sha256": "ea243def9198e1575066317f4be8b5048140fa54eb270924efd4c6c53d0ced41"
+    },
+    "packs/hand/hd_L_0.png": {
+      "bytes": 2963420,
+      "sha256": "a98deeed7fd24a6f1a4373e97fa6a1f1525b3568a191d0f3327ffc17fbbca7dd"
+    },
+    "packs/hand/hd_L_sleeve.obj": {
+      "bytes": 253654,
+      "sha256": "f84a8c539c2fff338b7d5c766b104f5d860a7766d601c924cde35b22fe90ea2f"
+    },
+    "packs/hand/hd_L_sleeve.png": {
+      "bytes": 71090,
+      "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411"
+    },
+    "packs/hand/hd_R_0.obj": {
+      "bytes": 962092,
+      "sha256": "eb93ea3865ba5254b96fb244230b47f430f8b1debc0c8e3eadd8cc1e8ab41bb7"
+    },
+    "packs/hand/hd_R_0.png": {
+      "bytes": 2963420,
+      "sha256": "a98deeed7fd24a6f1a4373e97fa6a1f1525b3568a191d0f3327ffc17fbbca7dd"
+    },
+    "packs/hand/hd_R_sleeve.obj": {
+      "bytes": 253861,
+      "sha256": "6507fe426b4907deba9bfa959dcc2f1af3abbb42d6be27be8aef0a5e225afc31"
+    },
+    "packs/hand/hd_R_sleeve.png": {
+      "bytes": 71090,
+      "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411"
+    },
+    "packs/hand/hl_L_0.obj": {
+      "bytes": 1010969,
+      "sha256": "ce84fe6b2357615b101a58048af1cf2493568b9cd196dd039ba7a251665a2801"
+    },
+    "packs/hand/hl_L_0.png": {
+      "bytes": 4371775,
+      "sha256": "d1191b41b533d2c5ad05ac63b7c8585d97f9f4a4ee38a47ab3da48ec17a60e5c"
+    },
+    "packs/hand/hl_L_sleeve.obj": {
+      "bytes": 253332,
+      "sha256": "022893118f9112831aef7ea667bb1f33c40dc063af012abbe9988f379d10f1c2"
+    },
+    "packs/hand/hl_L_sleeve.png": {
+      "bytes": 71090,
+      "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411"
+    },
+    "packs/hand/hl_R_0.obj": {
+      "bytes": 1013351,
+      "sha256": "13b4e8d2c332ea98eb8ccc3430e3e35636fb746719cc3fe04ca089475daf29bd"
+    },
+    "packs/hand/hl_R_0.png": {
+      "bytes": 4371775,
+      "sha256": "d1191b41b533d2c5ad05ac63b7c8585d97f9f4a4ee38a47ab3da48ec17a60e5c"
+    },
+    "packs/hand/hl_R_sleeve.obj": {
+      "bytes": 253515,
+      "sha256": "f2ea82f89ff12cda0fb5267d875dd9e1529356d47959b6ca210655e0cec1f73a"
+    },
+    "packs/hand/hl_R_sleeve.png": {
+      "bytes": 71090,
+      "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411"
+    },
+    "packs/hand/hm_L_0.obj": {
+      "bytes": 986658,
+      "sha256": "35164d257e37f034e6ae154eee4a152060021c0684474d80de0ca88bf052ff28"
+    },
+    "packs/hand/hm_L_0.png": {
+      "bytes": 3578373,
+      "sha256": "72bdd2bab19101d0baf6a660a155f655f90349381bbc74492f61a1f61f6cd0fc"
+    },
+    "packs/hand/hm_L_sleeve.obj": {
+      "bytes": 253421,
+      "sha256": "1de5fb2a6c6a9f6f4c9de6ff904e40e317e6a01ff64f43a5603f07157c1297cf"
+    },
+    "packs/hand/hm_L_sleeve.png": {
+      "bytes": 71090,
+      "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411"
+    },
+    "packs/hand/hm_R_0.obj": {
+      "bytes": 988980,
+      "sha256": "fb9647cb2b117c78291c7d8faf7b61d07f755f8c3926530ae3c3fcb5be4525fc"
+    },
+    "packs/hand/hm_R_0.png": {
+      "bytes": 3578373,
+      "sha256": "72bdd2bab19101d0baf6a660a155f655f90349381bbc74492f61a1f61f6cd0fc"
+    },
+    "packs/hand/hm_R_sleeve.obj": {
+      "bytes": 253642,
+      "sha256": "8e1effd285faeb52b416a96a421bdfc28d72fe4d3bdaf15692c43ad9f81737b3"
+    },
+    "packs/hand/hm_R_sleeve.png": {
+      "bytes": 71090,
+      "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411"
+    },
+    "packs/hand/pack.json": {
+      "bytes": 11093,
+      "sha256": "557420d44501d7b133b769c14ac3eeaa201aece4c57613d699639598020fd3a4"
+    },
+    "packs/infant/i1_curled_0.obj": {
+      "bytes": 12618,
+      "sha256": "774960888aeca2f380382b48b4eb6e457cb76fe40d894ea298f797454d5d4f38"
+    },
+    "packs/infant/i1_curled_0.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/infant/i1_curled_1.obj": {
+      "bytes": 189660,
+      "sha256": "afde90277cc5b30ee9d0d809c205a5cfb32019c49ab8b040bf2481fcd1e7d6ae"
+    },
+    "packs/infant/i1_curled_1.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/infant/i1_curled_2.obj": {
+      "bytes": 286493,
+      "sha256": "3b881ebf28aa9a64218ea23396b269ed2c3278102bad59729061ffd3aa15e449"
+    },
+    "packs/infant/i1_curled_2.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/infant/i1_curled_3.obj": {
+      "bytes": 12722,
+      "sha256": "c78aa8c1f7bfdee271fb976ff02cfde492487151ca5f57a55f99498ed7e8b18d"
+    },
+    "packs/infant/i1_curled_3.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/infant/i1_curled_4.obj": {
+      "bytes": 2154153,
+      "sha256": "cbe98bdd90f734b3f36b10a40843c0d58e7dc53521a6e6c75d2c3575c1c695a3"
+    },
+    "packs/infant/i1_curled_4.png": {
+      "bytes": 1173410,
+      "sha256": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38"
+    },
+    "packs/infant/i2_curled_0.obj": {
+      "bytes": 134468,
+      "sha256": "d83623ef767f6f4a70e10d6d8ec80e355a9fb46a78fc8d7b741d8e10704f4a3c"
+    },
+    "packs/infant/i2_curled_0.png": {
+      "bytes": 903809,
+      "sha256": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579"
+    },
+    "packs/infant/i2_curled_1.obj": {
+      "bytes": 215774,
+      "sha256": "bcaddda1276bae5f34b3bfb514ab1fdc9b779ce44767f4275d7ea9d88153019b"
+    },
+    "packs/infant/i2_curled_1.png": {
+      "bytes": 903809,
+      "sha256": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579"
+    },
+    "packs/infant/i2_curled_2.obj": {
+      "bytes": 12614,
+      "sha256": "eb36121cf96431e6f4e58e665bf887f6d5d7bef9004fc28ff91c1a64a9f0d2ab"
+    },
+    "packs/infant/i2_curled_2.png": {
+      "bytes": 536232,
+      "sha256": "a853e2ebbb9a7735fbf8004b0f63bb2983cce952234954976714a19b3cfd741d"
+    },
+    "packs/infant/i2_curled_3.obj": {
+      "bytes": 12720,
+      "sha256": "01e273a062eb7cac9c2a3ab0b0a0ac1949de30d89b4bded80271714747ae6116"
+    },
+    "packs/infant/i2_curled_3.png": {
+      "bytes": 13034,
+      "sha256": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940"
+    },
+    "packs/infant/i2_curled_4.obj": {
+      "bytes": 1856686,
+      "sha256": "c787abc8f0cc9cd44dfdcdaa38da9e5454681fb82fe1708ae7ef353be044964d"
+    },
+    "packs/infant/i2_curled_4.png": {
+      "bytes": 1084837,
+      "sha256": "b0a4a1ae1bfb046a73d3b3549ae7f94934e80afb84f7414b571d97dac8f0d480"
+    },
+    "packs/infant/i3_curled_0.obj": {
+      "bytes": 170039,
+      "sha256": "eaef14f3fbe1f48f52919fc45ed3e7f305b55e62aef1e7c4a7264983356f8f21"
+    },
+    "packs/infant/i3_curled_0.png": {
+      "bytes": 554126,
+      "sha256": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca"
+    },
+    "packs/infant/i3_curled_1.obj": {
+      "bytes": 454096,
+      "sha256": "0c68926cdfb79ff6a28ae15aad274e2de8a8a1320de10ed7d99509b3420d0d41"
+    },
+    "packs/infant/i3_curled_1.png": {
+      "bytes": 554126,
+      "sha256": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca"
+    },
+    "packs/infant/i3_curled_2.obj": {
+      "bytes": 12621,
+      "sha256": "1784bbd9b7e096999a7dd8c19bee561e68d7305bc97586fae4a2e5a42fc3c033"
+    },
+    "packs/infant/i3_curled_2.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/infant/i3_curled_3.obj": {
+      "bytes": 12725,
+      "sha256": "e6f867bea00a5ba2a03da107e3442c3f33b8d4eb69d22ccf820b29e7bb884132"
+    },
+    "packs/infant/i3_curled_3.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/infant/i3_curled_4.obj": {
+      "bytes": 1997957,
+      "sha256": "d2c215bbd563e415173b1f8c16725116252d6ccb49d85b0e93e2eb339ece0a8f"
+    },
+    "packs/infant/i3_curled_4.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/infant/pack.json": {
+      "bytes": 14184,
+      "sha256": "e112d6745647c7d19bc179130edb0adecaf8e5e22208df6509c6a7c7ce7fc5aa"
+    },
+    "packs/knife/default_0.obj": {
+      "bytes": 946578,
+      "sha256": "4a95175ee0af5370309e0181da652e2bd9e46a7090f244bb3401b152b9695003"
+    },
+    "packs/knife/default_0.png": {
+      "bytes": 356368,
+      "sha256": "c7281003a41cb5f76c51a6781d9d2a75ae09ce51db0c7bce41d5edabd9bd12c2"
+    },
+    "packs/knife/pack.json": {
+      "bytes": 3824,
+      "sha256": "230463ed2c56990be88edbb7f5631aa960b4895204d28a98578d1a329d842eb8"
+    },
+    "packs/knife/standing_0.obj": {
+      "bytes": 946348,
+      "sha256": "2b6e8d4b3834f8f40ede5a761eef02f3d3b9763a3748bb3492a6ec86881625da"
+    },
+    "packs/knife/standing_0.png": {
+      "bytes": 380153,
+      "sha256": "0fe6d400daa1ffffcb9e23a05076efb3f5ad361d3bc50e8d55dee1094a662064"
+    },
+    "packs/low_table/default_0.obj": {
+      "bytes": 325383,
+      "sha256": "5f9250fc00fef35a07c2e93d681270e0eaadd3313acf92f8ac342c6fdfe40b3c"
+    },
+    "packs/low_table/default_0.png": {
+      "bytes": 774338,
+      "sha256": "1cdc65b84c1c4106d54c6d5e6e4c0760c7b6ec3c33df148feb426b48b3a612bd"
+    },
+    "packs/low_table/pack.json": {
+      "bytes": 2032,
+      "sha256": "a477f1d66e858e8830343e4452bd5693b88bccbcfb53cb5d55c82f53eefd5e48"
+    },
+    "packs/melon/default_0.obj": {
+      "bytes": 1025979,
+      "sha256": "440b336500b483c5cb02b532ffffcee87f7421757293e9f05b1cad1c40bed262"
+    },
+    "packs/melon/default_0.png": {
+      "bytes": 1678452,
+      "sha256": "d9486180265716a8a4d7d65d33da34a62a4917d1136e644863684d9a32ca8cbf"
+    },
+    "packs/melon/pack.json": {
+      "bytes": 1911,
+      "sha256": "bb00f56fd9b4910bd8a7e0a590d93c7ac2badf6c05e2e0302dc262bbb08b341d"
+    },
+    "packs/mug/default_0.obj": {
+      "bytes": 955339,
+      "sha256": "b5ccd0deeeb609305dcba0e3420246f3e63a32a998eb794aeaaadf697877f4c8"
+    },
+    "packs/mug/default_0.png": {
+      "bytes": 593306,
+      "sha256": "87a50d50ef260ca078b5f517ef0a1a090f2f7439f52702b6d283e8985f0ab071"
+    },
+    "packs/mug/pack.json": {
+      "bytes": 2000,
+      "sha256": "bc09fe747d395b16555bc8698e4cb0c03e1134dc65e0a51074c6f241ec07304d"
+    },
+    "packs/person/a1_lying_0.obj": {
+      "bytes": 251087,
+      "sha256": "75c159abba78774f208301e404043b058662cb5d9e0984f7f8d05cc6cd6e681f"
+    },
+    "packs/person/a1_lying_0.png": {
+      "bytes": 796032,
+      "sha256": "b60811884d4355350625b37d260eb4f96d6ca7b709142f897b9c42cea68543f4"
+    },
+    "packs/person/a1_lying_1.obj": {
+      "bytes": 14079,
+      "sha256": "e83334af40a978b140b1a463da3c0a30bb6bfd3f8401e2208318084e1bec2eb2"
+    },
+    "packs/person/a1_lying_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a1_lying_2.obj": {
+      "bytes": 283243,
+      "sha256": "88e694bb74b78bec6bee4766b2eda979af49ba2029bd5186bb901d11bcc6a496"
+    },
+    "packs/person/a1_lying_2.png": {
+      "bytes": 1330603,
+      "sha256": "c4d9dab283377b6c9d066f62c9849912d97f9518ce50cc9823de9f43fbd62b36"
+    },
+    "packs/person/a1_lying_3.obj": {
+      "bytes": 665658,
+      "sha256": "5554176b469d6680755b858c3bb0a97fba7f9979a6eb0e09c7f6e3b0baa93232"
+    },
+    "packs/person/a1_lying_3.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person/a1_lying_4.obj": {
+      "bytes": 797273,
+      "sha256": "cf9ed09eb0406e02213cacb15e6ad6b3aff46b24173103ad64ce34e66ac94559"
+    },
+    "packs/person/a1_lying_4.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person/a1_lying_5.obj": {
+      "bytes": 12596,
+      "sha256": "1b4adb14129e56e0045ba243cd3b19141c38676ec5a76ccc3ca5e12cbc14acde"
+    },
+    "packs/person/a1_lying_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a1_lying_6.obj": {
+      "bytes": 1387717,
+      "sha256": "36f5993c6945f4257ea67edc1160d4aa2c572254914cd8149d67eeaf03aa4c5e"
+    },
+    "packs/person/a1_lying_6.png": {
+      "bytes": 1024843,
+      "sha256": "53b996bd9345193d500a089f1d27e07a2e72f83c17df79db8c81aadf4008c06f"
+    },
+    "packs/person/a1_sitting_0.obj": {
+      "bytes": 251087,
+      "sha256": "75c159abba78774f208301e404043b058662cb5d9e0984f7f8d05cc6cd6e681f"
+    },
+    "packs/person/a1_sitting_0.png": {
+      "bytes": 796032,
+      "sha256": "b60811884d4355350625b37d260eb4f96d6ca7b709142f897b9c42cea68543f4"
+    },
+    "packs/person/a1_sitting_1.obj": {
+      "bytes": 14079,
+      "sha256": "e83334af40a978b140b1a463da3c0a30bb6bfd3f8401e2208318084e1bec2eb2"
+    },
+    "packs/person/a1_sitting_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a1_sitting_2.obj": {
+      "bytes": 283591,
+      "sha256": "fe5637998febfda991d030f970f4204314fddacd68004f139afccf8bf081c346"
+    },
+    "packs/person/a1_sitting_2.png": {
+      "bytes": 1330603,
+      "sha256": "c4d9dab283377b6c9d066f62c9849912d97f9518ce50cc9823de9f43fbd62b36"
+    },
+    "packs/person/a1_sitting_3.obj": {
+      "bytes": 666360,
+      "sha256": "c1fd6d50f2ab3457a1cbae5458ab2abf3696c611eb995746ad7903c341cf0e36"
+    },
+    "packs/person/a1_sitting_3.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person/a1_sitting_4.obj": {
+      "bytes": 797404,
+      "sha256": "0ffaf4472aecd9378d14432f090743f7cb15cdb812155ee727f8d774cfa4518c"
+    },
+    "packs/person/a1_sitting_4.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person/a1_sitting_5.obj": {
+      "bytes": 12596,
+      "sha256": "1b4adb14129e56e0045ba243cd3b19141c38676ec5a76ccc3ca5e12cbc14acde"
+    },
+    "packs/person/a1_sitting_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a1_sitting_6.obj": {
+      "bytes": 1387817,
+      "sha256": "165dd883375563c8dc98bad38c0d3f6db55470b89c0847a0fc0576d1673be884"
+    },
+    "packs/person/a1_sitting_6.png": {
+      "bytes": 1024843,
+      "sha256": "53b996bd9345193d500a089f1d27e07a2e72f83c17df79db8c81aadf4008c06f"
+    },
+    "packs/person/a1_standing_0.obj": {
+      "bytes": 251087,
+      "sha256": "75c159abba78774f208301e404043b058662cb5d9e0984f7f8d05cc6cd6e681f"
+    },
+    "packs/person/a1_standing_0.png": {
+      "bytes": 796032,
+      "sha256": "b60811884d4355350625b37d260eb4f96d6ca7b709142f897b9c42cea68543f4"
+    },
+    "packs/person/a1_standing_1.obj": {
+      "bytes": 14079,
+      "sha256": "e83334af40a978b140b1a463da3c0a30bb6bfd3f8401e2208318084e1bec2eb2"
+    },
+    "packs/person/a1_standing_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a1_standing_2.obj": {
+      "bytes": 283243,
+      "sha256": "88e694bb74b78bec6bee4766b2eda979af49ba2029bd5186bb901d11bcc6a496"
+    },
+    "packs/person/a1_standing_2.png": {
+      "bytes": 1330603,
+      "sha256": "c4d9dab283377b6c9d066f62c9849912d97f9518ce50cc9823de9f43fbd62b36"
+    },
+    "packs/person/a1_standing_3.obj": {
+      "bytes": 665658,
+      "sha256": "5554176b469d6680755b858c3bb0a97fba7f9979a6eb0e09c7f6e3b0baa93232"
+    },
+    "packs/person/a1_standing_3.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person/a1_standing_4.obj": {
+      "bytes": 797277,
+      "sha256": "27baa6d4e3b97822e0a4bf952c360502bd347d06b8d2a3d5f777ed43edd4e57b"
+    },
+    "packs/person/a1_standing_4.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person/a1_standing_5.obj": {
+      "bytes": 12596,
+      "sha256": "1b4adb14129e56e0045ba243cd3b19141c38676ec5a76ccc3ca5e12cbc14acde"
+    },
+    "packs/person/a1_standing_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a1_standing_6.obj": {
+      "bytes": 1387737,
+      "sha256": "f817610810b4f45abb357881faa8623cbcebd67a30245b59dc479452a937f67a"
+    },
+    "packs/person/a1_standing_6.png": {
+      "bytes": 1024843,
+      "sha256": "53b996bd9345193d500a089f1d27e07a2e72f83c17df79db8c81aadf4008c06f"
+    },
+    "packs/person/a2_lying_0.obj": {
+      "bytes": 264673,
+      "sha256": "4aaa7bdb7f22da83684ed7ab73a21695b3c7db57e87f7feed52969d4fe83c2d3"
+    },
+    "packs/person/a2_lying_0.png": {
+      "bytes": 1081971,
+      "sha256": "3a3fbfda7a7ca1876f6b7bc64486539b4e8225b5ce1cca1a76bb6cc95fb5b2a9"
+    },
+    "packs/person/a2_lying_1.obj": {
+      "bytes": 12592,
+      "sha256": "5fc53732751851a7664e29a3ff7ee563686903d76ee55196fffcbcb9f0b61aaf"
+    },
+    "packs/person/a2_lying_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a2_lying_2.obj": {
+      "bytes": 122006,
+      "sha256": "56075eaf4ddb57d7924a84c32f4aad81e96770db043bb41930d855d0e0f3c9c1"
+    },
+    "packs/person/a2_lying_2.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person/a2_lying_3.obj": {
+      "bytes": 235749,
+      "sha256": "b50856618f87ee0f1a9ab87bfd8ae17d76d44a1e1767a0c184a2c21507bf03e8"
+    },
+    "packs/person/a2_lying_3.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person/a2_lying_4.obj": {
+      "bytes": 14077,
+      "sha256": "70b10160b6f1a97b443a91b693755e19df4f0432db43dfa455933743126b5674"
+    },
+    "packs/person/a2_lying_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a2_lying_5.obj": {
+      "bytes": 221767,
+      "sha256": "fde18490f45e26f65f7376ba30eeb90bcd1d9a7310ed51ffda5982c7519ef0e0"
+    },
+    "packs/person/a2_lying_5.png": {
+      "bytes": 588943,
+      "sha256": "f58b756eef469d3e05897f55d5e633f3a8f16303583808deafbf268cbe6781ad"
+    },
+    "packs/person/a2_lying_6.obj": {
+      "bytes": 1521676,
+      "sha256": "d138bb9359fa8c8242517b09ae2c522f8142c2b28b8a33eb90171045dedb95a5"
+    },
+    "packs/person/a2_lying_6.png": {
+      "bytes": 1084174,
+      "sha256": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329"
+    },
+    "packs/person/a2_sitting_0.obj": {
+      "bytes": 264867,
+      "sha256": "c50fb27592bd8919e0c0421dd29aaa72999cce75a5bc508a029a1b64440d7248"
+    },
+    "packs/person/a2_sitting_0.png": {
+      "bytes": 1082134,
+      "sha256": "cc622f1aad77a70ab3a50bba41278abe17168b757058d4590d5bac10cf2038ca"
+    },
+    "packs/person/a2_sitting_1.obj": {
+      "bytes": 12592,
+      "sha256": "5fc53732751851a7664e29a3ff7ee563686903d76ee55196fffcbcb9f0b61aaf"
+    },
+    "packs/person/a2_sitting_1.png": {
+      "bytes": 536232,
+      "sha256": "a853e2ebbb9a7735fbf8004b0f63bb2983cce952234954976714a19b3cfd741d"
+    },
+    "packs/person/a2_sitting_2.obj": {
+      "bytes": 122167,
+      "sha256": "e32dd1b9b89701faf9f867374081a5391f0e76d570aea789c6a7453d23ab42fb"
+    },
+    "packs/person/a2_sitting_2.png": {
+      "bytes": 931561,
+      "sha256": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a"
+    },
+    "packs/person/a2_sitting_3.obj": {
+      "bytes": 235799,
+      "sha256": "c5e749aa78537413f9e166157bc3a0db52b694e134d64691c80e29b229668e38"
+    },
+    "packs/person/a2_sitting_3.png": {
+      "bytes": 931561,
+      "sha256": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a"
+    },
+    "packs/person/a2_sitting_4.obj": {
+      "bytes": 14077,
+      "sha256": "70b10160b6f1a97b443a91b693755e19df4f0432db43dfa455933743126b5674"
+    },
+    "packs/person/a2_sitting_4.png": {
+      "bytes": 21707,
+      "sha256": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189"
+    },
+    "packs/person/a2_sitting_5.obj": {
+      "bytes": 221767,
+      "sha256": "ea6851844d88aea3b53529391536f84884e4302e3413ace98094d04269becb2d"
+    },
+    "packs/person/a2_sitting_5.png": {
+      "bytes": 590388,
+      "sha256": "35c1ec015543058e5e348e8b2c29abdb05e8d9b3198e641e38d6fbc8d5b283fe"
+    },
+    "packs/person/a2_sitting_6.obj": {
+      "bytes": 1521938,
+      "sha256": "12c107df81188e26b7e5989ff09ef12f46f189fa4f75e33b9e36937f4372e857"
+    },
+    "packs/person/a2_sitting_6.png": {
+      "bytes": 1084837,
+      "sha256": "b0a4a1ae1bfb046a73d3b3549ae7f94934e80afb84f7414b571d97dac8f0d480"
+    },
+    "packs/person/a2_standing_0.obj": {
+      "bytes": 264673,
+      "sha256": "4aaa7bdb7f22da83684ed7ab73a21695b3c7db57e87f7feed52969d4fe83c2d3"
+    },
+    "packs/person/a2_standing_0.png": {
+      "bytes": 1081971,
+      "sha256": "3a3fbfda7a7ca1876f6b7bc64486539b4e8225b5ce1cca1a76bb6cc95fb5b2a9"
+    },
+    "packs/person/a2_standing_1.obj": {
+      "bytes": 12592,
+      "sha256": "5fc53732751851a7664e29a3ff7ee563686903d76ee55196fffcbcb9f0b61aaf"
+    },
+    "packs/person/a2_standing_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a2_standing_2.obj": {
+      "bytes": 122006,
+      "sha256": "56075eaf4ddb57d7924a84c32f4aad81e96770db043bb41930d855d0e0f3c9c1"
+    },
+    "packs/person/a2_standing_2.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person/a2_standing_3.obj": {
+      "bytes": 235755,
+      "sha256": "650b261ffe47f06640314838be92968801604c009be11101d754c8d7b72a8ea4"
+    },
+    "packs/person/a2_standing_3.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person/a2_standing_4.obj": {
+      "bytes": 14077,
+      "sha256": "70b10160b6f1a97b443a91b693755e19df4f0432db43dfa455933743126b5674"
+    },
+    "packs/person/a2_standing_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a2_standing_5.obj": {
+      "bytes": 221767,
+      "sha256": "3edede0495088659759a49583f1a03337e16605ba783fe263ea78beb4e60dc12"
+    },
+    "packs/person/a2_standing_5.png": {
+      "bytes": 588943,
+      "sha256": "f58b756eef469d3e05897f55d5e633f3a8f16303583808deafbf268cbe6781ad"
+    },
+    "packs/person/a2_standing_6.obj": {
+      "bytes": 1521784,
+      "sha256": "62b08a63eb1b04b5cc042604299dbd367f8c7e42a06fa3d98d1abf41e4d3400b"
+    },
+    "packs/person/a2_standing_6.png": {
+      "bytes": 1084174,
+      "sha256": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329"
+    },
+    "packs/person/a3_lying_0.obj": {
+      "bytes": 151442,
+      "sha256": "1afe531d21c966ae49924a0ef42cfea22448097f5beb0be6af6088c6b47e1b15"
+    },
+    "packs/person/a3_lying_0.png": {
+      "bytes": 629946,
+      "sha256": "9888992e1202aca7158bc4b9a3af2992fcfd52b499e8139c5ad10951d3d2e891"
+    },
+    "packs/person/a3_lying_1.obj": {
+      "bytes": 14135,
+      "sha256": "afafdbe0b4e18e29b6439cc879a47759a4180f4df92d0e2a4a11c6742029b06b"
+    },
+    "packs/person/a3_lying_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a3_lying_2.obj": {
+      "bytes": 378599,
+      "sha256": "aa5a05fd4af06538c9b5c4f9a3234c4292723dfe327572b4f1aa6f04601db7fb"
+    },
+    "packs/person/a3_lying_2.png": {
+      "bytes": 305439,
+      "sha256": "cb126e9dee72107f799a2f53a3c97a1200441f48d7c3fe8c67b5fe4e448de355"
+    },
+    "packs/person/a3_lying_3.obj": {
+      "bytes": 130035,
+      "sha256": "255d069f042d104232c1c866e2680573f7897e9ad06f0447ee185e6b7a0d0503"
+    },
+    "packs/person/a3_lying_3.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person/a3_lying_4.obj": {
+      "bytes": 288275,
+      "sha256": "bf6f451c24c7339f8ec796d8f2980f8004f44256e9b8b5301ef57998a368f053"
+    },
+    "packs/person/a3_lying_4.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person/a3_lying_5.obj": {
+      "bytes": 12592,
+      "sha256": "9a55cab6f2e547f6d9dfe2e399ead5c6e29f049af7b9e8d230fafa8e40954496"
+    },
+    "packs/person/a3_lying_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a3_lying_6.obj": {
+      "bytes": 1418686,
+      "sha256": "219d110c76b40cd24b27c2fe93eaf21bbff07a11bbf981ca59f9aa006ad947df"
+    },
+    "packs/person/a3_lying_6.png": {
+      "bytes": 989109,
+      "sha256": "d26dccdcd7712ab65d64aaad2bab30f2b0facc8f7858d3972da6b3e0ca01a207"
+    },
+    "packs/person/a3_sitting_0.obj": {
+      "bytes": 151442,
+      "sha256": "743ff1311a979661f36463942ddb454f492475e03e513c3c20c1d168afe51147"
+    },
+    "packs/person/a3_sitting_0.png": {
+      "bytes": 629946,
+      "sha256": "9888992e1202aca7158bc4b9a3af2992fcfd52b499e8139c5ad10951d3d2e891"
+    },
+    "packs/person/a3_sitting_1.obj": {
+      "bytes": 14135,
+      "sha256": "afafdbe0b4e18e29b6439cc879a47759a4180f4df92d0e2a4a11c6742029b06b"
+    },
+    "packs/person/a3_sitting_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a3_sitting_2.obj": {
+      "bytes": 378543,
+      "sha256": "3af7665346a3f1beb752d21e26ed91a0ea41f81a3b431fa96250838084406a84"
+    },
+    "packs/person/a3_sitting_2.png": {
+      "bytes": 305439,
+      "sha256": "cb126e9dee72107f799a2f53a3c97a1200441f48d7c3fe8c67b5fe4e448de355"
+    },
+    "packs/person/a3_sitting_3.obj": {
+      "bytes": 130227,
+      "sha256": "6e76fd27e913f9311d53e367731cb2cb3eca630eff6041d2d8160139e1188f48"
+    },
+    "packs/person/a3_sitting_3.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person/a3_sitting_4.obj": {
+      "bytes": 288368,
+      "sha256": "1a290d82d69b3dbafff9c0e52f0599e09e63821d62fcbab83b01eacebe5fbad0"
+    },
+    "packs/person/a3_sitting_4.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person/a3_sitting_5.obj": {
+      "bytes": 12592,
+      "sha256": "9a55cab6f2e547f6d9dfe2e399ead5c6e29f049af7b9e8d230fafa8e40954496"
+    },
+    "packs/person/a3_sitting_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a3_sitting_6.obj": {
+      "bytes": 1418840,
+      "sha256": "3b2a056f89240882835f89845c509943105ce71e604b336d14dfd4bb615e0c0d"
+    },
+    "packs/person/a3_sitting_6.png": {
+      "bytes": 989109,
+      "sha256": "d26dccdcd7712ab65d64aaad2bab30f2b0facc8f7858d3972da6b3e0ca01a207"
+    },
+    "packs/person/a3_standing_0.obj": {
+      "bytes": 151442,
+      "sha256": "5e10a9ba984d36c9d118df23ec0c13f6a5fb8c0d05ef1e7a1bbf9f9f553cc32c"
+    },
+    "packs/person/a3_standing_0.png": {
+      "bytes": 629946,
+      "sha256": "9888992e1202aca7158bc4b9a3af2992fcfd52b499e8139c5ad10951d3d2e891"
+    },
+    "packs/person/a3_standing_1.obj": {
+      "bytes": 14135,
+      "sha256": "afafdbe0b4e18e29b6439cc879a47759a4180f4df92d0e2a4a11c6742029b06b"
+    },
+    "packs/person/a3_standing_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a3_standing_2.obj": {
+      "bytes": 378599,
+      "sha256": "aa5a05fd4af06538c9b5c4f9a3234c4292723dfe327572b4f1aa6f04601db7fb"
+    },
+    "packs/person/a3_standing_2.png": {
+      "bytes": 305439,
+      "sha256": "cb126e9dee72107f799a2f53a3c97a1200441f48d7c3fe8c67b5fe4e448de355"
+    },
+    "packs/person/a3_standing_3.obj": {
+      "bytes": 130035,
+      "sha256": "255d069f042d104232c1c866e2680573f7897e9ad06f0447ee185e6b7a0d0503"
+    },
+    "packs/person/a3_standing_3.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person/a3_standing_4.obj": {
+      "bytes": 288288,
+      "sha256": "ac7bb1904396301d8d1ec6885168beedbdd9c9f9d3f2429b25b93b816fb7226e"
+    },
+    "packs/person/a3_standing_4.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person/a3_standing_5.obj": {
+      "bytes": 12592,
+      "sha256": "9a55cab6f2e547f6d9dfe2e399ead5c6e29f049af7b9e8d230fafa8e40954496"
+    },
+    "packs/person/a3_standing_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a3_standing_6.obj": {
+      "bytes": 1418703,
+      "sha256": "5710fd4cf53844fc04cc3eacc0528f2e50dab18811a96f92b4b8053c1250f927"
+    },
+    "packs/person/a3_standing_6.png": {
+      "bytes": 989109,
+      "sha256": "d26dccdcd7712ab65d64aaad2bab30f2b0facc8f7858d3972da6b3e0ca01a207"
+    },
+    "packs/person/a4_lying_0.obj": {
+      "bytes": 264695,
+      "sha256": "adedd4402eb06c13575ce0a5d025595c49e2589f8e1adf0e5e39b24ff1b626be"
+    },
+    "packs/person/a4_lying_0.png": {
+      "bytes": 1164391,
+      "sha256": "82281684c5be1b2c250d8fe678b63f7411850ebb367c33ab776162c44b0e8892"
+    },
+    "packs/person/a4_lying_1.obj": {
+      "bytes": 531389,
+      "sha256": "7fef25c9df256774b658bbab63d05043f2291d79c1763265bb90792165067bef"
+    },
+    "packs/person/a4_lying_1.png": {
+      "bytes": 824124,
+      "sha256": "6a6c3e7347468c60e029c7bb3b69431f802cbb6a9462194d60a92ed1c3d40f57"
+    },
+    "packs/person/a4_lying_2.obj": {
+      "bytes": 14077,
+      "sha256": "0a4043a2e1fa91c1c224c10ec467c6aea4c797e3d0cf28895bff2a29a494652e"
+    },
+    "packs/person/a4_lying_2.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a4_lying_3.obj": {
+      "bytes": 12592,
+      "sha256": "41962ef9bf9e601585426bd073dc19610722ce63ac174d71533ded45f9e2ee2f"
+    },
+    "packs/person/a4_lying_3.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a4_lying_4.obj": {
+      "bytes": 159282,
+      "sha256": "ec10a8fff6a3acf9c8c602ebdb7dbe527363f9debd1ddba31cffc57e8e56e061"
+    },
+    "packs/person/a4_lying_4.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/person/a4_lying_5.obj": {
+      "bytes": 319569,
+      "sha256": "9ee3cb1e8a6ec7eff782085d102c1043db7a8970f506347e1f98535612bd7e28"
+    },
+    "packs/person/a4_lying_5.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/person/a4_lying_6.obj": {
+      "bytes": 1693716,
+      "sha256": "efe51aa176982bbf1c1b452ff4a7fbc664245f6f01a5b37214d3f6309f4c34de"
+    },
+    "packs/person/a4_lying_6.png": {
+      "bytes": 1173410,
+      "sha256": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38"
+    },
+    "packs/person/a4_sitting_0.obj": {
+      "bytes": 264869,
+      "sha256": "76781caee10713fd9541a25f25faa03754329ad0b941e8bbec4eeaa02185785c"
+    },
+    "packs/person/a4_sitting_0.png": {
+      "bytes": 1164391,
+      "sha256": "82281684c5be1b2c250d8fe678b63f7411850ebb367c33ab776162c44b0e8892"
+    },
+    "packs/person/a4_sitting_1.obj": {
+      "bytes": 531388,
+      "sha256": "539c21ba8ebbe246d03bba37517161d78e7df4b846d55db9bba94d57ea48e440"
+    },
+    "packs/person/a4_sitting_1.png": {
+      "bytes": 824124,
+      "sha256": "6a6c3e7347468c60e029c7bb3b69431f802cbb6a9462194d60a92ed1c3d40f57"
+    },
+    "packs/person/a4_sitting_2.obj": {
+      "bytes": 14077,
+      "sha256": "0a4043a2e1fa91c1c224c10ec467c6aea4c797e3d0cf28895bff2a29a494652e"
+    },
+    "packs/person/a4_sitting_2.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a4_sitting_3.obj": {
+      "bytes": 12592,
+      "sha256": "41962ef9bf9e601585426bd073dc19610722ce63ac174d71533ded45f9e2ee2f"
+    },
+    "packs/person/a4_sitting_3.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a4_sitting_4.obj": {
+      "bytes": 159197,
+      "sha256": "cb0fbaa73aab7a9e0c0124b1f2fbeb42622effd7049fa944bf888ce76cdfd5ad"
+    },
+    "packs/person/a4_sitting_4.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/person/a4_sitting_5.obj": {
+      "bytes": 319595,
+      "sha256": "5f10543d0cb644f237e11d46abe2f51d389b6cee25efa7220d890e9f4e5bd8ee"
+    },
+    "packs/person/a4_sitting_5.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/person/a4_sitting_6.obj": {
+      "bytes": 1693986,
+      "sha256": "47d88b2d37a6ebf1ea4aacf14c1874e9eb90a336329549de13309852d2df65ac"
+    },
+    "packs/person/a4_sitting_6.png": {
+      "bytes": 1173410,
+      "sha256": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38"
+    },
+    "packs/person/a4_standing_0.obj": {
+      "bytes": 264695,
+      "sha256": "adedd4402eb06c13575ce0a5d025595c49e2589f8e1adf0e5e39b24ff1b626be"
+    },
+    "packs/person/a4_standing_0.png": {
+      "bytes": 1164391,
+      "sha256": "82281684c5be1b2c250d8fe678b63f7411850ebb367c33ab776162c44b0e8892"
+    },
+    "packs/person/a4_standing_1.obj": {
+      "bytes": 531386,
+      "sha256": "eecc6d3601178da5c048a37cb3ea57c4dce0bee32e017bfcd70d3b4fd226eddb"
+    },
+    "packs/person/a4_standing_1.png": {
+      "bytes": 824124,
+      "sha256": "6a6c3e7347468c60e029c7bb3b69431f802cbb6a9462194d60a92ed1c3d40f57"
+    },
+    "packs/person/a4_standing_2.obj": {
+      "bytes": 14077,
+      "sha256": "0a4043a2e1fa91c1c224c10ec467c6aea4c797e3d0cf28895bff2a29a494652e"
+    },
+    "packs/person/a4_standing_2.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a4_standing_3.obj": {
+      "bytes": 12592,
+      "sha256": "41962ef9bf9e601585426bd073dc19610722ce63ac174d71533ded45f9e2ee2f"
+    },
+    "packs/person/a4_standing_3.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a4_standing_4.obj": {
+      "bytes": 159282,
+      "sha256": "ec10a8fff6a3acf9c8c602ebdb7dbe527363f9debd1ddba31cffc57e8e56e061"
+    },
+    "packs/person/a4_standing_4.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/person/a4_standing_5.obj": {
+      "bytes": 319575,
+      "sha256": "b8cd4af812a3936796c9845558bed54f4d021f82d3b948d89d68006f5e67e3d2"
+    },
+    "packs/person/a4_standing_5.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/person/a4_standing_6.obj": {
+      "bytes": 1693813,
+      "sha256": "360eadc3f0da73ea2f30abb8117add0d84d45bfce098851ff4d80ac0a18e472f"
+    },
+    "packs/person/a4_standing_6.png": {
+      "bytes": 1173410,
+      "sha256": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38"
+    },
+    "packs/person/a5_lying_0.obj": {
+      "bytes": 110878,
+      "sha256": "a58ce6aa395257022ba53c2ed631964b89244f2287c0ecf1e11939804d694daf"
+    },
+    "packs/person/a5_lying_0.png": {
+      "bytes": 579778,
+      "sha256": "c1d153b092cadfd0a436a1e34414c5881760897a6e903f7e59947a003831eca1"
+    },
+    "packs/person/a5_lying_1.obj": {
+      "bytes": 14083,
+      "sha256": "eeff31cecd3b11ecef8de82fe6e0172d64e9075b3b9e3cbf9311e503ee811a62"
+    },
+    "packs/person/a5_lying_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a5_lying_2.obj": {
+      "bytes": 283147,
+      "sha256": "2c5d730f76d0a6b5117cb4a391d35df86b7e1f41e36e6faf82ea5b2ad3dc778f"
+    },
+    "packs/person/a5_lying_2.png": {
+      "bytes": 711381,
+      "sha256": "bad8ffbd16c7c1b81bc301cbfb409cf77e968191eaa43510c9a88c100b9e3479"
+    },
+    "packs/person/a5_lying_3.obj": {
+      "bytes": 139170,
+      "sha256": "576830d06c21391af13c5cb571cc61623c76e42749f6653540ff3f2f6be8aa9b"
+    },
+    "packs/person/a5_lying_3.png": {
+      "bytes": 937620,
+      "sha256": "146beef22db2eaff68ad4e5abc9dfc9d14455e93d6cbbe98e4ffb758d2251b9a"
+    },
+    "packs/person/a5_lying_4.obj": {
+      "bytes": 474127,
+      "sha256": "d5536bd6912ee2647af14fc65a11127686113d50157558a05031f359d445a192"
+    },
+    "packs/person/a5_lying_4.png": {
+      "bytes": 937620,
+      "sha256": "146beef22db2eaff68ad4e5abc9dfc9d14455e93d6cbbe98e4ffb758d2251b9a"
+    },
+    "packs/person/a5_lying_5.obj": {
+      "bytes": 12596,
+      "sha256": "7d427ae0e133e834b6e1b539000aff007d2652edc2c835a52f7d2283a48ff1d5"
+    },
+    "packs/person/a5_lying_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a5_lying_6.obj": {
+      "bytes": 1500187,
+      "sha256": "b94af33c1995c2ea9af8e5fb72885c574d4af19cd92c12c6c3b341605b87aea1"
+    },
+    "packs/person/a5_lying_6.png": {
+      "bytes": 871266,
+      "sha256": "d2f52a02704ea8a474e2e3b6828f9267314db3fbdaec806aeadba27f3cd1e41e"
+    },
+    "packs/person/a5_sitting_0.obj": {
+      "bytes": 110878,
+      "sha256": "a58ce6aa395257022ba53c2ed631964b89244f2287c0ecf1e11939804d694daf"
+    },
+    "packs/person/a5_sitting_0.png": {
+      "bytes": 579778,
+      "sha256": "c1d153b092cadfd0a436a1e34414c5881760897a6e903f7e59947a003831eca1"
+    },
+    "packs/person/a5_sitting_1.obj": {
+      "bytes": 14083,
+      "sha256": "eeff31cecd3b11ecef8de82fe6e0172d64e9075b3b9e3cbf9311e503ee811a62"
+    },
+    "packs/person/a5_sitting_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a5_sitting_2.obj": {
+      "bytes": 283601,
+      "sha256": "ca199adcc4f24ef959b72fc182dbbcecb2b4631e069f2a5aa416b295e71d418d"
+    },
+    "packs/person/a5_sitting_2.png": {
+      "bytes": 711381,
+      "sha256": "bad8ffbd16c7c1b81bc301cbfb409cf77e968191eaa43510c9a88c100b9e3479"
+    },
+    "packs/person/a5_sitting_3.obj": {
+      "bytes": 139404,
+      "sha256": "c7d2ce19cb5d0870eb6fcd3548970e12ce40c496ddb83a9ba2519a3572e79857"
+    },
+    "packs/person/a5_sitting_3.png": {
+      "bytes": 937620,
+      "sha256": "146beef22db2eaff68ad4e5abc9dfc9d14455e93d6cbbe98e4ffb758d2251b9a"
+    },
+    "packs/person/a5_sitting_4.obj": {
+      "bytes": 474236,
+      "sha256": "e40cbae77bcfd531a718aab5694112917e2fea45f62572f96ac668c3264dd6b4"
+    },
+    "packs/person/a5_sitting_4.png": {
+      "bytes": 937620,
+      "sha256": "146beef22db2eaff68ad4e5abc9dfc9d14455e93d6cbbe98e4ffb758d2251b9a"
+    },
+    "packs/person/a5_sitting_5.obj": {
+      "bytes": 12596,
+      "sha256": "7d427ae0e133e834b6e1b539000aff007d2652edc2c835a52f7d2283a48ff1d5"
+    },
+    "packs/person/a5_sitting_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a5_sitting_6.obj": {
+      "bytes": 1500389,
+      "sha256": "d9063758d777e8a5f62462bd69e86880015c46d239c890f839983b8ae96d29e6"
+    },
+    "packs/person/a5_sitting_6.png": {
+      "bytes": 871266,
+      "sha256": "d2f52a02704ea8a474e2e3b6828f9267314db3fbdaec806aeadba27f3cd1e41e"
+    },
+    "packs/person/a5_standing_0.obj": {
+      "bytes": 110878,
+      "sha256": "a58ce6aa395257022ba53c2ed631964b89244f2287c0ecf1e11939804d694daf"
+    },
+    "packs/person/a5_standing_0.png": {
+      "bytes": 582880,
+      "sha256": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c"
+    },
+    "packs/person/a5_standing_1.obj": {
+      "bytes": 14083,
+      "sha256": "eeff31cecd3b11ecef8de82fe6e0172d64e9075b3b9e3cbf9311e503ee811a62"
+    },
+    "packs/person/a5_standing_1.png": {
+      "bytes": 21707,
+      "sha256": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189"
+    },
+    "packs/person/a5_standing_2.obj": {
+      "bytes": 283147,
+      "sha256": "2c5d730f76d0a6b5117cb4a391d35df86b7e1f41e36e6faf82ea5b2ad3dc778f"
+    },
+    "packs/person/a5_standing_2.png": {
+      "bytes": 714109,
+      "sha256": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552"
+    },
+    "packs/person/a5_standing_3.obj": {
+      "bytes": 139170,
+      "sha256": "576830d06c21391af13c5cb571cc61623c76e42749f6653540ff3f2f6be8aa9b"
+    },
+    "packs/person/a5_standing_3.png": {
+      "bytes": 938878,
+      "sha256": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43"
+    },
+    "packs/person/a5_standing_4.obj": {
+      "bytes": 474151,
+      "sha256": "b130db6ad16c56fb75bb3bb88a2ec8122e51f52badcb08bd654e48584952d1c5"
+    },
+    "packs/person/a5_standing_4.png": {
+      "bytes": 938878,
+      "sha256": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43"
+    },
+    "packs/person/a5_standing_5.obj": {
+      "bytes": 12596,
+      "sha256": "7d427ae0e133e834b6e1b539000aff007d2652edc2c835a52f7d2283a48ff1d5"
+    },
+    "packs/person/a5_standing_5.png": {
+      "bytes": 536232,
+      "sha256": "a853e2ebbb9a7735fbf8004b0f63bb2983cce952234954976714a19b3cfd741d"
+    },
+    "packs/person/a5_standing_6.obj": {
+      "bytes": 1500194,
+      "sha256": "9d1dbb89ac9c9fde3e05ba0492ba8a98dfdbca38d6b27155010fc862528dcd1b"
+    },
+    "packs/person/a5_standing_6.png": {
+      "bytes": 872421,
+      "sha256": "c74e48de9d7de0d223979ccf3e09253319815bc1a07e5abb3bf8591b2dadd0ec"
+    },
+    "packs/person/a6_lying_0.obj": {
+      "bytes": 264713,
+      "sha256": "cf875e558291157457f2c22e3351e3fbd8a0c7414db48e6e1251a5a6985d95c2"
+    },
+    "packs/person/a6_lying_0.png": {
+      "bytes": 1283898,
+      "sha256": "8772b3f58bf255a65ab17888f02a9cb7d11633dc07e2eb61656cd05fff4f1f6b"
+    },
+    "packs/person/a6_lying_1.obj": {
+      "bytes": 12592,
+      "sha256": "f6be4b60932a917d9a5cd6e25f32488dd54f79ed3efe0c9442ff42a34f13d49c"
+    },
+    "packs/person/a6_lying_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a6_lying_2.obj": {
+      "bytes": 35410,
+      "sha256": "8cd6f04230d180596a0bf867509777ee3392ab2960149148707afecfb6849882"
+    },
+    "packs/person/a6_lying_2.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person/a6_lying_3.obj": {
+      "bytes": 333971,
+      "sha256": "b1a9614cc7c8733460cbd494ea3bda07e5b07fe256262af5bf59a8e9ad75a916"
+    },
+    "packs/person/a6_lying_3.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person/a6_lying_4.obj": {
+      "bytes": 14136,
+      "sha256": "226cd7f6a2a28387f8b30fa50dc9b0a6bfd1ae976add70b645df9d3d7d40a174"
+    },
+    "packs/person/a6_lying_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a6_lying_5.obj": {
+      "bytes": 817044,
+      "sha256": "396655d3627da7069e0e0e5f7c33c6754defec3ad0f3c412aa7dcc2de1d5db55"
+    },
+    "packs/person/a6_lying_5.png": {
+      "bytes": 796356,
+      "sha256": "cf8125beba28a3c23b41b507eb1cde2deb9d6cd31331a090a3c63d19ec59a753"
+    },
+    "packs/person/a6_lying_6.obj": {
+      "bytes": 1544639,
+      "sha256": "a5e6e1346367159a4849cd62eb9c536e6d4ed47a3f512dfcf0d4b2a9b65551f8"
+    },
+    "packs/person/a6_lying_6.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/person/a6_sitting_0.obj": {
+      "bytes": 264869,
+      "sha256": "177aaa27e3c8c07ca259dc4930f54d826ac7a7545c9f739094f1735f56dada95"
+    },
+    "packs/person/a6_sitting_0.png": {
+      "bytes": 1283898,
+      "sha256": "8772b3f58bf255a65ab17888f02a9cb7d11633dc07e2eb61656cd05fff4f1f6b"
+    },
+    "packs/person/a6_sitting_1.obj": {
+      "bytes": 12592,
+      "sha256": "f6be4b60932a917d9a5cd6e25f32488dd54f79ed3efe0c9442ff42a34f13d49c"
+    },
+    "packs/person/a6_sitting_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a6_sitting_2.obj": {
+      "bytes": 35431,
+      "sha256": "3d73e6359829c892f58226e5dc30ff4519f79c9339516fb2d00c48c86164e9cc"
+    },
+    "packs/person/a6_sitting_2.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person/a6_sitting_3.obj": {
+      "bytes": 334096,
+      "sha256": "51d77758dbd6e2133c4346b8cd30da51514bdea61f7e31e56ea1827880b70753"
+    },
+    "packs/person/a6_sitting_3.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person/a6_sitting_4.obj": {
+      "bytes": 14136,
+      "sha256": "226cd7f6a2a28387f8b30fa50dc9b0a6bfd1ae976add70b645df9d3d7d40a174"
+    },
+    "packs/person/a6_sitting_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a6_sitting_5.obj": {
+      "bytes": 817032,
+      "sha256": "807550ace5235d7d12f0672bf9fb6aac15a378c4a0701fe18eac1bb6d6b25c7f"
+    },
+    "packs/person/a6_sitting_5.png": {
+      "bytes": 796356,
+      "sha256": "cf8125beba28a3c23b41b507eb1cde2deb9d6cd31331a090a3c63d19ec59a753"
+    },
+    "packs/person/a6_sitting_6.obj": {
+      "bytes": 1544698,
+      "sha256": "3feb794dd57437068239303d7d5192042503926a485a3ad6dc97915285469f8d"
+    },
+    "packs/person/a6_sitting_6.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/person/a6_standing_0.obj": {
+      "bytes": 264713,
+      "sha256": "cf875e558291157457f2c22e3351e3fbd8a0c7414db48e6e1251a5a6985d95c2"
+    },
+    "packs/person/a6_standing_0.png": {
+      "bytes": 1283898,
+      "sha256": "8772b3f58bf255a65ab17888f02a9cb7d11633dc07e2eb61656cd05fff4f1f6b"
+    },
+    "packs/person/a6_standing_1.obj": {
+      "bytes": 12592,
+      "sha256": "f6be4b60932a917d9a5cd6e25f32488dd54f79ed3efe0c9442ff42a34f13d49c"
+    },
+    "packs/person/a6_standing_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person/a6_standing_2.obj": {
+      "bytes": 35410,
+      "sha256": "8cd6f04230d180596a0bf867509777ee3392ab2960149148707afecfb6849882"
+    },
+    "packs/person/a6_standing_2.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person/a6_standing_3.obj": {
+      "bytes": 334018,
+      "sha256": "4a442360e163ebac5d2fc8c3fc427974a24c1ffdde3aaa45f1e91c98134a542e"
+    },
+    "packs/person/a6_standing_3.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person/a6_standing_4.obj": {
+      "bytes": 14136,
+      "sha256": "226cd7f6a2a28387f8b30fa50dc9b0a6bfd1ae976add70b645df9d3d7d40a174"
+    },
+    "packs/person/a6_standing_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person/a6_standing_5.obj": {
+      "bytes": 817040,
+      "sha256": "e0a8e2193145cfbf100df2a147ee9d8c7d786125f0e0c70642d513840706aadc"
+    },
+    "packs/person/a6_standing_5.png": {
+      "bytes": 796356,
+      "sha256": "cf8125beba28a3c23b41b507eb1cde2deb9d6cd31331a090a3c63d19ec59a753"
+    },
+    "packs/person/a6_standing_6.obj": {
+      "bytes": 1544693,
+      "sha256": "40ce48b0299e9c3393b311f8d91874fca14a1b49ee69f12554028ba07f915031"
+    },
+    "packs/person/a6_standing_6.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/person/pack.json": {
+      "bytes": 95185,
+      "sha256": "e16a6060edee1367fc94ca0cb0ee72c54fa231e8cb3741a5ff99c0da5253e54a"
+    },
+    "packs/person_down/a1_down_prone_0.obj": {
+      "bytes": 250781,
+      "sha256": "c0b6117856021c4dfb70ed96a7bad3e717aa46e8486cb0d766d722dcefe8e078"
+    },
+    "packs/person_down/a1_down_prone_0.png": {
+      "bytes": 796032,
+      "sha256": "b60811884d4355350625b37d260eb4f96d6ca7b709142f897b9c42cea68543f4"
+    },
+    "packs/person_down/a1_down_prone_1.obj": {
+      "bytes": 13990,
+      "sha256": "c4d9c223025ffa94fef36636f00addae09180ae2d452a18796ef7842b46ceece"
+    },
+    "packs/person_down/a1_down_prone_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a1_down_prone_2.obj": {
+      "bytes": 283789,
+      "sha256": "6cf2f79a0e172592a9e09d393664cec4612e2e1a7429849a520a42c7ae4bfacd"
+    },
+    "packs/person_down/a1_down_prone_2.png": {
+      "bytes": 1330603,
+      "sha256": "c4d9dab283377b6c9d066f62c9849912d97f9518ce50cc9823de9f43fbd62b36"
+    },
+    "packs/person_down/a1_down_prone_3.obj": {
+      "bytes": 661642,
+      "sha256": "262a56530ef97ffd847a67312522ce35f6d954c06093d64d3ebe0c1ddb85ab82"
+    },
+    "packs/person_down/a1_down_prone_3.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person_down/a1_down_prone_4.obj": {
+      "bytes": 801098,
+      "sha256": "6aee7d74ce9b87ea73c64c4a844eb2845dfd3480461e48463268c696d70dc517"
+    },
+    "packs/person_down/a1_down_prone_4.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person_down/a1_down_prone_5.obj": {
+      "bytes": 12536,
+      "sha256": "c7f18cbc7d9d64796f696d61420045de0f50c297178592537eca58852f35b894"
+    },
+    "packs/person_down/a1_down_prone_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a1_down_prone_6.obj": {
+      "bytes": 1384241,
+      "sha256": "49790bf729297101b16bab7fd01d2e976be184226750f761288b28935195b3fe"
+    },
+    "packs/person_down/a1_down_prone_6.png": {
+      "bytes": 1024843,
+      "sha256": "53b996bd9345193d500a089f1d27e07a2e72f83c17df79db8c81aadf4008c06f"
+    },
+    "packs/person_down/a1_down_side_0.obj": {
+      "bytes": 252328,
+      "sha256": "bf619ff8b71556edb00b44e12928ebe48b85230cfcce9d4e51bbe27727e0ae02"
+    },
+    "packs/person_down/a1_down_side_0.png": {
+      "bytes": 796032,
+      "sha256": "b60811884d4355350625b37d260eb4f96d6ca7b709142f897b9c42cea68543f4"
+    },
+    "packs/person_down/a1_down_side_1.obj": {
+      "bytes": 13938,
+      "sha256": "fd29a0b78157f7e0f3b2c2bdaf6453870f0ad4d56bc0255af9e74cceb50d87ff"
+    },
+    "packs/person_down/a1_down_side_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a1_down_side_2.obj": {
+      "bytes": 283628,
+      "sha256": "60f62545c480b8f0e59494ae75bcbede4ceee1643754a5f03f81cdb33b8e0dfa"
+    },
+    "packs/person_down/a1_down_side_2.png": {
+      "bytes": 1330603,
+      "sha256": "c4d9dab283377b6c9d066f62c9849912d97f9518ce50cc9823de9f43fbd62b36"
+    },
+    "packs/person_down/a1_down_side_3.obj": {
+      "bytes": 662121,
+      "sha256": "72d916b16c2604d5bdac4f31bdaa676ef9102072b89508b585202173cc494ad6"
+    },
+    "packs/person_down/a1_down_side_3.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person_down/a1_down_side_4.obj": {
+      "bytes": 801581,
+      "sha256": "9b3335dd156e153524acc9b832e55419e12afd9823659377bdb0297e40e8f8d9"
+    },
+    "packs/person_down/a1_down_side_4.png": {
+      "bytes": 857359,
+      "sha256": "b2522f6a4fdf85ecdead09bd7b948e862145baf51af9d4d0a58c21cf90459b9a"
+    },
+    "packs/person_down/a1_down_side_5.obj": {
+      "bytes": 12534,
+      "sha256": "b214e273358988292dc7dd2c23d04f03434065399e789768beba6f409a0fa60f"
+    },
+    "packs/person_down/a1_down_side_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a1_down_side_6.obj": {
+      "bytes": 1386455,
+      "sha256": "8af79155f7b9c730faaa9e001e677644311d763d576c75444c9a1f07bfb251f0"
+    },
+    "packs/person_down/a1_down_side_6.png": {
+      "bytes": 1024843,
+      "sha256": "53b996bd9345193d500a089f1d27e07a2e72f83c17df79db8c81aadf4008c06f"
+    },
+    "packs/person_down/a2_down_prone_0.obj": {
+      "bytes": 265434,
+      "sha256": "b864f19606131d2bbe779dd868e50229210dcf475d0afe41541ed4dd2620374c"
+    },
+    "packs/person_down/a2_down_prone_0.png": {
+      "bytes": 1081971,
+      "sha256": "3a3fbfda7a7ca1876f6b7bc64486539b4e8225b5ce1cca1a76bb6cc95fb5b2a9"
+    },
+    "packs/person_down/a2_down_prone_1.obj": {
+      "bytes": 12551,
+      "sha256": "f55b259d3aa4ccc1d3c03020cd65f27eaa1103fd18555fee5c2c793f9e90f771"
+    },
+    "packs/person_down/a2_down_prone_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a2_down_prone_2.obj": {
+      "bytes": 119011,
+      "sha256": "3989daf8f4909ee5c5c961ab76af7a05f0d7372799791152a124b734b6ac9618"
+    },
+    "packs/person_down/a2_down_prone_2.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person_down/a2_down_prone_3.obj": {
+      "bytes": 238853,
+      "sha256": "f330219e451f0e4b5cbc3afebe9fef43e3a2a98adb5f6a113c938098f01e2203"
+    },
+    "packs/person_down/a2_down_prone_3.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person_down/a2_down_prone_4.obj": {
+      "bytes": 14025,
+      "sha256": "f519198d7d85a5c437ee35dda8154751798dce37ecf4afc45245c311b30ab4d8"
+    },
+    "packs/person_down/a2_down_prone_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a2_down_prone_5.obj": {
+      "bytes": 221607,
+      "sha256": "3cd54a5a383fac6f0b11f8e9dc8849e66acb5386e6d792beba1255d1eb745406"
+    },
+    "packs/person_down/a2_down_prone_5.png": {
+      "bytes": 588943,
+      "sha256": "f58b756eef469d3e05897f55d5e633f3a8f16303583808deafbf268cbe6781ad"
+    },
+    "packs/person_down/a2_down_prone_6.obj": {
+      "bytes": 1519154,
+      "sha256": "3b859de2e175ced61fa554bd8abc34b75d3224033a56baba7ad9307f0749340d"
+    },
+    "packs/person_down/a2_down_prone_6.png": {
+      "bytes": 1084174,
+      "sha256": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329"
+    },
+    "packs/person_down/a2_down_side_0.obj": {
+      "bytes": 265086,
+      "sha256": "998073e07faaa7332db37d1d7860a47165bc3b6ab0ebf99484c5f7c26c4f8e49"
+    },
+    "packs/person_down/a2_down_side_0.png": {
+      "bytes": 1081971,
+      "sha256": "3a3fbfda7a7ca1876f6b7bc64486539b4e8225b5ce1cca1a76bb6cc95fb5b2a9"
+    },
+    "packs/person_down/a2_down_side_1.obj": {
+      "bytes": 12475,
+      "sha256": "2a34eb14cc0eada31223330aff36c67fcb18e420c9e659d2e8c1546ba2a275d1"
+    },
+    "packs/person_down/a2_down_side_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a2_down_side_2.obj": {
+      "bytes": 118864,
+      "sha256": "b555acee19cd81dac2b833c164ef3dcd209b21bd1b233680b2d45c03e5290a90"
+    },
+    "packs/person_down/a2_down_side_2.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person_down/a2_down_side_3.obj": {
+      "bytes": 238946,
+      "sha256": "1c52365a87c41cc4e0b557098980fa655700ae77dfa6231b9d58fa1f4230eb47"
+    },
+    "packs/person_down/a2_down_side_3.png": {
+      "bytes": 930849,
+      "sha256": "0bc7c817d15510ea6ef348e3a3799e03d767f65db84d781166ac750595338f35"
+    },
+    "packs/person_down/a2_down_side_4.obj": {
+      "bytes": 13899,
+      "sha256": "2add705819c045f10560ea4d3b9c89ade2068caa59c2333a0e4b8f8f100babd6"
+    },
+    "packs/person_down/a2_down_side_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a2_down_side_5.obj": {
+      "bytes": 221703,
+      "sha256": "6d12c5d0d047b4a637ca68ee2a1c3e2978d547f3ddd67edcde3e9a1aaba84b58"
+    },
+    "packs/person_down/a2_down_side_5.png": {
+      "bytes": 588943,
+      "sha256": "f58b756eef469d3e05897f55d5e633f3a8f16303583808deafbf268cbe6781ad"
+    },
+    "packs/person_down/a2_down_side_6.obj": {
+      "bytes": 1520311,
+      "sha256": "f96430f2e8c9c2bff12141f1b154a7404a93c1c3fbdca4b92202f07b8687069c"
+    },
+    "packs/person_down/a2_down_side_6.png": {
+      "bytes": 1084174,
+      "sha256": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329"
+    },
+    "packs/person_down/a3_down_prone_0.obj": {
+      "bytes": 151441,
+      "sha256": "3f9532c4a3929f2d0228000d07872737bb2aa250acd789eb3be25925c11667ce"
+    },
+    "packs/person_down/a3_down_prone_0.png": {
+      "bytes": 629946,
+      "sha256": "9888992e1202aca7158bc4b9a3af2992fcfd52b499e8139c5ad10951d3d2e891"
+    },
+    "packs/person_down/a3_down_prone_1.obj": {
+      "bytes": 14010,
+      "sha256": "406e9bca6eef144df6d5f7945b7fec3e7be22efcd09377f98ff6802432dc1809"
+    },
+    "packs/person_down/a3_down_prone_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a3_down_prone_2.obj": {
+      "bytes": 378810,
+      "sha256": "dcf982c4dee794b2b4afa179c9f3d7cd375ca8719553064dc8fd892928b7cf5b"
+    },
+    "packs/person_down/a3_down_prone_2.png": {
+      "bytes": 305439,
+      "sha256": "cb126e9dee72107f799a2f53a3c97a1200441f48d7c3fe8c67b5fe4e448de355"
+    },
+    "packs/person_down/a3_down_prone_3.obj": {
+      "bytes": 120687,
+      "sha256": "6f6acb7130aaa5aaf149113b839a4201e28b5705fde0a3eaa6b77ae41f1d247d"
+    },
+    "packs/person_down/a3_down_prone_3.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person_down/a3_down_prone_4.obj": {
+      "bytes": 294619,
+      "sha256": "2bb321120fa0696996dc4e1aabcb0b6f7fd3fde5ae391282cbf93cdc723a9858"
+    },
+    "packs/person_down/a3_down_prone_4.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person_down/a3_down_prone_5.obj": {
+      "bytes": 12521,
+      "sha256": "022f8765c83391e68f9db20bfa1d70123cbfca166e967b206d46f76d8a5345a0"
+    },
+    "packs/person_down/a3_down_prone_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a3_down_prone_6.obj": {
+      "bytes": 1414746,
+      "sha256": "2b422417eab02485cbdf6b0652e5797ffee0dfcb4d81650b0a623bc7d28d7a96"
+    },
+    "packs/person_down/a3_down_prone_6.png": {
+      "bytes": 989109,
+      "sha256": "d26dccdcd7712ab65d64aaad2bab30f2b0facc8f7858d3972da6b3e0ca01a207"
+    },
+    "packs/person_down/a3_down_side_0.obj": {
+      "bytes": 151714,
+      "sha256": "bfc4b447a1131a8ab69f96203bdc0295de726f04d2967971dc01c4b151f3a485"
+    },
+    "packs/person_down/a3_down_side_0.png": {
+      "bytes": 629946,
+      "sha256": "9888992e1202aca7158bc4b9a3af2992fcfd52b499e8139c5ad10951d3d2e891"
+    },
+    "packs/person_down/a3_down_side_1.obj": {
+      "bytes": 13983,
+      "sha256": "eb5b7805ddb63dbe29b142932e5ffab1c56cc6f8c4169a61338338c891644717"
+    },
+    "packs/person_down/a3_down_side_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a3_down_side_2.obj": {
+      "bytes": 379006,
+      "sha256": "fb258452669faec8933b3e8c58d588dfd0edb8b16ebf5330af7fbac243ed3fb0"
+    },
+    "packs/person_down/a3_down_side_2.png": {
+      "bytes": 305439,
+      "sha256": "cb126e9dee72107f799a2f53a3c97a1200441f48d7c3fe8c67b5fe4e448de355"
+    },
+    "packs/person_down/a3_down_side_3.obj": {
+      "bytes": 120784,
+      "sha256": "44c0779e6b686850dc95183ce058942eae750d3d94debf2d7b6431f0b49a6169"
+    },
+    "packs/person_down/a3_down_side_3.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person_down/a3_down_side_4.obj": {
+      "bytes": 294879,
+      "sha256": "4fe3f5a39684ed0f867cdf5c174d7ca6d4e8ab7f0bca0cbf0e8ae3e37def4572"
+    },
+    "packs/person_down/a3_down_side_4.png": {
+      "bytes": 1073315,
+      "sha256": "b4317e72a19a12126956ad6561b5859abdeba3873844d619c47b3388962c7a31"
+    },
+    "packs/person_down/a3_down_side_5.obj": {
+      "bytes": 12499,
+      "sha256": "b72cf08788e092fabf6e09300f6af82538e5682045f6b704f6227faf286ae546"
+    },
+    "packs/person_down/a3_down_side_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a3_down_side_6.obj": {
+      "bytes": 1417359,
+      "sha256": "8de42b3b7e1f3c83664c77d0f3cbe71ebef59e824082b61d8df5f7206fa42ed9"
+    },
+    "packs/person_down/a3_down_side_6.png": {
+      "bytes": 989109,
+      "sha256": "d26dccdcd7712ab65d64aaad2bab30f2b0facc8f7858d3972da6b3e0ca01a207"
+    },
+    "packs/person_down/a4_down_prone_0.obj": {
+      "bytes": 265278,
+      "sha256": "a4300793362c30b767b0b6d269365a46aeeaedf8de7c3956f34bcde4fe045fea"
+    },
+    "packs/person_down/a4_down_prone_0.png": {
+      "bytes": 1165430,
+      "sha256": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f"
+    },
+    "packs/person_down/a4_down_prone_1.obj": {
+      "bytes": 535028,
+      "sha256": "594ce340c785d7346a9f8d988fdb34a1e6eb687fa550615ca8ff9585a805eba7"
+    },
+    "packs/person_down/a4_down_prone_1.png": {
+      "bytes": 825518,
+      "sha256": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c"
+    },
+    "packs/person_down/a4_down_prone_2.obj": {
+      "bytes": 13785,
+      "sha256": "00ea3e7b0e72dd4af216494b57dcf46b43c29089a9b03fc3b6b57b1c4fe68cc1"
+    },
+    "packs/person_down/a4_down_prone_2.png": {
+      "bytes": 21707,
+      "sha256": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189"
+    },
+    "packs/person_down/a4_down_prone_3.obj": {
+      "bytes": 12385,
+      "sha256": "14149b0dbf3e99e8e9ee97e33063555dd4a7fa4ee4f841532952cef819074c2e"
+    },
+    "packs/person_down/a4_down_prone_3.png": {
+      "bytes": 536232,
+      "sha256": "a853e2ebbb9a7735fbf8004b0f63bb2983cce952234954976714a19b3cfd741d"
+    },
+    "packs/person_down/a4_down_prone_4.obj": {
+      "bytes": 150814,
+      "sha256": "acb813a77591a107508d57075ad0bc3a80440dd8faf03844adbe8d7d36767e32"
+    },
+    "packs/person_down/a4_down_prone_4.png": {
+      "bytes": 1114196,
+      "sha256": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1"
+    },
+    "packs/person_down/a4_down_prone_5.obj": {
+      "bytes": 328014,
+      "sha256": "7d523a6876d58d8545f61a6c8b9b1565c0f33814e86255a2a814bf97ccdcfddf"
+    },
+    "packs/person_down/a4_down_prone_5.png": {
+      "bytes": 1114196,
+      "sha256": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1"
+    },
+    "packs/person_down/a4_down_prone_6.obj": {
+      "bytes": 1686730,
+      "sha256": "ca7a60ed2707a6d100275df6a2f2daf7d88ad7acb727ca192990ce395c2a9636"
+    },
+    "packs/person_down/a4_down_prone_6.png": {
+      "bytes": 1174057,
+      "sha256": "8871e276aeede706872bfca7a206ecaa93bc96a18a550550fe849247f84209f3"
+    },
+    "packs/person_down/a4_down_side_0.obj": {
+      "bytes": 264797,
+      "sha256": "8c95afedbebe087b79ed97a776140a4233096b7beffa5f5ee521c909ffe60e40"
+    },
+    "packs/person_down/a4_down_side_0.png": {
+      "bytes": 1165430,
+      "sha256": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f"
+    },
+    "packs/person_down/a4_down_side_1.obj": {
+      "bytes": 533172,
+      "sha256": "2255fed136a014571df460dbf30fdabf8fa89d9f579dc4ea05af1916d3d23bc7"
+    },
+    "packs/person_down/a4_down_side_1.png": {
+      "bytes": 825518,
+      "sha256": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c"
+    },
+    "packs/person_down/a4_down_side_2.obj": {
+      "bytes": 13904,
+      "sha256": "4ec52766e6b503971126f57c2f66786053c5a7adc585eb648b8a634a5ecb3538"
+    },
+    "packs/person_down/a4_down_side_2.png": {
+      "bytes": 21707,
+      "sha256": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189"
+    },
+    "packs/person_down/a4_down_side_3.obj": {
+      "bytes": 12491,
+      "sha256": "1fb115de508b0265fa8af273fc9466728f3caa4276a21dbecf52c4a96b672a06"
+    },
+    "packs/person_down/a4_down_side_3.png": {
+      "bytes": 536232,
+      "sha256": "a853e2ebbb9a7735fbf8004b0f63bb2983cce952234954976714a19b3cfd741d"
+    },
+    "packs/person_down/a4_down_side_4.obj": {
+      "bytes": 150898,
+      "sha256": "4ca4118dbda13ecc7a3a3ef7b9af0b351c6efe784333914a15675d383fb9101f"
+    },
+    "packs/person_down/a4_down_side_4.png": {
+      "bytes": 1114196,
+      "sha256": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1"
+    },
+    "packs/person_down/a4_down_side_5.obj": {
+      "bytes": 328161,
+      "sha256": "d7b007fc0a7f69915f0b4660e95051752373ebe46d9aa94d954d46df0e17ecc7"
+    },
+    "packs/person_down/a4_down_side_5.png": {
+      "bytes": 1114196,
+      "sha256": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1"
+    },
+    "packs/person_down/a4_down_side_6.obj": {
+      "bytes": 1692230,
+      "sha256": "bd4efd6478642250245cb8c2f2632fdb5694b0d70b6fb137c435ce229c91b596"
+    },
+    "packs/person_down/a4_down_side_6.png": {
+      "bytes": 1174057,
+      "sha256": "8871e276aeede706872bfca7a206ecaa93bc96a18a550550fe849247f84209f3"
+    },
+    "packs/person_down/a5_down_prone_0.obj": {
+      "bytes": 111027,
+      "sha256": "6a1e8b5e67efb5e17ae52051f975b9bfbae5279efca21225eef88b6a5611f4e5"
+    },
+    "packs/person_down/a5_down_prone_0.png": {
+      "bytes": 579778,
+      "sha256": "c1d153b092cadfd0a436a1e34414c5881760897a6e903f7e59947a003831eca1"
+    },
+    "packs/person_down/a5_down_prone_1.obj": {
+      "bytes": 13994,
+      "sha256": "d56f655388321d89def8fe9796062c93efbc68446401fd4c2977ceafb03f54e7"
+    },
+    "packs/person_down/a5_down_prone_1.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a5_down_prone_2.obj": {
+      "bytes": 283229,
+      "sha256": "764de37423cc2338a970e38a42e3cd3cf3a56130b3fb9e45ae2ae080a0958a84"
+    },
+    "packs/person_down/a5_down_prone_2.png": {
+      "bytes": 711381,
+      "sha256": "bad8ffbd16c7c1b81bc301cbfb409cf77e968191eaa43510c9a88c100b9e3479"
+    },
+    "packs/person_down/a5_down_prone_3.obj": {
+      "bytes": 135744,
+      "sha256": "da7287b3ba8a8105a8840a1ca7e11878f0bf8fa2e04ae3918e5e305d8369789c"
+    },
+    "packs/person_down/a5_down_prone_3.png": {
+      "bytes": 937620,
+      "sha256": "146beef22db2eaff68ad4e5abc9dfc9d14455e93d6cbbe98e4ffb758d2251b9a"
+    },
+    "packs/person_down/a5_down_prone_4.obj": {
+      "bytes": 477737,
+      "sha256": "18978c9748ec1d842f02d01e67ca0aefaaf57e491ea4ccdd826e4b14dc1e51c1"
+    },
+    "packs/person_down/a5_down_prone_4.png": {
+      "bytes": 937620,
+      "sha256": "146beef22db2eaff68ad4e5abc9dfc9d14455e93d6cbbe98e4ffb758d2251b9a"
+    },
+    "packs/person_down/a5_down_prone_5.obj": {
+      "bytes": 12542,
+      "sha256": "fbd5d483f1412a1be63b4272e933e342a0a8968f4c3474759201acfa4892abc9"
+    },
+    "packs/person_down/a5_down_prone_5.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a5_down_prone_6.obj": {
+      "bytes": 1497114,
+      "sha256": "6cd91a86ca1f312dee83e72b2f702ef36421db7e49d9ea893b4a95ecf6645cc6"
+    },
+    "packs/person_down/a5_down_prone_6.png": {
+      "bytes": 871266,
+      "sha256": "d2f52a02704ea8a474e2e3b6828f9267314db3fbdaec806aeadba27f3cd1e41e"
+    },
+    "packs/person_down/a5_down_side_0.obj": {
+      "bytes": 111705,
+      "sha256": "454e35ce4e0335c013d1f54518650bdb753021a901cd05cfc65fb5e6d10482fd"
+    },
+    "packs/person_down/a5_down_side_0.png": {
+      "bytes": 582880,
+      "sha256": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c"
+    },
+    "packs/person_down/a5_down_side_1.obj": {
+      "bytes": 13947,
+      "sha256": "8d566be78023cfb6f1169874238c06410cacfe2f23956607fb847562ad5bd022"
+    },
+    "packs/person_down/a5_down_side_1.png": {
+      "bytes": 21707,
+      "sha256": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189"
+    },
+    "packs/person_down/a5_down_side_2.obj": {
+      "bytes": 283683,
+      "sha256": "f179039ecd21e689ba299fbbcf179fca8592c2363332c2e2805560a977ce213b"
+    },
+    "packs/person_down/a5_down_side_2.png": {
+      "bytes": 714109,
+      "sha256": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552"
+    },
+    "packs/person_down/a5_down_side_3.obj": {
+      "bytes": 135932,
+      "sha256": "f4c24fc8817fb92d03a18611bfc0605c572ea7690012f7f35ff2414f87da84d3"
+    },
+    "packs/person_down/a5_down_side_3.png": {
+      "bytes": 938878,
+      "sha256": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43"
+    },
+    "packs/person_down/a5_down_side_4.obj": {
+      "bytes": 477787,
+      "sha256": "e9b5d43fef01a68ca2921efb3b6908da857711cff66a881928085dbaa589b4f3"
+    },
+    "packs/person_down/a5_down_side_4.png": {
+      "bytes": 938878,
+      "sha256": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43"
+    },
+    "packs/person_down/a5_down_side_5.obj": {
+      "bytes": 12546,
+      "sha256": "a83c3e2c7d434d0de26b63f6a11dcd1371833dc2533718a4c3dd04631e57bbae"
+    },
+    "packs/person_down/a5_down_side_5.png": {
+      "bytes": 536232,
+      "sha256": "a853e2ebbb9a7735fbf8004b0f63bb2983cce952234954976714a19b3cfd741d"
+    },
+    "packs/person_down/a5_down_side_6.obj": {
+      "bytes": 1499717,
+      "sha256": "979ccb19c58cf51ba8d61fdf622e5920b54b68251b2fb2b1c2e2a0ff418a8a7b"
+    },
+    "packs/person_down/a5_down_side_6.png": {
+      "bytes": 872421,
+      "sha256": "c74e48de9d7de0d223979ccf3e09253319815bc1a07e5abb3bf8591b2dadd0ec"
+    },
+    "packs/person_down/a6_down_prone_0.obj": {
+      "bytes": 265492,
+      "sha256": "4ef5e1cace1228d258f447602f2d14ffacc0bb6cd18f10d819f5735bdefa296a"
+    },
+    "packs/person_down/a6_down_prone_0.png": {
+      "bytes": 1283898,
+      "sha256": "8772b3f58bf255a65ab17888f02a9cb7d11633dc07e2eb61656cd05fff4f1f6b"
+    },
+    "packs/person_down/a6_down_prone_1.obj": {
+      "bytes": 12498,
+      "sha256": "c2b45c9390cf1a3d7f12add6928fede0096356eb4e322ea1e0dcf96dcdfdfd38"
+    },
+    "packs/person_down/a6_down_prone_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a6_down_prone_2.obj": {
+      "bytes": 34156,
+      "sha256": "f386d7e91b589da097250ab4d0398568e8286fb36580be40dcc88b5de413f949"
+    },
+    "packs/person_down/a6_down_prone_2.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person_down/a6_down_prone_3.obj": {
+      "bytes": 335285,
+      "sha256": "17d01c4f7c662c73a7121646700878a0dcbb04fa4205a86f703481251d8b1b14"
+    },
+    "packs/person_down/a6_down_prone_3.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person_down/a6_down_prone_4.obj": {
+      "bytes": 13991,
+      "sha256": "16b0ef33bd272004c0d8b7c61c0ee28dfdecf0cfe34b0c3aecb6a0ca1cc456f5"
+    },
+    "packs/person_down/a6_down_prone_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a6_down_prone_5.obj": {
+      "bytes": 814437,
+      "sha256": "067ff894c37c56f354ae1aaf2acf05b4209789c8d99f7cf799a3797216df0f8e"
+    },
+    "packs/person_down/a6_down_prone_5.png": {
+      "bytes": 796356,
+      "sha256": "cf8125beba28a3c23b41b507eb1cde2deb9d6cd31331a090a3c63d19ec59a753"
+    },
+    "packs/person_down/a6_down_prone_6.obj": {
+      "bytes": 1539877,
+      "sha256": "4bde2a154ff096d63642163cfec99a8a2d65016b11addfbb0ac38421203e7d02"
+    },
+    "packs/person_down/a6_down_prone_6.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/person_down/a6_down_side_0.obj": {
+      "bytes": 264980,
+      "sha256": "adc1eb0ec27d87c4e6598e7148f7bd558826dabd3032a097700735f08a55af48"
+    },
+    "packs/person_down/a6_down_side_0.png": {
+      "bytes": 1283898,
+      "sha256": "8772b3f58bf255a65ab17888f02a9cb7d11633dc07e2eb61656cd05fff4f1f6b"
+    },
+    "packs/person_down/a6_down_side_1.obj": {
+      "bytes": 12494,
+      "sha256": "64e6f21446fb1fc26fca0efd0acc3845b0e29cab92479562c8f911c047c393b2"
+    },
+    "packs/person_down/a6_down_side_1.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/person_down/a6_down_side_2.obj": {
+      "bytes": 34236,
+      "sha256": "f4ec1c7cb3ed1479e857f71ab00669c0991c71d92db4dfd5422030a9b6c134da"
+    },
+    "packs/person_down/a6_down_side_2.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person_down/a6_down_side_3.obj": {
+      "bytes": 335407,
+      "sha256": "ee46e09fd6bdbd010e1a28f414995d37e111307c8e302871a03184bcc69489c7"
+    },
+    "packs/person_down/a6_down_side_3.png": {
+      "bytes": 618015,
+      "sha256": "d3538acd5811e469e1560ca36cdcafe4831f93cc2ce8e506729774d39a16eee8"
+    },
+    "packs/person_down/a6_down_side_4.obj": {
+      "bytes": 13977,
+      "sha256": "6f7ca85e58cf3ff481a4843a972df35d30bb923be20cc3293f8c9a4715dde280"
+    },
+    "packs/person_down/a6_down_side_4.png": {
+      "bytes": 21607,
+      "sha256": "154270d4ade00cd899eaab038d7967acf40d0a1ae5f3ca14b926fffb22740da2"
+    },
+    "packs/person_down/a6_down_side_5.obj": {
+      "bytes": 815155,
+      "sha256": "0cd1cfbb198804ddc4604713b8db2e8b039e9555f178d634f49390ebe549f15f"
+    },
+    "packs/person_down/a6_down_side_5.png": {
+      "bytes": 796356,
+      "sha256": "cf8125beba28a3c23b41b507eb1cde2deb9d6cd31331a090a3c63d19ec59a753"
+    },
+    "packs/person_down/a6_down_side_6.obj": {
+      "bytes": 1542805,
+      "sha256": "825fa6c92f4345cfc071b76cd343e7101e8648aadd8463dfc2b63362d9035f95"
+    },
+    "packs/person_down/a6_down_side_6.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/person_down/calibration/a1_down_prone_support_fit.json": {
+      "bytes": 14395,
+      "sha256": "ed502391ca0d185238b332fe5dbad122eced6dcb07713f5a5a2d299626272d82"
+    },
+    "packs/person_down/calibration/a1_down_side_support_fit.json": {
+      "bytes": 15755,
+      "sha256": "0c2f6ef7db1de327bf2b2ab26ff3d13c1e7fc8edf3acff04ccb4526027a25975"
+    },
+    "packs/person_down/calibration/a2_down_prone_support_fit.json": {
+      "bytes": 13269,
+      "sha256": "be9b593979aaed20c0711ac2b2ef2e65f4837e47bd8f5f905f79fe59466cad08"
+    },
+    "packs/person_down/calibration/a2_down_side_support_fit.json": {
+      "bytes": 15577,
+      "sha256": "8acaed1b4707f98bab9f2e7267144f377961a04d36f8a59064b8a46dcb3e5371"
+    },
+    "packs/person_down/calibration/a3_down_prone_support_fit.json": {
+      "bytes": 11273,
+      "sha256": "13c8c18cfcd40ce7c2b6a29683ece24d4c7709a8164dedab58b9e4a80e593512"
+    },
+    "packs/person_down/calibration/a3_down_side_support_fit.json": {
+      "bytes": 16506,
+      "sha256": "b5f4cad9f7b1a61149802109d5bb8a40a4df0b7856c88369c893514c450e5c70"
+    },
+    "packs/person_down/calibration/a4_down_prone_support_fit.json": {
+      "bytes": 10850,
+      "sha256": "a2dbe77b1714495c840fb260105eb88910f2955ea41c6a0e734c0e8eb29969a5"
+    },
+    "packs/person_down/calibration/a4_down_side_support_fit.json": {
+      "bytes": 14122,
+      "sha256": "027989d3c6295346491032b766c6ab48432371e2bd8c0739dacf31f757e71cf0"
+    },
+    "packs/person_down/calibration/a5_down_prone_support_fit.json": {
+      "bytes": 27203,
+      "sha256": "5fd1b22f70e86bcc025782522775c5665c6b2491af12aa93540b70a6dfb06c73"
+    },
+    "packs/person_down/calibration/a5_down_side_support_fit.json": {
+      "bytes": 16515,
+      "sha256": "1ecfd36afede32bbe53274cae18ac3434ae2dc73573fb6d65e8e678de018fe37"
+    },
+    "packs/person_down/calibration/a6_down_prone_support_fit.json": {
+      "bytes": 9451,
+      "sha256": "31c551fc5ca8df4baef875e177172a1fe924ffe854271c795a1bd8a092af6791"
+    },
+    "packs/person_down/calibration/a6_down_side_support_fit.json": {
+      "bytes": 15063,
+      "sha256": "e071f1d6462fd45e2491ed5d46b746e9547efce1e53a0ee1652af3389ba84418"
+    },
+    "packs/person_down/calibration/target_prone.json": {
+      "bytes": 10359,
+      "sha256": "9b22fa61fcb12804687671f7f20975072c9f20435dca52a6991bf19f307e9780"
+    },
+    "packs/person_down/calibration/target_side.json": {
+      "bytes": 10246,
+      "sha256": "76751231533ad08cec187f902bbcc31c9bd6698877483e0fc53e0bae1ed54ead"
+    },
+    "packs/person_down/pack.json": {
+      "bytes": 77041,
+      "sha256": "90732b9d3d61a02651b95b78c2cb00e6facab88678dc8425c04ab0d5367f01ff"
+    },
+    "packs/plate/default_0.obj": {
+      "bytes": 313053,
+      "sha256": "ba9c557654ba9f14b2817de74cbf9943bbb85c72d67ea9397b566bbb5c1b65fe"
+    },
+    "packs/plate/default_0.png": {
+      "bytes": 419958,
+      "sha256": "0e62d77d678097baba619ff15515912674232a97e79f899c192ef3d036d7627e"
+    },
+    "packs/plate/pack.json": {
+      "bytes": 1988,
+      "sha256": "d270bd0009ba49b3a1e5a8f2439940289bc23bb89c5de6d12a690f883df607dd"
+    },
+    "packs/saucer/default_0.obj": {
+      "bytes": 212999,
+      "sha256": "938c6baf75fd8df297424205523bcf29b60aecfa4a3678e336ad7bdb3cd57b32"
+    },
+    "packs/saucer/default_0.png": {
+      "bytes": 341815,
+      "sha256": "791e7fc3ff8341f1a3094bb169492503f01fdd63ab8dfb9d9a04497a2ffe5933"
+    },
+    "packs/saucer/pack.json": {
+      "bytes": 1936,
+      "sha256": "47e5dda629208652464f5aae74596f4cdea8036606bd84862be0b55c518d141d"
+    },
+    "packs/screwdriver/default_0.obj": {
+      "bytes": 290882,
+      "sha256": "ef92ebd031ce72446bddba6f704c0232f32b440840e1aa9ec9acce1181ced0d7"
+    },
+    "packs/screwdriver/default_0.png": {
+      "bytes": 1117520,
+      "sha256": "0bcda6c6b5314e24a295702a7fdeaafc76ad4b4cc98260a4eec6ee94ed48fb0f"
+    },
+    "packs/screwdriver/pack.json": {
+      "bytes": 3286,
+      "sha256": "10a1a68036149b8bea50d789268761700f56a3671e77d69f148efe8da48941ce"
+    },
+    "packs/screwdriver/standing_0.obj": {
+      "bytes": 290854,
+      "sha256": "3a0823cd72071172de041943b02ab1c06763b58f9cbc77be659456f3e3f02215"
+    },
+    "packs/screwdriver/standing_0.png": {
+      "bytes": 1117520,
+      "sha256": "0bcda6c6b5314e24a295702a7fdeaafc76ad4b4cc98260a4eec6ee94ed48fb0f"
+    },
+    "packs/sofa/default_0.obj": {
+      "bytes": 8984,
+      "sha256": "3896a91282b1f9c8862d25e5be1821154df1954303f079623560a04e2f031459"
+    },
+    "packs/sofa/default_0.png": {
+      "bytes": 1622986,
+      "sha256": "63725e503275b7c4ec86b8581676505909c3d63ac08403fef2fbada21cd23f0a"
+    },
+    "packs/sofa/default_1.obj": {
+      "bytes": 709134,
+      "sha256": "31676bf040d271e5af558bb10b48f02ae745ff0495ed67f8edae94057f51c6f4"
+    },
+    "packs/sofa/default_1.png": {
+      "bytes": 788512,
+      "sha256": "3cc411892aed449de6db3d8502d549ec6253c32f3b564215242e67d28fb08d4d"
+    },
+    "packs/sofa/default_2.obj": {
+      "bytes": 569655,
+      "sha256": "450b390834ad68896ce59583dd23aa6d492c4b1c4ccc631967c20311e0353bdc"
+    },
+    "packs/sofa/default_2.png": {
+      "bytes": 509368,
+      "sha256": "5edcac2d37f27e43ed5afd2e71ecb5fb8733ebe7be5d3b6668f40625b46c2bff"
+    },
+    "packs/sofa/pack.json": {
+      "bytes": 2640,
+      "sha256": "a709f12a79a7536e2f9c5f5a2ae736ca03af5e596b09f965d8081a4a093b3278"
+    },
+    "packs/toddler/pack.json": {
+      "bytes": 30565,
+      "sha256": "67ebccd739c84bb23fd656b230b32f65b92c00882bdac623ae0634275592f2a8"
+    },
+    "packs/toddler/t1_sitting_floor_0.obj": {
+      "bytes": 396562,
+      "sha256": "81e8a2277f22bf6897f54f85a91f413fc32d1b525fb0e5294bb796369aa4303e"
+    },
+    "packs/toddler/t1_sitting_floor_0.png": {
+      "bytes": 440506,
+      "sha256": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd"
+    },
+    "packs/toddler/t1_sitting_floor_1.obj": {
+      "bytes": 12706,
+      "sha256": "78413d0087006fa39267537d5514f4fd46d27e4c0fd3687f841fc533e9ea87fa"
+    },
+    "packs/toddler/t1_sitting_floor_1.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/toddler/t1_sitting_floor_2.obj": {
+      "bytes": 12596,
+      "sha256": "36b659c2789b308e5f322e36edf0602d8f7507e7c6730cfe4ed01540d90b80d4"
+    },
+    "packs/toddler/t1_sitting_floor_2.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/toddler/t1_sitting_floor_3.obj": {
+      "bytes": 189331,
+      "sha256": "9dee7e04397289010542fb1ad629922fde79c5f72eeb08a4efa3dec6e7c88b3a"
+    },
+    "packs/toddler/t1_sitting_floor_3.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/toddler/t1_sitting_floor_4.obj": {
+      "bytes": 286971,
+      "sha256": "8e4beb51e65c9b8281ac254b5d02222a98c6e77d54fc06196764e139f8db1472"
+    },
+    "packs/toddler/t1_sitting_floor_4.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/toddler/t1_sitting_floor_5.obj": {
+      "bytes": 2154484,
+      "sha256": "69c0d4591c0c9f18c91ee0fcff5ac23eff89df42e9d781b07896d4c28b2559db"
+    },
+    "packs/toddler/t1_sitting_floor_5.png": {
+      "bytes": 1173410,
+      "sha256": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38"
+    },
+    "packs/toddler/t1_standing_0.obj": {
+      "bytes": 395430,
+      "sha256": "4a509c03f5df859c491e8fdf7623db8f0164b76ca22ffaf59120894482da61f9"
+    },
+    "packs/toddler/t1_standing_0.png": {
+      "bytes": 440506,
+      "sha256": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd"
+    },
+    "packs/toddler/t1_standing_1.obj": {
+      "bytes": 12702,
+      "sha256": "5ed9f18d2416cee2a62955f0206ca4f3cb2aace83e6c3e1997a1dfb24b8ad1c7"
+    },
+    "packs/toddler/t1_standing_1.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/toddler/t1_standing_2.obj": {
+      "bytes": 12592,
+      "sha256": "3c0c9241e87dfd0217d40d5b2f42010eaa9b5091edeff65dd07ada0e344ed64e"
+    },
+    "packs/toddler/t1_standing_2.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/toddler/t1_standing_3.obj": {
+      "bytes": 189308,
+      "sha256": "342fb97cebe7a1c2ab6e27d2b20cec0aeda8876a97ac1387928eaa237eccd5c7"
+    },
+    "packs/toddler/t1_standing_3.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/toddler/t1_standing_4.obj": {
+      "bytes": 286832,
+      "sha256": "cad185b6b96d38fae4263d6b014737a54c59956a5d49450ca450aadee4a36472"
+    },
+    "packs/toddler/t1_standing_4.png": {
+      "bytes": 1113151,
+      "sha256": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521"
+    },
+    "packs/toddler/t1_standing_5.obj": {
+      "bytes": 2154172,
+      "sha256": "84a47e9472b62ad0546f27c5fde86572c42dbc61ddc3ec6f05b45b43aaafa98e"
+    },
+    "packs/toddler/t1_standing_5.png": {
+      "bytes": 1173410,
+      "sha256": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38"
+    },
+    "packs/toddler/t2_sitting_floor_0.obj": {
+      "bytes": 396576,
+      "sha256": "48d1d789b74011c6d4afa87a4552790b787f1df11cf57f63222b27c20f6326ec"
+    },
+    "packs/toddler/t2_sitting_floor_0.png": {
+      "bytes": 440506,
+      "sha256": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd"
+    },
+    "packs/toddler/t2_sitting_floor_1.obj": {
+      "bytes": 12706,
+      "sha256": "32a6a14d7b636dbf74b229392fdcf0bc22c23c09f05080abebad8b60e1627794"
+    },
+    "packs/toddler/t2_sitting_floor_1.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/toddler/t2_sitting_floor_2.obj": {
+      "bytes": 134416,
+      "sha256": "6dbfd0b798b5ee99e1901199a622e8b7a5bf334d4e25b5104147d3b9f6d1e67f"
+    },
+    "packs/toddler/t2_sitting_floor_2.png": {
+      "bytes": 902722,
+      "sha256": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1"
+    },
+    "packs/toddler/t2_sitting_floor_3.obj": {
+      "bytes": 215871,
+      "sha256": "70fb5cc8ad9e74db749370301da3d8d9d017d13a2dca64bdeff6f90565ffd5fa"
+    },
+    "packs/toddler/t2_sitting_floor_3.png": {
+      "bytes": 902722,
+      "sha256": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1"
+    },
+    "packs/toddler/t2_sitting_floor_4.obj": {
+      "bytes": 12596,
+      "sha256": "0e70ab37d991310f8d97d3b678fc2278aae2d51cbba850dfc9debfebcbc7428e"
+    },
+    "packs/toddler/t2_sitting_floor_4.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/toddler/t2_sitting_floor_5.obj": {
+      "bytes": 1857105,
+      "sha256": "4da523e248ae0ba3d5c3e93a8c3d4fced0f5fe18d84c77c8643ee667f643347b"
+    },
+    "packs/toddler/t2_sitting_floor_5.png": {
+      "bytes": 1084174,
+      "sha256": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329"
+    },
+    "packs/toddler/t2_standing_0.obj": {
+      "bytes": 395454,
+      "sha256": "29310434bf5f0dc81c329f35faff5b708d5dc9eeb78b157567df82a8dbfe6cd2"
+    },
+    "packs/toddler/t2_standing_0.png": {
+      "bytes": 440506,
+      "sha256": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd"
+    },
+    "packs/toddler/t2_standing_1.obj": {
+      "bytes": 12702,
+      "sha256": "4806246dda3ab6b982636584dc58f8bb1cc962c50c54bf820c4a4c261122aa01"
+    },
+    "packs/toddler/t2_standing_1.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/toddler/t2_standing_2.obj": {
+      "bytes": 134296,
+      "sha256": "8fd8d2e4d49797a6ee3dfa0052faf77cf502b79ea175bb0773b28a0ef012e741"
+    },
+    "packs/toddler/t2_standing_2.png": {
+      "bytes": 902722,
+      "sha256": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1"
+    },
+    "packs/toddler/t2_standing_3.obj": {
+      "bytes": 215674,
+      "sha256": "2ca4a0d46b27125bc5df4225c85b8cb5eaad42b717c3cfbf4587cc7ae64dfe8b"
+    },
+    "packs/toddler/t2_standing_3.png": {
+      "bytes": 902722,
+      "sha256": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1"
+    },
+    "packs/toddler/t2_standing_4.obj": {
+      "bytes": 12592,
+      "sha256": "bfa134f35309db0060d8b8c739f79c06c32b10a02d69dc111884f654810c2116"
+    },
+    "packs/toddler/t2_standing_4.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/toddler/t2_standing_5.obj": {
+      "bytes": 1857241,
+      "sha256": "55bd9fdd19ec60cd533f609cfcfa77f7483ce6204a2745747392be0d85638d81"
+    },
+    "packs/toddler/t2_standing_5.png": {
+      "bytes": 1084174,
+      "sha256": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329"
+    },
+    "packs/toddler/t3_sitting_floor_0.obj": {
+      "bytes": 396539,
+      "sha256": "bd7a8dc8d5b184122bb174ec607406ff6658ada2c960ba6e7cb2fe61340d4199"
+    },
+    "packs/toddler/t3_sitting_floor_0.png": {
+      "bytes": 440506,
+      "sha256": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd"
+    },
+    "packs/toddler/t3_sitting_floor_1.obj": {
+      "bytes": 12704,
+      "sha256": "f3ca0ca1ff2d8dba74cba217a30fc36911ca8b586124f529d8e6a80c557f2bd0"
+    },
+    "packs/toddler/t3_sitting_floor_1.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/toddler/t3_sitting_floor_2.obj": {
+      "bytes": 169922,
+      "sha256": "c38b01a0f79563be27b939a386f89b8bf50415a4f3e2b5d543ad1fe2164dd7bc"
+    },
+    "packs/toddler/t3_sitting_floor_2.png": {
+      "bytes": 554126,
+      "sha256": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca"
+    },
+    "packs/toddler/t3_sitting_floor_3.obj": {
+      "bytes": 454389,
+      "sha256": "e5a196c30dffed66679533386683f4222bffba79e1010200224110c9120bda9d"
+    },
+    "packs/toddler/t3_sitting_floor_3.png": {
+      "bytes": 554126,
+      "sha256": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca"
+    },
+    "packs/toddler/t3_sitting_floor_4.obj": {
+      "bytes": 12596,
+      "sha256": "af39662982e6a413f79c5b2f3233827aeecec0aa9529e8aa8a20046b1881c386"
+    },
+    "packs/toddler/t3_sitting_floor_4.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/toddler/t3_sitting_floor_5.obj": {
+      "bytes": 1998288,
+      "sha256": "ee4f703f774b04782d151a263ba77c8d9da3f0fd55c36440410d14d6cd21d486"
+    },
+    "packs/toddler/t3_sitting_floor_5.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/toddler/t3_standing_0.obj": {
+      "bytes": 395405,
+      "sha256": "ffba48e190f40cc4d330ef2f59e8ba5ce0360810a3e4dba787ce831901014a25"
+    },
+    "packs/toddler/t3_standing_0.png": {
+      "bytes": 440506,
+      "sha256": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd"
+    },
+    "packs/toddler/t3_standing_1.obj": {
+      "bytes": 12702,
+      "sha256": "bcb0962a4aa9b31bfb8fa2b691efb0816e08f0c7280c8850461016039bcbc603"
+    },
+    "packs/toddler/t3_standing_1.png": {
+      "bytes": 12733,
+      "sha256": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64"
+    },
+    "packs/toddler/t3_standing_2.obj": {
+      "bytes": 169770,
+      "sha256": "5305f12cd01b348c96c3b9588a4c29133d3ab2441d27e25ba2ab8a54d75c2881"
+    },
+    "packs/toddler/t3_standing_2.png": {
+      "bytes": 554126,
+      "sha256": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca"
+    },
+    "packs/toddler/t3_standing_3.obj": {
+      "bytes": 453943,
+      "sha256": "88e2ef348c1a2fd7ff5cac30609bf1e70d3a2bc2c448a266d8778d75d48708d0"
+    },
+    "packs/toddler/t3_standing_3.png": {
+      "bytes": 554126,
+      "sha256": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca"
+    },
+    "packs/toddler/t3_standing_4.obj": {
+      "bytes": 12592,
+      "sha256": "87648273b4d9d1631f60424733a8f05ce226f2b174632e2cd1de62f0c9cd35a9"
+    },
+    "packs/toddler/t3_standing_4.png": {
+      "bytes": 530780,
+      "sha256": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72"
+    },
+    "packs/toddler/t3_standing_5.obj": {
+      "bytes": 1998135,
+      "sha256": "80d64312ce898899e369ca295e7ddc8f8e46d1e36d4ecdb08d24012accc7d5a2"
+    },
+    "packs/toddler/t3_standing_5.png": {
+      "bytes": 1022395,
+      "sha256": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+    },
+    "packs/tote/default_0.obj": {
+      "bytes": 636895,
+      "sha256": "70cb20ad955460896cb27103df93902649b12d69c7df2605df81fe42cbc3fa47"
+    },
+    "packs/tote/default_0.png": {
+      "bytes": 715607,
+      "sha256": "a4f0d17cab0c58ed7aebed08214faadd25d76ff9e22d73f13e2fd74b5b0382fb"
+    },
+    "packs/tote/pack.json": {
+      "bytes": 1956,
+      "sha256": "24f0d206ecc264dcf02286634bbf7883b96eeec3aa88a02f966d7661eebfcf67"
+    },
+    "plan.json": {
+      "bytes": 11849,
+      "sha256": "be075dae991305a0bb5925c2a7b320142d225a8f4abf6400255eb36dfb882f99"
+    },
+    "provenance/AUTHORED_HAND_RESOLUTION.md": {
+      "bytes": 1551,
+      "sha256": "1bed5e881abaf54832190f78262feeaeb900166bb1b6f3bb940221b2b440d67a"
+    },
+    "provenance/AUTHORED_HUMAN_MAPS.md": {
+      "bytes": 2136,
+      "sha256": "f00ce7ec56ea70334e3a0e6914d9a38083b9d28f051522488b337dc9c539d919"
+    },
+    "provenance/DOG_HEADING.md": {
+      "bytes": 2170,
+      "sha256": "ec6ccc7e19f6c0231f2a039477e0bbc3b6bc264f4aab255730556d2361f32c1e"
+    },
+    "provenance/PROVENANCE.v2.json": {
+      "bytes": 160672,
+      "sha256": "aa1af222d21304dbae859f4ab77b9daceb445e395e4f94195961816063f06b4b"
+    },
+    "provenance/asset_registry_supplement.json": {
+      "bytes": 3592,
+      "sha256": "4ce963bc74f2174cdc2cc01a18f1f442362f0a0691bf8c6aea9af6e7a4a7de39"
+    },
+    "provenance/compound_fixes.json": {
+      "bytes": 400,
+      "sha256": "c0093710ce6b2fdfb1e285b5fe87f8489955f81290f2d0a13599cf22f8bc2e61"
+    },
+    "provenance/dog_heading_fix.json": {
+      "bytes": 356,
+      "sha256": "fe491ecfe2b2c5817592e3530a95138f71d40ea97342d7a3a61407fcc59e44fc"
+    },
+    "provenance/fallen_pose_derivation.json": {
+      "bytes": 3479,
+      "sha256": "dcf79807a939f6cfe1a923472f416d163fab4574452dbbe5bab81ceb744c5d2f"
+    },
+    "provenance/final_catalog_config.json": {
+      "bytes": 31468,
+      "sha256": "d52bb7dfe7f159daea71ff80c9a49d3de9a73672b0e12a0b4ce7d28382341a3c"
+    },
+    "provenance/final_review_notes.json": {
+      "bytes": 4384,
+      "sha256": "75b76c720fdbb3a0e44bdfa00cae24243d84d7dfeb355a31ae88082f764f50bf"
+    },
+    "provenance/final_summary.json": {
+      "bytes": 2707,
+      "sha256": "57e134ed9a112a8f781f81cc16c188eeb3652f103bd48ff3db9645e0e1baf55f"
+    },
+    "provenance/hand_rebuild_validation.json": {
+      "bytes": 4584,
+      "sha256": "5ad39d6a4c64320c4dc48a3d7678bca8c52420c3895aeb39c71ba9474f6ed51f"
+    },
+    "provenance/provenance.json": {
+      "bytes": 832,
+      "sha256": "549c4600a64724ce9b95c21c294d87cb042021ad20af13b132028db81b2f45da"
+    },
+    "provenance/registration_validation.json": {
+      "bytes": 412,
+      "sha256": "87b8631fa9ce1cd1f6827ff69699019b69cea4dd22ff3db8af5e5a76ff320d1e"
+    },
+    "provenance/workflow_validation.json": {
+      "bytes": 3814,
+      "sha256": "94b737830f5c31f150691fef5b573f618b16ddc772651ce85b21c73d24157107"
+    },
+    "rsb_colors.json": {
+      "bytes": 2841,
+      "sha256": "39267620a26e620c9dfc3fdc8013dfb3801417ce300c1fad3c32cd1e44323251"
+    }
+  },
+  "local_derivations": {
+    "person_down": "provenance/fallen_pose_derivation.json"
+  },
+  "pack_count": 25,
+  "packs": {
+    "apple": {
+      "manifest": "packs/apple/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "bowl": {
+      "manifest": "packs/bowl/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "bread_loaf": {
+      "manifest": "packs/bread_loaf/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "cat": {
+      "manifest": "packs/cat/pack.json",
+      "referenced_files": [
+        "lying_0.obj",
+        "lying_0.png",
+        "standing_0.obj",
+        "standing_0.png"
+      ],
+      "variants": [
+        "lying",
+        "standing"
+      ]
+    },
+    "chair": {
+      "manifest": "packs/chair/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "cutting_board": {
+      "manifest": "packs/cutting_board/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "dining_table": {
+      "manifest": "packs/dining_table/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "dog": {
+      "manifest": "packs/dog/pack.json",
+      "referenced_files": [
+        "lying_0.obj",
+        "lying_0.png",
+        "standing_0.obj",
+        "standing_0.png"
+      ],
+      "variants": [
+        "lying",
+        "standing"
+      ]
+    },
+    "dog_bowl": {
+      "manifest": "packs/dog_bowl/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "eyeglasses": {
+      "manifest": "packs/eyeglasses/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png",
+        "default_1.obj"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "flower_pot": {
+      "manifest": "packs/flower_pot/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "hand": {
+      "manifest": "packs/hand/pack.json",
+      "referenced_files": [
+        "hd_L_0.obj",
+        "hd_L_0.png",
+        "hd_L_sleeve.obj",
+        "hd_L_sleeve.png",
+        "hd_R_0.obj",
+        "hd_R_0.png",
+        "hd_R_sleeve.obj",
+        "hd_R_sleeve.png",
+        "hl_L_0.obj",
+        "hl_L_0.png",
+        "hl_L_sleeve.obj",
+        "hl_L_sleeve.png",
+        "hl_R_0.obj",
+        "hl_R_0.png",
+        "hl_R_sleeve.obj",
+        "hl_R_sleeve.png",
+        "hm_L_0.obj",
+        "hm_L_0.png",
+        "hm_L_sleeve.obj",
+        "hm_L_sleeve.png",
+        "hm_R_0.obj",
+        "hm_R_0.png",
+        "hm_R_sleeve.obj",
+        "hm_R_sleeve.png"
+      ],
+      "variants": [
+        "hd_L",
+        "hd_R",
+        "hl_L",
+        "hl_R",
+        "hm_L",
+        "hm_R"
+      ]
+    },
+    "infant": {
+      "manifest": "packs/infant/pack.json",
+      "referenced_files": [
+        "i1_curled_0.obj",
+        "i1_curled_0.png",
+        "i1_curled_1.obj",
+        "i1_curled_1.png",
+        "i1_curled_2.obj",
+        "i1_curled_2.png",
+        "i1_curled_3.obj",
+        "i1_curled_3.png",
+        "i1_curled_4.obj",
+        "i1_curled_4.png",
+        "i2_curled_0.obj",
+        "i2_curled_0.png",
+        "i2_curled_1.obj",
+        "i2_curled_1.png",
+        "i2_curled_2.obj",
+        "i2_curled_2.png",
+        "i2_curled_3.obj",
+        "i2_curled_3.png",
+        "i2_curled_4.obj",
+        "i2_curled_4.png",
+        "i3_curled_0.obj",
+        "i3_curled_0.png",
+        "i3_curled_1.obj",
+        "i3_curled_1.png",
+        "i3_curled_2.obj",
+        "i3_curled_2.png",
+        "i3_curled_3.obj",
+        "i3_curled_3.png",
+        "i3_curled_4.obj",
+        "i3_curled_4.png"
+      ],
+      "variants": [
+        "i1_curled",
+        "i2_curled",
+        "i3_curled"
+      ]
+    },
+    "knife": {
+      "manifest": "packs/knife/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png",
+        "standing_0.obj",
+        "standing_0.png"
+      ],
+      "variants": [
+        "default",
+        "standing"
+      ]
+    },
+    "low_table": {
+      "manifest": "packs/low_table/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "melon": {
+      "manifest": "packs/melon/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "mug": {
+      "manifest": "packs/mug/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "person": {
+      "manifest": "packs/person/pack.json",
+      "referenced_files": [
+        "a1_lying_0.obj",
+        "a1_lying_0.png",
+        "a1_lying_1.obj",
+        "a1_lying_1.png",
+        "a1_lying_2.obj",
+        "a1_lying_2.png",
+        "a1_lying_3.obj",
+        "a1_lying_3.png",
+        "a1_lying_4.obj",
+        "a1_lying_4.png",
+        "a1_lying_5.obj",
+        "a1_lying_5.png",
+        "a1_lying_6.obj",
+        "a1_lying_6.png",
+        "a1_sitting_0.obj",
+        "a1_sitting_0.png",
+        "a1_sitting_1.obj",
+        "a1_sitting_1.png",
+        "a1_sitting_2.obj",
+        "a1_sitting_2.png",
+        "a1_sitting_3.obj",
+        "a1_sitting_3.png",
+        "a1_sitting_4.obj",
+        "a1_sitting_4.png",
+        "a1_sitting_5.obj",
+        "a1_sitting_5.png",
+        "a1_sitting_6.obj",
+        "a1_sitting_6.png",
+        "a1_standing_0.obj",
+        "a1_standing_0.png",
+        "a1_standing_1.obj",
+        "a1_standing_1.png",
+        "a1_standing_2.obj",
+        "a1_standing_2.png",
+        "a1_standing_3.obj",
+        "a1_standing_3.png",
+        "a1_standing_4.obj",
+        "a1_standing_4.png",
+        "a1_standing_5.obj",
+        "a1_standing_5.png",
+        "a1_standing_6.obj",
+        "a1_standing_6.png",
+        "a2_lying_0.obj",
+        "a2_lying_0.png",
+        "a2_lying_1.obj",
+        "a2_lying_1.png",
+        "a2_lying_2.obj",
+        "a2_lying_2.png",
+        "a2_lying_3.obj",
+        "a2_lying_3.png",
+        "a2_lying_4.obj",
+        "a2_lying_4.png",
+        "a2_lying_5.obj",
+        "a2_lying_5.png",
+        "a2_lying_6.obj",
+        "a2_lying_6.png",
+        "a2_sitting_0.obj",
+        "a2_sitting_0.png",
+        "a2_sitting_1.obj",
+        "a2_sitting_1.png",
+        "a2_sitting_2.obj",
+        "a2_sitting_2.png",
+        "a2_sitting_3.obj",
+        "a2_sitting_3.png",
+        "a2_sitting_4.obj",
+        "a2_sitting_4.png",
+        "a2_sitting_5.obj",
+        "a2_sitting_5.png",
+        "a2_sitting_6.obj",
+        "a2_sitting_6.png",
+        "a2_standing_0.obj",
+        "a2_standing_0.png",
+        "a2_standing_1.obj",
+        "a2_standing_1.png",
+        "a2_standing_2.obj",
+        "a2_standing_2.png",
+        "a2_standing_3.obj",
+        "a2_standing_3.png",
+        "a2_standing_4.obj",
+        "a2_standing_4.png",
+        "a2_standing_5.obj",
+        "a2_standing_5.png",
+        "a2_standing_6.obj",
+        "a2_standing_6.png",
+        "a3_lying_0.obj",
+        "a3_lying_0.png",
+        "a3_lying_1.obj",
+        "a3_lying_1.png",
+        "a3_lying_2.obj",
+        "a3_lying_2.png",
+        "a3_lying_3.obj",
+        "a3_lying_3.png",
+        "a3_lying_4.obj",
+        "a3_lying_4.png",
+        "a3_lying_5.obj",
+        "a3_lying_5.png",
+        "a3_lying_6.obj",
+        "a3_lying_6.png",
+        "a3_sitting_0.obj",
+        "a3_sitting_0.png",
+        "a3_sitting_1.obj",
+        "a3_sitting_1.png",
+        "a3_sitting_2.obj",
+        "a3_sitting_2.png",
+        "a3_sitting_3.obj",
+        "a3_sitting_3.png",
+        "a3_sitting_4.obj",
+        "a3_sitting_4.png",
+        "a3_sitting_5.obj",
+        "a3_sitting_5.png",
+        "a3_sitting_6.obj",
+        "a3_sitting_6.png",
+        "a3_standing_0.obj",
+        "a3_standing_0.png",
+        "a3_standing_1.obj",
+        "a3_standing_1.png",
+        "a3_standing_2.obj",
+        "a3_standing_2.png",
+        "a3_standing_3.obj",
+        "a3_standing_3.png",
+        "a3_standing_4.obj",
+        "a3_standing_4.png",
+        "a3_standing_5.obj",
+        "a3_standing_5.png",
+        "a3_standing_6.obj",
+        "a3_standing_6.png",
+        "a4_lying_0.obj",
+        "a4_lying_0.png",
+        "a4_lying_1.obj",
+        "a4_lying_1.png",
+        "a4_lying_2.obj",
+        "a4_lying_2.png",
+        "a4_lying_3.obj",
+        "a4_lying_3.png",
+        "a4_lying_4.obj",
+        "a4_lying_4.png",
+        "a4_lying_5.obj",
+        "a4_lying_5.png",
+        "a4_lying_6.obj",
+        "a4_lying_6.png",
+        "a4_sitting_0.obj",
+        "a4_sitting_0.png",
+        "a4_sitting_1.obj",
+        "a4_sitting_1.png",
+        "a4_sitting_2.obj",
+        "a4_sitting_2.png",
+        "a4_sitting_3.obj",
+        "a4_sitting_3.png",
+        "a4_sitting_4.obj",
+        "a4_sitting_4.png",
+        "a4_sitting_5.obj",
+        "a4_sitting_5.png",
+        "a4_sitting_6.obj",
+        "a4_sitting_6.png",
+        "a4_standing_0.obj",
+        "a4_standing_0.png",
+        "a4_standing_1.obj",
+        "a4_standing_1.png",
+        "a4_standing_2.obj",
+        "a4_standing_2.png",
+        "a4_standing_3.obj",
+        "a4_standing_3.png",
+        "a4_standing_4.obj",
+        "a4_standing_4.png",
+        "a4_standing_5.obj",
+        "a4_standing_5.png",
+        "a4_standing_6.obj",
+        "a4_standing_6.png",
+        "a5_lying_0.obj",
+        "a5_lying_0.png",
+        "a5_lying_1.obj",
+        "a5_lying_1.png",
+        "a5_lying_2.obj",
+        "a5_lying_2.png",
+        "a5_lying_3.obj",
+        "a5_lying_3.png",
+        "a5_lying_4.obj",
+        "a5_lying_4.png",
+        "a5_lying_5.obj",
+        "a5_lying_5.png",
+        "a5_lying_6.obj",
+        "a5_lying_6.png",
+        "a5_sitting_0.obj",
+        "a5_sitting_0.png",
+        "a5_sitting_1.obj",
+        "a5_sitting_1.png",
+        "a5_sitting_2.obj",
+        "a5_sitting_2.png",
+        "a5_sitting_3.obj",
+        "a5_sitting_3.png",
+        "a5_sitting_4.obj",
+        "a5_sitting_4.png",
+        "a5_sitting_5.obj",
+        "a5_sitting_5.png",
+        "a5_sitting_6.obj",
+        "a5_sitting_6.png",
+        "a5_standing_0.obj",
+        "a5_standing_0.png",
+        "a5_standing_1.obj",
+        "a5_standing_1.png",
+        "a5_standing_2.obj",
+        "a5_standing_2.png",
+        "a5_standing_3.obj",
+        "a5_standing_3.png",
+        "a5_standing_4.obj",
+        "a5_standing_4.png",
+        "a5_standing_5.obj",
+        "a5_standing_5.png",
+        "a5_standing_6.obj",
+        "a5_standing_6.png",
+        "a6_lying_0.obj",
+        "a6_lying_0.png",
+        "a6_lying_1.obj",
+        "a6_lying_1.png",
+        "a6_lying_2.obj",
+        "a6_lying_2.png",
+        "a6_lying_3.obj",
+        "a6_lying_3.png",
+        "a6_lying_4.obj",
+        "a6_lying_4.png",
+        "a6_lying_5.obj",
+        "a6_lying_5.png",
+        "a6_lying_6.obj",
+        "a6_lying_6.png",
+        "a6_sitting_0.obj",
+        "a6_sitting_0.png",
+        "a6_sitting_1.obj",
+        "a6_sitting_1.png",
+        "a6_sitting_2.obj",
+        "a6_sitting_2.png",
+        "a6_sitting_3.obj",
+        "a6_sitting_3.png",
+        "a6_sitting_4.obj",
+        "a6_sitting_4.png",
+        "a6_sitting_5.obj",
+        "a6_sitting_5.png",
+        "a6_sitting_6.obj",
+        "a6_sitting_6.png",
+        "a6_standing_0.obj",
+        "a6_standing_0.png",
+        "a6_standing_1.obj",
+        "a6_standing_1.png",
+        "a6_standing_2.obj",
+        "a6_standing_2.png",
+        "a6_standing_3.obj",
+        "a6_standing_3.png",
+        "a6_standing_4.obj",
+        "a6_standing_4.png",
+        "a6_standing_5.obj",
+        "a6_standing_5.png",
+        "a6_standing_6.obj",
+        "a6_standing_6.png"
+      ],
+      "variants": [
+        "a1_lying",
+        "a1_sitting",
+        "a1_standing",
+        "a2_lying",
+        "a2_sitting",
+        "a2_standing",
+        "a3_lying",
+        "a3_sitting",
+        "a3_standing",
+        "a4_lying",
+        "a4_sitting",
+        "a4_standing",
+        "a5_lying",
+        "a5_sitting",
+        "a5_standing",
+        "a6_lying",
+        "a6_sitting",
+        "a6_standing"
+      ]
+    },
+    "person_down": {
+      "manifest": "packs/person_down/pack.json",
+      "referenced_files": [
+        "a1_down_prone_0.obj",
+        "a1_down_prone_0.png",
+        "a1_down_prone_1.obj",
+        "a1_down_prone_1.png",
+        "a1_down_prone_2.obj",
+        "a1_down_prone_2.png",
+        "a1_down_prone_3.obj",
+        "a1_down_prone_3.png",
+        "a1_down_prone_4.obj",
+        "a1_down_prone_4.png",
+        "a1_down_prone_5.obj",
+        "a1_down_prone_5.png",
+        "a1_down_prone_6.obj",
+        "a1_down_prone_6.png",
+        "a1_down_side_0.obj",
+        "a1_down_side_0.png",
+        "a1_down_side_1.obj",
+        "a1_down_side_1.png",
+        "a1_down_side_2.obj",
+        "a1_down_side_2.png",
+        "a1_down_side_3.obj",
+        "a1_down_side_3.png",
+        "a1_down_side_4.obj",
+        "a1_down_side_4.png",
+        "a1_down_side_5.obj",
+        "a1_down_side_5.png",
+        "a1_down_side_6.obj",
+        "a1_down_side_6.png",
+        "a2_down_prone_0.obj",
+        "a2_down_prone_0.png",
+        "a2_down_prone_1.obj",
+        "a2_down_prone_1.png",
+        "a2_down_prone_2.obj",
+        "a2_down_prone_2.png",
+        "a2_down_prone_3.obj",
+        "a2_down_prone_3.png",
+        "a2_down_prone_4.obj",
+        "a2_down_prone_4.png",
+        "a2_down_prone_5.obj",
+        "a2_down_prone_5.png",
+        "a2_down_prone_6.obj",
+        "a2_down_prone_6.png",
+        "a2_down_side_0.obj",
+        "a2_down_side_0.png",
+        "a2_down_side_1.obj",
+        "a2_down_side_1.png",
+        "a2_down_side_2.obj",
+        "a2_down_side_2.png",
+        "a2_down_side_3.obj",
+        "a2_down_side_3.png",
+        "a2_down_side_4.obj",
+        "a2_down_side_4.png",
+        "a2_down_side_5.obj",
+        "a2_down_side_5.png",
+        "a2_down_side_6.obj",
+        "a2_down_side_6.png",
+        "a3_down_prone_0.obj",
+        "a3_down_prone_0.png",
+        "a3_down_prone_1.obj",
+        "a3_down_prone_1.png",
+        "a3_down_prone_2.obj",
+        "a3_down_prone_2.png",
+        "a3_down_prone_3.obj",
+        "a3_down_prone_3.png",
+        "a3_down_prone_4.obj",
+        "a3_down_prone_4.png",
+        "a3_down_prone_5.obj",
+        "a3_down_prone_5.png",
+        "a3_down_prone_6.obj",
+        "a3_down_prone_6.png",
+        "a3_down_side_0.obj",
+        "a3_down_side_0.png",
+        "a3_down_side_1.obj",
+        "a3_down_side_1.png",
+        "a3_down_side_2.obj",
+        "a3_down_side_2.png",
+        "a3_down_side_3.obj",
+        "a3_down_side_3.png",
+        "a3_down_side_4.obj",
+        "a3_down_side_4.png",
+        "a3_down_side_5.obj",
+        "a3_down_side_5.png",
+        "a3_down_side_6.obj",
+        "a3_down_side_6.png",
+        "a4_down_prone_0.obj",
+        "a4_down_prone_0.png",
+        "a4_down_prone_1.obj",
+        "a4_down_prone_1.png",
+        "a4_down_prone_2.obj",
+        "a4_down_prone_2.png",
+        "a4_down_prone_3.obj",
+        "a4_down_prone_3.png",
+        "a4_down_prone_4.obj",
+        "a4_down_prone_4.png",
+        "a4_down_prone_5.obj",
+        "a4_down_prone_5.png",
+        "a4_down_prone_6.obj",
+        "a4_down_prone_6.png",
+        "a4_down_side_0.obj",
+        "a4_down_side_0.png",
+        "a4_down_side_1.obj",
+        "a4_down_side_1.png",
+        "a4_down_side_2.obj",
+        "a4_down_side_2.png",
+        "a4_down_side_3.obj",
+        "a4_down_side_3.png",
+        "a4_down_side_4.obj",
+        "a4_down_side_4.png",
+        "a4_down_side_5.obj",
+        "a4_down_side_5.png",
+        "a4_down_side_6.obj",
+        "a4_down_side_6.png",
+        "a5_down_prone_0.obj",
+        "a5_down_prone_0.png",
+        "a5_down_prone_1.obj",
+        "a5_down_prone_1.png",
+        "a5_down_prone_2.obj",
+        "a5_down_prone_2.png",
+        "a5_down_prone_3.obj",
+        "a5_down_prone_3.png",
+        "a5_down_prone_4.obj",
+        "a5_down_prone_4.png",
+        "a5_down_prone_5.obj",
+        "a5_down_prone_5.png",
+        "a5_down_prone_6.obj",
+        "a5_down_prone_6.png",
+        "a5_down_side_0.obj",
+        "a5_down_side_0.png",
+        "a5_down_side_1.obj",
+        "a5_down_side_1.png",
+        "a5_down_side_2.obj",
+        "a5_down_side_2.png",
+        "a5_down_side_3.obj",
+        "a5_down_side_3.png",
+        "a5_down_side_4.obj",
+        "a5_down_side_4.png",
+        "a5_down_side_5.obj",
+        "a5_down_side_5.png",
+        "a5_down_side_6.obj",
+        "a5_down_side_6.png",
+        "a6_down_prone_0.obj",
+        "a6_down_prone_0.png",
+        "a6_down_prone_1.obj",
+        "a6_down_prone_1.png",
+        "a6_down_prone_2.obj",
+        "a6_down_prone_2.png",
+        "a6_down_prone_3.obj",
+        "a6_down_prone_3.png",
+        "a6_down_prone_4.obj",
+        "a6_down_prone_4.png",
+        "a6_down_prone_5.obj",
+        "a6_down_prone_5.png",
+        "a6_down_prone_6.obj",
+        "a6_down_prone_6.png",
+        "a6_down_side_0.obj",
+        "a6_down_side_0.png",
+        "a6_down_side_1.obj",
+        "a6_down_side_1.png",
+        "a6_down_side_2.obj",
+        "a6_down_side_2.png",
+        "a6_down_side_3.obj",
+        "a6_down_side_3.png",
+        "a6_down_side_4.obj",
+        "a6_down_side_4.png",
+        "a6_down_side_5.obj",
+        "a6_down_side_5.png",
+        "a6_down_side_6.obj",
+        "a6_down_side_6.png",
+        "calibration/a1_down_prone_support_fit.json",
+        "calibration/a1_down_side_support_fit.json",
+        "calibration/a2_down_prone_support_fit.json",
+        "calibration/a2_down_side_support_fit.json",
+        "calibration/a3_down_prone_support_fit.json",
+        "calibration/a3_down_side_support_fit.json",
+        "calibration/a4_down_prone_support_fit.json",
+        "calibration/a4_down_side_support_fit.json",
+        "calibration/a5_down_prone_support_fit.json",
+        "calibration/a5_down_side_support_fit.json",
+        "calibration/a6_down_prone_support_fit.json",
+        "calibration/a6_down_side_support_fit.json",
+        "calibration/target_prone.json",
+        "calibration/target_side.json"
+      ],
+      "variants": [
+        "a1_down_prone",
+        "a1_down_side",
+        "a2_down_prone",
+        "a2_down_side",
+        "a3_down_prone",
+        "a3_down_side",
+        "a4_down_prone",
+        "a4_down_side",
+        "a5_down_prone",
+        "a5_down_side",
+        "a6_down_prone",
+        "a6_down_side"
+      ]
+    },
+    "plate": {
+      "manifest": "packs/plate/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "saucer": {
+      "manifest": "packs/saucer/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "screwdriver": {
+      "manifest": "packs/screwdriver/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png",
+        "standing_0.obj",
+        "standing_0.png"
+      ],
+      "variants": [
+        "default",
+        "standing"
+      ]
+    },
+    "sofa": {
+      "manifest": "packs/sofa/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png",
+        "default_1.obj",
+        "default_1.png",
+        "default_2.obj",
+        "default_2.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "toddler": {
+      "manifest": "packs/toddler/pack.json",
+      "referenced_files": [
+        "t1_sitting_floor_0.obj",
+        "t1_sitting_floor_0.png",
+        "t1_sitting_floor_1.obj",
+        "t1_sitting_floor_1.png",
+        "t1_sitting_floor_2.obj",
+        "t1_sitting_floor_2.png",
+        "t1_sitting_floor_3.obj",
+        "t1_sitting_floor_3.png",
+        "t1_sitting_floor_4.obj",
+        "t1_sitting_floor_4.png",
+        "t1_sitting_floor_5.obj",
+        "t1_sitting_floor_5.png",
+        "t1_standing_0.obj",
+        "t1_standing_0.png",
+        "t1_standing_1.obj",
+        "t1_standing_1.png",
+        "t1_standing_2.obj",
+        "t1_standing_2.png",
+        "t1_standing_3.obj",
+        "t1_standing_3.png",
+        "t1_standing_4.obj",
+        "t1_standing_4.png",
+        "t1_standing_5.obj",
+        "t1_standing_5.png",
+        "t2_sitting_floor_0.obj",
+        "t2_sitting_floor_0.png",
+        "t2_sitting_floor_1.obj",
+        "t2_sitting_floor_1.png",
+        "t2_sitting_floor_2.obj",
+        "t2_sitting_floor_2.png",
+        "t2_sitting_floor_3.obj",
+        "t2_sitting_floor_3.png",
+        "t2_sitting_floor_4.obj",
+        "t2_sitting_floor_4.png",
+        "t2_sitting_floor_5.obj",
+        "t2_sitting_floor_5.png",
+        "t2_standing_0.obj",
+        "t2_standing_0.png",
+        "t2_standing_1.obj",
+        "t2_standing_1.png",
+        "t2_standing_2.obj",
+        "t2_standing_2.png",
+        "t2_standing_3.obj",
+        "t2_standing_3.png",
+        "t2_standing_4.obj",
+        "t2_standing_4.png",
+        "t2_standing_5.obj",
+        "t2_standing_5.png",
+        "t3_sitting_floor_0.obj",
+        "t3_sitting_floor_0.png",
+        "t3_sitting_floor_1.obj",
+        "t3_sitting_floor_1.png",
+        "t3_sitting_floor_2.obj",
+        "t3_sitting_floor_2.png",
+        "t3_sitting_floor_3.obj",
+        "t3_sitting_floor_3.png",
+        "t3_sitting_floor_4.obj",
+        "t3_sitting_floor_4.png",
+        "t3_sitting_floor_5.obj",
+        "t3_sitting_floor_5.png",
+        "t3_standing_0.obj",
+        "t3_standing_0.png",
+        "t3_standing_1.obj",
+        "t3_standing_1.png",
+        "t3_standing_2.obj",
+        "t3_standing_2.png",
+        "t3_standing_3.obj",
+        "t3_standing_3.png",
+        "t3_standing_4.obj",
+        "t3_standing_4.png",
+        "t3_standing_5.obj",
+        "t3_standing_5.png"
+      ],
+      "variants": [
+        "t1_sitting_floor",
+        "t1_standing",
+        "t2_sitting_floor",
+        "t2_standing",
+        "t3_sitting_floor",
+        "t3_standing"
+      ]
+    },
+    "tote": {
+      "manifest": "packs/tote/pack.json",
+      "referenced_files": [
+        "default_0.obj",
+        "default_0.png"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "provenance": "provenance/provenance.json",
+  "registry": {
+    "coverage": "Original per-pack converted_files plus preserved asset_registry_supplement.json",
+    "failures": [],
+    "files_checked": 599
+  },
+  "revision": "realism-cpu-v3-fallen-support-v1",
+  "runtime_dependencies": "Relative files inside this directory only; historic source paths are provenance.",
+  "schema": 1,
+  "source_commit": "b5bf3128ffb2435129ea2a85e46206e081f388f1",
+  "visual_only": true
+}

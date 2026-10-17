@@ -79,7 +79,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
     ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
-    ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
+    ("rsb-", "RoboSafeBench"),    # formerly `cell-` (renamed in 0.5.4, the authors); an agent can read its task name
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
@@ -624,6 +624,8 @@ def bench_has_mode(bench: str, mode: str) -> bool:
     tasks/ (PROTOCOL §2.15). Read from the repository, not from the directory a task is rendered in."""
     prefixes = tuple(p for p, label in BENCHMARKS if label == bench)
     tasks = Path(__file__).resolve().parents[1] / "tasks"
+    if not tasks.is_dir():  # Source-only generation has no committed task tree.
+        return False
     return any(d.name.startswith(prefixes) and mode_of(d) == mode and bench_of(d) == bench
                for d in tasks.iterdir() if (d / "task.toml").is_file()) if prefixes else False
 

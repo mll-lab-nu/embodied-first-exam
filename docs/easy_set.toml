@@ -90,6 +90,10 @@ benchmark = "AM-Bench"
 reason = "solved"
 note = "P: Luna; S: Luna"
 
+# 2026-10-17: RoboSafeBench 458 (the authors' selection with 0.5.4): every base outside the 84-task 0.5.4 set, i.e.
+# the 481 tasks that keep their 0.5.3 content and image. rsb-c04-i00 stays in the core set because its realtime mode
+# is one of the 84 (an entry covers every mode of a base).
+
 [[task]]
 base = "behavior-chop-an-onion-i00"
 benchmark = "BEHAVIOR-1K"
@@ -1456,3 +1460,2751 @@ base = "yamlab-put-pot-on-cooktop-i08"
 benchmark = "YAMLab"
 reason = "solved"
 note = "P: Astra, Opus, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "rsb-a01-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a01-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a01-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a01-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a01-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a01-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a02-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a03-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a04-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a05-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a06-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a07-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a08-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a09-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i12"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i13"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i14"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i15"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i16"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a10-i17"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a11-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i12"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i13"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a12-i14"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a13-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a14-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a15-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a16-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i12"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i13"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i15"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a17-i16"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i12"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i13"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i14"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i15"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i16"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a18-i17"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a19-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a20-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a21-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a21-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a21-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a21-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a22-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a23-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a23-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a23-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a23-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a24-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a24-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a24-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a24-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a25-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a25-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a25-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a25-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a25-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a26-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a26-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a26-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a27-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a27-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a27-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a27-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a27-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a27-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a28-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a29-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a30-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i09"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i11"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i12"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i13"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i14"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a31-i15"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a32-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a32-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a32-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a32-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a32-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a32-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a33-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a33-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a33-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a33-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i08"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i10"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i12"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i13"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i14"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-a34-i15"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b01-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b01-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b01-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b01-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b02-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b02-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b02-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b02-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b03-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b03-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b03-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b04-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b04-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b04-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b04-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b05-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b05-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b06-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b07-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b07-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b07-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b07-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b08-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b08-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b09-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b09-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b09-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b09-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b10-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b10-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b10-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b10-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b11-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b12-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b12-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b12-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b12-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-b12-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c01-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c01-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c01-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c01-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c02-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c02-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c03-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c03-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c03-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c03-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c06-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c06-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c06-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c06-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c07-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c07-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c08-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c08-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c09-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c09-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c09-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c09-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c10-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c10-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c10-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c10-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c11-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c11-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c11-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c11-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c12-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c12-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c13-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c13-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-c14-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d01-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d01-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d01-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d01-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d02-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d02-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d02-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d02-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d02-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d02-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d03-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d03-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d04-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d04-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d04-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d04-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d05-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d05-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d05-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d05-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d05-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d06-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d06-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d06-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d06-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d06-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d06-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d07-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d07-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d07-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d07-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d08-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d08-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d08-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d09-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d09-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d09-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-d09-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e01-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e01-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e01-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e01-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e01-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e01-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e02-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e02-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e02-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e02-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e02-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e02-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e03-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e03-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e03-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e03-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e04-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e04-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e04-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e04-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i04"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i05"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i06"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e05-i07"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e06-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e06-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e07-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e07-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e07-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e08-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e08-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e08-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e08-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e09-i00"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e09-i01"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e09-i02"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"
+
+[[task]]
+base = "rsb-e09-i03"
+benchmark = "RoboSafeBench"
+reason = "owner"
+note = "0.5.3 task, not in the 0.5.4 selection"

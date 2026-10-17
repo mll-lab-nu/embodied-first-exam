@@ -1,0 +1,66 @@
+{
+  "pipeline": "CPU MuJoCo 3.8.1 physics with offline CPU Blender Cycles PBR",
+  "accepted_visual_repairs": [
+    "Preserve helper and clothing masks, authored UVs and full-face garment grouping across 45 human variants.",
+    "Preserve authored corner normals; smooth hand/cat normals across UV seams without moving their vertices.",
+    "Cover the hand wrist cut with a fitted cloth cuff; preserve original 2048px hand diffuse pixels across all six variants without upsampling.",
+    "Restore compatible source normal/roughness/metallic maps, including original cloth normal maps, with UV checks.",
+    "Constrain cat carpet segmentation to remove the scanned support plane while retaining anatomy.",
+    "Use physical texture scale on MuJoCo planes and preserve label UV orientation and exact task cameras.",
+    "Keep flower-pot shell dimensions separate from the plant bounding box and preserve its saucer/soil/leaves.",
+    "Apply sofa recoloring separately to fabric and leather while preserving the wooden frame.",
+    "Restore source spectacle lens geometry and render declared glass and clear water films with full transmission.",
+    "Drive display emission from its authored color/texture to retain text contrast.",
+    "Keep caller paper-box colors with neutral fibre maps and separate all original carton tape strips from paper.",
+    "Align only the standing dog's visual heading with its original +x head site; keep the lying variant and all OBJ/UV/texture files unchanged."
+  ],
+  "rejected_experiments": [
+    {
+      "kind": "fallen person",
+      "branch": "codex/realism-fallen",
+      "commit": "d3382d9",
+      "reason": "Three isolated bounded skeletal-fit trials improved torso/head support but still penetrated the support plane. Final trial minimums: side upper arm -21.4mm; prone thigh -17.3mm. Rejected against the -5mm threshold; accepted packs were not replaced."
+    },
+    {
+      "kind": "lying dog anatomy",
+      "branch": "codex/realism-geometry",
+      "commit": "bb67af8",
+      "reason": "Experimental sphinx pose had incorrect height and paw fit; not promoted."
+    },
+    {
+      "kind": "skin subsurface scale",
+      "reason": "A tenfold reduction gave negligible improvement in the paired test; not promoted."
+    },
+    {
+      "kind": "beaker bevel suppression",
+      "reason": "Removing the transparent surface bevel did not remove the radial floor-refraction artifact in a controlled paired render. Source cap normals are planar and continuous; no ineffective change was promoted."
+    }
+  ],
+  "limits": [
+    "Skin remains waxy in some views; source skins provide diffuse maps without measured micro-normal or roughness maps.",
+    "Fallen human support contacts, lying dog anatomy, clothing fit and some scan seams still need replacement assets or more fitting work.",
+    "Many furniture, towels, plants and food shapes retain simplified geometry; PBR does not replace missing geometry.",
+    "Thin transmitting surfaces pass direct shadow rays straight through; focused refractive caustics are not simulated.",
+    "The beaker retains a radial bottom-refraction artifact. The dog retains scan seams, and the original collar colour is not represented by its scan.",
+    "All images are offline initial-state snapshots; agent observations, online renderer latency and complete task admission were not changed or validated.",
+    "Physical-array and 50-step replay checks do not establish full episode equivalence or visual/physical semantic alignment on their own.",
+    "The default cat scan's highest surface is about 7.8cm below the original primitive head-top site despite correct heading. Body-region fit needs a separate check before formal benchmark admission.",
+    "Source/license declarations are inherited from the local pilot; this is not a new upstream rights audit."
+  ],
+  "resources": {
+    "login_cpu_limit": 4,
+    "login_memory_limit_gb": 6,
+    "heavy_work_on_login": false,
+    "historical_pool_budget_cores": 176,
+    "current_running_allocations": 5,
+    "current_allocated_cpu_cores": 160,
+    "reserved_for_other_work": 16,
+    "current_maximum_pool_budget": 144,
+    "budget_is_not_measured_cpu_utilization": true,
+    "active_subagent_slots": 3
+  },
+  "original_pilot_modified": false,
+  "earlier_review_revisions_preserved": true,
+  "frozen_benchmark_modified": false,
+  "pushed_or_published": false
+}

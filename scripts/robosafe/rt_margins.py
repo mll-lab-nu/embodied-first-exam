@@ -60,7 +60,7 @@ def main() -> int:
     a = ap.parse_args()
     per: dict[str, list] = {}
     for task, t in trial_dirs(pathlib.Path(a.jobs), a.run):
-        name = task.replace("cell-", "").replace("-standard-realtime", "")
+        name = task.replace("rsb-", "").replace("-standard-realtime", "")
         reward = json.loads((t / "verifier/reward.json").read_text())
         data = t / "artifacts/data"
         row = {"success": reward.get("success"), "outcome": reward.get("outcome"), "stalls": reward.get("stalls"),

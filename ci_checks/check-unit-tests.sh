@@ -54,6 +54,10 @@ if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 
 if [ -f "$root/scripts/robosafe/tests/test_grade.py" ]; then run 300 robosafe/tests/test_grade.py; run 300 robosafe/tests/test_score.py; fi
 # ... and its standard-realtime grader (the realtime tasks' commit adds the test)
 if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe/tests/test_grade_rt.py; fi
+# Export and admission contracts need only the standard library; keep them in ordinary CI.
+for t in test_054_reporting test_admission_import test_release_export test_realtime_seed_export test_frozen_source_guard test_variant_export test_image_publication test_mechanism_selection; do
+  if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
+done
 # DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
 if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
@@ -74,8 +78,16 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            robodojo/tests/test_privileged_grading.py; do
     run 900 "$t"
   done
+  # Public RT source compilation and actual loopback RCB1/client snapshots; no simulator.
+  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_http_two_fresh test_tidy_observe_barrier test_quaternions; do
+    if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
+  done
+  # Existing accepted native records compile through the same converter as legacy references.
+  if [ -f "$root/scripts/robosafe/tests/test_compile_record.py" ]; then run 300 robosafe/tests/test_compile_record.py; fi
   # RoboSafeBench's adapter serves the control interface only (its tasks pull request adds the test)
   if [ -f "$root/scripts/robosafe/tests/test_interface_guard.py" ]; then run 300 robosafe/tests/test_interface_guard.py; fi
+  if [ -f "$root/scripts/robosafe/tests/test_picture_delivery.py" ]; then run 300 robosafe/tests/test_picture_delivery.py; fi
+  if [ -f "$root/scripts/robosafe/tests/test_picture_resume.py" ]; then run 300 robosafe/tests/test_picture_resume.py; fi
   # Panda Dynamic Scenes' graders, privileged and standard (its tasks pull request adds the test)
   if [ -f "$root/scripts/pandadyn/tests/test_grading.py" ]; then run 300 pandadyn/tests/test_grading.py; fi
   # iSpatialGym's frozen instances: goal.json restores upstream's TRO, nothing answer-like in instance.json, the start-only
