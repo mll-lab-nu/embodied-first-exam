@@ -7,14 +7,16 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/trajectory_live.f64", service = "sim" },
   { source = "/data/replay.mp4", service = "sim" },
   { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/replay.video.json", service = "sim" },
   { source = "/data/calls/", service = "sim" },
   { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): LIBERO-MAX (libero_object, receptacle relocation; Franka Panda) on the same frozen instance as libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00-privileged: Pick the alphabet soup and place it in the basket. Mid-task the scene changes (receptacle relocation). The agent only gets a client: two cameras (RGB, optional depth, calibrated) and the robot's own state; LIBERO's OSC control steps in chunks; one episode, no reset, no object poses; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): LIBERO-MAX (libero_object, receptacle relocation; Franka Panda) on the same frozen instance as libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00-privileged: Pick the alphabet soup and place it in the basket. Mid-task the scene changes (receptacle relocation). The agent only gets a client: two cameras (RGB, optional depth, calibrated) and the robot's own state; LIBERO's OSC control steps in chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (no replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "libero", "libero-max", "robosuite", "franka-panda", "online-event", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -90,10 +92,11 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
-# restarting), which ends the episode and replays it in a fresh simulator (the verdict; the video is recorded on the way
-# and can neither change nor cost it). The replay of a long episode on a busy host takes over an hour: the hook waits up
-# to 5400 s for the verdict (9000 steps at 0.5 s + 180 s to build the scene + 240 s of video = 4920 s);
-# timeout_sec = 180 s for the service's PID file + 5400 s + 120 s (docs/benchmarks/libero-max.md, "Collect budget").
+# restarting), which ends the episode and writes the verdict, the live episode's, within seconds (nothing is replayed to
+# grade it; board 0151). Then one video-only replay of the trajectory in a fresh process, which can neither change nor
+# cost the verdict; for a long episode on a busy host it takes over an hour: the hook waits up to 5400 s in
+# all (9000 steps at 0.5 s + 180 s to build the scene + 240 s of frames = 4920 s); timeout_sec = 180 s for the
+# service's PID file + 5400 s + 120 s (docs/benchmarks/libero-max.md, "Grading (standard mode)").
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
