@@ -145,7 +145,8 @@ any settle or hold check; `graded_by` = `live`, `replays` = 0); nothing is
 replayed to grade it (PROTOCOL H.4). The video is recorded during the episode or rendered from `trajectory.npz` after
 the verdict (`video_source`), and never decides anything. A separate verifier transcribes `final.json` into
 `reward.json` (`graded_by_live` = 1). `infra_error = 1` means there is no verdict on the agent: `final.json` is
-missing, unreadable or not finalized, or the service reported `sim_crashed`, `resume_failed` or `instance_mismatch`.
+missing, unreadable or not finalized, or the service reported `sim_crashed`, `resume_failed`, `instance_mismatch` or
+(2.4) `call_watchdog`.
 
 ### Live recording (optional, sidecar only; the agent sees none of it)
 `live.mp4`, `live_timeline.jsonl`, `live_segments.jsonl`, `trajectory_live.f64`, `startups.jsonl`: rendered from the
@@ -528,12 +529,17 @@ are part of a result's configuration (RUNNING.md).
   request's fields.
 - **Crashes and simulator errors.** No call spans the clock (`/submit` answers at once), so what the agent's commands
   caused is told apart by time and by kind (owner, 2026-10-17, board 0151; PROTOCOL H.5: a normal task failure is no
-  infrastructure failure). After the agent's first command, a simulator error raised by a control step (`reason =
-  "error"`) and a simulator crash (the process died on SIGSEGV, SIGBUS, SIGFPE, SIGILL or SIGABRT, which the service
-  records with `faulthandler` before it dies) are the agent's result: the episode ends there, `sim_error = 1`,
-  `infra_error = 0` (past `RCB_MAX_RESUMES` such crashes: `sim_crashed_on_call`). A process killed from outside
-  (SIGKILL, SIGTERM, the out-of-memory killer: nothing recorded), a failed resume (`resume_failed`), and any error or
-  crash before the agent's first command are infrastructure (`sim_crashed`, `infra_error = 1`).
+  infrastructure failure). "After the first command" means after the agent's first `/submit`.
+  - A simulator error raised by a control step after the first command (`reason = "error"`) ends the episode as the
+    agent's result: `sim_error = 1`, `infra_error = 0`. Before it: infrastructure.
+  - A crash (the process dies) is resumed as in 2.1. It counts as the agent's when it happened after the first
+    command and the process died on SIGSEGV, SIGBUS, SIGFPE, SIGILL or SIGABRT (the service records the signal with
+    `faulthandler` before it dies); past `RCB_MAX_RESUMES` restarts the trial then ends `sim_crashed_on_call` (the
+    agent's 0) if every crash was the agent's, else `sim_crashed` (`infra_error = 1`). A process killed from outside
+    (SIGKILL, SIGTERM, the out-of-memory killer: nothing recorded) and a crash before the first command are not the
+    agent's; a failed resume is `resume_failed` (`infra_error = 1`).
+  - The 2.3 layer (`rcb_realtime.py`) implements this from robot_coding_bench #312; tasks generated before it still
+    record every simulator error and crash as infrastructure.
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
   through the client, not code uploaded next to the simulator.
 

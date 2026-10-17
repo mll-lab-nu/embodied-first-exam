@@ -364,7 +364,7 @@ def dump_mode_collect_hook():
         r = c.robot()
         r.submit("joint_position", chunk(5, 0.3), dt=0.05, video="none")
         c.kill_service(); r.wait_ready(60)
-        expect(c.end() == 0, "dumped and exited: the hook replays next")
+        expect(c.end() == 0, "dumped and exited: the hook merges the live verdict next")
         ep = json.load(open(os.path.join(c.data, "episode.json")))
         expect(ep["n_actions"] == 5 and ep["resumes"] == 1, f"episode.json {ep}")
         time.sleep(0.5)

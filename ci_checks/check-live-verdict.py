@@ -17,6 +17,8 @@ RUNNING.md ("Infrastructure failures"). For every standard / standard-realtime t
       a give-up after crashes inside the agent's calls          -> reward 0, infra_error 0 (never a free retry)
       an unreadable final.json; a scene off the frozen instance -> reward 0, infra_error 1
       a live success whose settle / hold check failed           -> reward 0, infra_error 0 (`success` decides)
+      standard-realtime: a simulator error after the agent's first command -> reward 0, infra_error 0; before it (the
+      service records infra_error = 1) -> infra_error 1
       replay_success / deterministic true, the live episode not -> reward 0 (a replay never grants a success)
     The records are the shared layers' common fields; a benchmark whose grader needs more of its own (e.g. a verdict
     file next to final.json) may fail the success case, which is then a finding to read, not a rule. A grader that does
@@ -62,6 +64,18 @@ CASES = (
     ("a replay success where the live episode failed",
      {"finalized": True, "success": False, "live_success": False, "replay_success": True, "deterministic": True,
       "done": True, "reason": "timeout", "n_actions": 10}, 0, None),
+)
+
+
+# standard-realtime only (STANDARD_MODE Part 3, 2026-10-17): a simulator error after the agent's first command is the
+# agent's result; one before it is infrastructure (the service records it so)
+RT_CASES = (
+    ("standard-realtime: a simulator error after the first command",
+     {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
+      "reason": "error", "sim_error": 1, "n_actions": 10}, 0, 0),
+    ("standard-realtime: a simulator error before the first command",
+     {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
+      "reason": "error", "sim_error": 1, "infra_error": 1, "n_actions": 0}, 0, 1),
 )
 
 
@@ -136,7 +150,7 @@ def check(tasks: list[Path]) -> list[str]:
         if h in seen:
             continue
         seen[h] = task.name
-        for name, record, want_reward, want_infra in CASES:
+        for name, record, want_reward, want_infra in CASES + (RT_CASES if mode_of(task) == "standard-realtime" else ()):
             reward, rw, tail = run_grader(grader, record)
             if reward is None:
                 errs.append(f"{task.name}: tests/grade.py on {name}: no reward.txt ({tail.strip()[-160:]})")

@@ -860,7 +860,7 @@ class Episode:
         if not final_verdict(self.data):
             fin = _read_json(self.f_final)
             fin.update({"success": False, "live_success": False, "done": True, "reason": reason, "finalized": True,
-                        "gave_up": True, "graded_by": "live", "replays": 0, "protocol": PROTOCOL,
+                        "gave_up": True, "replays": 0, "protocol": PROTOCOL, **({} if infra else {"graded_by": "live"}),
                         **self.final_fields(), **({"infra_error": 1} if infra else {})})
             _write_json(self.f_final, fin)
         with open(self.f_pid, "w") as f:
@@ -1153,7 +1153,7 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
                 except OSError:
                     pass
         time.sleep(2)
-    return 1
+    return 2 if final_verdict(data) is not None else 1   # a verdict that landed during the last wait stands
 
 
 if __name__ == "__main__":
