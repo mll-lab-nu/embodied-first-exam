@@ -68,3 +68,6 @@ a documented mirror of the manufacturer right hand). The broom has 54 passive hi
 bristle-bundle capsules; the dustpan has a collision entrance ramp; the debris are rigid shape proxies of packaging
 pieces, caps, a wood chip and crumpled paper. Tools start pre-held: no pickup, fine dust, paper deformation or
 hardware identification is claimed. The arm and hand meshes are baked into the `eai-dexhand` image.
+
+### Change Log
+- 2026-10-16 (board 0136, video only): the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after `reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video. The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.
