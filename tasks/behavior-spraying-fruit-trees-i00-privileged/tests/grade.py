@@ -17,7 +17,8 @@ verdict (PROTOCOL §4: the verdict never waits for or depends on the video), bou
 `video_replay_matches` (whether it ended on the graded replays' state) to reward.json, and its record is video.json. "Success" is the tooling's rule (REST_* in rcb_behavior.py: the BDDL goal
 held for 1 s with no goal object in a gripper and every goal object at rest, after the trajectory plus a settle window of
 up to 5 s); a replay that ends on a simulator breakdown (the tooling's BREAKDOWN_* check: non-finite or runaway state) is
-`sim_breakdown` + `infra_error`, no verdict on the agent.
+a failure with `sim_breakdown` = 1 (2026-10-16: infrastructure or the agent's 0 is the owner's decision; until then the
+agent's 0, as a simulator error was before).
 
 Whose failure a 0 is (2026-10-10): a file the agent wrote that cannot be graded (not an npz, pickled / object arrays, no
 `task` or `actions` entry, wrong shape, non-finite, more than MAX_ROWS rows) is `bad_trajectory` (the agent's 0,
@@ -167,14 +168,14 @@ def main() -> int:
         all_success = all(o.get("success") for o in outs)
         deterministic = len({o.get("state_sha") for o in outs}) == 1
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
-        breakdown = any(bool(o.get("breakdown")) for o in outs)   # a simulator breakdown: infrastructure, no verdict
+        breakdown = any(bool(o.get("breakdown")) for o in outs)   # a simulator breakdown: a failure (sim_breakdown)
         if breakdown:
             print(f"[grade] simulator breakdown in a replay: {[o.get('end_reason') for o in outs]}", file=sys.stderr, flush=True)
         ok = all_success and deterministic and instance_ok and not breakdown
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                # instance_ok 0: the frozen scene did not rebuild to the recorded one in the verifier (dataset / simulator /
                # hardware drift, decided before the first action): an infrastructure failure, not the agent's 0
-               "instance_ok": int(instance_ok), "infra_error": int(not instance_ok or breakdown), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
+               "instance_ok": int(instance_ok), "infra_error": int(not instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
                "sim_breakdown": int(breakdown),
                # the BDDL goal at the end of the last replay, and the settle window it ran (the success rule, REST_*)
                "goal": int(bool(outs[-1].get("goal"))), "settle_steps": int(outs[-1].get("settle_steps") or 0),

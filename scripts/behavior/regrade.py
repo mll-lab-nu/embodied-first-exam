@@ -13,8 +13,8 @@ dataset in $RCB_BEHAVIOR_DATA. For every BEHAVIOR trial under JOBS_DIR (a Harbor
 standard: artifacts/out/trajectory.npz, else verifier/trajectory.npz) and runs the family's privileged
 tests/grade.py on it in a fresh container: two fresh-process replays, no video (`--no-video`). Reported per trial:
   old           the recorded verdict (verifier/reward.json `success`);
-  new           the current verdict of the trajectory (`success`; `infra` when the replays ended on a simulator breakdown
-                or did not run: no verdict, PROTOCOL H.5);
+  new           the current verdict of the trajectory (`success`; `infra` when the replays did not run or the scene
+                did not rebuild: no verdict; a replay that ended on a simulator breakdown is a 0, labelled `breakdown`);
   old_rule_here the bare BDDL goal held at some step of the replay here (`goal_first_step` >= 0): the rule before
                 2026-10-14. old 1, new 0 with old_rule_here 1 is the stricter rule; with old_rule_here 0 the replay
                 went elsewhere on this host (`inconclusive`: re-grade it on the host class it ran on).
@@ -23,7 +23,7 @@ step the bare goal held; under the current rule it would have gone on and the ag
 re-grade can only say whether the recorded rows, plus the settle window, reach the current rule in both replays
 (label "re-graded under 2026-10-14 rules (conservative)"). A standard trajectory over the privileged grader's
 MAX_ROWS (40,000) cannot be re-graded this way (`skipped`).
---select candidates (the default) re-grades only the trials whose verdict can change other than by a breakdown: old
+--select candidates (the default) re-grades only the trials whose verdict can change: old
 successes, and failures whose replays succeeded, disagreed, or (standard) whose live episode succeeded.
 Output: one JSON line per trial (--out, appended; trials already in it are skipped) and a table on stdout.
 Standard library only."""
@@ -98,13 +98,18 @@ def regrade(tests: pathlib.Path, fam: str, traj: pathlib.Path, gpu: str, img: st
         return {"error": f"no grader at {tests} (a task no longer in this checkout)"}
     with tempfile.TemporaryDirectory(prefix="rcb_behavior_regrade_") as tmp:
         os.chmod(tmp, 0o777)
-        cmd = ["docker", "run", "--rm", "--gpus", f"device={gpu}", "--shm-size", "8g",
+        name = f"rcb-behavior-regrade-{os.getpid()}-{threading.get_ident()}"
+        cmd = ["docker", "run", "--rm", "--name", name, "--gpus", f"device={gpu}", "--shm-size", "8g",
                "-e", "PYTHONHASHSEED=0", "-e", "OMP_NUM_THREADS=8", "-e", "MKL_NUM_THREADS=8", "-e", "RCB_TEXTURE_BUDGET=0.1",
                "-e", "RCB_VERIFIER_LOG_DIR=/o", "-v", f"{data}:/data:ro", "-v", f"{tests}:/tests:ro",
                "-v", f"{traj.parent}:/traj:ro", "-v", f"{tmp}:/o", img,
                "python", "/tests/grade.py", "--family", fam, "--instance", "/tests/instance.json",
                "--traj", f"/traj/{traj.name}", "--repeat", "2", "--no-video"]
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=2 * 28000 + 1800)
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=2 * 28000 + 1800)
+        except subprocess.TimeoutExpired:   # the CLI is gone, the container is not: free the GPU
+            subprocess.run(["docker", "kill", name], capture_output=True, timeout=120)
+            return {"error": "re-grade timed out"}
         new = load(pathlib.Path(tmp) / "reward.json")
         if not new:
             new = {"error": f"no reward.json (docker exit {p.returncode}): {p.stderr[-400:]}"}
@@ -118,7 +123,8 @@ def verdict(mode: str, old: dict, new: dict) -> dict:
     else:
         n = int(bool(new.get("success")))
     here = int(new.get("goal_first_step", -1)) >= 0
-    label = "unchanged" if n == o else ("infra (void, H.5)" if n == "infra" else "now passes" if n == 1 else
+    label = "unchanged" if n == o else ("infra (no verdict)" if n == "infra" else "now passes" if n == 1 else
+                                        "breakdown" if new.get("sim_breakdown") else
                                         "stricter rule" if here else "inconclusive (replay went elsewhere here)")
     if mode == "standard":
         label += "; re-graded under 2026-10-14 rules (conservative)"

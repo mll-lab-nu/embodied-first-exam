@@ -10,7 +10,7 @@ tests/grade.py of both template twins and the real environment/sim/finalize.sh, 
 - privileged tests/grade.py (with a stand-in tooling module): an unreadable trajectory is bad_trajectory, a replay that
   dies is grader_error, instance_ok 0 is infra_error;
 - (2026-10-14) both graders: the graded replays run alike, without the video; the video is a third replay whose state
-  never decides `deterministic`; a replay that ends on a simulator breakdown is infra_error (no verdict).
+  never decides `deterministic`; a replay that ends on a simulator breakdown is a failure with sim_breakdown (2026-10-16).
 """
 from __future__ import annotations
 
@@ -108,11 +108,13 @@ case "$1" in
     n=$(( $(cat "$RCB_DATA/.n" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$RCB_DATA/.n"; echo "$*" >> "$RCB_DATA/.args"
     eval "mode=\${FAKE_REPLAY_$n:-ok}"
     case "$mode" in
-      ok)      echo '[rcb] noise on stdout'; echo '{"replays": [{"success": true, "state_sha": "aaaa", "q_score": 1.0}], "instance_matches": true}' ;;
+      ok)      echo '[rcb] noise on stdout'; echo '{"replays": [{"success": true, "state_sha": "aaaa", "actions_sha": "aaaa", "settle_steps": 31, "q_score": 1.0}], "instance_matches": true}' ;;
+      early)   echo '{"replays": [{"success": true, "state_sha": "aaaa", "actions_sha": "aaaa", "settle_steps": 0, "q_score": 1.0}], "instance_matches": true}' ;;
+      elsewhere) echo '{"replays": [{"success": true, "state_sha": "aaaa", "actions_sha": "eeee", "settle_steps": 31, "q_score": 1.0}], "instance_matches": true}' ;;
       fail)    echo '{"replays": [{"success": false, "state_sha": "aaaa", "q_score": 0.3}], "instance_matches": true}' ;;
       drift)   echo '{"replays": [{"success": false, "state_sha": "cccc", "q_score": 0.0}], "instance_matches": false}' ;;
       other)   echo '{"replays": [{"success": true, "state_sha": "bbbb", "q_score": 1.0}], "instance_matches": true}' ;;
-      breakdown) echo '{"replays": [{"success": false, "state_sha": "dddd", "breakdown": true, "end_reason": "infrastructure: simulator breakdown (robot state not finite)"}], "instance_matches": true}' ;;
+      breakdown) echo '{"replays": [{"success": false, "state_sha": "dddd", "breakdown": true, "end_reason": "failure: simulator breakdown (robot state not finite)"}], "instance_matches": true}' ;;
       die)     echo 'Segmentation fault' >&2; exit 139 ;;
       silent)  exit 0 ;;
       error)   echo '{"error": "trajectory task x != y"}'; exit 2 ;;
@@ -181,14 +183,21 @@ class Finalize(unittest.TestCase):
         self.assertFalse(fin["success"]); self.assertEqual(self.graded(fin)["success"], 0)
         fin = finalize({**EPISODE, "success": False, "reason": "failure: the robot fell over"})   # only after the agent's end
         self.assertFalse(fin["success"])
+        # (review of #254) only a success the settle window brought, on the rows the live run took: replays that closed
+        # the window during the actions (the live run did not), or that went elsewhere than the live run, are no success
+        fin = finalize(ended, FAKE_REPLAY_1="early", FAKE_REPLAY_2="early")
+        self.assertFalse(fin["success"]); self.assertEqual(self.graded(fin)["success"], 0)
+        fin = finalize(ended, FAKE_REPLAY_1="elsewhere", FAKE_REPLAY_2="elsewhere")
+        self.assertTrue(fin["deterministic"]); self.assertFalse(fin["live_matches_replay"]); self.assertFalse(fin["success"])
 
-    def test_a_breakdown_is_infrastructure(self):
+    def test_a_breakdown_is_a_recorded_failure(self):
+        # (2026-10-16) the agent's 0 with sim_breakdown until the owner decides whether it is infrastructure
         fin = finalize(FAKE_REPLAY_1="breakdown", FAKE_REPLAY_2="breakdown")
-        self.assertTrue(fin["sim_breakdown"]); self.assertEqual(fin["infra_error"], 1)
+        self.assertTrue(fin["sim_breakdown"]); self.assertFalse(fin.get("infra_error"))
         g = self.graded(fin)
-        self.assertEqual((g["success"], g["infra_error"], g["sim_breakdown"]), (0, 1, 1), g)
-        g = self.graded({**GOOD, "reason": "infrastructure: simulator breakdown (robot state not finite)", "success": False})
-        self.assertEqual((g["success"], g["infra_error"], g["sim_breakdown"]), (0, 1, 1), g)
+        self.assertEqual((g["success"], g["infra_error"], g["sim_breakdown"]), (0, 0, 1), g)
+        g = self.graded({**GOOD, "reason": "failure: simulator breakdown (robot state not finite)", "success": False})
+        self.assertEqual((g["success"], g["infra_error"], g["sim_breakdown"], g["task_failure"]), (0, 0, 1, 1), g)
 
     def test_two_good_replays(self):
         fin = finalize()
@@ -251,7 +260,7 @@ if __name__ == "__main__":
         print(json.dumps({"replays": [{"success": True, "state_sha": "vvvv"}], "instance_matches": True})); sys.exit(0)
     mode = os.environ.get("FAKE_REPLAY", "ok")
     if mode == "breakdown":
-        print(json.dumps({"replays": [{"success": False, "state_sha": "dddd", "breakdown": True, "end_reason": "infrastructure: simulator breakdown (x)"}],
+        print(json.dumps({"replays": [{"success": False, "state_sha": "dddd", "breakdown": True, "end_reason": "failure: simulator breakdown (x)"}],
                           "instance_matches": True, "instance_exact": True})); sys.exit(0)
     if mode == "die":
         sys.exit(139)
@@ -321,8 +330,8 @@ class PrivilegedGrader(unittest.TestCase):
         txt, js = grade_privileged(good_traj, video=True, RCB_VERIFIER_TIMEOUT_S="700")   # 700 s - 600 s margin: no time
         self.assertEqual(txt, "1", js); self.assertEqual(len(js["_args"]), 2, js["_args"]); self.assertEqual(js["video_rendered"], 0)
 
-    def test_a_breakdown_is_infrastructure(self):
-        js = self.check(good_traj, "0", env={"FAKE_REPLAY": "breakdown"}, success=0, sim_breakdown=1, infra_error=1, grader_error=0)
+    def test_a_breakdown_is_a_recorded_failure(self):
+        js = self.check(good_traj, "0", env={"FAKE_REPLAY": "breakdown"}, success=0, sim_breakdown=1, infra_error=0, grader_error=0)
         self.assertEqual(js["deterministic"], 1)
 
     def test_pass_and_plain_failures(self):

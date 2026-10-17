@@ -123,8 +123,10 @@ SUCCESS_RULE = ("the BDDL goal has held for 1 s of simulated time in a row (30 c
                 "first control step the goal's literals were true, sometimes with the object still in the gripper); after the "
                 "last action the robot holds still for up to 5 s so that a goal reached on the last rows can settle")
 BREAKDOWN = ("a simulator breakdown (a non-finite robot state, the robot or a goal object farther than 10 km from the origin, "
-             "the robot faster than 100 m/s) ends the episode as an infrastructure failure (`sim_breakdown`, `infra_error` 1: "
-             "no verdict on the agent; before, the episode ran on, or ended as a simulator error)")
+             "the robot faster than 100 m/s) ends the episode as a failure, recorded as `sim_breakdown` (before, the episode ran "
+             "on, or ended as a simulator error once a call raised; amended 2026-10-16 in review: whether a breakdown is an "
+             "infrastructure failure, voided and retried, is the owner's decision, and until then it is the agent's 0 as a "
+             "simulator error was)")
 # The README Change Log (PROTOCOL §2.8: published tasks fixed in place), per mode, oldest first.
 FALL = ("OmniGibson's own Falling rule (the base tilted more than 41.4° from upright, or more than 3 cm below the floor) "
         "has held for 10 s of simulated time")                 # the tooling's FALL_* (docs/benchmarks/behavior.md, Falls)
@@ -170,7 +172,7 @@ CHANGES = {
         "challenge timeouts reach 39,090 steps, and the slowest replay measured ran 1.88 control steps/s with a start of up "
         "to 1,115 s (docs/benchmarks/behavior.md, Verifier time). The instruction states the cap. Every successful trajectory "
         "recorded so far is under it, so the scene, the instance and the pass rule are unchanged and the task keeps its name.",
-        "2026-10-14 (failure analysis of the 10-08..10-14 runs, items 16, 17, 20, 24, 25): (1) replays that agree: OmniGibson "
+        "2026-10-14, amended 2026-10-16 in review (board 0146: the video replay after the verdict, a breakdown the agent's 0 for now, settled successes only on the live rows) (failure analysis of the 10-08..10-14 runs, items 16, 17, 20, 24, 25): (1) replays that agree: OmniGibson "
         "updates object states and applies transition rules in the iteration order of Python sets of objects, which followed "
         "memory addresses and so differed between processes; with several heat sources or rules that do not commute, the same "
         "actions set a fire or cut a slice one control step apart, the two replays' state hashes differed and 6 privileged "
@@ -236,7 +238,7 @@ CHANGES = {
         "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
         "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
         "are unchanged, so the task keeps its name and earlier results stand.",
-        "2026-10-14 (failure analysis of the 10-08..10-14 runs, items 16, 20, 25): (1) replays that agree: the tooling hashes "
+        "2026-10-14, amended 2026-10-16 in review (board 0146: the video replay after the verdict, a breakdown the agent's 0 for now, settled successes only on the live rows) (failure analysis of the 10-08..10-14 runs, items 16, 20, 25): (1) replays that agree: the tooling hashes "
         "simulator objects by name, so OmniGibson's per-step object-state updates and transition rules run in the same order "
         "in the service and in every replay (it followed memory addresses: fires, cuts and cooking could happen one control "
         "step apart, and 8 live successes failed or split in replay), and the sim service sets PYTHONHASHSEED=0. "

@@ -366,7 +366,7 @@ class SuccessRule(unittest.TestCase):
         self.assertEqual(st["q_score"], 0.5)                           # the metric ran and filled the caches ...
         self.assertEqual((can._cache, can._changed, can._last_t_updated), before)   # ... which are restored
 
-    def test_breakdown_ends_the_episode_as_infrastructure(self):
+    def test_breakdown_ends_the_episode(self):
         s = stand_in_session(goal_at=None)
         s.step(np.zeros(25))
         s.robot.p = np.array([0.0, 0.0, 1.7e16])

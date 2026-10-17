@@ -15,8 +15,8 @@ released and at rest (Rules).
   goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
   `r.get_obs(seconds=2.0)`). When your episode ends first, each grading replay holds the robot still (your last
   command, the base at 0) for up to 5 s after your last row, and a goal that settles there counts.
-- A simulator breakdown (a non-finite or runaway robot or object state; reason "infrastructure: simulator breakdown")
-  ends the episode as an infrastructure failure, not graded against you.
+- A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
+  "failure: simulator breakdown") ends the episode as a failure.
 - **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
   when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
   time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the

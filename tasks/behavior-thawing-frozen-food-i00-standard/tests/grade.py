@@ -6,8 +6,9 @@ Numeric-only reward.json (docs/PROTOCOL.md §2.6, §4.8; docs/STANDARD_MODE.md �
 infra_error = 1 means no verdict on the agent (2026-10-10): final.json is the trusted sidecar's own file, so when it is
 missing (the service never came up, or its container was gone), unreadable, not finalized (the collect hook did not
 finish: the file is still the service's own copy without the replays), or says a fresh-process replay did not run to
-its result, the 0 is an infrastructure failure, not the agent's. So is a simulator breakdown (2026-10-14: the tooling's
-non-finite / runaway-state check ended the episode or a replay, `sim_breakdown`). A reward is written in every case."""
+its result, the 0 is an infrastructure failure, not the agent's. A simulator breakdown (2026-10-14: the tooling's
+non-finite / runaway-state check ended the episode or a replay) is a failure recorded as `sim_breakdown` (2026-10-16:
+infrastructure or the agent's 0 is the owner's decision; until then the agent's 0). A reward is written in every case."""
 import json, os, shutil, traceback
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
 def write(ok, out):
@@ -22,8 +23,8 @@ try:
     num = lambda k: float(d.get(k) or 0.0)  # noqa: E731
     finalized = bool(d.get("finalized"))
     replay_error = bool(d.get("replay_error"))     # a replay process died, timed out or printed no result (finalize.sh)
-    breakdown = bool(d.get("sim_breakdown")) or str(d.get("reason") or "").startswith("infrastructure")
-    infra = bool(d.get("infra_error")) or bool(d.get("gpu_lost")) or replay_error or breakdown or not finalized
+    breakdown = bool(d.get("sim_breakdown")) or str(d.get("reason") or "").startswith("failure: simulator breakdown")
+    infra = bool(d.get("infra_error")) or bool(d.get("gpu_lost")) or replay_error or not finalized
     ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not d.get("gave_up") and not infra
     out = {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
@@ -34,7 +35,7 @@ try:
            "video_replay_matches": int(bool(d.get("video_replay_matches"))),
            # the agent's episode ended first and the success came from the replays' settle window (finalize.sh)
            "settled_success": int(bool(d.get("settled_success"))),
-           "sim_breakdown": int(breakdown),                      # a simulator breakdown: infra_error, no verdict on the agent
+           "sim_breakdown": int(breakdown),                      # a simulator breakdown ended the episode or a replay
            "instance_ok": int(d.get("instance_ok", 1) not in (0, False)),   # 0: a replay's frozen scene did not rebuild (infra_error)
            # the episode ended by the task's failure rule: the robot fell over (reason "failure: the robot fell over")
            "task_failure": int(str(d.get("reason") or "").startswith("failure")),

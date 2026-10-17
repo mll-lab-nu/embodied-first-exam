@@ -28,7 +28,9 @@ success    : (2026-10-14) the BDDL goal must hold for REST_STEPS consecutive con
              (settle()) so that a goal reached on the last rows can settle; status()["success"] is this rule,
              status()["goal"] the BDDL goal at this step.
 breakdown  : (2026-10-14) a non-finite or runaway robot or goal-object state (BREAKDOWN_*) ends the episode as a simulator
-             breakdown, an infrastructure failure (status()["breakdown"]); the verifiers give no verdict on the agent.
+             breakdown (status()["breakdown"], reason BREAKDOWN_REASON): a failure, recorded as `sim_breakdown` (2026-10-16,
+             review of #254: whether it is the agent's 0 or an infrastructure failure is the owner's decision; until then it
+             stays what a simulator error was before, the agent's 0).
 
 CLI
 ---
@@ -102,12 +104,13 @@ REST_STEPS = 30                 # 1 s at the 30 Hz control rate: the goal holds,
 REST_SPEED_M_S = 0.05           # a goal object whose base link moves faster than this is not at rest
 SETTLE_STEPS = 150              # 5 s: after the last action the robot holds still (hold_action) up to this long (settle())
 # Simulator breakdown (2026-10-14, failure analysis item 25: NaN after tumbling, a body at z = 1.7e16 m with the episode
-# still running): an infrastructure failure, not the agent's (the general validity policy), so the episode ends and no
-# verdict is given. Checked on the robot every control step and on the goal objects every BREAKDOWN_OBJECT_EVERY steps.
+# still running): the episode ends there, a failure recorded as `sim_breakdown` (2026-10-16: most breakdowns seen were
+# the agent's own tumbles, e.g. 23 GLM standard episodes ended on a NaN base orientation; whether a breakdown is
+# infrastructure, voided and retried under PROTOCOL H.5, is the owner's decision). Checked on the robot every control step and on the goal objects every BREAKDOWN_OBJECT_EVERY steps.
 BREAKDOWN_POS_M = 1.0e4         # a robot or goal-object position farther than 10 km from the origin
 BREAKDOWN_SPEED_M_S = 100.0     # the robot base faster than 100 m/s
 BREAKDOWN_OBJECT_EVERY = 30
-BREAKDOWN_REASON = "infrastructure: simulator breakdown"
+BREAKDOWN_REASON = "failure: simulator breakdown"
 
 
 def up_z(quat_xyzw) -> float:

@@ -94,13 +94,17 @@ out["live_matches_replay"] = bool(a.get("state_sha")) and (a.get("actions_sha") 
 # the agent's episode ended before the success rule's window closed (reason "timeout": it stopped, or its time was up):
 # both replays ran the settle window after the last row (SETTLE_STEPS, the robot holding still), and a success they agree
 # on is the episode's success (the service itself cannot step after the end: Isaac steps on its request thread only)
-if not out.get("success") and out.get("reason") == "timeout" and out["replay_success"] and out["deterministic"]:
+# Only a success the settle window brought (both replays ran it: settle_steps > 0) on the rows the live run took
+# (live_matches_replay: the replay's state at the last row is the live one), never a replay that went elsewhere.
+if (not out.get("success") and out.get("reason") == "timeout" and out["replay_success"] and out["deterministic"]
+        and out["live_matches_replay"] and int(a.get("settle_steps") or 0) > 0 and int(b.get("settle_steps") or 0) > 0):
     out["success"] = True; out["settled_success"] = True
 out["video_replay_sha"], out["video_replay_matches"] = None, False   # step 4 (the video replay) fills these in
-# a replay that ended on a simulator breakdown (the tooling's BREAKDOWN_* check): an infrastructure failure
+# a replay that ended on a simulator breakdown (the tooling's BREAKDOWN_* check): a failure, recorded (whether it is
+# infrastructure is the owner's decision, 2026-10-16)
 if a.get("breakdown") or b.get("breakdown") or out.get("sim_breakdown"):
-    out["sim_breakdown"] = True; out["infra_error"] = 1
-    out.setdefault("error", "infrastructure: simulator breakdown in the episode or a replay (" + str(a.get("end_reason") or b.get("end_reason") or out.get("reason")) + ")")
+    out["sim_breakdown"] = True
+    out.setdefault("error", "simulator breakdown in the episode or a replay (" + str(a.get("end_reason") or b.get("end_reason") or out.get("reason")) + ")")
 if r1.get("gpu_lost"):
     out["gpu_lost"] = True; out["infra_error"] = 1
     out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"

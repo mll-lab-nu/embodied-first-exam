@@ -22,8 +22,8 @@ Differences from the RoboTwin service, all from the simulator:
   holds the robot still for up to 5 s (SETTLE_STEPS) after the last row, and a goal that settles there in both replays
   counts (finalize.sh)), when the robot has fallen
   over (the tooling's fall rule, OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell
-  over"), on a simulator breakdown (non-finite or runaway state: reason "infrastructure: simulator breakdown (...)", no
-  verdict on the agent), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
+  over"), on a simulator breakdown (non-finite or runaway robot or goal-object state: reason "failure: simulator
+  breakdown (...)", a failure recorded as `sim_breakdown`), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
   (MAX_STEPS control steps, reason "step_guard"; /spec max_control_steps); /spec "episode" says so;
 - a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
@@ -82,7 +82,7 @@ def dump() -> None:
         # no settle window here: this runs in the end signal's thread, and Isaac steps only on the thread that serves the
         # requests (a step from here deadlocked the service). Each fresh-process replay runs it after the last row, and
         # finalize.sh counts a success the settled replays agree on when the agent's episode ended first.
-        if S.breakdown is not None and not str(E["reason"] or "").startswith("infrastructure"):
+        if S.breakdown is not None and E["reason"] != S.end_reason:
             E["reason"] = S.end_reason
         E["live_sha"] = S.state_sha()
     except Exception as exc:  # noqa
@@ -206,7 +206,7 @@ SPEC = {
                 f"axis below {M.FALL_TILT_TOLERANCE}: cos(rx) * cos(ry) of base_footprint_rx_joint / _ry_joint) or more than "
                 f"{M.FALL_HEIGHT_M:g} m below the floor for {M.FALL_HOLD_STEPS / CTRL_HZ:g} s of simulated time in a row "
                 f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); on a simulator breakdown (a non-finite or runaway "
-                f"robot or object state: reason \"{M.BREAKDOWN_REASON} (...)\", an infrastructure failure, not graded against you); "
+                f"robot or goal-object state: reason \"{M.BREAKDOWN_REASON} (...)\", a failure); "
                 "when your time is up (timeout); on a simulator error (error); "
                 f"or at the runaway guard of {M.MAX_STEPS} control steps ({M.MAX_STEPS / CTRL_HZ / 3600:.2f} h of simulated time; step_guard). "
                 "There is no step budget otherwise"),

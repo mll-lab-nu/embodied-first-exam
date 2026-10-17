@@ -15,7 +15,7 @@ import numpy as np
 MAX_STEPS = int(os.environ.get("STUB_MAX_STEPS", "200000"))
 FALL_TILT_TOLERANCE, FALL_HEIGHT_M, FALL_HOLD_STEPS, FALL_REASON = 0.75, 0.03, 300, "failure: the robot fell over"
 REST_STEPS, REST_SPEED_M_S, SETTLE_STEPS = 30, 0.05, 150
-BREAKDOWN_REASON = "infrastructure: simulator breakdown"
+BREAKDOWN_REASON = "failure: simulator breakdown"
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
 CAMS = ("robot_r1:zed_link:Camera:0", "robot_r1:left_realsense_link:Camera:0", "robot_r1:right_realsense_link:Camera:0")
 

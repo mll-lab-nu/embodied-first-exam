@@ -197,8 +197,8 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
   replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
   `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below). Since 2026-10-14
-  52200 s: plus the video replay (up to 4 h), which runs after `final.json` holds the verdict, in the hook's
-  remaining time.
+  52200 s (since 2026-10-16; 41400 s on 10-14): plus the video replay (up to 4 h), which runs after `final.json` holds
+  the verdict, in the hook's remaining time (two very long graded replays can leave it less; the verdict never waits).
 
 ## Kit cache: one per trial
 Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every compose file names its cache volume without a
@@ -306,7 +306,8 @@ and every goal object's base link is slower than `REST_SPEED_M_S` = 0.05 m/s. Th
 When the actions run out first (a trajectory's last row; a standard episode the agent ended), the robot holds still (the
 last command, the base at 0) for up to `SETTLE_STEPS` = 150 control steps (5 s, `Session.settle()`; every replay runs it
 after the last row; in standard mode, when the agent's episode ended first (reason `timeout`), a success both replays reach
-there is the episode's, `settled_success`: the service itself cannot step after the end signal, since Isaac steps only on
+there is the episode's, `settled_success` (since the review of 2026-10-16 only when both replays ran the settle window,
+`settle_steps` > 0, and their state at the last row is the live one, `live_matches_replay`): the service itself cannot step after the end signal, since Isaac steps only on
 its request thread and a step from the end signal's thread deadlocked it), so a trajectory recorded to the first
 frame of the goal with the objects released still passes once they settle. `status()["goal"]` is the bare goal,
 `goal_objects_held` / `goal_objects_moving` what keeps the window open; `reward.json` `goal`, `settle_steps`. The BDDL
@@ -314,11 +315,14 @@ goals themselves are the challenge's and unchanged; goals looser than their task
 make_microwave_popcorn, ...) are a maintainer decision (they come from the official challenge).
 
 ## Simulator breakdown (2026-10-14, failure analysis item 25)
-The general validity policy: a simulator breakdown is an infrastructure failure, not the agent's. The tooling checks the
-robot every control step and the goal objects every 30 (`BREAKDOWN_*`): a non-finite robot state, the robot or a goal
-object farther than 10 km from the origin, or the robot base faster than 100 m/s end the episode with reason
-"infrastructure: simulator breakdown (...)" (`status()["breakdown"]`); the verifiers then give no verdict on the agent
-(`sim_breakdown` = 1, `infra_error` = 1). Before, such an episode ran on (one body reached z = 1.7e16 m with the episode
+The tooling checks the robot every control step and the goal objects every 30 (`BREAKDOWN_*`): a non-finite robot
+state, the robot or a goal object farther than 10 km from the origin, or the robot base faster than 100 m/s end the
+episode with reason "failure: simulator breakdown (...)" (`status()["breakdown"]`), a failure the verifiers record as
+`sim_breakdown` = 1. The PR proposed counting it as an infrastructure failure (`infra_error`, no verdict); in review
+(2026-10-16, board 0146) the breakdowns on record turned out to be mostly the agent's own doing (all 23 `error` endings of
+GLM 5.3 Flash's standard episodes were a NaN base orientation after the robot tumbled), and an infrastructure failure is
+voided and run again under PROTOCOL H.5, so a failing agent would get its 0 dropped. Whether a breakdown is
+infrastructure is the owner's decision; until then it stays what a simulator error was before, the agent's 0. Before, such an episode ran on (one body reached z = 1.7e16 m with the episode
 still open) or ended as a simulator error once a call raised. A read that fails is no evidence: the check stands down.
 
 ## Re-grading results recorded before 2026-10-14
@@ -328,13 +332,13 @@ privileged `tests/grade.py` (two fresh-process replays, no video) on each record
 verdicts as JSON lines. `goal_first_step` (`reward.json`, the first control step the bare goal held, -1 never) is the
 rule before 2026-10-14, so an old success that fails now is labelled `stricter rule` when the bare goal still held in
 the replay here and `inconclusive` when the replay went elsewhere (re-grade on the host class it ran on). The default
-`--select candidates` re-grades the trials whose verdict can change other than by a breakdown: old successes and
+`--select candidates` re-grades the trials whose verdict can change: old successes and
 failures whose replays succeeded or disagreed (standard: also a live success). Privileged re-grades are close to exact
 (the deliverable is the trajectory; the settle window after its last row is new). Standard re-grades are conservative:
 the old service ended the live episode on the first step the bare goal held, where the agent could otherwise have
 gone on and let go, so they only say whether the recorded rows plus the settle window reach the current rule; a
 standard trajectory over 40,000 rows cannot be re-graded with the privileged grader. A re-grade that ends on a
-breakdown is `infra` (no verdict).
+breakdown is a 0 with `sim_breakdown` (see Simulator breakdown); `regrade.py` labels it.
 
 ### Whose failure a 0 is (2026-10-10, review of board 0067)
 The pass rules are unchanged; what changed is how a 0 that is not the agent's is reported (`reward.json`).

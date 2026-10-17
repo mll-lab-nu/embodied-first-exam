@@ -219,15 +219,15 @@ class EpisodeEnd(unittest.TestCase):
         finally:
             s.kill(); shutil.rmtree(s.work, ignore_errors=True)
 
-    def test_a_breakdown_ends_the_episode_as_infrastructure(self):
+    def test_a_breakdown_ends_the_episode(self):
         s = Service(STUB_BREAKDOWN_AT=4)
         try:
             s.wait()
             self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
             st = s.get("/status")
-            self.assertTrue(st["done"]); self.assertTrue(st["reason"].startswith("infrastructure: simulator breakdown"), st)
+            self.assertTrue(st["done"]); self.assertTrue(st["reason"].startswith("failure: simulator breakdown"), st)
             fin = s.final()
-            self.assertTrue(fin["reason"].startswith("infrastructure")); self.assertEqual(fin["n_actions"], 4)
+            self.assertTrue(fin["reason"].startswith("failure: simulator breakdown")); self.assertEqual(fin["n_actions"], 4)
         finally:
             s.kill(); shutil.rmtree(s.work, ignore_errors=True)
 
