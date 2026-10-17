@@ -154,8 +154,9 @@ def on_table_terms(F: dict) -> str:
     """The success term as graded here for an ON_TABLE family: the tooling's replacement of upstream's term."""
     t, n = re.subn(r"func=object_outside_of,", "func=object_outside_of_and_on_surface,", F["terms"])
     t, m = re.subn(r"params=\{([^{}]*?)\s*\}", lambda g: "params={" + g.group(1) + ', "surface": "table"}', t)
-    if n != 1 or m != 1:
-        raise RuntimeError("on-table family: its term is not a single object_outside_of with a flat params dict")
+    if n != 1 or m != 1 or "require_contact_with" in t:
+        raise RuntimeError("on-table family: its term is not a single object_outside_of with a flat params dict "
+                           "(without require_contact_with, which the tooling drops)")
     return t
 
 
@@ -164,11 +165,28 @@ def default_tolerance(F: dict) -> bool:
     return "object_in_container" in F["conditionals"] and '"tolerance"' not in F["terms"]
 
 
+TOLERANCE_UNUSED = ("RoboLab passes it to `in_opentop_container` "
+                    "(`/opt/robolab/robolab/core/task/predicate_logic.py`), which does not use it: \"in\" means that the "
+                    "centroid of the object's convex-hull vertices lies within the container's convex hull, open without "
+                    "limit along the container's own up axis, with no margin.")
 TOLERANCE_TEXT = ("`tolerance` is not set, so it takes `object_in_container`'s default, 0.01 m "
-                  "(`/opt/robolab/robolab/core/task/conditionals.py`). RoboLab passes it to `in_opentop_container` "
-                  "(`/opt/robolab/robolab/core/task/predicate_logic.py`), which does not use it: \"in\" means that the "
-                  "centroid of the object's convex-hull vertices lies within the container's convex hull, open without "
-                  "limit along the container's own up axis, with no margin.")
+                  "(`/opt/robolab/robolab/core/task/conditionals.py`). " + TOLERANCE_UNUSED)
+
+
+def set_tolerance(F: dict) -> float | None:
+    """The nonzero `tolerance` an object_in_container term sets explicitly (None: unset, zero or not that term)."""
+    m = re.search(r'"tolerance": ([0-9.]+)', F["terms"])
+    if "object_in_container" not in F["conditionals"] or not m or float(m.group(1)) == 0.0:
+        return None
+    return float(m.group(1))
+
+
+def tolerance_text(F: dict) -> str:
+    """What the instruction says about `tolerance`: a margin that the term names but the grader does not apply."""
+    if default_tolerance(F):
+        return TOLERANCE_TEXT + "\n"
+    t = set_tolerance(F)
+    return f"The term sets `tolerance` to {t:g} m, but {TOLERANCE_UNUSED}\n" if t is not None else ""
 
 
 def standard_grading() -> str:
@@ -179,8 +197,8 @@ def standard_grading() -> str:
     ok = re.search(r"(?m)^ok = (.*)$", grade)
     need = ('out["replay_success"] = bool(a and a.get("success")) and bool(b and b.get("success"))',
             'out["deterministic"] = bool(a and b) and a["state_sha"] == b["state_sha"]')
-    if n != 2 or not ok or not all(f'd.get("{k}")' in ok.group(1) for k in ("success", "replay_success", "deterministic")) \
-            or not all(x in fin for x in need):
+    rule = 'bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not infra'
+    if n != 2 or not ok or ok.group(1).strip() != rule or not all(x in fin for x in need):
         raise RuntimeError("standard grader changed: update standard_grading()")
     return ("- **Grading.** When the episode ends, the service's record of it (every control step it ran, including the\n"
             "  hold at the end of your session) is replayed open-loop from the same initial state in two fresh simulator\n"
@@ -206,7 +224,7 @@ def objects_block(fam: str, F: dict) -> str:
                 + (f"{note}\n" if note else ""))
     return (head + f"RoboLab's success predicate is the `success` termination\n"
             f"term in that file ({cond} in `/opt/robolab/robolab/core/task/conditionals.py`); it also ends the episode:\n"
-            f"```python\n{F['terms']}\n```\n" + (f"{TOLERANCE_TEXT}\n" if default_tolerance(F) else "")
+            f"```python\n{F['terms']}\n```\n" + tolerance_text(F)
             + (f"{note}\n" if note else ""))
 
 
@@ -234,6 +252,9 @@ def change_log_1016(fam: str, F: dict, mode: str) -> str:
         if default_tolerance(F):
             items.append("the instruction states `object_in_container`'s default `tolerance` (0.01 m), which "
                          "`in_opentop_container` does not use")
+        elif set_tolerance(F) is not None:
+            items.append(f"the instruction states that the term's `tolerance` ({set_tolerance(F):g} m) is not used by "
+                         "`in_opentop_container` (no margin)")
         items.append("the Tooling comment on `s.reset()` no longer calls it an exact state restore (the Conventions say "
                      "that not every PhysX internal is restored)")
     else:

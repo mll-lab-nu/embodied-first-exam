@@ -15,6 +15,7 @@ class Terminations:
         params={"object": "raisin_box", "container": "grey_bin", "tolerance": 0.02, "require_gripper_detached": True},
     )
 ```
+The term sets `tolerance` to 0.02 m, but RoboLab passes it to `in_opentop_container` (`/opt/robolab/robolab/core/task/predicate_logic.py`), which does not use it: "in" means that the centroid of the object's convex-hull vertices lies within the container's convex hull, open without limit along the container's own up axis, with no margin.
 
 This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
 and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
