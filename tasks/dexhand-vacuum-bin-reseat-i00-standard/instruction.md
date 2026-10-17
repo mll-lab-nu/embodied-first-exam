@@ -13,7 +13,7 @@ slide). The controller runs at 50 Hz, with twenty 1 ms physics substeps.
 ## Hands
 Two genuine manufacturer hand models are available: `sharpa` (Sharpa Wave, 22 finger actuators; the default) and `wuji` (Wuji Hand 2.2, 20 finger actuators). The task, scene, mount, objects and success predicate are the same for both; only one hand is used per episode.
 Two hands, each on its own six-axis wrist stage. Sharpa (56): right stage (6), right fingers (22), left stage (6), left fingers (22). Wuji (52): right stage (6), left stage (6), right fingers (20), left fingers (20). The left hand is the right Wave mirrored in y (shared arm_rig.mirrored_left_wave); one row is one 50 Hz control (twenty 1 ms physics substeps).
-The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`56` for `sharpa`, `52` for `wuji`) and the exact order. The episode record names the hand, and grading replays with that hand.
+The robot service runs the hand named by `DEXHAND_HAND` on the sim service (default `sharpa`); the agent cannot switch it during an episode. `spec()["hand"]` names it, and `spec()["action_types"]["joint_position"]` gives the row width (`56` for `sharpa`, `52` for `wuji`) and the exact order. The episode record names the hand; the service grades the episode it ran with that hand.
 
 ## Scene and frames
 The world frame has z up; lengths are in metres, angles in radians, quaternions WXYZ. A handheld vacuum (free body
@@ -47,7 +47,7 @@ the episode then running is the one graded. The wall clock is the run's and neve
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
 joint positions, velocities, actuator efforts, wrist pose and current targets. An episode ends at the first success
 or the first failure (see the task text); after that the service accepts no more actions until a reset. The service
-records every action and watch step, then replays the graded episode with the recorded hand in two fresh processes.
+records every action and watch step, then judges the graded episode as it ran (that is the verdict; nothing is replayed).
 Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python

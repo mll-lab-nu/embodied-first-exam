@@ -1,1 +1,1 @@
-{"collect_timeout_s": 3600, "replay_timeout_s": 1400, "verifier_timeout_s": 3600, "video_timeout_s": 1400}
+{"collect_timeout_s": 3220, "instance_sha256": {"catalog.json": "aa1030d3631c133993e3c6e960a3184be12abdcece6e844bd3236fda710332cf", "instance.json": "85690d6ad426c5ea88f7dd6f2d46c796a8a832d2f7c3a78cbf2e49a2c7fe6fbf", "wuji_reset.json": "f35d7139d7abd0daaa5e1df73d8fe4f3097abe9d918f2fd4d8094130ec0e0cca"}, "video_timeout_s": 2800}

@@ -60,10 +60,11 @@ Every family follows the same three rules, checked by the trusted runtime from s
 2. **No partial credit.** Success needs every ordered stage and the terminal (released or held) condition for its full
    window of consecutive samples; four of five layers, five of six debris pieces or a placed but still-held pot is a
    failure. Success ends the episode too.
-3. **Replayed, never claimed.** The grader rebuilds the frozen scene with the recorded hand in fresh processes and
-   replays only the motor targets: two privileged replays must succeed with identical final state hashes; in standard
-   mode the service's live episode, two fresh replays of its journal and their hashes must agree. Success flags, object
-   poses, configuration overrides or any other member of an agent's archive are never read.
+3. **Judged by a trusted simulator, never claimed.** Privileged: the grader rebuilds the frozen scene with the
+   recorded hand in fresh processes and replays only the motor targets; two replays must succeed with identical final
+   state hashes. Standard: the sim service's own record of the episode it ran is the verdict (no replay; owner,
+   2026-10-17, board 0151; see "Standard-mode grading by the live episode" below). Success flags, object poses,
+   configuration overrides or any other member of an agent's archive are never read.
 
 ## Hands
 
@@ -876,11 +877,11 @@ reset budget is 20 (`budget.reset`, `RCB_RESET_BUDGET` in the compose file; see 
 action, watch step and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
 where the committed resets did (resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
 (`meta["time_left_s"]`) counts from its first request. The collect hook (`finalize.sh` / `finalize.py`) ends the
-episode, replays `/data/trajectory.npz` twice in fresh processes with the recorded hand, seals `final.json` and then
-renders an evidence video (`/data/replay.mp4`) in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s` >= the replay timeout;
-before 2026-10-16 a fixed 300 s, which cut episodes of more than ~10k steps); the separate verifier reads only `final.json` and needs live success, both replay successes,
-identical replay hashes and replay hash = live hash. Missing trusted evidence is an infrastructure error; the video
-never decides a verdict.
+episode and seals `final.json` from the service's record of it (`episode.json`: the live success and end-state hash;
+no replay since 2026-10-17), then renders an evidence video (`/data/replay.mp4`) from `/data/trajectory.npz` in one
+fresh process in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s`); the
+separate verifier reads only `final.json` and needs the live success. Missing trusted evidence is an infrastructure
+error; the video never decides a verdict.
 
 **Oracles.** The generator owns the oracle runners (`scripts/dexhand/shared/solution/`): privileged `solve.sh`
 re-saves the family's rows to `/app/output/trajectory.npz`; standard `solve.sh` submits the same rows as float64
@@ -926,7 +927,7 @@ trial):
 | `batter_whisk` | 1 / 0 | 1 / 0 | 9 min | 3.41 / 2.26 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 | `bicycle_pump_stroke` | 1 / 0 | 1 / 0 | 10 min | 3.42 / 2.29 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
 
-The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`). Wave-2 rows: the oracle / nop and Wuji verdicts are the family authors' trials on the final task files (2026-10-14/15, same image and settings); wall time and peaks are this branch's integration smoke (one privileged and one standard Sharpa oracle per family, both 1, every standard live episode = its replays).
+The standard wall time is the whole trial: the live episode, then (until 2026-10-17) the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`). Wave-2 rows: the oracle / nop and Wuji verdicts are the family authors' trials on the final task files (2026-10-14/15, same image and settings); wall time and peaks are this branch's integration smoke (one privileged and one standard Sharpa oracle per family, both 1, every standard live episode = its replays).
 
 ### Standard-mode resets (owner, 2026-10-14, board 0109)
 
@@ -938,11 +939,41 @@ capability is the one of docs/STANDARD_MODE.md ("Optional reset capability"), im
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
 `Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
 the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
-episode is graded: `trajectory.npz` holds its rows, the collect hook replays them from the frozen start as before, and
+episode is graded: `trajectory.npz` holds its rows, the service's verdict on that episode is the grade, and
 `reward.json` adds `resets` and `reset_budget`. `Session.reset()` restores the frozen start exactly in all ten families
 (checked 2026-10-14 for both hands where offered: after k rows and a reset, the state hash equals a fresh process's, and
 the same rows then end in the same hash as in a fresh process). `RCB_RESET_BUDGET=0` still runs one episode.
 Results with a different budget are reported separately.
+
+### Standard-mode grading by the live episode (owner, 2026-10-17, board 0150/0151)
+
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass from the trajectory after the verdict.
+
+`success` in `final.json` is the sim service's verdict on the episode it ran (the last one after resets):
+`Session.status()["success"]` after the last executed row, the family's full predicate (every ordered stage, the
+terminal hold, the invariants at every physics substep), evaluated by `execute()` in
+`scripts/dexhand/shared/standard/server.py` and written to `episode.json` by `end_episode()`. A replay recomputed the
+same predicate from the same rows through the same `Session.step` (which also refuses an out-of-range target or a moved
+locked wrist; the service clips to the published ranges first), and a success ends the episode, so the replay applied
+no settle, hold or end check that the live episode lacks; every standard integration-smoke episode (2026-10-14/15) ended
+in the same state as its replays. The collect hook no longer runs the two fresh-process replays (`replay1/2.json`):
+`finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
+`video_pending`, then the family's `replay.py --video` films the trajectory once (`video.json`, `video.log`;
+`video_source = "render"`); a failed or late video sets `video = false` and changes nothing else. `reward.json` drops
+`replay_success`, `deterministic` and `live_matches_replay` and adds `graded_by_live`, `replays`, `gave_up`,
+`instance_mismatch` and `video_rendered`. When a fresh episode begins (not on a crash resume) the service compares the
+sha256 of the frozen instance's files (`instance.json`, `catalog.json` and, where present, `task.json`,
+`wuji_reset.json`, `offered_hands.json`) with the generator's record in `grading.json` (`instance_sha256`); a
+difference ends the trial before the agent is served (`instance_mismatch`, an infrastructure error). There is no
+recorded reference hash of the built starting state (computing one needs a MuJoCo run): the start event logs the state
+hash the service built and `episode.json` repeats it (`start_sha`), so trials of a task can be compared afterwards.
+Infrastructure errors (`infra_error = 1`): no, unreadable or unfinished `final.json`, the service not ending and
+dumping its episode within 300 s, a give-up after crashes not all inside the agent's calls (`sim_crashed`,
+`resume_failed`), `instance_mismatch`, a hand the task does not offer. A crash inside the agent's calls
+(`sim_crashed_on_call`), a simulator error from the agent's actions (`reason = "error"`, `sim_error = 1`), a timeout and
+a failed predicate are the agent's 0. Cost: the collect hook now runs one replay process (the video's) instead of three;
+its `timeout_sec` shrinks to the end wait plus the video's bound (`std_collect_s`).
 
 ### In-hand cameras of the essential families (2026-10-14, board 0109)
 
@@ -982,7 +1013,7 @@ README layout, test.sh). Never edit a generated task file: edit the family's sou
   `scripts/dexhand/families/<family>/` with a `family.json` (directory scan, no central list): its runtime files and
   asset folders, hands and per-hand widths, robot name, row limit, control rate, instruction and README texts
   (`{{HANDS}}`, `{{MAX_ROWS}}`, `{{CONTROL_HZ}}`, ... placeholders), oracle files, metadata and grader timeouts
-  (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits). The agent's time limit is not a family setting.
+  (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits; the standard collect hook's `timeout_sec` is `generate.py` `std_collect_s`: 300 s for the end, `replay_sec` + `video_sec` for the video process and 120 s, at most `collect_sec`). The agent's time limit is not a family setting.
 - Shared sources, copied unchanged into every task (`ci_checks/check-tooling-identity.sh`): `rcb_dexhand.py`,
   `hands.py`, the privileged and standard graders, the standard service, its collect hook and the `eai-standard/2.2`
   layer.
