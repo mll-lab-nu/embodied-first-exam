@@ -21,6 +21,56 @@
 # small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
 # 2026-10-16: DexJoCo 4 (#278, group meeting: a task the screening runs solved in both modes; docs/benchmarks/dexjoco.md
 # "Easy set").
+# 2026-10-17: AM-Bench 8 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/ambench.md "Easy set").
+
+[[task]]
+base = "ambench-cabinet-pick-place-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-lemon-harvesting-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-ndt-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-open-door-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-press-button-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-pull-lever-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "S: Luna"
+
+[[task]]
+base = "ambench-push-slider-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-rotate-valve-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
 
 [[task]]
 base = "behavior-chop-an-onion-i00"
