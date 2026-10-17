@@ -74,18 +74,17 @@ check use), as the privileged instruction says.
 | mode | the agent gets | graded |
 |---|---|---|
 | privileged | the `bigym` package (`Session`: step, reset, replay, MuJoCo model and data, onboard images) | `/app/output/trajectory.npz`, replayed in two fresh processes |
-| standard | the robot's three onboard cameras (84×84 as upstream renders them; `RCB_IMAGE_HW` for others, reported apart), upstream's proprioception, `whole_body` chunks; 10 resets, the last episode graded | the sidecar's live verdict + a fresh replay (`rcb_service.py`, as HumanoidBench and KinDER) |
+| standard | the robot's three onboard cameras (84×84 as upstream renders them; `RCB_IMAGE_HW` for others, reported apart), upstream's proprioception, `whole_body` chunks; one episode, no reset | the sidecar's live verdict + a fresh replay (`rcb_service.py`, as HumanoidBench and KinDER) |
 | standard-realtime | the same on a clock that does not stop; between commands the robot stands still on the last one | as standard (`rcb_realtime.py`, as HumanoidBench) |
 
 Every instruction states, besides upstream's task sentence and success rule: where the named objects are at the start
 (one sentence measured on the frozen scene: distance, direction, height; upstream gives its own agents a demonstration
 video instead, which a task here cannot ship), the action table, and upstream's own notes on the whole-body controller
 (`bigym/loco/agent/templates/api_strict.md`). Standard `spec()` adds the robot's description: joint axes and positions,
-the point between each gripper's pads, camera mounts. Reset budget: standard 10 (owner, 2026-10-11; PROTOCOL §4.5), standard-realtime 0. The horizon bounds each episode, so without a reset the practice and
-the graded attempt share it: in GPT-6 Astra's 12 standard runs of 2026-10-09, 6 of the 8 failures ended with the
-horizon spent and 2 on an object on the floor, the wall clock mostly unused. (The robot itself does not fall: 15
-adversarial command patterns of 12 s each, no fall.) `RCB_RESET_BUDGET=0` still runs one episode; standard results
-recorded before this change ran with 0 and are reported separately.
+the point between each gripper's pads, camera mounts. Reset budget: 0 in both service modes (author, 2026-10-16; PROTOCOL §2, the protocol's default; standard 10 from
+2026-10-11): one episode, whose horizon the practice and the graded attempt share. (The robot itself does not fall: 15
+adversarial command patterns of 12 s each, no fall.) `RCB_RESET_BUDGET=N` runs a configuration with N resets; standard
+results recorded with 10 resets (2026-10-11 to 2026-10-16) are reported separately.
 
 Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carries `deterministic` in
 every branch and `sim_error`. The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
