@@ -441,6 +441,8 @@ def live_open() -> None:
         LIVE["next"] = sim_time()
     except Exception:  # noqa: BLE001 — the live video is evidence only
         traceback.print_exc(); LIVE["w"] = None
+        return
+    live_tick()     # the start frame: every graded trial has a video, a trial with no step too (PROTOCOL §4)
 
 
 def live_tick() -> None:
