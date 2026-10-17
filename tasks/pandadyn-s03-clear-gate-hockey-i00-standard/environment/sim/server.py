@@ -21,9 +21,13 @@ What is particular to this benchmark:
   task's horizon), or when the time is up;
 - two static cameras (overview, closeup), RGB and z-depth, rendered only when a frame is recorded (rendering never steps
   physics); /kinematics from the arms' own Pinocchio models (stateless);
-- the episode is NOT replayed here: when it ends the service writes /data/trajectory.npz + /data/episode.json (live result
-  and state hash); the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh replays the trajectory in two
-  fresh processes and completes final.json."""
+- the frozen start is checked when the scene is built: a scene whose start state hash differs from the instance's recorded
+  `initial_sha` is refused before the agent is served (`instance_mismatch`, an infrastructure failure: no trial);
+- the verdict is the live episode's (owner, 2026-10-17, board 0151; docs/benchmarks/pandadyn.md "Grading"): when the
+  episode ends the service writes /data/trajectory.npz + /data/episode.json (the live result: the task's event ledger as
+  it ended, the final state hash); the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes the
+  verdict into final.json from episode.json (nothing is replayed to grade it), then renders the video from the
+  trajectory in one more process."""
 from __future__ import annotations
 import json, math, os, sys, threading, time, traceback
 from typing import Callable
@@ -54,8 +58,8 @@ def ctrl_steps() -> int:
 
 
 def write_final() -> None:
-    if L.final_verdict(DATA):        # finalize.sh's verdict, or a give-up after crashes: never overwritten
-        return
+    if L.final_verdict(DATA) or L._read_json(os.path.join(DATA, "final.json")).get("graded_by"):
+        return                       # a give-up after crashes, or finalize.sh's verdict (graded_by): never overwritten
     n = int(E.get("episode_control_steps") or ctrl_steps())
     L._write_json(os.path.join(DATA, "final.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
@@ -85,7 +89,10 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
+    if reason == "error":
+        # a simulator error ends the episode in the failed step's state, whatever the task's check says of it: no success
+        E["success"] = False
+    elif not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1),
@@ -95,7 +102,7 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_pandadyn as M  # noqa: E402
-S = M.Session(I, strict=True)
+S = M.Session(I)          # not strict: a start that differs from the instance's initial_sha is refused below (instance_mismatch)
 TASK = S.task
 ARMS = list(S.arm_ids)
 JOINTS = [f"joint{i}" for i in range(1, 8)]
@@ -235,6 +242,12 @@ SPEC = {
 }
 L.check_spec(SPEC)       # a spec that misses a 2.2 field or names a forbidden one never starts the episode
 EP.scene_built()         # the watchdog stands down: a long resume replay below is not a hung build
+if not S.instance_matches:
+    # The frozen initial state, checked at the episode's start (the verdict is the live episode's, so no later replay
+    # checks it): a scene that did not rebuild to the instance's recorded start is no trial of this task. Refused before
+    # the agent is served, as an infrastructure failure (final.json: gave_up, infra_error = 1).
+    EP.give_up(f"instance_mismatch: the scene started at {S.initial_sha[:16]}, the frozen instance records "
+               f"{str(I.get('initial_sha'))[:16]}", infra=True)
 
 
 def check_success() -> bool:
@@ -502,7 +515,7 @@ def end_from_signal() -> None:
         E["exiting"] = True
         if not E["done"]: finish("timeout")
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the verdict and the video"})
         if not os.path.exists(PID_FILE):   # a SIGUSR1 that came in during a resume: the hook still needs to see this process end
             open(PID_FILE, "w").write(str(os.getpid()))
     sys.stdout.flush(); sys.stderr.flush()
@@ -517,7 +530,7 @@ def replay_row(row) -> None:
 
 
 EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
-         start_event={"task": TASK, "cameras": CAMS, "initial_sha": S.initial_sha})
+         start_event={"task": TASK, "cameras": CAMS, "initial_sha": S.initial_sha, "instance_matches": bool(S.instance_matches)})
 if S.done and not E["done"]:       # a resume whose journal ends with the episode's last step
     finish(S.end_reason() or "error")
 E["ready"] = True; write_final()

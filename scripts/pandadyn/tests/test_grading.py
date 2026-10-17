@@ -6,16 +6,21 @@ rcb_pandadyn.py). Two fresh-process replays decide: reward 1 iff both succeed, e
 frozen start; a replay without a result, out of its time, or one that rebuilt another start is the verifier's failure
 (`grader_error` = `infra_error` = 1); a file that is not a trajectory of the task is the agent's 0; the video never decides.
 
-Standard (template/standard/tests/grade.py): the verifier run on final.json files: success = live ∧ replay ∧ deterministic,
-no infrastructure error; a missing, unreadable or unfinished final.json, a replay error (which includes a replay that did
-not rebuild the frozen start) or a lost GPU is `infra_error`; a give-up after crashes inside the agent's calls stays the
-agent's 0. Needs numpy (the privileged grader reads the npz)."""
+Standard (template/standard/tests/grade.py), graded by the live episode (board 0151): the verifier run on final.json files:
+success = the live episode's success, no infrastructure error; a missing, unreadable or unfinished final.json, an episode
+the service did not dump, a refused start (instance_mismatch) or a give-up between calls is `infra_error`; a give-up after
+crashes inside the agent's calls and a simulator error from a call stay the agent's 0. And the collect hook
+(template/standard/environment/sim/finalize.sh) run with stand-ins for rcb_limited.py `end` and the tooling: it writes the
+live verdict from episode.json, starts no replay, builds one scene for the video only after the verdict, and a failed or
+slow video leaves the verdict as it was. Needs numpy (the privileged grader reads the npz)."""
 import json, os, shutil, subprocess, sys, tempfile
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PRIV = os.path.join(HERE, "..", "template", "privileged", "tests", "grade.py")
 STD = os.path.join(HERE, "..", "template", "standard", "tests", "grade.py")
+HOOK = os.path.join(HERE, "..", "template", "standard", "environment", "sim", "finalize.sh")
+STD_SERVER = os.path.join(HERE, "..", "template", "standard", "environment", "sim", "server.py")
 GOOD = {"task": "S00-Stub", "actions": np.zeros((5, 8))}
 INSTANCE = {"task": "S00-Stub", "action_dim": 8}
 # name: (trajectory entries (None: no file; a str: raw bytes), STUB_PLAN, want reward, want reward.json subset, replay processes)
@@ -38,30 +43,62 @@ PRIV_CASES = {
     "not an npz": ("not an npz", "ok", 0, {"success": 0, "bad_trajectory": 1, "infra_error": 0}, 0),
     "no actions entry": ({"task": "S00-Stub"}, "ok", 0, {"success": 0, "bad_trajectory": 1}, 0),
 }
+LIVE = {"finalized": True, "graded_by": "live", "replays": 0}
 STD_CASES = {
-    "success": ({"finalized": True, "success": True, "replay_success": True, "deterministic": True, "live_matches_replay": True,
-                 "video": True, "phase": 5, "reason": "success"}, 1, {"success": 1, "live_success": 1, "replay_success": 1, "infra_error": 0,
-                                                                     "phases_done": 5, "video_rendered": 1}),
-    "live success, replay failure": ({"finalized": True, "success": True, "replay_success": False, "deterministic": True}, 0,
-                                     {"success": 0, "infra_error": 0}),
-    "nondeterministic": ({"finalized": True, "success": True, "replay_success": True, "deterministic": False}, 0, {"success": 0, "infra_error": 0}),
-    "the task failed live": ({"finalized": True, "success": False, "replay_success": False, "deterministic": True, "reason": "limit_violation"}, 0,
-                             {"success": 0, "limit_violation": 1, "infra_error": 0}),
-    "the horizon": ({"finalized": True, "success": False, "replay_success": False, "deterministic": True, "reason": "timeout"}, 0,
-                    {"success": 0, "timed_out": 1, "infra_error": 0}),
-    "unfinished hook": ({"finalized": False, "success": True, "replay_success": True, "deterministic": True}, 0, {"success": 0, "infra_error": 1}),
-    "a replay error": ({"finalized": True, "success": True, "replay_success": False, "deterministic": False, "replay_error": "replay 1 gave no result",
-                        "infra_error": 1}, 0, {"success": 0, "replay_error": 1, "grader_error": 1, "infra_error": 1}),
-    "a replay that rebuilt another start": ({"finalized": True, "success": True, "replay_success": True, "deterministic": True, "instance_mismatch": True,
-                                             "replay_error": "replay [1] rebuilt a scene that differs", "infra_error": 1}, 0,
-                                            {"success": 0, "instance_mismatch": 1, "infra_error": 1}),
-    "the GPU lost": ({"finalized": True, "success": True, "gpu_lost": True, "infra_error": 1}, 0, {"success": 0, "gpu_lost": 1, "infra_error": 1}),
+    "live success": ({**LIVE, "success": True, "live_success": True, "video": True, "video_matches_live": True, "phase": 5,
+                      "reason": "success"}, 1, {"success": 1, "live_success": 1, "graded_by_live": 1, "replays": 0, "infra_error": 0,
+                                                "phases_done": 5, "video_rendered": 1, "video_matches_live": 1}),
+    "live failure": ({**LIVE, "success": False, "live_success": False, "reason": "drop"}, 0, {"success": 0, "infra_error": 0}),
+    "the task failed live (a limit)": ({**LIVE, "success": False, "reason": "limit_violation"}, 0,
+                                       {"success": 0, "limit_violation": 1, "infra_error": 0}),
+    "the time was up": ({**LIVE, "success": False, "reason": "timeout"}, 0, {"success": 0, "timed_out": 1, "infra_error": 0}),
+    "a simulator error from a call": ({**LIVE, "success": False, "reason": "error"}, 0, {"success": 0, "sim_error": 1, "infra_error": 0}),
+    "a success recorded with a simulator error": ({**LIVE, "success": True, "live_success": True, "reason": "error"}, 0,
+                                                  {"success": 0, "sim_error": 1, "infra_error": 0}),
+    "no video: the verdict stands": ({**LIVE, "success": True, "video": False, "video_error": "x"}, 1,
+                                     {"success": 1, "video_rendered": 0, "infra_error": 0}),
+    "the video still pending: the verdict stands": ({**LIVE, "success": True, "video_pending": True}, 1, {"success": 1, "infra_error": 0}),
+    "unfinished hook": ({"finalized": False, "success": True}, 0, {"success": 0, "finalized": 0, "infra_error": 1}),
+    "finalized without a verdict": ({"finalized": True, "success": True}, 0, {"success": 0, "infra_error": 1}),
+    "the episode not dumped": ({**LIVE, "success": False, "dump_error": "no episode.json", "infra_error": 1}, 0,
+                               {"success": 0, "dump_error": 1, "infra_error": 1}),
+    "a refused start": ({"finalized": True, "gave_up": True, "success": False, "reason": "instance_mismatch: a != b", "infra_error": 1},
+                        0, {"success": 0, "instance_mismatch": 1, "infra_error": 1}),
     "a give-up inside the agent's calls": ({"finalized": True, "success": False, "reason": "sim_crashed_on_call", "gave_up": True}, 0,
                                            {"success": 0, "sim_crashed_on_call": 1, "infra_error": 0}),
     "a give-up between calls": ({"finalized": True, "success": False, "reason": "sim_crashed", "gave_up": True, "infra_error": 1}, 0,
                                 {"success": 0, "infra_error": 1}),
     "no final.json": (None, 0, {"success": 0, "missing_log": 1, "infra_error": 1}),
     "a truncated final.json": ("{\"success\": tr", 0, {"success": 0, "grader_error": 1, "infra_error": 1}),
+}
+# The collect hook: (end's exit code, the service's final.json, episode.json (None: none), a trajectory, STUB_VIDEO, extra
+# env, want reward, want reward.json subset, want final.json subset, scenes built (the video pass's only)).
+EP = {"success": True, "reason": "success", "phase": 5, "live_sha": "L", "n_actions": 5, "control_steps": 5}
+SERVICE = {"finalized": False, "success": False, "reason": None}
+HOOK_CASES = {
+    "live success": (0, SERVICE, EP, True, "ok", {}, 1, {"success": 1, "live_success": 1, "replays": 0, "video_rendered": 1,
+                     "video_matches_live": 1, "infra_error": 0}, {"graded_by": "live", "replays": 0, "video": True,
+                                                                   "video_pending": False, "state_sha": "L"}, 1),
+    "live failure": (0, SERVICE, {**EP, "success": False, "reason": "drop", "phase": 2}, True, "ok", {}, 0,
+                     {"success": 0, "live_success": 0, "infra_error": 0, "phases_done": 2}, {"success": False}, 1),
+    "the filmed run ends elsewhere: decides nothing": (0, SERVICE, EP, True, "ok", {"STUB_VIDEO_SHA": "X"}, 1,
+                     {"success": 1, "video_matches_live": 0}, {"video_matches_live": False}, 1),
+    "the video fails: the verdict stands": (0, SERVICE, EP, True, "fail", {}, 1, {"success": 1, "video_rendered": 0, "infra_error": 0},
+                     {"video": False, "video_pending": False, "success": True}, 1),
+    "the video is too slow: the verdict stands": (0, SERVICE, EP, True, "sleep", {"RCB_COLLECT_TIMEOUT_S": "63", "RCB_VIDEO_MIN_S": "1"},
+                     1, {"success": 1, "video_rendered": 0, "infra_error": 0}, {"video": False, "success": True}, 1),
+    "a success dumped with a simulator error": (0, SERVICE, {**EP, "reason": "error"}, True, "ok", {}, 0,
+                     {"success": 0, "live_success": 0, "sim_error": 1, "infra_error": 0}, {"success": False}, 1),
+    "no episode.json": (0, SERVICE, None, True, "ok", {}, 0, {"success": 0, "dump_error": 1, "infra_error": 1}, {"finalized": True}, 0),
+    "no trajectory": (0, SERVICE, EP, False, "ok", {}, 0, {"success": 0, "dump_error": 1, "infra_error": 1}, {"finalized": True}, 0),
+    "the service never dumped the episode": (1, SERVICE, None, False, "ok", {}, 0, {"success": 0, "infra_error": 1}, {"finalized": True}, 0),
+    "a give-up between calls": (2, {"finalized": True, "gave_up": True, "success": False, "reason": "sim_crashed", "infra_error": 1},
+                                None, False, "ok", {}, 0, {"success": 0, "infra_error": 1}, {"reason": "sim_crashed"}, 0),
+    "a give-up inside the agent's calls": (2, {"finalized": True, "gave_up": True, "success": False, "reason": "sim_crashed_on_call"},
+                                           None, False, "ok", {}, 0, {"success": 0, "sim_crashed_on_call": 1, "infra_error": 0},
+                                           {"graded_by": "live", "replays": 0}, 0),
+    "a refused start": (2, {"finalized": True, "gave_up": True, "success": False, "reason": "instance_mismatch: a != b", "infra_error": 1},
+                        None, False, "ok", {}, 0, {"success": 0, "instance_mismatch": 1, "infra_error": 1}, {"instance_mismatch": True}, 0),
 }
 
 
@@ -114,16 +151,103 @@ def run_std(name, final, want_reward, want) -> list:
         return check(name, int(open(os.path.join(logs, "reward.txt")).read()), out, want_reward, want)
 
 
-def main() -> int:
+STUB_END = """import os, sys
+sys.exit(int(os.environ.get("STUB_END_RC", "0")) if len(sys.argv) > 1 and sys.argv[1] == "end" else 2)
+"""
+STUB_PIL = {"__init__.py": "", "Image.py": "class _I:\n    def save(self, path):\n        open(path, 'wb').write(b'png')\n\n\n"
+                                         "def fromarray(a):\n    return _I()\n"}
+
+
+def run_hook(name, rc, service, episode, traj, video, extra, want_reward, want, want_final, n_scenes) -> list:
+    """finalize.sh on a scratch /srv and /data, then the standard grader on what it wrote."""
+    with tempfile.TemporaryDirectory() as td:
+        srv, data, logs, bin_ = (os.path.join(td, n) for n in ("srv", "data", "logs", "bin"))
+        for x in (srv, data, logs, bin_, os.path.join(srv, "PIL")):
+            os.makedirs(x)
+        open(os.path.join(srv, "rcb_limited.py"), "w").write(STUB_END)
+        shutil.copy(os.path.join(HERE, "stub_tool.py"), os.path.join(srv, "rcb_pandadyn.py"))
+        for f, text in STUB_PIL.items():
+            open(os.path.join(srv, "PIL", f), "w").write(text)
+        os.symlink(sys.executable, os.path.join(bin_, "python"))          # finalize.sh runs `python`, as in the image
+        json.dump(service, open(os.path.join(data, "final.json"), "w"))
+        if episode is not None:
+            json.dump(episode, open(os.path.join(data, "episode.json"), "w"))
+        if traj:
+            np.savez(os.path.join(data, "trajectory.npz"), task=np.array("S00-Stub"), actions=np.zeros((5, 8)))
+        env = {**os.environ, "PATH": bin_ + os.pathsep + os.environ.get("PATH", ""), "RCB_DATA": data, "RCB_SRV": srv,
+               "RCB_TOOL": os.path.join(srv, "rcb_pandadyn.py"), "RCB_INSTANCE": os.path.join(srv, "instance.json"),
+               "STUB_END_RC": str(rc), "STUB_VIDEO": video, "STUB_SESSIONS": os.path.join(td, "sessions"),
+               "STUB_REPLAYS": os.path.join(td, "replays"), "RCB_VERIFIER_LOG_DIR": logs, **extra}
+        subprocess.run(["sh", HOOK], env=env, capture_output=True, timeout=120)
+        subprocess.run([sys.executable, STD], env=env, capture_output=True, timeout=60)
+        out = json.load(open(os.path.join(logs, "reward.json")))
+        bad = check(name, int(open(os.path.join(logs, "reward.txt")).read()), out, want_reward, want)
+        fin = json.load(open(os.path.join(data, "final.json")))
+        bad += [f"final.json {k}={fin.get(k)!r} (want {v!r})" for k, v in want_final.items() if fin.get(k) != v]
+        n = {f: int(open(os.path.join(td, f)).read()) if os.path.exists(os.path.join(td, f)) else 0 for f in ("replays", "sessions")}
+        if n["replays"]:
+            bad.append(f"{n['replays']} replay process(es) started (the verdict is the live episode's)")
+        if n["sessions"] != n_scenes:
+            bad.append(f"{n['sessions']} scene(s) built, want {n_scenes} (the video pass's only)")
+        return [b if b.startswith(name) else f"{name}: {b}" for b in bad]
+
+
+RT_ADAPTER = os.path.join(HERE, "..", "template", "realtime", "environment", "sim", "server.py")
+
+
+def check_rt_adapter() -> list:
+    """The standard-realtime adapter on the shared layer (rcb_service.Sim; it needs SAPIEN to run, so read, not run): no
+    verify() (the layer grades the live episode and replays nothing), the frozen start as start_sha, and a live_verdict()
+    that never returns a "success" (the task's check already is the episode's end)."""
+    import ast
+    tree = ast.parse(open(RT_ADAPTER).read())
+    cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "PandaDyn")
+    funcs = {f.name: f for f in cls.body if isinstance(f, ast.FunctionDef)}
     bad = []
+    if "verify" in funcs:
+        bad.append("realtime adapter: has verify() (a grading replay)")
+    if not any(isinstance(n, ast.Attribute) and n.attr == "start_sha" and isinstance(n.ctx, ast.Store) for n in ast.walk(funcs["__init__"])):
+        bad.append("realtime adapter: sets no start_sha (the frozen start is not checked)")
+    lv = funcs.get("live_verdict")
+    if lv is None or any(isinstance(n, ast.Constant) and n.value == "success" for n in ast.walk(lv)):
+        bad.append("realtime adapter: live_verdict() missing or returns a success")
+    if any(isinstance(n, (ast.Import, ast.ImportFrom)) and any(a.name == "subprocess" for a in n.names) for n in ast.walk(tree)):
+        bad.append("realtime adapter: starts processes (a fresh-process replay)")
+    return bad
+
+
+def check_std_finish() -> list:
+    """The standard service's finish() (it needs SAPIEN to run the service, so it runs alone, on stubs): an episode ended
+    by a simulator error is no success even when the task's check passes on the failed step's state (review of #309)."""
+    import ast
+    src = open(STD_SERVER).read()
+    fn = next(n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name == "finish")
+    bad = []
+    for reason, want in (("error", False), ("timeout", True)):
+        E = {"done": False, "success": False, "step": 0, "t0": 0.0}
+        ns = {"E": E, "time": __import__("time"), "ctrl_steps": lambda: 0, "check_success": lambda: True,
+              "log": lambda ev: None, "dump": lambda: None, "S": type("S", (), {"u": type("U", (), {"phase": 5})()})()}
+        exec(compile(ast.Module(body=[fn], type_ignores=[]), STD_SERVER, "exec"), ns)
+        ns["finish"](reason)
+        if bool(E["success"]) != want:
+            bad.append(f"standard service: finish({reason!r}) with the task's check passing gives success {E['success']}")
+    return bad
+
+
+def main() -> int:
+    bad = check_rt_adapter() + check_std_finish()
     for name, case in PRIV_CASES.items():
         bad += run_priv("privileged: " + name, *case)
     for name, case in STD_CASES.items():
         bad += run_std("standard: " + name, *case)
+    for name, case in HOOK_CASES.items():
+        bad += run_hook("collect hook: " + name, *case)
     for b in bad:
         print("FAIL", b)
-    print(f"{len(PRIV_CASES) + len(STD_CASES) - len({b.split(':')[0] + ':' + b.split(':')[1] for b in bad})} / "
-          f"{len(PRIV_CASES) + len(STD_CASES)} cases pass" if bad else f"{len(PRIV_CASES)} privileged + {len(STD_CASES)} standard grading cases pass")
+    n = len(PRIV_CASES) + len(STD_CASES) + len(HOOK_CASES)
+    print(f"{n - len({b.split(':')[0] + ':' + b.split(':')[1] for b in bad})} / {n} cases pass" if bad else
+          f"{len(PRIV_CASES)} privileged + {len(STD_CASES)} standard grading + {len(HOOK_CASES)} collect-hook cases pass, "
+          "and the realtime adapter replays nothing")
     return 1 if bad else 0
 
 

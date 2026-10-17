@@ -5,7 +5,7 @@ docs/benchmarks/pandadyn.md "Standard-realtime").
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSkill 3.0.1 / SAPIEN 3.0.3, CPU PhysX at
 1000 Hz, one or two Franka Pandas behind their Ruckig + torque servos) -- the same scene, action, success rule and
-replay as the standard twin's eai-standard/2.2 service. The protocol, the clock, the plan, the episode, crash recovery
+trajectory as the standard twin's eai-standard/2.2 service. The protocol, the clock, the plan, the episode, crash recovery
 and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the HumanoidBench sources
 (ci_checks/check-tooling-identity.sh).
 
@@ -15,21 +15,22 @@ calibration, the robot's own proprioception (the standard twin's columns: joints
 velocities, apertures, motor torques, the targets in force) and the `joint_position` action (per arm 7 absolute joint
 targets + the total aperture, clipped to the limits). Nothing about objects or fixtures leaves this process.
 
-The graded episode is replayed in a fresh process (`rcb_pandadyn.py replay`, the standard twin's collect-hook replay):
-a Session holds a SAPIEN scene, one per process. The episode's verdict is the live run's and the replay's, and their
-final states must agree (CPU PhysX with enhanced determinism, one thread).
+The verdict is the live episode's (owner, 2026-10-17, board 0151; docs/benchmarks/pandadyn.md "Grading"): the task's
+own check as the graded episode ended in this process, judged by rcb_service after the agent's container is gone; nothing
+is replayed to grade it. The task's check is the episode's end (the first control step where it succeeded or failed), so
+there is no settle window to add (live_verdict below only records the phase and the end reason). The frozen start is
+checked when the first episode begins: `start_sha` is the instance's recorded `initial_sha` (rcb_service refuses a scene
+that starts elsewhere: instance_mismatch, an infrastructure failure). The video is rendered after the verdict from the
+graded episode's rows by this process's Session (render_video: the scene rebuilt, the rows filmed).
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_TEXTS (texts.json: the task text),
-RCB_TOOL (rcb_pandadyn.py, for the fresh-process replay), RCB_DATA, RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN
-(rcb_realtime / rcb_service).
+RCB_DATA, RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service).
 """
 from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
-import tempfile
 
 import numpy as np
 
@@ -44,16 +45,16 @@ from rcb_service import main  # noqa: E402
 JOINTS = [f"joint{i}" for i in range(1, 8)]
 MOUNT = {"overview": "static, looking at the whole workspace from the front right, above the table",
          "closeup": "static, closer to the task's working area"}
-REPLAY_TIMEOUT_S = 1200      # a fresh process builds the scene (5-15 s) and runs at most the 4500-step cap
 
 
 class PandaDyn:
     """One frozen Panda Dynamic Scenes instance behind the rcb_service.Sim contract (see the module docstring)."""
 
-    def __init__(self, instance: str, texts: dict, tool: str):
-        self.instance, self.tool, self.texts = instance, tool, texts
+    def __init__(self, instance: str, texts: dict):
+        self.instance, self.texts = instance, texts
         self.I = json.load(open(instance))
-        self.s = M.Session(self.I, strict=True)
+        self.s = M.Session(self.I)               # not strict: rcb_service checks start_sha when the first episode begins
+        self.start_sha = str(self.I["initial_sha"])  # the frozen instance's recorded start (rcb_pandadyn make-instance)
         self.arms = list(self.s.arm_ids)
         self.raw_dim = int(self.s.dim)
         self.control_dt = 1.0 / M.CONTROL_HZ
@@ -168,22 +169,10 @@ class PandaDyn:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen instance in a fresh process (`rcb_pandadyn.py replay`)."""
-        with tempfile.TemporaryDirectory(prefix="rcb_verify_") as td:
-            traj = os.path.join(td, "trajectory.npz")
-            self.s.save_trajectory(rows, traj, meta={"source": "standard-realtime episode"})
-            out = subprocess.run([sys.executable, self.tool, "replay", "--instance", self.instance, "--traj", traj],
-                                 capture_output=True, text=True, timeout=REPLAY_TIMEOUT_S,
-                                 env={**os.environ, "RCB_SESSION_LOG": ""})
-            line = next((ln for ln in reversed(out.stdout.splitlines()) if ln.startswith("{")), None)
-            if line is None:
-                raise RuntimeError(f"the fresh-process replay gave no result (exit {out.returncode}): {out.stderr[-500:]}")
-            res = json.loads(line)
-            if not res.get("instance_matches"):
-                raise RuntimeError("the fresh-process replay did not rebuild the frozen instance")
-            rep = res["replays"][0]
-            return {"success": bool(rep["success"]), "state_sha": rep["state_sha"]}
+    def live_verdict(self, rows: np.ndarray, success: bool) -> dict:
+        """The benchmark's own record of the live episode as it ended (no "success": the task's check already is the
+        episode's end, so nothing is taken away): the phases completed and why the episode ended."""
+        return {"phase": int(self.s.u.phase), "end_reason": self.s.end_reason() or ""}
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         self.s.save_trajectory(rows, path, meta)
@@ -197,8 +186,7 @@ class PandaDyn:
 def build() -> PandaDyn:
     env = os.environ.get
     texts = json.load(open(env("RCB_TEXTS", os.path.join(HERE, "texts.json"))))
-    return PandaDyn(env("RCB_INSTANCE", os.path.join(HERE, "instance.json")), texts,
-                    env("RCB_TOOL", os.path.join(HERE, "rcb_pandadyn.py")))
+    return PandaDyn(env("RCB_INSTANCE", os.path.join(HERE, "instance.json")), texts)
 
 
 if __name__ == "__main__":
