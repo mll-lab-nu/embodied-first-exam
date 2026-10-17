@@ -27,6 +27,8 @@
 # docs/benchmarks/robocasa.md "Easy set").
 # 2026-10-17: RoboCasa365 19 (the owner's screening: every mode the base ships solved by a screening run;
 # docs/benchmarks/robocasa365.md "Easy set").
+# 2026-10-17: RoboCasa-GR1 9 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robocasa-gr1.md "Easy set").
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -398,6 +400,60 @@ base = "robocasa-coffee-setup-mug-i00"
 benchmark = "RoboCasa"
 reason = "solved"
 note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Opus, Sol 6.1 (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-bottle-to-cabinet-close-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon (Luna failed); S: Astra, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-cuttingboard-to-basket-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-cuttingboard-to-pan-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Gemini 4 Argon (Luna failed); judgment: Astra's standard success is borderline (the agent doubted its placement); Gemini 4 Argon's is clean"
+
+[[task]]
+base = "robocasa-gr1-cuttingboard-to-pot-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-placemat-to-basket-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-plate-to-cardboardbox-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Astra, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-tray-to-cardboardbox-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Opus, Sol 6.1, Sol (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-tray-to-tieredbasket-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash (Luna failed); S: Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-tray-to-tieredshelf-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Gemini 4 Argon (Luna failed)"
 
 [[task]]
 base = "robocasa-open-drawer-i00"
