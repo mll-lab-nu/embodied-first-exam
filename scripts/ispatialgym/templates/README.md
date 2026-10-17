@@ -20,7 +20,8 @@ None.
 replays it (2026-10-17). Success is iSpatialGym's own geometric success as `run_isg --mode policy` judges it (the BDDL goal
 and every measured target within the isg-v2 tolerances x 3, held over the last $settle_steps control steps with the task's objects and the robot at rest: upstream's settle-eval).
 Upstream's symbolic success and the success step are reported apart, and so are the crash-recovery fields; the video
-(`/logs/verifier/live.mp4`, the head camera) is recorded during the episode and never decides anything. The frozen start
+(`/logs/verifier/live.mp4`, the head camera) is recorded during the episode (a video-only render, `replay.mp4`, only
+when it is missing) and never decides anything. The frozen start
 is checked when the sidecar builds the scene, before the agent is served. `infra_error` = 1 (no verdict on the agent) when
 `final.json` is missing, unreadable or not finalized, the service never ended the episode, it gave up after crashes not
 all inside the agent's calls, or the frozen start did not rebuild (`instance_mismatch`).

@@ -56,7 +56,7 @@ def main() -> None:
         traceback.print_exc()
         write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 0,
                       "infra_error": 1, "grader_error": 1}); return
-    for f in ("live.mp4", "trajectory.npz", "episode.jsonl"):
+    for f in ("live.mp4", "replay.mp4", "trajectory.npz", "episode.jsonl"):
         try:
             if os.path.exists(f"{data}/{f}"): shutil.copy(f"{data}/{f}", f"{LOG}/{f}")
         except OSError:    # the evidence never decides the verdict

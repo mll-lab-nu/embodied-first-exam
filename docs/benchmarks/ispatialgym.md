@@ -93,7 +93,9 @@ verifier's, for all 12 tasks.
   agent's observations, every third step (10 fps, 540 px), copied in the control loop and encoded by a thread
   (`rcb_ispatialgym.LiveVideo`; a full queue drops a frame rather than wait). A resume records it anew from the start, as
   it replays the journal. The service closes it when the collect hook ends the episode; a failed recording loses only
-  the video. `replay --video` renders one from `trajectory.npz` when a video is missing.
+  the video. Only when `live.mp4` is missing or does not play, `finalize.sh` runs ONE video-only render
+  (`rcb_ispatialgym.py replay --video`, `replay.mp4`) after the verdict, whose success and hash are not read; the
+  collect hook's bound covers it (the end, up to 1 h, + a scene load and the whole step budget + 10 min).
 - **Infrastructure** (`infra_error = 1`): no or unfinalized `final.json`, the service never ended the episode, a give-up
   after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), `instance_mismatch`. A crash inside the
   agent's calls (`sim_crashed_on_call`) and a simulator error raised by its actions (`error`) score 0.
@@ -148,5 +150,5 @@ RTX 4090 with four processes at once).
 
 ## Change log
 - 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay (the collect hook's
-  two fresh-process replays are gone, its bound 4200 s); the start state is checked at the live start; video recorded
-  live by the sim service (`live.mp4`).
+  two fresh-process replays are gone); the start state is checked at the live start; video recorded live by the sim
+  service (`live.mp4`), a video-only render only when that is missing.

@@ -8,12 +8,15 @@
 #   2. merge episode.json (the live episode's result: upstream's success under settle-eval, judged at every control step
 #      it ran) into final.json (written atomically), the only file the verifier sandbox grades. The video is checked for
 #      playability and never decides anything.
+#   3. only when the live video (live.mp4) is missing or does not play: ONE video-only pass, a fresh-process render of
+#      trajectory.npz (`rcb_ispatialgym.py replay --video`) after the verdict; its success and hash are not read, it is
+#      not retried, and a render that fails or runs out of the hook's time loses only the video.
 set -u
 DATA="${RCB_DATA:-/out}"
 SRV="${RCB_SRV:-/srv}"
+T0=$(date +%s)
 BUDGET_S="${RCB_COLLECT_BUDGET_S:-4200}"   # = [[verifier.collect]] timeout_sec of the sim hook in task.toml
-END_S=$((BUDGET_S - 600))                  # the episode's end, through a resume (a scene load + the journal); 600 s to merge
-[ "$END_S" -lt 600 ] && END_S=600
+END_S="${RCB_END_TIMEOUT_S:-3600}"         # the episode's end, through a resume (a scene load + the journal)
 python "$SRV/rcb_limited.py" end "$DATA" --timeout "$END_S"; rc=$?
 if [ "$rc" = 2 ]; then
     echo "[finalize] final.json already holds the verdict (a give-up)"; exit 0
@@ -58,9 +61,47 @@ def playable(p):
         return False
 v = os.path.join(d, "live.mp4")
 out["video"] = os.path.exists(v) and playable(v)
-out["video_source"] = "live"
+out["video_source"] = "live" if out["video"] else None
+out["video_pending"] = not out["video"] and out["trajectory"]
 out["finalized"] = True
 tmp = os.path.join(d, "final.json.tmp")
 json.dump(out, open(tmp, "w")); os.replace(tmp, os.path.join(d, "final.json"))
 print(json.dumps(out))
+PY
+python - <<'PY' || exit 0
+import json, os, sys
+sys.exit(0 if json.load(open(os.path.join(os.environ.get("RCB_DATA", "/out"), "final.json"))).get("video_pending") else 1)
+PY
+# 3. the video-only pass (no playable live video): the hook's remaining time, one attempt
+left=$((BUDGET_S - 300 - ($(date +%s) - T0)))
+if [ "$left" -ge 60 ] && [ -n "${RCB_TOOL:-}" ] && [ -n "${RCB_INSTANCE:-}" ]; then
+    echo "[finalize] no playable live video: one video-only render ($left s)"
+    limit=""; command -v timeout >/dev/null 2>&1 && limit="timeout -k 30 $left"
+    $limit python "$RCB_TOOL" replay --instance "$RCB_INSTANCE" --traj "$DATA/trajectory.npz" --video "$DATA/replay.mp4" > "$DATA/video.json" 2> "$DATA/video.log"
+    echo "[finalize] video render exit $?"
+else
+    echo "[finalize] video render skipped ($left s left)"
+fi
+python - <<'PY'
+import json, os, subprocess
+d = os.environ.get("RCB_DATA", "/out")
+def playable(p):
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries",
+                            "stream=nb_read_packets", "-of", "csv=p=0", p], capture_output=True, text=True, timeout=300)
+        return r.returncode == 0 and int((r.stdout.strip() or "0").split(",")[0]) > 0
+    except Exception:
+        return False
+p = os.path.join(d, "final.json")       # the verdict is on disk: only the video fields change
+try:
+    out = json.load(open(p))
+except Exception as exc:
+    print(f"[finalize] video fields: final.json unreadable: {exc!r}"); raise SystemExit(0)
+v = os.path.join(d, "replay.mp4")
+out["video"] = os.path.exists(v) and playable(v)
+out["video_source"] = "render" if out["video"] else None
+out["video_pending"] = False
+tmp = p + ".tmp"
+json.dump(out, open(tmp, "w")); os.replace(tmp, p)
+print(json.dumps({k: out[k] for k in ("video", "video_source")}))
 PY

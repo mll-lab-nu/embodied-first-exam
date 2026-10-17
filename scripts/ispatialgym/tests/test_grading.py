@@ -82,31 +82,38 @@ if __name__ == "__main__":
 """
 
 
-def finalize(rc: int, episode: dict | None, final: dict | None = None, video: bytes | None = None) -> tuple[dict, Path]:
+def finalize(rc: int, episode: dict | None, final: dict | None = None, video: bytes | None = None, render: bytes | None = None,
+             budget: int = 4200) -> tuple[dict, list]:
     td = Path(tempfile.mkdtemp())
     data, srv, bindir = td / "out", td / "srv", td / "bin"
     for p in (data, srv, bindir):
         p.mkdir()
     (srv / "rcb_limited.py").write_text(STUB.format(std=str(ROOT / "scripts/eai_standard")))
-    tool = srv / "tool.py"; tool.write_text(f"open({str(td / 'REPLAYED')!r}, 'w').write('1')\n")
+    tool = srv / "tool.py"        # the replay CLI: logs its arguments; with --video writes `render` there (if given)
+    (td / "render.bin").write_bytes(render or b"")
+    tool.write_text("import sys\n"
+                    f"open({str(td / 'REPLAYED')!r}, 'a').write(' '.join(sys.argv[1:]) + '\\n')\n"
+                    "if '--video' in sys.argv and " + repr(render is not None) + ":\n"
+                    f"    open(sys.argv[sys.argv.index('--video') + 1], 'wb').write(open({str(td / 'render.bin')!r}, 'rb').read())\n")
     (bindir / "python").symlink_to(sys.executable)
     if episode is not None:
         (data / "episode.json").write_text(json.dumps(episode))
+        np.savez(data / "trajectory.npz", actions=np.zeros((3, 23), np.float32))
     if final is not None:
         (data / "final.json").write_text(json.dumps(final))
     if video is not None:
         (data / "live.mp4").write_bytes(video)
     env = {**os.environ, "RCB_DATA": str(data), "RCB_SRV": str(srv), "STUB_END_RC": str(rc), "RCB_TOOL": str(tool),
-           "RCB_INSTANCE": str(srv), "RCB_COLLECT_BUDGET_S": "4200", "PATH": f"{bindir}:{os.environ['PATH']}"}
+           "RCB_INSTANCE": str(srv), "RCB_COLLECT_BUDGET_S": str(budget), "PATH": f"{bindir}:{os.environ['PATH']}"}
     r = subprocess.run(["sh", str(HERE / "shared/finalize.sh")], env=env, capture_output=True, text=True, timeout=600)
     assert r.returncode == 0, r.stderr
-    assert not (td / "REPLAYED").exists(), "finalize.sh ran the replay tool"
-    assert "replay" not in (HERE / "shared/finalize.sh").read_text().split("set -u", 1)[1].replace("no replay", "").replace(
-        "nothing is replayed", "").replace("replays", "").lower(), "finalize.sh still calls a replay"
+    calls = (td / "REPLAYED").read_text().splitlines() if (td / "REPLAYED").exists() else []
+    assert len(calls) <= 1 and all("--video" in c for c in calls), calls      # never a grading replay; one video-only render at most
     assert (data / "end_called").read_text().split()[-1] == "3600"
     fin = json.loads((data / "final.json").read_text())
+    assert "replay_success" not in fin and "deterministic" not in fin, fin
     shutil.rmtree(td)
-    return fin, td
+    return fin, calls
 
 
 def tiny_mp4() -> bytes | None:
@@ -124,16 +131,21 @@ def tiny_mp4() -> bytes | None:
 def test_finalize() -> None:
     ep = {"success": True, "reason": "success", "live_sha": "abc", "n_actions": 10, "control_steps": 10, "graded_by": "live", "replays": 0}
     mp4 = tiny_mp4()
-    fin, _ = finalize(0, ep, video=mp4)
+    fin, calls = finalize(0, ep, video=mp4)
     assert fin["success"] is True and fin["live_success"] is True and fin["finalized"] and fin["graded_by"] == "live"
-    assert fin["replays"] == 0 and fin["state_sha"] == "abc" and fin["video_source"] == "live" and fin["video_pending"] is False
-    assert "replay_success" not in fin and "deterministic" not in fin and not fin.get("infra_error")
-    assert fin["video"] is (mp4 is not None)
+    assert fin["replays"] == 0 and fin["state_sha"] == "abc" and fin["video_pending"] is False and not fin.get("infra_error")
+    if mp4 is not None:                                                 # a playable live video: no render at all
+        assert fin["video"] is True and fin["video_source"] == "live" and calls == [], (fin, calls)
     ok, _ = G.grade(fin); assert ok
-    for v in (None, b"not an mp4"):                                     # the video failed: the verdict stands
-        fin, _ = finalize(0, ep, video=v)
-        assert fin["success"] is True and fin["video"] is False and G.grade(fin)[0]
-    fin, _ = finalize(0, {**ep, "success": False, "reason": "failed: the episode's control steps ran out"}, video=mp4)
+    for v in (None, b"not an mp4"):                                     # no playable live video: one render, the verdict stands
+        fin, calls = finalize(0, ep, video=v, render=mp4)
+        assert len(calls) == 1 and fin["success"] is True and fin["video_pending"] is False and G.grade(fin)[0], (fin, calls)
+        assert fin["video"] is (mp4 is not None) and fin["video_source"] == ("render" if mp4 else None)
+        fin, calls = finalize(0, ep, video=v)                           # ... and the render fails too: only the video is lost
+        assert fin["success"] is True and fin["video"] is False and not fin.get("infra_error") and G.grade(fin)[0]
+    fin, calls = finalize(0, ep, video=None, render=mp4, budget=300)    # no time left for a render: skipped, verdict stands
+    assert calls == [] and fin["video"] is False and fin["video_pending"] is False and G.grade(fin)[0]
+    fin, _ = finalize(0, {**ep, "success": False, "reason": "failed: the episode's control steps ran out"}, video=mp4, render=mp4)
     assert fin["success"] is False and not fin.get("infra_error") and not G.grade(fin)[0]
     give = {"success": False, "finalized": True, "gave_up": True, "reason": "sim_crashed", "infra_error": 1}
     fin, _ = finalize(2, None, final=give)                              # a give-up on disk is kept as it is
@@ -186,7 +198,7 @@ def test_service_texts() -> None:
     s = (HERE / "shared/server.py").read_text()
     assert "instance_mismatch" in s and "LiveVideo" in s and "fresh-process replays\"" not in s
     t = (HERE / "templates/task.toml").read_text()
-    assert "replay1.log" not in t and "/out/live.mp4" in t
+    assert "replay1.log" not in t and "/out/live.mp4" in t and "kill -9 -1" in t
 
 
 if __name__ == "__main__":

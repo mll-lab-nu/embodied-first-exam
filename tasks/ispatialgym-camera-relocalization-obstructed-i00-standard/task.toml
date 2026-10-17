@@ -6,6 +6,8 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/out/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/out/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
   { source = "/out/live.mp4", service = "sim" },             # the live episode's head camera, recorded while it ran
+  { source = "/out/replay.mp4", service = "sim" },           # ... or the video-only render, only when that one is missing
+  { source = "/out/video.log", service = "sim" },
   { source = "/out/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   "/app/output/",
 ]
@@ -92,7 +94,8 @@ timeout_sec = 30
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end the episode, write final.json from the live episode's result (nothing is replayed)
-timeout_sec = 4200               # the episode end (up to 1 h through a resume) + 10 min to merge and check the live video
+timeout_sec = 5850               # the episode end (up to 1 h through a resume) + a video-only render (a scene load + 1324
+                                  # steps), run only when the live video is missing, after the verdict + margin
 
 [agent]
 timeout_sec = 3600.0
