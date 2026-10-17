@@ -46,7 +46,28 @@ More than 2 crashes end the episode: `sim_crashed_on_call` if every crash happen
 (`RCB_STARTUP_TIMEOUT_S`, 300 s). A host on which the frozen instance does not rebuild gets one retry and then
 `reason = instance_mismatch` with `infra_error = 1`.
 
-**Grading.** `success = live ∧ replay ∧ deterministic`; `replay.mp4` is six-view.
+**Grading** (since 2026-10-17, owner, board 0150/0151: standard mode graded by the live episode; no grading replay;
+video by one render pass after the verdict). `success` is RoboTwin's `check_success` on the episode the sidecar ran:
+it is checked after every call that ran physics, the first success ends the episode, and when the agent's time is up
+(the collect hook's SIGUSR1, after the monitor is sealed and the agent's container is stopped with `kill -9 -1`) the
+final state is checked once more. That is the live part of the old rule `live ∧ replay ∧ deterministic`; the replay's
+predicate was the same check on the final replayed state, with no settle or hold window, so nothing moves from the
+replay to the live episode. `final.json` gets the verdict at once (`graded_by = "live"`, `replays = 0`, `finalized`,
+the end state's hash `live_sha`, `video_pending: true`); `trajectory.npz` is saved as the deliverable. The frozen
+instance is checked when the scene is built, before the agent is served: `rcb_traj.Session` compares the initial-state
+hash with `instance.json`'s `state_sha` (a mismatch: one retry, then `instance_mismatch`, `infra_error = 1`). The
+grader (`tests/grade.py`) transcribes it; `infra_error = 1` only for a missing / unreadable final.json, no live verdict
+(`graded_by` absent: the hook gave up first, or `finalize_error`), `sim_crashed`, `resume_failed`, `instance_mismatch`;
+`sim_crashed_on_call`, a simulator error from the agent's call (`reason = "error"`), a timeout are the agent's 0.
+
+**Video.** After the verdict one pass over the trajectory (`rcb_live.LiveRecorder.render_videos`) rebuilds the frozen
+instance, steps the rows once and writes both `replay.mp4` (six views, 320×240 tiles, a frame every
+max(10, rows/600) steps) and `live.mp4` (below); `video_pending` is false when it is done or failed (`video_error`). The
+collect hook waits for it until 2200 s (an episode whose physics filled the whole 1800 s cutoff, plus at most ~2100
+rendered frames); a video not ready by then is lost, the verdict is not. Rendering during the episode
+(`RCB_LIVE=realtime`) was not chosen: it costs the agent ~150 ms of wall clock per frame (a 10 s chunk took 20.6 s
+instead of 5.1 s). Before 2026-10-17 the collect hook ran three passes over the trajectory (the grading replay, then
+`replay.mp4`, then `live.mp4`); now one.
 
 **Live recording** (sidecar only; the agent sees none of it):
 - `live.mp4`: the episode as six views (world / observer / head · front / left wrist / right wrist, 213×160 tiles), each
@@ -55,7 +76,7 @@ More than 2 crashes end the episode: `sim_crashed_on_call` if every crash happen
   frames; with `RCB_LIVE_FILTER=moving` (default) frames are also skipped while nothing moves (max change of all poses /
   joint states below `RCB_LIVE_MOVE_EPS`, 1e-3).
 - Capture (`RCB_LIVE`): **`replay`** (default) logs only call boundaries during the episode (no cost to the agent) and
-  renders `live.mp4` at episode end from the recorded trajectory; `realtime` renders while the episode runs (the video
+  renders `live.mp4` after the verdict from the recorded trajectory, in the same pass as `replay.mp4`; `realtime` renders while the episode runs (the video
   survives a crash, but each frame costs ~150 ms of the agent's wall clock: a 10 s chunk took 20.6 s instead of 5.1 s);
   `off` disables it.
 - `live_segments.jsonl` (per call) and `live_timeline.jsonl` (per frame) map every frame back to `episode.jsonl`;

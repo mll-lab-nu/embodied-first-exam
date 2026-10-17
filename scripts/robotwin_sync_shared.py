@@ -11,8 +11,10 @@ simulator image and an oracle run), each as a copy of the templates tasks/robotw
 - privileged: tests/grade.py (unchanged copy); environment/rcb_traj.py and tests/rcb_traj.py = the template's
   tests/rcb_traj.py with the task's own goal-text entry and selftest default (what robotwin_mk_task.py substitutes);
 - standard: environment/sim/{server.py,rcb_live.py,rcb1.py}, environment/{rcb_client.py,rcb1.py}, tests/{grade.py,test.sh}
-  (unchanged copies); environment/sim/rcb_traj.py = the privileged twin's; the sim service's `[[verifier.collect]]`
-  command in task.toml; instruction.md from "## Rules" up to the task's own objects line (the title, the objects line
+  (unchanged copies); environment/sim/rcb_traj.py = the privileged twin's; task.toml from `[verifier]` up to `[agent]`
+  (the verifier's settings and the `[[verifier.collect]]` hooks); README.md's "## Task" paragraph (with the task's name
+  and seed) and "## Verification" section, and every Change Log line of the template dated 2026-10-17 or later that
+  the task's log lacks (appended); instruction.md from "## Rules" up to the task's own objects line (the title, the objects line
   and the generated "## Resource limits" tail stay the task's); and, for a task listed in
   scripts/robotwin/standard_facts.json, the instruction's task paragraph: the goal text followed by the facts of the
   judge (what RoboTwin's check_success tests, with its numbers; owner decision 2026-10-10). The five tasks whose goal
@@ -37,7 +39,10 @@ STD_SAME = ["environment/sim/server.py", "environment/sim/rcb_live.py", "environ
 ENTRY = ('    "stack_blocks_two": dict(\n        text="Stack the green block on top of the red block (either arm may be used), '
          'then open both grippers.",\n    ),\n')
 SELFTEST = 'q = sub.add_parser("selftest"); q.add_argument("--task", default="stack_blocks_two")'
-HOOK = re.compile(r'(\[\[verifier\.collect\]\]\nservice = "sim"\ncommand = )(".*")\n')
+VERIFIER = re.compile(r"\n\[verifier\]\n.*?\n(?=\[agent\]\n)", re.S)   # [verifier] + its collect hooks, up to [agent]
+README_TASK = re.compile(r"## Task\n.*?\n(?=## Difficulty\n)", re.S)
+README_VER = re.compile(r"## Verification\n.*?\n(?=## Compute resources\n)", re.S)
+LOG_FROM = "2026-10-17"   # template Change Log lines from this date on are rolled out (board 0151: live grading)
 RULES = "## Rules (real-robot rules)\n"
 FACTS = json.loads((ROOT / "scripts/robotwin/standard_facts.json").read_text())
 TASK_PARA = re.compile(r"\*\*Task:\*\* .*?\n\n", re.S)
@@ -72,8 +77,13 @@ def main(argv: list[str]) -> int:
 
     tpl_traj = (PRIV / "tests/rcb_traj.py").read_text()
     tpl_toml = (STD / "task.toml").read_text()
-    hook = HOOK.search(tpl_toml)
-    assert hook, "template task.toml: no sim collect hook"
+    ver = VERIFIER.search(tpl_toml)
+    assert ver and '\nservice = "sim"\n' in ver.group(0), "template task.toml: no [verifier] with a sim collect hook"
+    tpl_md = (STD / "README.md").read_text()
+    tpl_seed = json.loads((STD / "environment/sim/instance.json").read_text())["seed"]
+    md_task, md_ver = README_TASK.search(tpl_md), README_VER.search(tpl_md)
+    assert md_task and md_ver, "template README.md: no ## Task / ## Verification section"
+    new_log = [ln for ln in tpl_md.splitlines() if ln.startswith("- ") and ln[2:12] >= LOG_FROM and ln[2:4] == "20"]
     tpl_ins = (STD / "instruction.md").read_text()
     a, b = shared_span(tpl_ins)
     span = tpl_ins[a:b]
@@ -94,8 +104,18 @@ def main(argv: list[str]) -> int:
         for rel in STD_SAME:
             put(std / rel, (STD / rel).read_bytes())
         toml = (std / "task.toml").read_text()
-        assert HOOK.search(toml), f"{std.name}/task.toml: no sim collect hook"
-        put(std / "task.toml", HOOK.sub(lambda m: m.group(1) + hook.group(2) + "\n", toml, count=1))
+        assert VERIFIER.search(toml), f"{std.name}/task.toml: no [verifier] section before [agent]"
+        put(std / "task.toml", VERIFIER.sub(lambda m: ver.group(0), toml, count=1))
+        md = (std / "README.md").read_text()
+        seed = json.loads((std / "environment/sim/instance.json").read_text())["seed"]
+        own = lambda x: x.replace(TPL, task).replace(f"seed {tpl_seed}", f"seed {seed}")
+        assert README_TASK.search(md) and README_VER.search(md), f"{std.name}/README.md: no ## Task / ## Verification section"
+        md = README_TASK.sub(lambda m: own(md_task.group(0)), md, count=1)
+        md = README_VER.sub(lambda m: own(md_ver.group(0)), md, count=1)
+        missing = [own(ln) for ln in new_log if own(ln) not in md.splitlines()]
+        if missing:
+            md = md.rstrip("\n") + "\n" + "\n".join(missing) + "\n"
+        put(std / "README.md", md)
         ins = (std / "instruction.md").read_text()
         x, y = shared_span(ins)
         new = ins[:x] + span + ins[y:]
