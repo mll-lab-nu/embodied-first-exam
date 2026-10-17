@@ -27,8 +27,11 @@ initial state, so none replays on a frozen layout. The task is reported separate
 
 ## Verification
 The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
-writes `/data/trajectory.npz`; the collect hook (`environment/sim/finalize.sh`) replays it from the frozen layout once,
-in a fresh process; `tests/grade.py` scores 1 iff @@STD_VERDICT@@. No oracle;
+writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
+writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
+`cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
+@@STD_VERDICT@@. Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
+(`instance_mismatch`: an infrastructure failure). The collect hook needs no GPU after the service exits. No oracle;
 human review in PR #@@REVIEW_PR@@ (@@EVIDENCE_SHORT@@). `nop` (no actions) scores 0.
 
 ## Details
