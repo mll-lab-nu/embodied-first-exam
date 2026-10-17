@@ -150,4 +150,4 @@ source_commits = ["dd4db78ea10a"]
 name = "roboolympics-badminton-matchlow-i01-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["1da9d228df21"]
+source_commits = ["0cff528341b4"]
