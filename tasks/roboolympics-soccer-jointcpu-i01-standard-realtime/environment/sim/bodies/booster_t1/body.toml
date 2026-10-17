@@ -1,0 +1,73 @@
+# Booster Robotics T1: the humanoid of robot soccer (sports/soccer). A limits-only legged entry (bodies/__init__.py
+# LEGS): the sport's scene carries the model (the lower body of sai-mujoco 0.1.30: legs and trunk; the real T1's two
+# 4-joint arms are not modelled, soccer deviation D13) and its walking policy (SaiResearch booster_soccer_models). The
+# kinematics and joint ranges of that model equal Booster's URDF. The sport drives the legs through bodies/servo.py:
+# Actuators (the motors' torque-speed curve of [motors] and the torque limit) and WalkCommand ([limits.walk]); sport.toml
+# [legs] body = "booster_t1". Every number is Booster's where Booster publishes one (S1-S3); the rest is labelled
+# ESTIMATE with its method (real-limits audit §3.3, B9 study §4.2, user approval 2026-10-09).
+
+[body]
+name = "booster_t1"
+title = "Booster T1 (lower body)"
+revision = "t1-2"                      # bump on any change of the numbers below (t1-2: realistic motors)
+kind = "legs"                          # limits only: the sport's scene carries the model and the walking policy
+license = "the limits are facts from Booster's published files (S1-S3); no model or mesh is distributed here"
+
+[limits.leg]                           # hip pitch, roll, yaw, knee pitch, ankle pitch, roll of either leg
+speed_rad_s = [12.5, 10.9, 10.9, 11.7, 18.8, 12.4]
+torque_nm = [45.0, 30.0, 30.0, 60.0, 24.0, 15.0]
+range_rad = [[-1.8, 1.57], [-0.3, 1.57], [-1.0, 1.0], [0.0, 2.34], [-0.87, 0.35], [-0.44, 0.44]]   # the left leg; the
+                                       # right hip roll is mirrored (-1.57 .. 0.3); the official page's knee range is
+                                       # smaller (0 .. 123 deg, S3): the URDF's is what the model and controller use
+[limits.leg.source]
+speed_rad_s = "S1 (<limit velocity> of the 12 leg joints; reachable only with the motor curve of [motors], an ESTIMATE)"
+accel_rad_s2 = "NOT PUBLISHED: Booster publishes no joint acceleration or jerk limit; the motors' torque-speed curve ([motors]) and the torques bound what a joint can do"
+jerk_rad_s3 = "NOT PUBLISHED: Booster publishes no joint acceleration or jerk limit; the motors' torque-speed curve ([motors]) and the torques bound what a joint can do"
+torque_nm = "S1 (<limit effort>; ankle pitch 24 from the locomotion URDF, the serial URDF says 20, the deployment config S2 uses 24)"
+
+[limits.walk]                          # the walking policy's command (vx, vy, wz; bodies/servo.py WalkCommand)
+command_max = [1.0, 1.0, 1.0]          # m/s, m/s, rad/s: the policy's training range
+command_accel = [2.0, 2.0, 4.0]        # per second
+[limits.walk.source]
+command_max = "S2 (envs/T1.yaml commands: lin_vel_x, lin_vel_y, ang_vel_yaw in [-1, 1]; Booster publishes no walking speed, RoboCup team reports give 0.8 m/s)"
+command_accel = "ESTIMATE: the Unitree G1 joystick rule of this library (bodies/unitree_g1 [limits.walk]); Booster publishes no command slew rate"
+
+[motors]                               # ESTIMATE (Booster publishes no motor curves): a linear torque-speed envelope per
+                                       # joint, bodies/servo.py Actuators: a torque along the motion is Y1 up to the
+                                       # corner X1 = 64 % of the URDF speed, falling linearly to 0 at X2 = the URDF
+                                       # speed; a braking torque keeps Y2 = the URDF torque (the shape of the Unitree
+                                       # curves, S6 of bodies/unitree_g1; the corner 0.64 from Unitree's N7520 hip and
+                                       # knee motors of the G1: X1 / X2 there; t1-1 had 0.80, which let a policy run at
+                                       # 2.2 m/s with the peak torque held, S4)
+T1_hip_pitch = { X1 = 8.0, X2 = 12.5, Y1 = 45.0, Y2 = 45.0 }
+T1_hip_roll = { X1 = 6.976, X2 = 10.9, Y1 = 30.0, Y2 = 30.0 }
+T1_hip_yaw = { X1 = 6.976, X2 = 10.9, Y1 = 30.0, Y2 = 30.0 }
+T1_knee = { X1 = 7.488, X2 = 11.7, Y1 = 60.0, Y2 = 60.0 }
+T1_ankle_pitch = { X1 = 12.032, X2 = 18.8, Y1 = 24.0, Y2 = 24.0 }
+T1_ankle_roll = { X1 = 7.936, X2 = 12.4, Y1 = 15.0, Y2 = 15.0 }
+[motors.thermal]                       # ESTIMATE: the continuous (rated) torque and an I^2 t foldback (servo.motor_model)
+rated_frac = 0.6                       # rated = 60 % of the URDF (peak) torque: peak / rated ~ 1.7, the low end of
+                                       # quasi-direct-drive joint motors (2-3); 0.6 is calibrated so that a walk is
+                                       # sustainable on the rated torque alone (the real T1 walks for an hour, S4)
+peak_s = 5.0                           # the peak torque from a cold motor lasts 5 s before the foldback ends at rated
+                                       # (thermal time constant ~11 s; owner's decision (a) of 2026-10-13: the v4 pilot's
+                                       # 2 s made the soccer swing kick's 2-3 s on one leg overheat the support hip roll;
+                                       # the least certain of these estimates, no published T1 thermal data)
+derate_from = 0.85                     # the foldback starts at 85 % of the thermal limit
+[motors.bus]                           # ESTIMATE: the battery and drives' power
+power_w = 1000.0                       # the summed positive mechanical power of the 12 leg motors per robot: the T1's
+                                       # 13S3P 10.5 Ah pack ~48 V at ~30 A ~1.4 kW electrical, ~70 % motor + drive
+                                       # efficiency (S4)
+[motors.assign]
+hip_pitch = "T1_hip_pitch"
+hip_roll = "T1_hip_roll"
+hip_yaw = "T1_hip_yaw"
+knee = "T1_knee"
+ankle_pitch = "T1_ankle_pitch"
+ankle_roll = "T1_ankle_roll"
+
+[sources]
+S1 = "Booster Robotics booster_gym (commit da396a0), resources/T1/T1_serial.urdf and the locomotion URDF: joint <limit lower upper velocity effort> of the 12 leg joints, https://github.com/BoosterRobotics/booster_gym"
+S2 = "Booster Robotics booster_gym (commit da396a0), envs/T1.yaml (commands: the policy's training ranges lin_vel_x, lin_vel_y, ang_vel_yaw in [-1, 1]) and deploy/configs/T1.yaml (deployment torque limits 60 / 25 / 30 / 60 / 24 / 15 N m)"
+S3 = "Booster Robotics, Booster T1 product page (peak joint torque 130 N m; knee 0-123 deg; hip roll -21-88 deg), https://www.booster.tech/booster-t1/, read 2026-10-08"
+S4 = "Humanoid training pilot v4 (2026-10-13, review/screening/humanoid_train_v4_en.md): the end-to-end PPO on the corner-0.80 envelope held the peak torque on 70 % of steps at ~470 W mean leg power and ran 2.2 m/s; the realistic motor model (corner, rated torque, foldback, bus cap) and its calibration"
