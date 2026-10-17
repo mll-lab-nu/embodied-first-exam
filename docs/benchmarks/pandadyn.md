@@ -178,7 +178,7 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras
   (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
   2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
-  scene rebuilt and reset with the instance's seed (exact, about 1 s); 10 by default (PROTOCOL §4b).
+  scene rebuilt and reset with the instance's seed (exact, about 1 s); 3 per trial ("Reset budget" below).
 - **Grading.** The live episode, and a replay of its rows in a **fresh process** (`rcb_pandadyn.py replay`, the standard
   twin's collect-hook replay: a Session holds a SAPIEN scene, one per process), which must succeed and end in the live
   run's state (CPU PhysX with enhanced determinism). The video is filmed afterwards by the live scene and never decides.
@@ -212,6 +212,15 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
   success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
+- **Reset budget: 3** (`RT_RESETS` in `mk_tasks.py`; 10, the mode's default, from 2026-10-14 to 2026-10-17). Every reset
+  restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
+  number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
+  clock that does not stop adds little once the plan is fixed. With 10 resets, the first screening runs (six harness /
+  model runs on nine families, one on all 19) succeeded in 14 of 67 standard-realtime trials against 1 of 87 standard
+  ones (no reset); none of the 14 succeeded in its first episode, 10 in episode 6-11, and 44 of the 53 failed trials used
+  the whole budget. Three resets keep one or two scouting episodes and a real attempt, so the twin still differs
+  from the one-shot standard twin. The check above (three aborted attempts, then the oracle in the fourth episode) uses
+  exactly this budget.
 
 ## Declarations
 - **Tooling: thin wrappers only** (above). No task-level skill (catch, strike, carry) is in the agent's tooling.
@@ -266,3 +275,54 @@ The Panda Dynamic Scenes environment package: MLL Lab, released with this reposi
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.2`. Resume class `exact` (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders (for this benchmark mostly from the grading records only: the log review
+was partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus
+5.5 among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna
+attempted it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict.
+A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and
+reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+1 of 25 bases are in the easy set; by directory: 33 easy, 11 hard, 24 unverified, 1 pending.
+
+| base | easy set | privileged | standard | standard-realtime |
+|---|---|---|---|---|
+| `pandadyn-d01-reciprocal-cup-relay-i00` |  | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
+| `pandadyn-d02-strike-catch-merge-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-d03-cooperative-puck-course-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | hard | easy: Astra (10) |
+| `pandadyn-d04-shared-tray-transport-discharge-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Gemini 4 Argon | easy: Astra (1), Opus (1), GLM 5.3 Flash (7) |
+| `pandadyn-d05-moving-ramp-relay-i00` |  | easy: Astra, Opus | hard | — |
+| `pandadyn-d06-moving-bank-relay-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-d07-spring-gate-switchyard-i00` |  | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Opus (7) |
+| `pandadyn-d08-pendulum-energy-relay-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-d09-lever-launch-catch-reload-i00` |  | easy: Astra, Opus | hard | hard |
+| `pandadyn-d10-moving-grasp-handover-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-d11-moving-fixture-unlock-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-d12-reciprocal-sliding-transfer-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-d13-supported-cube-flip-relay-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-s01-cup-route-delivery-i00` |  | easy: Astra, Opus | hard | easy: Astra (9) |
+| `pandadyn-s02-plate-catch-transport-release-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s03-clear-gate-hockey-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s04-impact-release-relay-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s05-sliding-receive-align-deliver-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s06-cube-flip-route-recover-i00` |  | pending | hard | — |
+| `pandadyn-s07-conveyor-load-brake-unload-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s08-load-switch-recover-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s09-toss-recatch-delivery-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard | easy: Astra (7), Opus (10) |
+| `pandadyn-s10-swinging-load-transit-dock-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s11-cylinder-rescue-route-deliver-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
+| `pandadyn-s12-moving-bridge-puck-relay-i00` |  | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
+
+Standard-realtime cells name each solving run with the resets it used. These trials ran with the earlier budget of 10
+resets; #285 (2026-10-17) lowered it to 3, so a realtime solve that used more than 3 would not count today. The easy-set
+base here, `pandadyn-d04-shared-tray-transport-discharge-i00`, has realtime solves with 1 reset (Astra, Opus).

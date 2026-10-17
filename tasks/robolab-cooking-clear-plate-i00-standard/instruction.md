@@ -1,7 +1,7 @@
 # RoboLab · cooking_clear_plate — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
-hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the two measuring cups outside of the plate. Success: The orange measuring cup and the small blue measuring scoop, which start on the clay plate, must end outside the clay plate, and, at that moment, the gripper must touch neither (let go of both at the end). "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis.
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the two measuring cups outside of the plate. Success: The orange measuring cup and the small blue measuring scoop, which start on the clay plate, must end outside the clay plate, and, at that moment, the gripper must touch neither (let go of both at the end). "Outside" means the centre of the object's convex hull is not within the container's convex hull extended along the container's own up axis. Each of them must also rest on the table top: the contact force between the object and the table is at least 0.1 N and points upwards, within 45° of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
@@ -18,6 +18,10 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
+- **Grading.** When the episode ends, the service's record of it (every control step it ran, including the
+  hold at the end of your session) is replayed open-loop from the same initial state in two fresh simulator
+  processes, exactly as recorded; it scores 1 only if the live episode succeeded, both replays succeed and both
+  end in the same state (equal state hashes), else 0.
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs (a long `submit` or
   a watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for
   it, `r.status()` from another process included. A client-side timeout while a call is in flight (for example
