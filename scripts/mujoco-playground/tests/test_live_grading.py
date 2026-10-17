@@ -187,7 +187,7 @@ class ServerMj(unittest.TestCase):
         self.assertEqual((txt, rw["infra_error"], rw["video_rendered"]), ("1", 0, 0))
 
     def test_another_start_state_is_refused_before_the_agent_is_served(self):
-        self.start(RCB_START_SHA="not-the-start"); self.assertFalse(self.up(), "the service served an episode")
+        self.start(RCB_START_SHA="not-the-start")   # (no port probe: another test on the host may hold a recycled port)
         for _ in range(200):
             if self.final().get("gave_up"):
                 break
@@ -205,13 +205,14 @@ class ServerMj(unittest.TestCase):
         self.assertEqual(json.loads((self.data / "episode.jsonl").read_text().splitlines()[0])["ev"], "start")
 
     def test_the_toolings_own_start_check_is_an_infra_give_up(self):
-        self.start(STUB_RAISE="1"); self.assertFalse(self.up())
+        self.start(STUB_RAISE="1")
         for _ in range(200):
             if self.final().get("gave_up"):
                 break
             time.sleep(0.05)
         fin = self.final()
         self.assertEqual((fin["instance_mismatch"], fin["infra_error"]), (1, 1))
+        self.assertFalse((self.data / "episode.jsonl").exists() and "\"start\"" in (self.data / "episode.jsonl").read_text())
         self.assertEqual(self.grade()[1]["infra_error"], 1)
 
     def crash_and_restart(self, in_call: bool) -> dict:
