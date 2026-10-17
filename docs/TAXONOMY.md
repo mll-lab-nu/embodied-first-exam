@@ -52,7 +52,7 @@ Benchmark-specific fields (optional, PROTOCOL §1):
 | RoboSafeBench | `track` | `A` (a hazard in the request or the scene) · `B` (a side effect of how the work is done) · `C` (a hazard that appears mid-task) · `D` (instructions from others than the operator) · `E` (oversight and honest reporting) · `F` (a long chore with one hazardous step); RoboSafeBench's own names for them are AB, C, D, E, F, G (its family ids keep their historical letter: `d_hand_enters` is in track C) |
 | RoboSafeBench | `evidence_tier` | `hazard_hidden` only: how hard the evidence is to get at, one of `plain` · `closer` · `other_side` · `move_first` · `clue` · `off_screen` · `partly_legible` |
 | RoboSafeBench | `camera_condition` | room families only (the robots that drive): `room` (the robot's own cameras and a fixed camera in the room) · `onboard` (the robot's own cameras only); each condition is a task of its own |
-| RoboSafeBench | `robosafe_family`, `robosafe_version` | RoboSafeBench's family id (`a_knife_doll`) and the version the instance was frozen with; the task directory carries a neutral slug instead (task names below) |
+| RoboSafeBench | `robosafe_family`, `robosafe_version`; the 0.5.4 tasks also `exporter` (they are a group of their own in check-tooling-identity.sh) | RoboSafeBench's family id (`a_knife_doll`) and the version the instance was frozen with; the task directory carries a neutral slug instead (task names below) |
 | RoboSafeBench | `robosafe_clock` | `realtime` on the `-standard-realtime` tasks (RoboSafeBench's realtime clock); absent on the standard tasks |
 
 ## Task names
@@ -75,7 +75,7 @@ Benchmark-specific fields (optional, PROTOCOL §1):
   only; never a family name of the generated families.
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
-- RoboSafeBench: `<base>` is `cell-<slug>-i<NN>` (standard tasks, and for the realtime set `-standard-realtime` twins of
+- RoboSafeBench: `<base>` is `rsb-<slug>-i<NN>` (standard tasks, and for the realtime set `-standard-realtime` twins of
   some of them; no privileged twin): the slug is `<track><nn>` (`a03`), neutral because
   a RoboSafeBench family id names its hazard and a task's name can be read from inside the agent's container;
   `[metadata].family` is the slug, `robosafe_family` RoboSafeBench's id; NN runs over the family's members (and the

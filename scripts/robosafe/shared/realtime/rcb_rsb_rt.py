@@ -20,6 +20,12 @@ scripts/humanoidbench/shared/realtime/) are used unchanged; this module adds wha
   The journal row is rcb_rsb's ([type index, values, note id]) with two columns more: the agent calls answered since
   the previous tick, without and with images. A replay (crash recovery, the graded fresh-process replays) registers
   them before the tick exactly as the live run did.
+- An `ee_pose` /submit with dt above one control step is interpolated the shorter way: from the target in force just
+  before `at`, each row's quaternion first takes the sign of the row before it (server.RoboSafe.clip; RoboSafeBench
+  0.5.4).
+- An `ee_pose` /submit whose rows as sent have a quaternion that is not finite or not of unit length within 0.01 is
+  refused whole (400, counted in requests_refused) before anything is planned (rcb_rsb.quaternion_refusal; RoboSafeBench
+  0.5.4); /spec states the rule in the type's semantics (server.py).
 - The /submit header's `note` (the text of `ask_operator`, `report`, an exit) goes with that call's rows: appended to
   DATA/notes.jsonl, fsynced, before the first of them runs. At most 4000 characters.
 - What rows said (a clipped value, an unreachable pose, the operator's answer, a refused row) comes back in the next
@@ -29,10 +35,19 @@ scripts/humanoidbench/shared/realtime/) are used unchanged; this module adds wha
   > 0) at most RT_WATCH_IMAGES_PER_S pictures per second (cameras x video_fps) and no depth: the cameras are rendered
   on the CPU (OSMesa), on the simulator's thread, and a watch renders inside the control steps it watches. More would
   hold the robot back (a stall: counted in final.json, never the agent's, never deciding a verdict).
+- Rows that are not motion (`report`, `ask_operator`, `stop`, the exits, `limits`: every type but MOTION_TYPES) are
+  never replaced (RoboSafeBench 0.5.4). The layer's /submit replaces everything planned from its `at` on; here a row
+  of such a type that is still planned there is kept and runs at the step it was planned for, and the new chunk's rows
+  from that step on run one control step later per kept row (a kept exit ends the episode at its step). Motion rows
+  are replaced as before. Without this a
+  `report` sent a few milliseconds before a `done` (both planned at the next control step) never ran and its text was
+  never filed: 4 of the 24 recorded realtime trials of 0.5.2 lost a report, a question or a stop so.
 - A 500 says "simulator error" only (as server.py's standard service).
 """
 from __future__ import annotations
 
+import collections
+import math
 import os
 import sys
 import time
@@ -45,17 +60,58 @@ import rcb_rsb  # noqa: E402
 
 CLOCK = "realtime"
 # CPU rendering (OSMesa in the image): about 0.15-0.19 s per 640 x 480 picture, 0.35 s per depth image, measured in the
-# eai-robosafe image on a university HPC cluster node (docs/benchmarks/robosafe.md, "Standard-realtime tasks"). A request renders on the
+# eai-robosafebench image on a university HPC cluster node (docs/benchmarks/robosafe.md, "Standard-realtime tasks"). A request renders on the
 # simulator's thread, a watch inside the control steps it watches: what one frame of a watch, or one request, renders
 # must stay well under rcb_realtime.MAX_LAG_S, and a watch's pictures per second under what the clock leaves free.
 RT_CAMERAS = int(os.environ.get("RCB_RT_CAMERAS") or 2)              # cameras per request while the clock runs
 RT_WATCH_IMAGES_PER_S = int(os.environ.get("RCB_RT_WATCH_IMAGES_PER_S") or 2)   # a watch: cameras x video_fps, at most
 # Each picture rendered while the clock runs (an RGB camera, a depth image) is charged a fixed robot time instead of the
-# wall time its render took: the render's wall time is forgiven and PICTURE_STEPS control steps run at once, so the world
-# moves on by the same amount whatever the host (design decision 2026-10-14). The value: a 640 x 480 picture's render and
-# encode, measured in the eai-robosafe image (median 0.199 s, p95 0.234 s on a cluster node at a load average of
-# 35 on 32 cores, the least loaded node at hand), the p95 rounded up to a control step.
-PICTURE_STEPS = int(os.environ.get("RCB_RT_PICTURE_STEPS") or 12)
+# wall time its render took: the render's wall time is forgiven and picture_steps(control_dt) control steps run at once,
+# so the world moves on by the same amount whatever the host (design decision 2026-10-14). The value: a 640 x 480
+# picture's render and encode, measured in the eai-robosafebench image (median 0.199 s, p95 0.234 s on a cluster node at a
+# load average of 35 on 32 cores, the least loaded node at hand), the p95 rounded up to a control step: 12 steps at the
+# arms' 50 Hz, 3 steps (0.3 s) at the TidyBot's 10 Hz (0.5.4: the charge is set in seconds, the steps follow the robot).
+PICTURE_COST_S = float(os.environ.get("RCB_RT_PICTURE_COST_S") or 0.24)
+# A robot whose cameras were measured on their own (lane rt054-tidybot, 2026-10-15). The charge stays on the arms'
+# scale, whatever the host: each TidyBot camera's render + encode (c14's reference, every 10th step) against the UR5e's
+# `front` (c01's reference) on the same host, minutes apart, times the arms' 0.24 s, rounded up to the TidyBot's 0.1 s
+# step. In eai-robosafe:0.5.3, a full-width step (srun -c32), at least 22 % idle CPU at start and end: p95 of `front`
+# 0.246 s (measurement host A) and 0.302 s (measurement host B); ratios `base` 0.39-0.41, `wrist` 0.45-0.46, `room` 1.00-1.04, the wrist's
+# depth image 0.10-0.13; so 0.09-0.10, 0.11, 0.24-0.25 and 0.03 s: one step for `base` and depth, two for `wrist`,
+# three for `room`. (Steps bound to one or two shared cores, srun -c1/-c2 with --overlap, rendered 5 to 20 times slower.)
+# A camera not listed costs PICTURE_COST_S.
+PICTURE_COST_S_BY_ROBOT = {"tidybot": {"base": 0.1, "wrist": 0.2, "room": 0.3, "depth": 0.1},
+                           # the walking G1 (lane rt054-g1): render + encode in one process on a full cpuset (-c32) of
+                           # measurement host B at load ~120: `room` 0.64 s, `head` 0.27 s (0.28, a whole 0.02 s step), the wrists
+                           # 0.24-0.25 s (0.26), the head's depth 0.04 s
+                           "g1_wbc": {"room": 0.64, "head": 0.28, "wrist_left": 0.26, "wrist_right": 0.26, "depth": 0.04}}
+# A robot whose watch has a rate per camera (sum over a watch's cameras of video_fps / rate at most 1). None so far: the
+# TidyBot keeps the arms' rule (RT_WATCH_IMAGES_PER_S, cameras x video_fps): its watch probe (c14's reference with a
+# watcher looking back to back, measurement host B at 50-66 % idle, srun -c32) had no stall at 2 per second of `room`, `base` or
+# `wrist` (and at 3 of `base`); 3 of `room` stalled 16 % of the time, as 3 of the UR5e's `front` did (2 of `front`: 3.5 %).
+RT_WATCH_PER_S_BY_ROBOT = {
+                           # the walking G1 (lane rt054-g1, review 2026-10-15): no watch, snapshots only (seconds = 0, each
+                           # charged its picture cost). On measurement host A at S = 2 the clock kept time with no watch (0 stalls)
+                           # and stalled with any: head 1/s 0.110, head 2/s 0.148, room 1/s 0.298, room 2/s 0.479
+                           "g1_wbc": {"head": 0, "room": 0, "wrist_left": 0, "wrist_right": 0}}
+
+
+def watch_rates(robot: str | None) -> dict | None:
+    """The watch's pictures per second by camera for a robot that has its own (None: cameras x video_fps at most
+    RT_WATCH_IMAGES_PER_S). An environment override (RCB_RT_WATCH_IMAGES_PER_S) sets the plain rule for every robot."""
+    if os.environ.get("RCB_RT_WATCH_IMAGES_PER_S"):
+        return None
+    return RT_WATCH_PER_S_BY_ROBOT.get(robot or "")
+
+
+def picture_steps(control_dt: float, robot: str | None = None, camera: str | None = None, depth: bool = False) -> int:
+    """Control steps one picture is charged: its cost (PICTURE_COST_S_BY_ROBOT, else PICTURE_COST_S) rounded up to a
+    whole control step. An environment override (RCB_RT_PICTURE_COST_S) sets every picture's cost."""
+    table = {} if os.environ.get("RCB_RT_PICTURE_COST_S") else PICTURE_COST_S_BY_ROBOT.get(robot or "", {})
+    cost = table.get("depth" if depth else camera or "", PICTURE_COST_S)
+    return max(1, int(math.ceil(cost / float(control_dt) - 1e-9)))
+# Only motion rows may be replaced after submission.
+MOTION_TYPES = ("joint_position", "ee_pose", "delta", "whole_body")
 MAX_RESULTS = 200                                                    # results kept for the next response
 # what RoboSafeBench's one-step plan reports (the fallback way): bookkeeping of the clock, not something the row said
 PLAN_KEYS = ("planned_steps", "plan_s", "start_tick", "plan_end_tick", "plan_left_s", "preempted_steps", "late_steps")
@@ -98,16 +154,20 @@ _step_raw = rcb_rsb.Session.step_raw
 def step_raw(self, raw) -> dict:
     """One journal row: the agent calls answered since the last tick, then exactly one control tick with the row."""
     ep = self.ep
+    self.apply_picture_events()
     if getattr(ep, "clock", "paused") != CLOCK:
         raise RuntimeError("a realtime task's instance must have the realtime clock")
     if hooked(ep):
         plain, shown = self.codec.calls(raw)
         for _ in range(plain):
             ep.agent_call("rcb", ())
+            self.apply_picture_events()
         for _ in range(shown):
             ep.agent_call("rcb", ("images",))
+            self.apply_picture_events()
         typ, row, note = self.codec.decode(raw)
         out = ep.tick(typ, row, self.notes.get(note))
+        self.apply_picture_events()
         out = {k: v for k, v in out.items() if k != "images"}
         res = out.get("result")
         if isinstance(res, dict) and isinstance(res.get("command"), dict):   # a command's own result, as act gives it
@@ -155,6 +215,7 @@ def build_service():
                                    f"clock; this instance's key has interface={key.get('interface')!r}, "
                                    f"clock={key.get('clock')!r}")
             super().__init__(instance)
+            self.robot = key.get("robot")
             ep = self.s.ep
             if getattr(ep, "interface", None) != "control" or getattr(ep, "clock", None) != CLOCK:
                 raise RuntimeError(f"the episode built has interface={getattr(ep, 'interface', None)!r}, "
@@ -213,12 +274,17 @@ def build_service():
             np.save(os.path.join(work, "rows.npy"), np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim))
             with open(os.path.join(work, "notes.json"), "w") as f:
                 json.dump(self.s.notes.texts, f)
+            pictures_path = os.path.join(work, 'pictures.json')
+            with open(pictures_path, 'w') as stream:
+                json.dump(self.s.ep.picture_events, stream)
             cmd = [sys.executable, os.path.abspath(__file__), "replay", self.instance_path,
                    os.path.join(work, "rows.npy"), os.path.join(work, "notes.json")]
-            procs = [subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json")], stdout=subprocess.DEVNULL,
-                                      stderr=open(os.path.join(work, f"replay{i}.err"), "w")) for i in (1, 2)]
-            for p in procs:
-                p.wait(timeout=server.REPLAY_TIMEOUT_S)
+            procs = []
+            for i in (1, 2):
+                with open(os.path.join(work, f"replay{i}.err"), "w") as stderr:
+                    procs.append(subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json"), pictures_path],
+                                                  stdout=subprocess.DEVNULL, stderr=stderr))
+            server.wait_replays(procs, server.REPLAY_TIMEOUT_S)
             outs = []
             for i, p in zip((1, 2), procs):
                 if p.returncode != 0:
@@ -243,7 +309,9 @@ def build_service():
             t = time.monotonic()
             rgb, dep = super().images(cameras, depth)
             if self.on_render is not None:
-                self.on_render(len(rgb) + len(dep), time.monotonic() - t)
+                steps = (sum(picture_steps(self.control_dt, self.robot, c) for c in rgb)
+                         + sum(picture_steps(self.control_dt, self.robot, c, True) for c in dep))
+                self.on_render(len(rgb) + len(dep), time.monotonic() - t, steps)
             return rgb, dep
 
         on_render = None
@@ -281,6 +349,13 @@ def build_service():
     class RtService(rcb_realtime.RealtimeService):
         def __init__(self, sim, **kw):
             self._owed, self.pictures, self.picture_steps, self.picture_wall_s = 0, 0, 0, 0.0
+            self._keep: tuple | None = None          # inside _rt_submit: (index of `at` in the plan, [(index, row)] kept)
+            self._kept_meta: list = []                # the rows the last /submit kept, for its response
+            self.kept_rows = 0
+            self.per_picture = picture_steps(sim.control_dt)        # a camera with no cost of its own (the default)
+            self.picture_table = {c: picture_steps(sim.control_dt, sim.robot, c) for c in sim.cameras}
+            if getattr(sim, "depth_cameras", None):
+                self.picture_table["depth"] = picture_steps(sim.control_dt, sim.robot, None, True)
             super().__init__(sim, **kw)
             sim.on_render = self.charge
 
@@ -288,27 +363,60 @@ def build_service():
             spec = super()._spec()
             t = spec["timing"]
             t["max_cameras_while_running"] = RT_CAMERAS
-            t["max_watch_images_per_s"] = RT_WATCH_IMAGES_PER_S
-            cost = PICTURE_STEPS * self.sim.control_dt
-            t["picture_cost_steps"] = PICTURE_STEPS
+            rates = watch_rates(self.sim.robot)
+            if rates:                                # a robot with a watch rate by camera (the TidyBot, 0.5.4)
+                t["max_watch_images_per_s"] = max(rates.values())
+                t["max_watch_images_per_s_by_camera"] = {c: n for c, n in rates.items() if c in self.sim.cameras}
+                watch = ("at most " + ", ".join(f"{n} picture{'s' if n != 1 else ''} per second of {c}"
+                                                for c, n in t["max_watch_images_per_s_by_camera"].items())
+                         + " (several cameras share it: the sum of video_fps / that rate is at most 1; video='none' "
+                           "returns the last picture only)")
+            else:
+                t["max_watch_images_per_s"] = RT_WATCH_IMAGES_PER_S
+                watch = (f"at most {RT_WATCH_IMAGES_PER_S} pictures per second (cameras x video_fps; video='none' returns "
+                         "the last picture only)")
+            cost = round(self.per_picture * self.sim.control_dt, 4)
+            t["picture_cost_steps"] = self.per_picture
             t["picture_cost_s"] = round(cost, 4)
+            uniform = set(self.picture_table.values()) <= {self.per_picture}
+            if uniform:
+                charge = (f"costs {cost:g} s of robot time ({self.per_picture} control steps; a request with two cameras "
+                          f"costs {round(2 * cost, 4):g} s)")
+            else:                                    # a robot whose cameras cost differently (the TidyBot, 0.5.4)
+                t["picture_cost_steps_by_camera"] = dict(self.picture_table)
+                t["picture_cost_s_by_camera"] = {c: round(n * self.sim.control_dt, 4) for c, n in self.picture_table.items()}
+                charge = ("costs a fixed robot time by camera (" + ", ".join(
+                    f"{c} {round(n * self.sim.control_dt, 4):g} s" for c, n in self.picture_table.items())
+                          + "; a request's pictures add up)")
             t["images"] = (f"while the clock runs, every picture a response carries (each camera's, and a depth image) "
-                           f"costs {cost:g} s of robot time ({PICTURE_STEPS} control steps; a request with two cameras "
-                           f"costs {2 * cost:g} s): the world, and the robot's "
+                           f"{charge}: the world, and the robot's "
                            f"plan, move on by that much while it is made, whatever the host, and a picture shared by "
                            f"requests of the same control step is charged once; a snapshot is no pause. A request "
                            f"returns pictures of at most {RT_CAMERAS} cameras while the clock runs, and a watch "
-                           f"(observe with seconds > 0) at most {RT_WATCH_IMAGES_PER_S} pictures per second (cameras x "
-                           f"video_fps; video='none' returns the last picture only) and no depth. Before the clock "
+                           f"(observe with seconds > 0) {watch} and no depth. Before the clock "
                            f"starts pictures cost nothing and any request may ask for every camera and depth; "
                            f"cameras=[] is the fastest call")
             t["rows"] = ("a row takes effect at the control step it is planned for and is applied with the next one: "
                          "the robot's sensors show it one step later")
-            t["stop"] = "`stop` (one empty row) drops what is planned and holds the robot where it was being sent"
+            t["stop"] = ("`stop` (one empty row) drops the planned motion and holds the robot where it is (a row of zeros)"
+                         if "delta" in self.sim.types else
+                         "`stop` (one empty row) drops the planned motion and holds the robot where it was being sent")
+            t["kept_rows"] = ("a /submit replaces only motion rows: a row of another type (report, ask_operator, stop, an "
+                              "exit) still planned from its `at` on is kept and runs at the step it was planned for, and "
+                              "the new chunk's rows from that step on run one control step later per kept row "
+                              "(meta.kept_rows: their steps); a kept exit ends the episode at its step")
             return spec
 
         def meta(self) -> dict:
-            return {**super().meta(), **self.sim.take_results()}
+            out = {**super().meta(), **self.sim.take_results()}
+            if self._kept_meta:
+                out["kept_rows"], self._kept_meta = self._kept_meta, []
+            return out
+
+        def status(self) -> dict:
+            if self.done or self.stopping:
+                return {"status": server.EXITED}
+            return super().status()
 
         @staticmethod
         def _reply_json(code: int, obj: dict):
@@ -326,16 +434,17 @@ def build_service():
             self.sim.images(list(self.sim.cameras), bool(self.sim.depth_cameras))
             self.log("cameras_warm", seconds=round(time.monotonic() - t, 2))
 
-        def charge(self, pictures: int, wall_s: float) -> None:
+        def charge(self, pictures: int, wall_s: float, steps: int | None = None) -> None:
             """A render while the clock runs: its wall time is forgiven (the clock's anchor moves on by it) and
-            PICTURE_STEPS control steps per picture are owed, run by tick() at once, so the world moves on by a fixed
+            `per_picture` control steps per picture are owed, run by tick() at once, so the world moves on by a fixed
             robot time per picture (never by how long this host took). Before the clock starts nothing is charged."""
             if not self.running or self.done or self.stopping or pictures <= 0:
                 return
             self.anchor_t += wall_s
-            self._owed += pictures * PICTURE_STEPS
+            steps = pictures * self.per_picture if steps is None else int(steps)   # by camera where a robot has its own costs
+            self._owed += steps
             self.pictures += pictures
-            self.picture_steps += pictures * PICTURE_STEPS
+            self.picture_steps += steps
             self.picture_wall_s += wall_s                # what the renders really took (evidence, never charged)
 
         def tick(self) -> None:
@@ -351,18 +460,20 @@ def build_service():
 
         def _timing(self) -> dict:
             return {**super()._timing(), "pictures": self.pictures, "picture_steps": self.picture_steps,
-                    "picture_wall_s": self.picture_wall_s}
+                    "picture_wall_s": self.picture_wall_s, **({"kept_rows": self.kept_rows} if self.kept_rows else {})}
 
         def _resume(self, ev: list) -> None:
             cp = next((e for e in reversed(ev) if "state_sha" in e and "journal_rows" in e), {})
             t = cp.get("timing") if isinstance(cp.get("timing"), dict) else {}
             self.pictures, self.picture_steps = int(t.get("pictures") or 0), int(t.get("picture_steps") or 0)
             self.picture_wall_s = float(t.get("picture_wall_s") or 0.0)
+            self.kept_rows = int(t.get("kept_rows") or 0)
             super()._resume(ev)
 
         def _timing_record(self) -> dict:
-            return {**super()._timing_record(), "picture_cost_steps": PICTURE_STEPS, "pictures": self.pictures,
-                    "picture_steps": self.picture_steps, "picture_wall_s": round(self.picture_wall_s, 3)}
+            return {**super()._timing_record(), "picture_cost_steps": self.per_picture, "pictures": self.pictures,
+                    "picture_steps": self.picture_steps, "picture_wall_s": round(self.picture_wall_s, 3),
+                    **({"kept_rows": self.kept_rows} if self.kept_rows else {})}
 
         def _check_submit(self, meta: dict, actions) -> dict:
             note = meta.get("note")
@@ -371,6 +482,9 @@ def build_service():
                 raise Refused(400, {"error": "note must be a string"})
             if len(note) > rcb_rsb.MAX_NOTE:
                 raise Refused(400, {"error": f"note is longer than {rcb_rsb.MAX_NOTE} characters"})
+            msg = rcb_rsb.quaternion_refusal(self.types, meta.get("type"), actions)
+            if msg:                                  # the rows as sent, before anything is planned (counted: 4xx)
+                raise Refused(400, {"error": msg})
             req = self._check_view(super()._check_submit(meta, actions), False)
             req["note"] = note
             return req
@@ -388,7 +502,18 @@ def build_service():
             if watch and depth:
                 raise Refused(400, {"error": "a watch (seconds > 0) returns no depth while the clock runs; ask for "
                                              "depth with seconds = 0"})
-            if watch and video != "none" and len(cams) * fps > RT_WATCH_IMAGES_PER_S:
+            rates = watch_rates(self.sim.robot)
+            if watch and rates and any(rates.get(c, RT_WATCH_IMAGES_PER_S) <= 0 for c in cams):
+                raise Refused(400, {"error": "on this robot there is no watch while the clock runs: look with snapshots "
+                                             "(get_obs with seconds = 0), each charged its picture cost "
+                                             "(spec()['timing']['picture_cost_s_by_camera'])"})
+            if watch and video != "none" and rates:
+                if sum(fps / rates.get(c, RT_WATCH_IMAGES_PER_S) for c in cams) > 1 + 1e-9:
+                    raise Refused(400, {"error": "a watch (seconds > 0) returns at most " + ", ".join(
+                        f"{n} per second of {c}" for c, n in rates.items() if c in self.sim.cameras)
+                        + " (several cameras share it; spec()['timing']['max_watch_images_per_s_by_camera']): lower "
+                        "video_fps or ask for fewer cameras"})
+            elif watch and video != "none" and len(cams) * fps > RT_WATCH_IMAGES_PER_S:
                 raise Refused(400, {"error": f"a watch (seconds > 0) returns at most {RT_WATCH_IMAGES_PER_S} pictures "
                                              "per second, cameras x video_fps (spec()['timing']"
                                              "['max_watch_images_per_s']): lower video_fps or ask for fewer cameras"})
@@ -398,8 +523,51 @@ def build_service():
             req = super()._check_observe(meta)
             return self._check_view(req, req["seconds"] > 0)
 
+        def _start_clock(self) -> None:
+            # Inside _rt_submit the layer calls this right after it has replaced the plan from `at` on (and before it
+            # answers): the rows of other types it took out go back in, each at the step it was planned for.
+            if self._keep is not None:
+                i, kept = self._keep
+                self._keep = None
+                if kept:
+                    # each kept row back at the step it was planned for (its index from the next step); the new
+                    # chunk's rows fill the other steps in order, so those from a kept row's step on move one step
+                    # later per kept row; a kept row planned after the new plan's end comes after held steps
+                    plan, new, todo = list(self.plan)[:i], collections.deque(list(self.plan)[i:]), list(kept)
+                    while todo:
+                        if todo[0][0] <= len(plan):
+                            plan.append(todo.pop(0)[1])
+                        else:
+                            plan.append(new.popleft() if new else rcb_realtime.HELD)
+                    plan.extend(new)
+                    self.plan = collections.deque(plan)
+                    nxt = len(self.episode)
+                    self._kept_meta = [{"step": nxt + k, "call": int(e[2]), "type": e[0]}
+                                       for k, e in enumerate(plan) if any(e is r for _, r in kept)]
+                    self.kept_rows += len(kept)
+                    self.log("kept_rows", by_call=self.calls, rows=self._kept_meta)
+            super()._start_clock()
+
         def _rt_submit(self, req: dict, job) -> None:
-            super()._rt_submit(req, job)
+            # Keep scheduled non-motion rows and align quaternion interpolation
+            # from the command in force before this request's start step.
+            self.sim.align_from = None
+            if not (self.done or self.stopping):
+                nxt = len(self.episode)
+                at = nxt if req["at"] is None else req["at"]
+                i = max(at - nxt, 0)
+                self._keep = (i, [(k, e) for k, e in enumerate(self.plan)
+                                  if k >= i and e[0] is not None and e[0] not in MOTION_TYPES])
+                if req["type"] == "ee_pose" and req["k"] > 1 and req["interpolate"] == "linear":
+                    held = self._in_force(at - 1, nxt, "ee_pose")
+                    prev = self.sim.command("ee_pose") if held is None else held
+                    self.sim.align_from = np.asarray(prev, dtype=np.float64)
+            try:
+                super()._rt_submit(req, job)
+            finally:
+                self._keep = None
+                self.sim.align_from = None
+
             if req["note"]:
                 self.sim.call_notes[self.calls] = req["note"]
             self.sim.agent_called(bool(req["view"][0]))
@@ -416,6 +584,8 @@ def build_service():
     def build() -> RoboSafeRT:
         return RoboSafeRT(os.environ.get("RCB_INSTANCE", "/srv/instance.json"))
 
+    import picture_delivery
+    picture_delivery.install_http(RtService, realtime=True)
     return RtService, build
 
 

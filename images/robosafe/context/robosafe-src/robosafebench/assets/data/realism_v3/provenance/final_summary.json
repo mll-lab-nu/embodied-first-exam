@@ -1,0 +1,49 @@
+{
+  "cpu_physics": "MuJoCo 3.8.1",
+  "offline_renderer": "Blender Cycles CPU",
+  "accepted_code_commit": "7090e5d0870423efeef93f0301ce9712fe9245e5",
+  "report_code_commit": "0a0c348c746586451a109e76aef3882ffe52d5a5",
+  "branch": "codex/realism-cpu-v3",
+  "task_pbr_frames": 96,
+  "standalone_pbr_frames": 8,
+  "catalog_pbr_frames": 244,
+  "catalog_kinds": 122,
+  "frozen_source_physics_families": 89,
+  "latest_source_compatibility_families": 94,
+  "passive_qpos_max_error": 0.0,
+  "passive_qvel_max_error": 0.0,
+  "configured_cpu_thread_peak": 122,
+  "task_render_seconds": {
+    "median": 47.98,
+    "min": 17.66,
+    "max": 88.3
+  },
+  "catalog_render_seconds": {
+    "min": 22.628,
+    "median": 40.883,
+    "max": 76.075
+  },
+  "login_used_for_heavy_work": false,
+  "subagents_used": 3,
+  "agent_observation_integration": false,
+  "frozen_benchmark_modified": false,
+  "earlier_reviews_preserved": true,
+  "reports": {
+    "context_final/config.json": "dfd64176a7a431d510965ab3b1f72e854e920f8325626a4c775eac9b0fce1b86",
+    "context_final/validation.json": "39e2efb119ac2ad444f2c62aeaba6857b0587946fae95924e62c3eb1c0dd5bec",
+    "context_final/review_notes.json": "75b76c720fdbb3a0e44bdfa00cae24243d84d7dfeb355a31ae88082f764f50bf",
+    "catalog_final/manifest.json": "91526d557706e0d8778d1ddf3423b39125081f6fc6654c082e9ec0b44a626f2d",
+    "catalog_final/validation.json": "829aa7e48a7ccf7acb6d736dd1bcd6e5b33b02bac530d9104a8af4c23469df36",
+    "catalog_final/visual_review.json": "3ad7ec84965f79e38cd85393c07de9b1d4c413457eab6c5eac78f14571add928",
+    "catalog_final/visual_reuse.json": "42fcd559c2b91213230dc5927970c751d6866869ab288ed1a431204e578a4d7d",
+    "workflow_validation.json": "94b737830f5c31f150691fef5b573f618b16ddc772651ce85b21c73d24157107",
+    "hand_rebuild_validation.json": "cae38da6b706304d0001aa688bab0b9d8d52c9fe5bbefd4d1810df57ed96848a",
+    "asset_registry_supplement.json": "db6b426281f5dc62b7aaa5e0160aad9c82155f2748843430995ce3638514f9d4",
+    "registration_validation.json": "e3b9e1d950421941a73330c8fe229f582cfa31992f2dafd36e2521e15fd41069",
+    "geometry_agent/skin/final_geometry_validation.json": "a36c4c9dfcbc3f540541c9baa2783b6158e3c9c09319a793716580f1323b063d",
+    "geometry_agent/skin/final_checks_validation.json": "bce39157c68e5436a48ea025fe7552b693fd88d41896f64d0ba6c1eafc36ac35",
+    "geometry_agent/skin/registry_supplement_validation.json": "799db8fc7ef50b53a699eeed93d6ce524b2fa88d7187edddffcb22c6f64832bc",
+    "pbr_agent/final_renderer_audit.json": "cefb7c2c134da433588358f4c69459db30f37ac40793e1a1a21a255c62a1178c"
+  },
+  "caveats": "Offline initial states only; visual review and physical checks do not establish complete task admission or photorealism."
+}

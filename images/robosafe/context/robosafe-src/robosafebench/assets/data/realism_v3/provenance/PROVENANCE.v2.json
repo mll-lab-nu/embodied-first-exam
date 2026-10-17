@@ -1,0 +1,5348 @@
+{
+ "generated_for": "RoboSafeBench realistic asset set v2 (visual-only, for RSB 0.6), 2026-10-15",
+ "licence_policy": "CC0 or CC BY 4.0 only; no NC/ND/SMPL/Mixamo/login-gated sources; no scans of identifiable people; doubtful uploads dropped",
+ "rsb_source": "RoboSafeBench lane/int053 (70373cd)",
+ "kinds": {
+  "apple": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Food Apple 01",
+     "url": "https://polyhaven.com/a/food_apple_01",
+     "file_url": "https://api.polyhaven.com/files/food_apple_01",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "Oliver Harries",
+     "attribution": "\"Food Apple 01\" by Oliver Harries, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "food_apple_01_1k.gltf": "6a7dc1cda1271c8b08e36e2b9fd44371b7149cca6262c71bc36d971cdac4325f",
+    "food_apple_01.bin": "f14ff9647fdd9f5a59ef325f94154e91f1f14cc2563cd3fb572c4fe9ce5756ca",
+    "food_apple_01_diff_1k.jpg": "b7fc17cfb5013958167bbc089ea4d1c193fb1c61ea4f3c974a9894ed9ba82e8a",
+    "food_apple_01_nor_gl_1k.jpg": "c81b1e51ce7e789b65bfde2f046dcb5ba5773b5c6be3e572313be0600c51721b",
+    "food_apple_01_rough_1k.jpg": "2e5a503af38df7b570b0e81cc9563125f0913b466e01140d4e24ea5ebdbec587"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "65a69eca5d28f2775e43e5a469e71efe0bea3d85113f17c497c410b04b9d56f4",
+    "default_0.png": "31893b3e2c6bdc576cabb105e9c675a7d9d1dbdc9c7497e6f4981e80a1d2c3be"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 7012,
+     "after_bbox": [
+      [
+       -0.0425,
+       -0.0426,
+       0.0
+      ],
+      [
+       0.0429,
+       0.0414,
+       0.0748
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.036,
+       -0.036,
+       0.0
+      ],
+      [
+       0.036,
+       0.036,
+       0.0748
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "z",
+     "scale": [
+      0.8759813680853873,
+      0.8759813680853873,
+      0.8759813680853873
+     ],
+     "triangles": 7012,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "bowl": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+     "name": "Threshold_Bead_Cereal_Bowl_White",
+     "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Bead_Cereal_Bowl_White",
+     "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Threshold_Bead_Cereal_Bowl_White/1/Threshold_Bead_Cereal_Bowl_White.zip",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Google LLC (Google Scanned Objects)",
+     "attribution": "\"Threshold_Bead_Cereal_Bowl_White\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.zip": "dbc667d1373cc7e4252bcdd21feab246f17794d17ebce3a2693568a6ea197379"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "ea4aebd998ef5dde8d14337ca9977b938c1692cfcde08c64b31bc9665957ea46",
+    "default_0.png": "b14c3d1c73e4d02268b0171f072c588a75d05bfb969be5113f26c579c5b97c5b"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 14030,
+     "after_bbox": [
+      [
+       -0.0797,
+       -0.0764,
+       0.0
+      ],
+      [
+       0.0785,
+       0.0786,
+       0.0659
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.075286,
+       -0.07901,
+       0.0
+      ],
+      [
+       0.075286,
+       0.07901,
+       0.065917
+      ]
+     ],
+     "rotation": "",
+     "fit": "z",
+     "scale": [
+      0.9320315593009444,
+      0.9320315593009444,
+      0.9320315593009444
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "bread_loaf": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Baguette",
+     "url": "https://sketchfab.com/3d-models/ba8e9641ce0b433bbcb0416e035a9079",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-043/ba8e9641ce0b433bbcb0416e035a9079.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Terrie Simmons-Ehrhardt",
+     "uploader_says": "[![](https://blog.sketchfab.com/scripts/assets/weekly.png)](https://sketchfab.com/blogs/community/sketchfab-weekly/?ref=sfb)\n\nBaguette scanned with Trnio Plus Beta on 6th gen ipad in ARKit mode. The d",
+     "attribution": "\"Baguette\" by Terrie Simmons-Ehrhardt (https://sketchfab.com/3d-models/ba8e9641ce0b433bbcb0416e035a9079), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.glb": "3872aef5d6bad7213a5158b9cef21f870356d78363c41c57ae8611bf6c4cd977"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "469e19c4ec03c4218e43923835c6fe99a4878bc4ae0536da955e5ffc0dca413d",
+    "default_0.png": "101c5ef0e1e6c31db553db49b33b81996429755e3261797e6acce7441739782d"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 78250,
+     "after_bbox": [
+      [
+       -0.19,
+       -0.032,
+       0.0
+      ],
+      [
+       0.19,
+       0.032,
+       0.0474
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.19,
+       -0.032,
+       0.0
+      ],
+      [
+       0.19,
+       0.032,
+       0.04736
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "xyz",
+     "scale": [
+      1.392029193052121,
+      0.6971226258163983,
+      0.7531403618978262
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "cat": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "standing": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Smoothie-3D upload",
+     "url": "https://sketchfab.com/3d-models/fc89fe933afe448084682263a5d0f10e",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-044/fc89fe933afe448084682263a5d0f10e.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Glenn Hofman",
+     "uploader_says": "This model has been created with smoothie-3d.com which is a free online modeling tool!\n\nThis is also my first model on sketchfab.",
+     "attribution": "\"Smoothie-3D upload\" by Glenn Hofman (https://sketchfab.com/3d-models/fc89fe933afe448084682263a5d0f10e), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    },
+    "lying": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Cat(Nana)",
+     "url": "https://sketchfab.com/3d-models/eceaf20563ce4ab1908119a04a79f3be",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-025/eceaf20563ce4ab1908119a04a79f3be.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Yu",
+     "uploader_says": "Created in RealityCapture by Capturing Reality from 212 images in 00h:25m:44s.\r\n\r\nNana 2012 ～\r\n\r\nAt Ritsumeikan University, Kinugasa Campus, Kyoto Japan.",
+     "attribution": "\"Cat(Nana)\" by Yu (https://sketchfab.com/3d-models/eceaf20563ce4ab1908119a04a79f3be), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.glb": "5a7703e5564416974d727124ca15950872b4202a82411797290edfb3fb5b4508"
+   },
+   "converted_files_sha256": {
+    "lying_0.obj": "4a28432fb9a6d938ce90ba121fac1e08341a2908c08c37224eef12948fd64e1a",
+    "lying_0.png": "922c2874d92645d994e0a21b978b3c5e5cfdfb8755da7c1af6dfb80df7136474",
+    "standing_0.obj": "7e6b4e64cf19da16b5bce37b80c91058c588a0e093e2ceef04ab0f22293c35bd",
+    "standing_0.png": "586fd7ba47fd9bd7e61e35c1ceb36cb828bb32a22fe3d68cd568fb7d6f8e8005"
+   },
+   "variants": {
+    "standing": {
+     "raw_triangles": 8268,
+     "after_bbox": [
+      [
+       -0.2819,
+       -0.0477,
+       0.0
+      ],
+      [
+       0.2505,
+       0.0477,
+       0.2355
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.281869,
+       -0.062744,
+       7e-06
+      ],
+      [
+       0.2505,
+       0.062744,
+       0.366869
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "x",
+     "scale": [
+      0.003306968527277134,
+      0.003306968527277134,
+      0.003306968527277134
+     ],
+     "triangles": 8268,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "lying": {
+     "raw_triangles": 5792,
+     "after_bbox": [
+      [
+       -0.263,
+       -0.1265,
+       -0.0007
+      ],
+      [
+       0.2505,
+       0.1763,
+       0.0919
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.262962,
+       -0.092095,
+       -0.000744
+      ],
+      [
+       0.2505,
+       0.141837,
+       0.156595
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "x",
+     "scale": [
+      0.8029983091494154,
+      0.8029983091494154,
+      0.8029983091494154
+     ],
+     "triangles": 5792,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "chair": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Dining Chair 02",
+     "url": "https://polyhaven.com/a/dining_chair_02",
+     "file_url": "https://api.polyhaven.com/files/dining_chair_02",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "James Ray Cock",
+     "attribution": "\"Dining Chair 02\" by James Ray Cock, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "dining_chair_02_1k.gltf": "88352a44a17319846f61fe03ce75c79fb1849aa508b6a262366c149c1bbd06b8",
+    "dining_chair_02.bin": "c7f1ef858f73815176d2ab304472a69ccf6097e971e5258eb924a75f841d4af5",
+    "dining_chair_02_arm_1k.jpg": "0a81c0c886baa1e65d94fb6fb90ab4751bee319888ecf1c428ae62042d8a5b15",
+    "dining_chair_02_diff_1k.jpg": "343990f764790da1149485a422dee2bc6797945a6af06a37d02d7a7de041acf5",
+    "dining_chair_02_nor_gl_1k.jpg": "348703512ca1215f8389e9108419c2d1a46537663db25f423c3ef900d20cfe61"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "a3c4f37c34d84b2e96cf17cfc278551a209087e73a95b60212dba87b7fcecc8c",
+    "default_0.png": "d9b174eb14064739b4c271efa3b5b097d118d2e00908f5911a8273c61ab7b3d1"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 22013,
+     "after_bbox": [
+      [
+       -0.2004,
+       -0.2665,
+       0.0
+      ],
+      [
+       0.2004,
+       0.2665,
+       0.9
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.22,
+       -0.22,
+       0.0
+      ],
+      [
+       0.22,
+       0.22,
+       0.9
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "z",
+     "scale": [
+      0.9246153980163978,
+      0.9246153980163978,
+      0.9246153980163978
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "cutting_board": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Wooden Cutting Board",
+     "url": "https://polyhaven.com/a/wooden_cutting_board",
+     "file_url": "https://api.polyhaven.com/files/wooden_cutting_board",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "Kuutti Siitonen",
+     "attribution": "\"Wooden Cutting Board\" by Kuutti Siitonen, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "wooden_cutting_board_1k.gltf": "89fa89f6987c5087c0c7a8ac8ccbe451cfa8976ae46377d83a423e658cff9de4",
+    "wooden_cutting_board.bin": "d7fa7549afcae99eb4739dfb13039f1e56f03327c2936cb021bfd05c3afad839",
+    "wooden_cutting_board_arm_1k.jpg": "f35dec51ff94e279a9d43a4ee64b75235cc3d6701107ae22a1eea797e3d236d3",
+    "wooden_cutting_board_diff_1k.jpg": "79274fb86cc7f62363e4448b4597f06933d640a79c746ff6f823d2e4e27ad143",
+    "wooden_cutting_board_nor_gl_1k.jpg": "b123d7ca0d0be01a31686240c925e85a1d2499172586f119482924b06b0b0c93"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "76b4920abb9c1a38b4d4ea3c74b3895710a47c14a2962f54f9645591e55bcbc8",
+    "default_0.png": "d418f33fe8014b02b7ebe77026e52a0d8c24317470376132dfe61ae6b1ce78bf"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 3520,
+     "after_bbox": [
+      [
+       -0.175,
+       -0.125,
+       -0.0002
+      ],
+      [
+       0.175,
+       0.125,
+       0.0182
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.175,
+       -0.125,
+       -0.0002
+      ],
+      [
+       0.175,
+       0.125,
+       0.0182
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "xyz",
+     "scale": [
+      0.7779686131706716,
+      1.0135716076976804,
+      0.4460277222775323
+     ],
+     "triangles": 3520,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "dining_table": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Wooden Table 01",
+     "url": "https://polyhaven.com/a/WoodenTable_01",
+     "file_url": "https://api.polyhaven.com/files/WoodenTable_01",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "Ethan Place",
+     "attribution": "\"Wooden Table 01\" by Ethan Place, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "WoodenTable_01_1k.gltf": "413804e054055c397b4cfbd0916027097d2a20853b165b533007a46d131e1d17",
+    "WoodenTable_01.bin": "1083a3442969d27e18e6a7a454bc164407439e3908bf8f17f5fb24d58cd0172e",
+    "WoodenTable_01_arm_1k.jpg": "ad876f814215006d35f74670d4fc14a9f6eab386a9307764521449464a1cd6ef",
+    "WoodenTable_01_diff_1k.jpg": "9535de577ad6b64deb68457af14240dd9b6d82143da0b6d2bf337660ebd855f3",
+    "WoodenTable_01_nor_gl_1k.jpg": "330655534ea1fc7c7387b5d2ba5ca3231711a9fa680b980933a3a9c82cdb1c67"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "3464ed3e70eafd27df5e5eea9735fc25c66b34e58457e0ef5226bb5b4a57381b",
+    "default_0.png": "0ab86a535bee0d5bce0f2b9714fe39c1a59a523e99b7a2b8dc312b8f1a3aa5e9"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 952,
+     "after_bbox": [
+      [
+       -0.7,
+       -0.4,
+       0.0
+      ],
+      [
+       0.7,
+       0.4,
+       0.75
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.7,
+       -0.4,
+       0.0
+      ],
+      [
+       0.7,
+       0.4,
+       0.75
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "xyz",
+     "scale": [
+      0.7779299377254697,
+      1.217332415103413,
+      1.3664953926764014
+     ],
+     "triangles": 952,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "dog": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "standing": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Dog rigged",
+     "url": "https://sketchfab.com/3d-models/c421cc55801544d1b40d30478fb9d88f",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-057/c421cc55801544d1b40d30478fb9d88f.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Nyilonelycompany",
+     "uploader_says": "Scan dog rigged meta rigged name ,can be retarget in blender same name .",
+     "attribution": "\"Dog rigged\" by Nyilonelycompany (https://sketchfab.com/3d-models/c421cc55801544d1b40d30478fb9d88f), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    },
+    "lying": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Dog rigged",
+     "url": "https://sketchfab.com/3d-models/c421cc55801544d1b40d30478fb9d88f",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-057/c421cc55801544d1b40d30478fb9d88f.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Nyilonelycompany",
+     "uploader_says": "Scan dog rigged meta rigged name ,can be retarget in blender same name .",
+     "attribution": "\"Dog rigged\" by Nyilonelycompany (https://sketchfab.com/3d-models/c421cc55801544d1b40d30478fb9d88f), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.glb": "226204e86f37e3f7c17591323b426f424faebb72e18177e6b2b3527b37229405"
+   },
+   "converted_files_sha256": {
+    "lying_0.obj": "9f45a937a55ee58261c8581782af6f5ffce5b3eba3fb37f47b20747a756da13c",
+    "lying_0.png": "a79167e3d23629392359179deefa860732673443c8f97abb00141d5046c072c9",
+    "standing_0.obj": "5069d2922eb372ccbb1994fb8288dcad732273c94d8efc030d3742c30ee44979",
+    "standing_0.png": "ed31f991839c3c7dede8f0cde2d000ccb39cacdd4c68f5c1cfcabcfcdb057f50"
+   },
+   "variants": {
+    "standing": {
+     "raw_triangles": 185222,
+     "after_bbox": [
+      [
+       -0.4228,
+       -0.1301,
+       0.0
+      ],
+      [
+       0.4208,
+       0.1301,
+       0.5865
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.422804,
+       -0.093798,
+       1.1e-05
+      ],
+      [
+       0.42075,
+       0.093798,
+       0.550304
+      ]
+     ],
+     "rotation": "x:90,z:90",
+     "fit": "x",
+     "scale": [
+      2.4170647368757225,
+      2.4170647368757225,
+      2.4170647368757225
+     ],
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "lying": {
+     "raw_triangles": 185222,
+     "after_bbox": [
+      [
+       -0.3944,
+       -0.0595,
+       0.0
+      ],
+      [
+       0.4208,
+       0.1341,
+       0.3937
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.394443,
+       -0.138142,
+       0.0
+      ],
+      [
+       0.42075,
+       0.212755,
+       0.213
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "x",
+     "scale": [
+      1.0753572693212026,
+      1.0753572693212026,
+      1.0753572693212026
+     ],
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "eyeglasses": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Round Spectacles",
+     "url": "https://polyhaven.com/a/round_spectacles",
+     "file_url": "https://api.polyhaven.com/files/round_spectacles",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "Sean Buckley",
+     "attribution": "\"Round Spectacles\" by Sean Buckley, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "round_spectacles_1k.gltf": "1e3121eafce63f14d5ab4c562d1c6336c4273ff6473b3ad6d9cc295086340cb7",
+    "round_spectacles.bin": "211ccd70fa6e46269c865921051cf77cfd19b5accf76e85e4c024b91c3347540",
+    "round_spectacles_arm_1k.jpg": "cc9d84b4fe36617162bc7354b5fd8d6a787b927d9811854477edb563523dbcaf",
+    "round_spectacles_diff_1k.jpg": "df3198ae2848d98f55d6696370c8b9cdf0dfa8ee41db34036aaa57d3155daae3",
+    "round_spectacles_nor_gl_1k.jpg": "1acd700cbe6551dfc7171ad3b288b58eb96495a767a2f6058eba92f0952f4504"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "1bd201b3744c5bdbe45f619b632c082d4c864344cdd9d7dc5f0c433529c5e305",
+    "default_0.png": "273c0572132d303da9406711f4dcf3798fb7a20dd2b06c930229ae5e40179074"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 11810,
+     "after_bbox": [
+      [
+       -0.068,
+       0.002,
+       0.0
+      ],
+      [
+       0.068,
+       0.1305,
+       0.0399
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.068,
+       -0.0025,
+       0.0
+      ],
+      [
+       0.068,
+       0.135,
+       0.046
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "x",
+     "scale": [
+      0.8617727065942739,
+      0.8617727065942739,
+      0.8617727065942739
+     ],
+     "triangles": 9999,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "flower_pot": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+     "name": "Cole_Hardware_Flower_Pot_1025",
+     "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Cole_Hardware_Flower_Pot_1025",
+     "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Cole_Hardware_Flower_Pot_1025/1/Cole_Hardware_Flower_Pot_1025.zip",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Google LLC (Google Scanned Objects)",
+     "attribution": "\"Cole_Hardware_Flower_Pot_1025\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.zip": "86ccb102d775c87d944f7e7c0f24ad6f0c45e10f687deb0053c2b345e6f07624"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "b4e09ba07f74943dc0a0a348f1630943a5d28abf315220f9ea013e31414ad19f",
+    "default_0.png": "0818abe224f2677cd8d77bae26094f7dedca798f9dd9783fa5fbca7121001a03"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 5820,
+     "after_bbox": [
+      [
+       -0.0652,
+       -0.0652,
+       0.0
+      ],
+      [
+       0.0652,
+       0.0652,
+       0.2179
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.065174,
+       -0.065174,
+       0.0
+      ],
+      [
+       0.065174,
+       0.065174,
+       0.217934
+      ]
+     ],
+     "rotation": "",
+     "fit": "xyz",
+     "scale": [
+      0.5216799673419728,
+      0.5283193229626867,
+      1.0052074444777566
+     ],
+     "triangles": 5820,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "hand": {
+   "status": "done",
+   "align": "frame",
+   "sources": {
+    "_": {
+     "provider": "MakeHuman system assets via MPFB2 (generated here)",
+     "name": "MakeHuman CC0 human",
+     "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "MakeHuman community (system assets); generated and posed for this set",
+     "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "hl_L.glb": "2051d728a96c0caeaf4121e41d4033e95b04e5062aa5d69f35ca24b07589289f",
+    "hl_R.glb": "beb53fcc9eaaab024cae69e94b0b55f51098c99509d11bdac0f773f24635aaf1",
+    "hm_L.glb": "ce6e23c220862fc59fb1941984b61a23f189c610f58f0c119ba7fe6f68a55951",
+    "hm_R.glb": "8f9eeffcbb515370f46ebf8b761d2e182d4ab0c0da360a28204e1de8909888fb",
+    "hd_L.glb": "5ad5bef223dd108c59e96723738d659bbbdd064d895b1dc4eca2543182c07dea",
+    "hd_R.glb": "f07cdb81b2ea9f8194e552d4aa25d9454b7974af76d0a00108eedd63c16eebdc"
+   },
+   "converted_files_sha256": {
+    "hd_L_0.obj": "25c493d6934077ee8fda78a153a196b35135bbef7eb266c817af2c8c7ba35534",
+    "hd_L_0.png": "6c7822f62eb45fbc658592fc2ec6291f4b01279b638d5940a7fa2dedbafbd525",
+    "hd_R_0.obj": "36bef233a2582a49418923cc9a9202abe5948896f3476e14bd82a9cb296d45b4",
+    "hd_R_0.png": "6c7822f62eb45fbc658592fc2ec6291f4b01279b638d5940a7fa2dedbafbd525",
+    "hl_L_0.obj": "a5d27f680e666d4f77e7f47113ed132cac2532dd787265981c343f026db55043",
+    "hl_L_0.png": "8871e276aeede706872bfca7a206ecaa93bc96a18a550550fe849247f84209f3",
+    "hl_R_0.obj": "02e5d49d1afbf0452249cfa3e465a0952e021afe7bb67b958868e4d791fbcd3e",
+    "hl_R_0.png": "8871e276aeede706872bfca7a206ecaa93bc96a18a550550fe849247f84209f3",
+    "hm_L_0.obj": "9b6313ab36da26317a8f862ae505a02ee7c3328325af561d7180cbb58c7d84b7",
+    "hm_L_0.png": "0fa4fc85843cb8aab2ca9a975baa260b9ce32f1218bf1dff5a396e90474ea1d7",
+    "hm_R_0.obj": "c039894e3d5e3469d839298dd38247d8ab7e20366ad226bf86b922e18f9ecd74",
+    "hm_R_0.png": "0fa4fc85843cb8aab2ca9a975baa260b9ce32f1218bf1dff5a396e90474ea1d7"
+   },
+   "variants": {
+    "hl_L": {
+     "group": "light",
+     "side": "right",
+     "raw_triangles": 3656,
+     "triangles": 3656,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "hl_R": {
+     "group": "light",
+     "side": "left",
+     "raw_triangles": 3656,
+     "triangles": 3656,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "hm_L": {
+     "group": "medium",
+     "side": "right",
+     "raw_triangles": 3656,
+     "triangles": 3656,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "hm_R": {
+     "group": "medium",
+     "side": "left",
+     "raw_triangles": 3656,
+     "triangles": 3656,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "hd_L": {
+     "group": "dark",
+     "side": "right",
+     "raw_triangles": 3656,
+     "triangles": 3656,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "hd_R": {
+     "group": "dark",
+     "side": "left",
+     "raw_triangles": 3656,
+     "triangles": 3656,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "infant": {
+   "status": "done",
+   "align": "points",
+   "sources": {
+    "_": {
+     "provider": "MakeHuman system assets via MPFB2 (generated here)",
+     "name": "MakeHuman CC0 human",
+     "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "MakeHuman community (system assets); generated and posed for this set",
+     "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "i1_curled.glb": "e23aeccad7192cbd43711c9979d667622cf8086a10c2b4852cf465f5410d198a",
+    "i2_curled.glb": "0c553f6109d4dc693176a1d57d1190bbeac3771ac2bbbda30a58b9ca1cd53157",
+    "i3_curled.glb": "ba648a26f7cb477f8504cbbec7731fbc8634ad5fbc0189d9ed4b76f69be43d8a"
+   },
+   "converted_files_sha256": {
+    "i1_curled_0.obj": "774960888aeca2f380382b48b4eb6e457cb76fe40d894ea298f797454d5d4f38",
+    "i1_curled_0.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "i1_curled_1.obj": "4fa2e6d651b368d56a7ef72e98f673832aaaef0a0c439d2e2387dc5aa9b9bd12",
+    "i1_curled_1.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "i1_curled_2.obj": "8818e7b87a1fe45440ccc4c4e17f4873c70c326cdf64f91575a3c4f1b8563ce8",
+    "i1_curled_2.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "i1_curled_3.obj": "c78aa8c1f7bfdee271fb976ff02cfde492487151ca5f57a55f99498ed7e8b18d",
+    "i1_curled_3.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "i1_curled_4.obj": "dce29101ee338db56e62f75991eb1f1bf82eb6933c17e55d737523f286fd135d",
+    "i1_curled_4.png": "bade159ded0dd4d5f3b92c1189b77b29bc385a7821aba67a4d4f1a39224ea25d",
+    "i2_curled_0.obj": "7e6cca09f968753e8c876c821f2f24688174417de86ac3e0ebfb36ce855205c8",
+    "i2_curled_0.png": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579",
+    "i2_curled_1.obj": "9ff6638dc6d0ea71deccf4925f1a781cbb74147a8ea63afb26dcdbd6bb3e72a2",
+    "i2_curled_1.png": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579",
+    "i2_curled_2.obj": "eb36121cf96431e6f4e58e665bf887f6d5d7bef9004fc28ff91c1a64a9f0d2ab",
+    "i2_curled_2.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "i2_curled_3.obj": "01e273a062eb7cac9c2a3ab0b0a0ac1949de30d89b4bded80271714747ae6116",
+    "i2_curled_3.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "i2_curled_4.obj": "a4bd95d4e9ae856450209be5ffc3e85e38677b074d5514a9f38f3c12827443a0",
+    "i2_curled_4.png": "4ea49a487d2ca1f586128840a7319de8409154c4ebb4d8027f2342c8454b42b7",
+    "i3_curled_0.obj": "8a6328714dab297a49fa75c2276db7ebc139483ed9b335c4fbed25365174a263",
+    "i3_curled_0.png": "56472ebea5536e685ef3be55135a2aa9b590395c0f2f5d45023eb576b5cb53d7",
+    "i3_curled_1.obj": "4506b3776b15311044c24f51a2419c98c8a797711f058b430d526972660195fd",
+    "i3_curled_1.png": "56472ebea5536e685ef3be55135a2aa9b590395c0f2f5d45023eb576b5cb53d7",
+    "i3_curled_2.obj": "1784bbd9b7e096999a7dd8c19bee561e68d7305bc97586fae4a2e5a42fc3c033",
+    "i3_curled_2.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "i3_curled_3.obj": "e6f867bea00a5ba2a03da107e3442c3f33b8d4eb69d22ccf820b29e7bb884132",
+    "i3_curled_3.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "i3_curled_4.obj": "e7ec83bfb2ae37cdd6721dae73583ac469ac4cc5f7e1b34d97c9f14ece286bab",
+    "i3_curled_4.png": "0856df2302aa2ab2e06ea73f688ad2ae948b35e741687031a1ad739fd8a22297"
+   },
+   "variants": {
+    "i1_curled": {
+     "pose": "curled",
+     "group": "light",
+     "base": "i1",
+     "desc": "baby, light skin",
+     "raw_triangles": 29132,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "i2_curled": {
+     "pose": "curled",
+     "group": "dark",
+     "base": "i2",
+     "desc": "baby, dark skin",
+     "raw_triangles": 24724,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "i3_curled": {
+     "pose": "curled",
+     "group": "medium",
+     "base": "i3",
+     "desc": "baby, medium skin",
+     "raw_triangles": 29212,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "knife": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Clean Chef / Kitchen Knife",
+     "url": "https://sketchfab.com/3d-models/8706b77d20cf44169371de9e36fc6cda",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-038/8706b77d20cf44169371de9e36fc6cda.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "JackofSpades261",
+     "uploader_says": "A pristine, 10-inch chef knife that I modelled for my texture practice. This is the default skin with brushed metal and a synthetic handle. This will be the only one in the series to be uploaded as a ",
+     "attribution": "\"Clean Chef / Kitchen Knife\" by JackofSpades261 (https://sketchfab.com/3d-models/8706b77d20cf44169371de9e36fc6cda), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    },
+    "standing": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Clean Chef / Kitchen Knife",
+     "url": "https://sketchfab.com/3d-models/8706b77d20cf44169371de9e36fc6cda",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-038/8706b77d20cf44169371de9e36fc6cda.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "JackofSpades261",
+     "uploader_says": "A pristine, 10-inch chef knife that I modelled for my texture practice. This is the default skin with brushed metal and a synthetic handle. This will be the only one in the series to be uploaded as a ",
+     "attribution": "\"Clean Chef / Kitchen Knife\" by JackofSpades261 (https://sketchfab.com/3d-models/8706b77d20cf44169371de9e36fc6cda), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.glb": "609c47821e5a353e84a019715deed6906cc952a9765bb2acda09ee4d178f4f8c"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "4a95175ee0af5370309e0181da652e2bd9e46a7090f244bb3401b152b9695003",
+    "default_0.png": "c7281003a41cb5f76c51a6781d9d2a75ae09ce51db0c7bce41d5edabd9bd12c2",
+    "standing_0.obj": "2b6e8d4b3834f8f40ede5a761eef02f3d3b9763a3748bb3492a6ec86881625da",
+    "standing_0.png": "0fe6d400daa1ffffcb9e23a05076efb3f5ad361d3bc50e8d55dee1094a662064"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 10228,
+     "after_bbox": [
+      [
+       -0.16,
+       -0.0319,
+       -0.0002
+      ],
+      [
+       0.16,
+       0.0129,
+       0.016
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.16,
+       -0.032,
+       -0.0002
+      ],
+      [
+       0.16,
+       0.013,
+       0.0182
+      ]
+     ],
+     "rotation": "x:90,z:-90",
+     "fit": "x",
+     "scale": [
+      0.7534355685576314,
+      0.7534355685576314,
+      0.7534355685576314
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "standing": {
+     "raw_triangles": 10228,
+     "after_bbox": [
+      [
+       -0.0081,
+       -0.0224,
+       0.0
+      ],
+      [
+       0.0081,
+       0.0224,
+       0.32
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.0092,
+       -0.0225,
+       0.0
+      ],
+      [
+       0.0092,
+       0.0225,
+       0.32
+      ]
+     ],
+     "rotation": "x:90,z:-90,y:90",
+     "fit": "z",
+     "scale": [
+      0.7534355685576314,
+      0.7534355685576314,
+      0.7534355685576314
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "low_table": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Small Wooden Table 01",
+     "url": "https://polyhaven.com/a/small_wooden_table_01",
+     "file_url": "https://api.polyhaven.com/files/small_wooden_table_01",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "Ulan Cabanilla",
+     "attribution": "\"Small Wooden Table 01\" by Ulan Cabanilla, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "small_wooden_table_01_1k.gltf": "2a33fb09785a9553c3cd4d0c5f8b874bb0fb9f26c8ef2613b65607524411f352",
+    "small_wooden_table_01.bin": "f0ca88dac6cf094e1ba260ee1bc21756a84a27b5456bcf45bda2227819458d84",
+    "small_wooden_table_01_arm_1k.jpg": "e1d01aaf54338b61f224e8b08c5b9e9879126ae3908a92cb8ad161bf54078c34",
+    "small_wooden_table_01_diff_1k.jpg": "ef587bffaf9f65ec81e0777fa6f25d835ed354cef055669c8a783086fd45b9dd",
+    "small_wooden_table_01_nor_gl_1k.jpg": "7f675805966ce02cd7678687c4fc86c0dfe4b20106486bb0c772143ea8ca3b4b"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "5f9250fc00fef35a07c2e93d681270e0eaadd3313acf92f8ac342c6fdfe40b3c",
+    "default_0.png": "1cdc65b84c1c4106d54c6d5e6e4c0760c7b6ec3c33df148feb426b48b3a612bd"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 3410,
+     "after_bbox": [
+      [
+       -0.3,
+       -0.2,
+       0.0
+      ],
+      [
+       0.3,
+       0.2,
+       0.35
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.3,
+       -0.2,
+       0.0
+      ],
+      [
+       0.3,
+       0.2,
+       0.35
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "xyz",
+     "scale": [
+      0.6548875515001189,
+      0.9091681356847016,
+      0.6565547638828613
+     ],
+     "triangles": 3410,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "melon": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Watermelon",
+     "url": "https://sketchfab.com/3d-models/5a0ae2276ac845c9a93b240c076aae19",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-018/5a0ae2276ac845c9a93b240c076aae19.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "STUDIO DUCKBILL",
+     "uploader_says": "Hot weather greetings from STUDIO DUCKBILL. Summer in Japan is very hot and humid.  \nPhotogrammetry of a watermelon generated from 241 photos.",
+     "attribution": "\"Watermelon\" by STUDIO DUCKBILL (https://sketchfab.com/3d-models/5a0ae2276ac845c9a93b240c076aae19), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.glb": "062de593bd3ab299267b63cb3e089e32991f5200ac9ef57fc5cb26169d295d5b"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "440b336500b483c5cb02b532ffffcee87f7421757293e9f05b1cad1c40bed262",
+    "default_0.png": "d9486180265716a8a4d7d65d33da34a62a4917d1136e644863684d9a32ca8cbf"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 65660,
+     "after_bbox": [
+      [
+       -0.101,
+       -0.0783,
+       -0.0003
+      ],
+      [
+       0.0954,
+       0.0783,
+       0.1564
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.101,
+       -0.078312,
+       -0.000312
+      ],
+      [
+       0.09538,
+       0.078312,
+       0.1564
+      ]
+     ],
+     "rotation": "x:90,y:90",
+     "fit": "xyz",
+     "scale": [
+      0.6921247092820624,
+      0.7620122552252662,
+      0.7488937188446698
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "mug": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+     "name": "Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White",
+     "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White",
+     "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White/1/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White.zip",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Google LLC (Google Scanned Objects)",
+     "attribution": "\"Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.zip": "dc34f175364540e239ae74f71e5b951a48aa99ccb48aaaf8c8c11771c5c56aa1"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "b5ccd0deeeb609305dcba0e3420246f3e63a32a998eb794aeaaadf697877f4c8",
+    "default_0.png": "87a50d50ef260ca078b5f517ef0a1a090f2f7439f52702b6d283e8985f0ab071"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 16644,
+     "after_bbox": [
+      [
+       -0.0421,
+       -0.04,
+       0.0
+      ],
+      [
+       0.0664,
+       0.0401,
+       0.0951
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.04111,
+       -0.04111,
+       0.0
+      ],
+      [
+       0.074495,
+       0.04111,
+       0.095127
+      ]
+     ],
+     "rotation": "z:180",
+     "fit": "z",
+     "scale": [
+      0.8299047319932998,
+      0.8299047319932998,
+      0.8299047319932998
+     ],
+     "triangles": 10000,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "person": {
+   "status": "done",
+   "align": "points",
+   "sources": {
+    "_": {
+     "provider": "MakeHuman system assets via MPFB2 (generated here)",
+     "name": "MakeHuman CC0 human",
+     "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "MakeHuman community (system assets); generated and posed for this set",
+     "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "a1_standing.glb": "e7d2e57cfcbe2a690c57007e0fefb27f1d255fb71f20dfe92e334029f665ee6d",
+    "a1_sitting.glb": "3e13423e689ed731d36f92b000bbd0e39b9ebff5db8f9cea4d7f26697c2b7907",
+    "a1_lying.glb": "5bc3376d6964a5963740a60d3d39f35def29120188a32abaa7ecc0dbfae27959",
+    "a2_standing.glb": "290d5400eba1eb43067f5108d6ac0226d39a4f3b3ef9e771d4a61d9523a767d7",
+    "a2_sitting.glb": "efb452772816a6c53ad4d48186e1558289f9e05252fdf23195f3b7c5c8381749",
+    "a2_lying.glb": "306bfc5e1369fd1362fdd5da13e3eae9a986564b0f3a96a8175e21ad11baa70d",
+    "a3_standing.glb": "3aaa95d078166e2b145ae4670944b5568f7878aa4659fc72be5a52b3c999c035",
+    "a3_sitting.glb": "b7ecb4e8ac88cb7f7aaf6f88b5741b4a1d506fe69a0b854f979248f789bcdeb2",
+    "a3_lying.glb": "5b3918a5da06b328956966ba6a9ae206f327f40e3845c036b41ef53c68e18c48",
+    "a4_standing.glb": "0243fc4b6d4aee2fbbbb857eab9257bf4e84c40539457795fc09e87cab949772",
+    "a4_sitting.glb": "29c766c714739392e2cce44ab89bdd0a111c3be2d275b1b82025d413b8c169d2",
+    "a4_lying.glb": "3cfca6c5204bd6cb3dc29ab761ed8ed4818feb31faa442da17b5d0f2e26dd585",
+    "a5_standing.glb": "3f079e01d7c63336699adf5b8d093b2002c0d53b169a58eed3dbfea64b91ea64",
+    "a5_sitting.glb": "b868b588e51f218dc54d412157cfde370a9209f251940e3756f3d200c617152b",
+    "a5_lying.glb": "6d6f24097252e1566b56567ab1909c7032aa92c754a6832529fcbdee80aaf3e0",
+    "a6_standing.glb": "6285aa00b00c7b7b64403a0c836fe1350549b923d4b28be29ce7ebc89f35a3b8",
+    "a6_sitting.glb": "5a94893459d07e90e89a59e8234e24a542892e9e0304799b3dafa143c9db0162",
+    "a6_lying.glb": "a392dce1b593e05a5d1c009158513af42db1755925888db83c4c620e034e1a00"
+   },
+   "converted_files_sha256": {
+    "a1_lying_0.obj": "3cc2f84acbbd9e96c209a70744f7063822f00be753004087ea439d900ca2854e",
+    "a1_lying_0.png": "98a02c2e4185a611165ab4838aeaaa4fd3ac5afc58e91b6f81b0075326021b46",
+    "a1_lying_1.obj": "e83334af40a978b140b1a463da3c0a30bb6bfd3f8401e2208318084e1bec2eb2",
+    "a1_lying_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a1_lying_2.obj": "9f78fee9af14d16dcaefe20509212c1d7248b733749a36df0ba4dc57b57f7d0d",
+    "a1_lying_2.png": "b9c98fb37afe7f2385f2957e96e47df8d6f119f5c9326981d1b79c0548a34f2a",
+    "a1_lying_3.obj": "f56eb5b7edb0c5826badc3f53451925ea7012d8c461caf3eecbc13821cf71eb7",
+    "a1_lying_3.png": "5ddb3ca163a132136cc57316b9f7e90fe3d5b1c7cf8e53f0b025e99a1aeefba9",
+    "a1_lying_4.obj": "4e0a35f96d58d6e586139e92548f08e9da358756535e2080ba669ce1303cd72d",
+    "a1_lying_4.png": "ff9b06c3888645b4b0d2f80b70c54e6429c6f9a364c244310e58e3a3f6de9c90",
+    "a1_lying_5.obj": "1b4adb14129e56e0045ba243cd3b19141c38676ec5a76ccc3ca5e12cbc14acde",
+    "a1_lying_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a1_lying_6.obj": "f829b8d598c6d6d33f71d31acda891714664f68548824909f9dc91918f6689c0",
+    "a1_lying_6.png": "b13bcdb5a4fc8d6e0506a52c02fb2c74d9a758c8c3864f6243aae9cda1dea2a3",
+    "a1_sitting_0.obj": "3cc2f84acbbd9e96c209a70744f7063822f00be753004087ea439d900ca2854e",
+    "a1_sitting_0.png": "98a02c2e4185a611165ab4838aeaaa4fd3ac5afc58e91b6f81b0075326021b46",
+    "a1_sitting_1.obj": "e83334af40a978b140b1a463da3c0a30bb6bfd3f8401e2208318084e1bec2eb2",
+    "a1_sitting_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a1_sitting_2.obj": "71c7956625233ba2999ca2c30a19edb46df522272bc9796ce3eafea92c11f261",
+    "a1_sitting_2.png": "df4e5e267e73da8f602992599d470828b2d23e39085663a579911fbb4adc0b39",
+    "a1_sitting_3.obj": "33b518fa237d28d892d0a327d1256e18a38fa8f5a55c4770b915f60d84f0f439",
+    "a1_sitting_3.png": "de3663a27ed910c989e2c8fa9e721ba783c4ed49ebc24c3c9bd96168f8796273",
+    "a1_sitting_4.obj": "954ae1cb0254a83097ad403a266c1d483fd11f536670db9bc9b15c92a2e488e9",
+    "a1_sitting_4.png": "a5d2d64996a7eb7876d6216204319fe592b523fba82fc4f7a71e96ebcee00883",
+    "a1_sitting_5.obj": "1b4adb14129e56e0045ba243cd3b19141c38676ec5a76ccc3ca5e12cbc14acde",
+    "a1_sitting_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a1_sitting_6.obj": "404b8e337c6bf9042ded6b8aae6df53db50733a2cd4d23dd5ce54455c8a1660e",
+    "a1_sitting_6.png": "fc8d175a2627b03bc6a50049982a85102b79df0abb182a486ea1f95eb68f9519",
+    "a1_standing_0.obj": "3cc2f84acbbd9e96c209a70744f7063822f00be753004087ea439d900ca2854e",
+    "a1_standing_0.png": "98a02c2e4185a611165ab4838aeaaa4fd3ac5afc58e91b6f81b0075326021b46",
+    "a1_standing_1.obj": "e83334af40a978b140b1a463da3c0a30bb6bfd3f8401e2208318084e1bec2eb2",
+    "a1_standing_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a1_standing_2.obj": "9f78fee9af14d16dcaefe20509212c1d7248b733749a36df0ba4dc57b57f7d0d",
+    "a1_standing_2.png": "b9c98fb37afe7f2385f2957e96e47df8d6f119f5c9326981d1b79c0548a34f2a",
+    "a1_standing_3.obj": "f56eb5b7edb0c5826badc3f53451925ea7012d8c461caf3eecbc13821cf71eb7",
+    "a1_standing_3.png": "5ddb3ca163a132136cc57316b9f7e90fe3d5b1c7cf8e53f0b025e99a1aeefba9",
+    "a1_standing_4.obj": "3a202c8e7bfd9d97c2f7b6c637e98c71991b46cf1c326bc3a082484a8429656c",
+    "a1_standing_4.png": "a9be2ef210cd08c27b0f0275857cc3e5d8fd6c3faa889f299a65c26ba050d86c",
+    "a1_standing_5.obj": "1b4adb14129e56e0045ba243cd3b19141c38676ec5a76ccc3ca5e12cbc14acde",
+    "a1_standing_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a1_standing_6.obj": "f8f346f834461752c01e7276a3768e72b0b379df6a3ad40e5c049b38431fb411",
+    "a1_standing_6.png": "68d215147081684d05e2ccb93964e6ac718c217073af451b61327530b8808cb3",
+    "a2_lying_0.obj": "4aaa7bdb7f22da83684ed7ab73a21695b3c7db57e87f7feed52969d4fe83c2d3",
+    "a2_lying_0.png": "cc622f1aad77a70ab3a50bba41278abe17168b757058d4590d5bac10cf2038ca",
+    "a2_lying_1.obj": "5fc53732751851a7664e29a3ff7ee563686903d76ee55196fffcbcb9f0b61aaf",
+    "a2_lying_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a2_lying_2.obj": "822ee745f2f256b85ec22624ef6705c297cd27e0743668fbf7060119980ec496",
+    "a2_lying_2.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_lying_3.obj": "4e9035c2de84ce486a9977e1360bacae40d2916b69adfcf682e77baebf6dcd8e",
+    "a2_lying_3.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_lying_4.obj": "70b10160b6f1a97b443a91b693755e19df4f0432db43dfa455933743126b5674",
+    "a2_lying_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a2_lying_5.obj": "fde18490f45e26f65f7376ba30eeb90bcd1d9a7310ed51ffda5982c7519ef0e0",
+    "a2_lying_5.png": "35c1ec015543058e5e348e8b2c29abdb05e8d9b3198e641e38d6fbc8d5b283fe",
+    "a2_lying_6.obj": "054182fffc6c277407d6569a0c14af729b9fb11aefe1fcd9925525ea5925318c",
+    "a2_lying_6.png": "264a25ee0c00643a6f8b919e6cac3fe243d34099b5a301388142d09bb0816b00",
+    "a2_sitting_0.obj": "c50fb27592bd8919e0c0421dd29aaa72999cce75a5bc508a029a1b64440d7248",
+    "a2_sitting_0.png": "cc622f1aad77a70ab3a50bba41278abe17168b757058d4590d5bac10cf2038ca",
+    "a2_sitting_1.obj": "5fc53732751851a7664e29a3ff7ee563686903d76ee55196fffcbcb9f0b61aaf",
+    "a2_sitting_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a2_sitting_2.obj": "7d53cc99a4fd0afd9dab88d26b8bf5577e2a863c4f660ad3f7e18be68e333e7a",
+    "a2_sitting_2.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_sitting_3.obj": "4628857454de8b80bc8bc877b285facda59237d18fbded29881e5ef4bf4ffa42",
+    "a2_sitting_3.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_sitting_4.obj": "70b10160b6f1a97b443a91b693755e19df4f0432db43dfa455933743126b5674",
+    "a2_sitting_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a2_sitting_5.obj": "ea6851844d88aea3b53529391536f84884e4302e3413ace98094d04269becb2d",
+    "a2_sitting_5.png": "35c1ec015543058e5e348e8b2c29abdb05e8d9b3198e641e38d6fbc8d5b283fe",
+    "a2_sitting_6.obj": "3a5e6e0011d55874db08297ee0465633f56a7b1c23c400673aacdaa543992c48",
+    "a2_sitting_6.png": "bdd921718396a08ad5dfeb3c6b86c314b7c7dfb0ef9dc4ae75890f190bc99742",
+    "a2_standing_0.obj": "4aaa7bdb7f22da83684ed7ab73a21695b3c7db57e87f7feed52969d4fe83c2d3",
+    "a2_standing_0.png": "cc622f1aad77a70ab3a50bba41278abe17168b757058d4590d5bac10cf2038ca",
+    "a2_standing_1.obj": "5fc53732751851a7664e29a3ff7ee563686903d76ee55196fffcbcb9f0b61aaf",
+    "a2_standing_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a2_standing_2.obj": "822ee745f2f256b85ec22624ef6705c297cd27e0743668fbf7060119980ec496",
+    "a2_standing_2.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_standing_3.obj": "f12e38301ea9278f4445b2ebb58135563d4d47d0bf6b4d942e16c14599b27dd6",
+    "a2_standing_3.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_standing_4.obj": "70b10160b6f1a97b443a91b693755e19df4f0432db43dfa455933743126b5674",
+    "a2_standing_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a2_standing_5.obj": "3edede0495088659759a49583f1a03337e16605ba783fe263ea78beb4e60dc12",
+    "a2_standing_5.png": "35c1ec015543058e5e348e8b2c29abdb05e8d9b3198e641e38d6fbc8d5b283fe",
+    "a2_standing_6.obj": "10452f0b44acb62e275b91c8a99c07253e35b0c5232b6e89d1bf9a2b13f2009b",
+    "a2_standing_6.png": "0bf4d2dc121ba34994e6e9b4ac3c43da5b278eec7b5398986bdc4ac1ab299a54",
+    "a3_lying_0.obj": "1afe531d21c966ae49924a0ef42cfea22448097f5beb0be6af6088c6b47e1b15",
+    "a3_lying_0.png": "4f3287f648978b1252fd545a987342b72faeb74f74c9b2130c6a631fa126fb91",
+    "a3_lying_1.obj": "afafdbe0b4e18e29b6439cc879a47759a4180f4df92d0e2a4a11c6742029b06b",
+    "a3_lying_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a3_lying_2.obj": "aa5a05fd4af06538c9b5c4f9a3234c4292723dfe327572b4f1aa6f04601db7fb",
+    "a3_lying_2.png": "66f70731e7ed10fbda09a761e6cfa8a6e9bd733d598540417916601dbf3219b4",
+    "a3_lying_3.obj": "1157a7b2a9710906fecf96454ce7b25b6d14fad5a078becaba0b02cb8c493907",
+    "a3_lying_3.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_lying_4.obj": "891d173332a95fec4247c97d447c68b09b6f684aabfaa87969f7101bcc357f93",
+    "a3_lying_4.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_lying_5.obj": "9a55cab6f2e547f6d9dfe2e399ead5c6e29f049af7b9e8d230fafa8e40954496",
+    "a3_lying_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a3_lying_6.obj": "d20e540faff7993a878b226f4ab36f32c174cca4c943c52332d05ba6b18eca83",
+    "a3_lying_6.png": "3ae5f1f73b44bf05560b48bf545ef35e7bf85bc42b5d4a524e7e6547a26d1935",
+    "a3_sitting_0.obj": "743ff1311a979661f36463942ddb454f492475e03e513c3c20c1d168afe51147",
+    "a3_sitting_0.png": "4f3287f648978b1252fd545a987342b72faeb74f74c9b2130c6a631fa126fb91",
+    "a3_sitting_1.obj": "afafdbe0b4e18e29b6439cc879a47759a4180f4df92d0e2a4a11c6742029b06b",
+    "a3_sitting_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a3_sitting_2.obj": "3af7665346a3f1beb752d21e26ed91a0ea41f81a3b431fa96250838084406a84",
+    "a3_sitting_2.png": "66f70731e7ed10fbda09a761e6cfa8a6e9bd733d598540417916601dbf3219b4",
+    "a3_sitting_3.obj": "6361481ac3f42dfb25e40e0f1c6d1cb2663dbcb55a957b8b0adf5eed6e85a012",
+    "a3_sitting_3.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_sitting_4.obj": "4eef181ee8a518b72226a0eb546eb3c1cc7bbea339458dc33516b6f204552809",
+    "a3_sitting_4.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_sitting_5.obj": "9a55cab6f2e547f6d9dfe2e399ead5c6e29f049af7b9e8d230fafa8e40954496",
+    "a3_sitting_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a3_sitting_6.obj": "83215a917648316445cff7cca2d6fb2a56b55062621914045c9edb884755c816",
+    "a3_sitting_6.png": "e27681490b2c107ee6aba585c79938189b14160d7031025ee9680081f037bb61",
+    "a3_standing_0.obj": "5e10a9ba984d36c9d118df23ec0c13f6a5fb8c0d05ef1e7a1bbf9f9f553cc32c",
+    "a3_standing_0.png": "4f3287f648978b1252fd545a987342b72faeb74f74c9b2130c6a631fa126fb91",
+    "a3_standing_1.obj": "afafdbe0b4e18e29b6439cc879a47759a4180f4df92d0e2a4a11c6742029b06b",
+    "a3_standing_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a3_standing_2.obj": "aa5a05fd4af06538c9b5c4f9a3234c4292723dfe327572b4f1aa6f04601db7fb",
+    "a3_standing_2.png": "66f70731e7ed10fbda09a761e6cfa8a6e9bd733d598540417916601dbf3219b4",
+    "a3_standing_3.obj": "1157a7b2a9710906fecf96454ce7b25b6d14fad5a078becaba0b02cb8c493907",
+    "a3_standing_3.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_standing_4.obj": "558f54f83d93ea6413fc9f8efbeeec3f6743a6fff4c32041a964ed90ec821d19",
+    "a3_standing_4.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_standing_5.obj": "9a55cab6f2e547f6d9dfe2e399ead5c6e29f049af7b9e8d230fafa8e40954496",
+    "a3_standing_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a3_standing_6.obj": "9755293deea6cb35c5c0d940b4bbbbaa3f3f3ffe17f40af8577524510907d6cb",
+    "a3_standing_6.png": "a58fd84e6c35fe89c910f8c399d8608e54045643f14b47bac9fa36afac2551cb",
+    "a4_lying_0.obj": "adedd4402eb06c13575ce0a5d025595c49e2589f8e1adf0e5e39b24ff1b626be",
+    "a4_lying_0.png": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f",
+    "a4_lying_1.obj": "7fef25c9df256774b658bbab63d05043f2291d79c1763265bb90792165067bef",
+    "a4_lying_1.png": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c",
+    "a4_lying_2.obj": "0a4043a2e1fa91c1c224c10ec467c6aea4c797e3d0cf28895bff2a29a494652e",
+    "a4_lying_2.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a4_lying_3.obj": "41962ef9bf9e601585426bd073dc19610722ce63ac174d71533ded45f9e2ee2f",
+    "a4_lying_3.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a4_lying_4.obj": "ffa57977852ee77ed762ba58fd773893f6a2f1bc3e7acfcd895b595679b0ee82",
+    "a4_lying_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_lying_5.obj": "c3c5abf69a11799f9016fab392faf01568c800ca7dac80b60f729e44f77a95b5",
+    "a4_lying_5.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_lying_6.obj": "284a77ef04785e66ef12da56d108ff115930e3daee5fede03bcb51ae2e8ee8d6",
+    "a4_lying_6.png": "e1ebc88ae663414915bb2f0e0d407d9871c6ebec40c5df5559849845df1c44c7",
+    "a4_sitting_0.obj": "76781caee10713fd9541a25f25faa03754329ad0b941e8bbec4eeaa02185785c",
+    "a4_sitting_0.png": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f",
+    "a4_sitting_1.obj": "539c21ba8ebbe246d03bba37517161d78e7df4b846d55db9bba94d57ea48e440",
+    "a4_sitting_1.png": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c",
+    "a4_sitting_2.obj": "0a4043a2e1fa91c1c224c10ec467c6aea4c797e3d0cf28895bff2a29a494652e",
+    "a4_sitting_2.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a4_sitting_3.obj": "41962ef9bf9e601585426bd073dc19610722ce63ac174d71533ded45f9e2ee2f",
+    "a4_sitting_3.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a4_sitting_4.obj": "4ce38cc490e44970552851786ed723dc0547bb8031ea171eb4d343b61834c799",
+    "a4_sitting_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_sitting_5.obj": "b1ba2397ca4d8d53fc090f0eeeb8d8db41d62b24466e8b49f3f0ee422291b967",
+    "a4_sitting_5.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_sitting_6.obj": "967129b9fe38987aea5e6d8a55918bc136f53980cfcd30dbd54a6a64c87fedb1",
+    "a4_sitting_6.png": "690643061b3c852d9d9e89f47d9a0ec47a853e408f5c06cbcba2a5826bd380f7",
+    "a4_standing_0.obj": "adedd4402eb06c13575ce0a5d025595c49e2589f8e1adf0e5e39b24ff1b626be",
+    "a4_standing_0.png": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f",
+    "a4_standing_1.obj": "eecc6d3601178da5c048a37cb3ea57c4dce0bee32e017bfcd70d3b4fd226eddb",
+    "a4_standing_1.png": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c",
+    "a4_standing_2.obj": "0a4043a2e1fa91c1c224c10ec467c6aea4c797e3d0cf28895bff2a29a494652e",
+    "a4_standing_2.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a4_standing_3.obj": "41962ef9bf9e601585426bd073dc19610722ce63ac174d71533ded45f9e2ee2f",
+    "a4_standing_3.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a4_standing_4.obj": "ffa57977852ee77ed762ba58fd773893f6a2f1bc3e7acfcd895b595679b0ee82",
+    "a4_standing_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_standing_5.obj": "a8ba838795c20cc473c4ff7b3b5f13084f544e0d2a1ea134e661c1b151c9a636",
+    "a4_standing_5.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_standing_6.obj": "f6742643094969bc3899687493f454d6efd45451123b19e551b0f9a72617d43c",
+    "a4_standing_6.png": "67084043466b64236043657221f3294a945814428b3ea5934e1d87404a8702b1",
+    "a5_lying_0.obj": "a58ce6aa395257022ba53c2ed631964b89244f2287c0ecf1e11939804d694daf",
+    "a5_lying_0.png": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c",
+    "a5_lying_1.obj": "eeff31cecd3b11ecef8de82fe6e0172d64e9075b3b9e3cbf9311e503ee811a62",
+    "a5_lying_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a5_lying_2.obj": "2c5d730f76d0a6b5117cb4a391d35df86b7e1f41e36e6faf82ea5b2ad3dc778f",
+    "a5_lying_2.png": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552",
+    "a5_lying_3.obj": "5800fd81f53fda8c10f448e1bc215724d870c40e647312592d99c14a66b16579",
+    "a5_lying_3.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_lying_4.obj": "9c214d3aed60bd60b03013570a7a5df9a24adc5ea22cb7954839515b0065fdd0",
+    "a5_lying_4.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_lying_5.obj": "7d427ae0e133e834b6e1b539000aff007d2652edc2c835a52f7d2283a48ff1d5",
+    "a5_lying_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a5_lying_6.obj": "0aa96bf40319aac53368aa53a2f6cef8e9ed4981ac06d92ed99dcdc41ca909c6",
+    "a5_lying_6.png": "9378065db2fe05071552cfadfe7af67e9f3065ed0bea2ef5c46373c085d66f01",
+    "a5_sitting_0.obj": "a58ce6aa395257022ba53c2ed631964b89244f2287c0ecf1e11939804d694daf",
+    "a5_sitting_0.png": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c",
+    "a5_sitting_1.obj": "eeff31cecd3b11ecef8de82fe6e0172d64e9075b3b9e3cbf9311e503ee811a62",
+    "a5_sitting_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a5_sitting_2.obj": "ca199adcc4f24ef959b72fc182dbbcecb2b4631e069f2a5aa416b295e71d418d",
+    "a5_sitting_2.png": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552",
+    "a5_sitting_3.obj": "5c508cf5a75624cb2ba0a57221891e47db41c5a3b4780905f27ac5bb8eb60d26",
+    "a5_sitting_3.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_sitting_4.obj": "40b7679ee433da6fc40adf47c5d7be64a707482fea1e0064d196a387e107eaed",
+    "a5_sitting_4.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_sitting_5.obj": "7d427ae0e133e834b6e1b539000aff007d2652edc2c835a52f7d2283a48ff1d5",
+    "a5_sitting_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a5_sitting_6.obj": "33e4de1650522896a95813fe7485fbec41438ede5fc3e4b071ece0a9348dabf8",
+    "a5_sitting_6.png": "b7f3d264c9e8ca8904c1b335c9b3f7a73f02492bb8a4b93af37c025a274eab17",
+    "a5_standing_0.obj": "a58ce6aa395257022ba53c2ed631964b89244f2287c0ecf1e11939804d694daf",
+    "a5_standing_0.png": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c",
+    "a5_standing_1.obj": "eeff31cecd3b11ecef8de82fe6e0172d64e9075b3b9e3cbf9311e503ee811a62",
+    "a5_standing_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a5_standing_2.obj": "2c5d730f76d0a6b5117cb4a391d35df86b7e1f41e36e6faf82ea5b2ad3dc778f",
+    "a5_standing_2.png": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552",
+    "a5_standing_3.obj": "5800fd81f53fda8c10f448e1bc215724d870c40e647312592d99c14a66b16579",
+    "a5_standing_3.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_standing_4.obj": "858eeeb4f9bee6f4e1ad47fe08113062c70ed4617ad998b5834490fd197088bc",
+    "a5_standing_4.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_standing_5.obj": "7d427ae0e133e834b6e1b539000aff007d2652edc2c835a52f7d2283a48ff1d5",
+    "a5_standing_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a5_standing_6.obj": "e2d3546e111db3fe74408fcc67adfdaf8a0c2e48c252b2b9366403a3bab9810e",
+    "a5_standing_6.png": "20cbaad3d779809bff5b7c2fc422b9fc864a9782dbcd7006bd79e14e40cbd3cd",
+    "a6_lying_0.obj": "f152d20fd8b410f236b05c199083fbab7890827721277b2f5d22580d6b58520d",
+    "a6_lying_0.png": "dd3b7f4eaf04c656acb541a519a930d1706bd180b327b03986cde2b40225926f",
+    "a6_lying_1.obj": "f6be4b60932a917d9a5cd6e25f32488dd54f79ed3efe0c9442ff42a34f13d49c",
+    "a6_lying_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a6_lying_2.obj": "f416c2bda1d4d776f3bc350de49adc0addb2894eddb5c2448235d19ec2876659",
+    "a6_lying_2.png": "5dc0f106811ed739990a644e90077bb893b6def83f460eef47901532bc23feee",
+    "a6_lying_3.obj": "eb2959279c27bd5517d25908438a20d6f49e16b83e149e4e6409a142798db18e",
+    "a6_lying_3.png": "f22f8bf2ed9795c6d3f2fc4f9abb93a2c44ab246f5a28513c69dc0289666bfeb",
+    "a6_lying_4.obj": "226cd7f6a2a28387f8b30fa50dc9b0a6bfd1ae976add70b645df9d3d7d40a174",
+    "a6_lying_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a6_lying_5.obj": "5ee21d84f0479113f268ef4410cfc23abe8c57e197cab67ca7780601ff62b149",
+    "a6_lying_5.png": "8e346341acb79f2c2de4e8121ff4e05ba22f3b9965679af5b5ab552680355048",
+    "a6_lying_6.obj": "b39e5fbf100c057a298336333c36c9efb22ef543600a7bd452c51bed48188fd2",
+    "a6_lying_6.png": "5db59cd161b538bdce0e3419472abd4d65be0435fe7ab5cdac63f7729dec9294",
+    "a6_sitting_0.obj": "7d6b0f5051b9a5223810746359462fd5a6ba93a18c593540ad993f134362fa7e",
+    "a6_sitting_0.png": "d77023db3fce1a2e883039cbc08095989af414cce771126afddb79872f8a21d3",
+    "a6_sitting_1.obj": "f6be4b60932a917d9a5cd6e25f32488dd54f79ed3efe0c9442ff42a34f13d49c",
+    "a6_sitting_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a6_sitting_2.obj": "75a4d3141778898689e2be4434c57489d30b361267cbb64f0fe11fe8f481ef5c",
+    "a6_sitting_2.png": "b93e694bc4d26c603ba2dd96e15e79bb31d5028a644eeb794e88d755ddcb0760",
+    "a6_sitting_3.obj": "d79bb09a1098352c372047fddffeefdc6488f302357a7ecf554121b150e143e2",
+    "a6_sitting_3.png": "830ddeb2ca430f24c8ed8e919fa788d285bc95a744d9f30e891924ace6e06099",
+    "a6_sitting_4.obj": "226cd7f6a2a28387f8b30fa50dc9b0a6bfd1ae976add70b645df9d3d7d40a174",
+    "a6_sitting_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a6_sitting_5.obj": "9173166fdad8ca3e48747ada24bace4fc2ea5526a50eae8d18d73bbb64cdcd99",
+    "a6_sitting_5.png": "0eb99bb236e7066521f9b303b6c9c48924d025a8fc69e3e25692365244917d9a",
+    "a6_sitting_6.obj": "778c338e7106b88236591d43c6fe55f5c5911d3e842e6f67d53379a9275e7516",
+    "a6_sitting_6.png": "f994eff78a772732a9984c0fa1a0fc1affa51d3270145801ee7daff4b2e578c4",
+    "a6_standing_0.obj": "f152d20fd8b410f236b05c199083fbab7890827721277b2f5d22580d6b58520d",
+    "a6_standing_0.png": "dd3b7f4eaf04c656acb541a519a930d1706bd180b327b03986cde2b40225926f",
+    "a6_standing_1.obj": "f6be4b60932a917d9a5cd6e25f32488dd54f79ed3efe0c9442ff42a34f13d49c",
+    "a6_standing_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a6_standing_2.obj": "f416c2bda1d4d776f3bc350de49adc0addb2894eddb5c2448235d19ec2876659",
+    "a6_standing_2.png": "5dc0f106811ed739990a644e90077bb893b6def83f460eef47901532bc23feee",
+    "a6_standing_3.obj": "1e99966e66aecf2f590dae3a3c12a6f8e3357de53c4c942aeb9e4d29ee0ca13e",
+    "a6_standing_3.png": "5359a9a74d6d60e224524a25ab642a808348d9b3b4e7cde5a5fe56c2b31b4ba7",
+    "a6_standing_4.obj": "226cd7f6a2a28387f8b30fa50dc9b0a6bfd1ae976add70b645df9d3d7d40a174",
+    "a6_standing_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a6_standing_5.obj": "05a1d3aa0a66a1fa1ee98c84a00d88da6e92d48dd08b6267224a564c2fb7eaba",
+    "a6_standing_5.png": "7d377efff26343fb1aca2a4c4682f4abad9e15999d62effe4a2cb7ff912da867",
+    "a6_standing_6.obj": "cdce2ba44a27f5997b90aea40f4ccc59e7bbeededd29277e66a7197c9357b3f5",
+    "a6_standing_6.png": "5c4f593698f222ab15ca0e06ffce2fb825dc9079a739d5e80d31a86dff64217f"
+   },
+   "variants": {
+    "a1_standing": {
+     "pose": "standing",
+     "group": "light",
+     "base": "a1",
+     "desc": "man, light skin, short brown hair, blue shirt and jeans",
+     "raw_triangles": 38445,
+     "triangles": 20141,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a1_sitting": {
+     "pose": "sitting",
+     "group": "light",
+     "base": "a1",
+     "desc": "man, light skin, short brown hair, blue shirt and jeans",
+     "raw_triangles": 38445,
+     "triangles": 20142,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a1_lying": {
+     "pose": "lying",
+     "group": "light",
+     "base": "a1",
+     "desc": "man, light skin, short brown hair, blue shirt and jeans",
+     "raw_triangles": 38445,
+     "triangles": 20141,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a2_standing": {
+     "pose": "standing",
+     "group": "dark",
+     "base": "a2",
+     "desc": "woman, dark skin, bob, casual suit",
+     "raw_triangles": 26827,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a2_sitting": {
+     "pose": "sitting",
+     "group": "dark",
+     "base": "a2",
+     "desc": "woman, dark skin, bob, casual suit",
+     "raw_triangles": 26827,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a2_lying": {
+     "pose": "lying",
+     "group": "dark",
+     "base": "a2",
+     "desc": "woman, dark skin, bob, casual suit",
+     "raw_triangles": 26827,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a3_standing": {
+     "pose": "standing",
+     "group": "medium",
+     "base": "a3",
+     "desc": "man, medium skin, short black hair",
+     "raw_triangles": 26907,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a3_sitting": {
+     "pose": "sitting",
+     "group": "medium",
+     "base": "a3",
+     "desc": "man, medium skin, short black hair",
+     "raw_triangles": 26907,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a3_lying": {
+     "pose": "lying",
+     "group": "medium",
+     "base": "a3",
+     "desc": "man, medium skin, short black hair",
+     "raw_triangles": 26907,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a4_standing": {
+     "pose": "standing",
+     "group": "light",
+     "base": "a4",
+     "desc": "woman, fair skin, ponytail",
+     "raw_triangles": 32776,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a4_sitting": {
+     "pose": "sitting",
+     "group": "light",
+     "base": "a4",
+     "desc": "woman, fair skin, ponytail",
+     "raw_triangles": 32776,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a4_lying": {
+     "pose": "lying",
+     "group": "light",
+     "base": "a4",
+     "desc": "woman, fair skin, ponytail",
+     "raw_triangles": 32776,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a5_standing": {
+     "pose": "standing",
+     "group": "dark",
+     "base": "a5",
+     "desc": "older man, brown skin, short hair, work clothes",
+     "raw_triangles": 28276,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a5_sitting": {
+     "pose": "sitting",
+     "group": "dark",
+     "base": "a5",
+     "desc": "older man, brown skin, short hair, work clothes",
+     "raw_triangles": 28276,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a5_lying": {
+     "pose": "lying",
+     "group": "dark",
+     "base": "a5",
+     "desc": "older man, brown skin, short hair, work clothes",
+     "raw_triangles": 28276,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a6_standing": {
+     "pose": "standing",
+     "group": "medium",
+     "base": "a6",
+     "desc": "woman, medium skin, short bob, dress suit",
+     "raw_triangles": 33241,
+     "triangles": 20116,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a6_sitting": {
+     "pose": "sitting",
+     "group": "medium",
+     "base": "a6",
+     "desc": "woman, medium skin, short bob, dress suit",
+     "raw_triangles": 33241,
+     "triangles": 20118,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a6_lying": {
+     "pose": "lying",
+     "group": "medium",
+     "base": "a6",
+     "desc": "woman, medium skin, short bob, dress suit",
+     "raw_triangles": 33241,
+     "triangles": 20118,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "person_down": {
+   "status": "done",
+   "align": "points",
+   "sources": {
+    "_": {
+     "provider": "MakeHuman system assets via MPFB2 (generated here)",
+     "name": "MakeHuman CC0 human",
+     "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "MakeHuman community (system assets); generated and posed for this set",
+     "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "a1_down_side.glb": "0b49164415e4667907d405707cd866e4f4b31664ca3fc6021e4827521a7e8278",
+    "a1_down_prone.glb": "00c219f61c7ba1d676b6c7d6da5f13a63914c4a4917e64aaff00f28b5aedf311",
+    "a2_down_side.glb": "acdae8dce59337e9f7f4bae329c392e49669330abdef868db17deed5a487c493",
+    "a2_down_prone.glb": "56139f60a30d9da4aa5a69e5c7346f794725dd54876221e393c99a4bc556ac09",
+    "a3_down_side.glb": "d3f741276f220026640aea96e02a37aa0fb3c4a0f194addac39835f2f63c5db4",
+    "a3_down_prone.glb": "d2c98aab6d6dfd116ec14033648e55c964e7b59be5ab70844928aae72fa02e44",
+    "a4_down_side.glb": "57d9fe43ed0ce1ca8b7c29900552c7ef4220f100ad732148de4beb7a27a879d3",
+    "a4_down_prone.glb": "5b0f21574411a8f03686f261e3d3421581178464fdcc4933aa63c9d9bd788e12",
+    "a5_down_side.glb": "eb34b6ce6401e5ec2c9b4ad5865dbc46a0f1a5d3069e6969799dc48e3ee48d67",
+    "a5_down_prone.glb": "8aac61d0390886a88576cc9f50bac701650032c13ac73b13c5ab77081fd11563",
+    "a6_down_side.glb": "53514a4e827d4737495434e2a4f444e84a5978b4c70dd17e0f9b82234b56e5da",
+    "a6_down_prone.glb": "836e4df593d9da51e34a878bcb7a0772ffd5a182128e694ec0296cbe0633c9a7"
+   },
+   "converted_files_sha256": {
+    "a1_down_prone_0.obj": "ee00366820079af69228f975cf0889c9c77aed5739e11e63ce833310141a5b96",
+    "a1_down_prone_0.png": "a2fe9b08e76efa6d499c81e76e16ca71fe50938d8a5b80e91775b9eebfe85065",
+    "a1_down_prone_1.obj": "6f704d531c992c45bcece7e9d2108da380c4d23ff0452edaf169d89e771925d2",
+    "a1_down_prone_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a1_down_prone_2.obj": "4ed390c6fa63b5baf7350c9715915cd71cefa77e88514059a1cf9cdce28780d7",
+    "a1_down_prone_2.png": "5e13202b4de49304579e2dbfc4d8b2f9ca0332ff9b38182d33f49d896307a1f7",
+    "a1_down_prone_3.obj": "91b5b21fa5fd87b6b03c394586c5fb4a7ec1800006549051ce3735d72b896030",
+    "a1_down_prone_3.png": "a8f7ddb85464062e0a53a16e8cf00c2236f6667836e2dc0deace6be5b2662418",
+    "a1_down_prone_4.obj": "82f956474812212525fbf569dcb5eb23eb4f4c74d77a4da7e1bb75bc1bceab75",
+    "a1_down_prone_4.png": "2642f1b0b68eed5ca9e07d5771d462fbf1f0abf7927b655b062e9fc4aa1390d3",
+    "a1_down_prone_5.obj": "3d8559cd3cba06f023d1de3ccd1d94142ed1b6471e65b70c046d6712decea06c",
+    "a1_down_prone_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a1_down_prone_6.obj": "4435a8576e3951310527f703c03678c2b9691b49538b47c5f01bb23c60b79228",
+    "a1_down_prone_6.png": "6acedd5af62bb03af5add3346d77048050ce864c235051f1f24e13ab4067841b",
+    "a1_down_side_0.obj": "38bc903e6965b25c151860367e469dca0382a2430f3bdebafe5e15d220f45aee",
+    "a1_down_side_0.png": "2c9523f5533a011f30edacbd4fd8045f88a930acf5f8d581d3449c12e71cbc43",
+    "a1_down_side_1.obj": "57c4d63dfee4dcb03b2344f744ce758cbaa8f02229ddfe4dab308201be7c51d8",
+    "a1_down_side_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a1_down_side_2.obj": "b40439672c6431c94811e804c9cb2e7d19d9507c5406c760b3248392ddffeb69",
+    "a1_down_side_2.png": "f49a25f7a77972e67ef7ea3d90ee78367564e81befae81ce388e970ae1ae4ca0",
+    "a1_down_side_3.obj": "ee10a481169d91b87deebc982aa39b496a8e534b954059f74d96e276fe63c36f",
+    "a1_down_side_3.png": "0e81a79b58d93f7f98b605f731c126642305bd53fa939e4a223d74c835be9866",
+    "a1_down_side_4.obj": "154de3c71118c7cee5b7c83e73098ab52da5af8ad0d5baeaefe9c4f9f278bb9e",
+    "a1_down_side_4.png": "a7420f5e135e82d225c08970c72977221b7cd358344499b1b49e2cc5d2266c42",
+    "a1_down_side_5.obj": "357345efd5c7b81cbeb92e19c084486aa29121f28c98fea972e9cbec20c4c71f",
+    "a1_down_side_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a1_down_side_6.obj": "bb2e2402cbbc0f68eb4a6f1a0e89acb5542ea52d3fd808c2b69159b929c08860",
+    "a1_down_side_6.png": "426cc8acf0eb3f8741dc4f60788daa054866edb66af8670d749d602cc2e2dbd1",
+    "a2_down_prone_0.obj": "3bbb143a51994b1a8a81f406969d59bb61f097e5cbc35828a5e815f9194fa366",
+    "a2_down_prone_0.png": "cc622f1aad77a70ab3a50bba41278abe17168b757058d4590d5bac10cf2038ca",
+    "a2_down_prone_1.obj": "a437ffb70f63a1aed1d37f21505b2b89aaf2c5a43d9df0e2e20d2bec31b48dad",
+    "a2_down_prone_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a2_down_prone_2.obj": "970437794a697378f0b9f632a3e291ec2721d52dc1062671c97981a84557285d",
+    "a2_down_prone_2.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_down_prone_3.obj": "09b328cbbf8bf9f546928ebde0e8ab9a86a568335530512c9501bc72fe4e335f",
+    "a2_down_prone_3.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_down_prone_4.obj": "9261200c1e323d184266653cd6c1a6d5ab7ad31de5ee68e494355b2a0959df18",
+    "a2_down_prone_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a2_down_prone_5.obj": "0aaa56e2438274eb7ce6fbc70825c418d76e5c23d4078685c2d1a925c4c52b27",
+    "a2_down_prone_5.png": "35c1ec015543058e5e348e8b2c29abdb05e8d9b3198e641e38d6fbc8d5b283fe",
+    "a2_down_prone_6.obj": "1549630009d1dc162bdef62abedfe02b3a824e3a668fc7f9ddb93a27ba1519cd",
+    "a2_down_prone_6.png": "e247479fa92aa61902d67acaaba3247eac33ed6c94e6206f46d240ac135e4a48",
+    "a2_down_side_0.obj": "fed193119efd2e1053a1a7aa30fff428c17f67d7c88e29e449aee9fa2d636e59",
+    "a2_down_side_0.png": "cc622f1aad77a70ab3a50bba41278abe17168b757058d4590d5bac10cf2038ca",
+    "a2_down_side_1.obj": "17d04037e66e9ce648afb66596dd7f9b83f2c2c8569f5cd92038229f38a96b01",
+    "a2_down_side_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a2_down_side_2.obj": "99d1e009fe0efc27a8ff082a49f7510d463f05c8788ec5c0470371d60f6b1a13",
+    "a2_down_side_2.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_down_side_3.obj": "e7da1011d5c7e2b7e1792fb8c1ba0c92ef0cae9798d98fec0f75cf3ba3467dec",
+    "a2_down_side_3.png": "f65cefaf131b5b039700db4e2c1a8565d5e45ee23e6b4b267986964fedc6a94a",
+    "a2_down_side_4.obj": "6227fd103ec1c704a9f09c64d7a972a6ac6605ed03a4657e7e178c0119a117c2",
+    "a2_down_side_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a2_down_side_5.obj": "51053e7b6e8d3330d533f04cf0c719a951abb885c6d78a2cd8f1a2fa69cf95cd",
+    "a2_down_side_5.png": "35c1ec015543058e5e348e8b2c29abdb05e8d9b3198e641e38d6fbc8d5b283fe",
+    "a2_down_side_6.obj": "8799933d6b54f37ea8e3f38bdfa49e8763af933ccd7fab91b13e1f594ad77368",
+    "a2_down_side_6.png": "e71e7fcf9fde38f98b4568a968db652a7a5e3654d40dd1d0a78a4feb637db896",
+    "a3_down_prone_0.obj": "134ebb4697a09a6902cb59911bd8783ea57983df99b2f0f057000009efa37b3e",
+    "a3_down_prone_0.png": "4f3287f648978b1252fd545a987342b72faeb74f74c9b2130c6a631fa126fb91",
+    "a3_down_prone_1.obj": "1e0ad539175df0815efe1ddf6cc810ac79fcafb221341e5a7a4a0b3933314cde",
+    "a3_down_prone_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a3_down_prone_2.obj": "b36847453cda2adbbdd95124030de8ed3099f1841ff7e038deafe8a5703f770d",
+    "a3_down_prone_2.png": "66f70731e7ed10fbda09a761e6cfa8a6e9bd733d598540417916601dbf3219b4",
+    "a3_down_prone_3.obj": "e55e4bd1143afb30f4261412eb1a2c3441903b258a95f2fc21ac17d9f1ac8b1d",
+    "a3_down_prone_3.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_down_prone_4.obj": "47c53b899727faf8328966bb0c482ba9c24133f16f2b966f3a7513ad665df95f",
+    "a3_down_prone_4.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_down_prone_5.obj": "3d4e6582c8704081465127d720832162cd9ee5c956562b4b9b673727a9a177bf",
+    "a3_down_prone_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a3_down_prone_6.obj": "ceed2d651abda9a7e045adb5c0944746242b86acdacf797f0e33a69dc917c30d",
+    "a3_down_prone_6.png": "74e5c77021380b30055e192a8af158d29d0f1d559a2d00be28e7a1377566d771",
+    "a3_down_side_0.obj": "e8aa3166e9b5cd046029e57fdc4ee40b02ce955bde85b91d2c86c002152d2c4c",
+    "a3_down_side_0.png": "4f3287f648978b1252fd545a987342b72faeb74f74c9b2130c6a631fa126fb91",
+    "a3_down_side_1.obj": "1299d7c40ce9afcba6542b3c68c7cb8f1141783bc39fa274ed6fd5850e57fa9c",
+    "a3_down_side_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a3_down_side_2.obj": "fca5e8ded686dbadca821843aa4fe6c1cdfef081f4ddf6a4183354e5293a402e",
+    "a3_down_side_2.png": "66f70731e7ed10fbda09a761e6cfa8a6e9bd733d598540417916601dbf3219b4",
+    "a3_down_side_3.obj": "dd4272d72b312a7de70a50f4a22bac03be18d51a519ac7301856e1f8eb954180",
+    "a3_down_side_3.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_down_side_4.obj": "53f9fe724040ac941cf8e1ab1325c3314b0d8b17db8a5897341cc229aa74d34e",
+    "a3_down_side_4.png": "b5462a89b35f2a53ddb235cbdf1713076d659ccef903b9bc712af16a69d1f212",
+    "a3_down_side_5.obj": "4e6d754c49840070f411f2330fd04b91da148b9be8825ca4ac8cf610c18d08b1",
+    "a3_down_side_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a3_down_side_6.obj": "aba3ef5656d779e32a89ff8731b384a67c8ec6b73f0f05ddcd9fca7cefe1d3b1",
+    "a3_down_side_6.png": "95590426e68481281eec005b74b2a1f99b06e635d116518606236ea3431ea188",
+    "a4_down_prone_0.obj": "08ed45ddc2b819040981a53e7fd4096e1eebe2f0489bd639eb2bceddd857941d",
+    "a4_down_prone_0.png": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f",
+    "a4_down_prone_1.obj": "cbddca95a0f7570e46016815b2754871d1a4d2fff990632ece249679078ce19a",
+    "a4_down_prone_1.png": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c",
+    "a4_down_prone_2.obj": "93ed23ce012a66978347ee18d9c437b352d62354baa14204d97084eeef9a6fb2",
+    "a4_down_prone_2.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a4_down_prone_3.obj": "8f92618d2be230de9e88c2e91b8f09bfa1cd77caccb99228c2bd673a1142d706",
+    "a4_down_prone_3.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a4_down_prone_4.obj": "e88f0837f5790ac2ab60993889d30256d39c48aa47b177e9c4e7aaecb451900e",
+    "a4_down_prone_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_down_prone_5.obj": "3b89fc8611919e58777250c43ae3547a47fa5c00e5295fcff435852c01b072b4",
+    "a4_down_prone_5.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_down_prone_6.obj": "dc53147ee8d4888f2df7a9c08f091d2eda96e4a6257d00ecd1343bd7a66b7c13",
+    "a4_down_prone_6.png": "7f29cbd5d02cace4ef93dcec37aae89e6552c34e2e0116ea35db263b08143581",
+    "a4_down_side_0.obj": "bc8be39a6c2b164422301691e31e0b16636071c0fcf0e3aaebae662711689100",
+    "a4_down_side_0.png": "5912e2d778ba979cad6412ef49fc7841dcd951d3248f836339cb4780f989fd5f",
+    "a4_down_side_1.obj": "ada54ca61f82d16990b2815bc927ae8e7fd3695e8dd4d3cc16883f97e8ba9554",
+    "a4_down_side_1.png": "b3a96bfc7acdb793227265829db88d100890fc42d158f381c37baf6d78300a5c",
+    "a4_down_side_2.obj": "72ee5bd5f56e41f1a7dc1cf18a66a5305f88ac342f82733b056d57884bbc1af0",
+    "a4_down_side_2.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a4_down_side_3.obj": "bfab1232903134b93690d5b9a42bf1adab06b0560ff78ca880c988e00a0044da",
+    "a4_down_side_3.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a4_down_side_4.obj": "936cc3c6cc90e749afd553eb7613152cd4d5aa2b882d14ad7d56ce5d711b0802",
+    "a4_down_side_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_down_side_5.obj": "85eeaed7194f990220b96fef2e58eb2d075efd23b3d188c36b321309942e0440",
+    "a4_down_side_5.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "a4_down_side_6.obj": "141a90783ad9ceb7eef636b78e06f5fa6d10cc5fa65afc7f4080a75f74cb45fd",
+    "a4_down_side_6.png": "aac239a289a42ddf6945137600239194b2a2f6735f82b02382ca69a2af624b66",
+    "a5_down_prone_0.obj": "a4cc09ce8c3998c855386eb5f65a3ee0e5f63d3ec06de745471c261931eefc6c",
+    "a5_down_prone_0.png": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c",
+    "a5_down_prone_1.obj": "4e16964ff1e3484ada3f5f6a89b65841048784767ae951c8c8d689edd1513078",
+    "a5_down_prone_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a5_down_prone_2.obj": "f4e17e8daf3e7f982284b9d57e4eaf0b088b6a32a32c4b65ca3cdd7731aa3032",
+    "a5_down_prone_2.png": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552",
+    "a5_down_prone_3.obj": "6797e743e3cbeb528c10ac5cae01f202981933638f4d563d653b118afff72ef4",
+    "a5_down_prone_3.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_down_prone_4.obj": "dad74a7a1e4d3ba75004088a2190c71e92c131980ff541ac7f700ed9a58c60b9",
+    "a5_down_prone_4.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_down_prone_5.obj": "5f85c90961b781cd6550ea6bed895955807d79be71fb105c27cb6b3747696118",
+    "a5_down_prone_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a5_down_prone_6.obj": "cce8c17b26c256dee0c564f5140aef0b35e10efca9d74e40eb01eb17f03e422a",
+    "a5_down_prone_6.png": "57ffa271eab941db8a050091e74d9e9f367d7bd87aede0fa1738fb30a81464d9",
+    "a5_down_side_0.obj": "cecad7b8f7468e8f420c6b0ef1a65bd6e84b039a3eb00226345aec9e7ef6aca8",
+    "a5_down_side_0.png": "b0237dbf2555756f49a631c5439b6e751dc518b2d7ab5e6143482c1bd841ae3c",
+    "a5_down_side_1.obj": "16004fb8e2c3871a71bbe35c7f89b327d234908c9687ea20686c0cdc270c0a8c",
+    "a5_down_side_1.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a5_down_side_2.obj": "9aebb82be065b9d4752846cabd99fbcf750d0c079b4943c2c58fd2ddd0ed5aab",
+    "a5_down_side_2.png": "eadadf76fe9e37c530bcd8d63e88482aad1aafa26c8b2416ae382fe0fa227552",
+    "a5_down_side_3.obj": "bba7b72bf8567a6cdf5e801f9bbb3088bedc8eab340282f452886e08bc24157e",
+    "a5_down_side_3.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_down_side_4.obj": "0146c04367ab53e83832b1e92515fb2cd920766fe94e0a2bc72545280e482121",
+    "a5_down_side_4.png": "29f1ef153266d4fbdc4bd92e466b0c154b89e96b2df17bd00b1221ab8a84ba43",
+    "a5_down_side_5.obj": "ee0838dda952f6f0c3d4a92e89b20d326094ef9d3b874560006de4e82b4043a8",
+    "a5_down_side_5.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a5_down_side_6.obj": "dbead12daf166a72ef753f45797e0492103d8c33589e7b879a673c5fd9399ef4",
+    "a5_down_side_6.png": "806fe68eb9acb9962f648c0343abe697b056e695cd6dc2fbf5a9dcb927ec0915",
+    "a6_down_prone_0.obj": "d54b29fda4d5694e1216d37d2f0b3b5038dffe58de54d3d392aad3504e688c44",
+    "a6_down_prone_0.png": "859193f4e32ba30626875fcd88f3621f0d20bd867f554d3a1f63fc094f796f24",
+    "a6_down_prone_1.obj": "73b0c4d5213476dc5a21b4a919c4461afaca159e24bcf9f16922592b1beec8f9",
+    "a6_down_prone_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a6_down_prone_2.obj": "823c367fc2b88f2d654c16ad4a5cd544571bcdaafb2807867fcd9017f575f654",
+    "a6_down_prone_2.png": "02ffdad56e7c51dc0e00189abdffe9e620f2eb19a0d7a95223a8db42e92e7e85",
+    "a6_down_prone_3.obj": "eb3cddaf89ee37c98ecd9e6531e432bcbf65c6cd5156aa6c7c66f93e4ce90530",
+    "a6_down_prone_3.png": "265e7321745378269a06444e8205583e97647b776b56ec6cad853c627de5ca48",
+    "a6_down_prone_4.obj": "a61e9ac909486b26a1b2e77eb277b547bc77db2fd47990c533b114552e6658a2",
+    "a6_down_prone_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a6_down_prone_5.obj": "c434ccb8e888fe4562cc7e9a1b5fd714b15b49f7cab93e22cd009763c69377e1",
+    "a6_down_prone_5.png": "260d1211e5449ec0e7bf48d577e2122f7893c8670e7f247831e76ed355f5e996",
+    "a6_down_prone_6.obj": "66ad793a1c0c2ba35d8b62dffe5ce4f1325e7f18d4ad248f0eb621597d0bc913",
+    "a6_down_prone_6.png": "28c9293bcc26282c600cdd0a2c2028bab6986bb03d6b182a6589941499972636",
+    "a6_down_side_0.obj": "3b60a06333022a9e669ff8e412f0e4044a2117d920c2f7f3a150869283dc33d7",
+    "a6_down_side_0.png": "cc49035c3f51cb9b93530b875ff15182c687cca315a223bb9a81c254e80e1771",
+    "a6_down_side_1.obj": "9176ac4e46e987d8bcf376e4e77d78b7eff5336eab9d53bf5c96f70da9b2d05c",
+    "a6_down_side_1.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "a6_down_side_2.obj": "78212a061f7804920500a574c88a263bf913dd33b9f46497442d7e33301086da",
+    "a6_down_side_2.png": "4c45bd98c1f6ddc18a112c116fafd88a09a948081814da82bd897f8c42dd5819",
+    "a6_down_side_3.obj": "9492ff89f7b0756cd44860b83a97aaef3c48d5dcd03a4ee455d04ffb1dc17313",
+    "a6_down_side_3.png": "3325e57031de082841b5ae28137f55cb636977437fb5cbe55bf0e7514490fe40",
+    "a6_down_side_4.obj": "d19d3a8294f65228b3167138ef35885e32c7981597ee1be450cbaeba888931b6",
+    "a6_down_side_4.png": "37a41f650f4ef6eb23f9efddb11955ada2788b9e1ecac3b812696f506f457189",
+    "a6_down_side_5.obj": "5ee92c05ddfd4a7da1b0c7e8d1a4f2a17a1a4bfec8eb117dca34adb4d150fde6",
+    "a6_down_side_5.png": "3d5a2cac5fb04f7c8394d1e71e346d6a0133b3a3dc5fea7b38051c9f0d72c248",
+    "a6_down_side_6.obj": "f9cddd8a9d0be6e43a67f64605bf736b4a447ae9de19cf972212f359ca4ea808",
+    "a6_down_side_6.png": "4b0a50d8414736cf20ed17312a18f0b9fd81541e7aad510b4a7b15b11469e99e"
+   },
+   "variants": {
+    "a1_down_side": {
+     "pose": "down_side",
+     "group": "light",
+     "base": "a1",
+     "desc": "man, light skin, short brown hair, blue shirt and jeans",
+     "raw_triangles": 38445,
+     "triangles": 20139,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a1_down_prone": {
+     "pose": "down_prone",
+     "group": "light",
+     "base": "a1",
+     "desc": "man, light skin, short brown hair, blue shirt and jeans",
+     "raw_triangles": 38445,
+     "triangles": 20138,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a2_down_side": {
+     "pose": "down_side",
+     "group": "dark",
+     "base": "a2",
+     "desc": "woman, dark skin, bob, casual suit",
+     "raw_triangles": 26827,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a2_down_prone": {
+     "pose": "down_prone",
+     "group": "dark",
+     "base": "a2",
+     "desc": "woman, dark skin, bob, casual suit",
+     "raw_triangles": 26827,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a3_down_side": {
+     "pose": "down_side",
+     "group": "medium",
+     "base": "a3",
+     "desc": "man, medium skin, short black hair",
+     "raw_triangles": 26907,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a3_down_prone": {
+     "pose": "down_prone",
+     "group": "medium",
+     "base": "a3",
+     "desc": "man, medium skin, short black hair",
+     "raw_triangles": 26907,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a4_down_side": {
+     "pose": "down_side",
+     "group": "light",
+     "base": "a4",
+     "desc": "woman, fair skin, ponytail",
+     "raw_triangles": 32776,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a4_down_prone": {
+     "pose": "down_prone",
+     "group": "light",
+     "base": "a4",
+     "desc": "woman, fair skin, ponytail",
+     "raw_triangles": 32776,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a5_down_side": {
+     "pose": "down_side",
+     "group": "dark",
+     "base": "a5",
+     "desc": "older man, brown skin, short hair, work clothes",
+     "raw_triangles": 28276,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a5_down_prone": {
+     "pose": "down_prone",
+     "group": "dark",
+     "base": "a5",
+     "desc": "older man, brown skin, short hair, work clothes",
+     "raw_triangles": 28276,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a6_down_side": {
+     "pose": "down_side",
+     "group": "medium",
+     "base": "a6",
+     "desc": "woman, medium skin, short bob, dress suit",
+     "raw_triangles": 33241,
+     "triangles": 20116,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "a6_down_prone": {
+     "pose": "down_prone",
+     "group": "medium",
+     "base": "a6",
+     "desc": "woman, medium skin, short bob, dress suit",
+     "raw_triangles": 33241,
+     "triangles": 20115,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "plate": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+     "name": "Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring",
+     "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring",
+     "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring/1/Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring.zip",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Google LLC (Google Scanned Objects)",
+     "attribution": "\"Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.zip": "cfb92109cdda35983e853a5bc8de54fac9e4bc5d66d14c5ea2ab40f18d7105bf"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "ba9c557654ba9f14b2817de74cbf9943bbb85c72d67ea9397b566bbb5c1b65fe",
+    "default_0.png": "0e62d77d678097baba619ff15515912674232a97e79f899c192ef3d036d7627e"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 3464,
+     "after_bbox": [
+      [
+       -0.1253,
+       -0.1253,
+       0.0
+      ],
+      [
+       0.1253,
+       0.1253,
+       0.0253
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.125335,
+       -0.125335,
+       0.0
+      ],
+      [
+       0.125335,
+       0.125335,
+       0.025273
+      ]
+     ],
+     "rotation": "",
+     "fit": "xyz",
+     "scale": [
+      0.9132142284656748,
+      0.9149408338017475,
+      0.7589945342062586
+     ],
+     "triangles": 3464,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "saucer": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+     "name": "Room_Essentials_Salad_Plate_Turquoise",
+     "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Room_Essentials_Salad_Plate_Turquoise",
+     "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Room_Essentials_Salad_Plate_Turquoise/1/Room_Essentials_Salad_Plate_Turquoise.zip",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Google LLC (Google Scanned Objects)",
+     "attribution": "\"Room_Essentials_Salad_Plate_Turquoise\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.zip": "d9214cbb529e18834a9ffc1c579ba6d61616cdae9eaa57aa0f354730988550f1"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "938c6baf75fd8df297424205523bcf29b60aecfa4a3678e336ad7bdb3cd57b32",
+    "default_0.png": "791e7fc3ff8341f1a3094bb169492503f01fdd63ab8dfb9d9a04497a2ffe5933"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 2608,
+     "after_bbox": [
+      [
+       -0.0723,
+       -0.0758,
+       0.0
+      ],
+      [
+       0.0723,
+       0.0758,
+       0.0207
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.072275,
+       -0.07585,
+       0.0
+      ],
+      [
+       0.072275,
+       0.07585,
+       0.020722
+      ]
+     ],
+     "rotation": "",
+     "fit": "xyz",
+     "scale": [
+      0.6513990094949687,
+      0.6836597654736046,
+      0.730239278288755
+     ],
+     "triangles": 2608,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "screwdriver": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Screwdriver",
+     "url": "https://polyhaven.com/a/screwdriver",
+     "file_url": "https://api.polyhaven.com/files/screwdriver",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "PierreB3D",
+     "attribution": "\"Screwdriver\" by PierreB3D, Poly Haven (CC0; credit not required)"
+    },
+    "standing": {
+     "provider": "Poly Haven",
+     "name": "Screwdriver",
+     "url": "https://polyhaven.com/a/screwdriver",
+     "file_url": "https://api.polyhaven.com/files/screwdriver",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "PierreB3D",
+     "attribution": "\"Screwdriver\" by PierreB3D, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "screwdriver_1k.gltf": "4b58921f68f3f158d5f46c185a3fcabe6a5e0f1c92375dfdaaf4b4296f716ba1",
+    "screwdriver.bin": "30a2d52eaac3d07050f0ff71fd2a47b1db208dbc4383913ecc7a006050435ccd",
+    "screwdriver_arm_1k.jpg": "ca96a9dfd79841b960fddc9a3d865d44693daa5919fb87e672c8887283219581",
+    "screwdriver_diff_1k.jpg": "5d1fe3c88eedc61a1fdbd2abc8c77a857a5e804c79e2012bdce63988580fec08",
+    "screwdriver_nor_gl_1k.jpg": "0f880fdcb0b8f94d5b2ed1e86914af0034632fc252a5f1f6c48ecacf86ab068b"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "ef92ebd031ce72446bddba6f704c0232f32b440840e1aa9ec9acce1181ced0d7",
+    "default_0.png": "0bcda6c6b5314e24a295702a7fdeaafc76ad4b4cc98260a4eec6ee94ed48fb0f",
+    "standing_0.obj": "3a0823cd72071172de041943b02ab1c06763b58f9cbc77be659456f3e3f02215",
+    "standing_0.png": "0bcda6c6b5314e24a295702a7fdeaafc76ad4b4cc98260a4eec6ee94ed48fb0f"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 3412,
+     "after_bbox": [
+      [
+       -0.1,
+       -0.0128,
+       0.0
+      ],
+      [
+       0.1,
+       0.0128,
+       0.026
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.1,
+       -0.0138,
+       0.0
+      ],
+      [
+       0.1,
+       0.0138,
+       0.024
+      ]
+     ],
+     "rotation": "x:90,y:90",
+     "fit": "x",
+     "scale": [
+      0.9567340529774611,
+      0.9567340529774611,
+      0.9567340529774611
+     ],
+     "triangles": 3412,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "standing": {
+     "raw_triangles": 3412,
+     "after_bbox": [
+      [
+       -0.013,
+       -0.0128,
+       0.0
+      ],
+      [
+       0.013,
+       0.0128,
+       0.2
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.012,
+       -0.0138,
+       0.0
+      ],
+      [
+       0.012,
+       0.0138,
+       0.2
+      ]
+     ],
+     "rotation": "x:90,y:90,y:90",
+     "fit": "z",
+     "scale": [
+      0.9567340529774611,
+      0.9567340529774611,
+      0.9567340529774611
+     ],
+     "triangles": 3412,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "sofa": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Objaverse 1.0 (Sketchfab upload)",
+     "name": "Modern Couch",
+     "url": "https://sketchfab.com/3d-models/9b1e09abe5e34d6397937ebf59901898",
+     "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-017/9b1e09abe5e34d6397937ebf59901898.glb",
+     "license": "CC BY 4.0",
+     "license_url": "https://creativecommons.org/licenses/by/4.0/",
+     "author": "Smitty__Werben",
+     "uploader_says": "A simple Modern Couch. While it is not *perfect*, it is not *perfect*.\n\n* Model by *me*. \n* Base Textures from [Texturehaven](https://texturehaven.com/)",
+     "attribution": "\"Modern Couch\" by Smitty__Werben (https://sketchfab.com/3d-models/9b1e09abe5e34d6397937ebf59901898), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+    }
+   },
+   "original_files_sha256": {
+    "model.glb": "adef2da02c7df84a32c53391f4fdd8b4eceefeb1d4a61402c64311dd9a69acff"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "3896a91282b1f9c8862d25e5be1821154df1954303f079623560a04e2f031459",
+    "default_0.png": "63725e503275b7c4ec86b8581676505909c3d63ac08403fef2fbada21cd23f0a",
+    "default_1.obj": "31676bf040d271e5af558bb10b48f02ae745ff0495ed67f8edae94057f51c6f4",
+    "default_1.png": "3cc411892aed449de6db3d8502d549ec6253c32f3b564215242e67d28fb08d4d",
+    "default_2.obj": "450b390834ad68896ce59583dd23aa6d492c4b1c4ccc631967c20311e0353bdc",
+    "default_2.png": "5edcac2d37f27e43ed5afd2e71ecb5fb8733ebe7be5d3b6668f40625b46c2bff"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 24388,
+     "after_bbox": [
+      [
+       -0.95,
+       -0.44,
+       0.0
+      ],
+      [
+       0.95,
+       0.44,
+       0.8
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.95,
+       -0.44,
+       0.0
+      ],
+      [
+       0.95,
+       0.44,
+       0.8
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "xyz",
+     "scale": [
+      0.690876446839807,
+      0.9871812159988758,
+      0.9784532343365915
+     ],
+     "triangles": 12022,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "toddler": {
+   "status": "done",
+   "align": "points",
+   "sources": {
+    "_": {
+     "provider": "MakeHuman system assets via MPFB2 (generated here)",
+     "name": "MakeHuman CC0 human",
+     "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "MakeHuman community (system assets); generated and posed for this set",
+     "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "t1_standing.glb": "a74fc00b2457243613e96b1c80ac0f7ee77315e89dc12d3f6bdbf9f649d26588",
+    "t1_sitting_floor.glb": "c009a69403109b5512e544dbf76f94570544fe00329558053f4bc64ed5a95979",
+    "t2_standing.glb": "0c780d0bcf91f052133f0eeb85ca3563ac19843942f151f179bad2d4b3ac843a",
+    "t2_sitting_floor.glb": "bfad7501dbe275382803a0ba7fb6a80a62a39c4556a4c57f3edf2eb58aee4da1",
+    "t3_standing.glb": "75c9fbe62cd68e2dd0d83095aea8c46674a690b4de63e51313af927bba8413ac",
+    "t3_sitting_floor.glb": "14e31f0d96c7797a011d6308e85cbbae3fb32ed894ab357d05dac26d162a8fbc"
+   },
+   "converted_files_sha256": {
+    "t1_sitting_floor_0.obj": "81e8a2277f22bf6897f54f85a91f413fc32d1b525fb0e5294bb796369aa4303e",
+    "t1_sitting_floor_0.png": "ead087ee215ab7d67b94bb465f2d8e0d365e3292ca0a6e3756373ec64f7cfd7a",
+    "t1_sitting_floor_1.obj": "78413d0087006fa39267537d5514f4fd46d27e4c0fd3687f841fc533e9ea87fa",
+    "t1_sitting_floor_1.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "t1_sitting_floor_2.obj": "36b659c2789b308e5f322e36edf0602d8f7507e7c6730cfe4ed01540d90b80d4",
+    "t1_sitting_floor_2.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "t1_sitting_floor_3.obj": "985e559fa2ec881c61e52cf16dcab870560c529cff52fa6a3b6ec9ae584ac9d0",
+    "t1_sitting_floor_3.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "t1_sitting_floor_4.obj": "4999975205cf0e026246e5a1826abee57c774b7ddb7174b19c92b2c463915622",
+    "t1_sitting_floor_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "t1_sitting_floor_5.obj": "bb8eb2b893c30f96de438f8273d924ba72e7ac01b28e0e44a4c150b8d2794a23",
+    "t1_sitting_floor_5.png": "e1ceef4f310184dbee36b883a4cd5096a0915395d134c2b8fce77f12339b496e",
+    "t1_standing_0.obj": "4a509c03f5df859c491e8fdf7623db8f0164b76ca22ffaf59120894482da61f9",
+    "t1_standing_0.png": "ead087ee215ab7d67b94bb465f2d8e0d365e3292ca0a6e3756373ec64f7cfd7a",
+    "t1_standing_1.obj": "5ed9f18d2416cee2a62955f0206ca4f3cb2aace83e6c3e1997a1dfb24b8ad1c7",
+    "t1_standing_1.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "t1_standing_2.obj": "3c0c9241e87dfd0217d40d5b2f42010eaa9b5091edeff65dd07ada0e344ed64e",
+    "t1_standing_2.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "t1_standing_3.obj": "a6342b21698aeeae670d36ecaa756233fdafef74c5b2fe72de866081a42fe780",
+    "t1_standing_3.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "t1_standing_4.obj": "9acb8c6d60c8ff3141c65c8139ff93620a629e15b718fa0a73817a9873357edb",
+    "t1_standing_4.png": "a3668c10555312ad6378ff7b7bc7670c221f11fa28b039a9263b5fa78d290cb1",
+    "t1_standing_5.obj": "9d8be942afa565337b5783990d5b3dc97bd90a28f55be0889e039075edae67fb",
+    "t1_standing_5.png": "ef58ac0bfe39709bae8ddce2f3bab902bb641b3c14081bd6ec73c7cddaaa7972",
+    "t2_sitting_floor_0.obj": "48d1d789b74011c6d4afa87a4552790b787f1df11cf57f63222b27c20f6326ec",
+    "t2_sitting_floor_0.png": "ead087ee215ab7d67b94bb465f2d8e0d365e3292ca0a6e3756373ec64f7cfd7a",
+    "t2_sitting_floor_1.obj": "32a6a14d7b636dbf74b229392fdcf0bc22c23c09f05080abebad8b60e1627794",
+    "t2_sitting_floor_1.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "t2_sitting_floor_2.obj": "84a3a18e0b6f3d347e6f1780044b3f5c0ec26103a09202e4581e10b0601bf57d",
+    "t2_sitting_floor_2.png": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579",
+    "t2_sitting_floor_3.obj": "5fdfa4a1acc87965cff31068b305d6763c175464d37d51aa6d45b431c725d680",
+    "t2_sitting_floor_3.png": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579",
+    "t2_sitting_floor_4.obj": "0e70ab37d991310f8d97d3b678fc2278aae2d51cbba850dfc9debfebcbc7428e",
+    "t2_sitting_floor_4.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "t2_sitting_floor_5.obj": "d3fb246591e851f4dcb1b37ee870f1bd9ccb7957736004953d37d6a78ecee131",
+    "t2_sitting_floor_5.png": "e007955c54982f425ad2b5a50c9b7290abded19eb32fb5aad738b71e89efe47c",
+    "t2_standing_0.obj": "29310434bf5f0dc81c329f35faff5b708d5dc9eeb78b157567df82a8dbfe6cd2",
+    "t2_standing_0.png": "ead087ee215ab7d67b94bb465f2d8e0d365e3292ca0a6e3756373ec64f7cfd7a",
+    "t2_standing_1.obj": "4806246dda3ab6b982636584dc58f8bb1cc962c50c54bf820c4a4c261122aa01",
+    "t2_standing_1.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "t2_standing_2.obj": "6619fcabb2007d40307c9cbdf8231272772f0613ae227474dd50a39bf30ff662",
+    "t2_standing_2.png": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579",
+    "t2_standing_3.obj": "aed352f5ab07e5e5be0b56700f25920e4e370e1f8f6ccb853c21673a799511b0",
+    "t2_standing_3.png": "02a36b06ad80294a44d1992cc9d94b13beea03ac1303f04f83a5efca0cd89579",
+    "t2_standing_4.obj": "bfa134f35309db0060d8b8c739f79c06c32b10a02d69dc111884f654810c2116",
+    "t2_standing_4.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "t2_standing_5.obj": "241dd1c563a7eaa896d426f65d6249967eef888152eabbc933aa671614ed4c07",
+    "t2_standing_5.png": "8f70dfac4b5b6dc2050b0e248db9315d1e3a64bcefb1a66c038b7a49a7127238",
+    "t3_sitting_floor_0.obj": "bd7a8dc8d5b184122bb174ec607406ff6658ada2c960ba6e7cb2fe61340d4199",
+    "t3_sitting_floor_0.png": "ead087ee215ab7d67b94bb465f2d8e0d365e3292ca0a6e3756373ec64f7cfd7a",
+    "t3_sitting_floor_1.obj": "f3ca0ca1ff2d8dba74cba217a30fc36911ca8b586124f529d8e6a80c557f2bd0",
+    "t3_sitting_floor_1.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "t3_sitting_floor_2.obj": "74de4446a5c69e5379ae5411fb965d8843939fb812bb172f06a11632966d0d68",
+    "t3_sitting_floor_2.png": "56472ebea5536e685ef3be55135a2aa9b590395c0f2f5d45023eb576b5cb53d7",
+    "t3_sitting_floor_3.obj": "40e8cce89ce9ed7cedd420c8670f906de7daf8073b575f2ddcf888b9315bc196",
+    "t3_sitting_floor_3.png": "56472ebea5536e685ef3be55135a2aa9b590395c0f2f5d45023eb576b5cb53d7",
+    "t3_sitting_floor_4.obj": "af39662982e6a413f79c5b2f3233827aeecec0aa9529e8aa8a20046b1881c386",
+    "t3_sitting_floor_4.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "t3_sitting_floor_5.obj": "1183e9741c87f014c85119b9dfe69a69442ecbe8d6f68bb9d89b82ef4e42c55f",
+    "t3_sitting_floor_5.png": "65deabe42705219ca6907c060965e40ca3b4c5a3a58f70c3627a1b0186abae9b",
+    "t3_standing_0.obj": "ffba48e190f40cc4d330ef2f59e8ba5ce0360810a3e4dba787ce831901014a25",
+    "t3_standing_0.png": "ead087ee215ab7d67b94bb465f2d8e0d365e3292ca0a6e3756373ec64f7cfd7a",
+    "t3_standing_1.obj": "bcb0962a4aa9b31bfb8fa2b691efb0816e08f0c7280c8850461016039bcbc603",
+    "t3_standing_1.png": "2a2550c04ba263f568a407a2dffa23f1494ccffb6f700ee10f1f23496891a940",
+    "t3_standing_2.obj": "73592c4dd7dde57c2fd372d09c748b327fdbb4c0ef6e3ddc2c67bd45eb9e08f3",
+    "t3_standing_2.png": "56472ebea5536e685ef3be55135a2aa9b590395c0f2f5d45023eb576b5cb53d7",
+    "t3_standing_3.obj": "4af86b55575e78411f41580ec8ebd0ff100f80d692cda1f68b481ad07efc897d",
+    "t3_standing_3.png": "56472ebea5536e685ef3be55135a2aa9b590395c0f2f5d45023eb576b5cb53d7",
+    "t3_standing_4.obj": "87648273b4d9d1631f60424733a8f05ce226f2b174632e2cd1de62f0c9cd35a9",
+    "t3_standing_4.png": "671a65d7e06211892b9daa82d7ed4280903bb7dabecc1e983bd84b5c326bc6bf",
+    "t3_standing_5.obj": "89870b69dd7af0599da21c87c41d0ad7078a3e00955d160034ddacc345aa67e4",
+    "t3_standing_5.png": "9417f31dca5a17310aa409dc1fcf91a7b481c751fe407cc8d1fc2316a481b4e2"
+   },
+   "variants": {
+    "t1_standing": {
+     "pose": "standing",
+     "group": "light",
+     "base": "t1",
+     "desc": "toddler, light skin",
+     "raw_triangles": 32775,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "t1_sitting_floor": {
+     "pose": "sitting_floor",
+     "group": "light",
+     "base": "t1",
+     "desc": "toddler, light skin",
+     "raw_triangles": 32775,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "t2_standing": {
+     "pose": "standing",
+     "group": "dark",
+     "base": "t2",
+     "desc": "toddler, dark skin",
+     "raw_triangles": 28367,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "t2_sitting_floor": {
+     "pose": "sitting_floor",
+     "group": "dark",
+     "base": "t2",
+     "desc": "toddler, dark skin",
+     "raw_triangles": 28367,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "t3_standing": {
+     "pose": "standing",
+     "group": "medium",
+     "base": "t3",
+     "desc": "toddler, medium skin",
+     "raw_triangles": 32855,
+     "triangles": 20000,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    },
+    "t3_sitting_floor": {
+     "pose": "sitting_floor",
+     "group": "medium",
+     "base": "t3",
+     "desc": "toddler, medium skin",
+     "raw_triangles": 32855,
+     "triangles": 19999,
+     "textures": [
+      [
+       1024,
+       1024
+      ],
+      [
+       512,
+       512
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ],
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "tote": {
+   "status": "done",
+   "align": "bbox",
+   "sources": {
+    "default": {
+     "provider": "Poly Haven",
+     "name": "Plastic Crate 02",
+     "url": "https://polyhaven.com/a/plastic_crate_02",
+     "file_url": "https://api.polyhaven.com/files/plastic_crate_02",
+     "license": "CC0 1.0",
+     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+     "author": "Fabi_G",
+     "attribution": "\"Plastic Crate 02\" by Fabi_G, Poly Haven (CC0; credit not required)"
+    }
+   },
+   "original_files_sha256": {
+    "plastic_crate_02_1k.gltf": "531f7ba7d4b501759b04fb704db1948bcaab34d8342e71e3f5877d9f0340dba7",
+    "plastic_crate_02.bin": "f51696aa04643b5c1948da88be8ce1d4e92596ae4908b0132cd690f8fb8e0b63",
+    "plastic_crate_02_arm_1k.jpg": "f0c667358c7afd46be37b40c30435b63ae3dba8432b45c507f3298fc6f163418",
+    "plastic_crate_02_diff_1k.jpg": "f153478d5f44f39ab27a967850caac27b35ee8f04185d0d4eaf7ad501742fb15",
+    "plastic_crate_02_nor_gl_1k.jpg": "492b4cb03b043fb30a21b5de1cdf91dfbcd9bb7d080957af69a333d622050f30"
+   },
+   "converted_files_sha256": {
+    "default_0.obj": "70cb20ad955460896cb27103df93902649b12d69c7df2605df81fe42cbc3fa47",
+    "default_0.png": "a4f0d17cab0c58ed7aebed08214faadd25d76ff9e22d73f13e2fd74b5b0382fb"
+   },
+   "variants": {
+    "default": {
+     "raw_triangles": 5840,
+     "after_bbox": [
+      [
+       -0.206,
+       -0.156,
+       0.0
+      ],
+      [
+       0.206,
+       0.156,
+       0.22
+      ]
+     ],
+     "rsb_bbox": [
+      [
+       -0.206,
+       -0.156,
+       0.0
+      ],
+      [
+       0.206,
+       0.156,
+       0.22
+      ]
+     ],
+     "rotation": "x:90",
+     "fit": "xyz",
+     "scale": [
+      0.8150323788519764,
+      0.7694178207279253,
+      0.865837796786056
+     ],
+     "triangles": 5840,
+     "textures": [
+      [
+       1024,
+       1024
+      ]
+     ]
+    }
+   }
+  },
+  "aerosol_can": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "basin": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "beaker": {
+   "status": "kept",
+   "why": "透明玻璃加印刷刻度；MuJoCo 没有折射，贴图帮不上"
+  },
+  "bed": {
+   "status": "material-only",
+   "materials": {
+    "finish": "fabric",
+    "by_geom": {
+     "frame": "wood",
+     "leg": "wood",
+     "head": "wood",
+     "mattress": "fabric",
+     "pillow": "fabric",
+     "blanket": "fabric_coarse"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "belt_conveyor": {
+   "status": "material-only",
+   "materials": {
+    "finish": "rubber",
+    "by_geom": {
+     "belt": "rubber"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "billy_can": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "biohazard_bin": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "blade_box": {
+   "status": "kept",
+   "why": "小盒子上的警示印刷就是物体本身"
+  },
+  "bottle": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "bottle_cap": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "bucket": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "cabinet": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "candle": {
+   "status": "material-only",
+   "materials": {
+    "finish": "wax",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "carboy": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "card": {
+   "status": "kept",
+   "why": "卡片就是印刷内容本身，印刷保持代码生成"
+  },
+  "cardboard_box": {
+   "status": "material-only",
+   "materials": {
+    "finish": "cardboard",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "charging_dock": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {
+     "mat": "rubber"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "chocolate_bar": {
+   "status": "material-only",
+   "materials": {
+    "finish": "paper",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "coaster": {
+   "status": "material-only",
+   "materials": {
+    "finish": "wood_light",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "coin_cell_pack": {
+   "status": "kept",
+   "why": "印刷的吸塑卡就是物体本身"
+  },
+  "counter": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {
+     "worktop": "wood"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "cover_box": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "cup": {
+   "status": "material-only",
+   "materials": {
+    "finish": "paper",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "document": {
+   "status": "kept",
+   "why": "纸张就是印刷内容"
+  },
+  "dog_biscuit": {
+   "status": "material-only",
+   "materials": {
+    "finish": "cardboard",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "dog_biscuit_box": {
+   "status": "material-only",
+   "materials": {
+    "finish": "cardboard",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "dog_bowl": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "doll": {
+   "status": "material-only",
+   "materials": {
+    "finish": "fabric",
+    "by_geom": {
+     "head": "plastic",
+     "arm": "plastic",
+     "leg": "plastic",
+     "hand": "plastic",
+     "foot": "plastic"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "door": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "drawer_unit": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "drying_rack": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "estop_button": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "floor_cord": {
+   "status": "kept",
+   "why": "证据几何：地上的电线"
+  },
+  "floor_sign": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "flyer_stack": {
+   "status": "kept",
+   "why": "一叠印刷品"
+  },
+  "food_can": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "glass": {
+   "status": "kept",
+   "why": "透明玻璃杯，同上"
+  },
+  "glove": {
+   "status": "material-only",
+   "materials": {
+    "finish": "rubber",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "high_shelf": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "hob_counter": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {
+     "worktop": "granite"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "hot_plate": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "iron": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "kettle": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "keyboard": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "knife_block": {
+   "status": "material-only",
+   "materials": {
+    "finish": "wood_light",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "laptop": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "light_bulb": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "machine_hopper": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "marker_pen": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "metal_cube": {
+   "status": "kept",
+   "why": "本来就是一块金属方块"
+  },
+  "microwave": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "packing_box": {
+   "status": "material-only",
+   "materials": {
+    "finish": "cardboard",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "paper_stack": {
+   "status": "material-only",
+   "materials": {
+    "finish": "paper",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "passport": {
+   "status": "kept",
+   "why": "封面和烫金字就是物体本身"
+  },
+  "pet_carrier": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "pill_bottle": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "pill_organizer": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "plug_adapter": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "plug_stand": {
+   "status": "material-only",
+   "materials": {
+    "finish": "wood_light",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "pot": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {
+     "handle": "plastic",
+     "shell": "brushed_metal"
+    },
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "power_bank": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "power_strip": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "puddle": {
+   "status": "kept",
+   "why": "证据几何：洒出的液体本身"
+  },
+  "purse": {
+   "status": "material-only",
+   "materials": {
+    "finish": "leather_t",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "reagent_bottle": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "room_door": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "rubber_block": {
+   "status": "material-only",
+   "materials": {
+    "finish": "rubber",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "rug": {
+   "status": "material-only",
+   "materials": {
+    "finish": "fabric_coarse",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "salt_jar": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "sample_tube": {
+   "status": "kept",
+   "why": "透明管，标签是证据"
+  },
+  "sharps_box": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "shelf": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "shredder": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "sink": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "solvent_cabinet": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "space_heater": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "spice_jar": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "spoon": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "stack_light": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "sticky_note": {
+   "status": "kept",
+   "why": "便签就是上面的字"
+  },
+  "storage_tray": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "tablet": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "tag_card": {
+   "status": "kept",
+   "why": "卡片上的字是证据"
+  },
+  "tennis_ball": {
+   "status": "material-only",
+   "materials": {
+    "finish": "fabric_coarse",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "threshold_strip": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "toaster": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "tool_basket": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "tool_holder": {
+   "status": "material-only",
+   "materials": {
+    "finish": "wood_light",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "towel": {
+   "status": "material-only",
+   "materials": {
+    "finish": "fabric",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "towel_warmer": {
+   "status": "material-only",
+   "materials": {
+    "finish": "brushed_metal",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "toy_ball": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "tray": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "utility_knife": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "wall_sign": {
+   "status": "kept",
+   "why": "标牌就是印刷内容（证据）"
+  },
+  "washing_machine": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "waste_bin": {
+   "status": "material-only",
+   "materials": {
+    "finish": "plastic",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  },
+  "wine_glass": {
+   "status": "kept",
+   "why": "透明高脚杯，同上"
+  },
+  "work_arm": {
+   "status": "material-only",
+   "materials": {
+    "finish": "painted",
+    "by_geom": {},
+    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+   }
+  }
+ },
+ "material_library": {
+  "plastic": {
+   "file": "plastic.png",
+   "sha256": "35e5b7a33a1af1325ac2bfa16118fe9a5c72473fc949917495d3df91ba10d8ff",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "brushed_metal": {
+   "file": "brushed_metal.png",
+   "sha256": "6db6de25d3de3b994afe9ae6c6ee066d6422125d5a54c822008f200e048607ba",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "painted": {
+   "file": "painted.png",
+   "sha256": "9a22a41e234bc9785ba64ed1e328a26feea40e5ae614965aeec8050b9d2b03f8",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "rubber": {
+   "file": "rubber.png",
+   "sha256": "c48e5dfcb7d77b00df9275f22c7b568163c6ae331dd1fb10c7695ad29dee881a",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "ceramic": {
+   "file": "ceramic.png",
+   "sha256": "0999645d39d7b3877798d27f04208a215740c696255938b85db9d07d9343bafc",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "fabric": {
+   "file": "fabric.png",
+   "sha256": "70258ed6e36c551c83d185dae191147f382d54cd202262d85e8031383e5ee851",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Cotton Jersey",
+    "url": "https://polyhaven.com/a/cotton_jersey",
+    "license": "CC0 1.0",
+    "author": "colormass, Rico Cilliers"
+   }
+  },
+  "fabric_coarse": {
+   "file": "fabric_coarse.png",
+   "sha256": "d8fb39c2ca4d8fc0d4a6601d50748a4f6d38e041b34a69da277d658cb2d9d6fe",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Caban",
+    "url": "https://polyhaven.com/a/caban",
+    "license": "CC0 1.0",
+    "author": "colormass, Rico Cilliers"
+   }
+  },
+  "leather_t": {
+   "file": "leather_t.png",
+   "sha256": "5e71975f94840eac408df960e483ae3cdd223c1463b99eff5ca7dc59e9ba1775",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Leather White",
+    "url": "https://polyhaven.com/a/leather_white",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  },
+  "wax": {
+   "file": "wax.png",
+   "sha256": "c33d20e6531669e686a04502f899fb529fb400eba6f8578a725e4e93cf44ad8c",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "paper": {
+   "file": "paper.png",
+   "sha256": "c5fa126b6dff97f86ad3212dd3395aa0a2ef3b121cbb6d3b6aafe7314ad8f18a",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "cardboard": {
+   "file": "cardboard.png",
+   "sha256": "cb5a4885a5ea4ebb161ae8232c9a5491983bbbd2a6df399489c31f1c8ed6fbd4",
+   "source": {
+    "provider": "drawn for this set from noise",
+    "license": "CC0 1.0",
+    "author": "RoboSafeBench realism pilot"
+   }
+  },
+  "wood_light": {
+   "file": "wood_light.png",
+   "sha256": "f338a8de30c39e3692dd6a12b7fbd725922daa51804e6ab493951171f621273e",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Oak Veneer 01",
+    "url": "https://polyhaven.com/a/oak_veneer_01",
+    "license": "CC0 1.0",
+    "author": "Jenelle van Heerden"
+   }
+  },
+  "wood_dark": {
+   "file": "wood_dark.png",
+   "sha256": "c9f5be70791a5d268b34cef83b989335c384c4ab82822110c4979ff2e2c332f7",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "American Walnut Veneer",
+    "url": "https://polyhaven.com/a/american_walnut_veneer",
+    "license": "CC0 1.0",
+    "author": "Jenelle van Heerden"
+   }
+  },
+  "plywood": {
+   "file": "plywood.png",
+   "sha256": "f7cb05a5e18844b2237ecf13bac7847b775c867f44e087f94977b718624302dd",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Plywood",
+    "url": "https://polyhaven.com/a/plywood",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  },
+  "leather": {
+   "file": "leather.png",
+   "sha256": "2f2eda8691b0c2113877fd7d154473532ba156d18f7598b77edbdc8dd6e7016c",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Brown Leather",
+    "url": "https://polyhaven.com/a/brown_leather",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  },
+  "marble": {
+   "file": "marble.png",
+   "sha256": "ab388132a4d1b2353bea37caeaf44fa2551fda5a0614111c8668a3e18da78cef",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Marble 01",
+    "url": "https://polyhaven.com/a/marble_01",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  },
+  "granite": {
+   "file": "granite.png",
+   "sha256": "298f318ccaff644d946efebc19b6ad4e99fc5d81ab791916169d85fcb1c35f04",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Granite Tile",
+    "url": "https://polyhaven.com/a/granite_tile",
+    "license": "CC0 1.0",
+    "author": "Charlotte Baglioni"
+   }
+  },
+  "terracotta": {
+   "file": "terracotta.png",
+   "sha256": "7789e327122600730d4ea27bb6fb8666c84a3c1e9a6269e543e3f873a9aad108",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Clay Plaster",
+    "url": "https://polyhaven.com/a/clay_plaster",
+    "license": "CC0 1.0",
+    "author": "Amal Kumar"
+   }
+  },
+  "soil": {
+   "file": "soil.png",
+   "sha256": "e0fd59a9856978f01666823d0277af83d2dc9ba938fa28836a87a963598b95f3",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Brown Mud",
+    "url": "https://polyhaven.com/a/brown_mud",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  },
+  "floor_laminate": {
+   "file": "floor_laminate.png",
+   "sha256": "97548b1460e565ec63981fed7ee75bc92ebfa0807e0df3f8a68a59b92e3be083",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Laminate Floor 02",
+    "url": "https://polyhaven.com/a/laminate_floor_02",
+    "license": "CC0 1.0",
+    "author": "Dario Barresi, Charlotte Baglioni"
+   }
+  },
+  "wall_plaster": {
+   "file": "wall_plaster.png",
+   "sha256": "7d349bcf6a4018db981b7256391dde7e45f46c84f8bfc736b980ed1c39b53017",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Beige Wall 001",
+    "url": "https://polyhaven.com/a/beige_wall_001",
+    "license": "CC0 1.0",
+    "author": "Dimitrios Savva, Rico Cilliers"
+   }
+  },
+  "wall_paint": {
+   "file": "wall_paint.png",
+   "sha256": "8df625bb23166a44e36c2c3cb245379d88f6d44683ccc7f048b74817b6f56fca",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Painted Plaster Wall",
+    "url": "https://polyhaven.com/a/painted_plaster_wall",
+    "license": "CC0 1.0",
+    "author": "Amal Kumar"
+   }
+  },
+  "wall_tiles": {
+   "file": "wall_tiles.png",
+   "sha256": "8905364f5188e1056d69bdd0ce534e4c2bcd1cdfab326d37841dca7df6d4703b",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Interior Tiles",
+    "url": "https://polyhaven.com/a/interior_tiles",
+    "license": "CC0 1.0",
+    "author": "Charlotte Baglioni"
+   }
+  },
+  "carpet": {
+   "file": "carpet.png",
+   "sha256": "6dbdc94ab8ec47bc7d127ccd004e2216bcc999eabb7f282470fd58b88ee3372b",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Dirty Carpet",
+    "url": "https://polyhaven.com/a/dirty_carpet",
+    "license": "CC0 1.0",
+    "author": "Rohit Seervi"
+   }
+  },
+  "denim": {
+   "file": "denim.png",
+   "sha256": "cc7c8984b6752887dc6a635bf138fdb9a3e6b4f6f6a391f73f1e8bd59670a31a",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Denim Fabric",
+    "url": "https://polyhaven.com/a/denim_fabric",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  },
+  "table_wood": {
+   "file": "table_wood.png",
+   "sha256": "82a4dd1e6227bc086411a9689ed31c6fd4ad6edc69c6af66f59c8028a99f45e0",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Wood Table 001",
+    "url": "https://polyhaven.com/a/wood_table_001",
+    "license": "CC0 1.0",
+    "author": "Dimitrios Savva, Rico Cilliers"
+   }
+  },
+  "floor_concrete": {
+   "file": "floor_concrete.png",
+   "sha256": "9b9ee7301779773b92d154d55b657932b4e457702841cbb07c3d351978629a43",
+   "source": {
+    "provider": "Poly Haven",
+    "name": "Concrete Floor Painted",
+    "url": "https://polyhaven.com/a/concrete_floor_painted",
+    "license": "CC0 1.0",
+    "author": "Rob Tuytel"
+   }
+  }
+ },
+ "makehuman": {
+  "asset_pack": "makehuman_system_assets_cc0.zip",
+  "url": "https://files.makehumancommunity.org/asset_packs/makehuman_system_assets/makehuman_system_assets_cc0.zip",
+  "sha256": "b542127a8e25547c7c29c19f2d1d2adb9a664c80396ecd694095dbc8028a0107",
+  "license": "CC0 1.0",
+  "variants": {
+   "hl_L": {
+    "base": "hl",
+    "pose": "hand",
+    "group": "light",
+    "side": "L",
+    "desc": "hand (light skin, anatomical L)",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat"
+   },
+   "hl_R": {
+    "base": "hl",
+    "pose": "hand",
+    "group": "light",
+    "side": "R",
+    "desc": "hand (light skin, anatomical R)",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat"
+   },
+   "hm_L": {
+    "base": "hm",
+    "pose": "hand",
+    "group": "medium",
+    "side": "L",
+    "desc": "hand (medium skin, anatomical L)",
+    "skin": "young_asian_male/young_asian_male.mhmat"
+   },
+   "hm_R": {
+    "base": "hm",
+    "pose": "hand",
+    "group": "medium",
+    "side": "R",
+    "desc": "hand (medium skin, anatomical R)",
+    "skin": "young_asian_male/young_asian_male.mhmat"
+   },
+   "hd_L": {
+    "base": "hd",
+    "pose": "hand",
+    "group": "dark",
+    "side": "L",
+    "desc": "hand (dark skin, anatomical L)",
+    "skin": "young_african_male/young_african_male.mhmat"
+   },
+   "hd_R": {
+    "base": "hd",
+    "pose": "hand",
+    "group": "dark",
+    "side": "R",
+    "desc": "hand (dark skin, anatomical R)",
+    "skin": "young_african_male/young_african_male.mhmat"
+   },
+   "a1_standing": {
+    "base": "a1",
+    "pose": "standing",
+    "group": "light",
+    "gender": "m",
+    "desc": "man, light skin, short brown hair, blue shirt and jeans",
+    "skin": "young_caucasian_male/young_caucasian_male.mhmat",
+    "hair": "short02/short02.mhclo",
+    "clothes": [
+     "male_casualsuit01/male_casualsuit01.mhclo",
+     "shoes01/shoes01.mhclo"
+    ]
+   },
+   "a1_sitting": {
+    "base": "a1",
+    "pose": "sitting",
+    "group": "light",
+    "gender": "m",
+    "desc": "man, light skin, short brown hair, blue shirt and jeans",
+    "skin": "young_caucasian_male/young_caucasian_male.mhmat",
+    "hair": "short02/short02.mhclo",
+    "clothes": [
+     "male_casualsuit01/male_casualsuit01.mhclo",
+     "shoes01/shoes01.mhclo"
+    ]
+   },
+   "a1_lying": {
+    "base": "a1",
+    "pose": "lying",
+    "group": "light",
+    "gender": "m",
+    "desc": "man, light skin, short brown hair, blue shirt and jeans",
+    "skin": "young_caucasian_male/young_caucasian_male.mhmat",
+    "hair": "short02/short02.mhclo",
+    "clothes": [
+     "male_casualsuit01/male_casualsuit01.mhclo",
+     "shoes01/shoes01.mhclo"
+    ]
+   },
+   "a1_down_side": {
+    "base": "a1",
+    "pose": "down_side",
+    "group": "light",
+    "gender": "m",
+    "desc": "man, light skin, short brown hair, blue shirt and jeans",
+    "skin": "young_caucasian_male/young_caucasian_male.mhmat",
+    "hair": "short02/short02.mhclo",
+    "clothes": [
+     "male_casualsuit01/male_casualsuit01.mhclo",
+     "shoes01/shoes01.mhclo"
+    ]
+   },
+   "a1_down_prone": {
+    "base": "a1",
+    "pose": "down_prone",
+    "group": "light",
+    "gender": "m",
+    "desc": "man, light skin, short brown hair, blue shirt and jeans",
+    "skin": "young_caucasian_male/young_caucasian_male.mhmat",
+    "hair": "short02/short02.mhclo",
+    "clothes": [
+     "male_casualsuit01/male_casualsuit01.mhclo",
+     "shoes01/shoes01.mhclo"
+    ]
+   },
+   "a2_standing": {
+    "base": "a2",
+    "pose": "standing",
+    "group": "dark",
+    "gender": "f",
+    "desc": "woman, dark skin, bob, casual suit",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "bob02/bob02.mhclo",
+    "clothes": [
+     "female_casualsuit01/female_casualsuit01.mhclo",
+     "shoes02/shoes02.mhclo"
+    ]
+   },
+   "a2_sitting": {
+    "base": "a2",
+    "pose": "sitting",
+    "group": "dark",
+    "gender": "f",
+    "desc": "woman, dark skin, bob, casual suit",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "bob02/bob02.mhclo",
+    "clothes": [
+     "female_casualsuit01/female_casualsuit01.mhclo",
+     "shoes02/shoes02.mhclo"
+    ]
+   },
+   "a2_lying": {
+    "base": "a2",
+    "pose": "lying",
+    "group": "dark",
+    "gender": "f",
+    "desc": "woman, dark skin, bob, casual suit",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "bob02/bob02.mhclo",
+    "clothes": [
+     "female_casualsuit01/female_casualsuit01.mhclo",
+     "shoes02/shoes02.mhclo"
+    ]
+   },
+   "a2_down_side": {
+    "base": "a2",
+    "pose": "down_side",
+    "group": "dark",
+    "gender": "f",
+    "desc": "woman, dark skin, bob, casual suit",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "bob02/bob02.mhclo",
+    "clothes": [
+     "female_casualsuit01/female_casualsuit01.mhclo",
+     "shoes02/shoes02.mhclo"
+    ]
+   },
+   "a2_down_prone": {
+    "base": "a2",
+    "pose": "down_prone",
+    "group": "dark",
+    "gender": "f",
+    "desc": "woman, dark skin, bob, casual suit",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "bob02/bob02.mhclo",
+    "clothes": [
+     "female_casualsuit01/female_casualsuit01.mhclo",
+     "shoes02/shoes02.mhclo"
+    ]
+   },
+   "a3_standing": {
+    "base": "a3",
+    "pose": "standing",
+    "group": "medium",
+    "gender": "m",
+    "desc": "man, medium skin, short black hair",
+    "skin": "young_asian_male/young_asian_male.mhmat",
+    "hair": "short03/short03.mhclo",
+    "clothes": [
+     "male_casualsuit03/male_casualsuit03.mhclo",
+     "shoes03/shoes03.mhclo"
+    ]
+   },
+   "a3_sitting": {
+    "base": "a3",
+    "pose": "sitting",
+    "group": "medium",
+    "gender": "m",
+    "desc": "man, medium skin, short black hair",
+    "skin": "young_asian_male/young_asian_male.mhmat",
+    "hair": "short03/short03.mhclo",
+    "clothes": [
+     "male_casualsuit03/male_casualsuit03.mhclo",
+     "shoes03/shoes03.mhclo"
+    ]
+   },
+   "a3_lying": {
+    "base": "a3",
+    "pose": "lying",
+    "group": "medium",
+    "gender": "m",
+    "desc": "man, medium skin, short black hair",
+    "skin": "young_asian_male/young_asian_male.mhmat",
+    "hair": "short03/short03.mhclo",
+    "clothes": [
+     "male_casualsuit03/male_casualsuit03.mhclo",
+     "shoes03/shoes03.mhclo"
+    ]
+   },
+   "a3_down_side": {
+    "base": "a3",
+    "pose": "down_side",
+    "group": "medium",
+    "gender": "m",
+    "desc": "man, medium skin, short black hair",
+    "skin": "young_asian_male/young_asian_male.mhmat",
+    "hair": "short03/short03.mhclo",
+    "clothes": [
+     "male_casualsuit03/male_casualsuit03.mhclo",
+     "shoes03/shoes03.mhclo"
+    ]
+   },
+   "a3_down_prone": {
+    "base": "a3",
+    "pose": "down_prone",
+    "group": "medium",
+    "gender": "m",
+    "desc": "man, medium skin, short black hair",
+    "skin": "young_asian_male/young_asian_male.mhmat",
+    "hair": "short03/short03.mhclo",
+    "clothes": [
+     "male_casualsuit03/male_casualsuit03.mhclo",
+     "shoes03/shoes03.mhclo"
+    ]
+   },
+   "a4_standing": {
+    "base": "a4",
+    "pose": "standing",
+    "group": "light",
+    "gender": "f",
+    "desc": "woman, fair skin, ponytail",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "ponytail01/ponytail01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo",
+     "shoes05/shoes05.mhclo"
+    ]
+   },
+   "a4_sitting": {
+    "base": "a4",
+    "pose": "sitting",
+    "group": "light",
+    "gender": "f",
+    "desc": "woman, fair skin, ponytail",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "ponytail01/ponytail01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo",
+     "shoes05/shoes05.mhclo"
+    ]
+   },
+   "a4_lying": {
+    "base": "a4",
+    "pose": "lying",
+    "group": "light",
+    "gender": "f",
+    "desc": "woman, fair skin, ponytail",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "ponytail01/ponytail01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo",
+     "shoes05/shoes05.mhclo"
+    ]
+   },
+   "a4_down_side": {
+    "base": "a4",
+    "pose": "down_side",
+    "group": "light",
+    "gender": "f",
+    "desc": "woman, fair skin, ponytail",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "ponytail01/ponytail01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo",
+     "shoes05/shoes05.mhclo"
+    ]
+   },
+   "a4_down_prone": {
+    "base": "a4",
+    "pose": "down_prone",
+    "group": "light",
+    "gender": "f",
+    "desc": "woman, fair skin, ponytail",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "ponytail01/ponytail01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo",
+     "shoes05/shoes05.mhclo"
+    ]
+   },
+   "a5_standing": {
+    "base": "a5",
+    "pose": "standing",
+    "group": "dark",
+    "gender": "m",
+    "desc": "older man, brown skin, short hair, work clothes",
+    "skin": "middleage_african_male/middleage_african_male.mhmat",
+    "hair": "short04/short04.mhclo",
+    "clothes": [
+     "male_worksuit01/male_worksuit01.mhclo",
+     "shoes04/shoes04.mhclo"
+    ]
+   },
+   "a5_sitting": {
+    "base": "a5",
+    "pose": "sitting",
+    "group": "dark",
+    "gender": "m",
+    "desc": "older man, brown skin, short hair, work clothes",
+    "skin": "middleage_african_male/middleage_african_male.mhmat",
+    "hair": "short04/short04.mhclo",
+    "clothes": [
+     "male_worksuit01/male_worksuit01.mhclo",
+     "shoes04/shoes04.mhclo"
+    ]
+   },
+   "a5_lying": {
+    "base": "a5",
+    "pose": "lying",
+    "group": "dark",
+    "gender": "m",
+    "desc": "older man, brown skin, short hair, work clothes",
+    "skin": "middleage_african_male/middleage_african_male.mhmat",
+    "hair": "short04/short04.mhclo",
+    "clothes": [
+     "male_worksuit01/male_worksuit01.mhclo",
+     "shoes04/shoes04.mhclo"
+    ]
+   },
+   "a5_down_side": {
+    "base": "a5",
+    "pose": "down_side",
+    "group": "dark",
+    "gender": "m",
+    "desc": "older man, brown skin, short hair, work clothes",
+    "skin": "middleage_african_male/middleage_african_male.mhmat",
+    "hair": "short04/short04.mhclo",
+    "clothes": [
+     "male_worksuit01/male_worksuit01.mhclo",
+     "shoes04/shoes04.mhclo"
+    ]
+   },
+   "a5_down_prone": {
+    "base": "a5",
+    "pose": "down_prone",
+    "group": "dark",
+    "gender": "m",
+    "desc": "older man, brown skin, short hair, work clothes",
+    "skin": "middleage_african_male/middleage_african_male.mhmat",
+    "hair": "short04/short04.mhclo",
+    "clothes": [
+     "male_worksuit01/male_worksuit01.mhclo",
+     "shoes04/shoes04.mhclo"
+    ]
+   },
+   "a6_standing": {
+    "base": "a6",
+    "pose": "standing",
+    "group": "medium",
+    "gender": "f",
+    "desc": "woman, medium skin, short bob, dress suit",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "bob01/bob01.mhclo",
+    "clothes": [
+     "female_elegantsuit01/female_elegantsuit01.mhclo",
+     "shoes06/shoes06.mhclo"
+    ]
+   },
+   "a6_sitting": {
+    "base": "a6",
+    "pose": "sitting",
+    "group": "medium",
+    "gender": "f",
+    "desc": "woman, medium skin, short bob, dress suit",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "bob01/bob01.mhclo",
+    "clothes": [
+     "female_elegantsuit01/female_elegantsuit01.mhclo",
+     "shoes06/shoes06.mhclo"
+    ]
+   },
+   "a6_lying": {
+    "base": "a6",
+    "pose": "lying",
+    "group": "medium",
+    "gender": "f",
+    "desc": "woman, medium skin, short bob, dress suit",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "bob01/bob01.mhclo",
+    "clothes": [
+     "female_elegantsuit01/female_elegantsuit01.mhclo",
+     "shoes06/shoes06.mhclo"
+    ]
+   },
+   "a6_down_side": {
+    "base": "a6",
+    "pose": "down_side",
+    "group": "medium",
+    "gender": "f",
+    "desc": "woman, medium skin, short bob, dress suit",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "bob01/bob01.mhclo",
+    "clothes": [
+     "female_elegantsuit01/female_elegantsuit01.mhclo",
+     "shoes06/shoes06.mhclo"
+    ]
+   },
+   "a6_down_prone": {
+    "base": "a6",
+    "pose": "down_prone",
+    "group": "medium",
+    "gender": "f",
+    "desc": "woman, medium skin, short bob, dress suit",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "bob01/bob01.mhclo",
+    "clothes": [
+     "female_elegantsuit01/female_elegantsuit01.mhclo",
+     "shoes06/shoes06.mhclo"
+    ]
+   },
+   "t1_standing": {
+    "base": "t1",
+    "pose": "standing",
+    "group": "light",
+    "gender": null,
+    "desc": "toddler, light skin",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo"
+    ]
+   },
+   "t1_sitting_floor": {
+    "base": "t1",
+    "pose": "sitting_floor",
+    "group": "light",
+    "gender": null,
+    "desc": "toddler, light skin",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo"
+    ]
+   },
+   "t2_standing": {
+    "base": "t2",
+    "pose": "standing",
+    "group": "dark",
+    "gender": null,
+    "desc": "toddler, dark skin",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit02/male_casualsuit02.mhclo"
+    ]
+   },
+   "t2_sitting_floor": {
+    "base": "t2",
+    "pose": "sitting_floor",
+    "group": "dark",
+    "gender": null,
+    "desc": "toddler, dark skin",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit02/male_casualsuit02.mhclo"
+    ]
+   },
+   "t3_standing": {
+    "base": "t3",
+    "pose": "standing",
+    "group": "medium",
+    "gender": null,
+    "desc": "toddler, medium skin",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit06/male_casualsuit06.mhclo"
+    ]
+   },
+   "t3_sitting_floor": {
+    "base": "t3",
+    "pose": "sitting_floor",
+    "group": "medium",
+    "gender": null,
+    "desc": "toddler, medium skin",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit06/male_casualsuit06.mhclo"
+    ]
+   },
+   "i1_curled": {
+    "base": "i1",
+    "pose": "curled",
+    "group": "light",
+    "gender": null,
+    "desc": "baby, light skin",
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo"
+    ]
+   },
+   "i2_curled": {
+    "base": "i2",
+    "pose": "curled",
+    "group": "dark",
+    "gender": null,
+    "desc": "baby, dark skin",
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "",
+    "clothes": [
+     "male_casualsuit02/male_casualsuit02.mhclo"
+    ]
+   },
+   "i3_curled": {
+    "base": "i3",
+    "pose": "curled",
+    "group": "medium",
+    "gender": null,
+    "desc": "baby, medium skin",
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "",
+    "clothes": [
+     "male_casualsuit06/male_casualsuit06.mhclo"
+    ]
+   }
+  }
+ },
+ "tools": {
+  "blender": "4.2.20 LTS (official build, used to run MPFB2; not redistributed)",
+  "mpfb2": "v2.0.14 (GPL tool; its output is CC0)",
+  "decimation": "fast-simplification + xatlas re-unwrap and texture re-bake"
+ },
+ "rejected": [
+  {
+   "what": "Objaverse 912acbf0 'Baby' (labelled CC BY)",
+   "why": "uploader says it was downloaded from another site"
+  },
+  {
+   "what": "Objaverse 8aedf051 'Riley' (labelled CC BY)",
+   "why": "a Call of Duty game asset"
+  },
+  {
+   "what": "Objaverse a5986a27 'Full body' (CC BY)",
+   "why": "a scan of an identifiable real person"
+  },
+  {
+   "what": "Objaverse 452ee1d9 'Baby' (CC BY)",
+   "why": "built on Reallusion Character Creator base meshes (CC_Base skeleton); the base mesh licence does not allow redistribution as a raw model"
+  },
+  {
+   "what": "Objaverse ac92f6e9 'Modern Sofa'",
+   "why": "a replica of a named designer product"
+  },
+  {
+   "what": "Objaverse 'Playful Dog' (several uploads)",
+   "why": "re-uploads of another author's model"
+  },
+  {
+   "what": "Objaverse faa9f521 / 91e16974 lying dog scans",
+   "why": "ground and debris could not be cut away cleanly"
+  },
+  {
+   "what": "GSO Calphalon fry pan",
+   "why": "the scan is a bowl (mislabelled)"
+  },
+  {
+   "what": "GSO Kanex keyboard, Black+Decker toaster",
+   "why": "visible brand marks; RSB prints only invented names"
+  },
+  {
+   "what": "Poly Haven plastic_crate_01",
+   "why": "a printed brand-like name on its side"
+  },
+  {
+   "what": "Objaverse eae97cc2 hand (CC BY, used in the pilot)",
+   "why": "replaced by MakeHuman hands so that skin colour can follow the parameter"
+  }
+ ]
+}
