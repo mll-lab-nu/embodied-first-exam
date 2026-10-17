@@ -29,11 +29,16 @@ when it happens and adapt, and finish in one episode without a reset.
 through the client; the episode ends with `reason = "success"` at the last of them.
 
 ## Verification
-The sim service ends the episode at LIBERO's success (or at the 9000-step technical cap, when the agent's time
-is up, or on a simulator error), replays the recorded episode in a fresh process and writes `/data/final.json`;
-`tests/grade.py` (separate sandbox, no network) grades it: `success = live_success ∧ replay_success ∧ deterministic`.
-The replay records `replay.mp4` on the way; the verdict is written the moment the replay has executed the last action,
-and the video can neither change nor cost it (`docs/benchmarks/libero-max.md`, "Collect budget").
+Graded by the live episode (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): the sim service ends the episode at
+LIBERO's success (or at the 9000-step technical cap, when the agent's time is up, or on a simulator error) and,
+once the agent's container is stopped, writes its verdict to `/data/final.json` (`graded_by = "live"`, `replays = 0`,
+the event record `event_fired` / `event_step`); `tests/grade.py` (separate sandbox, no network) grades it:
+`success = live_success` (LIBERO's success check held in the live episode), with `infra_error = 1` when there is no
+finalized verdict. Nothing is replayed to grade it. The frozen start is checked when the episode begins: a scene that
+does not start at the instance's recorded state hash is `instance_mismatch` (`infra_error = 1`), before the agent is
+served. After the verdict the collect hook replays `trajectory.npz` once in a fresh process for `replay.mp4` (and
+`replay.video.json`: whether that replay ended in the live state); it can neither change nor cost the verdict
+(`docs/benchmarks/libero-max.md`, "Grading (standard mode)").
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -53,7 +58,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 |---|---|
 | Actions | `ee_delta` (7, float64): OSC hand-target delta (1.0 = 0.05 m, 0.5 rad per control step) and gripper |
 | Episode cap | 9000 control steps (450 s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); the collect hook: the verdict at once, then one video pass (up to 5,400 s for the longest episode on a busy host) |
 
 ### Change Log
 - 2026-10-08: image `eai-libero-max:0.1.1` (`OPENBLAS_CORETYPE=Zen`); the instance, its start-state hash, the reference
@@ -88,3 +93,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   its name.
 - 2026-10-14 (board 0113, from board 0086): the instruction says that a moved object or receptacle jumps alone: what rests in or on it stays where it was (LIBERO-MAX moves one entity; board 0086 saw a basket jump through a can already in it). Text only: the instance, the event, the reference solution, LIBERO's success check and the verifier are unchanged, so the task keeps its name.
 - 2026-10-16 (board 0136): the collect hook waits for the replay (and its video) of an episode that ended without a live success as long as for any other (`RCB_FAIL_WAIT_S` 900 -> 5400 s, the overall wait): it stopped at 900 s, so most failed episodes had no `replay.mp4`. Video only: a failure is graded 0 whatever its replay says, so the verdict, the physics and the pass rule are unchanged and results from before this date stay valid.
+- 2026-10-17 (owner, board 0150/0151): graded by the live episode, no grading replay. `success = live_success`: LIBERO's success check held in the episode the sim service ran (it ends the episode the moment the check holds; the replay applied no other rule, so the rule is unchanged); `final.json` has `graded_by = "live"`, `replays = 0` and the live event record (`event_fired`, `event_step`); `replay_success`, `deterministic` and the replay's event fields are gone, from `reward.json` too (`graded_by_live`, `replays`, `instance_mismatch`, `event_fired`, `event_step` added). The frozen start is checked when the episode begins (the instance's start-state hash; a mismatch is `instance_mismatch`, `infra_error = 1`), no longer only when a replay rebuilt it. Video by one video-only replay of `trajectory.npz` in a fresh process after the verdict (`replay.video.json` says whether it ended in the live state); a failed or slow video costs only the video. The collect hook stops at 5,400 s overall as before (`RCB_FAIL_WAIT_S`, `RCB_VIDEO_GRACE_S` gone). The instance, the event, the reference solution and the agent's interface are unchanged, so the task keeps its name.

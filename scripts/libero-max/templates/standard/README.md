@@ -18,18 +18,23 @@ when it happens and adapt, and finish in one episode without a reset.
 through the client; the episode ends with `reason = "success"` at the last of them.
 
 ## Verification
-The sim service ends the episode at LIBERO's success (or at the {{std_cap}}-step technical cap, when the agent's time
-is up, or on a simulator error), replays the recorded episode in a fresh process and writes `/data/final.json`;
-`tests/grade.py` (separate sandbox, no network) grades it: `success = live_success ∧ replay_success ∧ deterministic`.
-The replay records `replay.mp4` on the way; the verdict is written the moment the replay has executed the last action,
-and the video can neither change nor cost it (`docs/benchmarks/libero-max.md`, "Collect budget").
+Graded by the live episode (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): the sim service ends the episode at
+LIBERO's success (or at the {{std_cap}}-step technical cap, when the agent's time is up, or on a simulator error) and,
+once the agent's container is stopped, writes its verdict to `/data/final.json` (`graded_by = "live"`, `replays = 0`,
+the event record `event_fired` / `event_step`); `tests/grade.py` (separate sandbox, no network) grades it:
+`success = live_success` (LIBERO's success check held in the live episode), with `infra_error = 1` when there is no
+finalized verdict. Nothing is replayed to grade it. The frozen start is checked when the episode begins: a scene that
+does not start at the instance's recorded state hash is `instance_mismatch` (`infra_error = 1`), before the agent is
+served. After the verdict the collect hook replays `trajectory.npz` once in a fresh process for `replay.mp4` (and
+`replay.video.json`: whether that replay ended in the live state); it can neither change nor cost the verdict
+(`docs/benchmarks/libero-max.md`, "Grading (standard mode)").
 
 ## Details
 | | |
 |---|---|
 | Actions | `ee_delta` (7, float64): OSC hand-target delta (1.0 = {{pos_scale}} m, {{rot_scale}} rad per control step) and gripper |
 | Episode cap | {{std_cap}} control steps ({{robot_seconds}} s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); the collect hook: the verdict at once, then one video pass (up to 5,400 s for the longest episode on a busy host) |
 
 ### Change Log
 - 2026-10-08: image `eai-libero-max:0.1.1` (`OPENBLAS_CORETYPE=Zen`); the instance, its start-state hash, the reference
