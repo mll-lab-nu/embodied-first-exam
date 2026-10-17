@@ -146,7 +146,9 @@ def grading_replay(acts: np.ndarray, window, reason: str) -> dict:
       whose window outlasts the recorded one (the live window stopped at a failure) holds the command for the rest.
     - reason "step_guard": the cap leaves no step for a window (Session.step raises past it), so the episode is graded
       without one, a failure (2026-10-17, audit M6: before, the window raised here and the trial became a grade error).
-    - any other end (no window was completed live: a simulator error, a window that raised): the window after the last row.
+    - any other end without such a window (a simulator error before any window passed, an end-of-phase window that
+      raised): the window after the last row. (An error right after a window passed keeps that window: settle() and
+      finish() record where it ended, and a window not at the end of the rows is dropped.)
     Returns success, settle (the window's result), state_sha_rows (the state after all recorded rows: the live final state)."""
     acts = np.asarray(acts, dtype=np.float32)
     if reason == "step_guard":
@@ -204,10 +206,9 @@ def settle(step) -> bool:
     recorded, so the grading replay runs them too). Remembers the result for final.json and the call's meta."""
     r = S.settle_check(step=step); E["settle"] = r
     if not r["success"] and r["why"].startswith("the step cap") and not S.episode_done:   # the call was stopped instead
-        r["why"] = ("the call stopped during the settle window (max_call_wall_s reached, the client hung up, or the "
-                    "session is ending)")
+        r["why"] = "the call stopped during the settle window (max_call_wall_s reached or the client hung up)"
     if r["success"]:                    # a passed window ends the episode: the recorded rows end with it (grading_replay),
-        E["final_window"] = int(r["steps"])   # even if the call then fails before finish("success")
+        E["final_window"] = int(r["steps"]); E["final_window_end"] = ctrl_steps()   # even if the call fails after it
     log({"ev": "settle", **r})
     return bool(r["success"])
 
@@ -221,8 +222,11 @@ def finish(reason: str) -> None:
         try:
             E["success"] = settle(journal_step)
             E["final_window"] = int(E["settle"]["steps"])    # the recorded rows end with this window (grading_replay)
+            E["final_window_end"] = ctrl_steps()
         except Exception:  # noqa
             traceback.print_exc()
+    if E.get("final_window") and E.get("final_window_end") != ctrl_steps():
+        E["final_window"] = None        # rows came after that window (a call that failed after it went on): not the end
     E["episode_control_steps"] = ctrl_steps()
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"]),
          "final_window": E.get("final_window")})

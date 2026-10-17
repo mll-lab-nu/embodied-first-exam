@@ -61,7 +61,7 @@ def episode_end(d: pathlib.Path, traj: pathlib.Path | None = None) -> dict:
     fin = None
     for fp in (d / "artifacts/data/final.json", d / "final.json"):      # (the second: beside a loose trajectory)
         try:
-            fin = json.loads(fp.read_text()); out["live_sha"] = fin.get("live_sha"); break
+            fin = json.loads(fp.read_text()); out["live_sha"] = fin.get("live_sha"); out["live_success"] = fin.get("success"); break
         except (OSError, ValueError):
             pass
     for log in (d / "verifier/episode.jsonl", d / "artifacts/data/episode.jsonl", d / "episode.jsonl"):
@@ -201,11 +201,16 @@ def worker(tests: str, family: str, items_path: str, out_path: str, repeat: int)
             if it.get("mode") == "standard":
                 window = it.get("final_window")
                 n_end = it.get("end_control_steps")
-                if window and n_end is not None and int(n_end) != len(acts):
+                short = int(n_end) - len(acts) if window and n_end is not None else 0
+                if short:
                     # the rows are not the whole recorded episode (journal.f64 is flushed at checkpoints only, and none
-                    # follows the end-of-phase window): the window cannot be placed, so grade conservatively
+                    # follows the end-of-phase window). The missing rows can only be the end of the window, all the held
+                    # command, which the replay holds once the rows run out: exact with the window shortened by them;
+                    # otherwise the window cannot be placed and the trial is graded conservatively
                     r["rows_mismatch"] = f"{len(acts)} rows, the episode ended at control step {n_end}"
-                    window = r["final_window"] = None
+                    window = r["final_window"] = (window - short) if 0 < short <= window else None
+                    if window == 0:                  # the whole window is missing: s.replay runs it after the rows
+                        window = None; r["final_window"] = None; r["window_after_rows_exact"] = True
                 outs = [replay_standard(s, acts, window, it.get("reason")) for _ in range(repeat)]
             else:
                 outs = [s.replay(acts) for _ in range(repeat)]
@@ -218,6 +223,10 @@ def worker(tests: str, family: str, items_path: str, out_path: str, repeat: int)
                      settle_max_move_mm=round(1000 * float((o.get("settle") or {}).get("max_move_m") or 0), 2))
             if it.get("mode") == "standard" and it.get("live_sha"):
                 r["replay_matches_live"] = o.get("state_sha") == it["live_sha"]
+            if it.get("mode") == "standard" and (r.get("final_window") or r.get("window_after_rows_exact")) \
+                    and it.get("live_success") is False and r["new_verdict"]:
+                # the window that ended the episode is the live one: the service's verdict needs the live success too
+                r["new_verdict"] = False; r["why"] = f"the live episode did not succeed ({it.get('reason')})"
         except Exception as exc:  # noqa: BLE001
             r["error"] = repr(exc)[:300]
         with open(out_path, "a") as f:
@@ -303,7 +312,7 @@ def main() -> int:
         if r.get("recorded_instance_exact") is not None and "instance_exact" in r and bool(r["recorded_instance_exact"]) != r["instance_exact"]:
             r["vendor_warning"] = "the frozen instance rebuilds differently here than on the recording host (another CPU vendor?)"
         std = r.get("mode") == "standard"
-        exact = r.get("final_window") or r.get("reason") == "step_guard"     # graded as the service now grades it
+        exact = r.get("final_window") or r.get("window_after_rows_exact") or r.get("reason") == "step_guard"   # as the service grades it
         r["label"] = RULES["standard" if std else "privileged"] + (" (conservative)" if std and not exact else "")
     with open(a.out, "w") as f:
         for r in results:
