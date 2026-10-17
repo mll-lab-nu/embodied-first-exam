@@ -43,7 +43,7 @@ def grade(final, verdict=None) -> tuple[str, dict]:
 def main() -> int:
     bad = 0
     txt, r, ticks = grade({**FINAL_OK, **CLOCK}, {**VERDICT, "clock_hook": True})
-    bad += check("a passing episode scores 1", txt == "1" and r["success"] == 1)
+    bad += check("a passing episode scores 1", txt == "1" and r["success"] == 1 and r["graded_by_live"] == 1)
     bad += check("numbers only", all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in r.values()))
     bad += check("the clock's record repeated", all(r[k] == CLOCK[k] for k in CLOCK if k not in ("realtime", "protocol")))
     bad += check("realtime and clock_hook", r["realtime"] == 1 and r["clock_hook"] == 1)
@@ -51,7 +51,7 @@ def main() -> int:
     bad += check("the tick log copied", ticks)
     txt, r, _ = grade({**FINAL_OK, **CLOCK, "stalls": 40, "stalled_s": 30.0, "stalled_share": 0.5}, VERDICT)
     bad += check("stalls decide nothing", txt == "1" and r["stalls"] == 40 and r["clock_hook"] == 0)
-    txt, r, _ = grade({**FINAL_OK, "deterministic": False}, VERDICT)
+    txt, r, _ = grade({**FINAL_OK, "success": False, "live_success": False}, VERDICT)
     bad += check("a missing clock field is 0, the standard rule still decides", txt == "0" and r["stalls"] == 0
                  and r["clock_s"] == 0)
     txt, r, _ = grade(None)

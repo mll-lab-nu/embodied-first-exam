@@ -66,7 +66,7 @@ def main() -> int:
         row = {"success": reward.get("success"), "outcome": reward.get("outcome"), "stalls": reward.get("stalls"),
                "max_lag_s": reward.get("max_lag_s"), "held_steps": reward.get("held_steps"),
                "late_steps": reward.get("late_steps"), "clock_hook": reward.get("clock_hook"),
-               "deterministic": reward.get("deterministic")}
+               "graded_by_live": reward.get("graded_by_live")}
         orc = HERE / "oracles_rt" / f"{name}.json"
         margin = json.loads(orc.read_text()).get("margin") if orc.exists() else None
         ver_p = data / "verdict.json"

@@ -284,7 +284,7 @@ def items_of(plan: list, arrays: dict) -> list:
 
 def summary(fin: dict, ver: dict) -> dict:
     return {"pass": bool(fin.get("success")), "live": bool(fin.get("live_success")),
-            "replay": bool(fin.get("replay_success")), "deterministic": bool(fin.get("deterministic")),
+            "graded_by": fin.get("graded_by"),      # the live episode's verdict (board 0151): no replay fields
             "outcome": ver.get("outcome"), "judgment_class": ver.get("judgment_class"),
             "control_steps": fin.get("control_steps"), "state_sha": fin.get("state_sha")}
 
