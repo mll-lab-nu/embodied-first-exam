@@ -84,3 +84,5 @@ world keeps running at S = 5 while your program computes; each review freezes it
 4800 s of wall time, 2 GiB of address space, 4800 CPU seconds. No model or API calls in the
 formal evaluation. Success: a complete win by the original referee, confirmed by two fresh replays. A missing,
 invalid, stuck or unfinished program does not win. The deliverable is a program, not a trajectory.
+After the verdict the verifier replays the formal match's record once more and draws `/logs/verifier/replay.mp4`
+as the twin's service draws its video, for spectators only (nothing reads it back; a failed render leaves no video).

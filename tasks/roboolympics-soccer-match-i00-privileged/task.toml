@@ -71,7 +71,7 @@ build_timeout_sec = 1800.0
 cpus = 6
 memory_mb = 16384
 [verifier]
-timeout_sec = 6600.0
+timeout_sec = 8400.0
 environment_mode = "separate"
 network_mode = "no-network"
 

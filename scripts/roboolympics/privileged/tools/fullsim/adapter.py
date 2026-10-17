@@ -3,7 +3,7 @@ copied byte for byte into the twin task's simulator, PROTOCOL H.7).
 
 Required: SPORT, SOURCE_TASK, FAMILY, INSTANCES, SLOWDOWN, CUTOFF_S, IMAGE, ORACLE, truth(match).
 Optional (defaults below): FORMAT, SEATS, ACTION_LEVEL, LEVELS, EVERY, MAX_COMMANDS, READY_TIMEOUT_S, MATCH_WALL_S,
-REPLAY_TIMEOUT_S, VERIFIER_TIMEOUT_S, PUBLIC_DROP_FILES, METADATA_FAMILY (the twin's [metadata] family when it is
+REPLAY_TIMEOUT_S, VIDEO_TIMEOUT_S, VERIFIER_TIMEOUT_S, PUBLIC_DROP_FILES, METADATA_FAMILY (the twin's [metadata] family when it is
 not FAMILY with underscores), ORACLE_FILES, TRUTH_DOC, NOTES_DOC, RESOURCES, DESCRIPTION,
 ROBOT, ORACLE_EVIDENCE, unavailable() (why this host cannot build the sport, e.g. a package only its image has; None).
 """
@@ -23,7 +23,8 @@ DEFAULTS = {
     "READY_TIMEOUT_S": 300,  # the review after each point (the twin's READY_TIMEOUT_S)
     "MATCH_WALL_S": 1800,  # the formal match's wall-clock cutoff (the program's CPU limit too)
     "REPLAY_TIMEOUT_S": 600,  # one fresh-process replay of the whole match (the twin's RO_REPLAY_TIMEOUT_S)
-    "VERIFIER_TIMEOUT_S": None,  # default: MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600
+    "VIDEO_TIMEOUT_S": 1800,  # the replay video after the verdict (tests/grade.py VIDEO_TIMEOUT_S, the same number)
+    "VERIFIER_TIMEOUT_S": None,  # default: MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600 + VIDEO_TIMEOUT_S
     "PUBLIC_DROP_FILES": ("builtin_players.py",),  # files of sports/<sport>/ left out of the agent's copies
     "ORACLE_FILES": (),
     "TRUTH_DOC": "",
@@ -44,7 +45,7 @@ def load(sport: str) -> ModuleType:
         if not hasattr(mod, k):
             setattr(mod, k, v)
     if mod.VERIFIER_TIMEOUT_S is None:
-        mod.VERIFIER_TIMEOUT_S = mod.MATCH_WALL_S + 2 * mod.REPLAY_TIMEOUT_S + 600
+        mod.VERIFIER_TIMEOUT_S = mod.MATCH_WALL_S + 2 * mod.REPLAY_TIMEOUT_S + 600 + mod.VIDEO_TIMEOUT_S
     return mod
 
 

@@ -32,7 +32,7 @@ READY_TIMEOUT_S = 600  # the twin's READY_TIMEOUT_S (sport.toml [timing] ready_t
 # program's CPU limit is the same number.
 MATCH_WALL_S = 13500
 REPLAY_TIMEOUT_S = 1800  # the twin's RO_REPLAY_TIMEOUT_S: a fresh-process replay of a whole match
-# VERIFIER_TIMEOUT_S: the default, MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600 = 17 700 s (4.9 h).
+# VERIFIER_TIMEOUT_S: the default, MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600 + VIDEO_TIMEOUT_S = 19 500 s (5.4 h).
 PUBLIC_DROP_FILES = ()  # opponents/ is built on builtin_players.Reference: the development copy needs it
 IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
 ORACLE = "tools/fullsim/oracles/soccer_ssl.py"

@@ -91,7 +91,10 @@ agent resource budget. No model/API calls are available in formal evaluation.
 a complete original-referee win and two fresh matching journal replays. Missing,
 invalid, stuck or unfinished programs do not win. Files under `evaluation/match/`
 record original final.json/episode/replay; diagnostics and decisions explain errors.
-No video is produced. The submitted artifact is a program, not a trajectory.
+The submitted artifact is a program, not a trajectory. After the verdict the verifier replays the formal match's record
+in a fresh process and draws `/logs/verifier/replay.mp4` with the sport's spectator camera (`core.spectator`), for
+spectators only: nothing reads it back, and a failed render only leaves no video (`/logs/verifier/video.json` says
+why). The verifier's timeout includes 1800 s for it.
 
 Level @LEVEL@ / seed @SEED@ is the frozen instance of `@TWIN@`, this task's
 camera-only twin. Full simulator/truth access changes the

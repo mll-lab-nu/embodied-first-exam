@@ -184,7 +184,7 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 8192
 [verifier]
-timeout_sec = 3300.0
+timeout_sec = 5100.0
 environment_mode = "separate"
 network_mode = "no-network"
 [verifier.environment]
