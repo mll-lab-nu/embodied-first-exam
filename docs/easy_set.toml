@@ -33,6 +33,8 @@
 # docs/benchmarks/metaworldplus.md "Easy set").
 # 2026-10-17: VLABench 15 (the owner's screening: every mode the base ships solved by a screening run;
 # docs/benchmarks/vlabench.md "Easy set").
+# 2026-10-17: RoboDojo 33 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robodojo.md "Easy set").
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -788,6 +790,204 @@ base = "robocasa365-tong-buffet-setup-i00"
 benchmark = "RoboCasa365"
 reason = "solved"
 note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-align-blocks-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-arrange-largest-number-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-arrange-largest-number-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-build-tower-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-classify-objects-by-language-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-classify-objects-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-deposit-coin-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-fasten-screws-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-fill-pen-holder-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra (Luna failed); S: Astra, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-fold-clothes-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-fold-clothes-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-general-pickup-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-make-toast-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-match-and-pick-from-conveyor-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-organize-table-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Gemini 4 Argon (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pack-objects-into-box-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pick-from-conveyor-by-image-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-play-stacking-toy-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-plug-in-charger-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, GLM 5.3 Flash (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-balls-into-vase-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-by-language-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-liquid-into-cup-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-liquid-into-cup-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Opus, Gemini 3.8 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-push-t-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-push-t-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-put-bottles-into-dustbin-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); judgment: the standard solves by Opus and Gemini 3.8 Flash relayed a bottle over the table instead of the suggested handover, which the task text says is not enforced"
+
+[[task]]
+base = "robodojo-sort-nesting-dolls-by-size-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-stack-blocks-by-language-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-stack-blocks-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-stack-blocks-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-stack-bowls-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-stack-bowls-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-swap-t-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
 
 [[task]]
 base = "robolab-banana-in-bowl-i00"
