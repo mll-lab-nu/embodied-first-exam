@@ -21,58 +21,67 @@ def std_grade(final, name):
     p = subprocess.run([PY, g], capture_output=True, text=True); assert p.returncode == 0, p.stderr
     r = json.load(open(os.path.join(log, "reward.json"))); txt = open(os.path.join(log, "reward.txt")).read().strip()
     assert all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in r.values()), r
-    assert txt == str(r["success"]) and all(k in r for k in ("deterministic", "infra_error", "grader_error", "finalized", "missing_log")), (txt, r)
+    assert txt == str(r["success"]) and all(k in r for k in ("live_success", "graded_by_live", "replays", "infra_error", "grader_error", "finalized", "missing_log")), (txt, r)
+    assert r["graded_by_live"] == 1 and r["replays"] == 0 and "replay_success" not in r and "deterministic" not in r, r
     return r
-GOOD = {"success": True, "finalized": True, "replay_success": True, "deterministic": True, "live_matches_replay": True, "n_actions": 30, "control_steps": 30, "reason": "done", "video": True}
-r = std_grade(GOOD, "pass"); check(r["success"] == 1 and r["infra_error"] == 0 and r["grader_error"] == 0, "standard: a pass stays a pass", r)
-r = std_grade({**GOOD, "success": False, "replay_success": False, "reason": "horizon"}, "fail"); check(r["success"] == 0 and r["infra_error"] == 0 and r["grader_error"] == 0, "standard: the agent's failure stays the agent's 0", r)
-r = std_grade(None, "missing"); check(r == {"success": 0, "finalized": 0, "deterministic": 0, "infra_error": 1, "missing_log": 1, "grader_error": 0}, "standard: no final.json -> infra_error (was the agent's 0)", r)
+GOOD = {"success": True, "finalized": True, "graded_by": "live", "replays": 0, "n_actions": 30, "control_steps": 30, "reason": "done", "video": True}
+r = std_grade(GOOD, "pass"); check(r["success"] == 1 and r["live_success"] == 1 and r["infra_error"] == 0 and r["grader_error"] == 0, "standard: a live success is a pass", r)
+r = std_grade({**GOOD, "success": False, "reason": "horizon"}, "fail"); check(r["success"] == 0 and r["infra_error"] == 0 and r["grader_error"] == 0, "standard: a live failure is the agent's 0", r)
+r = std_grade({**GOOD, "success": False, "reason": "timeout"}, "timeout"); check(r["success"] == 0 and r["infra_error"] == 0, "standard: a live failure at the time limit is the agent's 0", r)
+r = std_grade({**GOOD, "success": False, "replay_success": True, "deterministic": True}, "replaynotread"); check(r["success"] == 0 and r["infra_error"] == 0, "standard: replay fields (old records) are not read", r)
+r = std_grade({**GOOD, "success": False, "reason": "error"}, "simerror"); check(r["success"] == 0 and r["infra_error"] == 0 and r["sim_error"] == 1, "standard: a sim error raised by the agent's actions is the agent's 0, not infra", r)
+r = std_grade({**GOOD, "success": True, "reason": "error"}, "simerror_ok"); check(r["success"] == 0 and r["infra_error"] == 0, "standard: a post-exception state is never judged a success (reason error)", r)
+r = std_grade({**GOOD, "video": False, "video_pending": True}, "novideo"); check(r["success"] == 1 and r["video_rendered"] == 0 and r["video_pending"] == 1, "standard: a missing or unfinished video leaves the verdict", r)
+r = std_grade(None, "missing"); check(r == {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "infra_error": 1, "missing_log": 1, "grader_error": 0}, "standard: no final.json -> infra_error (was the agent's 0)", r)
 r = std_grade('{"success": true, "fin', "corrupt"); check(r["success"] == 0 and r["infra_error"] == 1 and r["grader_error"] == 1, "standard: a truncated final.json -> infra_error + grader_error, reward written (was no reward)", r)
 r = std_grade("null", "null"); check(r["infra_error"] == 1 and r["grader_error"] == 1, "standard: final.json = null -> infra_error", r)
 r = std_grade({"success": True, "finalized": False, "done": True, "reason": "done"}, "unfinalized"); check(r["success"] == 0 and r["infra_error"] == 1 and r["live_success"] == 1 and r["finalized"] == 0, "standard: the service's unfinalized copy (hook killed) -> infra_error (was the agent's 0)", r)
-r = std_grade({**GOOD, "replay_success": False, "deterministic": False, "replay_failed": 1, "infra_error": 1}, "replayfailed"); check(r["infra_error"] == 1 and r["grader_error"] == 1 and r["success"] == 0, "standard: replay_failed -> infra_error + grader_error", r)
-r = std_grade({**GOOD, "instance_mismatch": 1, "infra_error": 1}, "mismatch"); check(r["infra_error"] == 1 and r["instance_mismatch"] == 1 and r["success"] == 0, "standard: instance_mismatch -> infra_error", r)
+r = std_grade({"success": False, "done": True, "reason": "instance_mismatch: the frozen start state did not rebuild here", "finalized": True, "gave_up": True, "infra_error": 1}, "mismatch")
+check(r["infra_error"] == 1 and r["instance_mismatch"] == 1 and r["success"] == 0, "standard: the service's instance_mismatch give-up at the start -> infra_error", r)
+r = std_grade({"success": False, "done": True, "reason": "sim_crashed", "finalized": True, "gave_up": True, "infra_error": 1}, "giveup_between"); check(r["infra_error"] == 1 and r["success"] == 0, "standard: give-up after crashes between calls -> infra_error", r)
 r = std_grade({"success": False, "done": True, "reason": "sim_crashed_on_call", "finalized": True, "gave_up": True}, "giveup_call"); check(r["success"] == 0 and r["infra_error"] == 0 and r["gave_up"] == 1 and r["sim_crashed_on_call"] == 1, "standard: give-up after crashes during a call stays the agent's failure", r)
 r = std_grade({"success": False, "done": True, "reason": "resume_failed", "finalized": True, "gave_up": True, "infra_error": 1}, "giveup_infra"); check(r["infra_error"] == 1 and r["success"] == 0, "standard: give-up with infra_error -> infra_error", r)
 
-# ------------------------------------------------------------------ finalize.sh (the real script; stub `end` and stub tool)
-def finalize(name, beh, *, end_rc=0, episode=True, pre_final=None, budget=None):
+# ------------------------------------------------------------------ finalize.sh (the real script; stub `end` and stub video tool)
+def finalize(name, beh="ok", *, end_rc=0, episode=True, pre_final=None, budget=None, success=True):
     d = os.path.join(td, "fin_" + name); data, srv, bind = (os.path.join(d, x) for x in ("data", "srv", "bin"))
     for x in (data, srv, bind): os.makedirs(x)
     os.symlink(PY, os.path.join(bind, "python"))
     open(os.path.join(srv, "rcb_limited.py"), "w").write(f"import sys\nsys.exit({end_rc})\n")
     tool = os.path.join(srv, "tool.py"); open(tool, "w").write(textwrap.dedent("""
         import json, os, sys, time
-        out = sys.argv[sys.argv.index("--out") + 1]; n = os.path.basename(out)[6]
-        beh = json.loads(os.environ["STUB"]).get(n, "ok")
-        res = {"success": True, "state_sha": "abc", "instance_ok": True, "video": "--video" in sys.argv}
+        calls = os.path.join(os.environ["RCB_DATA"], "tool_calls"); open(calls, "a").write(" ".join(sys.argv[1:]) + "\\n")
+        out = sys.argv[sys.argv.index("--out") + 1]; beh = os.environ["STUB"]
+        res = {"success": beh != "fail", "state_sha": "zzz", "instance_ok": beh != "mismatch", "video": "--video" in sys.argv}
         if beh == "die": os._exit(137)
         if beh == "hang": time.sleep(600)
-        if beh == "fail": res["success"] = False
-        if beh == "mismatch": res["instance_ok"] = False
-        if beh == "othersha": res["state_sha"] = "zzz"
         if beh == "novideo": res["video"] = False
+        if res["video"]: open(sys.argv[sys.argv.index("--video") + 1], "wb").write(b"mp4")
         open(out, "w").write(json.dumps(res))
         """))
-    if episode: json.dump({"success": True, "n_actions": 30, "control_steps": 30, "reason": "done", "live_sha": "abc"}, open(os.path.join(data, "episode.json"), "w"))
+    if episode: json.dump({"success": success, "n_actions": 30, "control_steps": 30, "reason": "done", "live_sha": "abc", "graded_by": "live", "replays": 0}, open(os.path.join(data, "episode.json"), "w"))
     if pre_final is not None: json.dump(pre_final, open(os.path.join(data, "final.json"), "w"))
     open(os.path.join(data, "trajectory.npz"), "wb").write(b"x")
     f = os.path.join(d, "finalize.sh"); open(f, "w").write(open(os.path.join(T_STD, "environment/sim/finalize.sh")).read().replace("/srv", srv))
-    env = {**os.environ, "PATH": bind + ":" + os.environ["PATH"], "RCB_DATA": data, "RCB_TOOL": tool, "RCB_INSTANCE": "/x", "STUB": json.dumps(beh),
+    env = {**os.environ, "PATH": bind + ":" + os.environ["PATH"], "RCB_DATA": data, "RCB_TOOL": tool, "RCB_INSTANCE": "/x", "STUB": beh,
            **({"RCB_HOOK_BUDGET_S": str(budget)} if budget else {})}
     t0 = time.time(); p = subprocess.run(["sh", f], capture_output=True, text=True, env=env, timeout=200); assert p.returncode == 0, (p.stdout, p.stderr)
     fin = json.load(open(os.path.join(data, "final.json"))); assert not os.path.exists(os.path.join(data, "final.json.tmp"))
-    return fin, std_grade(fin, "fin_" + name), time.time() - t0, p.stdout
-fin, r, _, _ = finalize("ok", {}); check(fin["finalized"] and fin["replay_success"] and fin["deterministic"] and fin["video"] is True and r["success"] == 1 and r["video_rendered"] == 1, "finalize: good replays -> pass, video flagged", (fin, r))
-fin, r, _, _ = finalize("novideo", {"3": "die"}); check(fin["replay_success"] and fin["video"] is False and r["success"] == 1, "finalize: the video replay dying does not touch the verdict", (fin, r))
-fin, r, _, _ = finalize("fail", {"1": "fail", "2": "fail"}); check(not fin["replay_success"] and "infra_error" not in fin and r["success"] == 0 and r["infra_error"] == 0, "finalize: failing replays -> the agent's 0", (fin, r))
-fin, r, _, _ = finalize("die", {"2": "die"}); check(fin.get("replay_failed") == 1 and fin["infra_error"] == 1 and r["infra_error"] == 1 and r["grader_error"] == 1, "finalize: a replay process that died -> replay_failed + infra_error", (fin, r))
-fin, r, _, _ = finalize("mismatch", {"1": "mismatch"}); check(fin.get("instance_mismatch") == 1 and r["infra_error"] == 1, "finalize: replay not from the t = 0 state -> instance_mismatch + infra_error", (fin, r))
-fin, r, _, _ = finalize("nondet", {"2": "othersha"}); check(not fin["deterministic"] and r["success"] == 0 and r["infra_error"] == 0, "finalize: replays ending in different states -> deterministic 0", (fin, r))
-fin, r, dt, out = finalize("hang", {"1": "hang"}, budget=44); check(fin["finalized"] and fin.get("replay_failed") == 1 and fin["infra_error"] == 1 and r["infra_error"] == 1 and dt < 60, f"finalize: a hanging replay is ended at its share of the hook's time ({dt:.0f} s) and recorded as infra_error in a finalized final.json", (fin, r, out))
-fin, r, _, _ = finalize("endrc1", {}, end_rc=1, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and fin["infra_error"] == 1 and r["infra_error"] == 1 and r["success"] == 0, "finalize: the service never ended the episode -> infra_error", (fin, r))
+    calls = open(os.path.join(data, "tool_calls")).read().splitlines() if os.path.exists(os.path.join(data, "tool_calls")) else []
+    assert all("--video" in c for c in calls) and len(calls) <= 1, calls          # no grading replay: one video-only pass at most
+    assert "replay_success" not in fin and "deterministic" not in fin, fin
+    return fin, std_grade(fin, "fin_" + name), time.time() - t0, p.stdout, calls
+fin, r, _, _, calls = finalize("ok"); check(fin["finalized"] and fin["graded_by"] == "live" and fin["replays"] == 0 and fin["video"] is True and fin["video_source"] == "render" and fin["video_pending"] is False and fin["state_sha"] == "abc" and r["success"] == 1 and r["video_rendered"] == 1 and len(calls) == 1, "finalize: a live success -> pass; one video-only pass, video flagged", (fin, r, calls))
+fin, r, _, _, _ = finalize("videofail", "fail"); check(fin["success"] is True and r["success"] == 1, "finalize: the video pass's own success is not read", (fin, r))
+fin, r, _, _, _ = finalize("livefail", success=False); check(fin["success"] is False and not fin.get("infra_error") and r["success"] == 0 and r["infra_error"] == 0, "finalize: a live failure -> the agent's 0, whatever the render pass says", (fin, r))
+fin, r, _, _, _ = finalize("novideo", "die"); check(fin["success"] is True and fin["video"] is False and fin["video_pending"] is False and fin["video_source"] is None and r["success"] == 1 and r["infra_error"] == 0, "finalize: the video pass dying does not touch the verdict (video_source null)", (fin, r))
+fin, r, _, _, _ = finalize("mismatchrender", "mismatch"); check(fin["success"] is True and r["success"] == 1 and r["infra_error"] == 0, "finalize: the render pass's instance check decides nothing (the service checks the start)", (fin, r))
+fin, r, dt, out, _ = finalize("hang", "hang", budget=30); check(fin["finalized"] and fin["success"] is True and fin["video"] is False and fin["video_pending"] is False and r["success"] == 1 and dt < 60, f"finalize: a hanging render is ended at the hook's deadline ({dt:.0f} s) and loses only the video", (fin, r, out))
+fin, r, _, _, calls = finalize("noepisode", episode=False); check(fin["infra_error"] == 1 and r["infra_error"] == 1 and r["success"] == 0, "finalize: no episode.json -> infra_error", (fin, r))
+fin, r, _, _, calls = finalize("endrc1", end_rc=1, episode=False, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and fin["infra_error"] == 1 and r["infra_error"] == 1 and r["success"] == 0 and not calls, "finalize: the service never ended the episode (no episode.json) -> infra_error, no render", (fin, r))
+fin, r, _, _, calls = finalize("endrc1dumped", end_rc=1, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and not fin.get("infra_error") and fin["end_timed_out"] is True and r["success"] == 1 and not calls and fin["video_pending"] is False, "finalize: a dumped episode.json is the live verdict when the service was late to exit (no render)", (fin, r, calls))
 gave = {"success": False, "finalized": True, "gave_up": True, "reason": "sim_crashed_on_call"}
-fin, r, _, _ = finalize("endrc2", {}, end_rc=2, pre_final=gave); check(fin == gave and r["infra_error"] == 0, "finalize: a give-up verdict on disk is kept", (fin, r))
+fin, r, _, _, calls = finalize("endrc2", end_rc=2, pre_final=gave); check(fin == gave and r["infra_error"] == 0 and not calls, "finalize: a give-up verdict on disk is kept", (fin, r))
 ct = float(re.search(r'command = "sh /srv/finalize.sh".*\ntimeout_sec = (\d+)', open(os.path.join(T_STD, "task.toml")).read()).group(1))
 hb = float(re.search(r"RCB_HOOK_BUDGET_S:-(\d+)", open(os.path.join(T_STD, "environment/sim/finalize.sh")).read()).group(1))
 check(hb < ct, "finalize: the hook's own deadline is before the collect timeout", (hb, ct))
@@ -129,6 +138,20 @@ import importlib.util as _u
 _s = _u.spec_from_file_location("rcb_molmospaces", os.path.join(HERE, "stub_ms", "rcb_molmospaces.py")); _m = _u.module_from_spec(_s); _s.loader.exec_module(_m); sys.modules["rcb_molmospaces"] = _m
 import rcb_limited as L, rcb1
 got = []; L.serve = lambda svc, port=8000: got.append(svc)
+gave = []; _give_up = L.Episode.give_up
+def _gu(self, reason, infra):  # the real give-up writes the verdict; its endless refusal is replaced by an exception here
+    gave.append((reason, infra)); L.refuse_forever = lambda *a, **k: (_ for _ in ()).throw(SystemExit("refused"))
+    return _give_up(self, reason, infra)
+L.Episode.give_up = _gu
+os.environ["STUB_T0_SHA"] = "not-the-start"
+try:
+    runpy.run_path(os.path.join(SIM, "server.py"), run_name="server")
+except SystemExit:
+    pass
+fin0 = json.load(open(os.path.join(os.environ["RCB_DATA"], "final.json")))
+check(gave and gave[0][1] is True and gave[0][0].startswith("instance_mismatch") and not got and fin0.get("infra_error") == 1 and fin0.get("gave_up"),
+      "service: a start state that is not the frozen one gives up as instance_mismatch (infra) before serving", (gave, got, fin0))
+os.environ.pop("STUB_T0_SHA"); os.environ["RCB_DATA"] = tempfile.mkdtemp(); L.Episode.give_up = _give_up
 runpy.run_path(os.path.join(SIM, "server.py"), run_name="server"); svc = got[0]
 httpd = HTTPServer(("127.0.0.1", 0), L.make_handler(svc)); threading.Thread(target=httpd.serve_forever, daemon=True).start()
 U = f"http://127.0.0.1:{httpd.server_address[1]}"
