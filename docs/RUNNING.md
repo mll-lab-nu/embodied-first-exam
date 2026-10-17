@@ -60,13 +60,21 @@ Results are not committed (published on the results site and the Hugging Face da
 `<harness>-<model>-<effort>`, the model token with underscores: `codex-gpt6_luna-xhigh`; provider, tier and settings go
 in the metadata). `scripts/write_task_results.py` writes, per task and run id, `README.md`, `config.json` (the trial's
 effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`, `slowdown`, `seed`, `network`,
-`validated`, `oracle`, `service_protocol`, `digest`, the result and whether it counts; a result dir from before v2.0
+`validated`, `set`, `oracle`, `service_protocol`, `digest`, the result and whether it counts; a result dir from before v2.0
 gets its fields from the task at that digest, else `"legacy"`) and `attempts.json`. Rankings (the batch summary,
 the results site) compare trials only within one comparable configuration (`task_conventions.config_key`: protocol
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
-every task, the flag is shown as a marker and may be used as a filter.
+every core task, the flag is shown as a marker and may be used as a filter. The easy set ([`easy_set.toml`](easy_set.toml),
+`task_conventions.set_of`) is kept apart: its tasks are run and their results kept and shown, marked, but the main
+table and every headline number (success rates, rankings, totals) count `core` tasks only; the easy set's results are
+shown separately (the batch summary marks them in their configuration's table and leaves them out of its rate; the
+results site and the pool dashboard, outside this repository, are to list them apart). `set` in `config.json` is the value when the result was written; a
+report derives it from `docs/easy_set.toml` at the commit it publishes, so a task that leaves the list (e.g. after a
+grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
+mode by the screening runs its `note` names: core-set numbers of those runs are filtered against them, so report those
+runs on all tasks alongside.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker
