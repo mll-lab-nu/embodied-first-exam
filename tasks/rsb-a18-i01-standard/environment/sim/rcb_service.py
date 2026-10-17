@@ -25,7 +25,14 @@ Evidence under DATA, never visible to the agent:
   startups.jsonl       one line per process start
   final.json           kept current (written atomically); "finalized": true once the verdict is in -- before the
                        video is rendered ("video_pending": true while it is), so the video never decides anything
-  trajectory.npz, replay.mp4, replay.last.png   the graded episode and its fresh replay
+  trajectory.npz       the graded episode (the deliverable: every control step since the last reset, as executed)
+  replay.mp4, replay.last.png   the episode's video, rendered from trajectory.npz after the verdict (for people only)
+
+The verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): success = the episode this
+service ran ended in success under the task's rule (the adapter's step()), judged here, after the agent's container is
+gone; nothing is replayed to grade it. An adapter may add its benchmark's own record of the live episode with
+live_verdict(rows, success) -> dict, e.g. a settle window run on the live simulator: its "success" can only take a
+success away, never give one.
 
 Crash recovery: compose restarts a crashed service (restart: on-failure). It replays the journal up to the last
 checkpoint, checks the state hash, and continues the SAME episode -- never a reset. A call in flight is lost as a
@@ -91,9 +98,13 @@ class Sim:
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]: ...   # one control step -> (done, success, info)
     def reset(self) -> None: ...                       # back to the frozen instance
     def state_sha(self) -> str: ...
-    def verify(self, rows: np.ndarray) -> dict: ...    # replay in a fresh simulator -> {"success", "state_sha"}
+    # optional: start_sha: str   the frozen instance's recorded starting-state hash; a fresh episode that does not start
+    #           there is refused (instance_mismatch, an infrastructure failure) before the agent is served
+    # optional: live_verdict(rows, success) -> dict   the benchmark's own record of the live episode, judged on the live
+    #           simulator after the episode ended (e.g. a settle window); "success": False takes the success away
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None: ...
-    def render_video(self, rows: np.ndarray, path: str) -> None: ...   # path and path.last.png
+    def render_video(self, rows: np.ndarray, path: str) -> None: ...   # path and path.last.png: the episode's video, after
+                                                                        # the verdict; it never decides anything
 
 
 class GiveUp(Exception):
@@ -308,8 +319,8 @@ class Service:
              "control_steps_total": self.journal_rows, "episodes": self.resets + 1, "resets": self.resets,
              "reset_budget": self.reset_budget, "elapsed_s": round(end - self.t0, 1) if self.t0 else 0.0,
              "sim_startups": self.starts, "finalized": self.finalized, **self.verdict}
-        if "deterministic" in self.verdict:
-            d["success"] = bool(self.success and self.verdict["replay_success"] and self.verdict["deterministic"])
+        if self.verdict.get("graded_by") == "live":     # the verdict is in: the live episode's, nothing replayed
+            d["success"] = bool(self.success and self.verdict.get("live_rule", True))
         write_json_atomic(os.path.join(self.data, "final.json"), d)
 
     def _save_call(self, meta: dict, actions: np.ndarray | None) -> None:
@@ -330,6 +341,12 @@ class Service:
             self.starts = 1
         ev = self._events()
         if not any(e["ev"] == "start" for e in ev):
+            # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later
+            # replay checks it): a scene that did not build to the instance's recorded state is no trial of this task.
+            want = getattr(self.sim, "start_sha", None)
+            if want and self.sim.state_sha() != want:
+                self._give_up(f"instance_mismatch: the scene started at {self.sim.state_sha()}, the frozen instance "
+                              f"records {want}", infra=True)
             open(self.journal_path, "wb").close()
             self._checkpoint("start", protocol=PROTOCOL, spec=self.spec, startup=self.starts)
         else:
@@ -344,7 +361,7 @@ class Service:
                 fin = json.load(f)
         except (OSError, ValueError):
             fin = {}
-        if fin.get("finalized") or "deterministic" in fin:
+        if fin.get("finalized") or "deterministic" in fin or "graded_by" in fin:
             # Graded already. The process died rendering the video (video_pending; before 2026-10, a verdict not yet
             # finalized): all it lost is the video.
             if not fin.get("finalized") or fin.get("video_pending"):
@@ -666,10 +683,12 @@ class Service:
             self._finalize()
 
     def _finalize(self) -> None:
-        """The graded episode (every control step since the last reset) as a trajectory and its replay in a fresh
-        simulator (success, and bit-exact agreement with the live run): the verdict, final from the moment it is
-        written ("finalized": true). Then a video for humans, which can no longer change or void it: while it renders
-        final.json says "video_pending": true (the collect hook waits for it as long as its time allows)."""
+        """The verdict: the live episode's (docs/PROTOCOL.md H.4). The graded episode (every control step since the last
+        reset) is saved as the trajectory, the deliverable that stays replayable, and the success is the one the live
+        episode ended with (plus the adapter's live_verdict(), which can only take it away): final from the moment it is
+        written ("finalized": true). Nothing is replayed to grade it. Then a video for humans, rendered from the
+        trajectory, which can no longer change or void the verdict: while it renders final.json says
+        "video_pending": true (the collect hook waits for it as long as its time allows)."""
         rows = None
         try:
             rows = np.asarray(self.episode, dtype=np.float64).reshape(-1, self.sim.raw_dim)
@@ -677,10 +696,18 @@ class Service:
             self.sim.save_trajectory(rows, os.path.join(self.data, "trajectory.npz"),
                                      {"source": "standard-mode episode", "protocol": PROTOCOL, "reason": self.reason,
                                       "episode": self.resets + 1})
-            rep = self.sim.verify(rows)
-            self.verdict = {"n_actions": int(len(rows)), "replay_success": bool(rep["success"]),
-                            "deterministic": rep["state_sha"] == live_sha, "state_sha": live_sha, "video": False}
-            self.log("replay", **self.verdict)
+            verdict = {"n_actions": int(len(rows)), "graded_by": "live", "replays": 0, "state_sha": live_sha,
+                       "video": False, "video_source": "render"}
+            judge = getattr(self.sim, "live_verdict", None)
+            if callable(judge):
+                # the benchmark's own record of the live episode, judged on the live simulator (e.g. a settle window):
+                # recorded in final.json; its "success" can take a success away (live_rule), never give one
+                extra = dict(judge(rows, bool(self.success)) or {})
+                if "success" in extra:
+                    verdict["live_rule"] = bool(extra.pop("success"))
+                verdict.update({k: v for k, v in extra.items() if k not in verdict})
+            self.verdict = verdict
+            self.log("verdict", **{k: v for k, v in verdict.items() if isinstance(v, (bool, int, float, str))})
         except Exception as exc:  # noqa: BLE001
             traceback.print_exc()
             self.log("finalize_error", error=repr(exc)[:500])

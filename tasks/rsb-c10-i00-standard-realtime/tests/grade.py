@@ -1,7 +1,8 @@
 """RoboSafeBench standard-realtime verifier (eai-standard/2.3): the standard tasks' grader (grade_rsb.py, byte-identical
 to their tests/grade.py: the same verdict, the same reward.json fields) plus the clock's record. Needs only Python.
 
-success is decided exactly as in the standard tasks (live, both fresh replays, deterministic, no infrastructure error).
+success is decided exactly as in the standard tasks (the live episode's verdict, graded_by "live", no infrastructure
+error; nothing is replayed to grade it, board 0151).
 How well the clock was kept is repeated from /data/final.json as numbers (PROTOCOL §4b; a missing one is 0) and decides
 nothing: clock_s, max_lag_s, stalls, stalled_s, stalled_share, held_steps, late_steps, max_queue_wait_s,
 requests_refused, request_busy_s, slowdown, and the pictures charged (pictures, picture_steps; picture_wall_s:

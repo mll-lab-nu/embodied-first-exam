@@ -8,8 +8,8 @@ API, which says what the agent may send (`action_types`); this module only relay
 where the type index is the position of the type in `Codec.types` (the order of the API's `action_types`) and the note
 id is the line of DATA/notes.jsonl holding the free text the agent sent with that row (the /submit header's `note`:
 the question of `ask_operator`, the text of `report` and of the exits), or -1. A note is appended and fsynced before
-the first row that carries it runs, so a journal that names it can always be replayed (crash recovery, the graded
-replay, the verifier's evidence).
+the first row that carries it runs, so a journal that names it can always be replayed (crash recovery, the video,
+an offline re-check, the verifier's evidence).
 
 The control API an episode offers (RoboSafeBench's side, the instance key's `"interface": "control"`; `api_of`):
   action_types() -> {name: {"dim", "layout", "lower", "upper", "units", "semantics", "interpolable": bool,
