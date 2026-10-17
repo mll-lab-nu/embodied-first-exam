@@ -176,8 +176,9 @@ CHANGES = {
         "actions set a fire or cut a slice one control step apart, the two replays' state hashes differed and 6 privileged "
         "trials that completed the task scored 0. The tooling now hashes simulator objects by name (the same order in every "
         "process) and the images set PYTHONHASHSEED=0. `tests/grade.py`'s two graded replays also run exactly alike (the "
-        "second one recorded the video with other cameras); the video comes from a third replay, at most 1 h, that never "
-        "affects the score (`video_replay_matches`), and `[verifier] timeout_sec` is 61400 s (was 57800 s). "
+        "second one recorded the video with other cameras); the video comes from a third replay, run after `reward.json` holds "
+        "the verdict and bounded like a graded replay, that never affects the score (`video_replay_matches`, `video.json`), and "
+        "`[verifier] timeout_sec` is 85800 s (was 57800 s: three capped replays + 30 min). "
         f"(2) Success: {SUCCESS_RULE} (`reward.json` `goal`, `settle_steps`). (3) "
         f"{BREAKDOWN}. (4) `s.status()` no longer changes the simulation: the q_score's predicate evaluation runs with the "
         "object-state caches restored (calls at arbitrary steps changed what transition rules saw later, e.g. a fire). (5) "
@@ -240,8 +241,9 @@ CHANGES = {
         "in the service and in every replay (it followed memory addresses: fires, cuts and cooking could happen one control "
         "step apart, and 8 live successes failed or split in replay), and the sim service sets PYTHONHASHSEED=0. "
         "`environment/sim/finalize.sh`: the two graded replays run exactly alike (the first one recorded the video with other "
-        "cameras); the video comes from a third replay, at most 1 h, that never affects the score (`final.json` / "
-        "`reward.json` `video_replay_matches`), and `[[verifier.collect]] timeout_sec` is 41400 s (was 37800 s). (2) Success: "
+        "cameras); the video comes from a third replay, run after `final.json` holds the verdict with the hook's remaining time, "
+        "that never affects the score (`final.json` / `reward.json` `video_replay_matches`), and `[[verifier.collect]] "
+        "timeout_sec` is 52200 s (was 37800 s: one more replay of up to 4 h). (2) Success: "
         f"{SUCCESS_RULE}; each replay runs that settle window after the last row, and when your episode ended first a "
         f"success both replays reach there is the episode's (`settled_success`); `/spec` `episode` says so. (3) {BREAKDOWN}. The scene, the frozen instance and the BDDL "
         "goal are unchanged, so the task keeps its name (as for the fall rule of 2026-10-09); the pass rule is stricter, so "
@@ -399,8 +401,8 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("Budget", "the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every "
                        "Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)"),
-            ("Verifier time", f"at most 40,000 rows accepted; each graded replay {REPLAY_LIMIT}, the video replay at most 1 h; "
-                              "`[verifier] timeout_sec` 61400 s (two capped replays + the video replay + 30 min)")]
+            ("Verifier time", f"at most 40,000 rows accepted; each graded replay {REPLAY_LIMIT}, and the video replay after the "
+                              "verdict the same; `[verifier] timeout_sec` 85800 s (three capped replays + 30 min)")]
     return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e),
                   details(rows) + change_log("privileged"), review_pr(e))
 
@@ -431,8 +433,8 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; docs/benchmarks/behavior.md)"),
-            ("Collect hook time", "41400 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + the video replay "
-                                  "(at most 1 h) + 30 min")]
+            ("Collect hook time", "52200 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + the video replay "
+                                  "after the verdict (up to 4 h) + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))
 

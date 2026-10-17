@@ -88,8 +88,9 @@ timeout_sec = 120
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end the episode (waits through a resume), replay twice in fresh processes, write final.json
-timeout_sec = 41400               # 11.5 h = the episode end (up to 2 h through a resume) + two replays as long as the privileged
-                                  # grader allows (4 h each) + the video replay (at most 1 h) + 30 min; measured on an 8-vCPU L40S:
+timeout_sec = 52200               # 14.5 h = the episode end (up to 2 h through a resume) + two replays as long as the privileged
+                                  # grader allows (4 h each) + the video replay after the verdict (the same 4 h: PROTOCOL §4)
+                                  # + 30 min; measured on an 8-vCPU L40S:
                                   # 626 s Isaac start, < 3.5 steps/s.
                                   # finalize.sh's BUDGET_S is this value: it stops a replay 10 min before it and records why
 

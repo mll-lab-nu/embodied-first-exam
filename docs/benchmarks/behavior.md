@@ -190,13 +190,15 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
   challenge timeout and 1.6 times the longest success; 1.5 steps/s is 20 % under the slowest rate measured, and 1200 s
   covers the slowest start. The instruction states the cap; every success recorded so far is under it. The standard
   mode is unchanged (its episode is bounded by the agent's wall clock).
-  Since the video replay of 2026-10-14 (§ Grading and determinism) `[verifier] timeout_sec` = 61400 s: plus the video
-  replay, at most 1 h.
+  Since the video replay of 2026-10-14 (§ Grading and determinism) `[verifier] timeout_sec` = 85800 s: plus the video
+  replay, which runs after the verdict is written and gets a graded replay's limit (PROTOCOL §4: the video's bound
+  covers the longest episode), within the verifier's remaining time (`tests/grade.py` `VERIFIER_TIMEOUT_S`).
 - **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI;
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
   replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
   `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below). Since 2026-10-14
-  41400 s: plus the video replay, at most 1 h.
+  52200 s: plus the video replay (up to 4 h), which runs after `final.json` holds the verdict, in the hook's
+  remaining time.
 
 ## Kit cache: one per trial
 Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every compose file names its cache volume without a
@@ -283,7 +285,8 @@ its log has no failed download: the scene loads from the mounted dataset alone.
   challenge cameras (`cameras="default"`, 224x224) instead of the tiny ones, so the two replays the hash check compares
   ran different configurations (not the cause of the 15 above, but no basis for comparing hashes either). Now both graded
   replays run without video, the same way, and the
-  video comes from a third fresh-process replay, capped at 1 h, that never decides anything; whether it ended on the same
+  video comes from a third fresh-process replay, run after the verdict is written and bounded like a graded replay (2026-10-16,
+  PROTOCOL §4; it was capped at 1 h, which would have cut the video of long episodes), that never decides anything; whether it ended on the same
   state is reported (`video_replay_matches`), as evidence about the camera configuration's effect.
 - **`s.status()` changes nothing (2026-10-14, item 17).** The q_score counts the goal's satisfied predicates by evaluating
   them; that fills the object states' value caches, and OmniGibson reuses a cached value at later steps while the objects

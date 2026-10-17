@@ -11,8 +11,10 @@ non-deterministic run cannot pass. The frozen scene rebuilt here from tests/inst
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
 The graded replays run exactly alike (2026-10-14, failure analysis item 16; the last one used to record the video, with
 other cameras; the replays' disagreements that voided 15 completed tasks came from OmniGibson's set order, which the
-tooling now fixes, rcb_behavior._stable_hashes); the video is a third replay, capped at VIDEO_CAP_S, whose result never decides anything (`video_replay_matches`
-reports whether it ended on the same state). "Success" is the tooling's rule (REST_* in rcb_behavior.py: the BDDL goal
+tooling now fixes, rcb_behavior._stable_hashes); the video is a third replay, run after reward.txt / reward.json hold the
+verdict (PROTOCOL §4: the verdict never waits for or depends on the video), bounded like a graded replay
+(replay_timeout()) and by the verifier's remaining time (VERIFIER_TIMEOUT_S); it only adds `video_rendered` /
+`video_replay_matches` (whether it ended on the graded replays' state) to reward.json, and its record is video.json. "Success" is the tooling's rule (REST_* in rcb_behavior.py: the BDDL goal
 held for 1 s with no goal object in a gripper and every goal object at rest, after the trajectory plus a settle window of
 up to 5 s); a replay that ends on a simulator breakdown (the tooling's BREAKDOWN_* check: non-finite or runaway state) is
 `sim_breakdown` + `infra_error`, no verdict on the agent.
@@ -44,18 +46,63 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 MAX_ROWS = 40_000
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 3600.0, 1200.0, 1.5
 REPLAY_CAP_S = 28000.0                               # >= REPLAY_STARTUP_S + MAX_ROWS / REPLAY_MIN_RATE = 27,867 s
-VIDEO_CAP_S = 3600.0                                 # the video replay's own limit (evidence only; a cut video still plays)
+# The video replay (after the verdict) replays the whole episode again, so it gets a graded replay's own limit
+# (replay_timeout(); PROTOCOL §4: the video's time bound covers the longest episode), within the verifier's time left:
+# task.toml's [verifier] timeout_sec is VERIFIER_TIMEOUT_S = three capped replays + 30 min; VIDEO_MARGIN_S is kept for the
+# resource-limits step (test.sh's trap) and Harbor's copy of /logs/verifier.
+VERIFIER_TIMEOUT_S = float(os.environ.get("RCB_VERIFIER_TIMEOUT_S") or 85800.0)
+VIDEO_MARGIN_S = 600.0
+T_START = time.time()
 
 
 def replay_timeout(n_steps: int) -> float:
     return min(REPLAY_CAP_S, max(REPLAY_FLOOR_S, REPLAY_STARTUP_S + n_steps / REPLAY_MIN_RATE))
 
 
+def _atomic(name: str, text: str) -> None:
+    tmp = os.path.join(LOG_DIR, f".{name}.tmp")
+    with open(tmp, "w") as f:
+        f.write(text)
+    os.replace(tmp, os.path.join(LOG_DIR, name))
+
+
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
-    open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
-    json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
+    _atomic("reward.txt", "1\n" if ok else "0\n")
+    _atomic("reward.json", json.dumps(out))
     print(json.dumps(out), flush=True)
+
+
+def render_video(a, tool: str, limit: float, sha: str | None, out: dict) -> None:
+    """The evidence video: a third fresh-process replay with the challenge cameras, after the verdict is on disk. Bounded
+    by a graded replay's limit and the verifier's remaining time; a failure or a cut only leaves less video. Adds
+    `video_rendered` / `video_replay_matches` to reward.json (the verdict fields and reward.txt are not touched)."""
+    vpath, rec = os.path.join(LOG_DIR, "replay.mp4"), {"video": False}
+    budget = min(limit, VERIFIER_TIMEOUT_S - VIDEO_MARGIN_S - (time.time() - T_START))
+    if budget < 120:
+        rec["why"] = f"no verifier time left for the video replay ({budget:.0f} s)"
+    else:
+        vcmd = [sys.executable, tool, "replay", "--task", a.family, "--instance", a.instance, "--traj", a.traj,
+                "--video", vpath, "--fps", str(a.video_fps)]
+        try:
+            vp = subprocess.run(vcmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=budget,
+                                env={**os.environ, "RCB_SESSION_LOG": ""})
+            vl = [l for l in vp.stdout.splitlines() if l.startswith("{")]
+            vo = ((json.loads(vl[-1]).get("replays") or [{}])[0]) if vl else {}
+            rec["state_sha"] = vo.get("state_sha")
+            rec["matches"] = bool(vo.get("state_sha")) and vo.get("state_sha") == sha
+        except subprocess.TimeoutExpired:   # a cut video still plays (fragmented MP4)
+            rec["why"] = f"the video replay was not done within {budget:.0f} s"
+        except Exception as exc:  # noqa: BLE001 -- the video never decides the verdict
+            rec["why"] = f"the video replay failed: {exc!r}"[:300]
+    rec["video"] = os.path.isfile(vpath)
+    if rec.get("why"):
+        print(f"[grade] {rec['why']}", file=sys.stderr, flush=True)
+    try:
+        _atomic("video.json", json.dumps(rec))
+        _atomic("reward.json", json.dumps({**out, "video_rendered": int(rec["video"]), "video_replay_matches": int(bool(rec.get("matches")))}))
+    except Exception as exc:  # noqa: BLE001
+        print(f"[grade] video record: {exc!r}"[:300], file=sys.stderr, flush=True)
 
 
 def main() -> int:
@@ -124,20 +171,6 @@ def main() -> int:
         if breakdown:
             print(f"[grade] simulator breakdown in a replay: {[o.get('end_reason') for o in outs]}", file=sys.stderr, flush=True)
         ok = all_success and deterministic and instance_ok and not breakdown
-        video = {"video_rendered": 0, "video_replay_matches": 0}
-        if not a.no_video:            # the video: a third replay with the challenge cameras, evidence only
-            vpath = os.path.join(LOG_DIR, "replay.mp4")
-            vcmd = [sys.executable, tool, "replay", "--task", a.family, "--instance", a.instance, "--traj", a.traj,
-                    "--video", vpath, "--fps", str(a.video_fps)]
-            try:
-                vp = subprocess.run(vcmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=min(limit, VIDEO_CAP_S),
-                                    env={**os.environ, "RCB_SESSION_LOG": ""})
-                vl = [l for l in vp.stdout.splitlines() if l.startswith("{")]
-                vo = ((json.loads(vl[-1]).get("replays") or [{}])[0]) if vl else {}
-                video["video_replay_matches"] = int(bool(vo.get("state_sha")) and vo.get("state_sha") == outs[0].get("state_sha"))
-            except Exception as exc:  # noqa: BLE001 -- the video never decides the verdict (a timeout keeps a playable cut)
-                print(f"[grade] video replay: {exc!r}"[:300], file=sys.stderr, flush=True)
-            video["video_rendered"] = int(os.path.isfile(vpath))
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                # instance_ok 0: the frozen scene did not rebuild to the recorded one in the verifier (dataset / simulator /
                # hardware drift, decided before the first action): an infrastructure failure, not the agent's 0
@@ -152,8 +185,10 @@ def main() -> int:
                # that the replay does not report, so final_reward was always 0)
                "final_reward": float(outs[-1].get("q_score") or 0.0), "q_score": float(outs[-1].get("q_score") or 0.0),
                "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1), "grader_error": int(not instance_ok),
-               **video, **cost}
-        write(ok, out)
+               "video_rendered": 0, "video_replay_matches": 0, **cost}
+        write(ok, out)                # the verdict first; the video replay below only adds its two fields
+        if not a.no_video:
+            render_video(a, tool, limit, outs[0].get("state_sha"), out)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, **cost})

@@ -245,6 +245,8 @@ MAX_STEPS = 200_000
 if __name__ == "__main__":
     open(os.environ["FAKE_COUNT"] + ".args", "a").write(" ".join(sys.argv[1:]) + "\n")
     video = "--video" in sys.argv
+    if video and os.environ.get("FAKE_VIDEO") == "die":
+        sys.exit(139)
     if video and os.environ.get("FAKE_VIDEO") == "other":
         print(json.dumps({"replays": [{"success": True, "state_sha": "vvvv"}], "instance_matches": True})); sys.exit(0)
     mode = os.environ.get("FAKE_REPLAY", "ok")
@@ -309,6 +311,15 @@ class PrivilegedGrader(unittest.TestCase):
         self.assertEqual((js["deterministic"], js["video_replay_matches"]), (1, 1))
         txt, js = grade_privileged(good_traj, video=True, FAKE_VIDEO="other")   # the video replay's state never decides
         self.assertEqual(txt, "1", js); self.assertEqual((js["deterministic"], js["video_replay_matches"]), (1, 0))
+
+    def test_the_verdict_never_waits_for_the_video(self):
+        # (2026-10-16, PROTOCOL §4) the verdict is on disk before the video replay; a video replay that dies, or no
+        # verifier time left for it, leaves the verdict as it was (video_rendered 0, video.json says why)
+        txt, js = grade_privileged(good_traj, video=True, FAKE_VIDEO="die")
+        self.assertEqual(txt, "1", js); self.assertEqual((js["success"], js["video_rendered"], js["video_replay_matches"]), (1, 0, 0))
+        self.assertEqual(len(js["_args"]), 3, js["_args"])
+        txt, js = grade_privileged(good_traj, video=True, RCB_VERIFIER_TIMEOUT_S="700")   # 700 s - 600 s margin: no time
+        self.assertEqual(txt, "1", js); self.assertEqual(len(js["_args"]), 2, js["_args"]); self.assertEqual(js["video_rendered"], 0)
 
     def test_a_breakdown_is_infrastructure(self):
         js = self.check(good_traj, "0", env={"FAKE_REPLAY": "breakdown"}, success=0, sim_breakdown=1, infra_error=1, grader_error=0)
