@@ -385,7 +385,11 @@ MuJoCo model and state, exact resets, snapshots where the family offers them, re
 family's `replay.py`, reward 1 iff both succeed with identical final state hashes. `replay.py` reports an invalid
 archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure error. `reward.json` is numeric
 (`success, deterministic, infra_error, bad_trajectory, missing_trajectory, n_actions, sim_steps, stages_completed,
-hand_wuji`); text diagnostics go to `/logs/verifier/details.json`.
+hand_wuji`); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a third fresh
+replay renders the replay video (`/logs/verifier/replay.mp4`, its record in `video.json`) in the verifier's remaining
+time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict (board 0136, 2026-10-16: before, the privileged
+verifier rendered no video at all). The essential families' `replay.py` films every 2nd step, at most 1500 frames
+(`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core, so a 28k-step episode took over an hour before).
 
 **Standard** (`eai-standard/2.2`, docs/STANDARD_MODE.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer
@@ -396,7 +400,8 @@ action, watch step and reset is journaled, and a crashed service resumes the sam
 where the committed resets did (resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
 (`meta["time_left_s"]`) counts from its first request. The collect hook (`finalize.sh` / `finalize.py`) ends the
 episode, replays `/data/trajectory.npz` twice in fresh processes with the recorded hand, seals `final.json` and then
-renders an evidence video; the separate verifier reads only `final.json` and needs live success, both replay successes,
+renders an evidence video (`/data/replay.mp4`) in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s` >= the replay timeout;
+before 2026-10-16 a fixed 300 s, which cut episodes of more than ~10k steps); the separate verifier reads only `final.json` and needs live success, both replay successes,
 identical replay hashes and replay hash = live hash. Missing trusted evidence is an infrastructure error; the video
 never decides a verdict.
 
@@ -479,7 +484,7 @@ README layout, test.sh). Never edit a generated task file: edit the family's sou
   `scripts/dexhand/families/<family>/` with a `family.json` (directory scan, no central list): its runtime files and
   asset folders, hands and per-hand widths, robot name, row limit, control rate, instruction and README texts
   (`{{HANDS}}`, `{{MAX_ROWS}}`, `{{CONTROL_HZ}}`, ... placeholders), oracle files, metadata and grader timeouts
-  (`replay_sec`, `video_sec`, verifier and collect limits). The agent's time limit is not a family setting.
+  (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits). The agent's time limit is not a family setting.
 - Shared sources, copied unchanged into every task (`ci_checks/check-tooling-identity.sh`): `rcb_dexhand.py`,
   `hands.py`, the privileged and standard graders, the standard service, its collect hook and the `eai-standard/2.2`
   layer.

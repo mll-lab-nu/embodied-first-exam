@@ -140,10 +140,10 @@ episode, #125).
   backstops stop it earlier or bound it; none can misgrade, because `tests/grade.py` reads `deterministic`, not
   `finalized`:
   - 300 s after the verdict is on disk (`RCB_VIDEO_GRACE_S`), should the service hang while finishing the video;
-  - 900 s after the start for an episode that ended **without** a live success (`RCB_FAIL_WAIT_S`): it is a failure
-    whatever its replay says, so its replay and video are evidence only. This is a deliberate exception to §4.8's
-    "waits for `finalized`": such a trial is graded 0 with `finalized = 0` and, when the replay was not done, without
-    `replay.mp4`;
+  - `RCB_FAIL_WAIT_S` after the start for an episode that ended **without** a live success: it is a failure whatever
+    its replay says, so its replay is evidence only. The default is the overall wait (5,400 s; board 0136, 2026-10-16):
+    the replay records the trial's video, and with the earlier 900 s most failed episodes ended without `replay.mp4`.
+    A lower value trades the video of long failed episodes for verifier time, never the grade;
   - 5,400 s overall: a live success without a replay verdict by then is `infra_error = 1`.
 
 ## Licence
