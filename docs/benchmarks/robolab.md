@@ -88,7 +88,7 @@ the host list from that script).
 | standard `main` (agent, client only) | the same |
 | standard `sim` (the simulator service) | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (it begins at container start and takes 5 to 9 minutes) and a restart after a crash run with the allowlist only |
 | `rcb_monitor` | none |
-| privileged verifier | public (Harbor's default) |
+| privileged verifier | none (`no-network`) |
 | standard verifier | none (`no-network`) |
 
 - **Isaac itself needs no network**: the image holds Isaac Sim, Isaac Lab, RoboLab and every Python package, and the EULA
@@ -135,9 +135,8 @@ iterations cost more than in the other simulators.
   robot joint within the tooling's tolerance (`Session.instance_matches`, as the tooling's strict mode). A scene that
   matches neither is a give-up as an infrastructure failure (`instance_mismatch`, `infra_error` = 1; the service answers
   409).
-- The privileged verifier keeps Harbor's default network (open: PROTOCOL H.6 says the verifier has no network): it starts Isaac Sim, and a Kit start in a container without
-  any network interface has not been tested on our hosts. Grading downloads nothing: RoboLab's assets, the remote files
-  they reference and every package are in the image.
+- The privileged verifier runs with `network_mode = "no-network"` too (PROTOCOL H.6): it starts Isaac Sim offline.
+  Grading downloads nothing: RoboLab's assets, the remote files they reference and every package are in the image.
 - Whose failure a 0 is. Standard: `tests/grade.py` writes a reward whatever it finds; a missing, unreadable or
   unfinalized `final.json` (the service never came up, the collect hook was killed), no record of the live episode, a
   give-up after crashes between calls and an instance mismatch at the start are `infra_error = 1`, never the agent's 0;

@@ -182,7 +182,8 @@ the allowlist `scripts/set_agent_egress.py` `HOSTS` (the model APIs and the pack
 "allowlist"` with exactly those hosts, no step with a policy of its own; an official run narrows it further to the usage
 gateway and the registries), unless the task's author declares open egress, `[metadata] network = "open"` (then
 `[agent]` sets no other policy). The runner applies what the task declares; open-network results are ranked apart.
-The verifier has no network. *CI:* `check-verifier-isolation.sh`.
+The verifier has no network (`[verifier] network_mode = "no-network"` in every task, written by `normalize`; no service
+of `tests/docker-compose.yaml` with a network setting other than `none`). *CI:* `check-verifier-isolation.sh`.
 
 **H.7 Comparable twins.** Where a task ships both a privileged and a standard (or standard-realtime) version, they
 share one frozen instance (byte-identical copies), one success rule and the same seeds (`default`, `allowed`,
