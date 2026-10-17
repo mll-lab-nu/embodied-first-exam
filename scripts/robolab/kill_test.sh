@@ -2,7 +2,7 @@
 # Crash-recovery acceptance test for one RoboLab standard task (docs/STANDARD_MODE.md §13; resume class exact):
 # run the task's oracle with Harbor, kill -9 the sim service in the middle of the episode (once N calls are checkpointed,
 # while the next call runs), and check that the service resumed the same episode exactly, the oracle carried on, the
-# episode was graded as usual, and the live run still equals its fresh-process replays (live_matches_replay).
+# episode was graded as usual (by the live episode, graded_by_live = 1; no replay since 2026-10-17).
 #   usage: scripts/robolab/kill_test.sh [task dir] [jobs dir] [N checkpoints before the kill]
 #   default: tasks/robolab-banana-in-bowl-i00-standard, $PWD/jobs/kill_test, 4
 # Needs the eai-robolab image on the host (images/robolab/BUILD_ONLY), harbor and docker. One Isaac at a time per 32 GB.
@@ -41,7 +41,7 @@ rw = json.load(open(t / "verifier/reward.json"))
 ev = [json.loads(l) for l in open(t / "artifacts/data/episode.jsonl") if l.strip().startswith("{")]
 rs = [e for e in ev if e.get("ev") == "resumed"]
 ck = sum(1 for e in ev if e.get("ev") == "checkpoint")
-want = {"success": 1, "deterministic": 1, "live_matches_replay": 1, "resumes": 1, "sim_startups": 2, "resume_state_mismatch": 0, "infra_error": 0}
+want = {"success": 1, "graded_by_live": 1, "replays": 0, "resumes": 1, "sim_startups": 2, "resume_state_mismatch": 0, "infra_error": 0}
 bad = {k: rw.get(k) for k, v in want.items() if rw.get(k) != v}
 print(json.dumps({"reward": rw, "resumed": rs, "checkpoints": ck}, indent=1))
 ok = not bad and len(rs) == 1 and rs[0].get("exact") is True

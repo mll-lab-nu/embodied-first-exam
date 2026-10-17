@@ -15,10 +15,9 @@
 Standard-mode twin of `robolab-rubiks-cube-and-banana-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
 the agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a (T, 8)
-trajectory. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the
-trajectory in two fresh processes (Isaac: only the first replay in a process is bit-exact, and two simulators do not fit
-in one container) and writes `final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those
-artifacts. Compare against the privileged task to measure the cost of losing resets, privileged state and primitives.
+trajectory and films it (live video). The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
+service exit, writes `final.json` from the live episode's record (no replay) and encodes the video; the verifier runs in a
+separate sandbox (`tests/Dockerfile`) over those artifacts. Compare against the privileged task to measure the cost of losing resets, privileged state and primitives.
 
 ## Difficulty
 That of `robolab-rubiks-cube-and-banana-i00-privileged` (its README), without resets, object poses or the success predicate: every step is planned from camera images, depth and the robot's own proprioception, and a failed grasp or a knocked-over object stays that way.
@@ -28,11 +27,18 @@ None: RoboLab ships no expert or planner, and no reference solution has been wri
 - `robolab-rubiks-cube-and-banana-i__URGnnbk` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-rerun-0928`, host lab): [trial log](https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/rubiks_cube_and_banana/limited/), [replay video](https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/rubiks_cube_and_banana/limited/replay.mp4)
 
 ## Verification
-`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar's
-collect hook; `tests/grade.py` reads `final.json` with no network and writes the reward fields (with `infra_error` and the
-crash-recovery fields), plus `/logs/verifier/replay.mp4`. RoboLab's success term is instantaneous: it is checked after
-every control step and the first step where it holds ends the episode (RoboLab's own termination), live and in the
-replays.
+Graded by the live episode (owner 2026-10-17, board 0151): `success` = the live episode's success, judged by the sim
+service on the episode the agent ran, with no grading replay. RoboLab's success term is instantaneous: it is checked
+after every control step and the first step where it holds ends the episode (RoboLab's own termination); when the
+agent's time is up, the service holds the last command for 30 more control steps (2 s) on the live simulator, after the
+agent's container is stopped, while the term is checked. Before serving, the service checks the rebuilt scene against the
+frozen instance (`instance.json` `state_sha`, else every object pose and joint within tolerance); a mismatch is an
+infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json` with no network and writes the reward
+fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/live.mp4`:
+the service films the live episode (a frame of the viewport and wrist cameras every 3 control steps, from the renders
+Isaac Lab makes with every step), and the collect hook encodes it after the verdict (a failed encode costs the video
+only). Compute: the collect hook needs no GPU after the service exits (it replayed the episode in two fresh Isaac
+processes before 2026-10-17).
 
 No oracle; human review in PR #3 (PROTOCOL §2.7: per family, this task and its twin, a positive example and the `nop` result).
 
@@ -75,3 +81,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-14 (board 0113, from board 0086): the success text says that the gripper must not be touching the objects at the moment of success ("at that moment"); the old wording "the gripper must touch none of them" was read by an agent as "never touch them" (board 0086). Text only: the scene, the frozen instance, RoboLab's success term and the verifier are unchanged, so the task keeps its name.
 - 2026-10-14 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; the success rule changed). From the failure analysis of the 10-14 results (19 of 194 RoboLab successes fired before the task was done). (1) "The gripper" of every contact check is both Robotiq fingers (an object touching either finger is held); RoboLab's DROID setup watched the left inner finger alone, so a success could fire mid-carry. (2) `take_measuring_spoon_out` and `cooking_clear_plate` use RoboLab's own `object_outside_of_and_on_surface` (surface `table`) instead of `object_outside_of`. (3) When the agent's phase ends, the service holds the last command for 30 more control steps (2 s) while the term is checked; the fresh-process replays run the recorded episode as it is (`--no-settle`). (4) The instruction says that a client timeout while a call is in flight means the single-threaded service is busy, not crashed (agents waited for resumes that never came). The frozen instance and the time limit are unchanged; results recorded before this date (the earlier DIGEST) are not comparable with this version.
 - 2026-10-16 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; texts only). From the instruction audit of 2026-10-16, the instruction now states the rules the grader applies: (1) the Rules state the pass rule: two fresh-process replays of the recorded episode, live success, both replays successful and both ending in the same state. The scene, the frozen instance, the tooling, the success term and the grader are unchanged, so the task keeps its name and results under the 2026-10-14 DIGEST are graded the same way.
+- 2026-10-17 (owner, boards 0150/0151; in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8): standard modes graded by the live episode; no grading replay; video by the sim service during the live episode (`live.mp4`). `success` is the live episode's success as the service judged it (RoboLab's success term at any control step, through the 30-step hold of the last command after the agent's phase, which the service already ran on the live simulator); it was live success ∧ both of two fresh-process replays successful ∧ equal end-state hashes. The collect hook no longer replays the trajectory: its time limit is 3600 s (was 15000 s) and it needs no GPU after the service exits. The start-state check is made by the service before it serves the agent: a rebuilt scene that is not the frozen instance ends the trial as an infrastructure failure (`instance_mismatch`, a give-up); before, the strict check made the service crash and restart until the hook timed out. The video (`replay.mp4` before) is filmed by the service during the episode, a frame every 3 control steps from the renders Isaac Lab makes with every step, and encoded after the verdict; it never decides anything. A collect hook on `main` (`kill -9 -1`) now stops whatever the agent left running in its container before the service ends the episode (PROTOCOL H.4), so nothing moves the robot after the deadline or during the hold. reward.json: `graded_by_live` = 1, `replays` = 0, no `replay_success` / `deterministic`. The scene, the frozen instance, the RoboLab success rule, the agent's interface and the time limit are unchanged; a trial recorded before this date scored live ∧ replay ∧ deterministic (docs/benchmarks/robolab.md, Grading, says how to re-score it by its live episode).
