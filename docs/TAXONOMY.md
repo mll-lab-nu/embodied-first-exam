@@ -40,7 +40,7 @@ Benchmark-specific fields (optional, PROTOCOL §1):
 | RoboFunOlympics | `reset_budget` | integer: the task's default reset budget, its service's `RCB_RESET_BUDGET` default (PROTOCOL §4.5) |
 | DexHand | `hands`, `default_hand` | the hand models the task runs with: `sharpa` (Sharpa Wave, 22 finger actuators) · `wuji` (Wuji Hand 2.2, 20 finger actuators), mounted in place of each Sharpa Wave on the same wrist stage or arm; `default_hand = "sharpa"` (selected with `DEXHAND_HAND`; the verifier replays with the hand the trajectory records) |
 | DexHand | `difficulty`, `release_status` | `hard` (proposed before calibration with agent trials); `provisional` (human solvability review pending, PROTOCOL §2.7) |
-| RoboOlympics (exported, PROTOCOL §3) | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's slowdown S (the world runs at 1/S of real speed; the sport's official one: 5, 10 or 20) |
+| RoboOlympics (exported, PROTOCOL §3) | `opponent_level`, `slowdown` (real-time matches), `chess_clock_s` (turn-based matches) | integers: the scripted opponent's level; the task's slowdown S (the world runs at 1/S of real speed; the sport's official one: 5, 10 or 20); in a turn-based match the world waits for the player whose turn it is, and `chess_clock_s` is each player's clock of real time, running on its own turns |
 | RoboOlympics (exported, PROTOCOL §3) | `revision`, `play`, `player_mode`, `action_level`, `source_task`, `source_commits`, `exporter`, `official`; skill tasks also `skill_deliverable`, `dev_requests`, `success_line` | the sport's revision; `program`; `high` · `low`; the RoboOlympics task it was exported from, its commits and exporter; `false` (development seeds); the deliverable's path, the number of graded requests, the success rate needed |
 | RoboOlympics | `category` | `track-and-jumps` · `football-and-volleyball` · `basketball-and-rackets` · `throwing-catching-striking` · `parkour-apparatus-balance` |
 | RoboOlympics | `reset_budget` | integer: the task's default reset budget, its service's `RCB_RESET_BUDGET` default (PROTOCOL §4.5) |
@@ -70,8 +70,9 @@ Benchmark-specific fields (optional, PROTOCOL §1):
   `roboolympics-<family-with-dashes>-i<NN>` (`[metadata].family` = the family with underscores, e.g. `penalty_kick`);
   every family in privileged and standard mode. Its exported tasks (PROTOCOL §3, `scripts/roboolympics/exported.toml`): `<base>` is
   `roboolympics-<sport>-<format>-i<NN>` with the sport's RoboOlympics id (`tabletennis`, `badminton`, `soccer`,
-  `soccerssl`) and `match`, or a skill format (`hitskill`, `actskill`); matches in standard-realtime mode only, skill
-  tasks in standard mode only; never a family name of the generated families.
+  `soccerssl`, `fencing`) and its format (`match`, `bout`), or a skill format (`hitskill`, `actskill`); real-time
+  matches in standard-realtime mode only, turn-based matches (`eai-standard-turn/1.0`) and skill tasks in standard mode
+  only; never a family name of the generated families.
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
 - RoboSafeBench: `<base>` is `cell-<slug>-i<NN>` (standard tasks, and for the realtime set `-standard-realtime` twins of

@@ -92,6 +92,8 @@ BENCHMARKS = [  # (directory prefix, label)
 RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
                      "roboolympics-badminton-match-i01-standard-realtime",
                      "roboolympics-badminton-match-i02-standard-realtime",
+                     "roboolympics-fencing-bout-i01-standard",
+                     "roboolympics-fencing-bout-i02-standard",
                      "roboolympics-soccer-match-i00-standard-realtime",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
                      "roboolympics-tabletennis-hitskill-i00-standard",
