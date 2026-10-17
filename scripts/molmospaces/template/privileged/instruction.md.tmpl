@@ -11,7 +11,8 @@ often as you like. Your deliverable is **one open-loop trajectory**, not a gener
 The episode ends after the last row of your trajectory, or after **@@HORIZON_STEPS@@ control steps** (the benchmark's
 @@HORIZON_S@@ s horizon at @@CONTROL_HZ@@ Hz), whichever comes first. Success is upstream's `judge_success()` on the state
 at that moment: @@SUCCESS@@. The task has to hold at the end: met earlier and undone by then does not count, and ending
-your trajectory right after the task is met is how you stop there.
+your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
+same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
 `/app/output/trajectory.npz` with `actions`: float64 (T, @@DIM@@), one row per control step, the targets of upstream's

@@ -1,5 +1,5 @@
 # Base image = MolmoSpaces (molmo-spaces 0.2.9, MuJoCo 3.5.0) + the assets of the frozen instances (images/molmospaces/).
-FROM ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3
+FROM ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5
 COPY instance.json /app/instance.json
 COPY rcb_molmospaces.py /opt/tools/rcb_molmospaces.py
 ENV PYTHONPATH=/opt/tools

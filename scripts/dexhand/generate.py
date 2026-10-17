@@ -1277,8 +1277,17 @@ def all_specs(only: set[str] | None = None) -> list[tuple[dict, dict | None, Pat
 HELD_ROTATION_BEFORE = {"essential_held_joystick": 0.24, "essential_cube_layer": 0.24}
 
 
-def change_log(spec: dict, mode: str) -> str:
-    """The README's change log: what changed after the tasks were first proposed (pull request #185)."""
+def video_frame_budget(folder: Path | None) -> int | None:
+    """A plugin family's replay-video frame budget (`VIDEO_MAX_FRAMES` in its replay.py, board 0136), if it has one."""
+    replay = folder / "replay.py" if folder is not None else None
+    if replay is None or not replay.is_file():
+        return None
+    match = re.search(r"^VIDEO_MAX_FRAMES = ([0-9_]+)", replay.read_text(), re.M)
+    return int(match.group(1)) if match else None
+
+
+def change_log(spec: dict, mode: str, frames: int | None = None) -> str:
+    """The README's change log: what changed after the tasks were first proposed (pull request #185 or #241)."""
     lines = []
     if mode == "standard":
         lines.append(
@@ -1292,16 +1301,29 @@ def change_log(spec: dict, mode: str) -> str:
             "`inhand_side` (thumb side), mounted on the locked hand like `palm`; the standard service returns "
             "`overview` and `inhand_top` by default. Before, the object was 40-60 px wide in the overview and the palm "
             "camera saw the back of the hand, so its in-hand pose could hardly be observed in standard mode.")
-    lines.append(
-        "- 2026-10-16 (board 0136, video only): "
-        + ("the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after "
-           "`reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video."
-           if mode == "privileged" else
-           "the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s) instead of a "
-           "fixed 300 s, which cut the video of episodes longer than ~10k steps.")
-        + (" The video films every 2nd step but at most 1500 frames (a 640x480 OSMesa frame takes ~0.3 s)."
-           if spec["id"].startswith("essential_") else "")
-        + " The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.")
+    if frames is not None:
+        # A family of pull request #241 (wave 2): its own replay.py films at most `frames` steps.
+        lines.append(
+            "- 2026-10-16 (board 0136, video only): "
+            + ("the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after "
+               "`reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video."
+               if mode == "privileged" else
+               "the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s, at most "
+               "the video limit).")
+            + f" The video films at most {frames} steps (a longer episode at a larger stride; an OSMesa frame of an "
+            "arm scene takes up to ~3.6 s on two cores), and the video, verifier and collect limits cover the longest "
+            "archive the row limit allows. The verdict, the replays and `reward.json` are unchanged.")
+    else:
+        lines.append(
+            "- 2026-10-16 (board 0136, video only): "
+            + ("the verifier renders the replay video (`/logs/verifier/replay.mp4`) with a third fresh replay after "
+               "`reward.json` is written, in its remaining time. Before, the privileged verifier rendered no video."
+               if mode == "privileged" else
+               "the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s) instead of a "
+               "fixed 300 s, which cut the video of episodes longer than ~10k steps.")
+            + (" The video films every 2nd step but at most 1500 frames (a 640x480 OSMesa frame takes ~0.3 s)."
+               if spec["id"].startswith("essential_") else "")
+            + " The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.")
     if spec["id"] in HELD_ROTATION_BEFORE:
         bound = spec["invariants"]["body_rotation"][1]
         lines.append(
@@ -1334,7 +1356,7 @@ def render(destination: Path, only: set[str] | None = None) -> list[Path]:
                 instruction_text, readme_text = plugin_texts(folder, manifest, spec, mode, name)
                 write(task / "instruction.md", with_archive_note(instruction_text) if mode == "privileged" else instruction_text)
                 write(task / "README.md", with_hand_solutions(readme_text, manifest.get("hand_solutions", {}), mode)
-                      + change_log(spec, mode))
+                      + change_log(spec, mode, video_frame_budget(folder)))
             else:
                 text = instruction(spec, mode)
                 write(task / "instruction.md", with_archive_note(text) if mode == "privileged" else text)

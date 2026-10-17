@@ -1,17 +1,18 @@
 # MolmoSpaces · open — frozen episode
 
-**Task:** Open the cabinet.
+**Task:** Open the dishwasher.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaOpenHardBench/FrankaOpenHardBench_20260206_json_benchmark`,
-episode 49: a hinged door (revolute joint)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 52: a hinged door (revolute joint)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 
 ## Success (upstream's rule, judged by upstream's code)
 The episode ends after the last row of your trajectory, or after **455 control steps** (the benchmark's
 30 s horizon at 15.152 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
-at that moment: some joint of any cabinet in the room is open at least 15% of its range (all start closed). The task has to hold at the end: met earlier and undone by then does not count, and ending
-your trajectory right after the task is met is how you stop there.
+at that moment: some joint of any dishwasher in the room is open at least 15% of its range (all start closed). The task has to hold at the end: met earlier and undone by then does not count, and ending
+your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
+same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
 `/app/output/trajectory.npz` with `actions`: float64 (T, 8), one row per control step, the targets of upstream's

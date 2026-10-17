@@ -11,6 +11,7 @@
   PATH records what it was given), removes the copy afterwards, and leaves tasks/ unchanged;
 - (board 0121 M4) a trial whose last model calls failed at the usage gateway, or whose job the gateway died in, is not a
   result; with GATEWAY=1 the runner restarts a dead gateway before the next job."""
+import functools
 import json
 import os
 import re
@@ -218,6 +219,55 @@ def test_summary_grouping():
         check("not a result (voided" in out, f"the voided trial is not marked:\n{out}")
 
 
+def test_easy_set():
+    """PROTOCOL §4: the easy set (docs/easy_set.toml) is valid, marks every mode of a listed base `easy` (recorded with
+    the result as `set`, never part of config_key), and the batch summary marks its trials and leaves them out of the rate."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import task_conventions as tc
+    names = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    es = tc.easy_set()                                   # a malformed list fails here (this test is in run_invariants.sh)
+    # a listed base with a privileged and a standard task, and a base outside the list in the same configuration (one
+    # summary table); the list changes over time, so both are looked up
+    pairs = [n[: -len("-privileged")] for n in names if n.endswith("-privileged") and f"{n[: -len('-privileged')]}-standard" in names]
+    key = functools.lru_cache(maxsize=None)(lambda b: tc.config_key(tc.effective_config(ROOT / "tasks" / f"{b}-standard")))
+    EASY = CORE = None
+    for e in (b for b in pairs if b in es):
+        same = sorted((b for b in pairs if b not in es), key=lambda b: b.split("-")[0] != e.split("-")[0])[:200]
+        CORE = next((b for b in same if key(b) == key(e)), None)
+        if CORE:
+            EASY = e
+            break
+    if EASY is None:
+        print("note: no easy-set base with a core base of the same configuration; the easy-set test is skipped")
+        return
+    for m in ("privileged", "standard"):
+        check(tc.set_of(ROOT / "tasks" / f"{EASY}-{m}") == "easy", f"{EASY}-{m} is not in the easy set")
+        check(tc.set_of(ROOT / "tasks" / f"{CORE}-{m}") == "core", f"{CORE}-{m} is in the easy set")
+    a, b = tc.effective_config(ROOT / "tasks" / f"{EASY}-standard"), tc.effective_config(ROOT / "tasks" / f"{CORE}-standard")
+    check(a.get("set") == "easy" and b.get("set") == "core", f"effective_config set: {a.get('set')}, {b.get('set')}")
+    a["set"] = b["set"]
+    check(tc.config_key(a) == tc.config_key(dict(a, set="easy")), "the set is part of config_key")
+    with tempfile.TemporaryDirectory() as td:
+        bad = Path(td) / "easy_set.toml"
+        bad.write_text(f'[[task]]\nbase = "{EASY}"\nbenchmark = "BEHAVIOR"\nreason = "why"\n'
+                       '[[task]]\nbase = "behavior-no-such-task-i00"\nbenchmark = "BEHAVIOR-1K"\nreason = "owner"\n')
+        found = tc.check_easy_set(path=bad)
+        check(len(found) == 3, f"check_easy_set: want a bad reason, a bad label and a missing base, got {found}")
+        twice = Path(td) / "easy_set_twice.toml"
+        twice.write_text(f'[[task]]\nbase = "{EASY}"\n[[task]]\nbase = "{EASY}"\n')
+        check(any("twice" in x for x in tc.check_easy_set(path=twice)), "a base listed twice is not found")
+        jobs = Path(td) / "jobs"
+        make_trial(jobs, "bx-standard-a", "e1", f"{EASY}-standard", "2026-10-14T01:00:00Z", {"success": 1})
+        make_trial(jobs, "bx-standard-a", "c1", f"{CORE}-standard", "2026-10-14T02:00:00Z", {"success": 0})
+        r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True)
+        check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
+        check(re.search(rf"\| {EASY}-standard( \(unvalidated\))? \(easy set\) \|", r.stdout) is not None,
+              f"the easy-set trial is not marked:\n{r.stdout}")
+        check(re.search(r"Success \(results only\): 0 / 1( \([^)]*\))?; 0 voided; 1 result\(s\) of easy-set tasks not counted\.",
+                        r.stdout) is not None,
+              f"the easy-set trial counted in the rate:\n{r.stdout}")
+
+
 def caps(task: Path) -> list[str]:
     out = re.findall(r"(?m)^cpus\s*=\s*\S+", (task / "task.toml").read_text())
     for f in sorted((task / "environment").glob("*docker-compose.y*ml")):
@@ -353,10 +403,11 @@ if __name__ == "__main__":
     test_results()
     test_config_and_attempts()
     test_summary_grouping()
+    test_easy_set()
     test_clamp()
     test_batch_runner()
     test_gateway_restart()
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
-    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, clamp_cpus, run_agent_batch.sh stamped job copies, clamped copies and gateway restart")
+    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, the easy set, clamp_cpus, run_agent_batch.sh stamped job copies, clamped copies and gateway restart")

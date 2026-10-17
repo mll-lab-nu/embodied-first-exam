@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "bicycle_pump_stroke",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": [
+      "arm_rig.py"
+    ]
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
+  "max_rows": 5000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/ replays the validated Sharpa Wave episode on the Marvin right arm (4,299 controls, success after 4,149: hose head pushed onto the valve and locked at control 306, 28 counted strokes to 210.64 kPa, lock opened and head pulled off at control 4,083, released hold); the standard oracle submits the same rows as float64 through the public client. Two fresh-process replays succeed with identical state hashes, and the rows rounded to float32 also succeed.",
+    "expert_time_estimate_hours": 2.0,
+    "keywords": [
+      "tool-use",
+      "bicycle-pump",
+      "valve-connection",
+      "thumb-lock",
+      "passive-mechanism",
+      "repetitive-strokes",
+      "free-standing-object"
+    ]
+  },
+  "control_hz": 50,
+  "timeouts": {
+    "verifier_privileged_sec": 1500,
+    "verifier_standard_sec": 1800,
+    "collect_sec": 3000,
+    "replay_sec": 900,
+    "video_sec": 1200
+  },
+  "notes": {
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
+  }
+}

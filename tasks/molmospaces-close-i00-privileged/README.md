@@ -7,17 +7,17 @@
 | Twin | `molmospaces-close-i00-standard` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `close` |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__HWWFXrw (run codex-gpt6_luna-medium, batch molmospaces-luna-1006; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/close/unlimited/); human review in PR #47 |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__8SX5TrW (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16); human review in PR #276 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3` |
+| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` |
 
 ## Task
-Close the cabinet. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark`, episode 51:
+Close the cabinet. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark`, episode 346:
 a hinged door (revolute joint)), with a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup). Privileged mode: full simulator state, unlimited resets; the deliverable is one
 open-loop trajectory of joint-position targets, one row per control step.
 
 ## Difficulty
-Close an articulated fixture that starts half open, in a hand-built AI2-THOR kitchen. Upstream's Hard configuration: the arm starts in a randomised posture and the robot up to 30° off facing the fixture. 455 control steps (30 s).
+Close an articulated fixture that starts half open, in a hand-built AI2-THOR kitchen, at least 0.75 m (horizontally) from the robot base; its moving part has to travel at least 14 cm to count as closed. Upstream's Hard configuration: the arm starts in a randomised posture and the robot up to 30° off facing the fixture. 455 control steps (30 s).
 
 ## Reference solution
 None is shipped. Upstream's scripted experts (`molmo_spaces/policy/solvers`) are reference solutions and are not in the
@@ -29,7 +29,7 @@ Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in t
 Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
 benchmark's 30 s horizon = 455 control steps) or the last row, then upstream's `judge_success()`
 on the final state: the target's joint is open at most 15% of its range (it starts 50% open). Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
-the verdict. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task and its twin, a
+the verdict. No oracle; human review in PR #276 (PROTOCOL §2.7: per family, this task and its twin, a
 positive example and the `nop` result).
 
 ## Compute resources
@@ -48,7 +48,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 | | |
 |---|---|
-| Upstream | molmo-spaces 0.2.9 (MuJoCo 3.5.0, CPU physics; EGL rendering on the GPU), benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 51, house ithor val 14 |
+| Upstream | molmo-spaces 0.2.9 (MuJoCo 3.5.0, CPU physics; EGL rendering on the GPU), benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 346, house ithor val 20 |
 | Frozen episode | `environment/instance.json`: the upstream episode unchanged except `source` (its expert trajectory's path) removed, plus the numbers the texts quote (`facts`) and its t = 0 record (`t0`: state hash, action layout) |
 | Generator | `scripts/molmospaces/mk_tasks.py` (`families.json`, `instances/`, `template/`, `shared/`); docs/benchmarks/molmospaces.md |
 
@@ -56,3 +56,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-10: how a file that is not a trajectory is recorded; the frozen episode, upstream's success rule and the pass rule are unchanged, so the task keeps its name. `tests/grade.py`: a file that cannot be read as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory = 1` (was `grader_error = 1`; 0 either way), and every reward that ends early also carries `deterministic`. A pass before this change is a pass after it.
 - 2026-10-10 (review round 2, board 0067): `tests/grade.py` writes `infra_error` = 1 next to every `grader_error` = 1 (a replay process that died or ran out of time, a frozen instance the host did not rebuild, an exception in the grader), as the other benchmarks do: a reader of `infra_error` alone (PROTOCOL §2.6) took these for the agent's 0. The reward is 0 in these cases, as before; the pass rule is unchanged, so the task keeps its name.
 - 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the session log the agent's tools write (`/app/output/rcb_session_log.jsonl`, read only for the self-reported `agent_*` cost fields) stopped the grader before it wrote a reward, so the trial had no verdict; the log is now read tolerantly and can no longer decide anything. A trial whose log is valid is graded as before; the pass rule is unchanged.
+- 2026-10-16: the frozen episode, the base image and the replay limit. The frozen episode is the one the 2026-10-16 selection rule picks (docs/benchmarks/molmospaces.md, Instances: the target small in the fixed cameras for the pick families, a longer travel for open and close); for every family but navigate-to and open-door that is a different episode, so results recorded on those tasks before this date are of another episode. Base image 0.2.5 (the assets of the new episodes). `tests/grade.py`: the two grading replays share the verifier's time (1740 s of its 1800 s; the first gets half of it) instead of 500 s each, which ended genuine successes on a loaded host as `replay_timed_out` + `infra_error`; the verdict, the pass rule and upstream's success rule are unchanged. `instruction.md` now states the pass rule (both replays succeed and end in the same state), which only this README stated.

@@ -18,7 +18,7 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): sc
 # scene = environment/instance.json (one upstream benchmark episode + its t = 0 state hash); identity = the dataset.toml digest
 expert_time_estimate_hours = 2.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i00-priv__mENe7qn (run codex-gpt6_luna-medium, batch molmospaces-luna-1006b; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/navigate_to/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i00-priv__YWMd22o (run codex-gpt6_1_sol-high, batch molmo-v2-sol-rby1, 2026-10-16); human review in PR #276"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)

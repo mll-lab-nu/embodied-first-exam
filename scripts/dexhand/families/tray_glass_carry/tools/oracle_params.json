@@ -1,0 +1,5 @@
+{
+  "sharpa": {},
+  "wuji": {"abd": {"FF": 0.2, "RF": -0.1, "LF": -0.2}, "equalize": 3, "clear_min": true, "insert": 0.032,
+           "open_first": true, "open_before_withdraw": 0.4}
+}

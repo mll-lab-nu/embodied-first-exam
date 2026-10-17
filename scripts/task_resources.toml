@@ -126,6 +126,56 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "pot_shelf_transfer oracle/nop trials (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays"
 
+# dexhand wave-2 families on the wrist stages, privileged / standard: 7 + 7 task(s)
+[[rule]]
+match = "^dexhand-(vacuum-bin-reseat|drying-rack-unfold|fan-guard-install|stool-brace-insert|ram-module-install|binder-page-load|tray-glass-carry)-i00-privileged$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "wave-2 integration smoke (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier <= 0.64 GiB with two concurrent replays, standard sim sidecar <= 0.96 GiB, agent containers < 0.05 GiB; one fresh replay process 0.26-0.39 GiB max RSS (os.wait4); x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3-0.5 GiB each)"
+
+# dexhand wave-3 Marvin-arm families (the robot of pot_shelf_transfer), privileged / standard: 13 + 13 task(s)
+[[rule]]
+match = "^dexhand-(remote-battery-swap|coffee-stir|jar-lid-open|grinder-crank|pancake-serve|picture-hang|usb-plug-insert|boot-sole-brush|paper-staple|envelope-letter-insert|book-page-turn|batter-whisk|bicycle-pump-stroke)-i00-privileged$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "wave-3 integration smoke of the Marvin-arm families (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier 3.40-3.51 GiB with two concurrent replays, standard sim sidecar 2.13-2.65 GiB, agent containers < 0.05 GiB; one fresh replay process 1.75-1.81 GiB max RSS (os.wait4); x1.2 rounded up to a GB, the values of pot_shelf_transfer (the same robot); two cores for the two concurrent verifier replays"
+
+[[rule]]
+match = "^dexhand-(vacuum-bin-reseat|drying-rack-unfold|fan-guard-install|stool-brace-insert|ram-module-install|binder-page-load|tray-glass-carry)-i00-standard$"
+min_cpus = 2.0
+min_memory_gb = 2.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "wave-2 integration smoke (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier <= 0.64 GiB with two concurrent replays, standard sim sidecar <= 0.96 GiB, agent containers < 0.05 GiB; one fresh replay process 0.26-0.39 GiB max RSS (os.wait4); x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3-0.5 GiB each)"
+
+[[rule]]
+match = "^dexhand-(remote-battery-swap|coffee-stir|jar-lid-open|grinder-crank|pancake-serve|picture-hang|usb-plug-insert|boot-sole-brush|paper-staple|envelope-letter-insert|book-page-turn|batter-whisk|bicycle-pump-stroke)-i00-standard$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "wave-3 integration smoke of the Marvin-arm families (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier 3.40-3.51 GiB with two concurrent replays, standard sim sidecar 2.13-2.65 GiB, agent containers < 0.05 GiB; one fresh replay process 1.75-1.81 GiB max RSS (os.wait4); x1.2 rounded up to a GB, the values of pot_shelf_transfer (the same robot); two cores for the two concurrent verifier replays"
+
 # dexjoco, privileged: 11 task(s)
 [[rule]]
 match = "^dexjoco-.*-privileged$"
@@ -844,7 +894,7 @@ measured = "author estimate (mll-4090-1, 2026-10-11): CPU-only MuJoCo with OSMes
 
 # roboolympics, standard: 50 task(s)
 [[rule]]
-match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-).*-standard$"   # not the exported skill tasks (their rules follow)
+match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-|fencing-bout-i[0-9]{2}-).*-standard$"   # not the exported skill tasks and turn-based matches (their rules follow)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -855,9 +905,9 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "author estimate (mll-4090-1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
 
-# roboolympics, exported matches (standard-realtime): 6 task(s)
+# roboolympics, exported matches (standard-realtime): 13 task(s)
 [[rule]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 min_cpus = 8.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -881,9 +931,22 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "RoboOlympics' exported skill tasks (scripts/roboolympics/exported.toml; mll-4090-1/2, 2026-10): no sim service, the agent 2 CPUs; the verifier runs the simulator and the skill; CPU only"
 
+# roboolympics, exported turn-based matches (standard, eai-standard-turn/1.0): 2 task(s)
+[[rule]]
+match = "^roboolympics-fencing-bout-i[0-9]{2}-standard$"
+min_cpus = 3.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "vanilla Harbor 0.23.0 on mll-4090-3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: RoboOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
+
 # roboolympics, standard-realtime: 13 task(s)
 [[rule]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 1.0
@@ -994,7 +1057,7 @@ trial_max_memory_gb = 13.0
 measured = "author estimate: no trials yet; memory under the 16 GiB cap by the margin the monitor needs (an agent may run several worlds at once or train a controller); disk 20 GiB for downloaded tools and controllers; processes 512: design default"
 
 [[limit]]
-match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-).*-standard$"   # not the exported skill tasks (their rules follow)
+match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-|fencing-bout-i[0-9]{2}-).*-standard$"   # not the exported skill tasks and turn-based matches (their rules follow)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -1009,7 +1072,7 @@ trial_max_memory_gb = 16.0
 measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
 
 [[limit]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 4.0
@@ -1039,7 +1102,22 @@ trial_max_memory_gb = 4.0
 measured = "design defaults of RoboOlympics' exported tasks (no sim service)"
 
 [[limit]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-fencing-bout-i[0-9]{2}-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+measured = "design defaults of RoboOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
+
+[[limit]]
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -1219,6 +1297,66 @@ window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 16.0
 measured = "memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks 0.65 GiB, dual-arm 2.53 GiB)"
+
+[[limit]]
+match = "^dexhand-(vacuum-bin-reseat|drying-rack-unfold|fan-guard-install|stool-brace-insert|ram-module-install|binder-page-load|tray-glass-carry)-i00-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: 8 GiB lets an agent run more than a dozen 0.3-0.5 GiB simulator sessions next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(remote-battery-swap|coffee-stir|jar-lid-open|grinder-crank|pancake-serve|picture-hang|usb-plug-insert|boot-sole-brush|paper-staple|envelope-letter-insert|book-page-turn|batter-whisk|bicycle-pump-stroke)-i00-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: 8 GiB lets an agent run three or four 1.8 GiB Marvin simulator sessions next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexhand-(vacuum-bin-reseat|drying-rack-unfold|fan-guard-install|stool-brace-insert|ram-module-install|binder-page-load|tray-glass-carry)-i00-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: 8 GiB lets an agent run more than a dozen 0.3-0.5 GiB simulator sessions next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks <= 0.96 GiB)"
+
+[[limit]]
+match = "^dexhand-(remote-battery-swap|coffee-stir|jar-lid-open|grinder-crank|pancake-serve|picture-hang|usb-plug-insert|boot-sole-brush|paper-staple|envelope-letter-insert|book-page-turn|batter-whisk|bicycle-pump-stroke)-i00-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: 8 GiB lets an agent run three or four 1.8 GiB Marvin simulator sessions next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks <= 2.65 GiB)"
 
 [[limit]]
 match = "^dexjoco-.*-privileged$"
@@ -2114,6 +2252,24 @@ main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
 
 [[cap]]
+match = "^dexhand-(vacuum-bin-reseat|drying-rack-unfold|fan-guard-install|stool-brace-insert|ram-module-install|binder-page-load|tray-glass-carry)-i00-privileged$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(remote-battery-swap|coffee-stir|jar-lid-open|grinder-crank|pancake-serve|picture-hang|usb-plug-insert|boot-sole-brush|paper-staple|envelope-letter-insert|book-page-turn|batter-whisk|bicycle-pump-stroke)-i00-privileged$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(vacuum-bin-reseat|drying-rack-unfold|fan-guard-install|stool-brace-insert|ram-module-install|binder-page-load|tray-glass-carry)-i00-standard$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^dexhand-(remote-battery-swap|coffee-stir|jar-lid-open|grinder-crank|pancake-serve|picture-hang|usb-plug-insert|boot-sole-brush|paper-staple|envelope-letter-insert|book-page-turn|batter-whisk|bicycle-pump-stroke)-i00-standard$"
+main = { cpus = 2.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 2.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
 match = "^dexjoco-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 
@@ -2322,7 +2478,7 @@ match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2378,7 +2534,7 @@ match = "^roboolympics-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-).*-standard$"   # not the exported skill tasks (their rules follow)
+match = "^roboolympics-(?!tabletennis-hitskill-|badminton-actskill-|fencing-bout-i[0-9]{2}-).*-standard$"   # not the exported skill tasks and turn-based matches (their rules follow)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2453,13 +2609,18 @@ match = "^cell-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (RoboOlympics' exported docker-compose.yaml)
 
 [[cap]]
 match = "^roboolympics-(tabletennis-hitskill|badminton-actskill)-i[0-9]{2}-standard$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+
+[[cap]]
+match = "^roboolympics-fencing-bout-i[0-9]{2}-standard$"
+main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }   # the sim service's own cpus and pids_limit (RoboOlympics' exported docker-compose.yaml)
 
 [[cap]]
 match = "^pandadyn-.*-privileged$"
