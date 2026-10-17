@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The RoboSafeBench sim service end to end, in this process (no HTTP, no container): the frozen instance is built,
 the reference solution is sent through Service.handle() as an agent would send it (rows, notes in the header), the
-episode is finalized (two fresh-process replays) and graded by tests/grade.py. Also: doing nothing, exiting at once, a
+episode is finalized (the live episode's verdict, nothing replayed: board 0151) and graded by tests/grade.py. Also: doing nothing, exiting at once, a
 note in a malformed request, a crash in mid-episode resumed from the journal and the notes.
 
 Needs the simulator (RoboSafeBench importable, MuJoCo); run by hand (docs/benchmarks/robosafe.md):
@@ -107,11 +107,13 @@ def case(name: str, rows, expect: int, crash_after: int | None = None) -> dict:
         drive(svc, rows)
     r = finish_and_grade(svc, data)
     v = json.loads((data / "verdict.json").read_text())
-    ok = r["success"] == expect and r["deterministic"] == 1 and r["infra_error"] == 0
+    fin = json.loads((data / "final.json").read_text())
+    ok = (r["success"] == expect and r["graded_by_live"] == 1 and r["replays"] == 0 and r["infra_error"] == 0
+          and v["graded_by"] == "live" and v["start"]["start_sha"] == v["start"]["frozen_start_sha"])
     print(("ok  " if ok else "FAIL") + f" {name} {len(rows)} rows: success {r['success']} (expected {expect}), outcome "
-          f"{v['outcome']}, replays {v['replays']['state_sha'][0][:12]} {v['replays']['state_sha'][1][:12]}")
+          f"{v['outcome']}, live end state {str(fin.get('state_sha'))[:12]}")
     shutil.rmtree(work, ignore_errors=True)
-    return {"ok": ok, "reward": r, "hashes": v["replays"]["state_sha"]}
+    return {"ok": ok, "reward": r, "state_sha": fin.get("state_sha")}
 
 
 def main() -> int:

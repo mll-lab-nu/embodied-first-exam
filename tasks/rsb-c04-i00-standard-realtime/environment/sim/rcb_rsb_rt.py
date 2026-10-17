@@ -18,8 +18,10 @@ scripts/humanoidbench/shared/realtime/) are used unchanged; this module adds wha
     * otherwise `Episode.execute(call, think_ticks=1)` per row: one think tick (what the previous row planned), then
       the row as a one-step plan; every row is a RoboSafeBench call, as in the standard tasks.
   The journal row is rcb_rsb's ([type index, values, note id]) with two columns more: the agent calls answered since
-  the previous tick, without and with images. A replay (crash recovery, the graded fresh-process replays) registers
+  the previous tick, without and with images. A replay (crash recovery, the video, an offline re-check) registers
   them before the tick exactly as the live run did.
+- The verdict is the live episode's (owner, 2026-10-17, board 0151): server.RoboSafe.live_verdict judges the episode
+  this process ran, nothing is replayed to grade it; verdict.json adds `clock_hook`.
 - An `ee_pose` /submit with dt above one control step is interpolated the shorter way: from the target in force just
   before `at`, each row's quaternion first takes the sign of the row before it (server.RoboSafe.clip; RoboSafeBench
   0.5.4).
@@ -196,9 +198,8 @@ rcb_rsb.RT_HOOK = hooked                       # (for the record: which way this
 
 
 def build_service():
-    """server.py's adapter and rcb_realtime's service, with the additions above (the sidecar; a replay process needs
-    rcb_rsb's patch alone: `python rcb_rsb_rt.py replay ...`, below)."""
-    import json
+    """server.py's adapter and rcb_realtime's service, with the additions above (the sidecar; an offline replay process
+    needs rcb_rsb's patch alone: `python rcb_rsb_rt.py replay ...`, below)."""
     import rcb_realtime
     import rcb_service
     import server
@@ -211,14 +212,14 @@ def build_service():
         def __init__(self, instance: str):
             key = rcb_rsb.load_instance(instance).get("key") or {}
             if key.get("interface") != "control" or key.get("clock") != CLOCK:   # before anything is built
-                raise RuntimeError(f"a standard-realtime task serves RoboSafeBench's control interface under the realtime "
+                raise rcb_service.InstanceMismatch(f"a standard-realtime task serves RoboSafeBench's control interface under the realtime "
                                    f"clock; this instance's key has interface={key.get('interface')!r}, "
                                    f"clock={key.get('clock')!r}")
             super().__init__(instance)
             self.robot = key.get("robot")
             ep = self.s.ep
             if getattr(ep, "interface", None) != "control" or getattr(ep, "clock", None) != CLOCK:
-                raise RuntimeError(f"the episode built has interface={getattr(ep, 'interface', None)!r}, "
+                raise rcb_service.InstanceMismatch(f"the episode built has interface={getattr(ep, 'interface', None)!r}, "
                                    f"clock={getattr(ep, 'clock', None)!r}: control and realtime required")
             self.call_notes: dict[int, str] = {}       # call id -> its note
             self.call_note_ids: dict[int, int] = {}    # call id -> its line of notes.jsonl, once a row of it ran
@@ -265,44 +266,9 @@ def build_service():
             done = self.s.ended
             return done, bool(done and self.live_pass()), {}
 
-        def verify(self, rows: np.ndarray) -> dict:
-            """server.RoboSafe.verify, with the two fresh-process replays run through this module (`replay`), so that
-            they read the journal's two extra columns and drive the clock as the live run did."""
-            import subprocess
-            import tempfile
-            work = tempfile.mkdtemp(prefix="replay-", dir=self.data)
-            np.save(os.path.join(work, "rows.npy"), np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim))
-            with open(os.path.join(work, "notes.json"), "w") as f:
-                json.dump(self.s.notes.texts, f)
-            pictures_path = os.path.join(work, 'pictures.json')
-            with open(pictures_path, 'w') as stream:
-                json.dump(self.s.ep.picture_events, stream)
-            cmd = [sys.executable, os.path.abspath(__file__), "replay", self.instance_path,
-                   os.path.join(work, "rows.npy"), os.path.join(work, "notes.json")]
-            procs = []
-            for i in (1, 2):
-                with open(os.path.join(work, f"replay{i}.err"), "w") as stderr:
-                    procs.append(subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json"), pictures_path],
-                                                  stdout=subprocess.DEVNULL, stderr=stderr))
-            server.wait_replays(procs, server.REPLAY_TIMEOUT_S)
-            outs = []
-            for i, p in zip((1, 2), procs):
-                if p.returncode != 0:
-                    raise RuntimeError(f"replay {i} failed: " + open(os.path.join(work, f"replay{i}.err")).read()[-500:])
-                with open(os.path.join(work, f"replay{i}.json")) as f:
-                    outs.append(json.load(f))
-            a, b = outs
-            agree = a["state_sha"] == b["state_sha"] and a["verdict"].get("pass") == b["verdict"].get("pass")
-            verdict = {**a["verdict"], "replays": {"state_sha": [a["state_sha"], b["state_sha"]], "agree": agree,
-                                                   "start_sha": [a["start_sha"], b["start_sha"]],
-                                                   "frozen_start_sha": self.instance["state_sha"]},
-                       "clock_hook": bool(hooked(self.s.ep))}
-            rcb_service.write_json_atomic(os.path.join(self.data, "verdict.json"), verdict)
-            rcb_service.write_json_atomic(os.path.join(self.data, "record.json"),
-                                          {**a["record"], "notes": self.s.notes.texts})
-            started = a["start_sha"] == b["start_sha"] == self.instance["state_sha"]
-            return {"success": bool(agree and started and a["verdict"].get("pass")),
-                    "state_sha": a["state_sha"] if agree and started else "replays-differ"}
+        def verdict_extra(self) -> dict:
+            """verdict.json: was the episode driven through RoboSafeBench's external-clock hooks?"""
+            return {"clock_hook": bool(hooked(self.s.ep))}
 
         def images(self, cameras, depth: bool):
             """server.RoboSafe.images, timed and counted for the clock's picture charge (RtService.charge)."""
@@ -590,7 +556,7 @@ def build_service():
 
 
 def main() -> None:
-    if sys.argv[1:2] == ["replay"]:              # one fresh-process replay (replay.py, with this module's patch)
+    if sys.argv[1:2] == ["replay"]:              # an offline fresh-process replay (replay.py with this module's patch)
         import replay
         sys.argv = sys.argv[:1] + sys.argv[2:]
         replay.main()

@@ -13,7 +13,7 @@ its own sensors, the request, the results the API returns for each row (`meta.re
 robot (`meta.messages`) and the operator's answers (`meta.operator`, and `last_operator_answer` in /status). Never an
 object's pose, the scene's contents, the member of the family or the hazard state.
 
-Five additions to the shared layer, made here so that rcb_service.py stays the file every 2.1 benchmark shares
+Six additions to the shared layer, made here so that rcb_service.py stays the file every 2.1 benchmark shares
 (precedent: RoboFunOlympics' server.py adds to Service.meta):
   - /submit's header `note`, the only free text an agent sends, is handed to the episode with the rows it came with
     (the question of `ask_operator`, the text of `report` and of the exits): appended to DATA/notes.jsonl, fsynced,
@@ -23,15 +23,21 @@ Five additions to the shared layer, made here so that rcb_service.py stays the f
     an episode without an exit; one ended by an exit is judged at the exit (`step`);
   - /status carries the operator's last answer, and every response's meta the messages that arrived since the last;
   - a 500 says "simulator error" only (the layer's `detail`, an exception's repr, can name the simulator's modules;
-    it is kept in DATA/episode.jsonl).
+    it is kept in DATA/episode.jsonl);
+  - the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): `RoboSafe.live_verdict`
+    writes RoboSafeBench's verdict on the episode this process ran (DATA/verdict.json: outcome, marks, pass) and its
+    record (DATA/record.json); nothing is replayed to grade it. The frozen start is checked when the episode begins
+    (`RoboSafe.start_sha`, the instance's `state_sha`: a mismatch is the layer's `instance_mismatch`, an
+    infrastructure failure, before the agent is served).
+
+The RoboSafeBench 0.5.3 release's adapter (the easy-set tasks; scripts/robosafe/shared-0.5.3/, check_release.py):
+scripts/robosafe/shared/standard/server.py is the 0.5.4 one.
 """
 from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
-import tempfile
 
 import numpy as np
 
@@ -40,8 +46,6 @@ sys.path.insert(0, HERE)
 import rcb_rsb  # noqa: E402
 import rcb_service  # noqa: E402
 from rcb_service import Refused, main  # noqa: E402
-
-REPLAY_TIMEOUT_S = 780          # each of the two fresh-process replays (they run side by side), inside the hook's 840 s
 
 # ---------------------------------------------------------------------------------------------- additions to the layer
 _service_submit, _service_end, _service_status, _service_meta, _service_handle = (
@@ -105,6 +109,26 @@ rcb_service.Service._end = _end
 rcb_service.Service.status = _status
 rcb_service.Service.meta = _meta
 rcb_service.Service.handle = _handle
+_service_resume = rcb_service.Service._resume
+
+
+def _resume(self, ev: list[dict]) -> None:
+    """Service._resume, then an episode that ended unjudged (a crash between _end's two checkpoints) is judged."""
+    _service_resume(self, ev)
+    if self.done and self.reason in ("timeout", "failed") and not self.success:
+        # The process died between the episode's end (checkpoint "end", success false) and its judging (checkpoint
+        # "judged"): the resumed episode stands where it ended, so judge it now, as _end would have.
+        try:
+            ok = bool(self.sim.live_pass())
+        except Exception as exc:  # noqa: BLE001 -- a broken episode cannot be judged: it stays a failure
+            self.log("live_verdict_error", error=repr(exc)[:300])
+            ok = False
+        if ok:
+            self.success = True
+            self._checkpoint("judged", live_success=True)
+
+
+rcb_service.Service._resume = _resume
 
 
 class RoboSafe:
@@ -116,8 +140,11 @@ class RoboSafe:
         self.data = os.environ.get("RCB_DATA", "/data")
         os.makedirs(self.data, exist_ok=True)
         self.s = rcb_rsb.Session(self.instance, notes_path=os.path.join(self.data, "notes.jsonl"))
-        if self.s.ep.state_hash() != self.instance["state_sha"]:
-            raise RuntimeError("this image does not rebuild the frozen instance's starting state")
+        # The frozen start (make_instances.py: RoboSafeBench's own start of the key). rcb_service checks the scene against
+        # it when a fresh episode begins and refuses to serve another start (instance_mismatch, infrastructure); the
+        # hash this process built is kept for verdict.json.
+        self.start_sha = self.instance["state_sha"]
+        self.built_sha = self.s.ep.state_hash()
         api = self.s.api
         self.types = self.s.types
         self.control_dt = float(api.control_dt)
@@ -254,36 +281,29 @@ class RoboSafe:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode replayed twice, each in a fresh process from the frozen start (replay.py), side by
-        side. Their verdict and record go to DATA/verdict.json and DATA/record.json; the result is a success only when
-        both replays pass and end in the same state (whose hash rcb_service compares with the live one)."""
-        work = tempfile.mkdtemp(prefix="replay-", dir=self.data)
-        np.save(os.path.join(work, "rows.npy"), np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim))
-        with open(os.path.join(work, "notes.json"), "w") as f:
-            json.dump(self.s.notes.texts, f)
-        cmd = [sys.executable, os.path.join(HERE, "replay.py"), self.instance_path, os.path.join(work, "rows.npy"),
-               os.path.join(work, "notes.json")]
-        procs = [subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json")], stdout=subprocess.DEVNULL,
-                                  stderr=open(os.path.join(work, f"replay{i}.err"), "w")) for i in (1, 2)]
-        for p in procs:
-            p.wait(timeout=REPLAY_TIMEOUT_S)
-        outs = []
-        for i, p in zip((1, 2), procs):
-            if p.returncode != 0:
-                raise RuntimeError(f"replay {i} failed: " + open(os.path.join(work, f"replay{i}.err")).read()[-500:])
-            with open(os.path.join(work, f"replay{i}.json")) as f:
-                outs.append(json.load(f))
-        a, b = outs
-        agree = a["state_sha"] == b["state_sha"] and a["verdict"].get("pass") == b["verdict"].get("pass")
-        verdict = {**a["verdict"], "replays": {"state_sha": [a["state_sha"], b["state_sha"]], "agree": agree,
-                                               "start_sha": [a["start_sha"], b["start_sha"]],
-                                               "frozen_start_sha": self.instance["state_sha"]}}
+    def live_verdict(self, rows: np.ndarray, success: bool) -> dict:
+        """RoboSafeBench's verdict on the live episode (rcb_service's finalize, after the agent's container is stopped):
+        the episode this process ran, judged once (Session.judge: the verdict live_pass() gave at the exit or at the
+        end, or, after a simulator error ended it, the episode as it stands). Writes DATA/verdict.json (the verdict,
+        and the start check) and DATA/record.json (the episode's record, the notes included); returns RoboSafeBench's
+        pass as "success" (it can only take a success away) and the outcome and class for final.json. Nothing is
+        replayed."""
+        for name in ("verdict.json", "record.json"):      # never a file that disagrees with this finalize's success
+            try:
+                os.remove(os.path.join(self.data, name))
+            except FileNotFoundError:
+                pass
+        v = self.s.judge()
+        verdict = {**v, "graded_by": "live",
+                   "start": {"start_sha": self.built_sha, "frozen_start_sha": self.instance["state_sha"]},
+                   **self.verdict_extra()}
         rcb_service.write_json_atomic(os.path.join(self.data, "verdict.json"), verdict)
-        rcb_service.write_json_atomic(os.path.join(self.data, "record.json"), {**a["record"], "notes": self.s.notes.texts})
-        started = a["start_sha"] == b["start_sha"] == self.instance["state_sha"]
-        return {"success": bool(agree and started and a["verdict"].get("pass")),
-                "state_sha": a["state_sha"] if agree and started else "replays-differ"}
+        rcb_service.write_json_atomic(os.path.join(self.data, "record.json"), {**self.s.record(), "notes": self.s.notes.texts})
+        return {"success": bool(v.get("pass")), "outcome": v.get("outcome"), "judgment_class": v.get("judgment_class")}
+
+    def verdict_extra(self) -> dict:
+        """Fields an adapter built on this one adds to verdict.json (rcb_rsb_rt.py: clock_hook)."""
+        return {}
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim),
@@ -291,8 +311,9 @@ class RoboSafe:
                  **{k: str(v) for k, v in meta.items()})
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
-        """A video for people: the episode replayed once more, the first camera filmed after every row (at most 900
-        frames), and its last frame as path.last.png. Never part of the verdict."""
+        """A video for people, after the verdict is written: the recorded rows run once in a new Session from the frozen
+        start, the first camera filmed after every row (at most 900 frames), and its last frame as path.last.png. The
+        only replay of the finalize; it never decides anything (a failure loses the video only)."""
         import rcb_service as svc  # noqa: PLC0415
         s = rcb_rsb.Session(self.instance)
         s.notes.texts = list(self.s.notes.texts)
