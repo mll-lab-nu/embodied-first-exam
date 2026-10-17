@@ -1,0 +1,15 @@
+{
+ "description": "Original authored T49 meshes (scene_expansion/tasks/batter_mix/assets): Roesle 150672 deep bowl shell and Roesle 950633 balloon-whisk wire loops; used for the look only (contact uses convex proxies built in scene.py).",
+ "source": "robot_coding_bench/scripts/scene_expansion/tasks/batter_mix/assets (task-owned original procedural meshes; see that task's PROVENANCE.md)",
+ "files": {
+  "rosle-bowl-original.obj": {
+   "sha256": "d20e884a856f123e5a598708408981a9ec43b0835cfba4bdd667f5692f72ec73",
+   "bytes": 120757
+  },
+  "rosle-whisk-wires-original.obj": {
+   "sha256": "a33651ce0362dc116b57de85f49e53ae25e0e0986d5e015584cd02d6db4f7854",
+   "bytes": 299204
+  }
+ },
+ "note": "The trimesh export header comment (a URL) was removed from both OBJ files; vertices and faces are unchanged."
+}

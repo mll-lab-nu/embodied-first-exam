@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "source": "T39 scene-expansion board book (scripts/scene_expansion/repairs/board_book_meta_delivery_polish_r1_trajectory_r1/assets), copied unchanged",
+  "license": "page/cover artwork: original CC0-1.0 (ORIGINAL_CONTENT_LICENSE.txt); the page text was rasterized with DejaVu Sans (Bitstream Vera license, DejaVu changes public domain; the license text is kept with the family sources, licenses/DEJAVU_FONT_LICENSE.txt)",
+  "files": {
+    "ORIGINAL_CONTENT_LICENSE.txt": {
+      "bytes": 192,
+      "sha256": "5d2ad4e4d206a76c23e0b8e73db4cb7ecc629fc28a0f630ff4dd787158bcb16a"
+    },
+    "cover.png": {
+      "bytes": 17042,
+      "sha256": "76c50a227de164c7743760f5eb13bc48fe7c51f6ad444920395573c9887f251d"
+    },
+    "page-01.png": {
+      "bytes": 21852,
+      "sha256": "f63a245b863afd1c017cf7936288b9d8652ab3d60f2e0c3b0d710c11e4880e64"
+    },
+    "page-02.png": {
+      "bytes": 21073,
+      "sha256": "23cdfff8a69600c0aec1bc3c0fcc13a36909cdebe0034f648ed7a74e6ed83230"
+    },
+    "page-03.png": {
+      "bytes": 20735,
+      "sha256": "e3d14ef4acbed0b59f84ac44978fb3ffc76c3444c6b3a39834e1564e281735bf"
+    },
+    "page-04.png": {
+      "bytes": 20427,
+      "sha256": "80df79ecdb37c5d79c8e5e829758b74ecac9e9494ca2064092555cecad07ba78"
+    },
+    "page-05.png": {
+      "bytes": 20113,
+      "sha256": "2c4f200aab07feb48e7f0f88a8f0af0898b034d4e39fb878d0c58f42140d12a0"
+    },
+    "page-06.png": {
+      "bytes": 20774,
+      "sha256": "a7126e31cdc33312625e0c817a019b574c36c4cae8edd9c2c8224afbaa0ead46"
+    },
+    "page-07.png": {
+      "bytes": 19953,
+      "sha256": "d8904b77b39693e5a7af55f972f58ddd21f88d8612dea67855e3eff9f32576c5"
+    },
+    "page-08.png": {
+      "bytes": 21612,
+      "sha256": "7d0f67bb18c27ce4b721577c0e716dd8bda09cc113d1bd65f1d9d832b841055e"
+    },
+    "page-09.png": {
+      "bytes": 21534,
+      "sha256": "bf0db307ef62699b04d3cdc9f564a5a90ae8d9c8e88a3f9bbd43e0bd25d18d15"
+    },
+    "page-10.png": {
+      "bytes": 20611,
+      "sha256": "e2866edfe966f30d314bc2a77410d2dab7b82ea6cfd721f4384700833e8aaa97"
+    },
+    "page-11.png": {
+      "bytes": 20356,
+      "sha256": "e1bc7dc00f04da965b58902b9c634a22f8a1ddf3f73bde4e8fb80465e1966264"
+    },
+    "page-12.png": {
+      "bytes": 21010,
+      "sha256": "7ccfbb4d9d4e1a6ff22adb981b283acf2ed75fff1e8812a32ed07996300ce988"
+    },
+    "page-13.png": {
+      "bytes": 20948,
+      "sha256": "b18b30d20bc430bb2429fb5b88d009bdb2e59fda62c8653735d1ff48b6b1594e"
+    },
+    "page-14.png": {
+      "bytes": 20835,
+      "sha256": "bf9437deb15990945c304ae78bc3e1c42901497ab88ec3fa575de5b0f5633711"
+    },
+    "page-15.png": {
+      "bytes": 20713,
+      "sha256": "10c8c41fbd16586a38cf75dad61a7330d678940e8c7902e3d0e121d9ea6f9714"
+    },
+    "page-16.png": {
+      "bytes": 21428,
+      "sha256": "40b7eb8b153b0ff0a933840647a90174fc20da4dc318057b6ef61b1eee567725"
+    }
+  }
+}

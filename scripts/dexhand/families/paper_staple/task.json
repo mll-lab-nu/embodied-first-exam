@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "id": "paper_staple",
+  "title": "Align and staple three paper sheets",
+  "category": "office_tools",
+  "description": "Square up three loose, misaligned A5 sheets with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a Tianji Marvin arm, slide their corner into a NOVUS B2 desk stapler's throat against its paper stop, press the spring-loaded head (about 10 N rising to 25 N) through its full stroke and let it spring back; a sheet pushed off the desk, a knocked-over stapler or an arm link hitting the desk fails the episode at once.",
+  "difficulty": "hard",
+  "mechanism": "free rigid sheets and a passive spring-returned stapler head hinge",
+  "instruction": "Square up three loose A5 sheets and staple them at a corner with the desk stapler, using the dexterous hand on the right arm of a fixed two-arm robot (the left arm stays parked). The sheets lie as a misaligned stack (each upper sheet shifted toward +x) with the bottom sheet's corner resting on the stapler's anvil mouth and the far edge on the desk. Slide the stack into the stapler throat against the stapler's paper stop, square the sheets, press the stapler head through its full stroke onto the stack and let it spring back. Stages, in order: (1) aligned: every corner of sheets 1 and 2 within 2.0 mm of the matching corner of sheet 0 (in sheet 0's plane), the sheets stacked in order (each 0.25-1.5 mm above the one below, along sheet 0's normal) and sheets 0-1 and 1-2 in contact; (2) in the throat: with (1), the staple point (stapler base frame (0.063, 0, 0.012) m, on the anvil under the driver blade) lies inside every sheet 3-30 mm from both edges of one corner and every sheet mid-plane is 0-6 mm above it; (3) pressed: with (1) and (2), the head hinge within 0.01 rad of its bottom stop (0.1701 rad) and the driver blade touching the top sheet; (4) released: after (3), with (1) and (2), the head back up (hinge <= 0.02 rad), no robot contact (either hand or any arm link) with any sheet or the stapler and every sheet's centre of mass slower than 0.02 m/s for 50 consecutive controls (1 s). The episode ends with success at that moment; partial completion never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when a sheet centre falls below z = 0.77925 m (1 mm under its resting height on the desk top) or any sheet corner below z = 0.765 m, a sheet centre leaves the desk (x 0.25-0.99 m, y -0.36-0.36 m) or the workspace box (x 0.2-1.1 m, y -0.45-0.45 m, z 0.70-1.20 m), a sheet or the stapler touches the floor or a desk leg, a sheet or the stapler has no contact at all while its centre of mass falls faster than 0.2 m/s, the stapler base moves more than 3 cm horizontally from its reset position or tilts more than 0.26 rad, an arm link or the robot stand (anything of the robot but the two hands) touches the desk, the stapler or a sheet, or the physics becomes unstable; later actions cannot undo a failure. Only arm-joint and finger actuator targets are allowed. The head's return spring needs about 10 N pressed 8 cm in front of its hinge to start the stroke and about 25 N at the bottom stop. Sheets are 0.5 mm rigid plates (real A5 size and mass); staple formation is not simulated. At most 6000 controls at 50 Hz; reaching that limit without success is a failure.",
+  "robot": "marvin-bimanual-sharpa-wave",
+  "physics_dt": 0.002,
+  "control_dt": 0.02,
+  "max_steps": 6000,
+  "table_z": 0.78,
+  "desk": {
+    "center": [
+      0.62,
+      0.0
+    ],
+    "half": [
+      0.37,
+      0.36
+    ],
+    "thickness": 0.025
+  },
+  "stapler": {
+    "pos": [
+      0.575,
+      -0.1,
+      0.783
+    ],
+    "yaw": 0.0
+  },
+  "sheet": {
+    "half": [
+      0.105,
+      0.074
+    ],
+    "thickness": 0.0005,
+    "mass": 0.0025,
+    "friction": 0.4
+  },
+  "sheets": [
+    {
+      "center": [
+        0.744,
+        -0.036
+      ],
+      "yaw": 0.0,
+      "pose": [
+        0.7440104,
+        -0.0360028,
+        0.7879309,
+        0.9993287,
+        -3.74e-05,
+        0.0366341,
+        2.43e-05
+      ]
+    },
+    {
+      "center": [
+        0.748,
+        -0.0356
+      ],
+      "yaw": 0.0,
+      "pose": [
+        0.7480266,
+        -0.0356124,
+        0.7881288,
+        0.9993287,
+        -3.84e-05,
+        0.0366357,
+        -5.2e-06
+      ]
+    },
+    {
+      "center": [
+        0.752,
+        -0.0364
+      ],
+      "yaw": 0.0,
+      "pose": [
+        0.752046,
+        -0.036414,
+        0.7883309,
+        0.9993287,
+        -3.84e-05,
+        0.0366361,
+        -1.11e-05
+      ]
+    }
+  ],
+  "head": {
+    "stiffness": 7.0,
+    "preload_rad": 0.115,
+    "damping": 0.05,
+    "frictionloss": 0.003,
+    "stop_margin_m": 0.0002
+  },
+  "initial_targets": {
+    "sharpa": [
+      1.570796,
+      -1.570796,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.42673,
+      0.520165,
+      -0.113493,
+      -2.185305,
+      0.442622,
+      0.746492,
+      0.831435,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "wuji": [
+      1.570796,
+      -1.570796,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -0.42673,
+      0.520165,
+      -0.113493,
+      -2.185305,
+      0.442622,
+      0.746492,
+      0.831435,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "align_tolerance_m": 0.002,
+  "align_yaw_tolerance_rad": 0.02,
+  "staple_margin_min_m": 0.003,
+  "staple_margin_max_m": 0.03,
+  "throat_height_max_m": 0.006,
+  "stroke_tolerance_rad": 0.01,
+  "head_up_rad": 0.02,
+  "hold_steps": 50,
+  "stapler_max_shift_m": 0.03,
+  "stapler_max_tilt_rad": 0.26,
+  "workspace": {
+    "min": [
+      0.2,
+      -0.45,
+      0.7
+    ],
+    "max": [
+      1.1,
+      0.45,
+      1.2
+    ]
+  },
+  "modeling": "Rigid thin sheets (0.5 mm, five times real paper thickness, real A5 size and 80 g/m2 mass) and a NOVUS B2 envelope stapler whose handle and driver blade turn on one passive spring-returned hinge (7.0 N m/rad, 0.115 rad preload: about 10 N at the start of the stroke and 25 N at the bottom stop, 8 cm in front of the hinge) with a bottom stop; the magazine is rigid with the base. Staple formation (legs piercing and clinching) is not simulated. A paper insertion stop (not part of the real B2) squares and positions the stack, and the stack starts with its corner propped on the anvil mouth.",
+  "desk_friction": 0.15,
+  "anvil_friction": 0.1,
+  "drop_speed_m_s": 0.2,
+  "marvin": {
+    "base_pos": [
+      0.58,
+      -0.66,
+      0.1
+    ],
+    "base_yaw": 2.356194490192345
+  }
+}

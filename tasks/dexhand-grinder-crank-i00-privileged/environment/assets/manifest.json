@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "files": {
+    "source/ASSET_PROVENANCE.md": {
+      "sha256": "3731cbdd72822d6e98eccf16717e99e5d2ab35a79cd76a3c3ad8711c1d7be137",
+      "bytes": 3407
+    },
+    "source/SHARPA-APACHE-2.0.txt": {
+      "sha256": "8d3d877d33afe58c5146e4304db9cc01e7550f843b025a461ea2804e90a3c6d3",
+      "bytes": 11343
+    },
+    "source/hario_mechanism.py": {
+      "sha256": "dcadf7ac83a3981fc122218e65ecb6863ac8dafa372022a91549de87710155d3",
+      "bytes": 6384
+    }
+  },
+  "provenance": {
+    "source/hario_mechanism.py": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_grinder/mechanism.py (byte-identical copy; T15 scene source, read-only)",
+    "source/ASSET_PROVENANCE.md": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_grinder/ASSET_PROVENANCE.md (byte-identical copy)",
+    "source/SHARPA-APACHE-2.0.txt": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_grinder/licenses/SHARPA-APACHE-2.0.txt"
+  }
+}
