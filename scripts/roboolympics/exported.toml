@@ -9,8 +9,10 @@
 # The protocol each mode of these tasks serves (PROTOCOL §4c): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
 [protocols]
-standard-realtime = "eai-standard-realtime/1.0"   # the matches: RoboOlympics' own service and referee
-standard = "skilleval-api-test/1"                 # the skill tasks (task_type = "policy"), graded offline
+standard-realtime = "eai-standard-realtime/1.0"   # the real-time matches: RoboOlympics' own service and referee
+standard = ["skilleval-api-test/1",               # the skill tasks (task_type = "policy"), graded offline
+            "eai-standard-turn/1.0"]              # the turn-based matches: the world waits for the player whose turn it
+                                                  # is, a chess clock per player (RoboOlympics' own service and referee)
 
 [[tasks]]
 name = "roboolympics-badminton-actskill-i00-standard"
@@ -35,6 +37,20 @@ revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
            "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
+
+[[tasks]]
+name = "roboolympics-fencing-bout-i01-standard"
+source_task = "roboolympics/fencing-bout-wallclock-program-standard"
+revision = "fencing-7+core-0.2"
+source_commits = ["a6712a675343"]
+patched = ["task.toml", "environment/docker-compose.yaml"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
+
+[[tasks]]
+name = "roboolympics-fencing-bout-i02-standard"
+source_task = "roboolympics/fencing-bout-wallclock-program-standard"
+revision = "fencing-7+core-0.2"
+source_commits = ["a6712a675343"]
+patched = ["task.toml", "environment/docker-compose.yaml"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
