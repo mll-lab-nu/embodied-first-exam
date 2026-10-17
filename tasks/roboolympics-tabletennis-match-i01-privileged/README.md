@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboOlympics |
 | Mode | privileged |
-| Twin | — (privileged only) |
+| Twin | `roboolympics-tabletennis-match-i01-standard-realtime` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_match` / seed 22 |
 | Oracle | `partial` — full-state reference program (solution/): the camera-only reference player's serve and stroke planner fed the true ball state; its wins on this instance and across levels 1-4 are in the RoboOlympics privileged report (tools/tt_fullsim/calibrate.py) |
