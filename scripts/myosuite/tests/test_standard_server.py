@@ -176,7 +176,10 @@ class LiveGrading(unittest.TestCase):
         shutil.copy(HERE / "stub_mujoco.py", self.srv / "mujoco.py")
         shutil.copy(HERE / "stub_rcb_myosuite.py", self.srv / "rcb_myosuite.py")
         (self.srv / "video.py").write_text(FAKE_VIDEO)
-        os.symlink(sys.executable, self.bin / "python")          # the hook calls `python`, as in the image
+        # the hook calls `python`, as in the image: this interpreter (a wrapper, not a symlink: a venv's python finds
+        # its packages by its own path)
+        (self.bin / "python").write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+        (self.bin / "python").chmod(0o755)
         np.savez(self.srv / "instance.npz", task="obj_hold", model__actuator_ctrlrange=np.zeros((NU, 2)))
         (self.srv / "task.json").write_text(json.dumps({"task_text": "stub", "default_cameras": ["hand_top"], "reference": None}))
         self.proc = None

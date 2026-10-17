@@ -809,6 +809,13 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict to final.json, then the video
@@ -904,9 +911,10 @@ R3_STD = f"""\
   decides nothing. `environment/sim/server.py` checks at the episode's start that the scene hashes to the frozen
   instance's recorded state (else `instance_mismatch`, an infrastructure failure, before the agent is served; before,
   the replays checked it). `tests/grade.py`: success = the live success; `reward.json` drops `replay_success`,
-  `deterministic` and `live_matches_replay` and adds `graded_by_live`, `replays`. The scene, the instance, the pass
-  rule and everything the agent sees are unchanged, so the task keeps its name; a result graded before passed only if
-  the live episode succeeded too.
+  `deterministic` and `live_matches_replay` and adds `graded_by_live`, `replays`. A collect hook on `main`
+  (`kill -9 -1`) stops whatever the agent left running before the service ends the episode. The scene, the instance,
+  the pass rule and everything the agent sees are unchanged, so the task keeps its name; a result graded before passed
+  only if the live episode succeeded too.
 """
 R3_PRIV = """\
 - 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the session log
