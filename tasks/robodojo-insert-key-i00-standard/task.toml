@@ -4,18 +4,18 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/final.json", service = "sim" },
   { source = "/data/episode.jsonl", service = "sim" },
   { source = "/data/trajectory.npz", service = "sim" },
-  { source = "/data/replay.mp4", service = "sim" },
-  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/live.mp4", service = "sim" },               # the live episode's video (kept by the service)
+  { source = "/data/live.last.png", service = "sim" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's one fresh-process replay
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video encode (never decides anything)
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/robodojo-insert-key-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo insert_key (Precision) on the same frozen layout as the privileged task (arx_x5/0/insert_key_0.json). Task: Pick up the key, pass it between hands, insert it into the keyhole (slot) and turn it so it ends fully inserted, upright and rotated. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo insert_key (Precision) on the same frozen layout as the privileged task (arx_x5/0/insert_key_0.json). Task: Pick up the key, pass it between hands, insert it into the keyhole (slot) and turn it so it ends fully inserted, upright and rotated. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
@@ -44,7 +44,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 19.0
 verifier_min_gpu_memory_gb = 11.0
-measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10; the verifier phase replays as the privileged verifier does (docker peak 15.7 GiB, GPU 9.6 GiB)"
+measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10 (the verifier phase then replayed as the privileged verifier does: docker peak 15.7 GiB, GPU 9.6 GiB); since 2026-10-17 (board 0151) the collect hook replays nothing: after the service exits it only encodes the live video on the CPU, so the sidecar's peak is the live service's"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -85,13 +85,19 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay once in a fresh process, write final.json
-timeout_sec = 10800               # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
-                                  # resume) + ONE fresh-process replay (owner, 2026-10-12; two and 18000 s before) of up to
-                                  # 7200 s (an Isaac start + up to 15,000 actions, filmed: 1200 s + actions / 2.5) + 900 s;
-                                  # finalize.sh ends a replay that would pass this deadline and records it (replay_error, infra_error)
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode (no replay), encode live.mp4
+timeout_sec = 3600                # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
+                                  # resume) + the video encode (at most 600 s, at most 3001 frames, CPU) + a margin; graded by
+                                  # the live episode since 2026-10-17 (10800 s with one fresh-process replay before)
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2.12), as the service's RCB_WALL_CLOCK_S
