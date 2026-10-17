@@ -118,6 +118,15 @@ SIDECAR = (
     "(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes\n"
     "(Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes\n"
     "`final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.")
+SUCCESS_RULE = ("the BDDL goal has held for 1 s of simulated time in a row (30 control steps) with no goal object attached to "
+                "a gripper and every goal object at rest (slower than 0.05 m/s), and the episode ends there (it ended on the "
+                "first control step the goal's literals were true, sometimes with the object still in the gripper); after the "
+                "last action the robot holds still for up to 5 s so that a goal reached on the last rows can settle")
+BREAKDOWN = ("a simulator breakdown (a non-finite robot state, the robot or a goal object farther than 10 km from the origin, "
+             "the robot faster than 100 m/s) ends the episode as a failure, recorded as `sim_breakdown` (before, the episode ran "
+             "on, or ended as a simulator error once a call raised; amended 2026-10-16 in review: whether a breakdown is an "
+             "infrastructure failure, voided and retried, is the owner's decision, and until then it is the agent's 0 as a "
+             "simulator error was)")
 # The README Change Log (PROTOCOL §2.8: published tasks fixed in place), per mode, oldest first.
 FALL = ("OmniGibson's own Falling rule (the base tilted more than 41.4° from upright, or more than 3 cm below the floor) "
         "has held for 10 s of simulated time")                 # the tooling's FALL_* (docs/benchmarks/behavior.md, Falls)
@@ -162,7 +171,23 @@ CHANGES = {
         "Basis: the longest successful privileged trajectory of the pool's trials had 25,404 rows, the frozen instances' "
         "challenge timeouts reach 39,090 steps, and the slowest replay measured ran 1.88 control steps/s with a start of up "
         "to 1,115 s (docs/benchmarks/behavior.md, Verifier time). The instruction states the cap. Every successful trajectory "
-        "recorded so far is under it, so the scene, the instance and the pass rule are unchanged and the task keeps its name."],
+        "recorded so far is under it, so the scene, the instance and the pass rule are unchanged and the task keeps its name.",
+        "2026-10-14, amended 2026-10-16 in review (board 0146: the video replay after the verdict, a breakdown the agent's 0 for now, settled successes only on the live rows) (failure analysis of the 10-08..10-14 runs, items 16, 17, 20, 24, 25): (1) replays that agree: OmniGibson "
+        "updates object states and applies transition rules in the iteration order of Python sets of objects, which followed "
+        "memory addresses and so differed between processes; with several heat sources or rules that do not commute, the same "
+        "actions set a fire or cut a slice one control step apart, the two replays' state hashes differed and 6 privileged "
+        "trials that completed the task scored 0. The tooling now hashes simulator objects by name (the same order in every "
+        "process) and the images set PYTHONHASHSEED=0. `tests/grade.py`'s two graded replays also run exactly alike (the "
+        "second one recorded the video with other cameras); the video comes from a third replay, run after `reward.json` holds "
+        "the verdict and bounded like a graded replay, that never affects the score (`video_replay_matches`, `video.json`), and "
+        "`[verifier] timeout_sec` is 85800 s (was 57800 s: three capped replays + 30 min). "
+        f"(2) Success: {SUCCESS_RULE} (`reward.json` `goal`, `settle_steps`). (3) "
+        f"{BREAKDOWN}. (4) `s.status()` no longer changes the simulation: the q_score's predicate evaluation runs with the "
+        "object-state caches restored (calls at arbitrary steps changed what transition rules saw later, e.g. a fire). (5) "
+        "`/behavior-src` and `/opt/tools` are mounted read-only in the agent's container. The scene, the frozen instance and "
+        "the BDDL goal are unchanged, so the task keeps its name (as for the fall rule of 2026-10-09); the pass rule is "
+        "stricter (a goal held in the gripper or reached on one frame no longer passes), so results recorded before this "
+        "change are reported separately."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
         f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT_0}) "
@@ -212,7 +237,19 @@ CHANGES = {
         "`time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from "
         "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The "
         "service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader "
-        "are unchanged, so the task keeps its name and earlier results stand."],
+        "are unchanged, so the task keeps its name and earlier results stand.",
+        "2026-10-14, amended 2026-10-16 in review (board 0146: the video replay after the verdict, a breakdown the agent's 0 for now, settled successes only on the live rows) (failure analysis of the 10-08..10-14 runs, items 16, 20, 25): (1) replays that agree: the tooling hashes "
+        "simulator objects by name, so OmniGibson's per-step object-state updates and transition rules run in the same order "
+        "in the service and in every replay (it followed memory addresses: fires, cuts and cooking could happen one control "
+        "step apart, and 8 live successes failed or split in replay), and the sim service sets PYTHONHASHSEED=0. "
+        "`environment/sim/finalize.sh`: the two graded replays run exactly alike (the first one recorded the video with other "
+        "cameras); the video comes from a third replay, run after `final.json` holds the verdict with the hook's remaining time, "
+        "that never affects the score (`final.json` / `reward.json` `video_replay_matches`), and `[[verifier.collect]] "
+        "timeout_sec` is 52200 s (was 37800 s: one more replay of up to 4 h). (2) Success: "
+        f"{SUCCESS_RULE}; each replay runs that settle window after the last row, and when your episode ended first a "
+        f"success both replays reach there is the episode's (`settled_success`); `/spec` `episode` says so. (3) {BREAKDOWN}. The scene, the frozen instance and the BDDL "
+        "goal are unchanged, so the task keeps its name (as for the fall rule of 2026-10-09); the pass rule is stricter, so "
+        "results recorded before this change are reported separately."],
 }
 
 
@@ -338,8 +375,8 @@ def readme(name: str, task: str, difficulty: str, reference: str, verification: 
 def readme_privileged(fam: str, e: dict) -> str:
     r = e.get("readme", {})
     success = "".join(f"- {c}\n" for c in e.get("success", []))
-    task = r.get("task") or (e["goal"] + (f"\n\n**Success**, all at the same time (the episode ends by itself the moment they "
-                                          f"hold):\n{success}" if success else ""))
+    task = r.get("task") or (e["goal"] + (f"\n\n**Success**, all at the same time, held for 1 s with no goal object in a gripper "
+                                          f"and every goal object at rest:\n{success}" if success else ""))
     if r.get("reference"):
         ref = r["reference"]
     elif e["oracle"] in ("full", "partial"):
@@ -366,8 +403,8 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("Budget", "the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every "
                        "Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)"),
-            ("Verifier time", f"at most 40,000 rows accepted; each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 57800 s "
-                              "(two capped replays + 30 min)")]
+            ("Verifier time", f"at most 40,000 rows accepted; each graded replay {REPLAY_LIMIT}, and the video replay after the "
+                              "verdict the same; `[verifier] timeout_sec` 85800 s (three capped replays + 30 min)")]
     return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e),
                   details(rows) + change_log("privileged"), review_pr(e))
 
@@ -398,7 +435,8 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; docs/benchmarks/behavior.md)"),
-            ("Collect hook time", "37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min")]
+            ("Collect hook time", "52200 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + the video replay "
+                                  "after the verdict (up to 4 h) + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))
 
@@ -468,7 +506,8 @@ def make_privileged(fam: str, e: dict, src: Path, out: Path) -> None:
     bddl = (HERE / "bddl" / f"{fam}.bddl").read_text()
     objs = e.get("objects") or G.task_objects(bddl)
     success = "".join(f"- {c}\n" for c in e.get("success", []))
-    success = f"**Success**, all at the same time (the episode ends by itself the moment they hold):\n{success}\n" if success else ""
+    success = (f"**Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest "
+               f"(`## Conventions`):\n{success}\n") if success else ""
     meaning = G.meanings(bddl)
     meaning = f"What the goal's predicates mean (OmniGibson's object states):\n{meaning}\n" if meaning else ""
     note = f"{e['note'].strip()}\n" if e.get("note", "").strip() else ""
@@ -478,7 +517,7 @@ def make_privileged(fam: str, e: dict, src: Path, out: Path) -> None:
     resub(ins, r"The scene is `.*?`; the task objects are BDDL objects .*?```lisp\n.*?```\n",
           f"The scene is `{e['scene']}`; the task objects are BDDL objects (`s.objects()`: {', '.join(f'`{o}`' for o in objs)}; see\n"
           f"`/behavior-src/bddl3/bddl/activity_definitions/{fam}/problem0.bddl`). The success predicate is the task's BDDL\n"
-          f"goal in that file, evaluated by OmniGibson's object states; the episode ends by itself the moment it holds:\n"
+          f"goal in that file, evaluated by OmniGibson's object states; it counts once it has held for 1 s, released and at rest (`## Conventions`):\n"
           f"```lisp\n{goal_block(bddl)}\n```\n" + meaning + note)
     sub(ins, [(f'Session("{TEMPLATE}"', f'Session("{fam}"'), (f"--task {TEMPLATE}", f"--task {fam}")])
     (dst / "README.md").write_text(readme_privileged(fam, e))
