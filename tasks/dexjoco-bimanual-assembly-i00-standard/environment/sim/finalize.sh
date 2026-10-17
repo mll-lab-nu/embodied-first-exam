@@ -15,9 +15,10 @@
 # live episode stepped and renders at most ~1500 frames; it gets what is left of the budget, at most
 # RCB_COLLECT_VIDEO_MAX_S, and is stopped at that. final.json is always written whole (temporary file + rename).
 set -u
-DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; INSTANCE="${RCB_INSTANCE:?}"; TASK="${RCB_TASK:?}"
+DATA="${RCB_DATA:-/data}"; INSTANCE="${RCB_INSTANCE:?}"; TASK="${RCB_TASK:?}"
+RCB_SRV="${RCB_SRV:-/srv}"; export RCB_SRV   # the task's sim/ directory (tests point it elsewhere)
 RCB_HOOK_T0="$(date +%s)"; export RCB_HOOK_T0
-python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-900}"; rc=$?
+python "$RCB_SRV/rcb_limited.py" end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-900}"; rc=$?
 if [ "$rc" = 2 ]; then
     echo "[finalize] final.json already holds the verdict (the service gave up); nothing to add"; exit 0
 fi
@@ -89,9 +90,9 @@ for f in (mp4, os.path.join(d, "video.json")):
         pass
 # the video stops itself 30 s before its time is up (the frames so far stay playable); the kill is the backstop
 log = open(os.path.join(d, "video.log"), "w")
-p = subprocess.Popen([sys.executable, "/srv/video.py", "--task", task, "--instance", instance,
-                      "--traj", os.path.join(d, "trajectory.npz"), "--out", mp4, "--json", os.path.join(d, "video.json"),
-                      "--deadline-s", str(int(left - 30.0))],
+p = subprocess.Popen([sys.executable, os.path.join(os.environ.get("RCB_SRV") or "/srv", "video.py"),
+                      "--task", task, "--instance", instance, "--traj", os.path.join(d, "trajectory.npz"),
+                      "--out", mp4, "--json", os.path.join(d, "video.json"), "--deadline-s", str(int(left - 30.0))],
                      stdout=log, stderr=subprocess.STDOUT, env=dict(os.environ, RCB_SESSION_LOG=""))
 try:
     p.wait(timeout=left)

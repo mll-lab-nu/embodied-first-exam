@@ -69,7 +69,8 @@ class Hook(unittest.TestCase):
         (self.srv / "video.py").write_text(STUB_VIDEO)
         self.bin = self.tmp / "bin"                  # the hook runs `python`: this interpreter (it has numpy)
         self.bin.mkdir()
-        (self.bin / "python").symlink_to(sys.executable)
+        (self.bin / "python").write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')   # not a symlink: a venv's
+        (self.bin / "python").chmod(0o755)                                                 # python finds it by path
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)

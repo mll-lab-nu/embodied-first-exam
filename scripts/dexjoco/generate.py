@@ -518,7 +518,8 @@ def std_changes(F: dict) -> str:
         "  scene that does not rebuild to its recorded hash: no episode, `instance_mismatch`, infrastructure); before, the\n"
         "  replays checked it. The episode ends at the first success, so no replay ever judged a state the live check had not.\n"
         "  The scene, the frozen instance, the pass rule and what the agent sees are unchanged, so the task keeps its name;\n"
-        "  `reward.json` no longer has `replay_success`, `deterministic` and `live_matches_replay`.")
+        "  `reward.json` no longer has `replay_success`, `deterministic` and `live_matches_replay`. A collect hook on `main`\n"
+        "  (`kill -9 -1`) stops whatever the agent left running before the service ends the episode.")
     out.append(
         "- 2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`,\n"
         "  `environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and\n"
@@ -701,6 +702,13 @@ expert_time_estimate_hours = {f["hours"]}
 timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
 
 [[verifier.collect]]
 service = "sim"

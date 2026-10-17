@@ -857,7 +857,14 @@ environment_mode = "separate"
 network_mode = "no-network"
 
 {
-        f"""[[verifier.collect]]
+        f"""# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+[[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end the episode, write its live verdict (no replay), then one video pass
 timeout_sec = {std_collect_s(manifest)}                # the end wait, the video and a margin (generate.py std_collect_s)
@@ -1389,7 +1396,9 @@ def change_log(spec: dict, mode: str, frames: int | None = None) -> str:
             "success ending the episode); the collect hook no longer replays it twice in fresh processes, and "
             "`final.json` / `reward.json` drop `replay_success`, `deterministic` and `live_matches_replay` "
             "(`graded_by = \"live\"`, `replays = 0`). The service checks the frozen instance's files against the "
-            "generator's record when an episode begins (`instance_mismatch`, an infrastructure error). The agent's "
+            "generator's record when an episode begins (`instance_mismatch`, an infrastructure error). A collect "
+            "hook on `main` (`kill -9 -1`) stops whatever the agent left running before the service ends the "
+            "episode. The agent's "
             "side (the instruction's grading sentence aside), the scene and the predicate are unchanged.")
     if spec["id"] in HELD_ROTATION_BEFORE:
         bound = spec["invariants"]["body_rotation"][1]
