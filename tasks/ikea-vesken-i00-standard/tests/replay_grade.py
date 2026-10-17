@@ -95,10 +95,17 @@ def main() -> int:
             # the image's scene is not the one the task was validated on: the host's / image's fault, not the agent's 0
             write(False, {"success": 0, "instance_mismatch": 1, "instance_exact": 0, "grader_error": 0, "infra_error": 1})
             return 0
+        mj, npy = getattr(R, "mujoco", None), getattr(R, "np", None)    # the replays' own runtime (rcb_ikea's imports)
+        rt = {"mujoco": mj.__version__, "numpy": npy.__version__, "python": sys.version.split()[0]} if mj and npy else None
+        if rt and b.get("runtime") and rt != b["runtime"]:
+            # the verifier image's MuJoCo / numpy / Python are not the ones the task was bound to: infrastructure
+            atomic_json(os.path.join(LOG_DIR, "instance_error.json"), {"runtime": rt, "bound": b["runtime"]})
+            write(False, {"success": 0, "runtime_binding_ok": 0, "instance_mismatch": 1, "grader_error": 0, "infra_error": 1})
+            return 0
         try:
-            rows = len(R.load_trajectory(a.traj, int(b["nu"]), float(b["timestep"])))
-            if a.max_rows is not None and rows > a.max_rows:
-                raise R.InvalidTrajectory(f"{rows} rows, over the task's cap of {a.max_rows} (the verifier's replays must fit its time limit)")
+            # the task's row cap is checked from the file's header, before the rows are read (the verifier's replays must
+            # fit its time limit; an oversized or compressed-bomb file is the deliverable's fault, never a grader error)
+            R.load_trajectory(a.traj, int(b["nu"]), float(b["timestep"]), max_rows=a.max_rows)
         except R.InvalidTrajectory as exc:
             atomic_json(os.path.join(LOG_DIR, "submission_error.json"), {"error": str(exc)})
             write(False, {"success": 0, "bad_trajectory": 1, "grader_error": 0})
@@ -122,6 +129,13 @@ def main() -> int:
                                       stderr=open(os.path.join(LOG_DIR, "render.log"), "w"), env=env)
         codes = [p.wait() for p, _ in procs]
         crashed = [c for c in codes if c < 0]
+        if -9 in crashed:
+            # SIGKILL: the host's OOM killer or the runtime stopped a replay (the rows are capped and validated before
+            # any replay starts, so their memory is bounded): infrastructure, not a simulator crash
+            out = {"success": 0, "replay_killed": 1, "replays": len(codes), "replay_wall_s": round(time.time() - t0, 1),
+                   "video_rendered": 0, "grader_error": 0, "infra_error": 1}
+            write(False, out)
+            return 0
         if crashed:
             # a replay killed by a signal is a simulator crash (e.g. SIGSEGV inside MuJoCo) on the deliverable: a
             # breakdown, never a success and never the grader's fault. If only some replays crashed, the replays also
@@ -168,7 +182,7 @@ def main() -> int:
                "sim_breakdown": int(bool(last.get("breakdown") or settled.get("breakdown"))),
                "max_part_depth_mm": float((settled.get("terminal") or term).get("max_part_depth_mm") or 0.0),
                "settle_s": float(last.get("settle_s") or 0.0),
-               "instance_ok": int(instance_ok), "instance_exact": 1, "runtime_binding_ok": 1,
+               "instance_ok": int(instance_ok), "instance_exact": 1, "runtime_binding_ok": int(rt is not None),
                "n_actions": int(outs[-1].get("rows", 0)), "sim_steps": int(outs[-1].get("sim_steps", 0)),
                "sim_time_s": float(outs[-1].get("sim_time_s", 0.0)), "replays": len(outs),
                "replay_wall_s": round(time.time() - t0, 1), "video_rendered": 0, "grader_error": 0, "infra_error": 0}

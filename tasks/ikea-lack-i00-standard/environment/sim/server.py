@@ -69,7 +69,10 @@ OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))
 LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get("RCB_LIVE_CAMERA", "cam_high")
-MAX_FRAMES = 3000
+# /spec max_frames_per_call (cameras x frames; a frame with per-frame depth counts double). The recorder holds every frame
+# of a call (848 x 480 RGB = 1.2 MB) and stacks and encodes them again: 1000 keeps one call near 3.7 GB at its peak,
+# inside the sidecar's 8 GB cap (3000 could take the service past it: an OOM kill in the middle of a call).
+MAX_FRAMES = 1000
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
      "service_s": 0.0, "t_first": None, "deadline": float("inf")}
@@ -115,10 +118,11 @@ runtime = {"mujoco": mujoco.__version__, "numpy": np.__version__, "python": sys.
 L._write_json(os.path.join(DATA, "startup_binding.json"), {
     "task": TASK, "instance_exact": instance_exact, "instance_ok": instance_ok, "initial_state_sha": init_sha,
     "scene_digest": R.digest(files), "runtime": runtime, "runtime_matches": runtime == BINDING["runtime"]})
-if not (instance_exact and instance_ok):
+if not (instance_exact and instance_ok and runtime == BINDING["runtime"]):
+    # the sidecar's scene or runtime is not the one the task was validated on: infrastructure, never the agent's 0
     EP.scene_built()
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": False, "done": True, "finalized": True, "deterministic": False, "instance_mismatch": True, "infra_error": 0,
+        "success": False, "done": True, "finalized": True, "deterministic": False, "instance_mismatch": True, "infra_error": 1,
         "reason": "instance_mismatch", "task": TASK, "protocol": PROTOCOL, **EP.final_fields(),
         "differing_files": sorted(k for k in set(files) | set(BINDING["scene_files"]) if files.get(k) != BINDING["scene_files"].get(k))[:50]})
     open(PID_FILE, "w").write(str(os.getpid()))
@@ -407,7 +411,9 @@ def write_final() -> None:
     if L.final_verdict(DATA):
         return
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"],
+        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error" and bool(E.get("error_infra"))),
+        "sim_error": int(E["reason"] == "error" and not E.get("error_infra")),
+        "dump_error": E.get("dump_error"), "steps": E["step"], "calls": E["calls"],
         "control_steps": ctrl_steps(), "physics_steps": ctrl_steps() * R.SUBSTEPS, "sim_time_s": sim_time(),
         "elapsed_s": round(agent_time(), 1), "service_time_s": round(service_time(), 1),
         "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
@@ -468,16 +474,24 @@ def dump() -> None:
         np.savez_compressed(tmp, ctrl=rows, substeps=np.int64(R.SUBSTEPS), timestep=np.float64(s.timestep), actuators=np.array(ACT))
         os.replace(tmp, os.path.join(DATA, "trajectory.npz"))
     except Exception as exc:  # noqa: BLE001
-        traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
+        traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)}); E["dump_error"] = repr(exc)[:300]
+    # the verdict first, then the video (evidence only: a hung or failing encoder must not hold the verdict back)
+    episode_json()
+    write_final()
     live_close()
+    episode_json()
+
+
+def episode_json() -> None:
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"],
+        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error" and bool(E.get("error_infra"))),
+        "sim_error": int(E["reason"] == "error" and not E.get("error_infra")),
+        "dump_error": E.get("dump_error"), "steps": E["step"], "calls": E["calls"],
         "control_steps": ctrl_steps(), "physics_steps": ctrl_steps() * R.SUBSTEPS, "sim_time_s": sim_time(),
         "elapsed_s": round(((E.get("t_end") or time.time()) - E["t_first"]) if E["t_first"] else 0.0, 1),
         "service_time_s": round(service_time(), 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), "live_verdict": E.get("verdict"),
         "live_video": LIVE["path"] and os.path.basename(LIVE["path"]), "live_video_frames": LIVE["frames"], **EP.final_fields()})
-    write_final()
 
 
 def verdict() -> dict:
@@ -533,16 +547,24 @@ def finish(reason: str) -> None:
     if E["done"]:
         return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
-    if not E["success"] and reason != "sim_breakdown":
+    if not E["success"] and reason not in ("sim_breakdown", "error"):
         try:
             E["success"] = bool(verdict()["success"]) and bool(settled()["success"])   # graded as it stands (the verifier's replays decide)
         except Exception:  # noqa: BLE001
             traceback.print_exc()
-    if reason == "sim_breakdown":
+    if reason in ("sim_breakdown", "error"):
         E["success"] = False
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
          "service_time_s": round(service_time(), 1), "success": bool(E["success"]), "breakdown": s.validity.breakdown})
     dump()
+
+
+def fail(exc: BaseException) -> None:
+    """A simulator error in /submit or /observe ends the episode (reason "error"): infra_error if it is the service's
+    (infra_exception), else sim_error (the agent's 0)."""
+    if not E["done"]:
+        E["error_infra"] = bool(infra_exception(exc))
+    finish("error")
 
 
 # ---------------------------------------------------------------- observation
@@ -625,7 +647,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded control step (the row as executed: float64, clipped, speed-limited). True when the call must stop here
     (the episode ended: a breakdown; the call ran past max_call_wall_s or its client hung up: EP.journal)."""
     if EP.poll_stop():
-        return True
+        return None             # stopped before this step: nothing executed (the caller does not count it)
     row = np.asarray(a, dtype=np.float64)
     s.step(row)
     stop = EP.journal(row)
@@ -672,6 +694,8 @@ def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, c
                 a[cols] = cmd[cols] + np.sign(dd[over]) * lim[over]
                 slowed = True
             stop = ctrl_step(a, rec)
+            if stop is None:                                   # nothing executed: the row is not counted
+                return n_slow + int(slowed)
             if k == 1:
                 E["step"] += 1
             if stop:
@@ -700,18 +724,49 @@ def _call(fn):
     return wrapped
 
 
+def req_cameras(meta: dict) -> list:
+    """The request's cameras (a list of names; unknown names are dropped, none left = every camera). A malformed field is
+    the caller's error, a 400 before anything executes (PROTOCOL §4.6), never a simulator error."""
+    c = meta.get("cameras")
+    if c is None:
+        return list(CAMS)
+    if not isinstance(c, list) or not all(isinstance(x, str) for x in c):
+        raise ValueError("cameras must be a list of camera names")
+    return [x for x in c if x in CAMS] or list(CAMS)
+
+
+def req_note(meta: dict) -> str:
+    n = meta.get("note")
+    if n is not None and not isinstance(n, str):
+        raise ValueError("note must be a string")
+    return (n or "")[:500]
+
+
+def infra_exception(exc: BaseException) -> bool:
+    """Which errors in /submit or /observe are the service's infrastructure (reason "error", infra_error): the render
+    process (ikea_nyx.RenderError), the host (OSError: disk, pipes; MemoryError). Everything else raised while the agent's
+    rows run (the scene's code, MuJoCo) is a simulator error the rows caused (sim_error 1: the agent's 0,
+    STANDARD_MODE.md "500"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
+    with reason "error"."""
+    render = getattr(sys.modules.get("ikea_nyx"), "RenderError", ())
+    return isinstance(exc, (OSError, MemoryError) + ((render,) if render else ()))
+
+
 def _frames(cams, fps, seconds, depth_mode) -> int:
     return int(len(cams) * (math.ceil(seconds * fps) + 2) * (2 if depth_mode in ("frames", "legacy") else 1))
 
 
 @_call
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
+    if E["done"]:               # the episode ended (the deadline) between the request's admission and this job
+        raise ValueError("episode finished")
     typ = meta.get("type"); interp = meta.get("interpolate", "linear")
+    note = req_note(meta)
     try:
         dt = float(meta.get("dt", CTRL_DT))
     except (TypeError, ValueError):
         raise ValueError("dt must be a number")
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
+    cams = req_cameras(meta)
     fps = meta.get("video_fps", 10); video = meta.get("video", "mp4")
     if typ != "joint_position":
         raise ValueError(f"type must be joint_position (not yet: {SPEC['action_types']['not_yet']})")
@@ -743,7 +798,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
            "clipped": clipped, "n_clipped": n_clipped + n_slow, "n_speed_limited_rows": n_slow, "plan": [], "rejected": None,
            "ok": True, "settle_failed": E.get("settle_failed", 0), **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
-         "note": (meta.get("note") or "")[:500], "control_steps": ctrl_steps() - before, "n_clipped": n_clipped, "n_slow": n_slow,
+         "note": note, "control_steps": ctrl_steps() - before, "n_clipped": n_clipped, "n_slow": n_slow,
          "success": succ, "verdict": E.get("verdict")})
     save_call_evidence(E["calls"], {k_: v for k_, v in out.items() if k_ != "cameras"}, rec)
     return out, rec.parts(video, fps)
@@ -751,7 +806,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 @_call
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
+    cams = req_cameras(meta)
     try:
         seconds = float(meta.get("seconds", 0))
     except (TypeError, ValueError):
@@ -772,7 +827,8 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     if watch:
         hold = np.array(d.ctrl, dtype=np.float64)
         for _ in range(int(round(seconds * CTRL_HZ))):
-            if ctrl_step(hold, rec):
+            r = ctrl_step(hold, rec)
+            if r or r is None:
                 break
         rec.tick(force=True, last=True)
         evaluate()
@@ -907,7 +963,7 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} IKEA MuJoCo sim ready: task {TASK}, startup {EP.n_startups}, resumes {EP.resumes}, rows {ctrl_steps()}", flush=True)
 threading.Thread(target=L.serve, daemon=True, args=(L.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
-    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(finish, "error"), log=log,
+    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(fail, exc), log=log,
     episode=EP, state_sha=lambda: on_main(s.state_sha), proprio=lambda: on_main(proprio_row)),)).start()
 while True:
     if deadline_reached():                      # between simulator jobs: never inside a call

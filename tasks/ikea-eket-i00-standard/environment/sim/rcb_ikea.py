@@ -63,6 +63,16 @@ JOINT_SPEED_LIMITS_RAD_S = {
 # references are retimed for it in both modes; the current ones close faster and lose lack's and ikea365's goals under
 # it (2026-10-16): GRIPPER_SPEED_LIMITS = {"panda": {"actuator8": 318.75}}.
 GRIPPER_SPEED_LIMITS: dict = {}   # command units per second
+# End-pose rule (the benchmark's, on top of a scene's success.py where the source grader checks only its operations'
+# history): every listed part must end within POS_M / ANGLE_DEG of its goal pose in the frame of FRAME. EKET: the
+# source grader accepts the back's slide once and never looks at the back again (it has no frame joint), so a back
+# pulled out again after its slide and the bottom fitted without it passed (review of PR #299, 2026-10-17). The bound is
+# loose on purpose: the reference's back ends 5.0 mm from its goal (the bottom's insertion pushes it after its slide was
+# accepted), while the back's slide travels 0.30 m, so a removed back is far outside it.
+END_POSE_RULES = {
+    "eket": {"frame": "top", "goals": "goals_in_top_frame", "parts": ("top", "bottom", "side_a", "back", "side_b"),
+             "pos_m": 0.010, "angle_deg": 2.0},
+}
 
 
 def joint_speed_limits(actuators: list) -> np.ndarray:
@@ -225,25 +235,66 @@ def state_sha(model, data) -> str:
     return hashlib.sha256(s.tobytes()).hexdigest()
 
 
-def load_trajectory(path: str, nu: int, timestep: float | None = None) -> np.ndarray:
-    """The ctrl rows of a trajectory file, validated (InvalidTrajectory otherwise)."""
+MAX_SMALL_MEMBER = 1 << 20        # bytes: every member of the file but `ctrl` (substeps, timestep, actuators, ...)
+
+
+def _check_members(path: str, nu: int, max_rows: int) -> None:
+    """The file's members, from the zip directory and the .npy headers only (nothing is decompressed beyond a header):
+    `ctrl` a numeric (N, nu) array with 1 <= N <= max_rows, every other member small. A file that would not fit in
+    memory or lies about its contents is refused before it is read (a zip bomb is the deliverable's fault)."""
+    import zipfile
+    with zipfile.ZipFile(path) as zf:
+        infos = {i.filename: i for i in zf.infolist()}
+        if "ctrl.npy" not in infos:
+            raise InvalidTrajectory("missing key 'ctrl'")
+        for name, info in infos.items():
+            if name != "ctrl.npy" and info.file_size > MAX_SMALL_MEMBER:
+                raise InvalidTrajectory(f"member {name!r} is {info.file_size} bytes (at most {MAX_SMALL_MEMBER})")
+        with zf.open("ctrl.npy") as f:
+            version = np.lib.format.read_magic(f)
+            if version == (1, 0):
+                shape, fortran, dtype = np.lib.format.read_array_header_1_0(f)
+            elif version in ((2, 0), (3, 0)):
+                shape, fortran, dtype = np.lib.format.read_array_header_2_0(f)
+            else:
+                raise InvalidTrajectory(f"unsupported .npy version {version}")
+        if dtype.hasobject or dtype.kind not in "fiu" or len(shape) != 2 or shape[1] != nu or not 1 <= shape[0] <= max_rows:
+            raise InvalidTrajectory(f"ctrl must be a numeric (N, {nu}) array with 1 <= N <= {max_rows}, got {dtype} {shape}")
+        if infos["ctrl.npy"].file_size > shape[0] * nu * dtype.itemsize + 65536:
+            raise InvalidTrajectory("ctrl's member is larger than its header says")
+
+
+def _scalar(z, key: str):
+    v = np.asarray(z[key]).reshape(-1)
+    if v.size != 1 or v.dtype.kind not in "fiu":
+        raise InvalidTrajectory(f"{key} must be one number")
+    return v[0]
+
+
+def load_trajectory(path: str, nu: int, timestep: float | None = None, max_rows: int | None = None) -> np.ndarray:
+    """The ctrl rows of a trajectory file, validated (InvalidTrajectory otherwise, whatever is wrong with the file: the
+    deliverable's fault, never the grader's). max_rows: the task's row cap, checked before the rows are read."""
+    cap = MAX_ROWS if max_rows is None else min(MAX_ROWS, int(max_rows))
     try:
-        z = np.load(path, allow_pickle=False)
-    except Exception as exc:  # noqa: BLE001
-        raise InvalidTrajectory(f"not a readable .npz file: {exc!r}"[:300])
-    if "ctrl" not in z.files:
-        raise InvalidTrajectory("missing key 'ctrl'")
-    if "substeps" in z.files and int(np.asarray(z["substeps"]).reshape(-1)[0]) != SUBSTEPS:
-        raise InvalidTrajectory(f"substeps must be {SUBSTEPS}")
-    if timestep is not None and "timestep" in z.files and float(np.asarray(z["timestep"]).reshape(-1)[0]) != timestep:
-        raise InvalidTrajectory(f"timestep must be {timestep}")
-    c = z["ctrl"]
-    if c.dtype.kind not in "fiu" or c.ndim != 2 or c.shape[1] != nu or not 1 <= c.shape[0] <= MAX_ROWS:
-        raise InvalidTrajectory(f"ctrl must be a numeric (N, {nu}) array with N >= 1, got {c.dtype} {c.shape}")
-    c = np.ascontiguousarray(c, dtype=np.float64)
-    if not np.isfinite(c).all():
-        raise InvalidTrajectory("ctrl has NaN or inf")
-    return c
+        _check_members(path, nu, cap)
+        with np.load(path, allow_pickle=False) as z:
+            if not isinstance(z, np.lib.npyio.NpzFile):
+                raise InvalidTrajectory("not an .npz archive")
+            if "substeps" in z.files and _scalar(z, "substeps") != SUBSTEPS:
+                raise InvalidTrajectory(f"substeps must be {SUBSTEPS}")
+            if timestep is not None and "timestep" in z.files and float(_scalar(z, "timestep")) != timestep:
+                raise InvalidTrajectory(f"timestep must be {timestep}")
+            c = z["ctrl"]
+        if c.dtype.kind not in "fiu" or c.ndim != 2 or c.shape[1] != nu or not 1 <= c.shape[0] <= cap:
+            raise InvalidTrajectory(f"ctrl must be a numeric (N, {nu}) array with 1 <= N <= {cap}, got {c.dtype} {c.shape}")
+        c = np.ascontiguousarray(c, dtype=np.float64)
+        if not np.isfinite(c).all():
+            raise InvalidTrajectory("ctrl has NaN or inf")
+        return c
+    except InvalidTrajectory:
+        raise
+    except (Exception, MemoryError) as exc:  # noqa: BLE001
+        raise InvalidTrajectory(f"not a readable trajectory .npz file: {exc!r}"[:300])
 
 
 class Session:
@@ -275,11 +326,21 @@ class Session:
         self._clo = np.where(cl, cr[:, 0], -np.inf)
         self._chi = np.where(cl, cr[:, 1], np.inf)
         self.slewed_ticks = 0                         # ticks on which the joint-speed clamp moved some target
+        rule = END_POSE_RULES.get(self.task)
+        self._end_pose = None
+        if rule:
+            goals = json.load(open(os.path.join(self.scene_dir, "task.json")))[rule["goals"]]
+            self._end_pose = dict(rule, ids={p: self.model.body(p).id for p in rule["parts"]},
+                                  frame_id=self.model.body(rule["frame"]).id,
+                                  goal_pos={p: np.asarray(goals[p], dtype=np.float64) for p in rule["parts"]})
 
     def get_state(self) -> dict:
         st = copy.deepcopy(self.S.get_state())
         st["rows"] = list(self.rows)
         st["validity"] = self.validity.state()
+        # MuJoCo's warning counters are not part of the integration state; restored with it, so a warning raised after
+        # this state (e.g. in final_check's hold) is not read as a breakdown on every later tick
+        st["warnings"] = [(int(w.number), int(w.lastinfo)) for w in self.data.warning]
         return st
 
     def set_state(self, st: dict) -> None:
@@ -288,6 +349,8 @@ class Session:
         self.rows = list(st["rows"])
         if "validity" in st:
             self.validity.set_state(st["validity"])
+        for w, (n, info) in zip(self.data.warning, st.get("warnings") or []):
+            w.number, w.lastinfo = n, info
 
     def state_sha(self) -> str:
         return state_sha(self.model, self.data)
@@ -335,11 +398,32 @@ class Session:
         rep = self.S.success()
         term = self.validity.terminal()
         goal = bool(rep.get("success"))
+        if self._end_pose is not None:
+            ep = self.end_pose()
+            rep = dict(rep, end_pose=ep)
+            goal = goal and ep["ok"]
         ok = goal and term["released"] and term["at_rest"] and term["breakdown"] is None
         return {"success": ok, "goal": goal, "released": term["released"], "at_rest": term["at_rest"],
                 "breakdown": term["breakdown"], "rows": len(self.rows), "sim_time_s": float(self.data.time),
                 "state_sha": self.state_sha(), "terminal": json.loads(json.dumps(term, default=_plain)),
                 "report": json.loads(json.dumps(rep, default=_plain))}
+
+    def end_pose(self) -> dict:
+        """END_POSE_RULES: each listed part's position and orientation error against its goal in the rule's frame (the
+        assembled panels are identity-oriented in it)."""
+        r, d = self._end_pose, self.data
+        f = r["frame_id"]
+        Rf = d.xmat[f].reshape(3, 3)
+        worst_mm, worst_deg, bad = 0.0, 0.0, []
+        for p, b in r["ids"].items():
+            err = float(np.linalg.norm(Rf.T @ (d.xpos[b] - d.xpos[f]) - r["goal_pos"][p]))
+            Rrel = Rf.T @ d.xmat[b].reshape(3, 3)
+            ang = float(np.degrees(np.arccos(np.clip((np.trace(Rrel) - 1.0) / 2.0, -1.0, 1.0))))
+            if not (np.isfinite(err) and np.isfinite(ang)) or err > r["pos_m"] or ang > r["angle_deg"]:
+                bad.append(p)
+            worst_mm, worst_deg = max(worst_mm, 1000 * err), max(worst_deg, ang)
+        return {"ok": not bad, "parts_off_goal": bad, "max_error_mm": round(worst_mm, 3), "max_angle_deg": round(worst_deg, 3),
+                "pos_m": r["pos_m"], "angle_deg": r["angle_deg"]}
 
     def final_check(self) -> dict:
         """The grader's verdict on the rows so far: status() now, then the last row held for SETTLE_S (not recorded),

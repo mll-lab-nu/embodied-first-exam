@@ -60,6 +60,7 @@ Build the EKET cabinet frame: slide the two side panels into the top panel, then
 - The seven operations happen in this order, each measured against the top panel: side A entry and slide, side B entry and slide, back slide, bottom entry and slide. Each one must reach its goal pose within the scene's gates (goal error 0.25 to 0.8 mm, angle 0.1 to 1 degree, nearly at rest, with contact with its counterpart panels).
 - The four frame joints (side A and side B to the top, the bottom to both sides) are latched, and the five panels are finite.
 - At the end the panels are released (no robot contact, no applied force), rest on the table (at least one panel touches the table top, none touches the floor) and move slower than 0.01 m/s and 0.05 rad/s.
+- At the end every panel, the back included (it has no frame joint), is still in its assembled place: within 10 mm and 2 degrees of its goal pose relative to the top panel (the benchmark's end-pose rule, rcb_ikea.END_POSE_RULES).
 
 ### Mechanism
 Mitres, keyholes, dowels and back grooves are contact. The four frame joints (welds) latch with the measured relative pose when the side A slide, the side B slide and the bottom slide pass their gates.

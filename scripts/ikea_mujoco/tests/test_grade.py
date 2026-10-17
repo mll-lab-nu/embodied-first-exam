@@ -11,13 +11,15 @@ import json, os, signal, sys
 SCENES_ROOT = os.environ["FAKE_SCENES"]
 class InvalidTrajectory(ValueError): pass
 def scene_files(d): return {"scene.py": "x"}
-def load_trajectory(path, nu, timestep=None): return [[0.0] * nu]
+def load_trajectory(path, nu, timestep=None, max_rows=None): return [[0.0] * nu]
 if __name__ == "__main__":
     a = sys.argv[1:]
     out = a[a.index("--out") + 1]
     k = int(out.rsplit("_", 1)[1].split(".")[0])
     if os.environ["FAKE_CRASH"][k] == "1":
         os.kill(os.getpid(), signal.SIGSEGV)
+    if os.environ["FAKE_CRASH"][k] == "9":
+        os.kill(os.getpid(), signal.SIGKILL)
     if os.environ["FAKE_CRASH"][k] == "2":    # the scene's code raised on the rows (rcb_ikea.py replay records it)
         json.dump({"initial_state_sha": "s0", "success": False, "replay_exception": "ValueError: math domain error",
                    "rows": 1, "state_sha": "e"}, open(out, "w"))
@@ -59,6 +61,8 @@ def main() -> int:
         r = run(crash)
         assert r["success"] == 0 and r["sim_breakdown"] == 1 and r["replay_exception"] == 1, (crash, r)
         assert r["grader_error"] == 0 and r["infra_error"] == 0 and r["deterministic"] == det, (crash, r)
+    r = run("90")                                 # SIGKILL (OOM killer): infrastructure
+    assert r["success"] == 0 and r["infra_error"] == 1 and r["replay_killed"] == 1, r
     r = run("33")                                 # the host builds another initial state: infrastructure
     assert r["success"] == 0 and r["infra_error"] == 1 and r["instance_mismatch"] == 1, r
     print("test_grade: ok (no crash, one of two, the other one, both; scene exceptions; instance mismatch)")

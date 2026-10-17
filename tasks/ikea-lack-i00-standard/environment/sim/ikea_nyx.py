@@ -64,6 +64,11 @@ def _plane_texture(model, g, folder) -> dict | None:
     return {"png": name, "texrepeat": [float(v) for v in model.mat_texrepeat[mat]], "texuniform": bool(model.mat_texuniform[mat])}
 
 
+
+class RenderError(RuntimeError):
+    """The Nyx render process failed (it died, refused or sent a short frame): the service's infrastructure, never the
+    agent's doing (server.py ends the episode with reason "error", an infrastructure failure)."""
+
 class NyxRig:
     """The render process of one scene and rig (physics-process side)."""
 
@@ -97,13 +102,13 @@ class NyxRig:
                                      env={k: v for k, v in os.environ.items() if k != "PYTHONPATH"})
         ready = self._line()
         if not ready.get("ready"):
-            raise RuntimeError(f"Nyx render process failed to start: {ready}")
+            raise RenderError(f"Nyx render process failed to start: {ready}")
         self.startup = {**ready, "startup_s": round(time.time() - t, 2)}
 
     def _line(self) -> dict:
         line = self.proc.stdout.readline()
         if not line:
-            raise RuntimeError(f"Nyx render process ended (exit {self.proc.poll()})")
+            raise RenderError(f"Nyx render process ended (exit {self.proc.poll()})")
         return json.loads(line)
 
     def render(self, kd, cameras: list) -> dict:
@@ -121,13 +126,13 @@ class NyxRig:
         self.proc.stdin.flush()
         reply = self._line()
         if not reply.get("ok"):
-            raise RuntimeError(f"Nyx render failed: {reply}")
+            raise RenderError(f"Nyx render failed: {reply}")
         out = {}
         for c in cameras:
             n = self.rig.H * self.rig.W * 3
             buf = self.proc.stdout.read(n)
             if len(buf) != n:
-                raise RuntimeError("Nyx render process: short frame")
+                raise RenderError("Nyx render process: short frame")
             out[c] = np.frombuffer(buf, dtype=np.uint8).reshape(self.rig.H, self.rig.W, 3).copy()
         self.timing["roundtrip_ms"] += 1e3 * (time.perf_counter() - t)
         self.timing["render_ms"] += float(reply.get("ms", 0.0))

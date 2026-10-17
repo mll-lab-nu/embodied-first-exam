@@ -5,6 +5,8 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/episode.jsonl", service = "sim" },
   { source = "/data/trajectory.npz", service = "sim" },
   { source = "/data/live.mp4", service = "sim" },
+  { source = "/data/live.2.mp4", service = "sim" },
+  { source = "/data/live.3.mp4", service = "sim" },
   { source = "/data/live.last.png", service = "sim" },
   { source = "/data/server.log", service = "sim" },
   { source = "/data/journal.f64", service = "sim" },
@@ -76,7 +78,7 @@ allowed = [0]
 oracle = [0]
 
 [verifier]
-timeout_sec = 16800.0
+timeout_sec = 24360.0
 environment_mode = "separate"     # tests/Dockerfile: the IKEA MuJoCo image; replays /data/trajectory.npz without network
 network_mode = "no-network"
 

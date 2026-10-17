@@ -137,10 +137,12 @@ def task_text(t: str) -> dict:
 
 
 def verifier_timeout(t: str) -> int:
-    """The verifier's two replays run at the same time: about one replay's wall time, with a margin, and at least what
-    the longest episode the wall clock allows needs (its rows replay faster than they ran live: 1.5 x AGENT_S + 600)."""
+    """The verifier's two replays run at the same time (only for a live success): about one replay's wall time, with a
+    margin, and at least what the longest episode the wall clock allows needs on a slower or busier host than the live
+    episode's: a replay is not always faster than the live run (gladom: 3975 s replay vs 3362 s of service time), and a
+    slow trial-class core (Xeon Gold 6230R) is about 1.8 x a fast one, so 2.2 x AGENT_S + 600."""
     wall = EVID.get(t, {}).get("replay_wall_s")
-    return int(max(1.5 * AGENT_S + 600, 3 * wall + 600 if wall else 0))
+    return int(max(2.2 * AGENT_S + 600, 3 * wall + 600 if wall else 0))
 
 
 def step_ms(t: str) -> float | None:
@@ -150,7 +152,8 @@ def step_ms(t: str) -> float | None:
 
 def task_toml(t: str) -> str:
     x, r = P.TEXTS["tasks"][t], P.robot_text(t)
-    arts = ["final.json", "episode.json", "episode.jsonl", "trajectory.npz", "live.mp4", "live.last.png", "server.log",
+    arts = ["final.json", "episode.json", "episode.jsonl", "trajectory.npz", "live.mp4", "live.2.mp4", "live.3.mp4",
+            "live.last.png", "server.log",
             "journal.f64", "startups.jsonl", "startup_binding.json"]
     art = "\n".join(f'  {{ source = "/data/{a}", service = "sim" }},' for a in arts)
     return f'''schema_version = "1.3"
