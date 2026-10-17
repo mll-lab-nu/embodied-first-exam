@@ -52,7 +52,10 @@ recommending, but CI still blocking every convention and the trust-boundary rule
   cheap, else rendered from the trajectory once after the verdict (§4). What keeps the record trusted is unchanged: the
   agent cannot write the sidecar's state, the evidence comes only from the sidecar, the agent's container stops before
   the sidecar finalizes. H.1 and H.4 reworded; decision 2 of 2026-10-02 (the standard-mode verifier double check, never
-  implemented) withdrawn. Results recorded before the change are re-read from their own `final.json` (RUNNING.md "Results").
+  implemented) withdrawn. Results recorded before the change are re-read from their own `final.json` (RUNNING.md
+  "Results"). The shared layers (`rcb_limited.py` `final_verdict` and `give_up`, the toy server) changed with the
+  text; the benchmarks' pull requests of board 0151 carry the migration of their tasks (until each merges, its tasks
+  still replay).
 - Added on 2026-10-16 (owner, board 0136: "every run must end with a video, except a privileged trial that submitted no trajectory"): §4's video row says every graded trial leaves a playable video and the replayable trajectory it was graded on, the one exception, and that the video's time bound covers the longest episode; `ci_checks/check-video.py` (advisory: a video is evidence for people, never the verdict, and a static scan cannot tell whether a render finishes in time) and the runner's `no_video` flag with an after-the-fact render from the trajectory (RUNNING.md "Recordings"). Found by the survey of 7977 graded trials: 114 without a video for reasons other than the exception (DexHand privileged rendered none; render time bounds shorter than long episodes; a RoboOlympics sport without a spectator camera).
 - Changed on 2026-10-17 (owner, board 0150 Q12: "所有task默认budget设置为很高 cached input也算 ... input budget默认设置1B甚至10B"):
   the default token budget went from 100M input / 10M output to 10B / 10B per trial (`TOKEN_BUDGET_IN` /

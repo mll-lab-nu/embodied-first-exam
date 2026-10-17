@@ -17,7 +17,7 @@ One benchmark per pull request. A pull request that adds tasks **and** changes s
 ## Proposal (new benchmarks)
 Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
-- **solvable** — a positive example the verifier scores 1: an oracle, an upstream expert or policy, a successful
+- **solvable** — a positive example the verifier (standard modes: the sidecar) scores 1: an oracle, an upstream expert or policy, a successful
   model trial, or a hand-built trajectory (tasks without one are human-reviewed and marked unvalidated, PROTOCOL §2, §4);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
 - **reproducible** — a frozen scene instance; a privileged trajectory replays bit for bit (and the hardware it was

@@ -140,7 +140,8 @@ on which the frozen instance does not rebuild to its stored initial state report
 `/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz` (the graded episode, the deliverable),
 `final.json`, then `replay.mp4`. The collect hook signals the service by PID after a collect hook has stopped
 the agent's processes; from then on the service refuses every request, and it judges the episode it ran (the task's success rule, with any settle or hold window run on the live simulator)
-and writes the verdict into `final.json` (`success`, `live_success`, `graded_by` = `live`, `replays` = 0); nothing is
+and writes the verdict into `final.json` (`success`, the verdict; `live_success`, how the episode itself ended, before
+any settle or hold check; `graded_by` = `live`, `replays` = 0); nothing is
 replayed to grade it (PROTOCOL H.4). The video is recorded during the episode or rendered from `trajectory.npz` after
 the verdict (`video_source`), and never decides anything. A separate verifier transcribes `final.json` into
 `reward.json` (`graded_by_live` = 1). `infra_error = 1` means there is no verdict on the agent: `final.json` is

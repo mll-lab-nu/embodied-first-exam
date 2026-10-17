@@ -96,7 +96,8 @@ def write_final() -> None:
     if L.final_verdict(DATA):
         return
     fin.update({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"],
-                "reason": E["reason"], "protocol": L.PROTOCOL, "finalized": bool(E.get("finalized")), "deterministic": E.get("deterministic"),
+                "reason": E["reason"], "protocol": L.PROTOCOL, "finalized": bool(E.get("finalized")), "live_success": bool(E["success"]),
+                **({"graded_by": "live", "replays": 0} if E.get("finalized") else {}),
                 **EP.final_fields()})
     L._write_json(os.path.join(DATA, "final.json"), fin)
 
@@ -160,7 +161,8 @@ def status() -> dict:
 
 
 def end_episode() -> None:
-    """The collect hook's SIGUSR1: end the episode, then grade in-process (inprocess) or dump and exit (dump)."""
+    """The collect hook's SIGUSR1: end the episode, then grade in-process (inprocess: the live episode's verdict, nothing
+    replayed; PROTOCOL H.4) or dump and exit (dump)."""
     with LOCK:
         if not E["done"]:
             finish("timeout")
@@ -170,14 +172,11 @@ def end_episode() -> None:
             L._write_json(os.path.join(DATA, "episode.json"), {"success": bool(E["success"]), "n_actions": len(acts), "live_sha": live,
                                                                "reason": E["reason"], **EP.final_fields()})
             os._exit(0)
-        r = Toy(live=False)
-        for a in acts:                                      # a fresh replay of the recorded episode
-            r.step(a)
-        # the replay's fields first, the verdict (finalized + deterministic) last: the collect hook stops waiting at the
+        # the live record's fields first, the verdict (finalized + graded_by) last: the collect hook stops waiting at the
         # verdict, so it must never see one without them (the main thread's write_final can run in between)
-        fin = L._read_json(os.path.join(DATA, "final.json")); fin.update({"replay_success": r.success(), "n_actions": len(acts), "live_sha": live})
+        fin = L._read_json(os.path.join(DATA, "final.json")); fin.update({"n_actions": len(acts), "live_sha": live})
         L._write_json(os.path.join(DATA, "final.json"), fin)
-        E["deterministic"] = r.state_sha() == live; E["finalized"] = True; write_final()
+        E["finalized"] = True; write_final()
 
 
 S.rec = []                                                  # record_start: the resume replay is recorded too

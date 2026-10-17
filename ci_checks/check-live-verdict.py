@@ -4,8 +4,7 @@ sidecar judges the episode it ran and the verifier transcribes its `final.json`;
 invariant itself (the verdict from a trusted source) is held by check-verifier-isolation.sh; this check reports a
 standard task whose grader still follows the replay rule, and a grader that breaks the infrastructure rule of
 RUNNING.md ("Infrastructure failures"). For every standard / standard-realtime task:
-  - static: its verifier code (tests/*.py) reports `graded_by_live` and reads no `replay_success` (a verdict that waits
-    for a replay, or a replay that can decide); task.toml has a `[[verifier.collect]]` hook on `main` (the agent's
+  - static: its verifier code (tests/*.py) reports `graded_by_live`; task.toml has a `[[verifier.collect]]` hook on `main` (the agent's
     container: `kill -9 -1`, stopping what the agent left running) before the first hook on the sim sidecar, so
     nothing the agent left running moves the robot before the service is signalled (H.4);
   - run: each distinct tests/grade.py (one run per content, standard library only) is given synthetic records in a
@@ -16,6 +15,8 @@ RUNNING.md ("Infrastructure failures"). For every standard / standard-realtime t
       a give-up after crashes between calls (sim_crashed)       -> reward 0, infra_error 1
       a finalized live failure at the cutoff                    -> reward 0, infra_error 0 (the agent's result)
       a give-up after crashes inside the agent's calls          -> reward 0, infra_error 0 (never a free retry)
+      an unreadable final.json; a scene off the frozen instance -> reward 0, infra_error 1
+      a live success whose settle / hold check failed           -> reward 0, infra_error 0 (`success` decides)
       replay_success / deterministic true, the live episode not -> reward 0 (a replay never grants a success)
     The records are the shared layers' common fields; a benchmark whose grader needs more of its own (e.g. a verdict
     file next to final.json) may fail the success case, which is then a finding to read, not a rule. A grader that does
@@ -43,8 +44,12 @@ LIVE_OK = {"finalized": True, "graded_by": "live", "replays": 0, "success": True
 CASES = (
     ("a finalized live success", LIVE_OK, 1, 0),
     ("no final.json", None, 0, 1),
-    ("an unfinalized final.json", {**LIVE_OK, "finalized": False, "success": False, "live_success": True,
-                                   "done": False, "reason": None}, 0, 1),
+    ("an unfinalized final.json", {**LIVE_OK, "finalized": False}, 0, 1),
+    ("an unreadable final.json", "{", 0, 1),
+    ("a scene off the frozen instance",
+     {"finalized": True, "success": False, "live_success": False, "done": True, "reason": "instance_mismatch: start",
+      "gave_up": True, "infra_error": 1, "graded_by": "live", "replays": 0}, 0, 1),
+    ("a live success whose settle / hold check failed", {**LIVE_OK, "success": False, "live_rule": False}, 0, 0),
     ("a give-up after crashes between calls",
      {"finalized": True, "success": False, "live_success": False, "done": True, "reason": "sim_crashed",
       "gave_up": True, "infra_error": 1}, 0, 1),
@@ -52,7 +57,7 @@ CASES = (
      {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
       "reason": "timeout", "n_actions": 10, "video": True}, 0, 0),
     ("a give-up after crashes inside the agent's calls",
-     {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
+     {"finalized": True, "success": False, "live_success": False, "done": True,
       "reason": "sim_crashed_on_call", "gave_up": True}, 0, 0),
     ("a replay success where the live episode failed",
      {"finalized": True, "success": False, "live_success": False, "replay_success": True, "deterministic": True,
@@ -73,7 +78,7 @@ def run_grader(grader: Path, record: dict | None) -> tuple[int | None, dict, str
         data.mkdir()
         log.mkdir()
         if record is not None:
-            (data / "final.json").write_text(json.dumps(record))
+            (data / "final.json").write_text(record if isinstance(record, str) else json.dumps(record))
             (data / "trajectory.npz").write_bytes(b"")      # present, as the service always writes one
         env = {**os.environ, "RCB_DATA": str(data), "RCB_VERIFIER_LOG_DIR": str(log), "PYTHONDONTWRITEBYTECODE": "1"}
         try:
@@ -83,7 +88,7 @@ def run_grader(grader: Path, record: dict | None) -> tuple[int | None, dict, str
             return None, {}, "timed out after 60 s"
         try:
             txt = (log / "reward.txt").read_text().split()
-            reward = int(float(txt[0])) if txt else None
+            reward = int(float(txt[0]) >= 1) if txt else None
         except (OSError, ValueError):
             reward = None
         try:
@@ -113,18 +118,17 @@ def check(tasks: list[Path]) -> list[str]:
         svc = [h.get("service") for h in hooks if isinstance(h, dict)]
         first_sim = next((i for i, x in enumerate(svc) if x not in ("main", "rcb_monitor")), None)
         kill = next((i for i, h in enumerate(hooks) if isinstance(h, dict) and h.get("service") == "main"
-                     and "kill" in str(h.get("command") or "")), None)
+                     and re.search(r"\bkill\s+-(9|KILL)\s+-1\b", str(h.get("command") or ""))), None)
         if first_sim is not None and (kill is None or kill > first_sim):
             errs.append(f"{task.name}: no collect hook stops the agent's processes (`main`: kill -9 -1) before the sim "
                         "sidecar is signalled (PROTOCOL H.4)")
-        if re.search(r"""["']replay_success["']""", src):
-            errs.append(f"{task.name}: its verifier reads `replay_success` (no replay grades a standard episode)")
         grader = task / "tests" / "grade.py"
         if not grader.is_file():
             STATIC_ONLY.append(task.name)
             continue
         text = grader.read_text(errors="replace")
-        if "RCB_DATA" not in text or "RCB_VERIFIER_LOG_DIR" not in text:
+        alltext = "\n".join(p.read_text(errors="replace") for p in (task / "tests").glob("*.py") if p.is_file())
+        if "RCB_DATA" not in alltext or "RCB_VERIFIER_LOG_DIR" not in alltext:   # a grader may read them in a module
             STATIC_ONLY.append(task.name)
             continue
         h = hashlib.sha256(b"".join(p.name.encode() + p.read_bytes() for p in sorted((task / "tests").iterdir())

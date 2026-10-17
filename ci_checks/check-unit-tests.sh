@@ -80,7 +80,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
     run 900 "$t"
   done
   # Public RT source compilation and actual loopback RCB1/client snapshots; no simulator.
-  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_http_two_fresh test_tidy_observe_barrier test_quaternions; do
+  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_http_two_fresh test_live_verdict test_tidy_observe_barrier test_quaternions; do
     if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
   done
   # Existing accepted native records compile through the same converter as legacy references.

@@ -160,13 +160,14 @@ agent's controller runs in the agent's own container; no agent code runs next to
 
 **H.4 Trusted verdict.** The verdict comes only from a trusted source. Privileged: a replay, in a fresh process, of
 the agent's deliverable from the frozen initial state, in the verifier. Standard and standard-realtime: the sim
-sidecar's record of the live episode (`final.json`), judged by the service on the episode it ran, from a frozen
-initial state it checked when the episode began, and the verifier transcribes the
+sidecar's record of the live episode (`final.json`, its `success`), judged by the service on the episode it ran, from a
+frozen initial state it checked when the episode began (and after every reset), and the verifier transcribes the
 record; no replay decides it, and nothing the verifier renders afterwards (a video) does. What keeps that record
 trusted: the agent cannot write the sidecar's state (its volumes are `*_trusted`, it publishes no port); the evidence is
-collected only from the sidecar; when the agent's time is up a collect hook stops every process the agent left running
-(`kill -9 -1` in its container) before the sidecar is signalled, and from that signal on the service refuses every
-request (a settle or hold window included), so the sidecar finalizes an episode the agent can no longer change; the
+collected only from the sidecar; when the agent's time is up the collect hooks stop every process the agent left
+running (`kill -9 -1` in its container; only the resource monitor's seal comes first) before the sidecar is signalled,
+and from that signal on the service refuses every request that would run the simulator (a settle or hold window
+included), so the sidecar finalizes an episode the agent can no longer change; the
 sidecar keeps the episode's journal or trajectory as the deliverable. Nothing the agent's container writes
 decides, except the privileged deliverable that is replayed; the verifier uses no network; a verdict once written in
 a trial is never rewritten (a later re-grade keeps the original beside it). The frozen instance the verifier or the
