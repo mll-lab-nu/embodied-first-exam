@@ -526,9 +526,14 @@ are part of a result's configuration (RUNNING.md).
   and stalls while it lasts -- counted in `stalls` and `stalled_s`. Refusals the episode's state decides (409; an `at`
   too far ahead; too many frames) are answered by the simulator's thread, and a 409 still comes before a 400 for a
   request's fields.
-- **Crashes are infrastructure.** No call spans a crash (`/submit` answers at once), so a crash is never put down to the
-  agent: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator
-  error that ends the graded episode (`reason = "error"`) is one too; `final.json` carries `infra_error = 1` in all three.
+- **Crashes and simulator errors.** No call spans the clock (`/submit` answers at once), so what the agent's commands
+  caused is told apart by time and by kind (owner, 2026-10-17, board 0151; PROTOCOL H.5: a normal task failure is no
+  infrastructure failure). After the agent's first command, a simulator error raised by a control step (`reason =
+  "error"`) and a simulator crash (the process died on SIGSEGV, SIGBUS, SIGFPE, SIGILL or SIGABRT, which the service
+  records with `faulthandler` before it dies) are the agent's result: the episode ends there, `sim_error = 1`,
+  `infra_error = 0` (past `RCB_MAX_RESUMES` such crashes: `sim_crashed_on_call`). A process killed from outside
+  (SIGKILL, SIGTERM, the out-of-memory killer: nothing recorded), a failed resume (`resume_failed`), and any error or
+  crash before the agent's first command are infrastructure (`sim_crashed`, `infra_error = 1`).
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
   through the client, not code uploaded next to the simulator.
 
