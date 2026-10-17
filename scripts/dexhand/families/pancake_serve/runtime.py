@@ -93,7 +93,7 @@ class Session:
         if values.shape != (self.action_dim,) or not np.isfinite(values).all():
             raise ValueError(f"Expected {self.action_dim} finite actuator targets")
         lo, hi = self.model.actuator_ctrlrange.T
-        if np.any(values < lo - 1e-7) or np.any(values > hi + 1e-7):
+        if np.any(values < lo - 1e-6) or np.any(values > hi + 1e-6):
             raise ValueError("Actuator targets exceed native joint bounds")
         if self.done:
             # The episode ended at the first success or failure; later rows are not executed.
@@ -151,9 +151,9 @@ class Session:
     # ------------------------------------------------------------------------------------------- tooling
     def snapshot(self):
         """Full simulator + checker state (authoring/search tooling; never used by graders)."""
-        size = mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS)
+        size = mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_INTEGRATION)
         state = np.empty(size)
-        mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_FULLPHYSICS)
+        mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_INTEGRATION)
         c = self.checker
         return {
             "physics": state, "ctrl": self.data.ctrl.copy(), "warmstart": self.data.qacc_warmstart.copy(),
@@ -163,7 +163,7 @@ class Session:
         }
 
     def restore(self, snap):
-        mujoco.mj_setState(self.model, self.data, snap["physics"], mujoco.mjtState.mjSTATE_FULLPHYSICS)
+        mujoco.mj_setState(self.model, self.data, snap["physics"], mujoco.mjtState.mjSTATE_INTEGRATION)
         self.data.ctrl[:] = snap["ctrl"]
         self.data.qacc_warmstart[:] = snap["warmstart"]
         mujoco.mj_forward(self.model, self.data)

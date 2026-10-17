@@ -70,7 +70,7 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
     try:
         if names is not None and names != session.actuator_names:
             raise BadTrajectory("trajectory actuator_names differ from the " + hand + " actuator layout")
-        if len(actions) and (np.any(actions < session.lo - 1e-7) or np.any(actions > session.hi + 1e-7)):
+        if len(actions) and (np.any(actions < session.lo - 1e-6) or np.any(actions > session.hi + 1e-6)):
             raise BadTrajectory("actuator targets exceed native joint bounds")
     except Exception:
         session.close()

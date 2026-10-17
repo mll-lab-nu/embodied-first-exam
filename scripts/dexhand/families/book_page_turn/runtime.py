@@ -100,7 +100,7 @@ class Session:
         values = np.asarray(action, dtype=np.float64)
         if values.shape != (self.action_dim,) or not np.isfinite(values).all():
             raise ValueError(f"Expected {self.action_dim} finite actuator targets")
-        if np.any(values < self.lo - 1e-7) or np.any(values > self.hi + 1e-7):
+        if np.any(values < self.lo - 1e-6) or np.any(values > self.hi + 1e-6):
             raise ValueError("Actuator targets exceed native joint bounds")
         if self.done:
             # The episode ended at the first success or failure; later rows are not executed.

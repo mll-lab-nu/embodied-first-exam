@@ -3,8 +3,8 @@
 {{TASK_TEXT}}
 
 You control two dexterous hands, each mounted on its own six-DoF wrist positioning stage (three prismatic and three
-serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin `task.json` `wrist_stage.origin`) and
-the left hand (the right hand's mirror image) on `left_wrist_stage` (origin `task.json` `left_wrist_stage.origin`).
+serial revolute joints, no arm): the right hand on the stage `wrist_stage` (origin (0.45, 0.0, 0.8) m) and
+the left hand (the right hand's mirror image) on `left_wrist_stage` (origin (0.55, 0.3, 0.95) m).
 Both are needed as in the real task: one hand steadies the vacuum (or works the button) while the other handles the
 bin. The stages and the fingers are position actuated in the physics engine under native force bounds; the vacuum
 body, the dust bin and the release button move only through contact and their passive dynamics (the button is a spring-loaded

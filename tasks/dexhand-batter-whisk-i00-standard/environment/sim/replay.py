@@ -121,16 +121,19 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
     if names is not None and names != session.actuator_names:
         session.close()
         raise BadTrajectory("Trajectory actuator_names differ from the " + hand + " actuator layout")
-    if len(actions) and (np.any(actions < lo - 1e-7) or np.any(actions > hi + 1e-7)):
+    if len(actions) and (np.any(actions < lo - 1e-6) or np.any(actions > hi + 1e-6)):
         session.close()
         raise BadTrajectory("Actuator targets exceed native joint bounds")
     hand_label = session.hand_info["model"]
     phases = np.full(len(actions), "actuator replay")
     if video:
-        with np.load(path, allow_pickle=False) as archive:
-            labels = archive["phases"] if "phases" in archive else None
-            if labels is not None and labels.shape == (len(actions),) and labels.dtype.kind in "US":
-                phases = labels.copy()
+        try:
+            with np.load(path, allow_pickle=False) as archive:
+                labels = archive["phases"] if "phases" in archive else None
+                if labels is not None and labels.shape == (len(actions),) and labels.dtype.kind in "US":
+                    phases = labels.copy()
+        except Exception:  # noqa: BLE001 - phase labels only caption the video: an unreadable
+            pass  # member keeps the default labels, never costs the video (review 0146)
     writer = None
     width, height = size
     if video:

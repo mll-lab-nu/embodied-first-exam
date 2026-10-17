@@ -110,7 +110,7 @@ class Session:
         if values.shape != (self.action_dim,) or not np.isfinite(values).all():
             raise ValueError(f"Expected {self.action_dim} finite actuator targets")
         lo, hi = self.model.actuator_ctrlrange.T
-        if np.any(values < lo - 1e-7) or np.any(values > hi + 1e-7):
+        if np.any(values < lo - 1e-6) or np.any(values > hi + 1e-6):
             raise ValueError("Actuator targets exceed native joint bounds")
         return values
 

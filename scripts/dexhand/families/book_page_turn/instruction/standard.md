@@ -67,7 +67,7 @@ left_pinky_PIP, left_pinky_DIP`; 36-57 the right Sharpa Wave fingers in the same
 Row layout, `wuji` (54): 0-13 the same arm targets; 14-33 the left Wuji fingers `l_wuji_l_THJ0..THJ3` (thumb),
 `l_wuji_l_FFJ0..FFJ3` (index), `l_wuji_l_MFJ0..MFJ3` (middle), `l_wuji_l_RFJ0..RFJ3` (ring), `l_wuji_l_LFJ0..LFJ3`
 (little); 34-53 the right Wuji fingers in the same order (`r_wuji_r_...`). The frozen start row of each hand variant
-(arm targets and finger targets) is in `task.json` (`initial_targets`).
+(arm targets and finger targets) is the robot's `joint_target` proprioception right after a reset.
 
 Requests can return RGB frames or mp4, with depth `none`, `last` or `frames`. Each call returns at most 1,000 camera
 images, counting per-frame depth; reduce cameras, fps or duration for larger chunks. `get_obs(seconds=...)` holds the

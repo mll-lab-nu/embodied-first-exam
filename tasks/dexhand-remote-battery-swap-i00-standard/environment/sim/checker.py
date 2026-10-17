@@ -14,6 +14,24 @@ TASK_OBJECTS = ("remote", "tray", "old_cell", "new_cell")
 STAGES = ("cover_open", "old_cell_in_tray", "new_cell_seated", "cover_closed")
 
 
+def left_side_bodies(model) -> set:
+    """Body ids of the parked left arm (the links from its shoulder to its flange) and of the left hand."""
+    from scene import _arm_rig_module  # noqa: PLC0415 - the shared rig, registered by scene.py
+
+    arm_rig = _arm_rig_module()
+    out = set(arm_rig.hand_body_ids(model, "left"))
+    base = model.body("base_link").id
+    body = model.body(arm_rig.FLANGE_BODY["left"]).id
+    while body not in (0, base):
+        out.add(body)
+        body = int(model.body_parentid[body])
+    return out
+
+
+def m_name(model, geom):
+    return model.geom(geom).name or model.body(int(model.geom_bodyid[geom])).name
+
+
 def _quat_to_mat(q):
     m = np.empty(9)
     mujoco.mju_quat2Mat(m, np.asarray(q, dtype=float))
@@ -42,6 +60,9 @@ class Checker:
                 parent = int(m.body_parentid[parent])
         self.geom_owner = np.array([self.owner.get(int(m.geom_bodyid[g]), "world") for g in range(m.ngeom)])
         self.task_geom = np.isin(self.geom_owner, TASK_OBJECTS)
+        # The parked left side (its arm links from the shoulder down and its hand): the instruction keeps it parked,
+        # so any contact of it with a task object fails the episode (left_arm_contact).
+        self.left_geom = np.isin(m.geom_bodyid, np.asarray(sorted(left_side_bodies(m)), dtype=int))
         self.hand_geom = self.geom_owner == "hand"
         self.cell_geom = {name: np.flatnonzero(self.geom_owner == name) for name in ("old_cell", "new_cell")}
         self.table_geom = m.geom("table").id
@@ -115,6 +136,10 @@ class Checker:
         table_touch = {"old_cell": False, "new_cell": False}
         any_touch = {"old_cell": False, "new_cell": False}
         for a, b, g1, g2 in self.contacts(data):
+            for g_left, g_task in ((g1, g2), (g2, g1)):
+                if self.left_geom[g_left] and self.task_geom[g_task]:
+                    return "left_arm_contact", {"robot_geom": m_name(self.model, g_left),
+                                                "touches": m_name(self.model, g_task)}
             for own, other, g_other in ((a, b, g2), (b, a, g1)):
                 if own in TASK_OBJECTS and g_other == self.floor_geom:
                     return "object_on_floor", {"object": own}

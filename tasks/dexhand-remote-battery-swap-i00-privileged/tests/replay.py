@@ -131,13 +131,16 @@ def replay(path, video=None, camera="overview", fps=10, trusted_service=False, e
     hand_label = session.hand_info["model"]
     phases = np.full(len(actions), "actuator replay")
     if video:
-        with np.load(phases_path or path, allow_pickle=False) as archive:
-            if (
-                "phases" in archive
-                and archive["phases"].shape == (len(actions),)
-                and archive["phases"].dtype.kind in "US"
-            ):
-                phases = archive["phases"].copy()
+        try:
+            with np.load(phases_path or path, allow_pickle=False) as archive:
+                if (
+                    "phases" in archive
+                    and archive["phases"].shape == (len(actions),)
+                    and archive["phases"].dtype.kind in "US"
+                ):
+                    phases = archive["phases"].copy()
+        except Exception:  # noqa: BLE001 - phase labels only caption the video: an unreadable
+            pass  # member keeps the default labels, never costs the video (review 0146)
     writer = None
     if video:
         import imageio.v2 as imageio

@@ -20,6 +20,7 @@ mode = "standard"
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
+oracle_evidence = "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (942 controls; success after 742, then 200 unexecuted hold rows of slack). Two fresh-process replays succeed with identical state hashes. The standard oracle submits the same rows through the public client."
 expert_time_estimate_hours = 3.0
 difficulty = "hard"
 release_status = "provisional"

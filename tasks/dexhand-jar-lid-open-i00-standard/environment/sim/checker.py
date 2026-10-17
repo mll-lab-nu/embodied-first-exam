@@ -17,7 +17,7 @@ Fail-fast (checked after every physics substep; the first failure is permanent a
   than 0.3 m/s, about a 5 mm free fall, or moves down faster than 1.0 m/s at any time), lid_off_table (the lid or jar touches the floor,
   or an object origin is below the worktop top or outside the worktop footprint), object_left_workspace,
   lid_forced_through_thread (the lid leaves the thread zone upward while its lugs are not in the gaps between ramps),
-  unstable_physics.
+  left_arm_contact (the parked left arm or left hand touches the jar or the lid), unstable_physics.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ import math
 import mujoco
 import numpy as np
 
-from scene import LID_RADIUS, LID_SEAT_Z, RELEASE_ANGLE, RIM_Z, STOP_ANGLE, robot_bodies
+from scene import LID_RADIUS, LID_SEAT_Z, RELEASE_ANGLE, RIM_Z, STOP_ANGLE, arm_rig, robot_bodies
 
 STAGES = ("lid_unscrewed", "lid_lifted_clear", "lid_set_aside")
 HOLD_STEPS = 50
@@ -78,6 +78,14 @@ class Checker:
         owner[model.geom("worktop").id] = WORKTOP
         owner[model.geom("floor").id] = FLOOR
         self.owner = owner
+        # The parked left side (its arm links from the shoulder down and its hand): the instruction keeps it parked,
+        # so any contact of it with the jar or the lid fails the episode (left_arm_contact).
+        left = set(arm_rig.hand_body_ids(model, "left"))
+        base, body = model.body("base_link").id, model.body(arm_rig.FLANGE_BODY["left"]).id
+        while body not in (0, base):
+            left.add(body)
+            body = int(model.body_parentid[body])
+        self.left_geom = np.isin(model.geom_bodyid, np.asarray(sorted(left), dtype=int))
         self.table_z = float(config["table_z"])
         self.half = np.asarray(config["table_half"], dtype=float)
         ws = config["workspace"]
@@ -188,6 +196,15 @@ class Checker:
             if p[2] < self.table_z - 0.005 or abs(p[0]) > self.half[0] or abs(p[1]) > self.half[1]:
                 return fail("lid_off_table" if name == "lid" else "jar_off_table", object=name)
         pairs = self.contact_sets(data)
+        for i in range(data.ncon):
+            contact = data.contact[i]
+            if contact.efc_address < 0:
+                continue
+            for g_left, g_other in ((int(contact.geom1), int(contact.geom2)), (int(contact.geom2), int(contact.geom1))):
+                if self.left_geom[g_left] and self.owner[g_other] in (JAR, LID):
+                    return fail("left_arm_contact", robot_geom=self.model.geom(g_left).name
+                                or self.model.body(int(self.model.geom_bodyid[g_left])).name,
+                                touches="jar" if self.owner[g_other] == JAR else "lid")
         if frozenset((LID, FLOOR)) in pairs or frozenset((JAR, FLOOR)) in pairs:
             return fail("lid_off_table", object="floor_contact")
         lid_touch = any(LID in p and len(p) == 2 for p in pairs)

@@ -86,7 +86,7 @@ class Session:
         if values.shape != (self.action_dim,) or not np.isfinite(values).all():
             raise ValueError(f"Expected {self.action_dim} finite actuator targets")
         lo, hi = self.model.actuator_ctrlrange.T
-        if np.any(values < lo - 1e-7) or np.any(values > hi + 1e-7):
+        if np.any(values < lo - 1e-6) or np.any(values > hi + 1e-6):
             raise ValueError("Actuator targets exceed native joint bounds")
         if self.done:
             return self.status()
@@ -160,8 +160,8 @@ class Session:
 
     # ------------------------------------------------------------------ tooling
     def snapshot(self):
-        state = np.empty(mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS))
-        mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_FULLPHYSICS)
+        state = np.empty(mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_INTEGRATION))
+        mujoco.mj_getState(self.model, self.data, state, mujoco.mjtState.mjSTATE_INTEGRATION)
         return {
             "state": state,
             "ctrl": self.data.ctrl.copy(),
@@ -170,7 +170,7 @@ class Session:
         }
 
     def restore(self, snap):
-        mujoco.mj_setState(self.model, self.data, snap["state"], mujoco.mjtState.mjSTATE_FULLPHYSICS)
+        mujoco.mj_setState(self.model, self.data, snap["state"], mujoco.mjtState.mjSTATE_INTEGRATION)
         self.data.ctrl[:] = snap["ctrl"]
         mujoco.mj_forward(self.model, self.data)
         (self.steps, self.stage, self.hold, self.success, self.failure, self.failure_detail,

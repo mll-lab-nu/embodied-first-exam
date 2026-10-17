@@ -7,7 +7,7 @@
 | Twin | `dexhand-paper-staple-i00-standard` |
 | Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
 | Family / instance | `paper_staple` |
-| Oracle | `full` |
+| Oracle | `full` — solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory on the Marvin right arm (942 controls; success after 742, then 200 unexecuted hold rows of slack). Two fresh-process replays succeed with identical state hashes. The standard oracle submits the same rows through the public client. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 

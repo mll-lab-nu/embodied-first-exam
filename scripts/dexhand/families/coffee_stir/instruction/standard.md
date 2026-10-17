@@ -13,8 +13,8 @@ physical contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
 The mug, the coffee and the teaspoon are the approved T11 kitchen scene: a cream glazed mug with a rounded handle
 (pointing +x) on a stone worktop (top at z = 0.75 m, front edge at x = 0.25 m), axis at x = 0.48 m, y = 0.015 m. The
 source film (kinematic, without hands) starts with the spoon suspended above the rim; here the right hand holds the
-teaspoon there, upright, bowl down, in a thumb-index pinch near the top of its handle, the bowl just above the mug (`task.json` `spoon_pos`, position and quaternion WXYZ, is the
-settled start pose). The coffee is a visual surface only: it exerts no force, and the stirring is judged only from the
+teaspoon there, upright, bowl down, in a thumb-index pinch near the top of its handle, the bowl just above the mug (settled start pose: position (0.452, -0.020, 0.874) m,
+quaternion WXYZ (-0.399, 0.006, 0.032, 0.916)). The coffee is a visual surface only: it exerts no force, and the stirring is judged only from the
 bowl's revolutions below that surface. Mug and spoon are free rigid bodies that move only through contact and gravity.
 Cameras: `overview` (front right of the mug, wide), `closeup` (front right, close) and `top` (looking down the mug axis).
 
