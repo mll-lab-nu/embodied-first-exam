@@ -301,6 +301,8 @@ def finish(reason: str) -> None:
     if E["done"]:
         return
     E.update(done=True, reason=reason)
+    if reason == "error":
+        E["success"] = False   # a simulator error ends the episode: the state after it is never judged a success
     if REPLAYING["on"]:
         return
     EP.log({"ev": "end", "reason": reason, "success": bool(E["success"]), "control_steps": clock(),
