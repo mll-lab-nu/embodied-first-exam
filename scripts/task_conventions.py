@@ -90,8 +90,7 @@ BENCHMARKS = [  # (directory prefix, label)
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
 # RoboOlympics' exported tasks (PROTOCOL v1 §4c; scripts/roboolympics/exported.toml) have a cutoff note of their own
 # (CUTOFF_NOTE_TASK below):
-RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
-                     "roboolympics-badminton-match-i01-standard-realtime",
+RO_EXPORTED_TASKS = ("roboolympics-badminton-match-i01-standard-realtime",
                      "roboolympics-badminton-duelrl-i01-standard-realtime",
                      "roboolympics-badminton-match-i02-standard-realtime",
                      "roboolympics-badminton-match-i04-standard-realtime",
@@ -102,7 +101,6 @@ RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
                      "roboolympics-soccerssl-match-i01-standard-realtime",
                      "roboolympics-tabletennis-duelrl-i01-standard-realtime",
-                     "roboolympics-tabletennis-hitskill-i00-standard",
                      "roboolympics-tabletennis-match-i01-standard-realtime",
                      "roboolympics-tabletennis-match-i02-standard-realtime",
                      "roboolympics-tabletennis-match-i03-standard-realtime",
