@@ -185,9 +185,11 @@ the video only. Rendering in the live episode was not taken: the cameras render 
 picture) on the simulator's thread, which would slow every call and, in the realtime set, the clock.
 
 Infrastructure (`infra_error` 1, one full retry): no, an unreadable or an unfinalized `final.json`; a give-up after
-crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`); `instance_mismatch`; a finalize error.
-The agent's result, never infra: a failure at the cutoff, an exit that fails, a simulator error raised by the agent's
-rows (`sim_error`), crashes all inside the agent's calls (`sim_crashed_on_call`). A missing video is never infra.
+crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`); `instance_mismatch`; a finalize error
+outside the verdict (saving the trajectory). The agent's result, never infra: a failure at the cutoff, an exit that
+fails, a simulator error raised by the agent's rows (`sim_error`), crashes all inside the agent's calls
+(`sim_crashed_on_call`), a verdict that cannot be read off the episode (`live_verdict_error`: a failure, as an episode
+whose judging raised at its end always was). A missing video is never infra.
 
 The bit-exact checks stay offline: `replay.py` (and `rcb_rsb_rt.py replay`) replays a recorded journal in a fresh
 process, in the sim sidecar's own image (`eai-robosafe`); a replay outside the image can differ in the last bits

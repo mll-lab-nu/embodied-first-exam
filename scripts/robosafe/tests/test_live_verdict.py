@@ -250,6 +250,15 @@ class Live(unittest.TestCase):
         self.assertFalse(fin["success"])
         self.assertEqual(self.grade()[1]["success"], 0)
 
+    def test_a_judge_that_raises_is_0_not_infra(self):
+        sim, svc = self.episode(0.8)
+        sim.s.judge = mock.Mock(side_effect=RuntimeError("judge broke"))
+        fin = self.finalize(svc)
+        self.assertFalse(fin["success"])
+        self.assertIn("live_verdict_error", fin)
+        txt, r = self.grade()
+        self.assertEqual((txt, r["infra_error"]), ("0", 0))
+
     def test_a_sim_error_in_a_call_is_0_not_infra(self):
         _, sim, svc = self.paused()
         svc.start()
