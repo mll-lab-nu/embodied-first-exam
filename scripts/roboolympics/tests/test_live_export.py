@@ -18,6 +18,8 @@ import importlib.util, json, os, pathlib, subprocess, sys, tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 REG = tomllib.loads((ROOT / "scripts/roboolympics/exported.toml").read_text())
+# the privileged twins (kind "fullsim-policy", #282) are graded by the verifier (a formal match and its replay), not live
+REG["tasks"] = [e for e in REG["tasks"] if e.get("kind") != "fullsim-policy"]
 
 
 def load(path: pathlib.Path):

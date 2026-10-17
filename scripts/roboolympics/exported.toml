@@ -170,3 +170,47 @@ patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
            "environment/sim/core/grading.py", "tests/grade.py", "README.md",
            "environment/sim/core/realtime.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
            # 2026-10-16, board 0146: a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i01-privileged"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/fullsim/generate.py"
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i02-privileged"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/fullsim/generate.py"
+
+[[tasks]]
+name = "roboolympics-badminton-match-i01-privileged"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-badminton-match-i02-privileged"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-soccer-match-i00-privileged"
+source_task = "roboolympics/soccer-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-soccerssl-match-i00-privileged"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
