@@ -20,6 +20,10 @@ let go of it.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
+- **Grading.** When the episode ends, the service's record of it (every control step it ran, including the
+  hold at the end of your session) is replayed open-loop from the same initial state in two fresh simulator
+  processes, exactly as recorded; it scores 1 only if the live episode succeeded, both replays succeed and both
+  end in the same state (equal state hashes), else 0.
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs (a long `submit` or
   a watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for
   it, `r.status()` from another process included. A client-side timeout while a call is in flight (for example
@@ -83,7 +87,7 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 
 Objects here: a yellow banana and a red bowl on the table.
-The Robotiq opens to 8.5 cm. The episode ends by itself the moment the banana rests in the bowl with the gripper open.
+The Robotiq opens to 8.5 cm. The episode ends by itself the moment the banana rests in the bowl and neither gripper finger touches it.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
