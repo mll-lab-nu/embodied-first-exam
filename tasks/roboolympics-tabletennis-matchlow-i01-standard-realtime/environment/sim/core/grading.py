@@ -125,7 +125,8 @@ def grade(d, r, contract, evaluate, audits=None):
     else:
         success = valid
     out = dict(success=int(success), valid_trial=int(valid), technical_failure=int(not valid), grader_error=0,
-               missing_log=0, verdict_replay=int(not live), match_over=int(d.get("reason") == "match_over"),
+               missing_log=0, verdict_replay=int(not live), graded_by_live=int(live), replays=0 if live else 1,
+               match_over=int(d.get("reason") == "match_over"),
                seed=int(d.get("seed") or 0), official_config=int(official(d, contract)),
                video_rendered=int(bool(d.get("video")) or (DATA / "replay.mp4").exists()), direct_play=int(direct),
                lowlevel_actions=int(d.get("action_level") == "low"), solo=int(solo),
