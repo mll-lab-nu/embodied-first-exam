@@ -7,7 +7,7 @@ often as you like and plan with the full simulator. You hand in one trajectory, 
 ## Your task: make the scene look like a picture
 `/app/goal.png` is what the robot's head camera (`robot_r1:zed_link:Camera:0`) sees once the task is done. It is the same
 camera, resolution and intrinsics as the robot's own head camera. Change the scene so that it looks like the picture. No
-text tells you which objects matter or what to do with them: the picture is the whole task. The robot does not have to
+sentence here names the objects that matter or what to do with them: the picture is the whole task. The robot does not have to
 match the picture (its arms, grippers and base may be anywhere), and nothing the picture does not show is judged.
 
 ## When a replay succeeds
@@ -22,8 +22,8 @@ After every control step it checks three conditions:
    - at every step, each of them moves slower than 0.001 m/s and 0.005 rad/s, and each robot joint slower than 0.02 rad/s;
    - over the whole window, none of them drifts more than 0.01 m or 0.05 rad, and no robot joint more than 0.05.
 
-A replay succeeds at the first control step where all three hold, which is the last step of that window. You are not
-told which objects the task is about: the picture shows you.
+A replay succeeds at the first control step where all three hold, which is the last step of that window. This text does
+not say which objects the task is about: the picture shows them.
 
 **Once the scene looks right, stop the robot and keep it still for at least 45 control steps.** A replay stops at
 your last row, so end your trajectory with at least 45 rows of the robot standing still (for example
@@ -64,8 +64,8 @@ s.state_sha(); s.save_trajectory("/app/output/trajectory.npz")
 ```
 Frames and units: the odometry frame is the robot's `base_link` at the start (x forward, y left, z up); `s.env` also gives
 the world frame. Quaternions are XYZW, lengths in m, angles in rad. While the robot moves, a camera frame shows the scene
-2 control steps earlier. OmniGibson and iSpatialGym's simulator code are installed. There are no motion primitives or
-planners: moving the robot is up to you.
+2 control steps earlier. OmniGibson and iSpatialGym's simulator code are installed. This tooling gives you no motion
+primitives or planners (only what the installed packages themselves ship): moving the robot is up to you.
 
 ### The action (23 numbers per row)
 Layout (`s.robot.controller_action_idx`): base (3), trunk (4), left arm (7), left gripper (1), right arm (7), right

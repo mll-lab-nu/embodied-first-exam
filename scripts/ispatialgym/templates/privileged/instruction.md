@@ -41,8 +41,8 @@ s.state_sha(); s.save_trajectory("/app/output/trajectory.npz")
 ```
 Frames and units: the odometry frame is the robot's `base_link` at the start (x forward, y left, z up); `s.env` also gives
 the world frame. Quaternions are XYZW, lengths in m, angles in rad. While the robot moves, a camera frame shows the scene
-2 control steps earlier. OmniGibson and iSpatialGym's simulator code are installed. There are no motion primitives or
-planners: moving the robot is up to you.
+2 control steps earlier. OmniGibson and iSpatialGym's simulator code are installed. This tooling gives you no motion
+primitives or planners (only what the installed packages themselves ship): moving the robot is up to you.
 
 ### The action (23 numbers per row)
 Layout (`s.robot.controller_action_idx`): base (3), trunk (4), left arm (7), left gripper (1), right arm (7), right

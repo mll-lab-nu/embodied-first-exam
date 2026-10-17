@@ -68,9 +68,11 @@ rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the
 | deliverable, grading | the episode the sidecar records; live ∧ two fresh replays ∧ deterministic, in the sidecar | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
 
 The privileged agent's image is eai-ispatialgym with a layer that removes, and the build then asserts gone: every BDDL
-problem (goals), the docs (they preview the reference demonstrations), tests, configs and README, the eval data's
-dataset name and the project URLs (they locate the demonstrations) and bytecode; upstream's release ships no
-scripted expert, planner or sampler (`scripts/ispatialgym/shared/scrub.sh`). It writes this task's start-only BDDL problem (objects and positive initial
+problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
+configs and README, the eval data's repository id and folder names and the project URLs (they locate the
+demonstrations) and bytecode; upstream's public release ships no scripted expert, planner, sampler or task spec, and the
+build fails if one is there (`scripts/ispatialgym/shared/scrub.sh`; the names it looks for are read from the image, so
+no task file names the eval data). It writes this task's start-only BDDL problem (objects and positive initial
 atoms, one neutral goal atom) from the image's own copy. Upstream's success-check code stays in the image, as KinDER's and
 BEHAVIOR-1K's do; with no goal, target or problem in the container it has nothing to check, and the tooling reports no
 success. Measured: the same 300 rows give bit-identical start and final states in the agent's simulator and the
@@ -82,9 +84,9 @@ verifier's, for all 12 tasks.
 |---|---|---|
 | measured targets and tolerances, the goal camera's world pose | the instance file (`*-tro_state.json`: `pose_targets`, `goal_observation`) | `goal.json`, scoring side only; the agent sees the tolerances |
 | the goal relation and roles | the BDDL problem (`:goal`, `:variant`, comments, negative `:init` atoms), the objects' names | the problem only in the standard sidecar and the verifier; names without roles in `instance.json` |
-| demonstrations | `ispatialgym-eval-demos` (public GitHub: actions per step) | in no image and no task; the agent's egress is the model APIs and package registries |
-| the scripted demonstrator and its per-instance plans | `ispatialgym/oracle/`, `*.oracle.json` | removed from the privileged agent's image; the standard agent's container is the eai-standard client |
-| the instance generator, its specs and seeds | `ispatialgym/sampling/`, `assets/task_specs/` | removed from the privileged agent's image; in the standard sidecar only |
+| demonstrations | the eval data's demos folder (Hugging Face: actions per step) | in no image and no task; its repository id and folder names are removed from the privileged agent's image (`scrub.sh`); the agent's egress is the model APIs and package registries |
+| the scripted demonstrator and its per-instance plans | upstream's internal release only (`ispatialgym/oracle/`, `*.oracle.json`); the public release (`fddcf756`) ships neither | in no image: `scrub.sh` fails the privileged build if any is there; the standard agent's container is the eai-standard client |
+| the instance generator, its specs and seeds | upstream's internal release only (`ispatialgym/sampling/`, `assets/task_specs/`); not in the public release | in no image: `scrub.sh` fails the privileged build if any is there |
 
 ## Run
 ```bash
@@ -99,6 +101,11 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 (`instances` splits the picked instances of upstream's eval data into `instance.json` and `goal.json`; `measure --task T` writes `facts.json`, on a GPU).
 
 ## Known issues
+- **The privileged start names the task's objects.** The start-only BDDL problem the loader needs lists the objects the
+  task is about (as BEHAVIOR-1K's do), and `instance.json` keeps upstream's load order, in which they come last before the
+  robot; reordering it changes the settled start. What is to be done with them (the relation, the pose, the angle) is
+  only in the picture; the instruction claims no more than that. In next to and touching the moved object starts close to
+  its measured pose (inside the × 3 position tolerance), so the relation is most of those two tasks.
 - **No fall rule.** Upstream ends an episode only on success or at its step budget. The R1Pro can tip over against an
   obstacle (seen in camera relocalization), and in one run a toppled robot driven on fell through the floor; the episode
   then runs on to its budget. Kept as upstream has it.

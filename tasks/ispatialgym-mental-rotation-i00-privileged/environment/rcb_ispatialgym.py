@@ -616,19 +616,46 @@ class Session:
 
 # --------------------------------------------------------------------------- CLI
 class _Video:
-    """Head-camera frames of an episode to an mp4 through ffmpeg (10 fps: every third control step, 540 px)."""
+    """Head-camera frames of an episode to an mp4 through ffmpeg (10 fps: every third control step, 540 px). The
+    recording never decides a replay (PROTOCOL §4): a failure of the encoder disables it and is reported as `error`."""
 
     def __init__(self, path: str, size: int = 540, fps: int = 10):
-        self.size, self.p = size, subprocess.Popen(
-            ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{size}x{size}", "-r", str(fps), "-i", "-",
-             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", path], stdin=subprocess.PIPE)
+        self.size, self.p, self.error, self.n = size, None, None, 0
+        try:
+            self.p = subprocess.Popen(
+                ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{size}x{size}", "-r", str(fps),
+                 "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", path], stdin=subprocess.PIPE)
+        except Exception as exc:  # noqa: BLE001
+            self.error = f"start: {exc!r}"[:300]
 
-    def add(self, rgb: np.ndarray) -> None:
-        from PIL import Image
-        self.p.stdin.write(np.asarray(Image.fromarray(rgb).resize((self.size, self.size))).tobytes())
+    def _fail(self, where: str, exc: BaseException) -> None:
+        self.error = f"{where}: {exc!r}"[:300]
+        try:
+            self.p.kill()
+        except Exception:  # noqa: BLE001
+            pass
+        self.p = None
+
+    def add(self, frame) -> None:
+        """`frame`: an RGB array, or a callable returning one (read only while the recording works)."""
+        if self.p is None:
+            return
+        try:
+            from PIL import Image
+            rgb = frame() if callable(frame) else frame
+            self.p.stdin.write(np.asarray(Image.fromarray(rgb).resize((self.size, self.size))).tobytes()); self.n += 1
+        except Exception as exc:  # noqa: BLE001
+            self._fail("frame", exc)
 
     def close(self) -> None:
-        self.p.stdin.close(); self.p.wait()
+        if self.p is None:
+            return
+        try:
+            self.p.stdin.close(); rc = self.p.wait(timeout=900)
+            if rc != 0:
+                self.error = f"ffmpeg exit {rc}"
+        except Exception as exc:  # noqa: BLE001
+            self._fail("close", exc)
 
 
 def joint_types(s: Session) -> dict[str, dict[str, str]]:
@@ -640,18 +667,33 @@ def joint_types(s: Session) -> dict[str, dict[str, str]]:
     return out
 
 
-def run_rows(s: Session, rows: np.ndarray, video: str | None = None) -> dict:
+class StepError(RuntimeError):
+    """A control step of the replayed rows raised (after the start rebuilt): the trajectory's own outcome, not the host's."""
+
+    def __init__(self, step: int, exc: BaseException):
+        super().__init__(f"step {step}: {exc!r}"[:500]); self.step, self.kind = step, type(exc).__name__
+
+
+def run_rows(s: Session, rows: np.ndarray, video: str | None = None, info: dict | None = None) -> dict:
     vid = _Video(video) if video else None
+    head = lambda: s.frames([s.head_camera])[s.head_camera]  # noqa: E731
     try:
+        if vid is not None:
+            vid.add(head)                                    # the start: a video even of an episode without actions
         for i, a in enumerate(rows):
-            done = s.step(a)
+            try:
+                done = s.step(a)
+            except Exception as exc:  # noqa: BLE001
+                raise StepError(s.n, exc) from exc
             if vid is not None and i % 3 == 0:
-                vid.add(s.frames([s.head_camera])[s.head_camera])
+                vid.add(head)
             if done:
                 break
     finally:
         if vid is not None:
             vid.close()
+            if info is not None:
+                info.update({"video_frames": vid.n, **({"video_error": vid.error} if vid.error else {})})
     return s.status()
 
 
@@ -661,8 +703,11 @@ def cmd_replay(a) -> None:
         s = Session(a.instance)
         out.update({"instance_matches": s.instance_ok, "instance_exact": s.instance_exact, "start_sha": s.start_sha})
         rows = np.load(a.traj)["actions"]
-        st = run_rows(s, rows, a.video)
+        st = run_rows(s, rows, a.video, out)
         out["replays"].append({**st, "rows": int(len(rows))})
+    except StepError as exc:     # the rows themselves fail to step (the same step in every fresh process): sim_error
+        import traceback; traceback.print_exc()
+        out["error"] = str(exc); out["step_error"] = {"step": int(exc.step), "kind": exc.kind}
     except Exception as exc:  # noqa: BLE001
         import traceback; traceback.print_exc()
         out["error"] = repr(exc)[:500]
