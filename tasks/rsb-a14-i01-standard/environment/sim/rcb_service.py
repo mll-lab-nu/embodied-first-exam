@@ -51,8 +51,11 @@ trial: sim_crashed_on_call if every crash was the agent's (here: it happened whi
 (infrastructure, infra_error = 1). Each process writes a fatal signal's record (SIGSEGV, SIGBUS, SIGFPE, SIGILL,
 SIGABRT: faulthandler) to crash.log, and startups.jsonl notes crash.log's size at every start, so the death before a
 start is known to be a simulator crash or not (a kill -- SIGKILL, SIGTERM, the OOM killer -- leaves no record);
-"resuming" logs it (fatal_signal). This service keeps the in-call rule; the realtime layer counts a simulator crash
-after the agent's first command as the agent's (rcb_realtime.py). A verdict already on disk is never overwritten; a crash, a hang or a slow render
+"resuming" logs it (fatal_signal), and whether the crashing thread was inside a control step (in_step). This service
+keeps the in-call rule; the realtime layer counts a simulator crash inside a control step after the agent's first
+command as the agent's (rcb_realtime.py). A reset whose scene does not rebuild ends the episode "error" as
+infrastructure in both (infra_error = 1: the agent's reset was legitimate); an error raised by the agent's own call
+is its 0. A verdict already on disk is never overwritten; a crash, a hang or a slow render
 of the video loses only the video.
 """
 from __future__ import annotations
@@ -200,11 +203,26 @@ def enable_crash_log(data: str) -> None:
     faulthandler.enable(file=_crash_log, all_threads=True)
 
 
+STEP_FRAMES = (" in _step",)                  # the service's control step (Service._step, which runs sim.step)
+
+
+def crashed_in_step(record: bytes) -> bool:
+    """Does a fatal signal's record (faulthandler: every thread's stack, the crashing one under "Current thread", most
+    recent call first) show the crashing thread inside a control step? Not when it died building the scene, replaying
+    the journal to resume, resetting, rendering for a request, finalizing or in live_verdict()."""
+    text = record.decode("utf-8", "replace")
+    i = text.find("Current thread")
+    if i < 0:
+        return False
+    block = text[i:].split("\n\n", 1)[0]
+    return any(line.rstrip().endswith(STEP_FRAMES) for line in block.splitlines()[1:])
+
+
 def deaths(data: str) -> list[dict]:
     """The process deaths startups.jsonl implies, in order: the k-th (0-based) ended process k + 1 (1-based, as a start
-    event's `startup` counts) and came before start k + 2. Each: {"process", "restart_ts", "fatal_signal"}; fatal_signal
-    = crash.log grew between the two starts with a fatal signal's record (None: a start without the size, before
-    2026-10-17)."""
+    event's `startup` counts) and came before start k + 2. Each: {"process", "restart_ts", "fatal_signal", "in_step"};
+    fatal_signal = crash.log grew between the two starts with a fatal signal's record (None: a start without the size,
+    before 2026-10-17); in_step = that record shows the crashing thread inside a control step (crashed_in_step)."""
     try:
         with open(os.path.join(data, "startups.jsonl")) as f:
             starts = [json.loads(line) for line in f if line.strip()]
@@ -218,8 +236,10 @@ def deaths(data: str) -> list[dict]:
     out = []
     for k in range(len(starts) - 1):
         a, b = starts[k].get("crash_log_bytes"), starts[k + 1].get("crash_log_bytes")
-        fatal = None if a is None or b is None else FATAL in log[int(a):int(b)]
-        out.append({"process": k + 1, "restart_ts": float(starts[k + 1].get("ts") or 0.0), "fatal_signal": fatal})
+        chunk = b"" if a is None or b is None else log[int(a):int(b)]
+        fatal = None if a is None or b is None else FATAL in chunk
+        out.append({"process": k + 1, "restart_ts": float(starts[k + 1].get("ts") or 0.0), "fatal_signal": fatal,
+                    "in_step": bool(fatal) and crashed_in_step(chunk)})
     return out
 
 
@@ -357,6 +377,7 @@ class Service:
         self.starts = 1
         self.ep_start_ok = True        # the current episode began at the frozen instance's start_sha (or none is known)
         self.judged_before = False     # a process of this trial died inside live_verdict()
+        self.error_infra = False       # the episode's "error" is the simulator's, not the agent's (a reset's rebuild)
         self._unwritten: list[np.ndarray] = []   # sim rows executed since the last checkpoint
 
     # ------------------------------------------------------------------ spec and status
@@ -422,7 +443,7 @@ class Service:
             self._unwritten = []
         self.log(ev, **kw, calls=self.calls, rows=self.rows, resets=self.resets, ep_start=self.ep_start,
                  journal_rows=self.journal_rows, done=self.done, reason=self.reason, success=self.success,
-                 state_sha=self.sim.state_sha())
+                 error_infra=self.error_infra, state_sha=self.sim.state_sha())
         self._write_final()
 
     def _write_final(self) -> None:
@@ -434,6 +455,8 @@ class Service:
              "sim_startups": self.starts, "finalized": self.finalized, **self.verdict}
         if self.verdict.get("graded_by") == "live":     # the verdict is in: the live episode's, nothing replayed
             d["success"] = bool(self.success and self.verdict.get("live_rule", True))
+        if self.reason == "error" and self.error_infra:  # the simulator failed, not the agent's commands
+            d["infra_error"] = 1
         if not self.ep_start_ok:                        # the graded episode began off the frozen instance (a reset)
             d.update(success=False, instance_mismatch=True, infra_error=1)
         write_json_atomic(os.path.join(self.data, "final.json"), d)
@@ -511,6 +534,7 @@ class Service:
         self.episode = [r.copy() for r in rows[self.ep_start:]]
         self.done, self.reason, self.success = bool(cp["done"]), cp["reason"], bool(cp["success"])
         self.judged_before = any(e["ev"] == "live_verdict_begin" for e in ev)   # a process died in live_verdict()
+        self.error_infra = bool(cp.get("error_infra", self.error_infra))
         if cp["ev"] == "end" and cp["reason"] == "reset":
             # The process died inside a reset, after the abandoned episode's end and before the new episode began: a
             # reset lost with its call never happened (as in server_mj.py), so that episode runs on and the reset is
@@ -763,7 +787,8 @@ class Service:
         except Exception:
             # The simulator failed to start the new episode: the trial ends on a simulator error, not on the episode
             # the agent had every right to abandon (handle() answers 500; its _end("error") finds the episode ended).
-            self.done, self.reason, self.success = True, "error", False
+            # The agent's reset was legitimate: this error is infrastructure (owner, 2026-10-17; both modes).
+            self.done, self.reason, self.success, self.error_infra = True, "error", False, True
             try:
                 self._checkpoint("end", reset_failed=True)
             except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash
@@ -773,6 +798,7 @@ class Service:
         self.resets += 1
         self.ep_start, self.episode = self.journal_rows, []
         self.done, self.reason, self.success, self.t_end = False, None, False, None
+        self.error_infra = False
         want = getattr(self.sim, "start_sha", None)
         got = self.sim.state_sha() if want else None
         self.ep_start_ok = not want or got == want   # the episode starts at the frozen instance

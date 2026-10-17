@@ -96,6 +96,10 @@ EDITS = [
      "operator told by a decline, a question or a report).\n\n",
      "operator told by a decline, a question or a report). The video (`replay.mp4`) is rendered after the verdict from the\n"
      "recorded rows and decides nothing.\n\n"),
+    # the layer's record of a fatal signal (faulthandler; rcb_service.deaths: whose crash it was), as evidence
+    ("task.toml",
+     '  { source = "/data/startups.jsonl", service = "sim" },\n',
+     '  { source = "/data/startups.jsonl", service = "sim" },\n  { source = "/data/crash.log", service = "sim" },\n'),
     ("tests/Dockerfile",
      "needs nothing but Python (the sim service replayed and judged the episode).",
      "needs nothing but Python (the sim service judged the live episode)."),
