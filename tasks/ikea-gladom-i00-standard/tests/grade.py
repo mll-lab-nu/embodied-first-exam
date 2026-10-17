@@ -54,15 +54,21 @@ def grade() -> None:
         write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "missing_log": 1,
                       "infra_error": 1, "sim_error": 0, "grader_error": 1})
         return
+    def num(k, cast=int):
+        """A finite number from final.json, else 0 (reward.json takes numbers only; a bad value never fails the grader)."""
+        try:
+            v = float(d.get(k) or 0)
+        except (TypeError, ValueError):
+            return cast(0)
+        return cast(v) if v == v and abs(v) != float("inf") else cast(0)
     sim_error = bool(d.get("sim_error")) and not d.get("infra_error")
     # `success` decides (a live rule recorded beside the live success, e.g. a failed settle, can only take it away)
     live = bool(d.get("success")) and bool(d.get("live_success", True)) and not d.get("gave_up")
     # a done episode with rows but no trajectory file (the dump failed: disk, ...): the service's fault
-    dump_lost = bool(d.get("dump_error")) or (int(d.get("live_rows") or 0) > 0 and not os.path.isfile(f"{DATA}/trajectory.npz"))
+    dump_lost = bool(d.get("dump_error")) or (num("live_rows") > 0 and not os.path.isfile(f"{DATA}/trajectory.npz"))
     mismatch = bool(d.get("instance_mismatch"))
     infra = bool(d.get("infra_error")) or not d.get("finalized") or mismatch or (dump_lost and live and not sim_error)
     ok = live and not infra and not sim_error
-    num = lambda k, cast=int: cast(d.get(k) or 0)  # noqa: E731
     videos = [f for f in ("live.mp4", *(f"live.{i}.mp4" for i in range(2, 8))) if os.path.isfile(f"{DATA}/{f}")]
     write(ok, {"success": int(ok), "live_success": int(live), "graded_by_live": 1, "replays": 0,
                "finalized": int(bool(d.get("finalized"))), "missing_log": 0, "live_rows": num("live_rows"),

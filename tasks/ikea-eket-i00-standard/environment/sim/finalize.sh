@@ -33,6 +33,8 @@ out.update(graded_by="live", replays=0, state_sha=out.get("live_sha"))
 videos = [f for f in ("live.mp4", *(f"live.{i}.mp4" for i in range(2, 8))) if os.path.isfile(os.path.join(d, f))]
 out.update(video=videos[0] if videos else None, video_segments=videos, video_pending=False, video_source="live")
 tmp = os.path.join(d, "final.json.tmp")
-json.dump(out, open(tmp, "w")); os.replace(tmp, os.path.join(d, "final.json"))
+with open(tmp, "w") as f:                 # written whole and synced, then renamed: a killed hook never leaves half a file
+    json.dump(out, f); f.flush(); os.fsync(f.fileno())
+os.replace(tmp, os.path.join(d, "final.json"))
 print(json.dumps(out))
 PY

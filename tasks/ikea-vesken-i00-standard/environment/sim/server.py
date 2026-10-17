@@ -129,10 +129,11 @@ L._write_json(os.path.join(DATA, "startup_binding.json"), {
     "scene_digest": R.digest(files), "runtime": runtime, "runtime_matches": runtime == BINDING["runtime"]})
 if not (instance_exact and instance_ok and runtime == BINDING["runtime"]):
     # the sidecar's scene or runtime is not the one the task was validated on: infrastructure, never the agent's 0
-    # (`deterministic` False is the shared layer's marker of a verdict on disk, rcb_limited.final_verdict(): no replay)
+    # (`gave_up` / `graded_by` mark a verdict on disk for rcb_limited.final_verdict(): the collect hook keeps it)
     EP.scene_built()
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": False, "done": True, "finalized": True, "deterministic": False, "instance_mismatch": True, "infra_error": 1,
+        "success": False, "done": True, "finalized": True, "gave_up": True, "graded_by": "live", "replays": 0,
+        "instance_mismatch": True, "infra_error": 1,
         "reason": "instance_mismatch", "task": TASK, "protocol": PROTOCOL, **EP.final_fields(),
         "differing_files": sorted(k for k in set(files) | set(BINDING["scene_files"]) if files.get(k) != BINDING["scene_files"].get(k))[:50]})
     open(PID_FILE, "w").write(str(os.getpid()))

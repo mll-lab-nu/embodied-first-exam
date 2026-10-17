@@ -92,8 +92,8 @@ def main() -> int:
     fin, r, _ = run({"final": dict(gave, reason="sim_crashed_on_call", infra_error=0), "rc": 2})
     assert r["success"] == 0 and r["infra_error"] == 0 and r["gave_up"] == 1, (fin, r)
     # the frozen instance mismatched at the episode's start (server.py) -> infra
-    mm = {"success": False, "done": True, "finalized": True, "deterministic": False, "instance_mismatch": True, "infra_error": 1,
-          "reason": "instance_mismatch"}
+    mm = {"success": False, "done": True, "finalized": True, "gave_up": True, "graded_by": "live", "replays": 0,
+          "instance_mismatch": True, "infra_error": 1, "reason": "instance_mismatch"}
     _, r, _ = run({"final": mm, "rc": 2})
     assert r["success"] == 0 and r["infra_error"] == 1 and r["instance_mismatch"] == 1, r
     # no live video (the encoder failed): the verdict is unchanged
@@ -112,6 +112,11 @@ def main() -> int:
     assert r["success"] == 0 and r["infra_error"] == 1, r
     _, r, _ = run({"hook": False, "final": dict(LIVE_OK, finalized=False)})
     assert r["success"] == 0 and r["infra_error"] == 1, r
+    # a bad number in final.json never fails the grader; success decides over live_success
+    _, r, _ = run({"hook": False, "final": dict(LIVE_OK, finalized=True, live_rows="x", elapsed_s=float("nan"), calls=None)})
+    assert r["success"] == 1 and r["live_rows"] == 0 and r["elapsed_s"] == 0, r
+    _, r, _ = run({"hook": False, "final": dict(LIVE_OK, finalized=True, success=False, live_success=True, live_rule=False)})
+    assert r["success"] == 0 and r["infra_error"] == 0, r
     print("test_standard_grade: ok (live success / failure / settle failure / breakdown / sim error / service error; crash "
           "give-ups; instance mismatch; no video; lost dump; end timeout; missing final.json; no replay)")
     return 0

@@ -431,7 +431,7 @@ def readme(t: str) -> str:
     x, r, b = P.TEXTS["tasks"][t], P.robot_text(t), P.BIND["tasks"][t]
     e = EVID.get(t, {})
     checks = e.get("checks")
-    ver = (f"Harbor checks on {e['host']} ({e['date']}): " + "; ".join(f"`{c['agent']}` scored {c['reward']}" + (f" ({c['note']})" if c.get("note") else "")
+    ver = (f"Before 2026-10-17 (graded then by the verifier's two replays; history, not re-run since): Harbor checks on {e['host']} ({e['date']}): " + "; ".join(f"`{c['agent']}` scored {c['reward']}" + (f" ({c['note']})" if c.get("note") else "")
                                                                      for c in checks) + ".") if checks else "Harbor oracle / nop checks: pending."
     ref = e.get("reference", {})
     return f'''# {name(t)}
