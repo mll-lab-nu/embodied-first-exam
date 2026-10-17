@@ -256,6 +256,8 @@ memory_mb = 8192
 
 [verifier.environment]
 build_timeout_sec = 1800.0
+cpus = 4                          # two replays at once (+ the video replay, privileged): the timeouts assume a core each
+memory_mb = 8192
 '''
 
 

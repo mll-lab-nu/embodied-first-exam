@@ -356,7 +356,7 @@ class IkeaNyx(_nyx_direct_class().NyxDirect if __name__ == "__main__" and len(sy
             self.cuda.synchronize()
             ptr, shape = N._dlpack_pointer(self.renderer.render_frame(i))
             if shape != self._frame_shapes[i]:
-                raise ValueError(f"camera {self.names[i]}: Nyx frame {shape}, expected {self._frame_shapes[i]}")
+                raise RuntimeError(f"camera {self.names[i]}: Nyx frame {shape}, expected {self._frame_shapes[i]}")
             self.cuda.copy_device(self._dev_frames + int(self._frame_offsets[i]), ptr, int(np.prod(shape)))
         self.cuda.synchronize()
         self.cuda.download(self._dev_frames, self._host_frames)

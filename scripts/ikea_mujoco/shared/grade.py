@@ -16,9 +16,10 @@ first, then `video_rendered` is set once the video exists, waiting for it at mos
 took plus 600 s and never past the verifier's limit (--budget-s); a video that fails or is late changes nothing else. No
 video for a missing or invalid trajectory.
 Failure classes (PROTOCOL H.5: grader_error / infra_error give a free retry, so only what is not the deliverable's doing
-lands there): a replay killed by a signal (`replay_crash`) or one in which the scene's code or MuJoCo raised
-(`replay_exception`, rcb_ikea.py replay) is a breakdown, the agent's 0; a scene that differs from the binding or builds
-to another initial state (`instance_mismatch`) is infra_error; anything else that goes wrong in here is grader_error.
+lands there): a replay that crashed (SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT: `replay_crash`) or in which the scene's
+code or MuJoCo raised (`replay_exception`, rcb_ikea.py replay) is a breakdown, the agent's 0; a replay stopped from
+outside (SIGKILL from the OOM killer, SIGTERM: `replay_killed`), a scene, image or runtime that differs from the binding
+(`instance_mismatch`) and a host out of memory are infra_error; anything else that goes wrong in here is grader_error.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, time
@@ -27,6 +28,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 T_START = time.time()
+# the signals of a simulator crash inside a replay process (MuJoCo, numpy): the deliverable's breakdown. Any other signal
+# (SIGKILL from the OOM killer, SIGTERM / SIGHUP / SIGINT from the runtime) comes from outside: infrastructure.
+CRASH_SIGNALS = {4, 6, 7, 8, 11}    # SIGILL, SIGABRT, SIGBUS, SIGFPE, SIGSEGV
+RENDER = []                         # the video process, killed when the grader returns before waiting for it
 BUDGET_S = 0.0     # the task's [verifier] timeout_sec (--budget-s from tests/test.sh); 0: unknown
 
 
@@ -127,13 +132,14 @@ def main() -> int:
             render = subprocess.Popen([sys.executable, os.path.join(HERE, "render_video.py"), "--task", a.task, "--traj", a.traj,
                                        "--scene-dir", scene_dir, "--out", video], stdout=subprocess.DEVNULL,
                                       stderr=open(os.path.join(LOG_DIR, "render.log"), "w"), env=env)
+            RENDER.append(render)
         codes = [p.wait() for p, _ in procs]
         crashed = [c for c in codes if c < 0]
-        if -9 in crashed:
-            # SIGKILL: the host's OOM killer or the runtime stopped a replay (the rows are capped and validated before
-            # any replay starts, so their memory is bounded): infrastructure, not a simulator crash
-            out = {"success": 0, "replay_killed": 1, "replays": len(codes), "replay_wall_s": round(time.time() - t0, 1),
-                   "video_rendered": 0, "grader_error": 0, "infra_error": 1}
+        if any(-c not in CRASH_SIGNALS for c in crashed):
+            # SIGKILL, SIGTERM, ...: the host's OOM killer or the runtime stopped a replay from outside (the rows are capped
+            # and validated before any replay starts, so their memory is bounded): infrastructure, not a simulator crash
+            out = {"success": 0, "replay_killed": 1, "replay_signal": -min(crashed), "replays": len(codes),
+                   "replay_wall_s": round(time.time() - t0, 1), "video_rendered": 0, "grader_error": 0, "infra_error": 1}
             write(False, out)
             return 0
         if crashed:
@@ -142,7 +148,8 @@ def main() -> int:
             # disagree (deterministic 0).
             out = {"success": 0, "sim_breakdown": 1, "replay_crash": 1, "replay_signal": -crashed[0],
                    "replays_crashed": len(crashed), "replays": len(codes),
-                   "deterministic": int(len(crashed) == len(codes)), "replay_wall_s": round(time.time() - t0, 1),
+                   "deterministic": int(len(crashed) == len(codes) and len(set(crashed)) == 1),
+                   "replay_wall_s": round(time.time() - t0, 1),
                    "video_rendered": 0, "grader_error": 0, "infra_error": 0}
             write(False, out)
             wait_video(render, video, out, [])
@@ -182,7 +189,7 @@ def main() -> int:
                "sim_breakdown": int(bool(last.get("breakdown") or settled.get("breakdown"))),
                "max_part_depth_mm": float((settled.get("terminal") or term).get("max_part_depth_mm") or 0.0),
                "settle_s": float(last.get("settle_s") or 0.0),
-               "instance_ok": int(instance_ok), "instance_exact": 1, "runtime_binding_ok": int(rt is not None),
+               "instance_ok": int(instance_ok), "instance_exact": 1, "runtime_binding_ok": int(rt is not None and bool(b.get("runtime"))),
                "n_actions": int(outs[-1].get("rows", 0)), "sim_steps": int(outs[-1].get("sim_steps", 0)),
                "sim_time_s": float(outs[-1].get("sim_time_s", 0.0)), "replays": len(outs),
                "replay_wall_s": round(time.time() - t0, 1), "video_rendered": 0, "grader_error": 0, "infra_error": 0}
@@ -195,5 +202,14 @@ def main() -> int:
     return 0
 
 
+def run() -> int:
+    try:
+        return main()
+    finally:                        # never leave the video process writing into /logs/verifier after the verdict
+        for r in RENDER:
+            if r.poll() is None:
+                r.kill(); r.wait()
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run())

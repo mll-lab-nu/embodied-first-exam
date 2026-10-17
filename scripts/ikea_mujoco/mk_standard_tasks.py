@@ -152,7 +152,7 @@ def step_ms(t: str) -> float | None:
 
 def task_toml(t: str) -> str:
     x, r = P.TEXTS["tasks"][t], P.robot_text(t)
-    arts = ["final.json", "episode.json", "episode.jsonl", "trajectory.npz", "live.mp4", "live.2.mp4", "live.3.mp4",
+    arts = ["final.json", "episode.json", "episode.jsonl", "trajectory.npz", "live.mp4", *(f"live.{i}.mp4" for i in range(2, 8)),
             "live.last.png", "server.log",
             "journal.f64", "startups.jsonl", "startup_binding.json"]
     art = "\n".join(f'  {{ source = "/data/{a}", service = "sim" }},' for a in arts)
@@ -203,6 +203,8 @@ memory_mb = 16384
 
 [verifier.environment]
 build_timeout_sec = 1800.0
+cpus = 4                          # two replays at once (+ the video replay, privileged): the timeouts assume a core each
+memory_mb = 8192
 '''
 
 
@@ -355,7 +357,8 @@ obs.group("tcp_pose", now=True)                # proprio groups: joint_pos, join
 res = r.submit("joint_position", rows, dt={dt_ms / 1e3:g}, interpolate="linear", cameras=["cam_high"], video="mp4")
 res.meta["executed_rows"], res.meta["clipped"], res.meta["done"], res.meta["reason"], res.meta["time_left_s"]
 res.video["cam_high"]                          # mp4 bytes of the chunk; video="frames" gives res.frames[cam] (N, H, W, 3)
-obs = r.get_obs(seconds=2.0)                   # hold the last command, simulate 2 s and return the video (<= 30 s)
+obs = r.get_obs(seconds=2.0)                   # hold the last command, simulate 2 s and return the video (<= 30 s, and
+                                               # at most spec()["max_frames_per_call"] frames: cameras x (fps x s + 2))
 r.fk(q); r.ik({{"{f'left{sp}gripper' if vx else f'left{sp}tcp'}": [x, y, z, qw, qx, qy, qz]}})   # stateless kinematics on the robot's model
 r.status()                                     # calls, control steps, done, reason, time left
 ```

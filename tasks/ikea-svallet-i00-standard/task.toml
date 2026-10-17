@@ -7,6 +7,10 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/live.mp4", service = "sim" },
   { source = "/data/live.2.mp4", service = "sim" },
   { source = "/data/live.3.mp4", service = "sim" },
+  { source = "/data/live.4.mp4", service = "sim" },
+  { source = "/data/live.5.mp4", service = "sim" },
+  { source = "/data/live.6.mp4", service = "sim" },
+  { source = "/data/live.7.mp4", service = "sim" },
   { source = "/data/live.last.png", service = "sim" },
   { source = "/data/server.log", service = "sim" },
   { source = "/data/journal.f64", service = "sim" },
@@ -105,6 +109,8 @@ memory_mb = 10240
 
 [verifier.environment]
 build_timeout_sec = 1800.0
+cpus = 4                          # two replays at once (+ the video replay, privileged): the timeouts assume a core each
+memory_mb = 8192
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

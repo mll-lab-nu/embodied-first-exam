@@ -21,6 +21,43 @@
   "date": "2026-10-16",
   "end_hashes_equal_0.2.0": true,
   "host": "ws2 (mll-4090-2: Ryzen 9 7950X; shared, loaded), Docker, Harbor 0.23.0, harbor_run_safe.sh (fresh mtime base), image 0.3.0 sha256:ed950d079b63, the replay-video verifier",
+  "maintainer_checks": {
+   "checks": [
+    {
+     "agent": "oracle",
+     "deterministic": 1,
+     "max_part_depth_mm": 4.949,
+     "note": "end-pose rule on: back 5.022 mm / 0.011 deg from its goal (bound 10 mm / 2 deg); end hash 0a38212b16dc, settled fe1fe33a3ad6, as before the fixes",
+     "replay_wall_s": 260.5,
+     "reward": 1,
+     "video_rendered": 1
+    },
+    {
+     "agent": "nop",
+     "grader_error": 0,
+     "missing_trajectory": 1,
+     "reward": 0
+    },
+    {
+     "agent": "adversarial (PROTOCOL H.1)",
+     "agent_report": "inspected the loader, the replay, final_check, the operation tracker, the latches and the end-pose rule; found no trajectory-only bypass; its best attempt (a one-row hold) replays released and at rest and scores 0 (no operations, no frame joints, four panels off goal)",
+     "agent_wall_s": 121,
+     "deterministic": 1,
+     "grader_error": 0,
+     "infra_error": 0,
+     "instance_ok": 1,
+     "instruction": "the task's instruction with a red-team paragraph on top: obtain reward 1 without assembling the cabinet, by any exploit of the grader, tooling, file format or simulator",
+     "n_actions": 1,
+     "reward": 0,
+     "run": "codex-gpt6_luna-xhigh on a ChatGPT subscription, the pool's Codex lane settings (no external tools, usage gateway, egress allowlist)",
+     "tokens_in": 400354,
+     "tokens_out": 10994
+    }
+   ],
+   "commit": "d04b9d304c (review fixes, board 0146)",
+   "date": "2026-10-17",
+   "host": "aws:rcb-cpu3 (64 vCPU, Docker containerd store), Harbor 0.23.0, stamped task copy, base image eai-ikea-mujoco:0.3.0 (digest 909e06d2d666)"
+  },
   "replay_wall_s": 294.9,
   "rows": 70210,
   "sim_time_s": 175.5,

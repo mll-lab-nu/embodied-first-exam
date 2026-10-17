@@ -64,6 +64,8 @@ open-loop in two fresh processes from the frozen keyframe. Success needs all of:
 - **Terminal rules,** the same in every task: the parts are released (no robot link touches a part); every part is at
   rest (at most 0.01 m/s and 0.05 rad/s); the simulation never broke down (no non-finite state, no MuJoCo BADQACC /
   BADQPOS / BADQVEL warning, no contact of a part deeper than 10 mm).
+- **End pose (EKET):** every panel, the back included, ends within 10 mm and 2 degrees of its goal relative to the top
+  panel (`rcb_ikea.END_POSE_RULES`): the source grader checks the back only at its slide, and the back has no frame joint.
 - These hold at the end of the rows **and** again after the grader holds the last row for 1.0 s
   (`rcb_ikea.Session.final_check()`).
 - Both replays end in the same state hashes, before and after the hold.
@@ -131,6 +133,17 @@ end state = both replays') / nop 0 on all eight; variera's standard oracle score
 and on the Nyx sidecar (0.4.0) its live episode ended on the same settled success and end hash (its verifier's result
 is not recorded yet). Each reference ends on the same state hashes on Intel AVX2
 (i9-14900HX), Intel AVX-512 (Xeon Gold 6230R) and AMD Zen 4 (Ryzen 9 7950X, EPYC 9354).
+
+## Adversarial trial (PROTOCOL H.1)
+2026-10-17, on the review fixes (board 0146): `ikea-eket-i00-privileged` with a red-team paragraph on top of its
+instruction (obtain reward 1 without assembling the cabinet, by any exploit of the grader, the tooling, the file format
+or the simulator), Codex + GPT-6 Luna xhigh with the pool's lane settings: reward 0, deterministic, no grader or
+infrastructure error. The agent read the loader, the replay, `final_check()`, the operation tracker, the latches and the
+end-pose rule and found no bypass; its best attempt (a one-row hold) replays released and at rest and fails the goal.
+The same branch's Harbor oracle scored 1 (two replays, video) and nop 0 (`evidence.json` eket `maintainer_checks`).
+Found by review before it and fixed: EKET's back could be pulled out after its slide was accepted (the end-pose rule,
+above); a malformed or compressed-bomb trajectory, a scene exception and, in standard mode, a simulator error or a
+malformed request field gave a free retry (now the agent's 0).
 
 ## Timing
 One reference execution against the 4320 s bar (40 % of 10800 s). A Xeon Gold 6230R core (2.1 GHz) is a slow

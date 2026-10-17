@@ -53,7 +53,7 @@ final_check(): the terminal rules at the end of the rows and after a 1.0 s hold 
 A live video of cam_high (/data/live.mp4, RCB_LIVE_FPS frames per simulated second) is recorded during the episode; it
 never affects the verdict."""
 from __future__ import annotations
-import json, math, os, queue, sys, threading, time, traceback
+import json, math, os, queue, shutil, sys, threading, time, traceback
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -73,6 +73,9 @@ LIVE_FPS = int(os.environ.get("RCB_LIVE_FPS", "10")); LIVE_CAM = os.environ.get(
 # of a call (848 x 480 RGB = 1.2 MB) and stacks and encodes them again: 1000 keeps one call near 3.7 GB at its peak,
 # inside the sidecar's 8 GB cap (3000 could take the service past it: an OOM kill in the middle of a call).
 MAX_FRAMES = 1000
+# per-frame depth (depth="frames") is float32 here and float64 in the shared encoder (x 1000, rint): it costs about five
+# RGB frames of memory, "legacy" (float16 per frame) about three; both count that much against MAX_FRAMES
+DEPTH_WEIGHT = {"frames": 5, "legacy": 3}
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
      "service_s": 0.0, "t_first": None, "deadline": float("inf")}
@@ -133,6 +136,8 @@ CTRL_DT = float(s.control_dt); CTRL_HZ = 1.0 / CTRL_DT
 SNAP = mujoco.MjData(m)                 # status() evaluation snapshot (restored bit-exactly)
 KD = mujoco.MjData(m)                   # /kinematics scratch data (never the live data)
 RIG = ikea_rig.Rig(m, RIG_SPEC)
+RIG.update(d); RIG.depth(RIG.names[0])   # build MuJoCo's EGL raster (depth) now: a host without EGL fails at start-up (infra),
+                                         # not in the agent's first depth request (where it would read as a simulator error)
 CAMS = list(RIG.names)
 RENDER = os.environ.get("RCB_RENDER", "nyx")      # nyx: the agent's images; egl: MuJoCo's raster RGB (tests only)
 if RENDER not in ("nyx", "egl"):
@@ -478,7 +483,8 @@ def dump() -> None:
     # the verdict first, then the video (evidence only: a hung or failing encoder must not hold the verdict back)
     episode_json()
     write_final()
-    live_close()
+    t = threading.Thread(target=live_close, daemon=True)   # bounded: a hung encoder must not keep the service alive
+    t.start(); t.join(float(os.environ.get("RCB_LIVE_CLOSE_S", "300")))
     episode_json()
 
 
@@ -554,7 +560,7 @@ def finish(reason: str) -> None:
             traceback.print_exc()
     if reason in ("sim_breakdown", "error"):
         E["success"] = False
-    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
+    log({"ev": "end", "reason": reason, "error_infra": bool(E.get("error_infra")), "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(agent_time(), 1),
          "service_time_s": round(service_time(), 1), "success": bool(E["success"]), "breakdown": s.validity.breakdown})
     dump()
 
@@ -610,7 +616,7 @@ class Rec(L.Recorder):
     skipped = 0
 
     def _capture(self, last: bool) -> None:
-        per = len(self.cams) * (2 if self.mode in ("frames", "legacy") else 1)
+        per = len(self.cams) * (1 + DEPTH_WEIGHT.get(self.mode, 0))
         if not last and per * (len(self.steps) + 2) > MAX_FRAMES:
             self.skipped += 1
             return
@@ -630,7 +636,13 @@ def meta_common(cams) -> dict:
             **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
 
 
+CALLS_KEPT = 200     # the last calls' evidence (meta + last frames) on the sidecar's disk; older ones are removed
+
+
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
+    old = os.path.join(DATA, "calls", f"{idx - CALLS_KEPT:06d}")
+    if idx > CALLS_KEPT and os.path.isdir(old):
+        shutil.rmtree(old, ignore_errors=True)
     dd = os.path.join(DATA, "calls", f"{idx:06d}"); os.makedirs(dd, exist_ok=True)
     json.dump(meta, open(os.path.join(dd, "meta.json"), "w"))
     try:
@@ -643,7 +655,7 @@ def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
 
 
 # ---------------------------------------------------------------- executing chunks
-def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
+def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool | None:
     """One recorded control step (the row as executed: float64, clipped, speed-limited). True when the call must stop here
     (the episode ended: a breakdown; the call ran past max_call_wall_s or its client hung up: EP.journal)."""
     if EP.poll_stop():
@@ -695,7 +707,7 @@ def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, c
                 slowed = True
             stop = ctrl_step(a, rec)
             if stop is None:                                   # nothing executed: the row is not counted
-                return n_slow + int(slowed)
+                return n_slow + int(slowed and k > 1)
             if k == 1:
                 E["step"] += 1
             if stop:
@@ -753,7 +765,7 @@ def infra_exception(exc: BaseException) -> bool:
 
 
 def _frames(cams, fps, seconds, depth_mode) -> int:
-    return int(len(cams) * (math.ceil(seconds * fps) + 2) * (2 if depth_mode in ("frames", "legacy") else 1))
+    return int(len(cams) * (math.ceil(seconds * fps) + 2) * (1 + DEPTH_WEIGHT.get(depth_mode, 0)))
 
 
 @_call
@@ -764,7 +776,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     note = req_note(meta)
     try:
         dt = float(meta.get("dt", CTRL_DT))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise ValueError("dt must be a number")
     cams = req_cameras(meta)
     fps = meta.get("video_fps", 10); video = meta.get("video", "mp4")
@@ -785,23 +797,26 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
         raise ValueError("video_fps must be in [1, 30]")
     fps = int(fps); depth = L.depth_mode(meta)
     if _frames(cams, fps, A.shape[0] * k * CTRL_DT, depth) > MAX_FRAMES:
-        raise ValueError(f"more than {MAX_FRAMES} frames in one response (cameras x fps x seconds, depth counts double)")
-    rec = recorder(cams, fps, meta); clipped: list = []
-    E["calls"] += 1; step0 = E["step"]; before = ctrl_steps()
-    A, n_clipped = clip_rows(np.asarray(A, dtype=np.float64), clipped)
-    rec.tick(force=True)
-    n_slow = run_joint_position(A, dt, interp, rec, clipped)
-    rec.tick(force=True, last=True)
-    succ = evaluate()
-    out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0,
-           "control_steps_chunk": ctrl_steps() - before, "physics_steps_chunk": (ctrl_steps() - before) * R.SUBSTEPS,
-           "clipped": clipped, "n_clipped": n_clipped + n_slow, "n_speed_limited_rows": n_slow, "plan": [], "rejected": None,
-           "ok": True, "settle_failed": E.get("settle_failed", 0), **({"frames_skipped": rec.skipped} if rec.skipped else {})}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
-         "note": note, "control_steps": ctrl_steps() - before, "n_clipped": n_clipped, "n_slow": n_slow,
-         "success": succ, "verdict": E.get("verdict")})
-    save_call_evidence(E["calls"], {k_: v for k_, v in out.items() if k_ != "cameras"}, rec)
-    return out, rec.parts(video, fps)
+        raise ValueError(f"more than {MAX_FRAMES} frames in one response (cameras x (fps x seconds + 2); a frame with per-frame depth counts 6, legacy depth 4)")
+    try:   # executing: a ValueError from here on is the simulator's (a 400 would hide it), never the request's
+        rec = recorder(cams, fps, meta); clipped: list = []
+        E["calls"] += 1; step0 = E["step"]; before = ctrl_steps()
+        A, n_clipped = clip_rows(np.asarray(A, dtype=np.float64), clipped)
+        rec.tick(force=True)
+        n_slow = run_joint_position(A, dt, interp, rec, clipped)
+        rec.tick(force=True, last=True)
+        succ = evaluate()
+        out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0,
+               "control_steps_chunk": ctrl_steps() - before, "physics_steps_chunk": (ctrl_steps() - before) * R.SUBSTEPS,
+               "clipped": clipped, "n_clipped": n_clipped + n_slow, "n_speed_limited_rows": n_slow, "plan": [], "rejected": None,
+               "ok": True, "settle_failed": E.get("settle_failed", 0), **({"frames_skipped": rec.skipped} if rec.skipped else {})}
+        log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
+             "note": note, "control_steps": ctrl_steps() - before, "n_clipped": n_clipped, "n_slow": n_slow,
+             "success": succ, "verdict": E.get("verdict")})
+        save_call_evidence(E["calls"], {k_: v for k_, v in out.items() if k_ != "cameras"}, rec)
+        return out, rec.parts(video, fps)
+    except ValueError as exc:
+        raise RuntimeError(f"simulator error: {exc}") from exc
 
 
 @_call
@@ -809,7 +824,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     cams = req_cameras(meta)
     try:
         seconds = float(meta.get("seconds", 0))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise ValueError("seconds must be a number")
     fps = meta.get("video_fps", 10); video = meta.get("video", "frames")
     if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
@@ -820,25 +835,28 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         raise ValueError("video_fps must be in [1, 30]")
     fps = int(fps); depth = L.depth_mode(meta)
     if _frames(cams, fps, seconds, depth) > MAX_FRAMES:
-        raise ValueError(f"more than {MAX_FRAMES} frames in one response (cameras x fps x seconds, depth counts double)")
-    rec = recorder(cams, fps, meta); before = ctrl_steps()
-    watch = seconds > 0 and not E["done"]
-    rec.tick(force=True, last=not watch)
-    if watch:
-        hold = np.array(d.ctrl, dtype=np.float64)
-        for _ in range(int(round(seconds * CTRL_HZ))):
-            r = ctrl_step(hold, rec)
-            if r or r is None:
-                break
-        rec.tick(force=True, last=True)
-        evaluate()
-    E["calls"] += 1
-    out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * R.SUBSTEPS, "ok": True}
-    log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
-    if seconds > 0:
-        save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
+        raise ValueError(f"more than {MAX_FRAMES} frames in one response (cameras x (fps x seconds + 2); a frame with per-frame depth counts 6, legacy depth 4)")
+    try:   # executing: a ValueError from here on is the simulator's (a 400 would hide it), never the request's
+        rec = recorder(cams, fps, meta); before = ctrl_steps()
+        watch = seconds > 0 and not E["done"]
+        rec.tick(force=True, last=not watch)
+        if watch:
+            hold = np.array(d.ctrl, dtype=np.float64)
+            for _ in range(int(round(seconds * CTRL_HZ))):
+                r = ctrl_step(hold, rec)
+                if r or r is None:
+                    break
+            rec.tick(force=True, last=True)
+            evaluate()
+        E["calls"] += 1
+        out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
+               "physics_steps_watch": (ctrl_steps() - before) * R.SUBSTEPS, "ok": True}
+        log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
+        if seconds > 0:
+            save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
+        return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
+    except ValueError as exc:
+        raise RuntimeError(f"simulator error: {exc}") from exc
 
 
 # ---------------------------------------------------------------- /kinematics (stateless, scratch data, robot frame)
@@ -953,6 +971,9 @@ def replay_row(row) -> None:
 # ---------------------------------------------------------------- start, or resume after a crash
 resumed = EP.begin(state=E, step=replay_row, state_sha=s.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
                    start_event={"task": TASK, "initial_state_sha": init_sha})
+if E.get("done") and E.get("reason") == "error":   # a resumed, ended episode keeps its error's class (infra or sim)
+    _ends = [e for e in EP.events() if e.get("ev") == "end"]
+    E["error_infra"] = bool(_ends and _ends[-1].get("error_infra"))
 _first = [e for e in EP.events() if e.get("ev") == "first_request"]
 if _first:                              # a resumed service: the agent's clock keeps running from its first request
     start_clock(float(_first[0]["t_first"]))
