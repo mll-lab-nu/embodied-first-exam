@@ -1,0 +1,15 @@
+# Appearance of tabletennis' robots (docs/framework_zh.md §3.1, renderer rule 6; renderers/presentation/__init__.py):
+# the Franka Panda's visual meshes on the arm's bodies, same kinematics. Since revision wallclock-6 / duel-wallclock-4
+# the players' images use it too (`players`): tools/sportlib bundles this directory and the 25k level of detail of the
+# meshes (renderers/presentation/lod.json, sha256-pinned, licence kept) into the simulator, so they are part of
+# source_sha; spectator re-renders from a checkout use the full meshes.
+[presentation]
+version = 2
+label = "Franka Panda visual meshes (MuJoCo Menagerie)"
+players = "25k"                       # the players' images: the meshes decimated to ~25k triangles per arm
+
+[[presentation.robot]]
+model = "franka_emika_panda"          # renderers/presentation/menagerie.json (fetched, sha256-pinned)
+bodies = '^link(?P<n>[0-7])(?P<b>_b)?$'
+body = "link{n}"
+hide = "mesh"                         # the arm's collision meshes move to the hidden group 3
