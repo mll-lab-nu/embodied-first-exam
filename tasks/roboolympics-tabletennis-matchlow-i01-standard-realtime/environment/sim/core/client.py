@@ -7,6 +7,8 @@ A built-in player is an object made by factory(spec, seat, seed) with
     review(reply) -> (why, plan) optional; called after each own action (turn) or at each review (realtime)
     message(view) -> text | None optional (realtime, core 0.2.21): a team-channel message to the seat's teammates
                                  (POST /say; refused messages, e.g. faster than the channel allows, are dropped)
+    every_s                      optional attribute (realtime): the game seconds the loop waits after each decision
+                                 (default 0.05); a player that controls at a faster rate declares it (e.g. 0.01)
 
     python3 -m core.client MODULE:FACTORY        (SIM_URL, SEAT; e.g. the task's solution/oracle_play.py)
 """
@@ -107,6 +109,7 @@ def play_turn(c: Seat, player) -> dict:
 
 
 def play_realtime(c: Seat, player, every_s: float = 0.05) -> dict:
+    every_s = float(getattr(player, "every_s", every_s))   # the player's declared decision cadence (game seconds)
     c.call("start", {})
     while True:
         view = c.call("observe", {})

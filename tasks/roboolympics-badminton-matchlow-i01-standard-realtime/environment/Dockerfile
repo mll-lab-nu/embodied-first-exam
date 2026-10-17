@@ -17,4 +17,7 @@ RUN python -c "import mujoco; m = mujoco.MjModel.from_xml_path('/opt/robot/robot
 RUN python -c "import sys; sys.path.insert(0, '/opt/robot/lib'); import bm_kinematics as k, bm_servo; K = k.RacketKinematics(); q, e = K.solve([0.3, -1.0, 1.2], normal=[0, 1, 0], base=[0.0, -1.6]); assert e < 1e-3, e; bm_servo.RobotSim()"
 ENV SEAT=A
 ENV SIM_URL=http://localhost:8000
+# core 0.2.34: your skill server (game skill serve) and its port on the loopback the sim shares
+COPY skillkit/ /opt/skillkit/
+ENV RCB_SKILL_PORT=8765 RCB_SKILLKIT=/opt/skillkit/skillhost.py
 WORKDIR /app

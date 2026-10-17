@@ -145,6 +145,8 @@ def grade(d, r, contract, evaluate, audits=None):
             out[s + "_place"] = ranking.index(side[s]) + 1 if valid and side[s] in ranking else 0
         out[s + "_transient_api_errors"] = int(d["transient_api_errors"].get(s, 0))
         out[s + "_unrecovered_api_errors"] = int(d["unrecovered_api_errors"].get(s, 0))
+        out[s + "_api_retries"] = int((d.get("api_retries") or {}).get(s, 0))           # recorded only
+        out[s + "_api_wait_s"] = float((d.get("api_wait_s") or {}).get(s, 0.0))
         if direct:
             out[s + "_nocode_tool_calls"] = int(audits.get(s, (0, []))[0])
             out[s + "_nocode_violations"] = len(audits.get(s, (0, []))[1])

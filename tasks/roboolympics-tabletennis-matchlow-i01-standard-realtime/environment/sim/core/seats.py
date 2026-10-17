@@ -84,4 +84,8 @@ def validity_fields(seats: dict[str, Seat], need_meter) -> dict:
     return {"meter_error": meter, "proxy_error": {s: a["api_failure"] for s, a in apis.items()},
             "transient_api_errors": {s: a["transient_api_errors"] for s, a in apis.items()},
             "unrecovered_api_errors": {s: a["unrecovered_api_errors"] for s, a in apis.items()},
+            # recorded only (2026-10-17): recovered errors void a trial only above api_errors.py's sanity cap
+            "api_retries": {s: a["api_retries"] for s, a in apis.items()},
+            "api_wait_s": {s: a["api_wait_s"] for s, a in apis.items()},
+            "api_failure_reason": {s: a["api_failure_reason"] for s, a in apis.items()},
             "player_modes": {s: st.mode for s, st in seats.items()}}

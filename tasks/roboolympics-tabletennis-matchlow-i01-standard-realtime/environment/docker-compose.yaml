@@ -4,8 +4,8 @@
 # namespace (keep [agent] network_mode = "allowlist"). The seat is unmetered: no metering proxy and no
 # credential here (Harbor records the model's usage). CPU only (MuJoCo, OSMesa). cap_drop NET_RAW: no raw
 # sockets and no SO_MARK, which could bypass the egress proxy's mark.
-# Low level: the agent uploads its skill to the service (`game skill upload`); the sim runs it as nobody
-# with no network on one CPU (skilleval/skillhost.py UploadHost); no skill container.
+# Low level: the agent serves its own skill from its own container (`game skill serve`, core 0.2.34); the
+# sim calls it at 127.0.0.1:8765 over the shared loopback. No agent code runs in the sim.
 services:
   main:
     pids_limit: 8192   # rcb-monitor
@@ -18,7 +18,6 @@ services:
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
-      - ./seat_files/opt/robot:/opt/robot:ro   # the toolkit, where the uploaded skill expects it
     working_dir: /srv
     command: python3 /srv/core/launch.py
     cpus: 6
@@ -55,7 +54,7 @@ services:
       RCB_VIDEO_TIMEOUT_S: "300"
       RO_VIDEO_RENDERER: ""
       LP_NUM_THREADS: "2"
-      RCB_SKILL_INLOOP_A: "upload:A"
+      RCB_SKILL_INLOOP_A: "tcp:127.0.0.1:8765"
       RCB_SKILL_INLOOP_LOG: "/data"
       PLAYER_MODE_A: "unmetered"
       RCB_WALL_CLOCK_S: "7200"

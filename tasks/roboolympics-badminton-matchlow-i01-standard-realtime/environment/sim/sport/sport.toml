@@ -133,6 +133,10 @@ practice_path = "/opt/robot/act_cases_public.jsonl"
 slowdown = 20                         # the legacy default (RCB_SLOWDOWN; official 1, 2, 5, 10, 20)
 start_timeout_s = 1800                # the second seat may start up to 30 min after the first (legacy START_TIMEOUT_S)
 ready_timeout_s = 300                 # each review after a point (legacy READY_TIMEOUT_S), else the late side loses
+video_timeout_s = 1200                # the replay video (spectators only): a game to 11 renders in 1.6 min on 6 CPUs, 4.4 min on a loaded host
+
+[broadcast]                           # spectators: the replay video's camera (the whole court from the side, above); its scene adds the scripted opponent (plugin.BadmintonSport.spectator_scene, core 0.2.28)
+camera = { name = "broadcast", pos = [-5.6, 0.0, 2.6], lookat = [0.0, 0.0, 1.4], fovy_deg = 50, width = 640, height = 360 }
 
 [actions.cli]                         # `game none`; act takes vectors: `game act '{"type": "act", "t": 0.8, ...}'`
 high = { none = [] }

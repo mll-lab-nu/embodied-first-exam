@@ -22,8 +22,6 @@ def _rows(p):
         return []
 calls = [c for c in _rows(DATA / "inloop_A.jsonl") if c.get("op") == "call"]
 loads = [c for c in _rows(DATA / "inloop_A.jsonl") if c.get("op") == "load"]
-ups = [e for e in _rows(DATA / "episode.jsonl") if e.get("ev") == "skill_upload"]
-r["skill_uploads"] = len(ups)
 r["skill_versions_played"] = len({c.get("sha256") for c in calls if c.get("sha256")})
 r["skill_loads_failed"] = sum(1 for c in loads if not c.get("ok"))
 r["skill_calls"] = len(calls)

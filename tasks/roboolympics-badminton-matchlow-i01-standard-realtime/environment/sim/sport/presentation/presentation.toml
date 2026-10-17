@@ -7,7 +7,7 @@
 version = 2
 label = "Franka Panda visual meshes (MuJoCo Menagerie)"
 players = "25k"                       # the players' images: the meshes decimated to ~25k triangles per arm
-scenes = ["sim/scene/bm_scene.xml", "sim/scene/bm_duel.xml"]   # the match scenes (badminton has no Sport.scene())
+scenes = ["sim/scene/bm_scene.xml", "sim/scene/bm_duel.xml"]   # the match scenes (Sport.scene(); the players' images draw them themselves)
 
 [[presentation.robot]]
 model = "franka_emika_panda"          # renderers/presentation/menagerie.json (fetched, sha256-pinned)

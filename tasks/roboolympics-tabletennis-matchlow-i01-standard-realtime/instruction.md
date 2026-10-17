@@ -8,8 +8,13 @@ The world runs in real time at 1/S of real speed (S = `timing.slowdown` in `game
 
 Whenever the world freezes for a review (after every unit: a point, a shot, a heat; see `game spec`), send `game ready "WHY" "PLAN"` (a short review) before the next unit starts.
 **Each review has a time limit: send `game ready` within 300 s of real time after the world freezes (`timing.review_timeout_s` in `game spec`), or your side loses the match** (`ready_timeout`, a valid result, success 0, even when you are ahead). The world does not go on by itself after the limit: watch for the freeze (your program's log, `game status`) and review at once.
-**Send `game start` within 1800 s of real time after the match service starts (`start.window_s` in `game spec`), or you lose the match** (`no_show`, a valid result, success 0). Write, check and upload your skill within that window (the toolkit, its servo model and the practice requests work offline in your container); between points you can improve it and upload it again.
-The match is graded when your session ends: stay until it is over. **If your session ends before the match is over, you lose the match** (a valid result, success 0), also if you never sent `game start`.
+**Send `game start` within 1800 s of real time after the match service starts (`start.window_s` in `game spec`), or you lose the match** (`no_show`, a valid result, success 0). Write, check and serve your skill (`game skill serve`) within that window (the toolkit, its servo model and the practice requests work offline in your container); you can improve it at any time during the match.
+
+**Deadlines: each one you miss loses the match.**
+
+- **Start window: send `game start` within 30 minutes (1800 s, `start.window_s` in `game spec`); the window opens when the match service starts. If you have not started when it closes, you lose the match (`no_show`).** Start in time even if your program is not finished: you can keep improving it once the match runs.
+- **Review time limit: in every review (the world frozen after a unit) send `game ready "WHY" "PLAN"` within 5 minutes (300 s) of the freeze. If you have not, you lose the match (`ready_timeout`).** You may change your program during a review, but only what fits in the time limit, with `game ready` sent before it ends: the review is not development time. Watch for the freeze (`game status`: `phase` is `review`) so that you never miss one while you work on something else.
+- **Session end: the match is graded when your session ends: stay until it is over. If your session ends before the match is over, you lose the match** (a valid result, success 0), also if you never sent `game start`.
 
 ## Write a program
 You may write a program that observes, measures in the images, computes your next action and sends it, without a
@@ -27,15 +32,16 @@ action); you implement it yourself from your toolkit, and **the match is played 
 your program decides when and where, your skill turns each decision into the robot's commands.
 
 - Skill API: the contract (request ranges, what is measured, the tolerances, success) is `skill_contract` in `game spec`.
-- Deliverable: a skill directory with `hit.py` (plus any files it needs), **uploaded to the simulator** with `game skill upload DIR` (keep it in `/app/output/skill/`), with
-  `hit(t, pos, normal, vel, *, state, spec) -> one low-level command ({'type': 'traj', 'k0', 'q': rows of 9 targets} | {'type': 'slew', 'q', 'speed'} | {'type': 'hold'}) or None; the contact at control step state['step'] + round(t / 0.01) (in the API test the command takes effect at state['step']; in the match when your call returns, spec timing)`; optional: `step(*, state, spec) -> a command or None (called every 20 ms between hits: the return to a ready pose, the base's position)`. It may use the standard library, numpy and mujoco (the simulator's Python 3.12, numpy 2.2.6, mujoco 3.3.7; **no SciPy** where your skill runs, although your own container has it), the toolkit under /opt/robot (robot_only.xml, assets, lib/tt_kinematics.py, lib/tt_servo.py) and the files of your upload (they run from their own directory, its working directory); module-level memory between calls of one run; state = the low level's observe state (no images, no ball coordinates), spec = game spec's kinematics, limits, toolkit, skill_contract; no network, no other files, no other processes. It must be deterministic; time limits per call: load 30 s, hit 5 s, step 1 s.
+- Deliverable: `/app/output/skill/hit.py` (plus any files it needs in `/app/output/skill/`), **served to the simulator from your own container** with `game skill serve`, with
+  `hit(t, pos, normal, vel, *, state, spec) -> one low-level command ({'type': 'traj', 'k0', 'q': rows of 9 targets} | {'type': 'slew', 'q', 'speed'} | {'type': 'hold'}) or None; the contact at control step state['step'] + round(t / 0.01) (in the API test the command takes effect at state['step']; in the match when your call returns, spec timing)`; optional: `step(*, state, spec) -> a command or None (called every 20 ms between hits: the return to a ready pose, the base's position)`. It may use numpy, scipy, mujoco, the toolkit under /opt/robot (robot_only.xml, assets, lib/tt_kinematics.py, lib/tt_servo.py) and files inside /app/output/skill; module-level memory between calls of one run; state = the low level's observe state (no images, no ball coordinates), spec = game spec's kinematics, limits, toolkit, skill_contract; no network, no other files, no other processes. It must be deterministic; time limits per call: load 30 s, hit 5 s, step 1 s.
 - Toolkit: `/opt/robot/toolkit.toml` lists everything you are given (joint_interface, robot_model, robot_meshes, ik_library, servo_model); not given: hit.
 - Practice requests: `/opt/robot/hit_cases_public.jsonl` (public; they show the contract at work; this task grades the match only).
 
 ### The skill in the loop
 - To play `hit`, send it as an action: `game act '{"type": "hit", ...}'` with the fields of `skill_contract`. The
-  simulator calls the `hit.py` you uploaded in a sandbox of its own (inside the simulator's container, as an
-  unprivileged user on one CPU: no network, not the match's records; a private copy of your upload, the toolkit at the same paths as in your container) with `state` = your observation
+  simulator calls your skill server (`game skill serve`, a background process in your own container), which runs your
+  `hit.py` in a sandbox of its own (a separate process, as an unprivileged user when your container runs as root, from a
+  private copy of `/app/output/skill/`, the toolkit at its paths) with `state` = your observation
   without images (`state["step"]` = the control step your call arrived) and `spec` (`skill_contract`, the toolkit, the
   robot's kinematics and limits, and `timing`), and applies the low-level command your function returns.
 - **Your skill's computation counts.** The world runs on while it computes (1 wall second = 1/S game seconds, S =
@@ -45,8 +51,9 @@ your program decides when and where, your skill turns each decision into the rob
 - If your module defines `step(*, state, spec)`, it is called every 2 control steps during
   the match (in the background, its compute counts the same way); a command it returns is applied when it returns.
 - Low-level commands that bypass the skill are refused (HTTP 409) while a ball is in play (from a toss or a stroke until the point is decided: traj, slew and hold go through your hit); between points and before your toss you may send them; `toss` at any time.
-- **Upload your skill before you send `game start`:** `game skill upload /app/output/skill` (or `POST /<SEAT>/skill {"files": {"hit.py": "<its text>", ...}}`: source and text files only, .py .json .txt .toml .yaml .yml .csv .md, at most 64 files and 1 MiB). The reply gives the upload's sha256; `game skill status` shows the uploaded and the loaded version and any load error (also in every hit's reply, `skill.status`).
-- The simulator loads your skill when the match starts and, at the start of every unit (a point), reloads it if you uploaded a new version: improve it between units and upload it again (an upload replaces the whole previous one; editing your files without uploading changes nothing). Each upload (its sha256) is recorded in the match's record and kept; every call is logged with the sha256 of the files it ran (artifact `inloop_<seat>.jsonl`).
+- **Start your skill server before you send `game start`:** `game skill serve /app/output/skill` (once; it keeps running in the background). `game skill status` shows the loaded version (sha256), its functions and any load error (also in every hit's reply, `skill.status`). Without a server every skill call fails: nothing happens.
+- The server reloads your skill whenever its files change, at any time: the new version plays from the next call (write each file completely, e.g. write and rename). Every call is logged with the sha256 of the files it ran (artifact `inloop_<seat>.jsonl`); the match's record holds the commands your skill returned.
+- Tip: your container has 2 CPU cores and 6 GB of memory, no GPU, and the skill server shares them with everything else you run. If timing matters, consider pinning the server to a core of its own (e.g. `taskset -c 1 game skill serve /app/output/skill`) and keeping heavy work (training, your model's own tools) off that core during play.
 - **Success = you win the match** (a valid match against the scripted opponent). Your skill's calls and failures are reported as extra fields; no separate test of the skill decides anything.
 
 ## Interface
@@ -62,8 +69,8 @@ Use the `game` command, or the same calls as HTTP with JSON at `http://localhost
 | `game act JSON` | `POST /act JSON` | one action |
 | `game hold ` | `POST /act {"type":"hold", ...}` | one action (`game spec` lists the fields and ranges) |
 | `game ready "WHY" "PLAN"` | `POST /ready {"why":"...","plan":"..."}` | your review after each of your actions |
-| `game skill upload DIR` | `POST /skill {"files": {"hit.py": "..."}}` | send your skill (it plays from the next unit; up to 1 MiB) |
-| `game skill status` | `GET /skill` | the uploaded and the loaded version, any load error |
+| `game skill serve [DIR]` | (in your container) | start your skill server (default DIR /app/output/skill); it reloads the skill whenever its files change |
+| `game skill status` | (in your container) | the loaded version, its functions, any load error |
 
 Errors: 400 = an invalid action (nothing happens), 409 = not now (not your turn, or a review is due), 429 = one
 action in flight, or more than 20 requests per second or 4 open requests from your seat (empty body: retry more slowly).

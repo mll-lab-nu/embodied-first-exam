@@ -15,7 +15,10 @@
   game skill upload PATH     low level with an uploaded skill in the loop: send your skill (the directory PATH,
                              or one file) to the simulator; it replaces your previous upload and plays from the
                              next unit's start (source and text files only: .py .json .txt .toml .yaml .yml .csv .md)
-  game skill status          the uploaded and the loaded version (sha256) and any load error
+  game skill serve [PATH]    low level with your skill in the loop: serve your skill (default /app/output/skill) from
+                             your container to the simulator (a background server; it reloads the skill whenever its
+                             files change: the new version plays from the next call); run it before `game start`
+  game skill status          your skill server: the loaded version (sha256), its functions and any load error
 Sport shortcuts (generated from the sport's declaration):
   game hold """
 import base64
@@ -91,6 +94,44 @@ def skill_files(path):
     return out
 
 
+SKILL_PORT = int(os.environ.get("RCB_SKILL_PORT", "8765"))
+SKILLKIT = os.environ.get("RCB_SKILLKIT", "/opt/skillkit/skillhost.py")
+
+
+def skill_server(q, timeout=5.0):
+    """One request to your own skill server (127.0.0.1:RCB_SKILL_PORT), or None if it does not answer."""
+    import socket
+    try:
+        with socket.create_connection(("127.0.0.1", SKILL_PORT), timeout=timeout) as s, s.makefile("rwb") as f:
+            f.write((json.dumps(q) + "\n").encode())
+            f.flush()
+            line = f.readline()
+            return json.loads(line) if line else None
+    except (OSError, ValueError):
+        return None
+
+
+def skill_serve(path):
+    """Start the skill server in the background (once): the simulator calls it for every skill call of the match."""
+    import subprocess
+    import time
+    path = os.path.abspath(path)
+    up = skill_server({"op": "status"}, 1.0)
+    if up is not None:
+        return {"ok": True, "already_serving": True, **up}
+    if not os.path.isfile(SKILLKIT):
+        return {"ok": False, "error": f"no skill server kit at {SKILLKIT}"}
+    log = open("/tmp/skill_server.log", "ab")
+    subprocess.Popen([sys.executable, "-I", SKILLKIT, "serve", "--tcp", f"127.0.0.1:{SKILL_PORT}", "--skill", path,
+                      "--live"], stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)
+    for _ in range(50):
+        time.sleep(0.1)
+        up = skill_server({"op": "status"}, 1.0)
+        if up is not None:
+            return {"ok": True, "serving": path, "port": SKILL_PORT, "log": "/tmp/skill_server.log", **up}
+    return {"ok": False, "error": "the skill server did not start (see /tmp/skill_server.log)"}
+
+
 def arg(name, x):
     """A shortcut's argument as the act body carries it: `entity` as written (an id), true / false as booleans, a
     number as a number, anything else (an enum value) as written; the core checks every field against the schema."""
@@ -134,6 +175,10 @@ def main(a):
         show(call("team", {"since": int(a[1]) if len(a) == 2 else 0}))
     elif a[:2] == ["skill", "upload"] and len(a) == 3:
         show(call("skill", {"files": skill_files(a[2])}))
+    elif a[:2] == ["skill", "serve"] and len(a) <= 3:
+        show(skill_serve(a[2] if len(a) == 3 else "/app/output/skill"))
+    elif a == ["skill", "status"] and os.environ.get("RCB_SKILL_PORT"):     # your own skill server (core 0.2.34)
+        show(skill_server({"op": "status"}) or {"ok": False, "error": "no skill server (game skill serve)"})
     elif a == ["skill", "status"]:
         show(call("skill"))
     elif a and a[0] in COMMANDS and len(a) == len(COMMANDS[a[0]]):

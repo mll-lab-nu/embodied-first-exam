@@ -9,12 +9,11 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/video.json", service = "sim" },
   { source = "/data/broadcast.jsonl", service = "sim" },
   { source = "/data/inloop_A.jsonl", service = "sim" },
-  { source = "/data/skill_A/", service = "sim" },
 ]
 
 [task]
 name = "robot-coding-bench/roboolympics-badminton-matchlow-i01-standard-realtime"
-description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): robot badminton, one match-wallclock against the scripted opponent at level 2, LOW LEVEL (Agent as Robotics Engineer: the agent implements the core skill itself from the robot's joint interface and toolkit and uploads it to the simulator, which plays every stroke with it: the skill in the loop, its compute counted in match time), program play (eai-standard-realtime/1.0: the world runs at 1/20 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players. Exported from RoboOlympics task badminton-match-wallclock-program-lowlevel-standard by tools/export_fexam.py."
+description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): robot badminton, one match-wallclock against the scripted opponent at level 2, LOW LEVEL (Agent as Robotics Engineer: the agent implements the core skill itself from the robot's joint interface and toolkit and serves it from its own container to the simulator, which plays every stroke with it: the skill in the loop, its compute counted in match time), program play (eai-standard-realtime/1.0: the world runs at 1/20 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players. Exported from RoboOlympics task badminton-match-wallclock-program-lowlevel-standard by tools/export_fexam.py."
 authors = [{ name = "RoboOlympics (CHIGUI0)" }]
 keywords = ["robotics", "roboolympics", "sports", "badminton", "mujoco", "standard-realtime-mode", "vision", "real-time", "low-level", "skill-engineering"]
 
@@ -30,14 +29,14 @@ slowdown = 20                     # standard-realtime: the world runs at 1/S of 
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 8
 opponent_level = 2
-skill_in_loop = "upload"             # core 0.2.32: game skill upload / POST /A/skill; the sim runs it (nobody, no network, one CPU)
-skill_deliverable = "act.py (uploaded)"
+skill_in_loop = "agent-server"       # core 0.2.34: game skill serve, in the agent's own container; the sim calls it over the loopback
+skill_deliverable = "act.py (served)"
 skill_implements = ["act"]
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 play = "program"
 action_level = "low"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
-source_commits = ["0cff528341b4"]
+source_commits = ["fd8bc81a1283"]
 exporter = "roboolympics tools/export_fexam.py"
 player_mode = "unmetered"
 official = false
@@ -86,7 +85,7 @@ allowed = [8]
 oracle = [8]
 
 [verifier]
-timeout_sec = 2820.0
+timeout_sec = 2160.0
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -103,12 +102,11 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then SIGUSR1 ends the match: the service replays it in a fresh process, checks the replay and writes the verdict
-# ("graded_ready"). Badminton declares no spectator camera or scene (core/spectator.py renders nothing): the replay
-# video is drawn with the players' cameras by spectator/sport_video.py (robot_coding_bench, board 0136), after the verdict.
+# ("graded_ready"), then the spectator video.
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_SPORT_VIDEO = x1 ] && timeout ${RCB_VIDEO_TIMEOUT_S:-1800} python3 /srv/spectator/sport_video.py /srv/sport/plugin.py /data > /dev/null 2>&1; cat /data/final.json | head -c 2000"
-timeout_sec = 2640
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 1200); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 1980
 
 [agent]
 timeout_sec = 14400

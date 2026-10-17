@@ -47,6 +47,19 @@ class SkillError(RuntimeError):
         self.kind = kind
 
 
+def _own_processes() -> int:
+    """How many processes (and threads) this process's real user has now (/proc/*/task of that uid)."""
+    uid, n = os.getuid(), 0
+    for d in os.listdir("/proc"):
+        if d.isdigit():
+            try:
+                if os.stat(f"/proc/{d}").st_uid == uid:
+                    n += max(1, len(os.listdir(f"/proc/{d}/task")))
+            except OSError:
+                continue
+    return n
+
+
 # The jail of a skill that runs inside the simulator's own container (skilleval/skillhost.py UploadHost: the skill the
 # player uploads to the match service, core 0.2.32), where no container boundary cuts the network or the CPU off:
 # no_network  a seccomp filter (set after the drop, with no_new_privs): socket() of any family but AF_UNIX and
@@ -135,8 +148,9 @@ def _preexec(limits: dict, drop: bool, jail: dict | None = None):
             (resource.RLIMIT_CPU, limits["cpu_s"]),
             (resource.RLIMIT_NOFILE, limits["open_files"]),
             (resource.RLIMIT_FSIZE, limits["file_size_mb"] * mb),
-            # as nobody only: for another user the count includes all of that user's own processes
-            *([(resource.RLIMIT_NPROC, limits["processes"])] if drop else []),
+            # RLIMIT_NPROC counts every process of the user: as nobody, the limit; as the caller's own user (a test, an
+            # unprivileged run), that user's processes now plus the limit, so the skill can never start more
+            (resource.RLIMIT_NPROC, limits["processes"] if drop else _own_processes() + limits["processes"]),
         ):
             try:
                 resource.setrlimit(res, (val, val))

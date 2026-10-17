@@ -474,6 +474,31 @@ class Badminton(MatchBase):
                 "wall_mono": snaps[-1].get("wall_mono", time.monotonic())}
         return job, meta
 
+    def spectator_state(self):
+        """The replay video's state (core 0.2.28; spectators only, never read back): the robots' joints, the shuttle
+        (cork first along its flight) and, format match-wallclock, the scripted opponent's figure and racket where the
+        players' images draw them (bm.Match._extra_geoms), as the mocap bodies of BadmintonSport.spectator_scene."""
+        g = self.g
+        if self.single:
+            o = np.asarray(g.opp_xy(), float)
+            sh = np.asarray(g.s.sh_p, float)
+            rp = np.array([o[0] + 0.45, o[1] - 0.1, 1.9])
+            d = sh - np.array([o[0], o[1], 1.2])
+            n = float(np.linalg.norm(d))
+            if n < 1.6:
+                rp = np.array([o[0], o[1], 1.2]) + d / max(1e-6, n) * min(1.2, n)
+            qpos = np.asarray(g.s.d.qpos, float)
+            pos = [sh, [o[0], o[1], 0.0], rp]
+            quat = [_shuttle_quat(g.s.sh_v), [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]]
+        else:
+            qa, qpos = _duel_layout()
+            qpos = qpos.copy()
+            for s in SEATS2:
+                qpos[qa[s]] = g.sides[s].s.d.qpos
+            pos, quat = [g.sh_p], [_shuttle_quat(g.sh_v)]
+        return {"qpos": qpos.tolist(), "mocap_pos": np.asarray(pos, float).ravel().tolist(),
+                "mocap_quat": np.asarray(quat, float).ravel().tolist()}
+
     def final_fields(self):
         """The sport's fields, the arms' self-collision record (bodies/selfcollision.py Monitor: recorded only) and their
         joint-velocity reflexes (bm.REFLEX: the robot stopped for 1 s; revision wallclock-12 / duel-14)."""
@@ -770,6 +795,37 @@ def _players_model(live, scene_file):
     return fine
 
 
+# The replay video only (BadmintonSport.spectator_scene, format match-wallclock): the scripted opponent's figure and
+# racket, the shapes bm.Match._extra_geoms adds to the players' images, as mocap bodies (no physics: never compiled
+# into the match).
+SPECTATOR_OPPONENT = """    <body name="spectator_opponent" mocap="true" pos="0 3 0">
+      <geom type="capsule" size="0.16 0.55" pos="0 0 0.75" rgba="0.35 0.35 0.42 1" contype="0" conaffinity="0"/>
+      <geom type="sphere" size="0.12" pos="0 0 1.55" rgba="0.85 0.7 0.6 1" contype="0" conaffinity="0"/>
+    </body>
+    <body name="spectator_opponent_racket" mocap="true" pos="0.45 2.9 1.9">
+      <geom type="ellipsoid" size="0.10 0.02 0.13" rgba="0.9 0.1 0.1 1" contype="0" conaffinity="0"/>
+    </body>
+"""
+_DUEL_LAYOUT: list = []
+
+
+def _shuttle_quat(v):
+    """The shuttle's orientation as the players' images draw it: local z (cork first) along its velocity."""
+    v = np.asarray(v, float)
+    return BM.quat_z_to(v if np.linalg.norm(v) >= 1e-6 else np.array([0.0, 0.0, -1.0]))
+
+
+def _duel_layout():
+    """({seat: qpos addresses of its robot's joints}, qpos0) of the duel scene (bduel.Renderer's layout)."""
+    if not _DUEL_LAYOUT:
+        import mujoco as mj
+        m = mj.MjModel.from_xml_path(str(BD.SCENE2))
+        jid = lambda n: m.jnt_qposadr[mj.mj_name2id(m, mj.mjtObj.mjOBJ_JOINT, n)]  # noqa: E731
+        _DUEL_LAYOUT.append(({"A": np.array([jid(j) for j in BM.JOINTS]),
+                              "B": np.array([jid(j + "_b") for j in BM.JOINTS])}, np.asarray(m.qpos0, float).copy()))
+    return _DUEL_LAYOUT[0]
+
+
 class Views:
     """The legacy observation images: 2 cameras x 4 frames, each tile stamped `k=.. t=..`, one PNG. Tiles are cached by
     their content, so a frame shown in several observations is drawn once (same pixels). Since revision wallclock-5 /
@@ -886,6 +942,29 @@ class BadmintonSport:
         if any(os.environ.get(k) for k in ("RCB_SKILL_INLOOP", "RCB_SKILL_INLOOP_A", "RCB_SKILL_INLOOP_B")):
             return inloop_layer()                         # the skill in the loop (low level; skilleval/inloop.py)
         return LowLayer()
+
+    def scene(self, cfg):
+        """The match scene (sim/scene/; the replay video's base only: the players' images are drawn by Views)."""
+        from renderers.base import Scene
+        return Scene.from_file(BM.SCENE if len(cfg.seats) == 1 else BD.SCENE2)
+
+    def spectator_scene(self, cfg):
+        """The replay video's scene (core 0.2.28, spectators only): the match scene plus, format match-wallclock, the
+        scripted opponent as mocap bodies after the shuttle (Badminton.spectator_state), dressed like the players'
+        images (presentation/presentation.toml: the Franka Panda's visual meshes)."""
+        from renderers import presentation
+        sc = self.spectator_match_scene(cfg)
+        return presentation.for_plugin(os.path.join(HERE, "plugin.py"), sc) or sc
+
+    def spectator_match_scene(self, cfg):
+        """spectator_scene before the presentation dressing: the match scene (+ the opponent's mocap bodies)."""
+        import dataclasses
+        sc = self.scene(cfg)
+        if len(cfg.seats) == 1:
+            if sc.xml.count("</worldbody>") != 1:
+                raise ValueError("the match scene must have exactly one </worldbody>")
+            sc = dataclasses.replace(sc, xml=sc.xml.replace("</worldbody>", SPECTATOR_OPPONENT + "  </worldbody>"))
+        return sc
 
     def worker_init(self, kind, seat, cfg):
         if kind == "plan":

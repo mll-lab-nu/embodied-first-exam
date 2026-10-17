@@ -779,6 +779,90 @@ def test_grading_success_rules():
     assert grade(opp, dict(rc, winner="A"), contract, lambda d: {})["success"] == 1
 
 
+def _calls(pattern, gap=5.0, dur=4.0, wait_after_fail=0.5):
+    """think_calls records: 'o' a completed call, 'x' a failed one (stream closed), 'r' a completed call after one
+    in-proxy 429 retry (wait 2 s). A failed call is followed by its retry after `wait_after_fail` s."""
+    t, out = 1000.0, []
+    for i, c in enumerate(pattern):
+        rec = dict(seq=i + 1, t0=t, t1=t + dur, model_call=True, status=200, completed=c != "x", stream_error=c == "x")
+        if c == "r":
+            rec["retries"] = [{"status": 429, "at": t + 0.1, "wait_s": 2.0}]
+        out.append(rec)
+        t += dur + (wait_after_fail if c == "x" else gap)
+    return out
+
+
+def test_api_errors_recovered_only_is_valid():
+    """core 0.2.33: recovered transient errors are only recorded; 6 drops (STUNTCAR Big Air L3, 10-17) and 50 are
+    valid."""
+    from core.metering.api_errors import MAX_TRANSIENT_API_ERRORS, classify_calls
+    six = classify_calls(_calls("o" * 57 + "xoxoxoo" + "xoxoxo"))
+    assert (six["transient_api_errors"], six["unrecovered_api_errors"], six["api_failure"]) == (6, 0, False), six
+    assert six["api_failure_reason"] is None and six["api_wait_s"] == 6 * 4.5, six
+    many = classify_calls(_calls("o" * 300 + "xo" * MAX_TRANSIENT_API_ERRORS))      # at the cap: still valid
+    assert many["transient_api_errors"] == MAX_TRANSIENT_API_ERRORS and not many["api_failure"], many
+    retried = classify_calls(_calls("oro"))                                        # in-proxy 429, call completed
+    assert (retried["transient_api_errors"], retried["api_retries"], retried["api_failure"]) == (1, 1, False), retried
+    assert retried["api_wait_s"] == 2.0, retried
+
+
+def test_api_errors_unrecovered_is_invalid():
+    """An error after which the seat got no answer (all retries failed) fails the trial, as before; so does a failure
+    the proxy counted but did not log."""
+    from core.metering.api_errors import classify_calls
+    tail = classify_calls(_calls("ooxxx"))
+    assert (tail["unrecovered_api_errors"], tail["api_failure"], tail["api_failure_reason"]) == (3, True, "unrecovered")
+    one = classify_calls(_calls("oxo"), usage={"failed_model_calls": 2})
+    assert (one["transient_api_errors"], one["unrecovered_api_errors"], one["api_failure"]) == (1, 1, True), one
+
+
+def test_api_errors_sanity_cap_is_technical_failure():
+    """Above the sanity cap recovered errors fail the trial: more than MAX_TRANSIENT_API_ERRORS, or more than
+    MAX_API_WAIT_FRACTION of the session (and at least MIN_API_WAIT_S) lost to errors."""
+    from core.metering.api_errors import MAX_API_WAIT_FRACTION, MAX_TRANSIENT_API_ERRORS, MIN_API_WAIT_S, classify_calls
+    over = classify_calls(_calls("o" * 300 + "xo" * (MAX_TRANSIENT_API_ERRORS + 1)))
+    assert over["api_failure"] and over["api_failure_reason"] == "transient_cap" and over["unrecovered_api_errors"] == 0
+    # 5 failed calls, each 4 s plus a 20 s back-off before its retry: 120 s lost of ~300 s (40%)
+    slow = classify_calls(_calls("oxoxoxoxoxo", wait_after_fail=20.0))
+    assert slow["api_wait_s"] == 120.0 and slow["api_wait_s"] > MAX_API_WAIT_FRACTION * slow["api_session_s"], slow
+    assert slow["api_failure"] and slow["api_failure_reason"] == "wait_cap", slow
+    # the same share in a short session stays valid below the floor (one 20 s reconnect in ~60 s)
+    short = classify_calls(_calls("oxoo", wait_after_fail=20.0))
+    assert short["api_wait_s"] < MIN_API_WAIT_S and short["api_wait_s"] > MAX_API_WAIT_FRACTION * short["api_session_s"]
+    assert not short["api_failure"], short
+
+
+def test_api_errors_reach_the_grade():
+    """The service's validity fields from a seat's think_calls file, through grade(): recovered errors keep the trial
+    valid and are reported (<seat>_transient_api_errors, _api_retries, _api_wait_s); an unrecovered one voids it."""
+    from core.metering.api_errors import seat_api_errors
+    tmp = Path(tempfile.mkdtemp())
+    try:
+        base = {"cfg": {"seats": ["A"]}, "sides": {"A": "A"}, "deterministic": True, "state_sha": "s",
+                "scores": {"A": 31}, "match_winner": None, "commands_sha": "c", "source_sha": "x", "steps": 5,
+                "reason": "match_over", "valid_trial": True, "finalized": True, "errors": [], "meter_error": {},
+                "solo": True, "player_modes": {"A": "model"}, "format": "single", "play": "program"}
+        rc = {"state_sha": "s", "scores": {"A": 31}, "winner": None, "commands_sha": "c", "source_sha": "x", "k": 5}
+        contract = {"formats": {"single": {"success": {"score_at_least": 30}}}}
+        for name, pattern, valid in (("ok", "oxoxoroxoxoxoo", True), ("bad", "ooxoxx", False)):
+            usage = tmp / name / "think_usage_A.json"
+            usage.parent.mkdir()
+            (tmp / name / "think_calls_A.jsonl").write_text("".join(json.dumps(r) + "\n" for r in _calls(pattern)))
+            a = seat_api_errors(str(usage), {})
+            d = dict(base, proxy_error={"A": a["api_failure"]}, transient_api_errors={"A": a["transient_api_errors"]},
+                     unrecovered_api_errors={"A": a["unrecovered_api_errors"]}, api_retries={"A": a["api_retries"]},
+                     api_wait_s={"A": a["api_wait_s"]})
+            out = grade(d, rc, contract, lambda d: {})
+            assert out["valid_trial"] == int(valid) and out["technical_failure"] == int(not valid), (name, a, out)
+            if valid:
+                assert (out["A_transient_api_errors"], out["A_api_retries"]) == (6, 1), out
+                assert out["A_api_wait_s"] == 5 * 4.5 + 2.0 and out["success"] == 1, out
+        old = dict(base, proxy_error={"A": False}, transient_api_errors={"A": 0}, unrecovered_api_errors={"A": 0})
+        assert grade(old, rc, contract, lambda d: {})["A_api_wait_s"] == 0.0     # a final.json of core < 0.2.33
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_launch_seat_env_second_account_and_route():
     from core.launch import PROXY, seat_env
     env = {"KEY_ACCOUNT": "t1", "KEY_ACCOUNT_2": "t2", "THINK_OPENAI_ROUTE": "openrouter",
@@ -2101,6 +2185,38 @@ def test_video_fps_from_sport_toml_and_event_frames():
     finally:
         for k in ("RO_TEST_FIXTURE_IMAGES", "RO_TEST_SPECTATOR_LOG"):
             os.environ.pop(k, None)
+
+
+
+def test_client_realtime_loop_uses_the_players_declared_cadence():
+    """core/client.py play_realtime waits the player's every_s after each decision (default 0.05 game s)."""
+    from core import client
+
+    class FakeSeat:
+        seat = "A"
+
+        def __init__(self):
+            self.waits, self.n = [], 0
+
+        def call(self, name, body):
+            if name == "wait":
+                self.waits.append(body["dt"])
+            if name == "observe":
+                self.n += 1
+                return {"now": {"done": self.n > 3, "world": "running"}}
+            return {}
+
+    class Plain:
+        def act(self, view):
+            return None
+
+    class Fast(Plain):
+        every_s = 0.01
+
+    for player, want in ((Plain(), 0.05), (Fast(), 0.01)):
+        seat = FakeSeat()
+        client.play_realtime(seat, player)
+        assert seat.waits and all(abs(w - want) < 1e-12 for w in seat.waits), (type(player).__name__, seat.waits)
 
 
 if __name__ == "__main__":

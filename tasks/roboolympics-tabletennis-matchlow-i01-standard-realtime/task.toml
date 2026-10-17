@@ -9,12 +9,11 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/video.json", service = "sim" },
   { source = "/data/broadcast.jsonl", service = "sim" },
   { source = "/data/inloop_A.jsonl", service = "sim" },
-  { source = "/data/skill_A/", service = "sim" },
 ]
 
 [task]
 name = "robot-coding-bench/roboolympics-tabletennis-matchlow-i01-standard-realtime"
-description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): table tennis, one match against the scripted opponent at level 1, LOW LEVEL (Agent as Robotics Engineer: the agent implements the core skill itself from the robot's joint interface and toolkit and uploads it to the simulator, which plays every stroke with it: the skill in the loop, its compute counted in match time), program play (eai-standard-realtime/1.0: the world runs at 1/10 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players. Exported from RoboOlympics task tabletennis-match-wallclock-program-lowlevel-standard by tools/export_fexam.py."
+description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): table tennis, one match against the scripted opponent at level 1, LOW LEVEL (Agent as Robotics Engineer: the agent implements the core skill itself from the robot's joint interface and toolkit and serves it from its own container to the simulator, which plays every stroke with it: the skill in the loop, its compute counted in match time), program play (eai-standard-realtime/1.0: the world runs at 1/10 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players. Exported from RoboOlympics task tabletennis-match-wallclock-program-lowlevel-standard by tools/export_fexam.py."
 authors = [{ name = "RoboOlympics (CHIGUI0)" }]
 keywords = ["robotics", "roboolympics", "sports", "tabletennis", "mujoco", "standard-realtime-mode", "vision", "real-time", "low-level", "skill-engineering"]
 
@@ -30,14 +29,14 @@ slowdown = 10                     # standard-realtime: the world runs at 1/S of 
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 22
 opponent_level = 1
-skill_in_loop = "upload"             # core 0.2.32: game skill upload / POST /A/skill; the sim runs it (nobody, no network, one CPU)
-skill_deliverable = "hit.py (uploaded)"
+skill_in_loop = "agent-server"       # core 0.2.34: game skill serve, in the agent's own container; the sim calls it over the loopback
+skill_deliverable = "hit.py (served)"
 skill_implements = ["hit"]
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 play = "program"
 action_level = "low"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
-source_commits = ["dd4db78ea10a"]
+source_commits = ["fd8bc81a1283"]
 exporter = "roboolympics tools/export_fexam.py"
 player_mode = "unmetered"
 official = false

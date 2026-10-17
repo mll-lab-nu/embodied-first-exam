@@ -38,6 +38,7 @@ import subprocess
 import sys
 import threading
 import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -322,9 +323,19 @@ def _recv(f) -> dict | None:
     return json.loads(line)
 
 
-def handle(host: SkillHost, q: dict) -> dict:
+def handle(host: SkillHost, q: dict, live: bool = False) -> dict:
+    """One request. live (the agent's own skill server, core 0.2.34): every call first reloads the skill if its files
+    changed (the agent may change it at any time; the new version plays from that call on), and every answer carries
+    the version (sha256) it ran with."""
     op = q.get("op")
     try:
+        if live and op == "call":
+            load = host.refresh("live")
+            try:
+                ret = host.call(q["fn"], list(q.get("args") or []), q.get("state") or {})
+            except SkillError as e:
+                return {"ok": False, "kind": e.kind, "error": str(e)[-600:], "load": load, "status": host.status()}
+            return {"ok": True, "ret": ret, "load": load, "status": host.status()}
         if op == "configure":
             host.configure(q["module"], q.get("spec") or {}, q.get("timeouts"), q.get("load_timeout_s", 30.0))
             return {"ok": True}
@@ -341,40 +352,67 @@ def handle(host: SkillHost, q: dict) -> dict:
         return {"ok": False, "kind": "host", "error": f"{type(e).__name__}: {e}"[-600:]}
 
 
-def serve(sock_path: str, src: str, copy_to: str | None = None, once: bool = False):
-    """Serve one connection at a time (the simulator; a reconnect replaces the previous one) until killed."""
-    p = Path(sock_path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.unlink(missing_ok=True)
+def tcp_addr(addr: str):
+    """(host, port) of "tcp:HOST:PORT", else None (a Unix socket path, optionally "unix:PATH")."""
+    if not str(addr).startswith("tcp:"):
+        return None
+    host, _, port = str(addr)[4:].rpartition(":")
+    return host or "127.0.0.1", int(port)
+
+
+def serve(sock_path: str, src: str, copy_to: str | None = None, once: bool = False, live: bool = False):
+    """Serve one connection at a time (the simulator; a reconnect replaces the previous one) until killed. sock_path:
+    a Unix socket (the seat's skill container) or "tcp:127.0.0.1:PORT" (core 0.2.34: the agent's own container, which
+    shares its network namespace with the simulator: the simulator connects to it over the loopback)."""
     host = SkillHost(src, copy_to=copy_to)
-    srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    srv.bind(str(p))
-    os.chmod(p, 0o600)  # the simulator connects as root; the skill (nobody) cannot
-    srv.listen(1)
-    print(f"skillhost: serving {src} on {p}", file=sys.stderr, flush=True)
+    tcp = tcp_addr(sock_path)
+    if tcp is not None:
+        p = None
+        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.bind(tcp)                      # the loopback only: nothing outside the trial's network namespace
+    else:
+        p = Path(sock_path[5:] if sock_path.startswith("unix:") else sock_path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.unlink(missing_ok=True)
+        srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        srv.bind(str(p))
+        os.chmod(p, 0o600)  # the simulator connects as root; the skill (nobody) cannot
+    srv.listen(8)
+    print(f"skillhost: serving {src} on {sock_path}{' (live reload)' if live else ''}", file=sys.stderr, flush=True)
+    lock = threading.Lock()                # one request at a time on the host (the skill answers one call)
+
+    def session(conn):
+        with conn, conn.makefile("rwb") as f:
+            while True:
+                try:
+                    q = _recv(f)
+                except (ValueError, OSError):
+                    break
+                if q is None:
+                    break
+                with lock:
+                    r = handle(host, q, live)
+                try:
+                    _send(f, r)
+                except (TypeError, ValueError):
+                    _send(f, {"ok": False, "kind": "error", "error": "the skill returned something that is not JSON"})
+                except OSError:
+                    break
+
     try:
         while True:
             conn, _ = srv.accept()
-            with conn, conn.makefile("rwb") as f:
-                while True:
-                    try:
-                        q = _recv(f)
-                    except (ValueError, OSError):
-                        break
-                    if q is None:
-                        break
-                    try:
-                        _send(f, handle(host, q))
-                    except (TypeError, ValueError):
-                        _send(f, {"ok": False, "kind": "error", "error": "the skill returned something that is not JSON"})
-                    except OSError:
-                        break
             if once:
+                session(conn)
                 break
+            # live (the agent's server): the simulator's connection and the agent's own `game skill status` at once
+            threading.Thread(target=session, args=(conn,), daemon=True).start() if live else session(conn)
     finally:
         host.close()
         srv.close()
-        p.unlink(missing_ok=True)
+        if p is not None:
+            p.unlink(missing_ok=True)
 
 
 class RemoteHost:
@@ -382,8 +420,11 @@ class RemoteHost:
     reopened at the next refresh; meanwhile calls raise SkillError("host", ...): a technical failure, not the
     player's."""
 
-    def __init__(self, sock_path: str, connect_timeout_s: float = 60.0):
-        self.path, self.connect_timeout_s = sock_path, float(connect_timeout_s)
+    def __init__(self, sock_path: str, connect_timeout_s: float = 60.0, live: bool = False):
+        # live (core 0.2.34, "tcp:127.0.0.1:PORT"): the agent's own skill server in its container; it may be down
+        # (not started, restarted): a call reconnects quickly, and a missing server is the player's error ("noserver")
+        self.path, self.connect_timeout_s = sock_path, float(2.0 if live else connect_timeout_s)
+        self.live, self.tcp = live, tcp_addr(sock_path)
         self.sock = self.f = None
         self.conf: dict | None = None
         self.timeouts, self.load_timeout_s = {}, 30.0
@@ -394,8 +435,11 @@ class RemoteHost:
         end = time.monotonic() + wait_s
         while True:
             try:
-                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                s.connect(self.path)
+                if self.tcp is not None:
+                    s = socket.create_connection(self.tcp, timeout=max(0.2, min(2.0, wait_s)))
+                else:
+                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    s.connect(self.path[5:] if self.path.startswith("unix:") else self.path)
                 self.sock, self.f = s, s.makefile("rwb")
                 if self.conf is not None:
                     self._req(self.conf, 10.0)
@@ -403,6 +447,9 @@ class RemoteHost:
             except OSError:
                 self._drop()
                 if time.monotonic() >= end:
+                    if self.live:
+                        raise SkillError("noserver", f"no skill server answers at {self.path} (start it: game skill "
+                                                     "serve /app/output/skill)")
                     raise SkillError("host", f"the skill container does not answer at {self.path}")
                 time.sleep(0.2)
 
@@ -451,8 +498,16 @@ class RemoteHost:
         return bool(self._status.get("loaded")) and fn in (self._status.get("functions") or [])
 
     def call(self, fn: str, args: list, state: dict):
+        if self.live and self.sock is None:
+            try:
+                self._connect(0.5)
+            except SkillError as e:
+                self._status = {"sha256": None, "loaded": False, "functions": [], "load_error": str(e)}
+                raise
         r = self._req({"op": "call", "fn": fn, "args": list(args), "state": state},
-                      float(self.timeouts.get(fn, 5.0)) + 10.0)
+                      float(self.timeouts.get(fn, 5.0)) + (self.load_timeout_s if self.live else 0.0) + 10.0)
+        if isinstance(r.get("status"), dict):          # live: the version this call ran with
+            self._status = r["status"]
         if r.get("ok"):
             return r.get("ret")
         if r.get("kind") in ("timeout", "dead"):
@@ -470,12 +525,16 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="skillhost.py")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("serve", help="serve the skill directory on a Unix socket (the seat's skill container)")
-    s.add_argument("--socket", required=True)
+    s.add_argument("--socket", default=None)
+    s.add_argument("--tcp", default=None, help="HOST:PORT (core 0.2.34: the agent's own container, the loopback)")
+    s.add_argument("--live", action="store_true", help="reload the skill whenever its files change (at each call)")
     s.add_argument("--skill", required=True, help="the player's skill directory (read-only)")
     s.add_argument("--copy-to", default=None, help="where the private copy runs from (default: a temporary directory)")
     a = ap.parse_args(argv)
     if a.cmd == "serve":
-        serve(a.socket, a.skill, a.copy_to)
+        if not a.socket and not a.tcp:
+            ap.error("serve needs --socket or --tcp")
+        serve(f"tcp:{a.tcp}" if a.tcp else a.socket, a.skill, a.copy_to, live=a.live)
 
 
 if __name__ == "__main__":

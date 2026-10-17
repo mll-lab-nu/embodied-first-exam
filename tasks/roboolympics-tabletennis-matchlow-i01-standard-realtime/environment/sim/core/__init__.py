@@ -4,13 +4,22 @@ Flow (clock, slowdown, freeze and review, seats and turns), rules (formats, mode
 metering) and judgement (outcome, validity). It names no sport and no harness (ci_checks/check-core-purity.sh), computes
 no physics, and changes only in its own commits with a version bump (VERSION) and every sport's golden replay passing.
 """
-VERSION = "0.2.32"   # 0.2.32: the skill upload (POST /<seat>/skill, GET /<seat>/skill, `game skill upload DIR`): a low
+VERSION = "0.2.34"   # 0.2.34: the skill in the loop served from the agent's own container (`game skill serve`,
+# skilleval/skillhost.py serve --tcp --live; RCB_SKILL_INLOOP_<seat> = "tcp:127.0.0.1:PORT"): the simulator calls
+# it over the loopback of the shared network namespace; it reloads the skill whenever its files change (the new
+# version plays from the next call, its sha256 logged); a missing server is the player's error (the call lowers
+# to the no-op); no agent code runs next to the simulator (hub H.3)
+# 0.2.32: the skill upload (POST /<seat>/skill, GET /<seat>/skill, `game skill upload DIR`): a low
 # level's skill in the loop sent to the service and run in the sim's own jail (skilleval/skillhost.py UploadHost: nobody,
 # no network, one CPU, the match's records closed), each upload an episode row (information only) and archived by
 # sha256; for tasks without a skill container (the First Exam exports). Play unchanged.
 # 0.2.31: built-in seats (RO_BUILTIN_SEATS, core/builtin_seat.py): a seat played by a built-in player in the
 # service process through the same handlers, never served over HTTP; a player with uses_truth gets Match.builtin_truth
 # (0.2.30 is taken by the fexam-vidfix branch)
+# 0.2.33: model-API validity (api_errors.py): recovered transient errors are only recorded
+# (final.json api_retries / api_wait_s / api_failure_reason per seat, reward <seat>_api_retries / _api_wait_s); a seat's
+# API fails the trial on an unrecovered error, or above the sanity cap (> 50 transient errors, or >= 60 s and > 20% of
+# its model session lost to errors); before, > 5 transient errors did (0.2.30-0.2.32 are taken by unmerged branches)
 # 0.2.29: the replay video's frame rate from sport.toml [broadcast] fps (default 10) and
 # event frames (Match.spectator_frames(), drawn before a step's regular frame; core/spectator.py), spectators only
 # 0.2.28: a sport's own spectator scene for the replay video (Sport.spectator_scene(cfg) with

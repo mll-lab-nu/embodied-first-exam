@@ -8,8 +8,9 @@ skill that played it: every call records the sha256 of the skill's files.
     layer = layer_from_env(JointLayer(), CONTRACTS, decl, spec=skill_spec, control_dt=DT, raw_allowed=..., ...)
     # None unless RCB_SKILL_INLOOP_<seat> names the seat's skill: "unix:/skillipc/A/skill.sock" (generated tasks,
     # tools/generate.py), "upload:<seat>" (the skill the player uploads to the service, POST /<seat>/skill, run in the
-    # sim's own jail: skillhost.UploadHost; the First Exam exports) or a directory (tests, pilots);
-    # RCB_SKILL_INLOOP_LOG: a directory for inloop_<seat>.jsonl;
+    # sim's own jail: skillhost.UploadHost; core 0.2.32), "tcp:127.0.0.1:PORT" (core 0.2.34: the agent's own skill
+    # server in its container, `game skill serve`, reached over the loopback of the shared network namespace; it
+    # reloads the skill whenever its files change) or a directory (tests, pilots); RCB_SKILL_INLOOP_LOG: a directory for inloop_<seat>.jsonl;
     # RCB_SKILL_INLOOP_TIMING: "wall" (default: the match service) or "free" (core.local.play: no wall clock)
 
 The rules (InLoopLayer; sport.toml [modes.low.inloop], skilleval/declare.py):
@@ -62,6 +63,8 @@ def _host(skill):
     s = str(skill)
     if s.startswith("upload:"):                # core 0.2.32: the skill the player uploads to the service
         return UploadHost(s[len("upload:"):])
+    if s.startswith("tcp:"):                   # core 0.2.34: the agent's own skill server (game skill serve)
+        return RemoteHost(s, live=True)
     return RemoteHost(s[len("unix:"):]) if s.startswith("unix:") else SkillHost(s)
 
 
@@ -124,6 +127,12 @@ class InLoop:
                     rec["host_error"] = True
         rec["wall_s"] = round(time.monotonic() - t0, 5)
         rec["k_done"] = int(k_now()) if k_now is not None else int(k)
+        new = self.host.status().get("sha256")
+        if getattr(self.host, "live", False) and new != self.sha:   # the agent changed its skill: from this call on
+            self.sha = rec["sha256"] = new
+            load = {"unit": self.unit, "k": int(k), "sha256": new, "ok": bool(new), "live": True}
+            self.loads.append(load)
+            self._log({"op": "load", **load})
         if not rec["ok"]:
             self.errors[fn] = self.errors.get(fn, 0) + 1
         self.calls.append(rec)
