@@ -198,3 +198,88 @@ cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 Measured on the reference machine (AMD Ryzen 9 7950X): about 20 ms of physics per control step, about 70 ms per
 256×256 camera image (OSMesa); a privileged oracle trial takes 2–3 min, most of it the verifier's two fresh replays.
 Busy hosts are several times slower: see Collect budget.
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+29 of 64 bases are in the easy set; by directory: 93 easy, 0 hard, 35 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
+| `libero-max-goal-akita-black-bowl-on-flat-stove-cook-target-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-goal-akita-black-bowl-on-plate-receptacle-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-cream-cheese-on-akita-black-bowl-obstacle-insertion-i00` |  | easy: Luna | unverified |
+| `libero-max-goal-flat-stove-off-visual-theme-switch-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-flat-stove-on-illumination-switch-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-flat-stove-on-illumination-switch-i01` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-flat-stove-on-sensor-noise-onset-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-wine-bottle-on-plate-receptacle-relocation-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i00` |  | easy: Luna | unverified |
+| `libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `libero-max-goal-wine-bottle-on-wooden-cabinet-top-sensor-noise-onset-i00` |  | easy: Luna | unverified |
+| `libero-max-goal-yellow-stove-on-camera-shift-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-long-alphabet-soup-and-cream-cheese-in-basket-receptacle-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-distractor-burst-i00` |  | easy: Luna | unverified |
+| `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-receptacle-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-sensor-noise-onset-i00` |  | easy: Luna | unverified |
+| `libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i01` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-camera-shift-i00` |  | easy: Luna | unverified |
+| `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-illumination-switch-i00` |  | easy: Luna | unverified |
+| `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i00` |  | easy: Luna | unverified |
+| `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i01` |  | easy: Luna | unverified |
+| `libero-max-long-white-yellow-mug-and-green-chocolate-pudding-on-yellow-plate-sensor-noise-onset-i00` |  | easy: Luna | unverified |
+| `libero-max-long-white-yellow-mug-in-desk-caddy-back-camera-shift-i00` |  | easy: Luna | unverified |
+| `libero-max-long-white-yellow-mug-in-desk-caddy-back-illumination-switch-i00` |  | easy: Luna | unverified |
+| `libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-object-alphabet-soup-in-basket-target-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-object-alphabet-soup-in-basket-visual-theme-switch-i00` |  | easy: Luna | unverified |
+| `libero-max-object-butter-in-basket-distractor-burst-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-butter-in-basket-receptacle-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-object-chocolate-pudding-in-basket-distractor-burst-i00` |  | easy: Luna | unverified |
+| `libero-max-object-chocolate-pudding-in-basket-distractor-burst-i01` |  | easy: Luna | unverified |
+| `libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-cream-cheese-in-basket-visual-theme-switch-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-green-bbq-sauce-in-red-basket-distractor-burst-i00` |  | easy: Luna | unverified |
+| `libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-ketchup-in-basket-distractor-burst-i00` |  | easy: Luna | unverified |
+| `libero-max-object-milk-in-basket-camera-shift-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-milk-in-basket-distractor-burst-i00` |  | easy: Luna | unverified |
+| `libero-max-object-milk-in-basket-illumination-switch-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-milk-in-basket-target-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-object-orange-juice-in-basket-distractor-burst-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-orange-juice-in-basket-illumination-switch-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i01` |  | unverified | easy: Luna |
+| `libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `libero-max-spatial-akita-black-bowl-on-plate-obstacle-insertion-i00` | yes | easy: Luna | easy: Luna |
+| `libero-max-spatial-akita-black-bowl-on-plate-obstacle-insertion-i01` |  | easy: Luna | unverified |
+| `libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i01` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00` | yes | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `libero-max-spatial-akita-black-bowl-on-plate-target-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-spatial-akita-black-bowl-on-plate-target-relocation-i01` |  | easy: Luna | unverified |
+| `libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i00` |  | easy: Luna | unverified |
+| `libero-max-spatial-black-bowl-on-yellow-plate-obstacle-insertion-i00` |  | easy: Luna | unverified |
+| `libero-max-spatial-black-bowl-on-yellow-plate-target-relocation-i00` |  | easy: Luna | unverified |
+| `libero-max-spatial-black-bowl-on-yellow-plate-visual-theme-switch-i00` |  | easy: Luna | unverified |
