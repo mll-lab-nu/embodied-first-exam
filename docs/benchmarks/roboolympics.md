@@ -439,13 +439,30 @@ What differs from the 2.x tasks (PROTOCOL §4c, owner 2026-10-14):
 | | the 2.x tasks | exported RoboOlympics tasks | why |
 |---|---|---|---|
 | protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (real-time matches; RoboOlympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `eai-standard-turn/1.0` (turn-based matches, mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s` since 2026-10-14, board 0121, `patched` in exported.toml) is part of RoboOlympics' rules, and its results are only comparable under them |
-| crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the service replays the whole match from its record to grade it; a resumed match would not be the recorded one |
+| crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the match is one continuous live record (its scores and winner); a resumed match would not be the recorded one |
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (RoboOlympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10, foosball 20 (`metadata.slowdown`); turn-based matches have none (`metadata.chess_clock_s`: fencing 3600 s) | results state S, or the chess clock |
 | agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02 / i04, the badminton duel, wheeled soccer and foosball 14400 s (those tasks' own `[agent] timeout_sec`, owner 2026-10-14) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |
 | network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL §2.11 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
 | twin | privileged + standard | none (the README's Twin row says why) | no trajectory deliverable |
 | seeds | the instance's | matches: `[metadata.seeds]` default = allowed = the instance's development seed (a turn-based match whose world is deterministic has one outcome per sequence of choices: its oracle is `full` when the reference wins that seed); skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; RoboOlympics' official results are produced by RoboOlympics on its hidden six-digit seeds |
 | metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the D11 proxy's file `metering/think_proxy.py` is in the image's copy but never started) | |
+
+**Graded by the live match (owner, 2026-10-17, board 0150/0151).** The core's fresh-process validity replay
+(`python -m core.episode`, `replay_check.json`) no longer runs. The verdict is the live match as the trusted core recorded
+it while playing: `scores`, `match_winner`, `reason`, `errors` and the seats' metering in `final.json` (`graded_by` live,
+`replays` 0). `valid_trial` = finalized ∧ complete ∧ no technical error, without the replay term, and success = a valid
+match the agent's seat A won (duelrl: `tests/fexam_reward.py`'s `valid_trial` ∧ `A_won`).
+`scripts/roboolympics/live_grading_export.py` patches the exported files (listed under `patched` in `exported.toml`;
+re-run it after a re-export) and switches on with `RO_VERDICT_REPLAY=0` in the sim service's compose environment (the convention of #300's matchlow tasks, whose core has the same hunks), so the core
+keeps its upstream behaviour without it. The patch touches `core/service.py` (`finalize` skips the replay, `write_final`
+drops the replay term, `deterministic` and `replay_scores`) and `core/grading.py` = `tests/grade.py` (a live record needs
+no `replay_check.json`; reward.json gets `graded_by_live 1`, `replays 0`, and loses `deterministic` and the sports' legacy
+`replay_*` fields). The spectator video stays a video-only pass after the verdict. Where its limit was below the old
+replay's 600 s (table tennis, foosball: 300 s) it becomes 600 s, and the hook's verdict wait goes 600 -> 300 s, so the
+hook's timeout is unchanged. **source_sha:** `core/` is hashed into every match's `source_sha` (with the sport's
+directory), so matches played after this change record a new `source_sha` per task. Archived episodes still replay,
+because the replay echoes the header's own `source_sha`, but results keyed by `source_sha` see a new version.
+`scripts/roboolympics/tests/test_live_export.py` (standard library) tests the patch on every exported task.
 
 **Replay videos of the matches (fixed here, 2026-10-16, board 0136).** The sim service draws the spectator video after the verdict (`core.spectator`, `RCB_VIDEO_TIMEOUT_S`); the grade never depends on it. Humanoid soccer's full match takes about 8-10 min to replay and draw, so its limit is 1800 s (was 300 s, as wheeled soccer) and the collect hook waits as long. Badminton declares no spectator camera or scene, so the core drew nothing: its tasks run `environment/sim/spectator/sport_video.py` from the collect hook instead (the players' two cameras, the sport's own `Views`, at 10 frames per game second; `video.json` says whether that replay ended in the verdict replay's state). `spectator/` is outside the match's `source_sha` (`core/`, `sport/`), so the match, its replay check and the grade are unchanged and earlier results stand; both are `patched` in `exported.toml` (to be sent upstream: a spectator camera in `sports/badminton/sport.toml` would change the sport's `source_sha`). Table tennis (about 100-420 frames) and wheeled soccer (1800 s) rendered every recorded video and are unchanged. Fencing (turn-based) draws one still per phrase, held 1 s, with `core.spectator`; its limit is 900 s (board 0146: never shorter than the verdict replay's 600 s), the collect hook waits as long. The second batch (board 0146): badminton i04 and the badminton duel use the same `sport_video.py` as badminton i01 / i02 (collect 2640 s, verifier 2820 s: 60 s of headroom) (checked on a local duel: 392 frames in 28 s, `matches_verdict_replay` true); foosball (at most 240 s of play, 2400 frames; a 136 s match drew 1360 frames in 47 s), the table-tennis duel and table tennis i03 / i04 draw with `core.spectator` within 300 s; wheeled soccer i01 has 1800 s as i00.
 
@@ -484,4 +501,6 @@ velocity-height policy (nvidia-isaac/WBC-AGILE): Apache-2.0. Every licence file 
 ## Change log
 - 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay (the native
   standard and standard-realtime tasks: `rcb_service.py`'s live finalize, the adapter's start check and live referee
-  record); video by one render pass from the trajectory after the verdict.
+  record); video by one render pass from the trajectory after the verdict. The exported matches: the core's validity
+  replay is gone (`RO_VERDICT_REPLAY=0`, `live_grading_export.py`); the verdict is the live match's; video by the spectator
+  pass after the verdict; a new `source_sha` (`core/` changed).
