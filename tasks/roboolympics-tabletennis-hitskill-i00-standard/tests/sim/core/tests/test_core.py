@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 import tempfile
 import threading
@@ -1959,6 +1960,148 @@ def test_requests_after_the_end_never_void_a_finished_match():
     for ep in ("observe", "act"):
         code, out = tpost[ep]("A", {"v": 0.5} if ep == "act" else {})[:2]
         assert code == 409 and out["error"] == "the match is over" and out["state"]["done"], (ep, code, out)
+
+
+_SPECTATOR_PLUGIN = """import importlib.util, os
+_spec = importlib.util.spec_from_file_location("fixture_images_base", os.environ["RO_TEST_FIXTURE_IMAGES"])
+_base = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_base)
+EXTRA = '<geom name="spectators_only" type="box" pos="0.5 0.5 0.2" size="0.2 0.2 0.2" rgba="1 1 0 1"/>'
+
+
+class Game(_base.Game):
+    def spectator_state(self):
+        with open(os.environ["RO_TEST_SPECTATOR_LOG"], "a") as f:
+            f.write("x\\n")
+        return self.render_state()
+
+
+class Fixture(_base.Fixture):
+    def build(self, cfg):
+        return Game(cfg)
+
+    def spectator_scene(self, cfg):
+        from renderers.base import Scene
+        if os.environ.get("RO_TEST_SPECTATOR_FAIL"):
+            raise RuntimeError("no spectator scene here")
+        return Scene(xml=_base.XML.replace("</worldbody>", EXTRA + "</worldbody>"))
+
+
+SPORT = Fixture()
+"""
+
+
+def test_sport_spectator_scene_and_state_draw_the_video_only():
+    """core 0.2.28: a sport's own spectator scene (Sport.spectator_scene(cfg)) with Match.spectator_state() draws the
+    replay video; RO_VIDEO_SCENE=match and a failing spectator_scene fall back to the match scene; the players' scene
+    (Sport.scene) is untouched and the episode replays to the same digest."""
+    os.environ.setdefault("MUJOCO_GL", "osmesa")
+    from core import local, spectator
+    from core.episode import read_rows, replay
+    tmp = Path(tempfile.mkdtemp(prefix="core-test-"))
+    plugin = tmp / "plugin.py"
+    plugin.write_text(_SPECTATOR_PLUGIN)
+    shutil.copy2(Path(PLUGIN_IMG).parent / "sport.toml", tmp / "sport.toml")
+    log = tmp / "spectator.log"
+    os.environ["RO_TEST_FIXTURE_IMAGES"] = PLUGIN_IMG
+    os.environ["RO_TEST_SPECTATOR_LOG"] = str(log)
+    try:
+        sport = load_plugin(str(plugin))
+        cfg = MatchConfig(sport="fixture_images", format="duel", seats=("A", "B"), seed=1, first="A",
+                          action_level="low")
+        sc, what = spectator.spectator_scene(sport, str(plugin), cfg)
+        assert what == "spectator" and "spectators_only" in sc.xml and "spectators_only" not in sport.scene(cfg).xml
+        os.environ["RO_VIDEO_SCENE"] = "match"
+        try:
+            sc2, what2 = spectator.spectator_scene(sport, str(plugin), cfg)
+        finally:
+            del os.environ["RO_VIDEO_SCENE"]
+        assert what2 == "match" and "spectators_only" not in sc2.xml
+        os.environ["RO_TEST_SPECTATOR_FAIL"] = "1"
+        try:
+            sc3, what3 = spectator.spectator_scene(sport, str(plugin), cfg)
+        finally:
+            del os.environ["RO_TEST_SPECTATOR_FAIL"]
+        assert what3.startswith("match (spectator scene unavailable") and "spectators_only" not in sc3.xml
+
+        class Mover:
+            def act(self, view):
+                return {"type": "add", "v": 0.5}
+        data = tmp / "run"
+        r = local.play(sport, cfg, {"A": Mover(), "B": Mover()}, data=data, render=False, plugin=str(plugin))
+        assert not log.exists()                          # the match itself never asks for the spectator state
+        info = spectator.render_video(str(plugin), data)
+        assert info["video"] and info["scene"] == "spectator" and info["label"] is None, info
+        n = len(log.read_text().splitlines())         # one spectator state per drawn frame (held 1 s: turn protocol)
+        assert n > 0 and info["frames"] == n * 10, (info, n)
+        rep = replay(sport, read_rows(data / "episode.jsonl"))
+        assert rep["state_sha"] == r["digest"], (rep, r)
+    finally:
+        for k in ("RO_TEST_FIXTURE_IMAGES", "RO_TEST_SPECTATOR_LOG"):
+            os.environ.pop(k, None)
+
+
+_EVENT_PLUGIN = """import importlib.util, os
+_spec = importlib.util.spec_from_file_location("fixture_images_base", os.environ["RO_TEST_FIXTURE_IMAGES"])
+_base = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_base)
+
+
+class Game(_base.Game):
+    _calls = 0
+
+    def spectator_frames(self):
+        self._calls += 1
+        with open(os.environ["RO_TEST_SPECTATOR_LOG"], "a") as f:
+            f.write("x\\n")
+        return [self.render_state()] if self._calls % 2 == 0 else []
+
+
+class Fixture(_base.Fixture):
+    def build(self, cfg):
+        return Game(cfg)
+
+
+SPORT = Fixture()
+"""
+
+
+def test_video_fps_from_sport_toml_and_event_frames():
+    """core 0.2.29: the replay video's frame rate is sport.toml [broadcast] fps; Match.spectator_frames() adds event
+    frames before a step's regular frame (counted in video.json event_frames); the match never calls it and the
+    episode replays to the same digest."""
+    os.environ.setdefault("MUJOCO_GL", "osmesa")
+    from core import local, spectator
+    from core.episode import read_rows, replay
+    tmp = Path(tempfile.mkdtemp(prefix="core-test-"))
+    plugin = tmp / "plugin.py"
+    plugin.write_text(_EVENT_PLUGIN)
+    (tmp / "sport.toml").write_text((Path(PLUGIN_IMG).parent / "sport.toml").read_text() + "\n[broadcast]\nfps = 12\n")
+    log = tmp / "spectator.log"
+    os.environ["RO_TEST_FIXTURE_IMAGES"] = PLUGIN_IMG
+    os.environ["RO_TEST_SPECTATOR_LOG"] = str(log)
+    try:
+        sport = load_plugin(str(plugin))
+        cfg = MatchConfig(sport="fixture_images", format="duel", seats=("A", "B"), seed=1, first="A",
+                          action_level="low")
+
+        class Mover:
+            def act(self, view):
+                return {"type": "add", "v": 0.5}
+        data = tmp / "run"
+        r = local.play(sport, cfg, {"A": Mover(), "B": Mover()}, data=data, render=False, plugin=str(plugin))
+        assert not log.exists()                          # the match itself never asks for event frames
+        info = spectator.render_video(str(plugin), data)
+        calls = len(log.read_text().splitlines())       # one call per drawn state (turn protocol: held 1 s = 12 frames)
+        ev = calls // 2
+        assert info["fps"] == 12 and info["event_frames"] == ev > 0, info
+        assert info["frames"] == calls * 12 + ev, (info, calls)
+        rep = replay(sport, read_rows(data / "episode.jsonl"))
+        assert rep["state_sha"] == r["digest"], (rep, r)
+    finally:
+        for k in ("RO_TEST_FIXTURE_IMAGES", "RO_TEST_SPECTATOR_LOG"):
+            os.environ.pop(k, None)
+
 
 if __name__ == "__main__":
     sys.exit(main())
