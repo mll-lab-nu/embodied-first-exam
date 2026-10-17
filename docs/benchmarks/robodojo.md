@@ -245,3 +245,81 @@ fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary 
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+33 of 54 bases are in the easy set; by directory: 80 easy, 13 hard, 9 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `robodojo-align-blocks-i00` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash |
+| `robodojo-arrange-largest-number-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-arrange-largest-number-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-build-tower-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
+| `robodojo-classify-objects-by-language-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-classify-objects-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-cover-blocks-i00` |  | easy: Luna | unverified |
+| `robodojo-deposit-coin-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-fasten-screws-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-fill-egg-holder-i00` |  | easy: Astra | hard |
+| `robodojo-fill-pen-holder-i00` | yes | easy: Astra | easy: Astra, Gemini 4 Argon |
+| `robodojo-fold-clothes-i00` | yes | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-fold-clothes-random-i00` | yes | — | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-general-pickup-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-hang-mugs-i00` |  | easy: Astra, Opus | hard |
+| `robodojo-hang-mugs-random-i00` |  | hard | easy: Gemini 4 Argon |
+| `robodojo-imitate-sorting-sequence-i00` |  | easy: Luna | unverified |
+| `robodojo-insert-key-i00` |  | easy: Astra, Gemini 4 Argon | hard |
+| `robodojo-insert-tubes-i00` |  | easy: Luna | unverified |
+| `robodojo-make-kong-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
+| `robodojo-make-toast-i00` |  | easy: Astra | hard |
+| `robodojo-make-toast-random-i00` | yes | — | easy: Opus, Gemini 4 Argon |
+| `robodojo-match-and-pick-from-conveyor-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-organize-table-i00` | yes | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
+| `robodojo-pack-objects-into-box-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard |
+| `robodojo-pack-objects-into-box-random-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Gemini 4 Argon |
+| `robodojo-pick-from-conveyor-by-image-i00` | yes | easy: Astra, Opus | easy: Opus |
+| `robodojo-play-stacking-toy-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-play-tic-tac-toe-i00` |  | easy: Luna | unverified |
+| `robodojo-play-xylophone-i00` |  | unverified | easy: Luna |
+| `robodojo-plug-in-charger-i00` | yes | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
+| `robodojo-pour-balls-into-vase-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-pour-by-language-i00` | yes | — | easy: Opus |
+| `robodojo-pour-liquid-into-cup-i00` | yes | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-pour-liquid-into-cup-random-i00` | yes | — | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-press-by-number-i00` |  | easy: Luna | unverified |
+| `robodojo-push-t-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
+| `robodojo-push-t-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |
+| `robodojo-put-bottles-into-dustbin-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-solve-equation-i00` |  | easy: Luna | unverified |
+| `robodojo-sort-nesting-dolls-by-size-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-sort-nesting-dolls-by-size-random-i00` |  | easy: Luna | unverified |
+| `robodojo-stack-blocks-by-language-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-stack-blocks-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-stack-blocks-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash |
+| `robodojo-stack-bowls-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-stack-bowls-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-store-laptop-and-headphones-i00` |  | easy: Astra | hard |
+| `robodojo-store-laptop-and-headphones-random-i00` |  | hard | hard |
+| `robodojo-store-tools-in-toolbox-i00` |  | easy: Astra | hard |
+| `robodojo-swap-blocks-i00` |  | easy: Astra | hard |
+| `robodojo-swap-t-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-sweep-blocks-i00` |  | easy: Luna | unverified |
+| `robodojo-sweep-blocks-random-i00` |  | easy: Astra, Opus | hard (only Astra) |
+
+Judgment calls: `robodojo-put-bottles-into-dustbin-i00`: the standard solves by Opus and Gemini 3.8 Flash relayed a
+bottle over the table instead of the suggested handover, which the task text says is not enforced.

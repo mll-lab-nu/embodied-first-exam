@@ -129,3 +129,74 @@ Harbor runs on the generated tasks (AMD Ryzen 9 7950X, Docker, no GPU): `-a orac
 tasks per mode. Two scripted cheat attempts score 0: in privileged mode, tooling patched to report success, forged
 reward files and a do-nothing trajectory; in standard mode, hidden endpoints (`/reset`, `/state`, `/success`: 404), a
 wrong action type and `dt` (400), and a forged `final.json` in the agent's container (never collected).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+29 of 50 bases are in the easy set; by directory: 79 easy, 0 hard, 21 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `metaworldplus-assembly-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-basketball-i00` |  | easy: Luna | unverified |
+| `metaworldplus-bin-picking-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-box-close-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-button-press-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-button-press-topdown-i00` |  | easy: Luna | unverified |
+| `metaworldplus-button-press-topdown-wall-i00` |  | easy: Luna | unverified |
+| `metaworldplus-button-press-wall-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-coffee-button-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-coffee-pull-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-coffee-push-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-dial-turn-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-disassemble-i00` |  | easy: Luna | unverified |
+| `metaworldplus-door-close-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-door-lock-i00` |  | easy: Luna | unverified |
+| `metaworldplus-door-open-i00` |  | easy: Luna | unverified |
+| `metaworldplus-door-unlock-i00` |  | easy: Luna | unverified |
+| `metaworldplus-drawer-close-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-drawer-open-i00` |  | easy: Luna | unverified |
+| `metaworldplus-faucet-close-i00` |  | easy: Luna | unverified |
+| `metaworldplus-faucet-open-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-hammer-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-hand-insert-i00` |  | easy: Luna | unverified |
+| `metaworldplus-handle-press-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-handle-press-side-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-handle-pull-i00` |  | easy: Luna | unverified |
+| `metaworldplus-handle-pull-side-i00` |  | easy: Luna | unverified |
+| `metaworldplus-lever-pull-i00` |  | easy: Luna | unverified |
+| `metaworldplus-peg-insert-side-i00` |  | easy: Luna | unverified |
+| `metaworldplus-peg-unplug-side-i00` |  | easy: Luna | unverified |
+| `metaworldplus-pick-out-of-hole-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-pick-place-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-pick-place-wall-i00` |  | easy: Luna | unverified |
+| `metaworldplus-plate-slide-back-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-plate-slide-back-side-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-plate-slide-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-plate-slide-side-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-push-back-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-push-i00` |  | easy: Luna | unverified |
+| `metaworldplus-push-wall-i00` |  | easy: Luna | unverified |
+| `metaworldplus-reach-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-reach-wall-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-shelf-place-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-soccer-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-stick-pull-i00` |  | easy: Luna | unverified |
+| `metaworldplus-stick-push-i00` |  | easy: Luna | unverified |
+| `metaworldplus-sweep-i00` |  | easy: Luna | unverified |
+| `metaworldplus-sweep-into-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-window-close-i00` | yes | easy: Luna | easy: Luna |
+| `metaworldplus-window-open-i00` | yes | easy: Luna | easy: Luna |
