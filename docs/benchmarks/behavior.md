@@ -321,6 +321,21 @@ object farther than 10 km from the origin, or the robot base faster than 100 m/s
 (`sim_breakdown` = 1, `infra_error` = 1). Before, such an episode ran on (one body reached z = 1.7e16 m with the episode
 still open) or ended as a simulator error once a call raised. A read that fails is no evidence: the check stands down.
 
+## Re-grading results recorded before 2026-10-14
+`scripts/behavior/regrade.py JOBS_DIR... [--gpus 0,1] [--select candidates|all] [--dry-run]` (host side, from the
+repository root: docker, the private `eai-behavior` image, an RTX GPU, `$RCB_BEHAVIOR_DATA`) runs the family's current
+privileged `tests/grade.py` (two fresh-process replays, no video) on each recorded trajectory and writes old / new
+verdicts as JSON lines. `goal_first_step` (`reward.json`, the first control step the bare goal held, -1 never) is the
+rule before 2026-10-14, so an old success that fails now is labelled `stricter rule` when the bare goal still held in
+the replay here and `inconclusive` when the replay went elsewhere (re-grade on the host class it ran on). The default
+`--select candidates` re-grades the trials whose verdict can change other than by a breakdown: old successes and
+failures whose replays succeeded or disagreed (standard: also a live success). Privileged re-grades are close to exact
+(the deliverable is the trajectory; the settle window after its last row is new). Standard re-grades are conservative:
+the old service ended the live episode on the first step the bare goal held, where the agent could otherwise have
+gone on and let go, so they only say whether the recorded rows plus the settle window reach the current rule; a
+standard trajectory over 40,000 rows cannot be re-graded with the privileged grader. A re-grade that ends on a
+breakdown is `infra` (no verdict).
+
 ### Whose failure a 0 is (2026-10-10, review of board 0067)
 The pass rules are unchanged; what changed is how a 0 that is not the agent's is reported (`reward.json`).
 - **Standard.** `final.json` is the trusted sidecar's own file, so `tests/grade.py` reports `infra_error` = 1 (no verdict on

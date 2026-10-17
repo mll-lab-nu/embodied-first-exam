@@ -1300,6 +1300,7 @@ class Session:
         self._fall = FallWatch(FALL_HOLD_STEPS, floor_z)   # the fall rule (FALL_*); its end is self.end_reason
         self._rest = RestWatch(REST_STEPS)                 # the success rule (REST_*): goal + release + rest for 1 s
         self._rest_info: dict = {"held": [], "moving": []}
+        self.goal_first_step: int | None = None            # the first control step the bare BDDL goal held (the rule before 10-14)
         self.breakdown: str | None = None                  # what broke down (BREAKDOWN_*), None while the simulator is sane
         self.end_reason: str | None = None
         try:
@@ -1366,6 +1367,7 @@ class Session:
         self._fall.reset()
         self._rest.reset()
         self._rest_info = {"held": [], "moving": []}
+        self.goal_first_step = None
         self.breakdown = None
         self.end_reason = None
         self._policy.reset()
@@ -1409,6 +1411,8 @@ class Session:
     def _success_step(self) -> bool:
         """The success rule for the control step just taken; True on the step its window closes (the episode ends there)."""
         goal, held, moving = bool(self.env.task.success), [], []
+        if goal and getattr(self, "goal_first_step", None) is None:
+            self.goal_first_step = int(self.env.episode_steps)
         if goal:
             ag = getattr(self.robot, "_ag_obj_in_hand", None) or {}
             in_hand = {id(o) for o in ag.values() if o is not None}
@@ -1535,6 +1539,7 @@ class Session:
         keeps the window from closing."""
         out = {"success": self.succeeded, "goal": bool(self.env.task.success), "goal_held_steps": int(self._rest.run),
                "goal_objects_held": list(self._rest_info["held"]), "goal_objects_moving": list(self._rest_info["moving"]),
+               "goal_first_step": getattr(self, "goal_first_step", None),  # the first step the bare goal held (the rule before 2026-10-14; re-grades)
                "fallen": bool(self._fall.fallen), "breakdown": self.breakdown is not None, "end_reason": self.end_reason,
                "sim_steps": int(self.env.episode_steps), "resets": self._resets, "state_sha": self.state_sha(), "q_score": None}
         try:

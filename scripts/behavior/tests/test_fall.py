@@ -315,6 +315,7 @@ class SuccessRule(unittest.TestCase):
         self.assertEqual(s.step(np.zeros(25)), (True, False))          # the window closes: REST_STEPS steps of goal
         self.assertTrue(s.succeeded and s.episode_done)
         self.assertEqual(s.env.episode_steps, 5 + M.REST_STEPS - 1)
+        self.assertEqual(s.status()["goal_first_step"], 5)               # the old rule's step, reported for re-grades
 
     def test_a_held_goal_object_is_not_success(self):
         s = stand_in_session(goal_at=1)

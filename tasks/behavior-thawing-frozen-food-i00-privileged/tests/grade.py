@@ -178,6 +178,9 @@ def main() -> int:
                "sim_breakdown": int(breakdown),
                # the BDDL goal at the end of the last replay, and the settle window it ran (the success rule, REST_*)
                "goal": int(bool(outs[-1].get("goal"))), "settle_steps": int(outs[-1].get("settle_steps") or 0),
+               # the first control step the bare BDDL goal held in the last replay, -1 never: the pass rule before
+               # 2026-10-14 (the episode ended there), so a re-grade can tell a rule change from a replay that went elsewhere
+               "goal_first_step": int(outs[-1]["goal_first_step"]) if outs[-1].get("goal_first_step") is not None else -1,
                "sim_steps": int(outs[0].get("sim_steps") or 0),
                # the robot fell over in a replay (the tooling's fall rule ended it there; the goal did not hold)
                "fallen": int(any(bool(o.get("fallen")) for o in outs)),
