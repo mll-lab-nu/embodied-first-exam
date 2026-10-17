@@ -70,7 +70,7 @@ every core task, the flag is shown as a marker and may be used as a filter. The 
 `task_conventions.set_of`) is kept apart: its tasks are run and their results kept and shown, marked, but the main
 table and every headline number (success rates, rankings, totals) count `core` tasks only; the easy set's results are
 shown separately (the batch summary marks them in their configuration's table and leaves them out of its rate; the
-results site and the dashboard list them apart). `set` in `config.json` is the value when the result was written; a
+results site and the pool dashboard, outside this repository, are to list them apart). `set` in `config.json` is the value when the result was written; a
 report derives it from `docs/easy_set.toml` at the commit it publishes, so a task that leaves the list (e.g. after a
 grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
 mode by the screening runs its `note` names: core-set numbers of those runs are filtered against them, so report those

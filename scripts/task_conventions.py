@@ -1162,13 +1162,20 @@ EASY_REASONS = {
 }
 
 
-@functools.lru_cache(maxsize=None)
 def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
     """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
     mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
-    optional `note`. ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`)."""
-    if not path.is_file():
+    optional `note`. ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
+    version of the file (its mtime), so a long-running reader sees an edited list."""
+    try:
+        mtime = path.stat().st_mtime_ns
+    except FileNotFoundError:
         return {}
+    return dict(_easy_set(path, mtime))
+
+
+@functools.lru_cache(maxsize=8)
+def _easy_set(path: Path, mtime: int) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
         b = e.get("base") if isinstance(e, dict) else None
@@ -1187,11 +1194,16 @@ def set_of(task: Path) -> str:
     result from being written (a warning, and `core`): `easy-set --check` reports it."""
     try:
         es = easy_set()
-    except (ValueError, tomllib.TOMLDecodeError) as e:
-        print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
-              file=sys.stderr)
+    except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
+        if str(e) not in _EASY_WARNED:
+            _EASY_WARNED.add(str(e))
+            print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
+                  file=sys.stderr)
         return "core"
     return "easy" if base_of(Path(task)) in es else "core"
+
+
+_EASY_WARNED: set[str] = set()
 
 
 def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:
@@ -1200,13 +1212,13 @@ def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) ->
     tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
     try:
         es = easy_set(path)
-    except (ValueError, tomllib.TOMLDecodeError) as e:
+    except (ValueError, OSError) as e:
         return [str(e)]
     names = {p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file()}
     have = {base_of(Path(n)) for n in names}
     bad = []
     for b, e in es.items():
-        if e.get("reason") not in EASY_REASONS:
+        if not isinstance(e.get("reason"), str) or e["reason"] not in EASY_REASONS:
             bad.append(f"{b}: reason {e.get('reason')!r} is not one of {', '.join(EASY_REASONS)}")
         if b not in have:
             bad.append(f"{b}: no task directory {b}-<mode> under tasks/")

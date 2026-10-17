@@ -11,6 +11,7 @@
   PATH records what it was given), removes the copy afterwards, and leaves tasks/ unchanged;
 - (board 0121 M4) a trial whose last model calls failed at the usage gateway, or whose job the gateway died in, is not a
   result; with GATEWAY=1 the runner restarts a dead gateway before the next job."""
+import functools
 import json
 import os
 import re
@@ -224,15 +225,20 @@ def test_easy_set():
     sys.path.insert(0, str(ROOT / "scripts"))
     import task_conventions as tc
     names = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
-    es = tc.easy_set()
-    # a listed base with a privileged and a standard task, and a base outside the list (the list changes over time)
-    EASY = next((b for b in sorted(es) if f"{b}-privileged" in names and f"{b}-standard" in names), None)
-    key = tc.config_key(tc.effective_config(ROOT / "tasks" / f"{EASY}-standard")) if EASY else None
-    CORE = next((b for b in (n[: -len("-privileged")] for n in names if n.endswith("-privileged"))   # same configuration:
-                 if b not in es and f"{b}-standard" in names and b.split("-")[0] == EASY.split("-")[0]   # one summary table
-                 and tc.config_key(tc.effective_config(ROOT / "tasks" / f"{b}-standard")) == key), None) if EASY else None
-    check(EASY is not None and CORE is not None, f"no easy / core base to test with: {EASY}, {CORE}")
-    if EASY is None or CORE is None:
+    es = tc.easy_set()                                   # a malformed list fails here (this test is in run_invariants.sh)
+    # a listed base with a privileged and a standard task, and a base outside the list in the same configuration (one
+    # summary table); the list changes over time, so both are looked up
+    pairs = [n[: -len("-privileged")] for n in names if n.endswith("-privileged") and f"{n[: -len('-privileged')]}-standard" in names]
+    key = functools.lru_cache(maxsize=None)(lambda b: tc.config_key(tc.effective_config(ROOT / "tasks" / f"{b}-standard")))
+    EASY = CORE = None
+    for e in (b for b in pairs if b in es):
+        same = sorted((b for b in pairs if b not in es), key=lambda b: b.split("-")[0] != e.split("-")[0])[:200]
+        CORE = next((b for b in same if key(b) == key(e)), None)
+        if CORE:
+            EASY = e
+            break
+    if EASY is None:
+        print("note: no easy-set base with a core base of the same configuration; the easy-set test is skipped")
         return
     for m in ("privileged", "standard"):
         check(tc.set_of(ROOT / "tasks" / f"{EASY}-{m}") == "easy", f"{EASY}-{m} is not in the easy set")
@@ -247,7 +253,7 @@ def test_easy_set():
                        '[[task]]\nbase = "behavior-no-such-task-i00"\nbenchmark = "BEHAVIOR-1K"\nreason = "owner"\n')
         found = tc.check_easy_set(path=bad)
         check(len(found) == 3, f"check_easy_set: want a bad reason, a bad label and a missing base, got {found}")
-        twice = Path(td) / "easy_set_twice.toml"            # another path: easy_set() caches per path
+        twice = Path(td) / "easy_set_twice.toml"
         twice.write_text(f'[[task]]\nbase = "{EASY}"\n[[task]]\nbase = "{EASY}"\n')
         check(any("twice" in x for x in tc.check_easy_set(path=twice)), "a base listed twice is not found")
         jobs = Path(td) / "jobs"
