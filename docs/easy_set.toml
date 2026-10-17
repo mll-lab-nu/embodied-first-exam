@@ -29,6 +29,8 @@
 # docs/benchmarks/robocasa365.md "Easy set").
 # 2026-10-17: RoboCasa-GR1 9 (the owner's screening: every mode the base ships solved by a screening run;
 # docs/benchmarks/robocasa-gr1.md "Easy set").
+# 2026-10-17: MetaWorld+ 29 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/metaworldplus.md "Easy set").
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -231,6 +233,180 @@ reason = "owner"
 base = "maniguard-stack-retrieve-i21"
 benchmark = "ManiGuard"
 reason = "owner"
+
+[[task]]
+base = "metaworldplus-assembly-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-bin-picking-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-box-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-button-press-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-button-press-wall-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-coffee-button-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-coffee-pull-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-coffee-push-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-dial-turn-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-door-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-drawer-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-faucet-open-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-hammer-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-handle-press-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-handle-press-side-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-pick-out-of-hole-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-pick-place-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-back-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-back-side-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-side-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-push-back-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-reach-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-reach-wall-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-shelf-place-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-soccer-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-sweep-into-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-window-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-window-open-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
 
 [[task]]
 base = "roboarc-blanket-flatten-01-i01"
