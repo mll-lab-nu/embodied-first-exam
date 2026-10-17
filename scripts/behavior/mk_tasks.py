@@ -107,17 +107,22 @@ VERIFY_PRIVILEGED = (
     "grader cannot read or with the wrong shape is `bad_trajectory`; a replay that dies or runs out of time, and a frozen\n"
     "instance that does not rebuild in the verifier (`instance_ok` 0), are `grader_error` + `infra_error` (no verdict on the agent).")
 VERIFY_STANDARD = (
-    "`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar;\n"
-    "`live_matches_replay` is reported separately, and so are the crash-recovery fields (`sim_startups`, `resumes`,\n"
-    "`resume_state_mismatch`, `infra_error`); `/logs/verifier/replay.mp4`. `infra_error` = 1 (no verdict on the agent) also\n"
-    "when `final.json` is missing, unreadable or not finalized, or a replay did not run to its result (`replay_error`).")
+    "`success` = the live episode's success, judged by the sim sidecar (graded live, no replay: 2026-10-17): the success\n"
+    "rule (the BDDL goal held 1 s, released and at rest) at every control step; when the agent's episode is still running at\n"
+    "its end, the sidecar holds the robot still for up to 5 s on the live simulator after the agent's container is stopped\n"
+    "and a goal that settles there counts (`settled_success`). The frozen start is checked when the sidecar builds the scene,\n"
+    "before the agent is served. The crash-recovery fields (`sim_startups`, `resumes`, `resume_state_mismatch`) are\n"
+    "reported; the video (`/logs/verifier/live.mp4`) is recorded during the episode (a video-only render, `replay.mp4`, only\n"
+    "when it is missing) and never decides anything. `infra_error` = 1 (no verdict on the agent) when `final.json` is\n"
+    "missing, unreadable or not finalized, the service never ended the episode, it gave up after crashes not all inside the\n"
+    "agent's calls, or the frozen start did not rebuild (`instance_mismatch`).")
 SIDECAR = (
     "The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar\n"
     "(`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own\n"
-    "record in `/out`), which owns the scene and records the episode as a (T, 25) trajectory. The collect hook\n"
-    "(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes\n"
-    "(Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes\n"
-    "`final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.")
+    "record in `/out`), which owns the scene, judges the episode and records it as a (T, 25) trajectory and a video. The\n"
+    "collect hook (`environment/sim/finalize.sh`) ends the episode (the settle window on the live simulator when it was still\n"
+    "running), lets the service exit and writes `final.json` from the live result; nothing replays the episode. The\n"
+    "verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.")
 SUCCESS_RULE = ("the BDDL goal has held for 1 s of simulated time in a row (30 control steps) with no goal object attached to "
                 "a gripper and every goal object at rest (slower than 0.05 m/s), and the episode ends there (it ended on the "
                 "first control step the goal's literals were true, sometimes with the object still in the gripper); after the "
@@ -249,7 +254,18 @@ CHANGES = {
         f"{SUCCESS_RULE}; each replay runs that settle window after the last row, and when your episode ended first a "
         f"success both replays reach there is the episode's (`settled_success`); `/spec` `episode` says so. (3) {BREAKDOWN}. The scene, the frozen instance and the BDDL "
         "goal are unchanged, so the task keeps its name (as for the fall rule of 2026-10-09); the pass rule is stricter, so "
-        "results recorded before this change are reported separately."],
+        "results recorded before this change are reported separately.",
+        "2026-10-17 (owner, board 0150/0151): graded by the live episode, no grading replay. `environment/sim/finalize.sh` no "
+        "longer replays the trajectory (two graded fresh-process replays and a video replay before): it writes `final.json` from "
+        "the live episode (`graded_by` \"live\", `replays` 0). The success rule is unchanged; its settle window now runs on the "
+        "live simulator: when the agent's episode is still running at its end, `environment/sim/server.py` holds the robot still "
+        "for up to 5 s once the collect hook's signal arrives (after the agent's container is stopped, `[[verifier.collect]]` "
+        "`kill -9 -1` on `main`), and a goal that settles there counts (`settled_success`). The frozen start is checked when the "
+        "service builds the scene (`instance_mismatch`, infrastructure: was a crash, then the replays' check). The video is "
+        "recorded during the episode (`live.mp4`: the robot cameras every third control step); a video-only render "
+        "(`replay.mp4`) runs only when that is missing. `[[verifier.collect]] timeout_sec` is 23400 s (was 52200 s). A trial "
+        "that passed live but failed a replay would now pass; one whose success came only from the replays' settle window is "
+        "now judged by the same window on the live simulator."],
 }
 
 
@@ -435,8 +451,8 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; docs/benchmarks/behavior.md)"),
-            ("Collect hook time", "52200 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + the video replay "
-                                  "after the verdict (up to 4 h) + 30 min")]
+            ("Collect hook time", "23400 s: the episode end (up to 2 h through a resume, with the 5 s settle window) + a video-only "
+                                  "render after the verdict, only when the live video is missing (up to 4 h) + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))
 
@@ -445,8 +461,7 @@ def standard_description(fam: str, seed: int, text: str) -> str:
     return (f'description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 {fam} on the same frozen '
             f'instance as the privileged task (2026 challenge public_test instance {seed}). {text} The agent only gets a client: '
             f'get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim '
-            f'service records the episode as a trajectory, resumes it after a crash, and the episode is graded on two fresh '
-            f'replays."\n')
+            f'service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."\n')
 
 
 def instance_text(fam: str) -> str:

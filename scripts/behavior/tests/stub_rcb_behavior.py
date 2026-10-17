@@ -3,7 +3,8 @@ sim service (tasks/behavior-*-standard/environment/sim/server.py) to start and s
 drive the real service code, the real shared layer and real HTTP requests. One "control step" adds the action to a
 25-number state. Knobs (environment): STUB_GOAL_AT (the success rule's window closes at that control step: the episode
 ends there as a success), STUB_FALL_AT (the episode ends there as a fall), STUB_BREAKDOWN_AT (the episode ends there as a
-simulator breakdown), STUB_LOG (every executed step is appended there, one line per step)."""
+simulator breakdown), STUB_LOG (every executed step is appended there, one line per step), STUB_INSTANCE_MISMATCH=1
+(the frozen start does not rebuild: instance_matches False)."""
 from __future__ import annotations
 
 import hashlib
@@ -16,6 +17,7 @@ MAX_STEPS = int(os.environ.get("STUB_MAX_STEPS", "200000"))
 FALL_TILT_TOLERANCE, FALL_HEIGHT_M, FALL_HOLD_STEPS, FALL_REASON = 0.75, 0.03, 300, "failure: the robot fell over"
 REST_STEPS, REST_SPEED_M_S, SETTLE_STEPS = 30, 0.05, 150
 BREAKDOWN_REASON = "failure: simulator breakdown"
+MP4_FRAGMENTED = "frag_keyframe+empty_moov+default_base_moof"
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
 CAMS = ("robot_r1:zed_link:Camera:0", "robot_r1:left_realsense_link:Camera:0", "robot_r1:right_realsense_link:Camera:0")
 
@@ -68,6 +70,8 @@ class Session:
         self.fall_at = int(os.environ.get("STUB_FALL_AT", "0")) or None
         self.breakdown_at = int(os.environ.get("STUB_BREAKDOWN_AT", "0")) or None
         self.log = os.environ.get("STUB_LOG")
+        self.instance_sha = "s0"; self.instance_exact = os.environ.get("STUB_INSTANCE_MISMATCH") != "1"
+        self.instance_matches = self.instance_exact
 
     # ---- what the service builds its /spec from
     def primitives(self): return {}
@@ -126,6 +130,8 @@ class Session:
         return False, False
     @property
     def succeeded(self): return bool(self.env.task.success)
+    def status(self):
+        return {"success": self.succeeded, "q_score": 1.0 if self.succeeded else 0.0, "goal_first_step": self.goal_at if self.succeeded else None}
     def settle(self, steps=SETTLE_STEPS):
         n = 0
         while n < steps and self.env.episode_steps > 0 and not self.episode_done:
