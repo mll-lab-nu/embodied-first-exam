@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""game - your seat in the match (the same commands for every sport; the actions are the sport's, see `game spec`).
+
+  game spec                  the sport: actions (types, fields, ranges), cameras, units, rules, timing
+  game status                the current state, no images
+  game start                 you are ready (preparation over); the match begins when every seat has started
+  game wait [SECONDS]        turn-based: block until it is your turn; real time: let the world run SECONDS (<= 1)
+  game observe [QUERY_JSON]  the state and the camera images (saved as PNG under /app/output/views/)
+  game act ACTION_JSON       one action, e.g. game act '{"type": "throw", ...}' (if the sport shows the result
+                             in images, they are saved like observe's, as reply_*.png)
+  game ready "WHY" "PLAN"    your review (after each of your actions, turn-based; at each review, real time)
+  game say "TEXT"            team formats: a message to your teammates (never shown to the other side)
+  game team [SINCE]          team formats: your teammates' messages after seq SINCE (default 0); reading never
+                             consumes them (observe / status show the recent ones and team_seq, the newest seq)
+  game skill upload PATH     low level with an uploaded skill in the loop: send your skill (the directory PATH,
+                             or one file) to the simulator; it replaces your previous upload and plays from the
+                             next unit's start (source and text files only: .py .json .txt .toml .yaml .yml .csv .md)
+  game skill status          the uploaded and the loaded version (sha256) and any load error
+Sport shortcuts (generated from the sport's declaration):
+@@SHORTCUTS@@"""
+import base64
+import json
+import os
+import sys
+import tempfile
+import urllib.error
+import urllib.request
+
+COMMANDS = json.loads('@@COMMANDS@@')       # shortcut -> [action type, field, field, ...]
+VIEWS = "/app/output/views"
+BASE = os.environ.get("SIM_URL", "http://sim:8000") + "/" + os.environ.get("SEAT", "A")
+
+
+def call(ep, body=None):
+    req = urllib.request.Request(BASE + "/" + ep, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+
+
+def save(b64, name):
+    os.makedirs(VIEWS, exist_ok=True)
+    fd, p = tempfile.mkstemp(dir=VIEWS, prefix=name + "_", suffix=".png")
+    with os.fdopen(fd, "wb") as f:
+        f.write(base64.b64decode(b64))
+    return p
+
+
+def show(o):
+    ob = o.get("observation")
+    if isinstance(ob, dict) and ob.get("image_png_b64"):
+        ob["image_file"] = save(ob.pop("image_png_b64"), "reply" if ob.get("of") else "obs")
+    for k in [k for k in o if k.endswith("_image_b64")]:
+        if o[k]:
+            o[k[:-4] + "_file"] = save(o.pop(k), k[:-10])
+        else:
+            o.pop(k)
+    print(json.dumps(o, indent=1))
+
+
+SKIP_DIRS = ("__pycache__", ".git", ".ipynb_checkpoints")
+
+
+def skill_files(path):
+    """{relative path: text} of the regular files under `path` (or the one file), without __pycache__ / .pyc."""
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
+            return {os.path.basename(path): f.read()}
+    if not os.path.isdir(path):
+        sys.exit(f"game skill upload: no such file or directory: {path}")
+    out = {}
+    for d, dirs, files in os.walk(path, followlinks=False):
+        dirs[:] = sorted(x for x in dirs if x not in SKIP_DIRS and not os.path.islink(os.path.join(d, x)))
+        for name in sorted(files):
+            full = os.path.join(d, name)
+            if name.endswith((".pyc", ".pyo")) or os.path.islink(full) or not os.path.isfile(full):
+                continue
+            try:
+                with open(full, encoding="utf-8") as f:
+                    out[os.path.relpath(full, path).replace(os.sep, "/")] = f.read()
+            except UnicodeDecodeError:
+                sys.exit(f"game skill upload: {full} is not UTF-8 text (only source and text files are accepted)")
+    return out
+
+
+def arg(name, x):
+    """A shortcut's argument as the act body carries it: `entity` as written (an id), true / false as booleans, a
+    number as a number, anything else (an enum value) as written; the core checks every field against the schema."""
+    if name == "entity":
+        return x
+    if x in ("true", "false"):
+        return x == "true"
+    try:
+        return float(x)
+    except ValueError:
+        return x
+
+
+def main(a):
+    turn = call("spec").get("protocol", "").startswith("eai-standard-turn") if a[:1] == ["wait"] else None
+    if a == ["spec"]:
+        show(call("spec"))
+    elif a == ["status"]:
+        show(call("status"))
+    elif a == ["start"]:
+        show(call("start", {}))
+    elif a[:1] == ["wait"] and len(a) <= 2:
+        if turn:
+            while True:
+                o = call("wait", {"timeout_s": 60})
+                st = o.get("state") or {}
+                if "error" in o or st.get("done") or st.get("your_turn"):
+                    break
+            show(o)
+        else:
+            show(call("wait", {"dt": float(a[1]) if len(a) == 2 else 0.1}))
+    elif a[:1] == ["observe"] and len(a) <= 2:
+        show(call("observe", {"query": json.loads(a[1])} if len(a) == 2 else {}))
+    elif a[:1] == ["act"] and len(a) == 2:
+        show(call("act", json.loads(a[1])))
+    elif a[:1] == ["ready"] and len(a) == 3:
+        show(call("ready", {"why": a[1], "plan": a[2]}))
+    elif a[:1] == ["say"] and len(a) == 2:
+        show(call("say", {"text": a[1]}))
+    elif a[:1] == ["team"] and len(a) <= 2:
+        show(call("team", {"since": int(a[1]) if len(a) == 2 else 0}))
+    elif a[:2] == ["skill", "upload"] and len(a) == 3:
+        show(call("skill", {"files": skill_files(a[2])}))
+    elif a == ["skill", "status"]:
+        show(call("skill"))
+    elif a and a[0] in COMMANDS and len(a) == len(COMMANDS[a[0]]):
+        kind, *names = COMMANDS[a[0]]
+        show(call("act", {"type": kind, **{n: arg(n, x) for n, x in zip(names, a[1:])}}))
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
