@@ -76,7 +76,7 @@ actively. The standard-realtime mode is offered where a benchmark's tasks call f
   `roboolympics-<family-with-dashes>-i<NN>` (`[metadata].family` = the family with underscores, e.g. `penalty_kick`);
   every family in privileged and standard mode. Its exported tasks (PROTOCOL §3, `scripts/roboolympics/exported.toml`): `<base>` is
   `roboolympics-<sport>-<format>-i<NN>` with the sport's RoboOlympics id (`tabletennis`, `badminton`, `soccer`,
-  `soccerssl`, `fencing`) and its format (`match`, `bout`); real-time
+  `soccerssl`, `fencing`) and its format (`match`, `bout`; `matchlow`: the low level, the agent's own uploaded skill plays the match); real-time
   matches in standard-realtime mode only, turn-based matches (`eai-standard-turn/1.0`) in standard mode only; never a family name of the generated families.
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
