@@ -313,48 +313,6 @@ reason = "solved"
 note = "Luna (codex-gpt6_luna-xhigh) P+S"
 
 [[task]]
-base = "dexjoco-bimanual-photograph-i00"
-benchmark = "DexJoCo"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "dexjoco-bimanual-unlock-ipad-i00"
-benchmark = "DexJoCo"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "dexjoco-fold-glasses-i00"
-benchmark = "DexJoCo"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "dexjoco-hammer-nail-i00"
-benchmark = "DexJoCo"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "dexjoco-pick-bucket-i00"
-benchmark = "DexJoCo"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "dexjoco-pinch-tongs-i00"
-benchmark = "DexJoCo"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
 base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
 benchmark = "LIBERO-MAX"
 reason = "solved"
@@ -6449,13 +6407,6 @@ solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
-base = "robotwin_2_0_beat_block_hammer"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
 base = "robotwin_2_0_blocks_ranking_rgb"
 benchmark = "RoboTwin 2.0"
 reason = "solved"
@@ -6477,49 +6428,7 @@ solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
-base = "robotwin_2_0_grab_roller"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_handover_block"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_handover_mic"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_lift_pot"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
 base = "robotwin_2_0_move_can_pot"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_move_pillbottle_pad"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_move_playingcard_away"
 benchmark = "RoboTwin 2.0"
 reason = "solved"
 solved_by = "luna"
@@ -6531,27 +6440,6 @@ benchmark = "RoboTwin 2.0"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_open_laptop"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_open_microwave"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_pick_diverse_bottles"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "robotwin_2_0_pick_dual_bottles"
@@ -6573,55 +6461,6 @@ benchmark = "RoboTwin 2.0"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_bread_basket"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_burger_fries"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_can_basket"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_container_plate"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_dual_shoes"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_empty_cup"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_fan"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "robotwin_2_0_place_mouse_pad"
@@ -6652,27 +6491,6 @@ solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
-base = "robotwin_2_0_place_phone_stand"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_place_shoe"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_press_stapler"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
 base = "robotwin_2_0_rotate_qrcode"
 benchmark = "RoboTwin 2.0"
 reason = "solved"
@@ -6680,25 +6498,11 @@ solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
-base = "robotwin_2_0_shake_bottle"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
 base = "robotwin_2_0_shake_bottle_horizontally"
 benchmark = "RoboTwin 2.0"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_stack_blocks_two"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "robotwin_2_0_stack_bowls_two"
@@ -6709,13 +6513,6 @@ note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026
 
 [[task]]
 base = "robotwin_2_0_stamp_seal"
-benchmark = "RoboTwin 2.0"
-reason = "solved"
-solved_by = "luna"
-note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
-
-[[task]]
-base = "robotwin_2_0_turn_switch"
 benchmark = "RoboTwin 2.0"
 reason = "solved"
 solved_by = "luna"
