@@ -27,7 +27,7 @@ it ran on.
 
 Scope: only the 94 tasks of the RoboARC 0.1.0 release (RELEASED below) are re-graded. A trial of any other task (a RoboARC
 task added after 0.1.0, a Genesis robotangle-* task) is listed with `skipped` and the reason, and so is a standard trial
-(the standard twins' grading did not change). Output: one JSON line per trial (--out) and a table on stdout."""
+(the standard twins are graded by the live episode since 2026-10-17: docs/benchmarks/roboarc.md, Standard grading). Output: one JSON line per trial (--out) and a table on stdout."""
 from __future__ import annotations
 import argparse, json, os, pathlib, re, shutil, subprocess, sys, tempfile
 
