@@ -71,6 +71,7 @@ UNITS: dict[str, list[str]] = {
     "RoboFunOlympics": _own("robofunolympics"),
     "Panda Dynamic Scenes": _own("pandadyn"),
     "AM-Bench": _own("ambench"),
+    "iSpatialGym": _own("ispatialgym"),
 }
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
