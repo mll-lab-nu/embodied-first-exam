@@ -100,6 +100,14 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 `images/ispatialgym/BUILD_ONLY` says. Regenerate the tasks: `python3 scripts/ispatialgym/mk_tasks.py render`
 (`instances` splits the picked instances of upstream's eval data into `instance.json` and `goal.json`; `measure --task T` writes `facts.json`, on a GPU).
 
+## Positive examples (oracle none, PROTOCOL §4)
+Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed
+in as the privileged deliverable and graded by the task's own verifier image (two fresh replays, no network) on an L40S,
+2026-10-17: 12/12 score 1, deterministic, with a replay video; the replay succeeds at upstream's first settled step + 1
+or earlier (the × 3 tolerances), e.g. mental_rotation 130 of 136 rows, block_design 3501 of 4149. One Isaac process of
+the verifier held up to 17 GiB of GPU memory on that card (texture streaming takes what the card has; 3.5-4.6 GiB on an
+RTX 4090 with four processes at once).
+
 ## Known issues
 - **The privileged start names the task's objects.** The start-only BDDL problem the loader needs lists the objects the
   task is about (as BEHAVIOR-1K's do), and `instance.json` keeps upstream's load order, in which they come last before the
