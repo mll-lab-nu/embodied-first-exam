@@ -17,9 +17,8 @@ Here the service checks (1)-(4) after every `submit` and every `get_obs(seconds 
 them after holding your last row 1.0 s more, on a copy (the robot is not moved): if that settled check passes too, the
 episode ends with success (`meta["reason"]` is `success`); if not, the episode goes on and you can still fix it
 (`meta["settle_failed"]` counts such checks). A breakdown ends the episode at once (`meta["reason"]` is
-`sim_breakdown`), with no success. After the episode every executed control step is replayed from the initial state in
-two fresh processes; the task is scored 1 only if the live episode succeeded, both replays pass (1)-(4) at the end of the
-rows and again after the 1.0 s hold, and they end in the live episode's final state.
+`sim_breakdown`), with no success. An episode that ends otherwise (your time is up) is judged as it stands by the same
+two checks. The task is scored 1 only if the live episode succeeded; nothing is replayed afterwards.
 
 ## Physics and mechanism
 

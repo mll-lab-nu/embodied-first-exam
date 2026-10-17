@@ -44,22 +44,26 @@ Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no re
   - `tasks.json`: the texts (goal, success requirements, mechanism, the terminal rules);
   - `assets.json`: the sha256 of every scene file in the image, and the dataset pin of the meshes (Image and assets);
   - `bindings.json`: what each scene builds to in the image (initial-state hash, actuators, timestep);
-  - `evidence.json`, `standard_evidence.json`: the Harbor checks and timings the READMEs and the verifier timeouts are
-    written from;
+  - `evidence.json`, `standard_evidence.json`: the Harbor checks and timings the READMEs and the privileged verifier
+    timeouts are written from;
   - `shared/`: `rcb_ikea.py` (the tooling and the replay), `grade.py` (the verifier), `render_video.py` (the replay
     video);
   - `standard/`: the sim service (`server.py`, `ikea_rig.py`, `ikea_nyx.py` with RoboARC's `nyx_direct.py`,
-    `finalize.sh`), its grader and the oracle client, `rigs.json` (camera rigs), `std_reference.py`;
+    `finalize.sh`), its grader (`grade.py`: transcribes the live episode's `final.json`) and the oracle client,
+    `rigs.json` (camera rigs), `std_reference.py`;
   - `oracles/<task>/`: the closed-loop references and how they were built (eket, ikea365, vesken) and stegesund's
     reference; `tails/variera.npy`: variera's release tail;
   - `provenance.json`: the scenes' upstream provenance, kept out of the image (PROTOCOL Appendix H.2);
-  - `tests/test_grade.py`: the grader's crash handling on a stub replay (`ci_checks/check-unit-tests.sh`).
+  - `tests/test_grade.py`: the privileged grader's crash handling on a stub replay, then `tests/test_standard_grade.py`:
+    the standard hook and grader on synthetic `final.json` / `episode.json` (live success, live failure, settle failure,
+    crash give-ups, instance mismatch, no video, missing `final.json`, no replay started) (`ci_checks/check-unit-tests.sh`).
 - Every generator ends with `scripts/task_conventions.py` normalize; the generators also write the egress allowlist
   of `scripts/set_agent_egress.py`.
 
 ## Grading (both modes, every task)
-The deliverable (privileged: `/app/output/trajectory.npz`; standard: the rows the sidecar executed) is replayed
-open-loop in two fresh processes from the frozen keyframe. Success needs all of:
+One rule in both modes. Privileged: the deliverable (`/app/output/trajectory.npz`) is replayed open-loop in two fresh
+processes from the frozen keyframe. Standard: the rule is evaluated on the live episode by the sim service; nothing is
+replayed (below). Success needs all of:
 - **Goal:** the scene's own `success.py`, a port of the source assembly grader.
 - **Terminal rules,** the same in every task: the parts are released (no robot link touches a part); every part is at
   rest (at most 0.01 m/s and 0.05 rad/s); the simulation never broke down (no non-finite state, no MuJoCo BADQACC /
@@ -68,7 +72,7 @@ open-loop in two fresh processes from the frozen keyframe. Success needs all of:
   panel (`rcb_ikea.END_POSE_RULES`): the source grader checks the back only at its slide, and the back has no frame joint.
 - These hold at the end of the rows **and** again after the grader holds the last row for 1.0 s
   (`rcb_ikea.Session.final_check()`).
-- Both replays end in the same state hashes, before and after the hold.
+- Privileged: both replays end in the same state hashes, before and after the hold.
 - A replay that crashes (a simulator crash, `replay_crash`) or in which the scene's code or MuJoCo raises on the state
   the rows drove it into (`replay_exception`) is a breakdown (`sim_breakdown 1`, reward 0), not a grader error: a
   grader or infrastructure error gives the trial a free retry (PROTOCOL H.5), which the deliverable's own failures must
@@ -76,16 +80,27 @@ open-loop in two fresh processes from the frozen keyframe. Success needs all of:
 - The privileged verifier's time limit covers a trajectory of the task's row cap on a slow trial-class CPU (one
   reference replay on a Xeon Gold 6230R core, `evidence.json` `slow_replay_wall_s`, with a 1.5x margin), not only the
   Harbor host's timing: a verifier that times out writes no verdict.
-- The verifier checks the scene in its image file by file against `tests/runtime_binding.json` (`instance_exact`) and
-  its initial-state hash (`instance_ok`).
+- The privileged verifier checks the scene in its image file by file against `tests/runtime_binding.json`
+  (`instance_exact`) and its initial-state hash (`instance_ok`); the standard sim service does the same before its
+  episode begins (`server.py`: scene files, initial-state hash, actuators and runtime against
+  `environment/sim/runtime_binding.json`; a mismatch is `instance_mismatch`, `infra_error 1`, and nothing is served).
 
-Standard mode's live verdict: the service ends an episode only at a settled success, `Session.status()` and then
-`final_check()` on a snapshot with the last row held 1.0 s; a failed settle lets the episode go on
-(`meta["settle_failed"]`). The live and the replay verdicts use one rule.
+Standard mode is graded by the live episode (owner, 2026-10-17, board 0150/0151): `success` = the sim service's live
+verdict, `graded_by_live 1`, `replays 0`. The service ends an episode at the first settled success, `Session.status()`
+and then `final_check()` on a snapshot with the last row held 1.0 s (the privileged grader's rule, the settle window
+included); a failed settle lets the episode go on (`meta["settle_failed"]`). An episode that ends otherwise (the wall
+clock, the collect hook's end) is judged as it stands by the same two checks. `finalize.sh` writes `final.json`
+(`graded_by "live"`, `replays 0`, `state_sha` = the live end-state hash); the verifier (`tests/grade.py`, the shared
+client base, no simulator) transcribes it. The trajectory (`/data/trajectory.npz`) stays the replayable deliverable; a
+live success without it is `infra_error`. Infrastructure (a free retry, H.5): no, unreadable or unfinalized
+`final.json`, `instance_mismatch`, a give-up after crashes not all inside the agent's calls (`sim_crashed`,
+`resume_failed`, `call_watchdog`), a service-side error. The agent's 0: a breakdown, a simulator error its rows caused
+(`sim_error`), a timeout, all crashes inside its calls (`sim_crashed_on_call`), a failed settle.
 
-Every graded trial leaves a replay video (PROTOCOL §4), evidence only: standard, the sidecar's `/data/live.mp4`;
-privileged, `/logs/verifier/replay.mp4`, rendered by a third process next to the two verdict replays (MuJoCo's renderer
-on CPU OSMesa: the verifier has no GPU; 512 x 288, at most 750 frames).
+Every graded trial leaves a video (PROTOCOL §4), evidence only: standard, the sidecar's `/data/live.mp4`, recorded during
+the live episode (Nyx, cam_high, 10 frames per simulated second, on the GPU the sidecar renders the agent's cameras with;
+no extra pass); privileged, `/logs/verifier/replay.mp4`, rendered by a third process next to the two verdict replays
+(MuJoCo's renderer on CPU OSMesa: the verifier has no GPU; 512 x 288, at most 750 frames).
 
 ## Robot speed (both modes)
 Every arm joint target moves at most the robot's real joint velocity limit per control step: Franka Panda 2.175 rad/s on
@@ -168,7 +183,8 @@ agent's budget is the same 10800 s on every host, so on a slow host an agent has
 ## Image and assets
 - `ghcr.io/mll-lab-nu/eai-ikea-mujoco:<images/ikea-mujoco/VERSION>` (0.3.0, image id `ed950d079b63`): MuJoCo 3.14.0
   (EPA-patched), numpy 2.5.4, Python 3.12, and the twelve scenes at `/opt/ikea/scenes/<task>` (the four in progress
-  included). The privileged agent, the privileged verifier and the standard verifier run it.
+  included). The privileged agent and the privileged verifier run it; the standard verifier runs the shared client
+  base (it replays nothing).
 - `ghcr.io/mll-lab-nu/eai-ikea-mujoco-sim:<images/ikea-mujoco/sim/VERSION>` (0.4.0): the standard sidecar. It adds Nyx,
   RoboARC's renderer and look, in its own venv `/opt/nyx` (gs-nyx 0.1.3 needs numpy < 2.4; the physics process keeps
   numpy 2.5.4 and the patched MuJoCo): RGB from Nyx (path tracer, 32 spp, denoised, studio HDRI, point lights placed
@@ -186,3 +202,8 @@ The standard tasks' texts give no world coordinates: no part poses or positions,
 Every pose the standard agent gets or gives is in the robot frame (origin at the left arm's base link, +z up). The
 privileged tasks read anything, as privileged tasks do. A scene reads nothing from the environment (`rcb_ikea` drops
 kyrre's development switches `SW_FROM_OP` / `SW_FROM_T` on import).
+
+## Change log
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay (the standard
+  verifier's two fresh-process replays are gone, and so is its IKEA MuJoCo image: it runs the shared client base, 600 s);
+  video by the live recording (`/data/live.mp4`, unchanged).
