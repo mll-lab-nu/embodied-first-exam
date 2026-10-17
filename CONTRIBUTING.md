@@ -31,6 +31,8 @@ Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 It also states the oracle source (PROTOCOL §4), the minimum compute per trial (CPU cores, memory, GPU memory
 and GPU class, §6), image size, whether the images can be published, and
 the expected size of the pull request.
+A new benchmark's shared-files change adds its label to `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix
+-> name) and its row to `ci_checks/ci_scope.py` `UNITS`.
 
 ## Authoring a task
 1. Copy the closest existing pair (`tasks/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks
@@ -59,7 +61,7 @@ the expected size of the pull request.
    expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
    `.caps` and writes the `## Resource limits` paragraph the agent reads into `instruction.md` (just before the closing
    `## Time limit`). With enforcement on
-   (`RCB_LIMITS_ENFORCE=1`, v1.2) exceeding a limit fails the trial, so set them a generous margin above measured peaks
+   (`RCB_LIMITS_ENFORCE=1`) exceeding a limit fails the trial, so set them a generous margin above measured peaks
    (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them. The caps are the ones docker
    applies: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb` and writes the other services' caps
    into the compose file; a cap your compose file sets itself must be the declared value (`check-resources.py`).
@@ -75,8 +77,8 @@ bash ci_checks/run_invariants.sh tasks/<your tasks>   # must pass (the required 
 bash ci_checks/run_all.sh tasks/<your tasks>      # both tiers: fix the advisory findings or say why the task departs
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
-python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
-python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (§2.12)
+python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (PROTOCOL §6)
+python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty
@@ -136,7 +138,7 @@ The checklist is in PROTOCOL §4.
 - To change a time cutoff (the task author's decision; owner involvement only where official results must stay
   comparable), set the new `[agent] timeout_sec` in the tasks concerned (a generated
   benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them
-  and say old -> new and why in the pull request ([docs/CUTOFFS.md](docs/CUTOFFS.md)). The task keeps its name and gets
+  and say old -> new and why in the pull request (docs/RUNNING.md "The agent's time"). The task keeps its name and gets
   a new digest; results under the earlier cutoff are ranked separately (PROTOCOL §2, H.8).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
 - The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives) by default

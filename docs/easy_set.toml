@@ -16,37 +16,7 @@
 # `config_key`) and checked by `python3 scripts/task_conventions.py easy-set --check` (ci_checks/run_all.sh). Marking a
 # task here changes none of its files: its DIGEST and the results recorded against it stay valid. A task leaves the
 # set by deleting its entry (e.g. after a grader fix and a re-grade).
-#
-# 2026-10-16: the first 84 bases (BEHAVIOR-1K 16, ManiGuard 8, RoboARC 31, RoboLab 19, RoboPaint 8, RoboWits 2), the
-# benchmark owner's (Qineng Wang) selection after the GPT-6 Astra review (#265). Several shortcut patterns are closed
-# by grader fixes (#243, #244, #248, #254), so some tasks may move back to the core set after a re-grade; RoboWits is
-# small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
-# 2026-10-16: DexJoCo 4 (#278, group meeting: a task the screening runs solved in both modes; docs/benchmarks/dexjoco.md
-# "Easy set").
-# 2026-10-17: AM-Bench 8 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/ambench.md "Easy set").
-# 2026-10-17: RoboCasa 9 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/robocasa.md "Easy set").
-# 2026-10-17: RoboCasa365 19 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/robocasa365.md "Easy set").
-# 2026-10-17: RoboCasa-GR1 9 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/robocasa-gr1.md "Easy set").
-# 2026-10-17: MetaWorld+ 29 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/metaworldplus.md "Easy set").
-# 2026-10-17: VLABench 15 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/vlabench.md "Easy set").
-# 2026-10-17: LIBERO-MAX 29 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/libero-max.md "Easy set").
-# 2026-10-17: RoboDojo 33 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/robodojo.md "Easy set").
-# 2026-10-17: Panda Dynamic Scenes 1 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/pandadyn.md "Easy set").
-# 2026-10-17: YAMLab 5 (the owner's screening: every mode the base ships solved by a screening run;
-# docs/benchmarks/yamlab.md "Easy set").
-# 2026-10-17: solved by Luna 362 (owner, board 0155): every base codex-gpt6_luna-xhigh solved in ANY mode it ships
-# (privileged by the verifier, the standard modes by the live episode), `solved_by = "luna"`, appended to each benchmark's
-# block by scripts/easy_set_add_solved.py from the pool's verdicts (re-run it as Luna solves more). Luna's core-set
-# success rate is then 0 by construction: report Luna on all tasks.
+# No dated or per-batch comments here: each entry's `reason`, `note` and `solved_by` say why it is easy.
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -102,10 +72,6 @@ benchmark = "AM-Bench"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
-
-# 2026-10-17: RoboSafeBench 458 (the authors' selection with 0.5.4): every base outside the 84-task 0.5.4 set, i.e.
-# the 481 tasks that keep their 0.5.3 content and image. rsb-c04-i00 stays in the core set because its realtime mode
-# is one of the 84 (an entry covers every mode of a base).
 
 [[task]]
 base = "behavior-chop-an-onion-i00"
@@ -3216,6 +3182,8 @@ benchmark = "YAMLab"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
+
+# RoboSafeBench: every base without a 0.5.4 task (rsb-c04-i00 stays core: its realtime mode is a 0.5.4 task).
 
 [[task]]
 base = "rsb-a01-i00"
