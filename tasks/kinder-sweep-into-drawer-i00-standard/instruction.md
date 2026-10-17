@@ -16,15 +16,14 @@ and you reach it only through a client. **Task:** get the five small dark-red cu
   `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
   `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
   gripper's grasp point, each camera's field of view and pose.
-- There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script
+- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run
   the same way, so do not stop early: while the episode runs, the run can still pass.
 
 ## Scoring
 The run passes iff the episode reaches the goal above, as KinDER's own goal check judges it, within 1000
-control steps (`reason = "success"`), and a fresh replay of the recorded episode reaches it as well and ends in the
-same state. There is no partial credit.
+control steps (`reason = "success"`); that live episode is the verdict. There is no partial credit.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;

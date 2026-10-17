@@ -30,9 +30,8 @@ end up close to one another rather than spread out.
   error, else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's range,
   each joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the IMU's
   frame, each camera's field of view and pose.
-- There is nothing to hand in: the service records every episode, replays the last one in a fresh simulator
-  and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it
-  early and keep it current.
+- There is nothing to hand in: the service records every episode and grades the last one as it ran. Keep the
+  script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
   earlier ends the run the same way, so do not stop early: while the episode runs, or a reset is left, the run
   can still pass.
@@ -43,8 +42,8 @@ HumanoidBench scores the *whole episode*, not a final state: it passes iff the s
 gives you no target positions at all. The dominant term measures how *spread out* the six objects are — the
 variance of their horizontal coordinates — and rewards making that small; a smaller term pays for standing
 steadily. Any arrangement that brings the objects close together scores, wherever in the room you do it. The
-service ends the episode the moment the pass mark is reached (`reason = "success"`), and a fresh replay of the
-recorded episode must reach it as well and end in the same state.
+service ends the episode the moment the pass mark is reached (`reason = "success"`); that live episode is the
+verdict.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 Your whole interface to the robot. Its docstring is the full reference
