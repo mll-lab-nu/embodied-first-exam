@@ -36,8 +36,9 @@ supplementary tasks for harder testing (50 on 2026-10-04, 16 and 23 on 2026-10-0
   protocol's layout and ends each task with `scripts/task_conventions.py`'s `normalize()`, like every generator.
   `scripts/behavior/goal.py` words each BDDL predicate a goal uses, with OmniGibson's thresholds. Agent results are not
   in the repository (PROTOCOL D3): the positives are cited by trial id, results-site log and Hugging Face replay.
-- The predicate is the task's official BDDL goal (OmniGibson object states), checked at every control step; the episode
-  ends the moment it holds, and as a failure when the robot has fallen over (§ Falls). The challenge's timeout is lifted to
+- The predicate is the task's official BDDL goal (OmniGibson object states), checked at every control step; success needs
+  it to hold for 1 s, released and at rest (§ Success, 2026-10-14), and the episode ends there, or as a failure when the
+  robot has fallen over (§ Falls). The challenge's timeout is lifted to
   a runaway guard (time is the budget, not steps).
 - Frozen instance: the full simulator state after the challenge's own instance load (`Evaluator.load_task_instance`) and
   its hash, in `environment/`, `tests/` and the standard sidecar. Another host may rebuild it within the pose tolerance but
@@ -189,10 +190,17 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
   challenge timeout and 1.6 times the longest success; 1.5 steps/s is 20 % under the slowest rate measured, and 1200 s
   covers the slowest start. The instruction states the cap; every success recorded so far is under it. The standard
   mode is unchanged (its episode is bounded by the agent's wall clock).
+  Since the video replay of 2026-10-14 (§ Grading and determinism) `[verifier] timeout_sec` = 85800 s: plus the video
+  replay, which runs after the verdict is written and gets a graded replay's limit (PROTOCOL §4: the video's bound
+  covers the longest episode), within the verifier's remaining time (`tests/grade.py` `VERIFIER_TIMEOUT_S`).
 - **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI;
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
   replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
-  `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below).
+  `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below). Since 2026-10-16
+  (41400 s from 10-14) it is 52200 s: plus the video replay (up to 4 h), which runs after `final.json` holds the verdict,
+  in the hook's remaining time. Known limit: each replay gets what the hook has left, so a very long episode (the
+  longest standard one recorded had 118,050 rows; at the slowest measured 1.88 steps/s a replay of it would take
+  ~17 h) can leave the second replay or the video short; the verdict never waits for the video.
 
 ## Kit cache: one per trial
 Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every compose file names its cache volume without a
@@ -254,6 +262,85 @@ its log has no failed download: the scene loads from the mounted dataset alone.
   hook's signal; the hook replays it in two fresh processes (`environment/sim/finalize.sh`); `success = live ∧ replay ∧
   deterministic`, `live_matches_replay` reported separately. OmniGibson declares rollouts nondeterministic; measured so
   far, a live run and its fresh replay agree.
+- **Replays that agree (2026-10-14, failure analysis item 16).** 15 trials of the 10-08..10-14 runs (7 privileged, 8
+  standard) completed the task live or in a replay and scored 0 because their two fresh-process replays (or the live run
+  and a replay) ended in different states; all are transition or heat tasks (setting_the_fire, slicing_vegetables,
+  halve_an_egg, chop_an_onion, cook_brussels_sprouts, chopping_wood) or rearrange_your_room. The cause is OmniGibson's
+  iteration over Python sets of simulator objects: every control step it updates object states per state type
+  `for obj in scene.get_objects_with_state(state_type)` (a set from the object registry) and applies transition rules
+  `for rule in tuple(self.active_rules)` and over candidate sets; no OmniGibson class defines `__hash__`, so the order
+  follows memory addresses, which differ between processes with different allocation histories (a cold Kit cache, other
+  cameras, a `status()` call, a service answering requests). Updates that do not commute then diverge: each burning object
+  in turn pulls the temperatures it reaches towards its own. Measured on ws (setting_the_fire 301, test-only state edits:
+  two burning objects next to a third): with the original hashing, four fresh processes that differed only by throw-away
+  allocations before the scene loaded iterated the scene's sets in different orders, and the third object caught fire at
+  control step 103 in one and 104 in three (its temperature after 10 steps 48.649 vs 46.107); with the tooling's stable
+  hashes all four processes (the same four allocation histories) gave step 103 and bit-identical temperatures. The agents' own evidence agrees (Opus
+  setting_the_fire: the grader's no-video replay ended at step 4340, its video replay and Opus's own no-video replays at
+  4341; standard chop_an_onion, halve_an_egg, cook_brussels_sprouts: the replay recorded with the video and other cameras
+  matched the live run, and the one run exactly like the live service did not), so the cameras were not the cause. The
+  tooling now hashes every prim and particle system by its unique name and every rule by its class name (crc32, the same
+  in every process; `_stable_hashes()`) before the scene loads; equality stays identity. Every simulator process also runs
+  with `PYTHONHASHSEED=0` (sets of strings).
+- **The graded replays run alike (2026-10-14).** Until then the video was recorded during one of
+  the two graded replays (privileged: the second, standard: the first), and the replay CLI builds that Session with the
+  challenge cameras (`cameras="default"`, 224x224) instead of the tiny ones, so the two replays the hash check compares
+  ran different configurations (not the cause of the 15 above, but no basis for comparing hashes either). Now both graded
+  replays run without video, the same way, and the
+  video comes from a third fresh-process replay, run after the verdict is written and bounded like a graded replay (2026-10-16,
+  PROTOCOL §4; it was capped at 1 h, which would have cut the video of long episodes), that never decides anything; whether it ended on the same
+  state is reported (`video_replay_matches`), as evidence about the camera configuration's effect.
+- **`s.status()` changes nothing (2026-10-14, item 17).** The q_score counts the goal's satisfied predicates by evaluating
+  them; that fills the object states' value caches, and OmniGibson reuses a cached value at later steps while the objects
+  have moved less than a tolerance, so a `status()` at an arbitrary step could change what the goal and the transition
+  rules saw afterwards (an agent's fire outcome changed with its `status()` calls). `status()` now restores every object
+  state's cache after the evaluation. The state hash (`og.sim.dump_state`) only reads.
+
+## Success: held for 1 s, released and at rest (2026-10-14, failure analysis item 20)
+Until 2026-10-14 the episode ended, as a success, on the first control step the BDDL goal's literals were true, and 6 of
+the 16 lenient successes of the 10-08..10-14 runs fired with a goal object still in the gripper (dispose_of_glass,
+installing_a_modem, putting_away_Halloween_decorations, tidying_bathroom, tidying_bedroom x2). The rule now
+(`REST_*`, `RestWatch`, `Session._success_step` in the tooling, so the privileged session, the standard service and every
+replay apply it at the same control step): the goal holds for `REST_STEPS` = 30 consecutive control steps (1 s of
+simulated time), on each of them no **goal object** (a BDDL object the `:goal` names, as an instance or through a
+quantifier's category; a tool the goal does not name may stay in the hand) is attached to a gripper by assisted grasping,
+and every goal object's base link is slower than `REST_SPEED_M_S` = 0.05 m/s. The episode ends at the end of that window.
+When the actions run out first (a trajectory's last row; a standard episode the agent ended), the robot holds still (the
+last command, the base at 0) for up to `SETTLE_STEPS` = 150 control steps (5 s, `Session.settle()`; every replay runs it
+after the last row; in standard mode, when the agent's episode ended first (reason `timeout`), a success both replays reach
+there is the episode's, `settled_success` (since the review of 2026-10-16 only when both replays ran the settle window,
+`settle_steps` > 0, and their state at the last row is the live one, `live_matches_replay`): the service itself cannot step after the end signal, since Isaac steps only on
+its request thread and a step from the end signal's thread deadlocked it), so a trajectory recorded to the first
+frame of the goal with the objects released still passes once they settle. `status()["goal"]` is the bare goal,
+`goal_objects_held` / `goal_objects_moving` what keeps the window open; `reward.json` `goal`, `settle_steps`. The BDDL
+goals themselves are the challenge's and unchanged; goals looser than their task texts (stacking_wood, chop_an_onion,
+make_microwave_popcorn, ...) are a maintainer decision (they come from the official challenge).
+
+## Simulator breakdown (2026-10-14, failure analysis item 25)
+The tooling checks the robot every control step and the goal objects every 30 (`BREAKDOWN_*`): a non-finite robot
+state, the robot or a goal object farther than 10 km from the origin, or the robot base faster than 100 m/s end the
+episode with reason "failure: simulator breakdown (...)" (`status()["breakdown"]`), a failure the verifiers record as
+`sim_breakdown` = 1. The PR proposed counting it as an infrastructure failure (`infra_error`, no verdict); in review
+(2026-10-16, board 0146) the breakdowns on record turned out to be mostly the agent's own doing (all 23 `error` endings of
+GLM 5.3 Flash's standard episodes were a NaN base orientation after the robot tumbled), and an infrastructure failure is
+voided and run again under PROTOCOL H.5, so a failing agent would get its 0 dropped. Whether a breakdown is
+infrastructure is the owner's decision; until then it stays what a simulator error was before, the agent's 0. Before, such an episode ran on (one body reached z = 1.7e16 m with the episode
+still open) or ended as a simulator error once a call raised. A read that fails is no evidence: the check stands down.
+
+## Re-grading results recorded before 2026-10-14
+`scripts/behavior/regrade.py JOBS_DIR... [--gpus 0,1] [--select candidates|all] [--dry-run]` (host side, from the
+repository root: docker, the private `eai-behavior` image, an RTX GPU, `$RCB_BEHAVIOR_DATA`) runs the family's current
+privileged `tests/grade.py` (two fresh-process replays, no video) on each recorded trajectory and writes old / new
+verdicts as JSON lines. `goal_first_step` (`reward.json`, the first control step the bare goal held, -1 never) is the
+rule before 2026-10-14, so an old success that fails now is labelled `stricter rule` when the bare goal still held in
+the replay here and `inconclusive` when the replay went elsewhere (re-grade on the host class it ran on). The default
+`--select candidates` re-grades the trials whose verdict can change: old successes and
+failures whose replays succeeded or disagreed (standard: also a live success). Privileged re-grades are close to exact
+(the deliverable is the trajectory; the settle window after its last row is new). Standard re-grades are conservative:
+the old service ended the live episode on the first step the bare goal held, where the agent could otherwise have
+gone on and let go, so they only say whether the recorded rows plus the settle window reach the current rule; a
+standard trajectory over 40,000 rows cannot be re-graded with the privileged grader. A re-grade that ends on a
+breakdown is a 0 with `sim_breakdown` (see Simulator breakdown); `regrade.py` labels it.
 
 ### Whose failure a 0 is (2026-10-10, review of board 0067)
 The pass rules are unchanged; what changed is how a 0 that is not the agent's is reported (`reward.json`).
@@ -357,6 +444,10 @@ BEHAVIOR-1K code (including the BDDL activity definitions): MIT; the BEHAVIOR Da
 never copied); Isaac Sim 5.1 and Omniverse Kit: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
 
 ## Known issues
+- Privileged agents' containers mount `/behavior-src` and `/opt/tools` read-only (2026-10-14, item 24: four agents edited
+  OmniGibson and robot files in their own container, and their live runs diverged from the grader's): each is a volume of
+  the trial that Docker fills from the image at the first mount. The robot assets live in the dataset mount, read-only too.
+  The conda environment's site-packages (Isaac Sim's extensions) stay writable; the grader uses its own image anyway.
 - While the robot moves, a frame shows the scene 2 control steps before its `frame_step` (renderer latency).
 - The per-call state hash (`og.sim.dump_state`, read-only) is new with crash recovery: the validation re-checks that
   `live_matches_replay` stays 1 on the standard oracles.

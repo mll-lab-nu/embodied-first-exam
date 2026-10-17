@@ -8,7 +8,9 @@ tests/grade.py of both template twins and the real environment/sim/finalize.sh, 
 - environment/sim/finalize.sh (run whole, with a stand-in `python` for the end command and the replay CLI): replay exit
   codes, a replay that dies / hangs / prints nothing, the atomic final.json;
 - privileged tests/grade.py (with a stand-in tooling module): an unreadable trajectory is bad_trajectory, a replay that
-  dies is grader_error, instance_ok 0 is infra_error.
+  dies is grader_error, instance_ok 0 is infra_error;
+- (2026-10-14) both graders: the graded replays run alike, without the video; the video is a third replay whose state
+  never decides `deterministic`; a replay that ends on a simulator breakdown is a failure with sim_breakdown (2026-10-16).
 """
 from __future__ import annotations
 
@@ -103,13 +105,16 @@ FAKE_PYTHON = r"""#!/bin/sh
 case "$1" in
   /srv/rcb_limited.py) exit "${FAKE_END_RC:-0}" ;;
   "$RCB_TOOL")
-    n=$(( $(cat "$RCB_DATA/.n" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$RCB_DATA/.n"
+    n=$(( $(cat "$RCB_DATA/.n" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$RCB_DATA/.n"; echo "$*" >> "$RCB_DATA/.args"
     eval "mode=\${FAKE_REPLAY_$n:-ok}"
     case "$mode" in
-      ok)      echo '[rcb] noise on stdout'; echo '{"replays": [{"success": true, "state_sha": "aaaa", "q_score": 1.0}], "instance_matches": true}' ;;
+      ok)      echo '[rcb] noise on stdout'; echo '{"replays": [{"success": true, "state_sha": "aaaa", "actions_sha": "aaaa", "settle_steps": 31, "q_score": 1.0}], "instance_matches": true}' ;;
+      early)   echo '{"replays": [{"success": true, "state_sha": "aaaa", "actions_sha": "aaaa", "settle_steps": 0, "q_score": 1.0}], "instance_matches": true}' ;;
+      elsewhere) echo '{"replays": [{"success": true, "state_sha": "aaaa", "actions_sha": "eeee", "settle_steps": 31, "q_score": 1.0}], "instance_matches": true}' ;;
       fail)    echo '{"replays": [{"success": false, "state_sha": "aaaa", "q_score": 0.3}], "instance_matches": true}' ;;
       drift)   echo '{"replays": [{"success": false, "state_sha": "cccc", "q_score": 0.0}], "instance_matches": false}' ;;
       other)   echo '{"replays": [{"success": true, "state_sha": "bbbb", "q_score": 1.0}], "instance_matches": true}' ;;
+      breakdown) echo '{"replays": [{"success": false, "state_sha": "dddd", "breakdown": true, "end_reason": "failure: simulator breakdown (robot state not finite)"}], "instance_matches": true}' ;;
       die)     echo 'Segmentation fault' >&2; exit 139 ;;
       silent)  exit 0 ;;
       error)   echo '{"error": "trajectory task x != y"}'; exit 2 ;;
@@ -137,7 +142,8 @@ def finalize(episode: dict | None = EPISODE, **env) -> dict:
         p = subprocess.run(["sh", str(STD / "environment" / "sim" / "finalize.sh")], env=e, capture_output=True, text=True, timeout=300)
         assert p.returncode == 0, p.stderr
         assert not list(out.glob("final.json*tmp")), "a temporary final.json was left behind"
-        return {**json.loads((out / "final.json").read_text()), "_stdout": p.stdout}
+        args = (out / ".args").read_text().splitlines() if (out / ".args").exists() else []
+        return {**json.loads((out / "final.json").read_text()), "_stdout": p.stdout, "_args": args}
 
 
 def gpu_openable() -> bool:
@@ -154,7 +160,44 @@ def gpu_openable() -> bool:
 @unittest.skipUnless(shutil.which("sh") and gpu_openable(), "needs sh and, where a GPU device exists, access to it")
 class Finalize(unittest.TestCase):
     def graded(self, fin: dict) -> dict:
-        return grade_standard({k: v for k, v in fin.items() if k != "_stdout"})[1]
+        return grade_standard({k: v for k, v in fin.items() if not k.startswith("_")})[1]
+
+    def test_graded_replays_alike_and_the_video_apart(self):
+        fin = finalize()
+        self.assertEqual(len(fin["_args"]), 3, fin["_args"])
+        self.assertNotIn("--video", fin["_args"][0]); self.assertNotIn("--video", fin["_args"][1])
+        self.assertIn("--video", fin["_args"][2])
+        self.assertTrue(fin["video_replay_matches"]); self.assertEqual(self.graded(fin)["video_replay_matches"], 1)
+        fin = finalize(FAKE_REPLAY_3="other")        # the video replay ended elsewhere: reported, never the verdict
+        self.assertTrue(fin["deterministic"]); self.assertFalse(fin["video_replay_matches"])
+        self.assertEqual(self.graded(fin)["success"], 1)
+        fin = finalize(FAKE_REPLAY_3="die")          # no video: still graded
+        self.assertNotIn("infra_error", fin); self.assertEqual(self.graded(fin)["success"], 1)
+
+    def test_a_success_the_replays_settle_counts_when_the_agent_ended_first(self):
+        ended = {**EPISODE, "success": False, "reason": "timeout"}
+        fin = finalize(ended)                                  # both replays succeed after their settle window
+        self.assertTrue(fin["success"] and fin["settled_success"]); self.assertEqual(self.graded(fin)["success"], 1)
+        self.assertEqual(self.graded(fin)["settled_success"], 1)
+        fin = finalize(ended, FAKE_REPLAY_2="other")           # not deterministic: no
+        self.assertFalse(fin["success"]); self.assertEqual(self.graded(fin)["success"], 0)
+        fin = finalize({**EPISODE, "success": False, "reason": "failure: the robot fell over"})   # only after the agent's end
+        self.assertFalse(fin["success"])
+        # (review of #254) only a success the settle window brought, on the rows the live run took: replays that closed
+        # the window during the actions (the live run did not), or that went elsewhere than the live run, are no success
+        fin = finalize(ended, FAKE_REPLAY_1="early", FAKE_REPLAY_2="early")
+        self.assertFalse(fin["success"]); self.assertEqual(self.graded(fin)["success"], 0)
+        fin = finalize(ended, FAKE_REPLAY_1="elsewhere", FAKE_REPLAY_2="elsewhere")
+        self.assertTrue(fin["deterministic"]); self.assertFalse(fin["live_matches_replay"]); self.assertFalse(fin["success"])
+
+    def test_a_breakdown_is_a_recorded_failure(self):
+        # (2026-10-16) the agent's 0 with sim_breakdown until the owner decides whether it is infrastructure
+        fin = finalize(FAKE_REPLAY_1="breakdown", FAKE_REPLAY_2="breakdown")
+        self.assertTrue(fin["sim_breakdown"]); self.assertFalse(fin.get("infra_error"))
+        g = self.graded(fin)
+        self.assertEqual((g["success"], g["infra_error"], g["sim_breakdown"]), (0, 0, 1), g)
+        g = self.graded({**GOOD, "reason": "failure: simulator breakdown (robot state not finite)", "success": False})
+        self.assertEqual((g["success"], g["infra_error"], g["sim_breakdown"], g["task_failure"]), (0, 0, 1, 1), g)
 
     def test_two_good_replays(self):
         fin = finalize()
@@ -209,7 +252,16 @@ FAKE_TOOL = r'''"""stand-in for the tooling in the verifier: MAX_STEPS and the `
 import json, os, sys
 MAX_STEPS = 200_000
 if __name__ == "__main__":
+    open(os.environ["FAKE_COUNT"] + ".args", "a").write(" ".join(sys.argv[1:]) + "\n")
+    video = "--video" in sys.argv
+    if video and os.environ.get("FAKE_VIDEO") == "die":
+        sys.exit(139)
+    if video and os.environ.get("FAKE_VIDEO") == "other":
+        print(json.dumps({"replays": [{"success": True, "state_sha": "vvvv"}], "instance_matches": True})); sys.exit(0)
     mode = os.environ.get("FAKE_REPLAY", "ok")
+    if mode == "breakdown":
+        print(json.dumps({"replays": [{"success": False, "state_sha": "dddd", "breakdown": True, "end_reason": "failure: simulator breakdown (x)"}],
+                          "instance_matches": True, "instance_exact": True})); sys.exit(0)
     if mode == "die":
         sys.exit(139)
     sha = "aaaa"
@@ -220,7 +272,7 @@ if __name__ == "__main__":
 '''
 
 
-def grade_privileged(write_traj, **env) -> tuple[str | None, dict | None]:
+def grade_privileged(write_traj, video: bool = False, **env) -> tuple[str | None, dict | None]:
     with tempfile.TemporaryDirectory(prefix="rcb_behavior_pgrade_") as tmp:
         tmp = Path(tmp); log = tmp / "log"; log.mkdir()
         shutil.copy(PRIV / "tests" / "grade.py", tmp / "grade.py")
@@ -232,9 +284,12 @@ def grade_privileged(write_traj, **env) -> tuple[str | None, dict | None]:
         e = {**os.environ, "RCB_VERIFIER_LOG_DIR": str(log), "FAKE_COUNT": str(tmp / "count"), "PYTHONDONTWRITEBYTECODE": "1",
              **{k: str(v) for k, v in env.items()}}
         subprocess.run([sys.executable, str(tmp / "grade.py"), "--family", "picking_up_trash", "--instance", str(tmp / "instance.json"),
-                        "--traj", str(traj), "--no-video"], env=e, capture_output=True, text=True, timeout=120)
+                        "--traj", str(traj)] + ([] if video else ["--no-video"]), env=e, capture_output=True, text=True, timeout=120)
         txt = (log / "reward.txt").read_text().strip() if (log / "reward.txt").exists() else None
         js = json.loads((log / "reward.json").read_text()) if (log / "reward.json").exists() else None
+        if js is not None:
+            a = tmp / "count.args"
+            js["_args"] = a.read_text().splitlines() if a.exists() else []
         return txt, js
 
 
@@ -256,6 +311,28 @@ class PrivilegedGrader(unittest.TestCase):
             self.assertEqual(js.get(k), v, (k, js))
         self.assertIn("deterministic", js); self.assertIn("grader_error", js); self.assertIn("infra_error", js)
         return js
+
+    def test_graded_replays_alike_and_the_video_apart(self):
+        txt, js = grade_privileged(good_traj, video=True)
+        self.assertEqual(txt, "1", js)
+        self.assertEqual(len(js["_args"]), 3, js["_args"])
+        self.assertTrue(all("--video" not in a for a in js["_args"][:2])); self.assertIn("--video", js["_args"][2])
+        self.assertEqual((js["deterministic"], js["video_replay_matches"]), (1, 1))
+        txt, js = grade_privileged(good_traj, video=True, FAKE_VIDEO="other")   # the video replay's state never decides
+        self.assertEqual(txt, "1", js); self.assertEqual((js["deterministic"], js["video_replay_matches"]), (1, 0))
+
+    def test_the_verdict_never_waits_for_the_video(self):
+        # (2026-10-16, PROTOCOL §4) the verdict is on disk before the video replay; a video replay that dies, or no
+        # verifier time left for it, leaves the verdict as it was (video_rendered 0, video.json says why)
+        txt, js = grade_privileged(good_traj, video=True, FAKE_VIDEO="die")
+        self.assertEqual(txt, "1", js); self.assertEqual((js["success"], js["video_rendered"], js["video_replay_matches"]), (1, 0, 0))
+        self.assertEqual(len(js["_args"]), 3, js["_args"])
+        txt, js = grade_privileged(good_traj, video=True, RCB_VERIFIER_TIMEOUT_S="700")   # 700 s - 600 s margin: no time
+        self.assertEqual(txt, "1", js); self.assertEqual(len(js["_args"]), 2, js["_args"]); self.assertEqual(js["video_rendered"], 0)
+
+    def test_a_breakdown_is_a_recorded_failure(self):
+        js = self.check(good_traj, "0", env={"FAKE_REPLAY": "breakdown"}, success=0, sim_breakdown=1, infra_error=0, grader_error=0)
+        self.assertEqual(js["deterministic"], 1)
 
     def test_pass_and_plain_failures(self):
         self.check(good_traj, "1", success=1, grader_error=0, infra_error=0, instance_ok=1, deterministic=1)

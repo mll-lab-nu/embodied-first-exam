@@ -198,6 +198,40 @@ class NonFiniteIK(unittest.TestCase):
             s.kill(); shutil.rmtree(s.work, ignore_errors=True)
 
 
+class EpisodeEnd(unittest.TestCase):
+    """(2026-10-14) The end of an episode the agent ended (no stepping after the end signal: the replays settle), and a
+    breakdown."""
+
+    def end(self, s: Service) -> dict:
+        s.p.send_signal(signal.SIGUSR1)                      # the collect hook's end (rcb_limited.py end)
+        s.p.wait(timeout=60)
+        return json.loads((s.out / "episode.json").read_text())
+
+    def test_the_end_steps_nothing(self):
+        s = Service(STUB_GOAL_AT=40, STUB_LOG=str(Path(tempfile.mkdtemp()) / "steps.log"))   # the agent's rows end at 15 steps
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            ep = self.end(s)
+            self.assertFalse(ep["success"]); self.assertEqual(ep["reason"], "timeout")
+            self.assertEqual(len(Path(s.env["STUB_LOG"]).read_text().splitlines()), 15)   # no step after the end signal
+            self.assertEqual(len(np.load(s.out / "trajectory.npz")["actions"]), 15)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_breakdown_ends_the_episode(self):
+        s = Service(STUB_BREAKDOWN_AT=4)
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            st = s.get("/status")
+            self.assertTrue(st["done"]); self.assertTrue(st["reason"].startswith("failure: simulator breakdown"), st)
+            fin = s.final()
+            self.assertTrue(fin["reason"].startswith("failure: simulator breakdown")); self.assertEqual(fin["n_actions"], 4)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+
 class ResumeEndsEarly(unittest.TestCase):
     """OmniGibson rollouts are not bit-exact: on a resume the replayed episode may end before the logged rows are done."""
 

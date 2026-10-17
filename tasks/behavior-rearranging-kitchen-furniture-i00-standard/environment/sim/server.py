@@ -17,10 +17,14 @@ Differences from the RoboTwin service, all from the simulator:
   simulator in this container would not fit next to the live one. So when the episode ends the service writes
   /out/trajectory.npz + /out/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and
   environment/sim/finalize.sh replays the trajectory in two fresh processes and completes /out/final.json;
-- the episode ends when the BDDL goal holds (success), when the robot has fallen over (the tooling's fall rule,
-  OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell over"), on the collect hook's
-  signal (timeout), on a simulator error, or at the tooling's runaway guard (MAX_STEPS control steps, reason
-  "step_guard"; /spec max_control_steps); /spec "episode" says so;
+- the episode ends on the tooling's success rule (2026-10-14: the BDDL goal has held for 1 s of simulated time with no
+  goal object in a gripper and every goal object at rest; when the agent's episode ends first, each fresh-process replay
+  holds the robot still for up to 5 s (SETTLE_STEPS) after the last row, and a goal that settles there in both replays
+  counts (finalize.sh)), when the robot has fallen
+  over (the tooling's fall rule, OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell
+  over"), on a simulator breakdown (non-finite or runaway robot or goal-object state: reason "failure: simulator
+  breakdown (...)", a failure recorded as `sim_breakdown`), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
+  (MAX_STEPS control steps, reason "step_guard"; /spec max_control_steps); /spec "episode" says so;
 - a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
   periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
@@ -73,15 +77,22 @@ def dump() -> None:
     if E.get("dumped"): return
     E["dumped"] = True
     try:
-        acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
+        acts = S.record_stop(); E["n_actions"] = int(len(acts))
         S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"], "reason": E["reason"]})
+        # no settle window here: this runs in the end signal's thread, and Isaac steps only on the thread that serves the
+        # requests (a step from here deadlocked the service). Each fresh-process replay runs it after the last row, and
+        # finalize.sh counts a success the settled replays agree on when the agent's episode ended first.
+        if S.breakdown is not None and E["reason"] != S.end_reason:
+            E["reason"] = S.end_reason
+        E["live_sha"] = S.state_sha()
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"), {
         "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-        "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+        "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "sim_breakdown": S.breakdown is not None,
+        **EP.final_fields()})
     write_final()
 
 
@@ -185,11 +196,18 @@ SPEC = {
                                "moves; its extrinsic_cv is the camera pose it was rendered with, so pixels, depth and pose agree; proprio "
                                "is the state at frame_step"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "14400"))},
-    "episode": ("one episode, no reset: it ends the moment the task's goal holds (success); when the robot has fallen over, i.e. its "
+    "episode": ("one episode, no reset: it ends as a success once the task's goal has held for "
+                f"{M.REST_STEPS / CTRL_HZ:g} s of simulated time in a row ({M.REST_STEPS} control steps) with no goal object in a "
+                f"gripper (assisted grasping lets go when both fingers are commanded open) and every goal object at rest (slower "
+                f"than {M.REST_SPEED_M_S:g} m/s; the goal objects: every object the goal names, a tool or appliance it names (even inside a `not`) included); when your episode ends first (you stop, or your time is up), each grading replay holds "
+                f"the robot still (your last command, the base at 0) for up to {M.SETTLE_STEPS / CTRL_HZ:g} s after your last row, and a "
+                "goal that settles there in both replays counts as a success; when the robot has fallen over, i.e. its "
                 f"base has been tilted more than {math.degrees(math.acos(M.FALL_TILT_TOLERANCE)):.1f} degrees from upright (the z of its up "
                 f"axis below {M.FALL_TILT_TOLERANCE}: cos(rx) * cos(ry) of base_footprint_rx_joint / _ry_joint) or more than "
                 f"{M.FALL_HEIGHT_M:g} m below the floor for {M.FALL_HOLD_STEPS / CTRL_HZ:g} s of simulated time in a row "
-                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); when your time is up (timeout); on a simulator error (error); "
+                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); on a simulator breakdown (a non-finite or runaway "
+                f"robot or goal-object state: reason \"{M.BREAKDOWN_REASON} (...)\", a failure); "
+                "when your time is up (timeout); on a simulator error (error); "
                 f"or at the runaway guard of {M.MAX_STEPS} control steps ({M.MAX_STEPS / CTRL_HZ / 3600:.2f} h of simulated time; step_guard). "
                 "There is no step budget otherwise"),
     "robot_spec": RSPEC,
@@ -200,7 +218,7 @@ SPEC = {
 
 
 def check_success() -> bool:
-    return bool(S.env.task.success)
+    return S.succeeded                  # the tooling's success rule (goal + release + rest for REST_STEPS), not the bare goal
 
 
 def proprio_row() -> np.ndarray:
