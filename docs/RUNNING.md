@@ -89,8 +89,9 @@ shown separately (the batch summary marks them in their configuration's table an
 results site and the pool dashboard, outside this repository, are to list them apart). `set` in `config.json` is the value when the result was written; a
 report derives it from `docs/easy_set.toml` at the commit it publishes, so a task that leaves the list (e.g. after a
 grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
-mode by the screening runs its `note` names: core-set numbers of those runs are filtered against them, so report those
-runs on all tasks alongside.
+mode by the screening runs its `note` names, or, with `solved_by` (owner 2026-10-17: `"luna"`, codex-gpt6_luna-xhigh),
+in any mode by that run (`scripts/easy_set_add_solved.py` appends them): core-set numbers of those runs are filtered
+against them (Luna's core-set success rate is 0 by construction), so report those runs on all tasks alongside.
 
 Standard-mode results recorded before the live-grading change (2026-10-17, PROTOCOL H.4) are re-read from their own
 `final.json`: the success the live episode ended with, under that benchmark's live rule, where that version's live
