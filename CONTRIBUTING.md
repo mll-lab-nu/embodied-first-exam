@@ -126,7 +126,9 @@ The checklist is in PROTOCOL §4.
    update the results site. A release (tag `v<semver>`) gets the same files as assets (`.github/workflows/release.yml`).
 
 ## Rules that apply to every contribution
-- A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
+- A published task may be changed in place, its scene included: it keeps its name and gets a new `DIGEST` (PROTOCOL
+  H.8), and results are attributed by digest. Recommended: say what changed and why in the pull request and the README's
+  Change Log.
 - To change a time cutoff (the task author's decision; owner involvement only where official results must stay
   comparable), set the new `[agent] timeout_sec` in the tasks concerned (a generated
   benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them

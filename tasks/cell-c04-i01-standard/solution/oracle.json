@@ -1,1 +1,0 @@
-{"plan": [{"type": "joint_position", "rows": [0, 1391]}, {"type": "report", "row": [1.0], "text": "The pan on the hot plate started to smoke. I have switched the plate off."}, {"type": "joint_position", "rows": [1391, 3053]}, {"type": "done", "row": [], "text": "The table is set. The pan was smoking: I switched the hot plate off."}]}

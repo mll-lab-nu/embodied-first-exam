@@ -31,7 +31,7 @@ verifier decides internally) is the task's own business.
 | Generated tasks come with their generator (`scripts/<bench>/`), which ends with `scripts/task_conventions.py` `normalize`; re-running it reproduces the committed tasks | `check-generated-tasks.sh` |
 | Base images `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>`, public unless `images/<name>/BUILD_ONLY`; every `FROM` / `image:` pinned to a tag or digest | `check-dockerfile.sh` |
 | README in the standard layout (`# <dir>`, key table, Task, Difficulty, Reference solution, Verification, Compute resources, Details); no `results/` | rendered by `normalize` |
-| A published task's `environment/` and `tests/` do not change; a fix changes the task in place only with a new DIGEST and a README Change Log entry | H.8 |
+| A change to a published task, its scene included, is made in place: same name, a new DIGEST, a README Change Log entry | H.8 |
 
 ## 2. Task-declared settings
 

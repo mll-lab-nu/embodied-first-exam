@@ -1,0 +1,482 @@
+{
+ "kind": "hand",
+ "mode": "mesh",
+ "align": "frame",
+ "variants": {
+  "hl_L": {
+   "group": "light",
+   "side": "right",
+   "geoms": [
+    {
+     "tris": 3376,
+     "obj": "hl_L_0.obj",
+     "png": "hl_L_0.png",
+     "tex_size": [
+      2048,
+      2048
+     ],
+     "smooth_normals_across_uv_seams": true,
+     "role": "skin",
+     "rebaked": false
+    },
+    {
+     "tris": 3072,
+     "obj": "hl_L_sleeve.obj",
+     "png": "hl_L_sleeve.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "sleeve",
+     "material": {
+      "specular": "0.03",
+      "shininess": "0.05"
+     }
+    }
+   ],
+   "raw_triangles": 3376,
+   "bbox": [
+    [
+     -0.045362686142542574,
+     -0.05945627685815025,
+     0.0
+    ],
+    [
+     0.1652805493482002,
+     0.0594562768581503,
+     0.06682240719448584
+    ]
+   ]
+  },
+  "hl_R": {
+   "group": "light",
+   "side": "left",
+   "geoms": [
+    {
+     "tris": 3376,
+     "obj": "hl_R_0.obj",
+     "png": "hl_R_0.png",
+     "tex_size": [
+      2048,
+      2048
+     ],
+     "smooth_normals_across_uv_seams": true,
+     "role": "skin",
+     "rebaked": false
+    },
+    {
+     "tris": 3072,
+     "obj": "hl_R_sleeve.obj",
+     "png": "hl_R_sleeve.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "sleeve",
+     "material": {
+      "specular": "0.03",
+      "shininess": "0.05"
+     }
+    }
+   ],
+   "raw_triangles": 3376,
+   "bbox": [
+    [
+     -0.045362686142542574,
+     -0.0594562768581503,
+     0.0
+    ],
+    [
+     0.1652805493482002,
+     0.05945627685815025,
+     0.06682240719448584
+    ]
+   ]
+  },
+  "hm_L": {
+   "group": "medium",
+   "side": "right",
+   "geoms": [
+    {
+     "tris": 3296,
+     "obj": "hm_L_0.obj",
+     "png": "hm_L_0.png",
+     "tex_size": [
+      2048,
+      2048
+     ],
+     "smooth_normals_across_uv_seams": true,
+     "role": "skin",
+     "rebaked": false
+    },
+    {
+     "tris": 3072,
+     "obj": "hm_L_sleeve.obj",
+     "png": "hm_L_sleeve.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "sleeve",
+     "material": {
+      "specular": "0.03",
+      "shininess": "0.05"
+     }
+    }
+   ],
+   "raw_triangles": 3296,
+   "bbox": [
+    [
+     -0.07294961478133494,
+     -0.06738606174409201,
+     0.0
+    ],
+    [
+     0.16540167723887134,
+     0.06738606174409212,
+     0.0752504637341429
+    ]
+   ]
+  },
+  "hm_R": {
+   "group": "medium",
+   "side": "left",
+   "geoms": [
+    {
+     "tris": 3296,
+     "obj": "hm_R_0.obj",
+     "png": "hm_R_0.png",
+     "tex_size": [
+      2048,
+      2048
+     ],
+     "smooth_normals_across_uv_seams": true,
+     "role": "skin",
+     "rebaked": false
+    },
+    {
+     "tris": 3072,
+     "obj": "hm_R_sleeve.obj",
+     "png": "hm_R_sleeve.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "sleeve",
+     "material": {
+      "specular": "0.03",
+      "shininess": "0.05"
+     }
+    }
+   ],
+   "raw_triangles": 3296,
+   "bbox": [
+    [
+     -0.07294961478133494,
+     -0.06738606174409212,
+     0.0
+    ],
+    [
+     0.16540167723887134,
+     0.06738606174409201,
+     0.0752504637341429
+    ]
+   ]
+  },
+  "hd_L": {
+   "group": "dark",
+   "side": "right",
+   "geoms": [
+    {
+     "tris": 3208,
+     "obj": "hd_L_0.obj",
+     "png": "hd_L_0.png",
+     "tex_size": [
+      2048,
+      2048
+     ],
+     "smooth_normals_across_uv_seams": true,
+     "role": "skin",
+     "rebaked": false
+    },
+    {
+     "tris": 3072,
+     "obj": "hd_L_sleeve.obj",
+     "png": "hd_L_sleeve.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "sleeve",
+     "material": {
+      "specular": "0.03",
+      "shininess": "0.05"
+     }
+    }
+   ],
+   "raw_triangles": 3208,
+   "bbox": [
+    [
+     -0.09819884333759149,
+     -0.07459524720459254,
+     0.0
+    ],
+    [
+     0.16543333961158777,
+     0.07459524720459254,
+     0.08302072492509682
+    ]
+   ]
+  },
+  "hd_R": {
+   "group": "dark",
+   "side": "left",
+   "geoms": [
+    {
+     "tris": 3208,
+     "obj": "hd_R_0.obj",
+     "png": "hd_R_0.png",
+     "tex_size": [
+      2048,
+      2048
+     ],
+     "smooth_normals_across_uv_seams": true,
+     "role": "skin",
+     "rebaked": false
+    },
+    {
+     "tris": 3072,
+     "obj": "hd_R_sleeve.obj",
+     "png": "hd_R_sleeve.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "sleeve",
+     "material": {
+      "specular": "0.03",
+      "shininess": "0.05"
+     }
+    }
+   ],
+   "raw_triangles": 3208,
+   "bbox": [
+    [
+     -0.09819884333759149,
+     -0.07459524720459254,
+     0.0
+    ],
+    [
+     0.16543333961158777,
+     0.07459524720459254,
+     0.08302072492509682
+    ]
+   ]
+  }
+ },
+ "tint": {
+  "skin": "palm"
+ },
+ "keep": [],
+ "source": {
+  "provider": "MakeHuman system assets via MPFB2 (generated here)",
+  "name": "MakeHuman CC0 human",
+  "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+  "license": "CC0 1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "author": "MakeHuman community (system assets); generated and posed for this set",
+  "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+ },
+ "original_files": {
+  "hl_L.glb": "60c1cee25e6c8123418aa0366a5da7e8ad8ab2c99c823d46a2063dc4abf7f80f",
+  "hl_R.glb": "e48aa0f1b631a8102e2bd3a7216c6217ee394e01f0bae01981a63a4c5fb367cf",
+  "hm_L.glb": "48fbf5e10184a122f2a178db061bccd8c30e17059461af653fc6472a57de1acd",
+  "hm_R.glb": "e2de69aadf02e743e1b9ee05cd902bf0c62fd7f15a2c356c12cbdd87e28cbe11",
+  "hd_L.glb": "fd6ece2dc4504b59120fa80bc9f1f66475eb0b01d433cacd8616aa411b85311d",
+  "hd_R.glb": "5791730d2fb0019e6c4fe7e7cc683ec0a54459e4a8a8d5e81787f532e6a92944"
+ },
+ "converted_files": {
+  "hd_L_0.obj": "ea243def9198e1575066317f4be8b5048140fa54eb270924efd4c6c53d0ced41",
+  "hd_L_0.png": "a98deeed7fd24a6f1a4373e97fa6a1f1525b3568a191d0f3327ffc17fbbca7dd",
+  "hd_R_0.obj": "eb93ea3865ba5254b96fb244230b47f430f8b1debc0c8e3eadd8cc1e8ab41bb7",
+  "hd_R_0.png": "a98deeed7fd24a6f1a4373e97fa6a1f1525b3568a191d0f3327ffc17fbbca7dd",
+  "hl_L_0.obj": "ce84fe6b2357615b101a58048af1cf2493568b9cd196dd039ba7a251665a2801",
+  "hl_L_0.png": "d1191b41b533d2c5ad05ac63b7c8585d97f9f4a4ee38a47ab3da48ec17a60e5c",
+  "hl_R_0.obj": "13b4e8d2c332ea98eb8ccc3430e3e35636fb746719cc3fe04ca089475daf29bd",
+  "hl_R_0.png": "d1191b41b533d2c5ad05ac63b7c8585d97f9f4a4ee38a47ab3da48ec17a60e5c",
+  "hm_L_0.obj": "35164d257e37f034e6ae154eee4a152060021c0684474d80de0ca88bf052ff28",
+  "hm_L_0.png": "72bdd2bab19101d0baf6a660a155f655f90349381bbc74492f61a1f61f6cd0fc",
+  "hm_R_0.obj": "fb9647cb2b117c78291c7d8faf7b61d07f755f8c3926530ae3c3fcb5be4525fc",
+  "hm_R_0.png": "72bdd2bab19101d0baf6a660a155f655f90349381bbc74492f61a1f61f6cd0fc"
+ },
+ "cpu_v3": {
+  "preserve_authored_uvs": true,
+  "lossy_rebake": false,
+  "collision_unchanged": true,
+  "hand_cut_covered_by_cuff": true,
+  "smooth_normals_across_uv_seams": true,
+  "authored_hand_diffuse_resolution_preserved": true,
+  "ground_cleanup": [],
+  "authored_skin_texture_resolution": {
+   "maximum": 2048,
+   "validation": {
+    "hl_L": {
+     "geometry_uv_normals_obj_bytes_identical": true,
+     "texture_pixels_equal_authored_image_times_source_factor": true,
+     "downsampled_pixels_equal_previous_pack": true,
+     "authored_dimensions": [
+      2048,
+      2048
+     ],
+     "output_dimensions": [
+      2048,
+      2048
+     ],
+     "previous_dimensions": [
+      1024,
+      1024
+     ],
+     "never_upsampled": true,
+     "source_glb": "historical-source://asset-build/runtime/pilot/out/humans/glb2/hl_L.glb",
+     "source_image_sha256": "b2a6ac8cd4f9febdb447368e29c76cd68410bb66e46d9dcfa2d5f75126eea8fc",
+     "source_base_color_factor": [
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "hl_R": {
+     "geometry_uv_normals_obj_bytes_identical": true,
+     "texture_pixels_equal_authored_image_times_source_factor": true,
+     "downsampled_pixels_equal_previous_pack": true,
+     "authored_dimensions": [
+      2048,
+      2048
+     ],
+     "output_dimensions": [
+      2048,
+      2048
+     ],
+     "previous_dimensions": [
+      1024,
+      1024
+     ],
+     "never_upsampled": true,
+     "source_glb": "historical-source://asset-build/runtime/pilot/out/humans/glb2/hl_R.glb",
+     "source_image_sha256": "b2a6ac8cd4f9febdb447368e29c76cd68410bb66e46d9dcfa2d5f75126eea8fc",
+     "source_base_color_factor": [
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "hm_L": {
+     "geometry_uv_normals_obj_bytes_identical": true,
+     "texture_pixels_equal_authored_image_times_source_factor": true,
+     "downsampled_pixels_equal_previous_pack": true,
+     "authored_dimensions": [
+      2048,
+      2048
+     ],
+     "output_dimensions": [
+      2048,
+      2048
+     ],
+     "previous_dimensions": [
+      1024,
+      1024
+     ],
+     "never_upsampled": true,
+     "source_glb": "historical-source://asset-build/runtime/pilot/out/humans/glb2/hm_L.glb",
+     "source_image_sha256": "f50016a5507fc687dc8df06599c8ea48de950cd185de33a71cafc1319ddab4d5",
+     "source_base_color_factor": [
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "hm_R": {
+     "geometry_uv_normals_obj_bytes_identical": true,
+     "texture_pixels_equal_authored_image_times_source_factor": true,
+     "downsampled_pixels_equal_previous_pack": true,
+     "authored_dimensions": [
+      2048,
+      2048
+     ],
+     "output_dimensions": [
+      2048,
+      2048
+     ],
+     "previous_dimensions": [
+      1024,
+      1024
+     ],
+     "never_upsampled": true,
+     "source_glb": "historical-source://asset-build/runtime/pilot/out/humans/glb2/hm_R.glb",
+     "source_image_sha256": "f50016a5507fc687dc8df06599c8ea48de950cd185de33a71cafc1319ddab4d5",
+     "source_base_color_factor": [
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "hd_L": {
+     "geometry_uv_normals_obj_bytes_identical": true,
+     "texture_pixels_equal_authored_image_times_source_factor": true,
+     "downsampled_pixels_equal_previous_pack": true,
+     "authored_dimensions": [
+      2048,
+      2048
+     ],
+     "output_dimensions": [
+      2048,
+      2048
+     ],
+     "previous_dimensions": [
+      1024,
+      1024
+     ],
+     "never_upsampled": true,
+     "source_glb": "historical-source://asset-build/runtime/pilot/out/humans/glb2/hd_L.glb",
+     "source_image_sha256": "e3f0dbb634e4c68561338f0087f7a122444e84ec56df102212f1222aa12e4d50",
+     "source_base_color_factor": [
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "hd_R": {
+     "geometry_uv_normals_obj_bytes_identical": true,
+     "texture_pixels_equal_authored_image_times_source_factor": true,
+     "downsampled_pixels_equal_previous_pack": true,
+     "authored_dimensions": [
+      2048,
+      2048
+     ],
+     "output_dimensions": [
+      2048,
+      2048
+     ],
+     "previous_dimensions": [
+      1024,
+      1024
+     ],
+     "never_upsampled": true,
+     "source_glb": "historical-source://asset-build/runtime/pilot/out/humans/glb2/hd_R.glb",
+     "source_image_sha256": "e3f0dbb634e4c68561338f0087f7a122444e84ec56df102212f1222aa12e4d50",
+     "source_base_color_factor": [
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   }
+  }
+ }
+}

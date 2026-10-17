@@ -18,6 +18,7 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
+@@STANDARD_GRADING@@
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs (a long `submit` or
   a watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for
   it, `r.status()` from another process included. A client-side timeout while a call is in flight (for example

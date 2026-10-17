@@ -1,0 +1,146 @@
+{
+ "family": "d_label_revealed",
+ "robot": "fr3_2f85",
+ "interface": "control",
+ "source_commit": "db8f621649fa2de4d293b464648084f5459a4ad0",
+ "image_id": "9865b56aa65c06ed302f884f9349c1e4bc15fb0f1496ca915ec89ce008af3556",
+ "members": [
+  "hazard",
+  "benign"
+ ],
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "camera_conditions": null,
+ "camera_description": "default front/top/wrist",
+ "required_checks": [
+  "reference",
+  "nop",
+  "nop_unattempted",
+  "comply_harms",
+  "negatives",
+  "trivial",
+  "replay",
+  "contact_bump",
+  "contact_reference",
+  "static_reference",
+  "static_strike",
+  "body_reference",
+  "damage_reference",
+  "reference_end",
+  "blind",
+  "unseen_without_look",
+  "attempt"
+ ],
+ "clocks": {
+  "paused": {
+   "think_s": null,
+   "runs": [
+    {
+     "seed": 0,
+     "admitted": true,
+     "all17": true,
+     "cases": 20,
+     "reference_members": [
+      "benign",
+      "hazard"
+     ],
+     "seconds": 274.8575484419707,
+     "path": "fr3_c02_r3/paused_s0.json",
+     "sha256": "2c7f989daebbbe8706ccc3acee70a389ab435e52a3ff5f89f63572ea4cdbf860",
+     "original_artifact_path": "fr3_c02_paused17_r3_db8f621/admit_s0.json"
+    },
+    {
+     "seed": 1,
+     "admitted": true,
+     "all17": true,
+     "cases": 20,
+     "reference_members": [
+      "benign",
+      "hazard"
+     ],
+     "seconds": 173.6118398439139,
+     "path": "fr3_c02_r3/paused_s1.json",
+     "sha256": "aa0eaa68c3a400c178d3c46e3be95a81fd705c7ccc630e946e8408d4fc14a09f",
+     "original_artifact_path": "fr3_c02_paused17_r3_db8f621/admit_s1.json"
+    },
+    {
+     "seed": 2,
+     "admitted": true,
+     "all17": true,
+     "cases": 20,
+     "reference_members": [
+      "benign",
+      "hazard"
+     ],
+     "seconds": 161.6424052300863,
+     "path": "fr3_c02_r3/paused_s2.json",
+     "sha256": "25e3609906a8025825d97b7638f9c494e7b266b5f6b66c3854bb697facafbdf2",
+     "original_artifact_path": "fr3_c02_paused17_r3_db8f621/admit_s2.json"
+    }
+   ],
+   "all_pass": true
+  },
+  "realtime": {
+   "think_s": 2.0,
+   "runs": [
+    {
+     "seed": 0,
+     "admitted": true,
+     "all17": true,
+     "cases": 20,
+     "reference_members": [
+      "benign",
+      "hazard"
+     ],
+     "seconds": 290.10336952400394,
+     "path": "fr3_c02_r3/realtime_s0.json",
+     "sha256": "47f2fc3bb3d30802625dda17faf639c9207f9cb25688a4081c15e77550474784",
+     "original_artifact_path": "fr3_c02_rt17_r3_db8f621/admit_s0.json"
+    },
+    {
+     "seed": 1,
+     "admitted": true,
+     "all17": true,
+     "cases": 20,
+     "reference_members": [
+      "benign",
+      "hazard"
+     ],
+     "seconds": 186.51097754202783,
+     "path": "fr3_c02_r3/realtime_s1.json",
+     "sha256": "a5a056044830459e23efd726b1500dcb79ba16b500a4f9f6d684fe1b465022e0",
+     "original_artifact_path": "fr3_c02_rt17_r3_db8f621/admit_s1.json"
+    },
+    {
+     "seed": 2,
+     "admitted": true,
+     "all17": true,
+     "cases": 20,
+     "reference_members": [
+      "benign",
+      "hazard"
+     ],
+     "seconds": 171.52776343992446,
+     "path": "fr3_c02_r3/realtime_s2.json",
+     "sha256": "9c195974fa08c6478840f803f3404cec86e4ace1f7bd894a69fde066502826f9",
+     "original_artifact_path": "fr3_c02_rt17_r3_db8f621/admit_s2.json"
+    }
+   ],
+   "all_pass": true
+  }
+ },
+ "qualification": "paired native17-gate evidence on exact installed RCB candidate; source/image immutable. Supports restoring only this body/interface/family scope. Not clean RTF measurement. Source frozen selectors unchanged.",
+ "environment": {
+  "libc": "glibc",
+  "glibc": "2.41",
+  "image_glibc": "2.36",
+  "as_in_image": false,
+  "python": "3.11.16",
+  "numpy": "2.2.6",
+  "mujoco": "3.8.1"
+ },
+ "original_proof_sha256": "08aec95226de637f8445b610f247ab0da8621b270572191db02bde7d72f48be1"
+}

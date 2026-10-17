@@ -102,6 +102,27 @@ I01 = {
             "is busy, not crashed. The frozen instance, RoboWits' predicate and the time limit are unchanged; results recorded "
             "before this date (the earlier DIGEST) are not comparable with this version."),
 }
+# 2026-10-17 (instruction audit, items M5 and M6): the standard grading replay checks the settle window that ended the
+# episode over its recorded rows instead of adding a second window after them; a step-cap end is graded without a window.
+# In place (PROTOCOL v2.0 §1, H.8: a new DIGEST; same names and instances). Entries of every family after I01, newest last.
+LATE_CHANGE_LOG = {
+    "priv": [],
+    "std": [
+        "2026-10-17 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; the grading replay changed; instruction audit M5, M6). "
+        "(1) The service's grading replay (`environment/sim/server.py` `grading_replay`) checks ONE settle window: when the "
+        "live episode ended on a settle window (reason \"success\": the window inside the last call; \"agent_exit\" / "
+        "\"timeout\": the window after the agent's last command), that window is part of the recorded rows, and the replay "
+        "checks the same window again over those rows. Before, the replay ran the recorded rows (the live window included) "
+        "and then a second window of 90 steps after them, which the instruction did not state and which could fail an "
+        "episode whose window had passed live (robowits-hold-cup-i00-standard, 2026-10-15: live window passed with 0.13 mm "
+        "of motion, replay 0). (2) An episode that ends at the step cap (reason \"step_guard\") is graded without a "
+        "settle window, as a failure, and the instruction says so (it said \"graded as it stands\"); before, the replay's "
+        "window raised past the cap and the trial was recorded as a grading error (`infra_error = 1`). `final.json` adds "
+        "`final_window` (the window's length in recorded rows) and `replay_settle`. The scene, the frozen instance, the "
+        "predicate, the live service's success rule and the client are unchanged; recorded trials are re-graded from their "
+        "trajectories with `scripts/robowits/regrade.py`.",
+    ],
+}
 # Fixes to the published tasks (PROTOCOL §2.8): one README Change Log entry per mode, newest last.
 CHANGE_LOG = {
     "priv": [
@@ -247,14 +268,15 @@ CRITERION_LEAD = {
             "checked, then 2 s in which every condition must hold at every 6th control step and at the last one, with each graded "
             "object staying within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the "
             "episode ends as a success; if not, the episode goes on and `meta[\"settle\"]` says why. When your session ends, the "
-            "same window decides once more. The service then replays your recorded episode, which must end in the same state "
-            "and pass again."),
+            "same window decides once more, after your last command. The window's steps are part of your recorded episode. "
+            "The service then replays the recorded episode, which must end in the same state, and checks the window that "
+            "ended it again over the same recorded steps: the replay adds no second window."),
 }
 
 
 def criterion_section(fam: str, f: dict, mode: str) -> str:
     c = f["criterion"]
-    text = f["std_goal"] if mode == "std" and f.get("std_goal") else f_text(fam)
+    text = goal_text(fam, f, mode)
     first = re.match(r"(.+?[.!?])(\s|$)", text)                  # the task text's first sentence (dominos adds a scene description)
     quoted = json.dumps(first.group(1) if first else text, ensure_ascii=False)
     return (f"## Success criterion (as graded)\n{wrap(CRITERION_LEAD[mode])}\n\n"
@@ -266,6 +288,11 @@ def criterion_section(fam: str, f: dict, mode: str) -> str:
 
 def f_text(fam: str) -> str:
     return INSTANCES[fam]["text"]
+
+
+def goal_text(fam: str, f: dict, mode: str) -> str:
+    """The task sentence: families.py `goal` (both modes), else `std_goal` (standard mode), else RoboWits' text."""
+    return f.get("goal") or (f.get("std_goal") if mode == "std" else None) or f_text(fam)
 
 
 PRIV_INSTRUCTION = """# RoboWits · @FAM@ — frozen instance
@@ -350,8 +377,9 @@ STD_INSTRUCTION = """# RoboWits · @FAM@ — STANDARD MODE (robot as a service, 
 - **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most @MAXSTEPS@ control steps (about
   @MAXHOURS@ h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
-  that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded
-  as it stands. Use the time: ending your session before the task is done ends the episode as a failure.
+  that watches counts too). The call that reaches it stops there and the episode ends (`reason` "step_guard"); no
+  settle window runs after the cap, so such an episode is graded without one, as a failure. Use the time: ending your
+  session before the task is done ends the episode as a failure.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -430,7 +458,7 @@ of the world y axis.
 def priv_instruction(fam: str, f: dict) -> str:
     pred = predicate_file(fam, f).read_text()
     intro = ("You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis "
-             f"0.4.7 physics) via Python. **Task:** {f_text(fam)}")
+             f"0.4.7 physics) via Python. **Task:** {goal_text(fam, f, 'priv')}")
     subs = {"@FAM@": fam, "@INTRO@": wrap(intro), "@NOTE@": (f["priv_note"] + "\n\n") if f.get("priv_note") else "",
             "@OBJECTS@": ", ".join(f"`{o}`" for o in f["objects"]), "@FILE@": f"{num(f)}_{fam}.py", "@PREDICATE@": pred,
             "@CRITERION@": criterion_section(fam, f, "priv"), "@BUILD@": f.get("build_note") or "~60 s",
@@ -448,7 +476,7 @@ def std_instruction(fam: str, f: dict) -> str:
              if rt else
              f"r = Robot()                                   # connects (waits while the service builds the scene, {(f.get('build_note') or '~1 min').split(' (')[0]})")
     intro = ("You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**: "
-             f"the simulator runs in a service you cannot open. You get one client and one episode. **Task:** {f.get('std_goal') or f_text(fam)}")
+             f"the simulator runs in a service you cannot open. You get one client and one episode. **Task:** {goal_text(fam, f, 'std')}")
     subs = {"@FAM@": fam, "@INTRO@": wrap(intro), "@NOTE@": (f["std_note"] + "\n\n") if f.get("std_note") else "",
             "@CRITERION@": criterion_section(fam, f, "std"), "@ROBOT@": robot, "@OBJECTS@": f["std_objects"],
             "@MAXSTEPS@": str(MAX_STEPS), "@MAXHOURS@": MAX_STEPS_H, "@MAXFRAMES@": str(MAX_FRAMES), "@DEPTHFRAME@": str(DEPTH_FRAME)}
@@ -490,12 +518,13 @@ def reference_text(fam: str, f: dict, mode: str) -> str:
 
 
 def readme(title: str, rows: list[tuple[str, str]], task: str, difficulty: str, reference: str, verification: str, mode: str,
-           extra: tuple = ()) -> str:
+           extra: tuple = (), late: tuple = ()) -> str:
     """README content in the standard layout (PROTOCOL §2.1). normalize() (scripts/task_conventions.py) then writes the key
     table (benchmark, mode, twin, simulator / robot, family / instance, oracle, budget, base image) from task.toml and the
     Dockerfiles, and moves these extra rows and the Change Log (PROTOCOL §2.8) into ## Details."""
     table = "\n".join(["| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows])
-    log = "\n".join(f"- {e}" for e in [*CHANGE_LOG[mode], *extra, I01[mode]])   # extra: the family's own entries (families.py change_log)
+    log = "\n".join(f"- {e}" for e in [*CHANGE_LOG[mode], *extra, I01[mode], *late, *LATE_CHANGE_LOG[mode]])
+    # extra / late: the family's own entries (families.py change_log / late_change_log), before / after the 10-14 entry
     return (f"# {title}\n\n{table}\n\n## Task\n{task}\n\n## Difficulty\n{difficulty}\n\n## Reference solution\n{reference}\n\n"
             f"## Verification\n{verification}\n\n## Change Log\n{log}\n")
 
@@ -545,11 +574,11 @@ def priv_readme(fam: str, f: dict) -> str:
                          "`environment/instance.json` (the verifier's copy in `tests/`)"),
             ("Robot", "Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz"),
             ("GPU", "EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`)")] + bk_detail(f, "") + host_detail(f)
-    task = wrap(f"{f_text(fam)} One replayable trajectory from the frozen instance (evaluation scene {f['eval_index']} of RoboWits task "
+    task = wrap(f"{f.get('goal') or f_text(fam)} One replayable trajectory from the frozen instance (evaluation scene {f['eval_index']} of RoboWits task "
                 f"{int(num(f))}), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay); the "
                 "success criterion as graded is in `instruction.md`.")
     return readme(priv_dir(fam), rows, task, wrap(f["difficulty"]), reference_text(fam, f, "priv"), ver, "priv",
-                  f.get("change_log", {}).get("priv", ()))
+                  f.get("change_log", {}).get("priv", ()), f.get("late_change_log", {}).get("priv", ()))
 
 
 def std_readme(fam: str, f: dict) -> str:
@@ -569,7 +598,7 @@ def std_readme(fam: str, f: dict) -> str:
             ("Agent and verifier image", f"`{CLIENT_IMAGE}` with the shared pins (`environment/{CLIENT_REQUIREMENTS}`)"),
             ("Instance", f"the privileged twin's frozen instance (`environment/sim/instance.json`): entry {f['eval_index']} of RoboWits' "
                          f"`eval_dataset_50/{num(f)}.json`")] + bk_detail(f, "into the `sim` sidecar") + host_detail(f)
-    task = wrap(f"{f_text(fam)} The same frozen instance as `{priv_dir(fam)}`, as a robot service (`{PROTOCOL}`): the simulator runs "
+    task = wrap(f"{f.get('goal') or f_text(fam)} The same frozen instance as `{priv_dir(fam)}`, as a robot service (`{PROTOCOL}`): the simulator runs "
                 "in the `sim` sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the "
                 "client (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar "
                 "records the episode as the trajectory, replays it and renders the video; the success criterion as graded is in "
@@ -578,7 +607,7 @@ def std_readme(fam: str, f: dict) -> str:
                 "perceives the scene through calibrated RGB-D cameras and its own proprioception, and every action it sends is part of "
                 "the one graded episode.")
     return readme(std_dir(fam), rows, task, diff, reference_text(fam, f, "std"), ver, "std",
-                  f.get("change_log", {}).get("std", ()))
+                  f.get("change_log", {}).get("std", ()), f.get("late_change_log", {}).get("std", ()))
 
 
 def evidence(f: dict, mode: str) -> str:
@@ -594,7 +623,7 @@ def toml_str(s: str) -> str:
 def priv_toml(fam: str, f: dict) -> str:
     s = priv_dir(fam)
     oracle = f'oracle = "{f["oracle"]}"' + (f"\noracle_evidence = {toml_str(evidence(f, 'priv'))}" if f["oracle"] != "full" else "")
-    desc = (f"RoboWits {fam} (bimanual Marvin, Genesis): produce one replayable trajectory. {f_text(fam)} Frozen scene instance "
+    desc = (f"RoboWits {fam} (bimanual Marvin, Genesis): produce one replayable trajectory. {f.get('goal') or f_text(fam)} Frozen scene instance "
             f"(RoboWits evaluation scene {f['eval_index']} of task {int(num(f))}).")
     vt = f.get("verifier_timeout_s") or 1800
     mem = f.get("memory_mb") or 16384
@@ -641,7 +670,7 @@ def std_toml(fam: str, f: dict) -> str:
     s = slug(fam)   # the standard directory is s + "-standard"
     oracle = f'oracle = "{f["oracle"]}"' + (f"\noracle_evidence = {toml_str(evidence(f, 'std'))}" if f["oracle"] != "full" else "")
     desc = (f"STANDARD MODE (robot as a service, {PROTOCOL}): RoboWits {fam} on the same frozen instance as the privileged task "
-            f"(evaluation scene {f['eval_index']} of task {int(num(f))}). {f_text(fam)} The agent only gets a client: get_obs (RGB, optional "
+            f"(evaluation scene {f['eval_index']} of task {int(num(f))}). {f.get('goal') or f_text(fam)} The agent only gets a client: get_obs (RGB, optional "
             f"depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, "
             f"no privileged state; the sim service records the episode as a trajectory and grades it.")
     ct = f.get("collect_timeout_s") or 2400

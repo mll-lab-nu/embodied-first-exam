@@ -1,0 +1,1887 @@
+{
+ "task": "vesken",
+ "parts": [
+  "tray_0",
+  "foot_0",
+  "foot_1",
+  "foot_2",
+  "foot_3",
+  "column_0_0",
+  "column_0_1",
+  "column_0_2",
+  "column_0_3",
+  "tray_1",
+  "column_1_0",
+  "column_1_1",
+  "column_1_2",
+  "column_1_3",
+  "tray_2",
+  "column_2_0",
+  "column_2_1",
+  "column_2_2",
+  "column_2_3",
+  "tray_3",
+  "cap_0",
+  "cap_1",
+  "cap_2",
+  "cap_3"
+ ],
+ "base": "tray_0",
+ "centers": {
+  "tray_0": [
+   0.0,
+   0.0,
+   0.14
+  ],
+  "foot_0": [
+   -0.165,
+   -0.095,
+   0.1
+  ],
+  "foot_1": [
+   0.165,
+   -0.095,
+   0.1
+  ],
+  "foot_2": [
+   -0.165,
+   0.095,
+   0.1
+  ],
+  "foot_3": [
+   0.165,
+   0.095,
+   0.1
+  ],
+  "column_0_0": [
+   -0.165,
+   -0.095,
+   0.29000000000000004
+  ],
+  "column_0_1": [
+   0.165,
+   -0.095,
+   0.29000000000000004
+  ],
+  "column_0_2": [
+   -0.165,
+   0.095,
+   0.29000000000000004
+  ],
+  "column_0_3": [
+   0.165,
+   0.095,
+   0.29000000000000004
+  ],
+  "tray_1": [
+   0.0,
+   0.0,
+   0.44
+  ],
+  "column_1_0": [
+   -0.165,
+   -0.095,
+   0.59
+  ],
+  "column_1_1": [
+   0.165,
+   -0.095,
+   0.59
+  ],
+  "column_1_2": [
+   -0.165,
+   0.095,
+   0.59
+  ],
+  "column_1_3": [
+   0.165,
+   0.095,
+   0.59
+  ],
+  "tray_2": [
+   0.0,
+   0.0,
+   0.74
+  ],
+  "column_2_0": [
+   -0.165,
+   -0.095,
+   0.89
+  ],
+  "column_2_1": [
+   0.165,
+   -0.095,
+   0.89
+  ],
+  "column_2_2": [
+   -0.165,
+   0.095,
+   0.89
+  ],
+  "column_2_3": [
+   0.165,
+   0.095,
+   0.89
+  ],
+  "tray_3": [
+   0.0,
+   0.0,
+   1.04
+  ],
+  "cap_0": [
+   -0.165,
+   -0.095,
+   1.081
+  ],
+  "cap_1": [
+   0.165,
+   -0.095,
+   1.081
+  ],
+  "cap_2": [
+   -0.165,
+   0.095,
+   1.081
+  ],
+  "cap_3": [
+   0.165,
+   0.095,
+   1.081
+  ]
+ },
+ "floor_parts": [
+  "foot_0",
+  "foot_1",
+  "foot_2",
+  "foot_3"
+ ],
+ "floor_geoms": [
+  "bench_top_c",
+  "bench_top_n",
+  "bench_top_p"
+ ],
+ "base_orientation_quat": [
+  1,
+  0,
+  0,
+  0
+ ],
+ "base_orientation_deg": 3.0,
+ "operations": [
+  {
+   "key": "s1-foot-0",
+   "manual_step": 1,
+   "part": "foot_0",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0,
+    0,
+    -1
+   ],
+   "approach_m": 0.025,
+   "dependencies": [],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      0.133
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s1_foot_0_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s1_foot_0_0"
+   ],
+   "weld": "conn_s1-foot-0",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-foot-1",
+   "manual_step": 1,
+   "part": "foot_1",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0,
+    0,
+    -1
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s1-foot-0"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      -0.095,
+      0.133
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s1_foot_1_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s1_foot_1_0"
+   ],
+   "weld": "conn_s1-foot-1",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-foot-2",
+   "manual_step": 1,
+   "part": "foot_2",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0,
+    0,
+    -1
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s1-foot-1"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      0.095,
+      0.133
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s1_foot_2_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s1_foot_2_0"
+   ],
+   "weld": "conn_s1-foot-2",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s1-foot-3",
+   "manual_step": 1,
+   "part": "foot_3",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0,
+    0,
+    -1
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s1-foot-2"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      0.095,
+      0.133
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s1_foot_3_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s1_foot_3_0"
+   ],
+   "weld": "conn_s1-foot-3",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s2-column-0",
+   "manual_step": 2,
+   "part": "column_0_0",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s1-foot-3"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      0.163
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s2_column_0_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s2_column_0_0"
+   ],
+   "weld": "conn_s2-column-0",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s2-column-1",
+   "manual_step": 2,
+   "part": "column_0_1",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s2-column-0"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      -0.095,
+      0.163
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s2_column_1_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s2_column_1_0"
+   ],
+   "weld": "conn_s2-column-1",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s2-column-2",
+   "manual_step": 2,
+   "part": "column_0_2",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s2-column-1"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      0.095,
+      0.163
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s2_column_2_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s2_column_2_0"
+   ],
+   "weld": "conn_s2-column-2",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s2-column-3",
+   "manual_step": 2,
+   "part": "column_0_3",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s2-column-2"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      0.095,
+      0.163
+     ],
+     "receiver": "tray_0"
+    }
+   ],
+   "jaws": [
+    "jaw_s2_column_3_0"
+   ],
+   "counterparts": [
+    "tray_0",
+    "jaw_s2_column_3_0"
+   ],
+   "weld": "conn_s2-column-3",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s3-tray",
+   "manual_step": 3,
+   "part": "tray_1",
+   "host": "tray_0",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.035,
+   "dependencies": [
+    "s2-column-3"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      0.44
+     ],
+     "receiver": "column_0_0"
+    },
+    {
+     "point": [
+      0.165,
+      -0.095,
+      0.44
+     ],
+     "receiver": "column_0_1"
+    },
+    {
+     "point": [
+      -0.165,
+      0.095,
+      0.44
+     ],
+     "receiver": "column_0_2"
+    },
+    {
+     "point": [
+      0.165,
+      0.095,
+      0.44
+     ],
+     "receiver": "column_0_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s3_tray_0",
+    "jaw_s3_tray_1",
+    "jaw_s3_tray_2",
+    "jaw_s3_tray_3"
+   ],
+   "counterparts": [
+    "column_0_0",
+    "column_0_1",
+    "column_0_2",
+    "column_0_3",
+    "jaw_s3_tray_0",
+    "jaw_s3_tray_1",
+    "jaw_s3_tray_2",
+    "jaw_s3_tray_3"
+   ],
+   "weld": "conn_s3-tray",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s4-column-0",
+   "manual_step": 4,
+   "part": "column_1_0",
+   "host": "tray_1",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s3-tray"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      0.463
+     ],
+     "receiver": "tray_1"
+    }
+   ],
+   "jaws": [
+    "jaw_s4_column_0_0"
+   ],
+   "counterparts": [
+    "tray_1",
+    "jaw_s4_column_0_0"
+   ],
+   "weld": "conn_s4-column-0",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s4-column-1",
+   "manual_step": 4,
+   "part": "column_1_1",
+   "host": "tray_1",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s4-column-0"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      -0.095,
+      0.463
+     ],
+     "receiver": "tray_1"
+    }
+   ],
+   "jaws": [
+    "jaw_s4_column_1_0"
+   ],
+   "counterparts": [
+    "tray_1",
+    "jaw_s4_column_1_0"
+   ],
+   "weld": "conn_s4-column-1",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s4-column-2",
+   "manual_step": 4,
+   "part": "column_1_2",
+   "host": "tray_1",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s4-column-1"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      0.095,
+      0.463
+     ],
+     "receiver": "tray_1"
+    }
+   ],
+   "jaws": [
+    "jaw_s4_column_2_0"
+   ],
+   "counterparts": [
+    "tray_1",
+    "jaw_s4_column_2_0"
+   ],
+   "weld": "conn_s4-column-2",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s4-column-3",
+   "manual_step": 4,
+   "part": "column_1_3",
+   "host": "tray_1",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s4-column-2"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      0.095,
+      0.463
+     ],
+     "receiver": "tray_1"
+    }
+   ],
+   "jaws": [
+    "jaw_s4_column_3_0"
+   ],
+   "counterparts": [
+    "tray_1",
+    "jaw_s4_column_3_0"
+   ],
+   "weld": "conn_s4-column-3",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s5-tray",
+   "manual_step": 5,
+   "part": "tray_2",
+   "host": "tray_1",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.035,
+   "dependencies": [
+    "s4-column-3"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      0.74
+     ],
+     "receiver": "column_1_0"
+    },
+    {
+     "point": [
+      0.165,
+      -0.095,
+      0.74
+     ],
+     "receiver": "column_1_1"
+    },
+    {
+     "point": [
+      -0.165,
+      0.095,
+      0.74
+     ],
+     "receiver": "column_1_2"
+    },
+    {
+     "point": [
+      0.165,
+      0.095,
+      0.74
+     ],
+     "receiver": "column_1_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s5_tray_0",
+    "jaw_s5_tray_1",
+    "jaw_s5_tray_2",
+    "jaw_s5_tray_3"
+   ],
+   "counterparts": [
+    "column_1_0",
+    "column_1_1",
+    "column_1_2",
+    "column_1_3",
+    "jaw_s5_tray_0",
+    "jaw_s5_tray_1",
+    "jaw_s5_tray_2",
+    "jaw_s5_tray_3"
+   ],
+   "weld": "conn_s5-tray",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s6-column-0",
+   "manual_step": 6,
+   "part": "column_2_0",
+   "host": "tray_2",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s5-tray"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      0.763
+     ],
+     "receiver": "tray_2"
+    }
+   ],
+   "jaws": [
+    "jaw_s6_column_0_0"
+   ],
+   "counterparts": [
+    "tray_2",
+    "jaw_s6_column_0_0"
+   ],
+   "weld": "conn_s6-column-0",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s6-column-1",
+   "manual_step": 6,
+   "part": "column_2_1",
+   "host": "tray_2",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s6-column-0"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      -0.095,
+      0.763
+     ],
+     "receiver": "tray_2"
+    }
+   ],
+   "jaws": [
+    "jaw_s6_column_1_0"
+   ],
+   "counterparts": [
+    "tray_2",
+    "jaw_s6_column_1_0"
+   ],
+   "weld": "conn_s6-column-1",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s6-column-2",
+   "manual_step": 6,
+   "part": "column_2_2",
+   "host": "tray_2",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s6-column-1"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      0.095,
+      0.763
+     ],
+     "receiver": "tray_2"
+    }
+   ],
+   "jaws": [
+    "jaw_s6_column_2_0"
+   ],
+   "counterparts": [
+    "tray_2",
+    "jaw_s6_column_2_0"
+   ],
+   "weld": "conn_s6-column-2",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s6-column-3",
+   "manual_step": 6,
+   "part": "column_2_3",
+   "host": "tray_2",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s6-column-2"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      0.095,
+      0.763
+     ],
+     "receiver": "tray_2"
+    }
+   ],
+   "jaws": [
+    "jaw_s6_column_3_0"
+   ],
+   "counterparts": [
+    "tray_2",
+    "jaw_s6_column_3_0"
+   ],
+   "weld": "conn_s6-column-3",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s7-tray",
+   "manual_step": 7,
+   "part": "tray_3",
+   "host": "tray_2",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.035,
+   "dependencies": [
+    "s6-column-3"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      1.04
+     ],
+     "receiver": "column_2_0"
+    },
+    {
+     "point": [
+      0.165,
+      -0.095,
+      1.04
+     ],
+     "receiver": "column_2_1"
+    },
+    {
+     "point": [
+      -0.165,
+      0.095,
+      1.04
+     ],
+     "receiver": "column_2_2"
+    },
+    {
+     "point": [
+      0.165,
+      0.095,
+      1.04
+     ],
+     "receiver": "column_2_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s7_tray_0",
+    "jaw_s7_tray_1",
+    "jaw_s7_tray_2",
+    "jaw_s7_tray_3"
+   ],
+   "counterparts": [
+    "column_2_0",
+    "column_2_1",
+    "column_2_2",
+    "column_2_3",
+    "jaw_s7_tray_0",
+    "jaw_s7_tray_1",
+    "jaw_s7_tray_2",
+    "jaw_s7_tray_3"
+   ],
+   "weld": "conn_s7-tray",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s8-cap-0",
+   "manual_step": 8,
+   "part": "cap_0",
+   "host": "tray_3",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s7-tray"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      -0.095,
+      1.075
+     ],
+     "receiver": "tray_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s8_cap_0_0"
+   ],
+   "counterparts": [
+    "tray_3",
+    "jaw_s8_cap_0_0"
+   ],
+   "weld": "conn_s8-cap-0",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s8-cap-1",
+   "manual_step": 8,
+   "part": "cap_1",
+   "host": "tray_3",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s8-cap-0"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      -0.095,
+      1.075
+     ],
+     "receiver": "tray_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s8_cap_1_0"
+   ],
+   "counterparts": [
+    "tray_3",
+    "jaw_s8_cap_1_0"
+   ],
+   "weld": "conn_s8-cap-1",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s8-cap-2",
+   "manual_step": 8,
+   "part": "cap_2",
+   "host": "tray_3",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s8-cap-1"
+   ],
+   "connectors": [
+    {
+     "point": [
+      -0.165,
+      0.095,
+      1.075
+     ],
+     "receiver": "tray_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s8_cap_2_0"
+   ],
+   "counterparts": [
+    "tray_3",
+    "jaw_s8_cap_2_0"
+   ],
+   "weld": "conn_s8-cap-2",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  },
+  {
+   "key": "s8-cap-3",
+   "manual_step": 8,
+   "part": "cap_3",
+   "host": "tray_3",
+   "mode": "press",
+   "outward": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "approach_m": 0.025,
+   "dependencies": [
+    "s8-cap-2"
+   ],
+   "connectors": [
+    {
+     "point": [
+      0.165,
+      0.095,
+      1.075
+     ],
+     "receiver": "tray_3"
+    }
+   ],
+   "jaws": [
+    "jaw_s8_cap_3_0"
+   ],
+   "counterparts": [
+    "tray_3",
+    "jaw_s8_cap_3_0"
+   ],
+   "weld": "conn_s8-cap-3",
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   }
+  }
+ ],
+ "jaws": [
+  {
+   "name": "jaw_s1_foot_0_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_0_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-0",
+   "pos_in_host": [
+    -0.1685,
+    -0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s1_foot_1_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_1_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-1",
+   "pos_in_host": [
+    0.1615,
+    -0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s1_foot_2_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_2_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-2",
+   "pos_in_host": [
+    -0.1685,
+    0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s1_foot_3_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_3_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-3",
+   "pos_in_host": [
+    0.1615,
+    0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s2_column_0_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s2_column_1_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s2_column_2_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s2_column_3_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_0",
+   "host": "column_0_0",
+   "joint": "jaw_s3_tray_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_1",
+   "host": "column_0_1",
+   "joint": "jaw_s3_tray_1_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_2",
+   "host": "column_0_2",
+   "joint": "jaw_s3_tray_2_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_3",
+   "host": "column_0_3",
+   "joint": "jaw_s3_tray_3_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s4_column_0_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s4_column_1_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s4_column_2_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s4_column_3_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_0",
+   "host": "column_1_0",
+   "joint": "jaw_s5_tray_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_1",
+   "host": "column_1_1",
+   "joint": "jaw_s5_tray_1_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_2",
+   "host": "column_1_2",
+   "joint": "jaw_s5_tray_2_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_3",
+   "host": "column_1_3",
+   "joint": "jaw_s5_tray_3_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s6_column_0_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s6_column_1_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s6_column_2_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s6_column_3_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_0",
+   "host": "column_2_0",
+   "joint": "jaw_s7_tray_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_1",
+   "host": "column_2_1",
+   "joint": "jaw_s7_tray_1_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_2",
+   "host": "column_2_2",
+   "joint": "jaw_s7_tray_2_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_3",
+   "host": "column_2_3",
+   "joint": "jaw_s7_tray_3_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_0_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.03249999999999997
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_1_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.03249999999999997
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_2_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.03249999999999997
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_3_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.03249999999999997
+   ]
+  }
+ ],
+ "jaw_gates": {
+  "peak_travel_min_m": 0.00025,
+  "final_travel_max_m": 0.0007
+ },
+ "approach_zone": {
+  "lateral_m": 0.005,
+  "gap_min_m": -0.003,
+  "gap_max_m": 0.05,
+  "axis_deg": 15.0
+ },
+ "not_ported": {
+  "fixtures": "source parks every part on a world FixedJoint in mid-air; here parts rest on the bench",
+  "pull_test": "source diagnostic applies a 0.15 N pull for 0.25 s before enabling the retention joint; that is a controller probe, not a scene mechanism",
+  "connection_collision_filter": "source disables host/part collision once the retention joint is on; MuJoCo cannot toggle pair collisions at runtime (contacts at the seat remain)",
+  "inertia": "source diagonal inertia 0.002 kg m^2 for every part is labelled \"uncalibrated held-part fixture inertia\"; here inertia is computed from the collision geometry at the source mass",
+  "body_damping": "PhysX linear/angular damping 0.05 1/s per body has no MuJoCo free-body equivalent; omitted",
+  "dynamic_friction": "MuJoCo has one friction coefficient; the static value 0.3 is used (dynamic 0.2)"
+ },
+ "gates_note": "Retention weld engages when the source operation acceptance gates hold for dwell_s: per-connector axial/lateral error, axis tilt, part speed, >= min_travel_m travel along the insertion axis, counterpart contact > min_contact_N, every jaw of the operation deflected > 0.25 mm and returned < 0.7 mm, dependencies welded."
+}

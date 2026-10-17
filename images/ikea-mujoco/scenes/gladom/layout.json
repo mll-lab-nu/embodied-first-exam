@@ -1,0 +1,3475 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.48,
+    0.4
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.4
+  },
+  "right": {
+   "pos": [
+    0.0,
+    0.48,
+    0.4
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.4
+  }
+ },
+ "parts": {
+  "frame_a": {
+   "pos": [
+    0.0,
+    0.0,
+    0.55052
+   ],
+   "quat": [
+    0.9238795325112867,
+    0.0,
+    0.0,
+    0.3826834323650898
+   ],
+   "geoms": [
+    {
+     "geom": "frame_a_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g001",
+     "source": "/Part/Shape1",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g014",
+     "source": "/Part/Shape14",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g015",
+     "source": "/Part/Shape15",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g016",
+     "source": "/Part/Shape16",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g017",
+     "source": "/Part/Shape17",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g034",
+     "source": "/Part/Shape34",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g035",
+     "source": "/Part/Shape35",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g036",
+     "source": "/Part/Shape36",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g037",
+     "source": "/Part/Shape37",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g038",
+     "source": "/Part/Shape38",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g039",
+     "source": "/Part/Shape39",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g040",
+     "source": "/Part/Shape40",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g041",
+     "source": "/Part/Shape41",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g042",
+     "source": "/Part/Shape42",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g043",
+     "source": "/Part/Shape43",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g044",
+     "source": "/Part/Shape44",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g045",
+     "source": "/Part/Shape45",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g046",
+     "source": "/Part/Shape46",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g047",
+     "source": "/Part/Shape47",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g048",
+     "source": "/Part/Shape48",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g049",
+     "source": "/Part/Shape49",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g050",
+     "source": "/Part/Shape50",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g051",
+     "source": "/Part/Shape51",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g052",
+     "source": "/Part/Shape52",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g053",
+     "source": "/Part/Shape53",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g054",
+     "source": "/Part/Shape54",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g055",
+     "source": "/Part/Shape55",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g056",
+     "source": "/Part/Shape56",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g057",
+     "source": "/Part/Shape57",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g058",
+     "source": "/Part/Shape58",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g059",
+     "source": "/Part/Shape59",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g060",
+     "source": "/Part/Shape60",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g061",
+     "source": "/Part/Shape61",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g062",
+     "source": "/Part/Shape62",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g063",
+     "source": "/Part/Shape63",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g064",
+     "source": "/Part/Shape64",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g065",
+     "source": "/Part/Shape65",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g066",
+     "source": "/Part/Shape66",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g067",
+     "source": "/Part/Shape67",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g068",
+     "source": "/Part/Shape68",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g069",
+     "source": "/Part/Shape69",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g070",
+     "source": "/Part/Shape70",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g071",
+     "source": "/Part/Shape71",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g072",
+     "source": "/Part/Shape72",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g073",
+     "source": "/Part/Shape73",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g074",
+     "source": "/Part/Shape74",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g075",
+     "source": "/Part/Shape75",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g076",
+     "source": "/Part/Shape76",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g077",
+     "source": "/Part/Shape77",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g078",
+     "source": "/Part/Shape78",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g079",
+     "source": "/Part/Shape79",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g080",
+     "source": "/Part/Shape80",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g081",
+     "source": "/Part/Shape81",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g082",
+     "source": "/Part/Shape82",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g083",
+     "source": "/Part/Shape83",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g084",
+     "source": "/Part/Shape84",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g085",
+     "source": "/Part/Shape85",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g086",
+     "source": "/Part/Shape86",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g087",
+     "source": "/Part/Shape87",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g088",
+     "source": "/Part/Shape88",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g089",
+     "source": "/Part/Shape89",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g090",
+     "source": "/Part/Shape90",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g091",
+     "source": "/Part/Shape91",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g092",
+     "source": "/Part/Shape92",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g093",
+     "source": "/Part/Shape93",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g094",
+     "source": "/Part/Shape94",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g095",
+     "source": "/Part/Shape95",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g096",
+     "source": "/Part/Shape96",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g097",
+     "source": "/Part/Shape97",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g098",
+     "source": "/Part/Shape98",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g099",
+     "source": "/Part/Shape99",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g100",
+     "source": "/Part/Shape100",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g101",
+     "source": "/Part/Shape101",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g102",
+     "source": "/Part/Shape102",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g103",
+     "source": "/Part/Shape103",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g104",
+     "source": "/Part/Shape104",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g105",
+     "source": "/Part/Shape105",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g106",
+     "source": "/Part/Shape106",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g107",
+     "source": "/Part/Shape107",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g108",
+     "source": "/Part/Shape108",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g109",
+     "source": "/Part/Shape109",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g110",
+     "source": "/Part/Shape110",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g111",
+     "source": "/Part/Shape111",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g112",
+     "source": "/Part/Shape112",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g113",
+     "source": "/Part/Shape113",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g114",
+     "source": "/Part/Shape114",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g115",
+     "source": "/Part/Shape115",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g116",
+     "source": "/Part/Shape116",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g117",
+     "source": "/Part/Shape117",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g118",
+     "source": "/Part/Shape118",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g119",
+     "source": "/Part/Shape119",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g120",
+     "source": "/Part/Shape120",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g121",
+     "source": "/Part/Shape121",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g122",
+     "source": "/Part/Shape122",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g123",
+     "source": "/Part/Shape123",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g124",
+     "source": "/Part/Shape124",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g125",
+     "source": "/Part/Shape125",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g126",
+     "source": "/Part/Shape126",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g127",
+     "source": "/Part/Shape127",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g128",
+     "source": "/Part/Shape128",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g129",
+     "source": "/Part/Shape129",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g130",
+     "source": "/Part/Shape130",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g131",
+     "source": "/Part/Shape131",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g132",
+     "source": "/Part/Shape132",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g133",
+     "source": "/Part/Shape133",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g134",
+     "source": "/Part/Shape134",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g135",
+     "source": "/Part/Shape135",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g136",
+     "source": "/Part/Shape136",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g137",
+     "source": "/Part/Shape137",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g138",
+     "source": "/Part/Shape138",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g139",
+     "source": "/Part/Shape139",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g140",
+     "source": "/Part/Shape140",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g141",
+     "source": "/Part/Shape141",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g142",
+     "source": "/Part/Shape142",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g143",
+     "source": "/Part/Shape143",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g144",
+     "source": "/Part/Shape144",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g145",
+     "source": "/Part/Shape145",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g146",
+     "source": "/Part/Shape146",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g147",
+     "source": "/Part/Shape147",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g148",
+     "source": "/Part/Shape148",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g149",
+     "source": "/Part/Shape149",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g150",
+     "source": "/Part/Shape150",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g151",
+     "source": "/Part/Shape151",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g152",
+     "source": "/Part/Shape152",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g153",
+     "source": "/Part/Shape153",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g154",
+     "source": "/Part/Shape154",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g155",
+     "source": "/Part/Shape155",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g156",
+     "source": "/Part/Shape156",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g157",
+     "source": "/Part/Shape157",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g158",
+     "source": "/Part/Shape158",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g159",
+     "source": "/Part/Shape159",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g160",
+     "source": "/Part/Shape160",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g161",
+     "source": "/Part/Shape161",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g162",
+     "source": "/Part/Shape162",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g163",
+     "source": "/Part/Shape163",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g164",
+     "source": "/Part/Shape164",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g165",
+     "source": "/Part/Shape165",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g166",
+     "source": "/Part/Shape166",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g167",
+     "source": "/Part/Shape167",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g168",
+     "source": "/Part/Shape168",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g169",
+     "source": "/Part/Shape169",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g170",
+     "source": "/Part/Shape170",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g171",
+     "source": "/Part/Shape171",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g172",
+     "source": "/Part/Shape172",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g173",
+     "source": "/Part/Shape173",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g174",
+     "source": "/Part/Shape174",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g175",
+     "source": "/Part/Shape175",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g176",
+     "source": "/Part/Shape176",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g177",
+     "source": "/Part/Shape177",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g178",
+     "source": "/Part/Shape178",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g179",
+     "source": "/Part/Shape179",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g180",
+     "source": "/Part/Shape180",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g181",
+     "source": "/Part/Shape181",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g182",
+     "source": "/Part/Shape182",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g183",
+     "source": "/Part/Shape183",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g184",
+     "source": "/Part/Shape184",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g185",
+     "source": "/Part/Shape185",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g186",
+     "source": "/Part/Shape186",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g187",
+     "source": "/Part/Shape187",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g188",
+     "source": "/Part/Shape188",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g189",
+     "source": "/Part/Shape189",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g190",
+     "source": "/Part/Shape190",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g191",
+     "source": "/Part/Shape191",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g192",
+     "source": "/Part/Shape192",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g193",
+     "source": "/Part/Shape193",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g194",
+     "source": "/Part/Shape194",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g195",
+     "source": "/Part/Shape195",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g196",
+     "source": "/Part/Shape196",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g197",
+     "source": "/Part/Shape197",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g198",
+     "source": "/Part/Shape198",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_a_g199",
+     "source": "/Part/Shape199",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.6499999761581421
+  },
+  "frame_b": {
+   "pos": [
+    0.0,
+    0.0,
+    0.55052
+   ],
+   "quat": [
+    0.9914448613738104,
+    0.0,
+    0.0,
+    -0.13052619222005155
+   ],
+   "geoms": [
+    {
+     "geom": "frame_b_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g001",
+     "source": "/Part/Shape1",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g014",
+     "source": "/Part/Shape14",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g015",
+     "source": "/Part/Shape15",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g016",
+     "source": "/Part/Shape16",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g017",
+     "source": "/Part/Shape17",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g034",
+     "source": "/Part/Shape34",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g035",
+     "source": "/Part/Shape35",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g036",
+     "source": "/Part/Shape36",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g037",
+     "source": "/Part/Shape37",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g038",
+     "source": "/Part/Shape38",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g039",
+     "source": "/Part/Shape39",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g040",
+     "source": "/Part/Shape40",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g041",
+     "source": "/Part/Shape41",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g042",
+     "source": "/Part/Shape42",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g043",
+     "source": "/Part/Shape43",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g044",
+     "source": "/Part/Shape44",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g045",
+     "source": "/Part/Shape45",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g046",
+     "source": "/Part/Shape46",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g047",
+     "source": "/Part/Shape47",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g048",
+     "source": "/Part/Shape48",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g049",
+     "source": "/Part/Shape49",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g050",
+     "source": "/Part/Shape50",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g051",
+     "source": "/Part/Shape51",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g052",
+     "source": "/Part/Shape52",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g053",
+     "source": "/Part/Shape53",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g054",
+     "source": "/Part/Shape54",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g055",
+     "source": "/Part/Shape55",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g056",
+     "source": "/Part/Shape56",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g057",
+     "source": "/Part/Shape57",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g058",
+     "source": "/Part/Shape58",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g059",
+     "source": "/Part/Shape59",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g060",
+     "source": "/Part/Shape60",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g061",
+     "source": "/Part/Shape61",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g062",
+     "source": "/Part/Shape62",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g063",
+     "source": "/Part/Shape63",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g064",
+     "source": "/Part/Shape64",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g065",
+     "source": "/Part/Shape65",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g066",
+     "source": "/Part/Shape66",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g067",
+     "source": "/Part/Shape67",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g068",
+     "source": "/Part/Shape68",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g069",
+     "source": "/Part/Shape69",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g070",
+     "source": "/Part/Shape70",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g071",
+     "source": "/Part/Shape71",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g072",
+     "source": "/Part/Shape72",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g073",
+     "source": "/Part/Shape73",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g074",
+     "source": "/Part/Shape74",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g075",
+     "source": "/Part/Shape75",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g076",
+     "source": "/Part/Shape76",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g077",
+     "source": "/Part/Shape77",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g078",
+     "source": "/Part/Shape78",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g079",
+     "source": "/Part/Shape79",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g080",
+     "source": "/Part/Shape80",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g081",
+     "source": "/Part/Shape81",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g082",
+     "source": "/Part/Shape82",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g083",
+     "source": "/Part/Shape83",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g084",
+     "source": "/Part/Shape84",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g085",
+     "source": "/Part/Shape85",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g086",
+     "source": "/Part/Shape86",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g087",
+     "source": "/Part/Shape87",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g088",
+     "source": "/Part/Shape88",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g089",
+     "source": "/Part/Shape89",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g090",
+     "source": "/Part/Shape90",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g091",
+     "source": "/Part/Shape91",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g092",
+     "source": "/Part/Shape92",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g093",
+     "source": "/Part/Shape93",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g094",
+     "source": "/Part/Shape94",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g095",
+     "source": "/Part/Shape95",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g096",
+     "source": "/Part/Shape96",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g097",
+     "source": "/Part/Shape97",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g098",
+     "source": "/Part/Shape98",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g099",
+     "source": "/Part/Shape99",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g100",
+     "source": "/Part/Shape100",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "frame_b_g101",
+     "source": "/Part/Shape101",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.6499999761581421
+  },
+  "ring": {
+   "pos": [
+    -0.59,
+    0.0,
+    0.33302
+   ],
+   "quat": [
+    0.9238795325112867,
+    0.0,
+    0.0,
+    0.3826834323650898
+   ],
+   "geoms": [
+    {
+     "geom": "ring_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g014",
+     "source": "/Part/Shape14",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g015",
+     "source": "/Part/Shape15",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g016",
+     "source": "/Part/Shape16",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g017",
+     "source": "/Part/Shape17",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g034",
+     "source": "/Part/Shape34",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g035",
+     "source": "/Part/Shape35",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g036",
+     "source": "/Part/Shape36",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g037",
+     "source": "/Part/Shape37",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g038",
+     "source": "/Part/Shape38",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g039",
+     "source": "/Part/Shape39",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g040",
+     "source": "/Part/Shape40",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g041",
+     "source": "/Part/Shape41",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g042",
+     "source": "/Part/Shape42",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g043",
+     "source": "/Part/Shape43",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g044",
+     "source": "/Part/Shape44",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g045",
+     "source": "/Part/Shape45",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g046",
+     "source": "/Part/Shape46",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g047",
+     "source": "/Part/Shape47",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g048",
+     "source": "/Part/Shape48",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g049",
+     "source": "/Part/Shape49",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g050",
+     "source": "/Part/Shape50",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g051",
+     "source": "/Part/Shape51",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g052",
+     "source": "/Part/Shape52",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g053",
+     "source": "/Part/Shape53",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g054",
+     "source": "/Part/Shape54",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g055",
+     "source": "/Part/Shape55",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g056",
+     "source": "/Part/Shape56",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g057",
+     "source": "/Part/Shape57",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g058",
+     "source": "/Part/Shape58",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g059",
+     "source": "/Part/Shape59",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g060",
+     "source": "/Part/Shape60",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g061",
+     "source": "/Part/Shape61",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g062",
+     "source": "/Part/Shape62",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g063",
+     "source": "/Part/Shape63",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g064",
+     "source": "/Part/Shape64",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g065",
+     "source": "/Part/Shape65",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g066",
+     "source": "/Part/Shape66",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g067",
+     "source": "/Part/Shape67",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g068",
+     "source": "/Part/Shape68",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g069",
+     "source": "/Part/Shape69",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g070",
+     "source": "/Part/Shape70",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g071",
+     "source": "/Part/Shape71",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g072",
+     "source": "/Part/Shape72",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g073",
+     "source": "/Part/Shape73",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g074",
+     "source": "/Part/Shape74",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g075",
+     "source": "/Part/Shape75",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g076",
+     "source": "/Part/Shape76",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g077",
+     "source": "/Part/Shape77",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g078",
+     "source": "/Part/Shape78",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g079",
+     "source": "/Part/Shape79",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g080",
+     "source": "/Part/Shape80",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g081",
+     "source": "/Part/Shape81",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g082",
+     "source": "/Part/Shape82",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g083",
+     "source": "/Part/Shape83",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g084",
+     "source": "/Part/Shape84",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g085",
+     "source": "/Part/Shape85",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g086",
+     "source": "/Part/Shape86",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g087",
+     "source": "/Part/Shape87",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g088",
+     "source": "/Part/Shape88",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g089",
+     "source": "/Part/Shape89",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g090",
+     "source": "/Part/Shape90",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g091",
+     "source": "/Part/Shape91",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g092",
+     "source": "/Part/Shape92",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g093",
+     "source": "/Part/Shape93",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g094",
+     "source": "/Part/Shape94",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g095",
+     "source": "/Part/Shape95",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g096",
+     "source": "/Part/Shape96",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g097",
+     "source": "/Part/Shape97",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g098",
+     "source": "/Part/Shape98",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g099",
+     "source": "/Part/Shape99",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g100",
+     "source": "/Part/Shape100",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g101",
+     "source": "/Part/Shape101",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g102",
+     "source": "/Part/Shape102",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g103",
+     "source": "/Part/Shape103",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g104",
+     "source": "/Part/Shape104",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g105",
+     "source": "/Part/Shape105",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g106",
+     "source": "/Part/Shape106",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g107",
+     "source": "/Part/Shape107",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g108",
+     "source": "/Part/Shape108",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g109",
+     "source": "/Part/Shape109",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g110",
+     "source": "/Part/Shape110",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g111",
+     "source": "/Part/Shape111",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g112",
+     "source": "/Part/Shape112",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g113",
+     "source": "/Part/Shape113",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g114",
+     "source": "/Part/Shape114",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g115",
+     "source": "/Part/Shape115",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g116",
+     "source": "/Part/Shape116",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g117",
+     "source": "/Part/Shape117",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g118",
+     "source": "/Part/Shape118",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g119",
+     "source": "/Part/Shape119",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g120",
+     "source": "/Part/Shape120",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g121",
+     "source": "/Part/Shape121",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g122",
+     "source": "/Part/Shape122",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g123",
+     "source": "/Part/Shape123",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g124",
+     "source": "/Part/Shape124",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g125",
+     "source": "/Part/Shape125",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g126",
+     "source": "/Part/Shape126",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g127",
+     "source": "/Part/Shape127",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g128",
+     "source": "/Part/Shape128",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g129",
+     "source": "/Part/Shape129",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g130",
+     "source": "/Part/Shape130",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g131",
+     "source": "/Part/Shape131",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g132",
+     "source": "/Part/Shape132",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g133",
+     "source": "/Part/Shape133",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g134",
+     "source": "/Part/Shape134",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g135",
+     "source": "/Part/Shape135",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g136",
+     "source": "/Part/Shape136",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g137",
+     "source": "/Part/Shape137",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g138",
+     "source": "/Part/Shape138",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g139",
+     "source": "/Part/Shape139",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g140",
+     "source": "/Part/Shape140",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g141",
+     "source": "/Part/Shape141",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g142",
+     "source": "/Part/Shape142",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g143",
+     "source": "/Part/Shape143",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g144",
+     "source": "/Part/Shape144",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "ring_g145",
+     "source": "/Part/Shape145",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.25
+  },
+  "tray": {
+   "pos": [
+    0.59,
+    0.0,
+    0.30152
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "tray_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g014",
+     "source": "/Part/Shape14",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g015",
+     "source": "/Part/Shape15",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g016",
+     "source": "/Part/Shape16",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g017",
+     "source": "/Part/Shape17",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g034",
+     "source": "/Part/Shape34",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g035",
+     "source": "/Part/Shape35",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g036",
+     "source": "/Part/Shape36",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g037",
+     "source": "/Part/Shape37",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g038",
+     "source": "/Part/Shape38",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g039",
+     "source": "/Part/Shape39",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g040",
+     "source": "/Part/Shape40",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g041",
+     "source": "/Part/Shape41",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g042",
+     "source": "/Part/Shape42",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g043",
+     "source": "/Part/Shape43",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g044",
+     "source": "/Part/Shape44",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g045",
+     "source": "/Part/Shape45",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g046",
+     "source": "/Part/Shape46",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g047",
+     "source": "/Part/Shape47",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_g048",
+     "source": "/Part/Shape48",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.25
+  },
+  "screw_long": {
+   "pos": [
+    -0.28733772469128244,
+    -0.04359967459962253,
+    0.346
+   ],
+   "quat": [
+    -0.937262357837951,
+    -0.32444128373137326,
+    -0.022107203615159436,
+    0.12565189031248608
+   ],
+   "geoms": [
+    {
+     "geom": "screw_long_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.017999999225139618
+  },
+  "screw_bottom": {
+   "pos": [
+    -0.30547329830359526,
+    -0.008842121774712055,
+    0.366
+   ],
+   "quat": [
+    0.24469636992496874,
+    0.4963245347062295,
+    0.22997057007535948,
+    0.8005617900533359
+   ],
+   "geoms": [
+    {
+     "geom": "screw_bottom_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.017999999225139618
+  },
+  "screw_ring_l": {
+   "pos": [
+    -0.2605750218524565,
+    0.010758318984869578,
+    0.38599999999999995
+   ],
+   "quat": [
+    -0.9425266311697822,
+    0.028492441851473444,
+    -0.30739132656877516,
+    -0.12783701593580113
+   ],
+   "geoms": [
+    {
+     "geom": "screw_ring_l_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.017999999225139618
+  },
+  "screw_ring_r": {
+   "pos": [
+    -0.2713580367378255,
+    0.03757337025505326,
+    0.40599999999999997
+   ],
+   "quat": [
+    -0.8022605331033293,
+    0.4477928308355767,
+    0.3172146004432364,
+    -0.23502024368692234
+   ],
+   "geoms": [
+    {
+     "geom": "screw_ring_r_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.017999999225139618
+  }
+ },
+ "initial_settled": {
+  "frame_a": {
+   "pos": [
+    3.27308731e-07,
+    6.15404367e-09,
+    0.550499067
+   ],
+   "quat": [
+    0.9238795339190325,
+    1.441249489873691e-07,
+    3.8525876496623646e-08,
+    0.3826834289664622
+   ]
+  },
+  "frame_b": {
+   "pos": [
+    -4.06485652e-07,
+    -4.12896115e-10,
+    0.550499078
+   ],
+   "quat": [
+    0.9914448640351856,
+    -4.1578227001475584e-08,
+    -2.6031054800923823e-07,
+    -0.13052617200463226
+   ]
+  },
+  "ring": {
+   "pos": [
+    -0.59,
+    5.39380021e-16,
+    0.332999382
+   ],
+   "quat": [
+    0.9238795327119359,
+    8.520649037343275e-16,
+    4.2089351186876615e-15,
+    0.38268343188067994
+   ]
+  },
+  "tray": {
+   "pos": [
+    0.59,
+    -1.42958259e-09,
+    0.30149812
+   ],
+   "quat": [
+    0.9999999999998823,
+    4.770450819999439e-07,
+    8.882078019998954e-08,
+    1.2464316599998533e-11
+   ]
+  },
+  "screw_long": {
+   "pos": [
+    -0.288866049,
+    -0.0421221149,
+    0.307870546
+   ],
+   "quat": [
+    -0.7378669615405458,
+    -0.6738238175804241,
+    -0.01183341709263158,
+    0.03706454057692069
+   ]
+  },
+  "screw_bottom": {
+   "pos": [
+    -0.268169999,
+    -0.00611722547,
+    0.307730056
+   ],
+   "quat": [
+    -0.29649109402041923,
+    0.596417289041075,
+    0.2296440760158155,
+    -0.7096781290488753
+   ]
+  },
+  "screw_ring_l": {
+   "pos": [
+    -0.259752089,
+    0.0116186444,
+    0.307741425
+   ],
+   "quat": [
+    -0.7670905723177618,
+    0.08648675133582652,
+    -0.6335744992624537,
+    -0.05172474832142661
+   ]
+  },
+  "screw_ring_r": {
+   "pos": [
+    -0.270688665,
+    0.0392395726,
+    0.307724327
+   ],
+   "quat": [
+    -0.5464028992795871,
+    0.6063152803102434,
+    0.20151121910311057,
+    -0.5414968892770767
+   ]
+  }
+ },
+ "hex_socket": {
+  "head_bearing_z": {
+   "screw_long": 0.02300000000000002,
+   "screw_bottom": 0.011999999999999997,
+   "screw_ring_l": 0.01200000000000001,
+   "screw_ring_r": 0.01200000000000001
+  },
+  "radius": 0.004,
+  "height": 0.002,
+  "across_flats": 0.003,
+  "depth": 0.0012
+ },
+ "hex_driver": {
+  "info": {
+   "type": "hex",
+   "length": 0.085,
+   "grip_z": 0.060000000000000005,
+   "handle_z": [
+    0.035,
+    0.085
+   ],
+   "tip_engage": 0.0012,
+   "handle_af": 0.022,
+   "handle_sides": 8
+  },
+  "clearance": 0.00015,
+  "stand_center_xy": [
+   0.2,
+   -0.25
+  ],
+  "stand_height": 0.05,
+  "stand_hole": 0.005,
+  "stand_holes_y": [
+   -0.015,
+   0.015
+  ]
+ },
+ "table_top_z": 0.3,
+ "table_half_xy": [
+  0.86,
+  0.36
+ ],
+ "part_info": {
+  "frame_a": {
+   "mass": 0.65,
+   "inertia": [
+    0.006500000000000001,
+    0.006500000000000001,
+    0.006500000000000001
+   ],
+   "com_local": [
+    -1.3357675508391708e-07,
+    -7.847658467631e-08,
+    0.011793493669177629
+   ],
+   "source_sha256": "3aac2d974435e7a1db14da90e536f8a21cd4d40fa3b8b310dc4f263c3dc343bd",
+   "n_collision_geoms": 204,
+   "thread_meshes_replaced": [
+    "/Part/Thread0",
+    "/Part/Thread1",
+    "/Part/Thread2",
+    "/Part/Thread3"
+   ]
+  },
+  "frame_b": {
+   "mass": 0.65,
+   "inertia": [
+    0.006500000000000001,
+    0.006500000000000001,
+    0.006500000000000001
+   ],
+   "com_local": [
+    -1.3944494434822373e-20,
+    -8.873769185796056e-21,
+    0.013128413893502954
+   ],
+   "source_sha256": "b98e26fe4a34e3dfdbfb2311fc68d7f9b894e5e96db4298c04ff92fcaeeca3e5",
+   "n_collision_geoms": 102,
+   "thread_meshes_replaced": []
+  },
+  "ring": {
+   "mass": 0.25,
+   "inertia": [
+    0.0025,
+    0.0025,
+    0.0025
+   ],
+   "com_local": [
+    -1.0693410850834627e-17,
+    1.488059429190328e-17,
+    -0.0001515299231075135
+   ],
+   "source_sha256": "99240be191fb24c1fa9c69991f9cafa108d0f8e3a70517c1e3bda1078e8de10d",
+   "n_collision_geoms": 146,
+   "thread_meshes_replaced": []
+  },
+  "tray": {
+   "mass": 0.25,
+   "inertia": [
+    0.0025,
+    0.0025,
+    0.0025
+   ],
+   "com_local": [
+    -6.004441384295533e-19,
+    -3.752775865184708e-19,
+    0.0008825483334750333
+   ],
+   "source_sha256": "91ba2c53181464c6f3e238ab9065244cfff58d769979551d487e5401226bb1c9",
+   "n_collision_geoms": 49,
+   "thread_meshes_replaced": []
+  },
+  "screw_long": {
+   "mass": 0.018,
+   "inertia": [
+    2e-05,
+    2e-05,
+    2e-06
+   ],
+   "com_local": [
+    1.2548117622722893e-06,
+    -1.0719819082353242e-07,
+    0.015610431398592552
+   ],
+   "source_sha256": "2342bf66c0914ebdd8283ea857a63ca78eb82643abee790c27d6d0a84734b62a",
+   "n_collision_geoms": 3,
+   "thread_meshes_replaced": [
+    "/Part/Thread0"
+   ]
+  },
+  "screw_bottom": {
+   "mass": 0.018,
+   "inertia": [
+    2e-05,
+    2e-05,
+    2e-06
+   ],
+   "com_local": [
+    1.6206831720118783e-06,
+    -1.3845447513434888e-07,
+    0.009246964424947098
+   ],
+   "source_sha256": "6b33b2029f700945d35a96bb1d54e62f70f120d9f1edead11891b88fb353505b",
+   "n_collision_geoms": 3,
+   "thread_meshes_replaced": [
+    "/Part/Thread0"
+   ]
+  },
+  "screw_ring_l": {
+   "mass": 0.018,
+   "inertia": [
+    2e-05,
+    2e-05,
+    2e-06
+   ],
+   "com_local": [
+    1.6206831720118783e-06,
+    -1.3845447513434888e-07,
+    0.009246964424947103
+   ],
+   "source_sha256": "c90b74793a1980e03038770f739da13c6e32e7b3065e8c799588183ad344bd24",
+   "n_collision_geoms": 3,
+   "thread_meshes_replaced": [
+    "/Part/Thread0"
+   ]
+  },
+  "screw_ring_r": {
+   "mass": 0.018,
+   "inertia": [
+    2e-05,
+    2e-05,
+    2e-06
+   ],
+   "com_local": [
+    1.6206831720118783e-06,
+    -1.3845447513434888e-07,
+    0.009246964424947103
+   ],
+   "source_sha256": "c90b74793a1980e03038770f739da13c6e32e7b3065e8c799588183ad344bd24",
+   "n_collision_geoms": 3,
+   "thread_meshes_replaced": [
+    "/Part/Thread0"
+   ]
+  }
+ },
+ "parts_box": {
+  "center_xy": [
+   -0.272,
+   0.0
+  ],
+  "interior_xy": [
+   0.12,
+   0.14
+  ],
+  "wall": 0.006,
+  "floor": 0.006,
+  "wall_height_above_floor": 0.03,
+  "drop_seed": 20261015
+ }
+}

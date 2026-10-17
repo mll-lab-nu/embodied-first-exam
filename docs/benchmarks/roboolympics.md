@@ -17,13 +17,13 @@ oracles are the same; the image keeps its name (`eai-robofunolympics`), as do th
 image `eai-olympiad:0.2.0`) were removed on the same day.
 
 **Two parts.** (1) The 50 single-robot sports families above and below, generated here (`scripts/roboolympics/`,
-privileged and standard). (2) Nineteen tasks RoboOlympics exports itself with its own service inside (PROTOCOL §4c):
+privileged and standard). (2) Seventeen tasks RoboOlympics exports itself with its own service inside (PROTOCOL §4c):
 matches against a scripted or learned opponent in standard-realtime mode (two of them at the low level: the agent's own
-uploaded skill plays), two turn-based fencing bouts and two skill-engineering tasks in standard mode, listed in
+uploaded skill plays) and two turn-based fencing bouts in standard mode, listed in
 `scripts/roboolympics/exported.toml` and described in "Tasks exported by RoboOlympics" at the end of this page. The two
 parts never share a family name: the families here are dashed English event names (`table-tennis-return`,
 `penalty-kick`), the exported tasks are the sport's RoboOlympics id and a format (`tabletennis-match`,
-`soccerssl-match`, `tabletennis-hitskill`, `badminton-actskill`); a new family here may not take a `<sport>-match` or
+`soccerssl-match`); a new family here may not take a `<sport>-match` or
 `<sport>-<x>skill` name, and `gen_tasks.py check` fails a name that is both rendered and exported. The
 standard-realtime twins of part (1)'s dynamic families (board 0112) are `roboolympics-<family>-i00-standard-realtime`
 and cannot meet part (2)'s names either.
@@ -426,20 +426,17 @@ RoboOlympics commit and the sport's frozen revision of each, and the files chang
 | `roboolympics-fencing-bout-i02-standard` | as above | level 2, seed 35 | full: the reference won 15:13 (32 phrases, replay identical); nop 0 |
 | `roboolympics-tabletennis-matchlow-i01-standard-realtime` | table tennis at the **low level** (RoboOlympics' Engineer mode as a match; owner's decision 2026-10-16): the agent implements the robot's `hit` skill itself from the joint interface and the toolkit, uploads it to the sim (`game skill upload`, `POST /A/skill`), and every stroke of the match is played by that skill (the skill in the loop: its compute counts in match time; no execution scatter); success = the agent wins | level 1, seed 22, S = 10, 7200 s | partial: RoboOlympics' toolkit-only reference skill with the camera-only reference strategy lost 0:5 (valid, replay identical; it lost 0:5 on 8 more seeds: its slow serves bounce twice on its own court); feasibility: the platform's own hit packaged as an uploaded skill, with the truth-state strategy, wins level 1 in 7 of 8 seeds of RoboOlympics' competition test (this seed 5:1; the reference skill 0 of 4); through this task's live upload path with the camera-only strategy it scored 2:5, 1:5, 2:5; GPT-6 Astra (one precheck) lost 2:3 by a missed review (`ready_timeout`, a valid loss; its own skill, uploaded 4 times, won 2 points); nop 0 |
 | `roboolympics-badminton-matchlow-i01-standard-realtime` | badminton at the **low level**, as the table-tennis one: the agent implements the robot's `act` skill (the racket head's state at contact, optional base position) from the joint interface and the toolkit (bm_kinematics, bm_servo), uploads it (`game skill upload`), and every stroke of the match is played by that skill in the sim's jail; success = the agent wins | level 2, seed 8, S = 20, 14400 s | partial: our toolkit-only reference act with the camera-only reference strategy lost 1:11 on this instance (vanilla Harbor 0.23.0: a valid, replayed match, 1 upload, 25 act calls, none failed); feasibility: our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 4/4 and level 2 2/4 with our toolkit-only reference act (API test 512/519), and in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act; level 2 because models won level 1; nop 0 |
-| `roboolympics-tabletennis-hitskill-i00-standard` | implement the robot's `hit` skill (the blade's state at contact) from the robot's model, its real-limit joint interface and a disclosed toolkit; graded offline by the sport's API test | 90 public development requests (24 development matches); success: rate >= 0.7 | full: RoboOlympics' reference skill 69/90 (the platform's own `hit` 90/90, an IK-only baseline 0/90); nop 0 |
-| `roboolympics-badminton-actskill-i00-standard` | implement the badminton robot's `act` skill (the racket's state at contact, optional base position) from its model, its real-limit joint interface and the toolkit; graded offline by the sport's API test (RoboOlympics revision `badminton-wallclock-12`, PR #98) | 246 public development requests (12 development matches, levels 1-2); success: rate >= 0.8 | full: RoboOlympics' reference skill 244/246; nop 0 |
 
 What differs from the 2.x tasks (PROTOCOL §4c, owner 2026-10-14):
 
 | | the 2.x tasks | exported RoboOlympics tasks | why |
 |---|---|---|---|
-| protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (real-time matches; RoboOlympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `eai-standard-turn/1.0` (turn-based matches, mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0), `skilleval-api-test/1` (skill tasks) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s` since 2026-10-14, board 0121, `patched` in exported.toml) is part of RoboOlympics' rules, and its results are only comparable under them |
+| protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (real-time matches; RoboOlympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `eai-standard-turn/1.0` (turn-based matches, mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s` since 2026-10-14, board 0121, `patched` in exported.toml) is part of RoboOlympics' rules, and its results are only comparable under them |
 | crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the service replays the whole match from its record to grade it; a resumed match would not be the recorded one |
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (RoboOlympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10, foosball 20 (`metadata.slowdown`); turn-based matches have none (`metadata.chess_clock_s`: fencing 3600 s) | results state S, or the chess clock |
 | agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02 / i04, the badminton duel, wheeled soccer and foosball 14400 s (those tasks' own `[agent] timeout_sec`, owner 2026-10-14) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |
 | network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL §2.11 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
 | twin | privileged + standard | none (the README's Twin row says why) | no trajectory deliverable |
-| skill task | — | mode `standard`, `task_type = "policy"`, no sim service; the verifier runs the simulator and the skill | the deliverable is code (`/app/output/skill/hit.py`, `act.py`) |
 | seeds | the instance's | matches: `[metadata.seeds]` default = allowed = the instance's development seed (a turn-based match whose world is deterministic has one outcome per sequence of choices: its oracle is `full` when the reference wins that seed); skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; RoboOlympics' official results are produced by RoboOlympics on its hidden six-digit seeds |
 | metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the D11 proxy's file `metering/think_proxy.py` is in the image's copy but never started) | |
 
@@ -469,7 +466,7 @@ between requests (it gets no outcome back, so it learns nothing it was not given
 
 Images: `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` (public; the image RoboOlympics' frozen revisions were screened on;
 built from RoboOlympics' own tree, not from this repository), for every task but humanoid soccer, which runs on
-`ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (public since 2026-10-16). The agent's container of the skill tasks is `python:3.12.14-slim`. CPU only.
+`ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (public since 2026-10-16). CPU only.
 
 ## Licences
 

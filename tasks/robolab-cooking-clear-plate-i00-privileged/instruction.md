@@ -4,8 +4,8 @@ You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDI
 Isaac Sim 5.1, PhysX physics) via Python. **Task:** Put the two measuring cups outside of the plate.
 
 The scene objects are the env's rigid objects (`s.objects()`: `redonion`, `serving_bowl`, `clay_plates`, `wooden_spoons`, `spatula`, `storage_box`, `tomato_sauce_can`, `measuring_cups_1`, `pink_spaghetti_spoon`, `spoon_1`, `green_serving_spoon`, `storage_box_01`, `ladle`, `wooden_bowl`, `potato_masher`, `table`; see
-`/opt/robolab/robolab/tasks/benchmark/cooking_clear_plate_specific.py`). RoboLab's success predicate is the `success` termination
-term in that file (`object_outside_of` in `/opt/robolab/robolab/core/task/conditionals.py`); it also ends the episode:
+`/opt/robolab/robolab/tasks/benchmark/cooking_clear_plate_specific.py`). RoboLab declares the success predicate as the `success` termination term in that file (`object_outside_of` in
+`/opt/robolab/robolab/core/task/conditionals.py`):
 ```python
 class CookingClearPlateTerminations:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
@@ -14,6 +14,16 @@ class CookingClearPlateTerminations:
         params={"object": ["spoon_1", "measuring_cups_1"], "container": "clay_plates", "logical": "all", "tolerance": 0.0, "require_gripper_detached": True}
     )
 ```
+This task does not grade that term. Its tooling and grader replace it (`ON_TABLE` in `rcb_robolab.py`) with RoboLab's own `object_outside_of_and_on_surface` (same file), the same parameters and surface `table`; this is the success predicate here (`s.status()`, `s.replay` and the grader all use it), and it also ends the episode:
+```python
+class CookingClearPlateTerminations:
+    time_out = DoneTerm(func=mdp.time_out, time_out=True)
+    success = DoneTerm(
+        func=object_outside_of_and_on_surface,
+        params={"object": ["spoon_1", "measuring_cups_1"], "container": "clay_plates", "logical": "all", "tolerance": 0.0, "require_gripper_detached": True, "surface": "table"}
+    )
+```
+Each listed object must be outside the container as above, the gripper must not touch it, and it must also rest on the table top (RoboLab's `WorldState.is_supported_on_surface`, `/opt/robolab/robolab/core/world/world_state.py`): the contact force between the object and the table is at least 0.1 N and points upwards, within 45° of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count.
 
 This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
 and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
@@ -38,7 +48,7 @@ takes here.
 ```python
 from rcb_robolab import Session
 s = Session("cooking_clear_plate", instance="/app/instance.json")   # ~1-2 min: launches Isaac Sim, builds the scene, restores the frozen state
-s.reset()                          # back to the frozen initial state (as often as you like; an exact state restore)
+s.reset()                          # back to the frozen initial state, as often as you like (not every PhysX internal: see Conventions)
 p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
 s.objects()                        # objects: name -> position, orientation_wxyz, bounds, size, velocity (env-local frame)
 p["move_ee"](pos, quat_wxyz, speed=0.2)   # straight-line fingertip move, one differential-IK update per control step
