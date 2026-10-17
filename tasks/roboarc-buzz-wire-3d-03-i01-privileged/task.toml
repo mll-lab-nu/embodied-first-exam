@@ -16,8 +16,7 @@ robot = "franka-robotiq-2f85"
 family = "buzz_wire_3d"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
 dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
-oracle = "none"
-oracle_evidence = "No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress round on this instance."
+oracle = "full"
 difficulty = "easy"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 grasp regions on wand)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision terminal_v4_traversal_then_deck_release)"
@@ -28,14 +27,14 @@ expert_time_estimate_hours = 2.0
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
 min_cpus = 4.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
+min_gpu_memory_gb = 2.0
 gpu_required = true
 gpu_class = "any"
 recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 5.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -62,7 +61,7 @@ main = { cpus = 16.0, memory_gb = 30.0, pids = 8192 }
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
-oracle = []
+oracle = [0]
 
 [verifier]
 timeout_sec = 45000.0

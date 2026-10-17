@@ -2,7 +2,7 @@
 # tooling and the frozen instance baked in. Nothing the agent did in its container reaches this one — Harbor
 # uploads only the declared artifacts (/app/output/), so a patched success check or a swapped interpreter in
 # the agent container cannot influence the verdict.
-FROM ghcr.io/mll-lab-nu/eai-roboarc:0.1.0
+FROM ghcr.io/mll-lab-nu/eai-roboarc:0.2.0
 # MuJoCo task: numpy / OpenBLAS SIMD masking, so every CPU class generates the frozen bytes
 ENV NPY_DISABLE_CPU_FEATURES=AVX512F,AVX512CD,AVX512_SKX,AVX512_CLX,AVX512_CNL,AVX512_ICL,AVX512_SPR OPENBLAS_CORETYPE=Haswell
 COPY runtime_binding.json /tests/runtime_binding.json
