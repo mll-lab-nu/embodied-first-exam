@@ -148,7 +148,9 @@ class SkillHost:
         if self.copy_to is not None:
             self.copy = self.copy_to
         else:
-            self._tmp = self._tmp or Path(tempfile.mkdtemp(prefix="inloop-"))
+            if self._tmp is None:
+                self._tmp = Path(tempfile.mkdtemp(prefix="inloop-"))
+                self._tmp.chmod(0o755)         # the skill runs as nobody when the host is root: it must reach its copy
             self.copy = self._tmp / "skill"
         try:
             copy_skill(self.src, self.copy)

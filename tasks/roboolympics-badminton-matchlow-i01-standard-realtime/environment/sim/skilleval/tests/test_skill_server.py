@@ -3,7 +3,7 @@ side (inloop: RCB_SKILL_INLOOP_<seat> = "tcp:127.0.0.1:PORT"): calls over the lo
 files plays from the next call (its version logged), a missing server is the player's error ("noserver").
 Standard library only:
 
-    python3 skilleval/tests/test_skill_server.py
+    python3 skilleval/tests/test_skill_server.py     # also as root (the skill then runs as nobody)
 """
 from __future__ import annotations
 
