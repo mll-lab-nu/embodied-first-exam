@@ -1,7 +1,10 @@
 """eai-standard/2.1 sim service for HumanoidBench -- the sidecar's entry point (`python /srv/server.py`).
 
 The simulator-specific half only: `HumanoidBench` implements rcb_service.Sim for one frozen instance. The protocol,
-the episode, crash recovery and the finalize live in rcb_service.py, which imports no simulator.
+the episode, crash recovery and the finalize live in rcb_service.py, which imports no simulator. The verdict is the live
+episode's (board 0151): step() reports HumanoidBench's own rule (the episode's return reached the pass mark) and the
+episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after the verdict, to
+film it. start_sha is the frozen instance's starting state as instance.npz records it, checked when an episode begins.
 Settings come from environment/docker-compose.yaml:
   RCB_TASK, RCB_INSTANCE   which HumanoidBench task, which frozen scene (the privileged twin's instance)
   RCB_TASK_TEXT            one sentence for /spec
@@ -17,6 +20,7 @@ Settings come from environment/docker-compose.yaml:
 """
 from __future__ import annotations
 
+import hashlib
 import itertools
 import math
 import os
@@ -32,7 +36,7 @@ import mujoco  # noqa: E402
 from rcb_rewards import restore  # noqa: E402
 
 restore()  # the scoring formula lives in this sidecar only, and must be back before a Session is opened
-from rcb_service import main  # noqa: E402
+from rcb_service import InstanceMismatch, main  # noqa: E402
 from humanoid_bench.tasks import Task  # noqa: E402
 
 # HumanoidBench's own non-privileged sensors (humanoid_bench/wrappers.py, ObservationWrapper): `image` renders
@@ -56,6 +60,16 @@ class HumanoidBench:
         self.s = Session(task, instance=instance, enable_render=True, image_hw=image_hw)
         if not self.s.scored:
             raise RuntimeError("the reward was not restored: this service could not judge success")
+        # The frozen start as instance.npz records it: the state the Session restores (state_sha() hashes the same
+        # snapshot), checked by rcb_service when an episode begins; and the file's own digest of the whole instance
+        # (pose, goal, task state), which a damaged or foreign file fails.
+        with np.load(instance, allow_pickle=False) as inst:
+            self.start_sha = hashlib.sha1(np.ascontiguousarray(np.asarray(inst["state"], dtype=np.float64))
+                                          .tobytes()).hexdigest()[:12]
+            recorded = str(inst["sha"]) if "sha" in inst.files else None
+        if recorded is not None and recorded != self.s.instance_sha():
+            raise InstanceMismatch(f"{instance} records instance sha {recorded}, its contents hash to "
+                                   f"{self.s.instance_sha()}")
         self.task_text, self.episode = task_text, episode
         self.robot, m = self.s.low.robot, self.s.model
         assert m.jnt_type[0] == mujoco.mjtJoint.mjJNT_FREE and m.body(int(m.jnt_bodyid[0])).name == "pelvis"
@@ -262,15 +276,11 @@ class HumanoidBench:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen scene, in a fresh HumanoidBench environment (physics only)."""
-        st = Session(self.task, instance=self.instance).replay(rows)
-        return {"success": st["success"], "state_sha": st["state_sha"]}
-
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         self.s.save_trajectory(rows, path, meta)
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """The episode's video, after the verdict: the trajectory re-run once on this simulator, from the frozen start."""
         self.s.render_video(rows, path, every=5, fps=20)
 
 

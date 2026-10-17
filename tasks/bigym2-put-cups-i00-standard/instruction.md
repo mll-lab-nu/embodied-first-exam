@@ -13,7 +13,7 @@ heights above the floor; measured on this scene.)
 - **One episode, no reset.** The episode starts when the service comes up, from a fixed starting state; what ends it is under Success below. `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run. Once it has ended, the run is over and `submit` raises `EpisodeOver`.
 - **Time moves only inside calls.** `submit` runs your commands and `get_obs(seconds=s)` stands still for s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no seconds is free.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, 84×84: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
-- There is nothing to hand in: the service records the episode, replays it in a fresh simulator and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so do not stop early: while the episode runs, the run can still pass.
 
 ## Success
@@ -21,8 +21,7 @@ The episode succeeds when the following has held for **1 s (50 control steps in 
 
 The episode ends when the success has held for 1 s (`reason = "success"`), when the pelvis gets more than
 10 m from the scene's origin, on a simulator error, after **3000 control steps** (60 s of robot
-time), or when your time is up. A fresh replay of the recorded episode must succeed as well and end in the same
-state.
+time), or when your time is up. That live episode is the verdict.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
