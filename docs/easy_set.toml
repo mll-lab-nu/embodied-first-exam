@@ -37,6 +37,8 @@
 # docs/benchmarks/libero-max.md "Easy set").
 # 2026-10-17: RoboDojo 33 (the owner's screening: every mode the base ships solved by a screening run;
 # docs/benchmarks/robodojo.md "Easy set").
+# 2026-10-17: Panda Dynamic Scenes 1 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/pandadyn.md "Easy set").
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -587,6 +589,12 @@ base = "metaworldplus-window-open-i00"
 benchmark = "MetaWorld+"
 reason = "solved"
 note = "P: Luna; S: Luna"
+
+[[task]]
+base = "pandadyn-d04-shared-tray-transport-discharge-i00"
+benchmark = "Panda Dynamic Scenes"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Gemini 4 Argon (Luna failed); RT: Astra, Opus, GLM 5.3 Flash (Luna failed)"
 
 [[task]]
 base = "roboarc-blanket-flatten-01-i01"
