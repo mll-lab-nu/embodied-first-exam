@@ -94,7 +94,11 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # iSpatialGym's frozen instances: goal.json restores upstream's TRO, nothing answer-like in instance.json, the start-only
   # BDDL states no goal (its tasks pull request adds the test)
   if [ -f "$root/scripts/ispatialgym/tests/test_instance.py" ]; then run 300 ispatialgym/tests/test_instance.py; fi
-  # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
+  # board 0151: the live-grading tests of MetaWorld+ and LIBERO-MAX (their pull requests add them)
+  for t in metaworldplus/tests/test_live_grading.py libero-max/tests/test_live_grading.py; do
+    if [ -f "$root/scripts/$t" ]; then run 900 "$t"; fi
+  done
+  # LIBERO-MAX keeps its own copy of rcb_service.py (since board 0151 the layer's bytes): the classes of the shared
   # service test that apply to it, run against that copy
   want humanoidbench/tests/test_standard_service.py libero-max/shared/standard &&
     cmds+="@lane:port RCB_SERVICE_DIR=$(printf %q "$root/scripts/libero-max/shared/standard") bash $self --one 900 humanoidbench/tests/test_standard_service.py Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot"$'\n'
