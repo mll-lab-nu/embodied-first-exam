@@ -71,7 +71,7 @@ family = "scoop-pour"
 env_id = "kinder/ScoopPour3D-o50-v0"
 instance_tag = "i01"      # i00 was the o30 variant until 2026-10-16
 replaces = "upstream's o30 variant: 30 cubes"
-verifier_timeout_sec = 1800   # o50: three 1000-step replays (two graded + the video's, ~81 s each on a light host) and
+verifier_timeout_sec = 1800   # o50, privileged twin's grade.py (standard grades in the sim hook): three 1000-step replays (two graded + the video's, ~81 s each on a light host) and
                               # the CPU-rendered video, on a loaded host; the default 900 s left too little margin
 expert_hours = 4.0
 difficulty = """Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another with a scoop, each ending well
