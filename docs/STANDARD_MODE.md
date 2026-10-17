@@ -529,15 +529,18 @@ are part of a result's configuration (RUNNING.md).
   request's fields.
 - **Crashes and simulator errors.** No call spans the clock (`/submit` answers at once), so what the agent's commands
   caused is told apart by time and by kind (owner, 2026-10-17, board 0151; PROTOCOL H.5: a normal task failure is no
-  infrastructure failure). "After the first command" means after the agent's first `/submit`.
+  infrastructure failure). "After the first command" means after the first control step that ran a row the agent
+  sent (held steps before it do not count).
   - A simulator error raised by a control step after the first command (`reason = "error"`) ends the episode as the
     agent's result: `sim_error = 1`, `infra_error = 0`. Before it: infrastructure.
-  - A crash (the process dies) is resumed as in 2.1. It counts as the agent's when it happened after the first
-    command and the process died on SIGSEGV, SIGBUS, SIGFPE, SIGILL or SIGABRT (the service records the signal with
-    `faulthandler` before it dies); past `RCB_MAX_RESUMES` restarts the trial then ends `sim_crashed_on_call` (the
+  - A crash (the process dies) is resumed as in 2.1. It counts as the agent's when it happened inside a control step
+    after the first command and the process died on SIGSEGV, SIGBUS, SIGFPE, SIGILL or SIGABRT (the service records
+    the signal and the crashing stack with `faulthandler` in `crash.log`, a collected artifact, before it dies); a
+    crash while the process builds the scene, replays its journal, renders or finalizes is not the agent's; past `RCB_MAX_RESUMES` restarts the trial then ends `sim_crashed_on_call` (the
     agent's 0) if every crash was the agent's, else `sim_crashed` (`infra_error = 1`). A process killed from outside
     (SIGKILL, SIGTERM, the out-of-memory killer: nothing recorded) and a crash before the first command are not the
-    agent's; a failed resume is `resume_failed` (`infra_error = 1`).
+    agent's; a failed resume is `resume_failed` (`infra_error = 1`). A reset whose new episode the simulator fails to
+    build is infrastructure in both standard modes.
   - The 2.3 layer (`rcb_realtime.py`) implements this from robot_coding_bench #312; tasks generated before it still
     record every simulator error and crash as infrastructure.
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
