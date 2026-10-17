@@ -33,6 +33,8 @@
 # docs/benchmarks/metaworldplus.md "Easy set").
 # 2026-10-17: VLABench 15 (the owner's screening: every mode the base ships solved by a screening run;
 # docs/benchmarks/vlabench.md "Easy set").
+# 2026-10-17: LIBERO-MAX 29 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/libero-max.md "Easy set").
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -195,6 +197,180 @@ base = "dexjoco-click-mouse-i00"
 benchmark = "DexJoCo"
 reason = "solved"
 note = "Luna (codex-gpt6_luna-xhigh) P+S"
+
+[[task]]
+base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash (Luna failed)"
+
+[[task]]
+base = "libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-off-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-on-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-on-illumination-switch-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-on-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-wine-bottle-on-plate-receptacle-relocation-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-goal-yellow-stove-on-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-object-butter-in-basket-distractor-burst-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-cream-cheese-in-basket-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-milk-in-basket-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-milk-in-basket-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-orange-juice-in-basket-distractor-burst-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-orange-juice-in-basket-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-obstacle-insertion-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
 
 [[task]]
 base = "maniguard-clutter-pickup-i25"
