@@ -11,10 +11,18 @@ As BEHAVIOR-1K's service (the same robot on the same simulator), except:
   policy budget, reason "failed: the episode's control steps ran out"), on the collect hook's signal (timeout) or on a
   simulator error (error); there is no fall rule (upstream has none);
 - every pose leaves in the odometry frame (the robot's base at the start of the episode), never in the world frame;
-- as there, the episode is not replayed here: when it ends the service writes /out/trajectory.npz + /out/episode.json,
-  the collect hook's SIGUSR1 makes it exit, and finalize.sh replays the trajectory in two fresh processes;
+- the verdict is the live episode's (owner 2026-10-17, board 0150/0151): upstream's success under settle-eval, judged
+  at every control step the episode runs, is `success`; nothing replays it. When it ends the service writes
+  /out/trajectory.npz + /out/episode.json, and the collect hook's SIGUSR1 makes it close the video and exit;
+  finalize.sh then writes final.json from episode.json;
+- the frozen start is checked when the scene is built, before the agent is served: a start that does not rebuild to
+  the frozen one (facts.json: the start-state hash, else every pose within POSE_TOL) gives up as `instance_mismatch`
+  (infra_error);
+- the video is recorded live (/out/live.mp4): the head camera's frame that every control step renders anyway, every
+  third step, encoded off the control loop (rcb_ispatialgym.LiveVideo); a resume re-records it from the start;
 - crash recovery: rcb_limited.Episode, resume class `approx` (OmniGibson's rollouts are only bit-exact as the first
-  episode of a fresh process)."""
+  episode of a fresh process): a resumed episode continues from the replayed state, which the gross-divergence guard
+  bounds (RCB_RESUME_MAX_DEV_M), and its verdict is the episode it then runs."""
 from __future__ import annotations
 import json, math, os, sys, threading, time, traceback
 import numpy as np
@@ -47,8 +55,8 @@ except BaseException as exc:            # Kit ends the process with exit code 0 
     log({"ev": "startup_error", "error": repr(exc)[:500]})
     sys.stdout.flush(); sys.stderr.flush()
     os._exit(1)
-if not S.instance_ok:
-    EP.give_up(f"instance: the frozen start state did not rebuild here (start {S.start_sha}, frozen {S.facts['start_sha']})", infra=True)
+if not S.instance_ok:                   # before the agent is served: the episode must start from the frozen instance
+    EP.give_up(f"instance_mismatch: the frozen start state did not rebuild here (start {S.start_sha}, frozen {S.facts['start_sha']})", infra=True)
 assert S.action_dim == DIM, (S.action_dim, DIM)
 IDX = {k: [int(i) for i in M._np(v).tolist()] for k, v in S.robot.controller_action_idx.items()}
 LAYOUT = [""] * DIM
@@ -70,6 +78,23 @@ CAMS = S.cameras()
 MOUNT = {c: ("head (moves with the base and trunk)" if "zed" in c else "left wrist" if "left" in c else "right wrist" if "right" in c else "on the robot") for c in CAMS}
 PROPRIO, GROUPS = S.proprio_layout()
 RSPEC, KSPEC = S.robot_spec(), S.kinematics_spec()
+VIDEO = os.path.join(DATA, "live.mp4")   # every start records it anew (a resume replays the episode from the start)
+try:
+    VID = M.LiveVideo(VIDEO)
+except Exception as exc:  # noqa: BLE001 -- never the verdict: no video, the episode runs on
+    VID = None; log({"ev": "video_error", "error": repr(exc)[:300]})
+
+
+def head_frame():
+    return S.frames([S.head_camera])[S.head_camera]
+
+
+def video_step() -> None:
+    if VID is not None:
+        VID.offer(S.n, head_frame)
+
+
+video_step()                            # the start: a video even of an episode without actions
 
 
 def ctrl_steps() -> int:
@@ -104,7 +129,8 @@ def dump() -> None:
         "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": S.n, "max_steps": S.max_steps,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "subtask": S.up["subtask"],
         "protocol": PROTOCOL, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "start_sha": S.start_sha,
-        "success_step": st["success_step"], "symbolic_success": st["symbolic_success"], "error_metric": st["error_metric"], **EP.final_fields()})
+        "success_step": st["success_step"], "symbolic_success": st["symbolic_success"], "geometric_success": st["geometric_success"],
+        "error_metric": st["error_metric"], "graded_by": "live", "replays": 0, **EP.final_fields()})
     write_final()
 
 
@@ -263,7 +289,7 @@ def clip_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over, or the layer stops
     the call (max_call_wall_s, the client hung up)."""
-    done = S.step(a); stop = EP.journal(a); rec.tick()
+    done = S.step(a); stop = EP.journal(a); rec.tick(); video_step()
     if done: finish("success" if S.success else MAX_STEPS_REASON)
     return E["done"] or stop
 
@@ -348,9 +374,17 @@ def _end_from_signal():
         E["exiting"] = True
         if not E["done"]: finish("timeout")
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        if VID is not None:              # the episode is over: no frame comes any more
+            v = VID.close()
+            log({"ev": "video", **v})
+            try:
+                ep = L._read_json(os.path.join(DATA, "episode.json")); ep.update(v)
+                L._write_json(os.path.join(DATA, "episode.json"), ep)
+            except Exception as exc:  # noqa: BLE001 -- never the verdict
+                log({"ev": "video_error", "error": repr(exc)[:300]})
+        log({"ev": "exit", "reason": "collect hook: episode dumped and video closed, releasing the simulator"})
     sys.stdout.flush(); sys.stderr.flush()
-    os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
+    os._exit(0)          # frees the GPU and the memory: finalize.sh writes final.json once this process is gone
 
 
 REPLAY = {"skipped": 0}
@@ -362,7 +396,7 @@ def replay_row(row) -> None:
     if S.done:
         REPLAY["skipped"] += 1
     else:
-        S.step(row)
+        S.step(row); video_step()
 
 
 L.check_spec(SPEC)                      # before the episode starts: a bad /spec must not cost a resume

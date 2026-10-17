@@ -1,7 +1,8 @@
 """
 rcb_ispatialgym.py -- iSpatialGym's tooling in a standard task's trusted `sim` sidecar (docs/benchmarks/ispatialgym.md):
-the frozen instance, loaded and judged by upstream's own code, the episode, its record and its fresh-process replay. The
-agent never imports it: it reaches the robot through the service (server.py) only.
+the frozen instance, loaded and judged by upstream's own code, the episode, its record, its live video and the
+fresh-process replay (the privileged twin's grading; the standard episode is graded live and never replayed). The agent
+never imports it: it reaches the robot through the service (server.py) only.
 
 instance : a directory holding instance.json, the frozen START of the task, byte-identical in both twins and in the
            privileged agent's container (the scene template, the loader's template_meta keys and the start-only TRO, the
@@ -21,7 +22,9 @@ episode  : one row of the R1Pro's 23-D JoyLo action per 30 Hz control step (env.
            step of the last settle_steps, the goal's objects and the robot at rest over them), or after max_steps =
            max(300, 2 x the demo's length) steps (run_isg's policy budget).
 replay   : the recorded rows from the frozen instance in a fresh process; on Isaac only the first episode in a process is
-           bit-exact, so determinism is fresh process == fresh process.
+           bit-exact, so determinism is fresh process == fresh process. The privileged verifier grades this way; in the
+           standard mode the episode the service ran is the verdict (it is the first in its process) and nothing replays
+           it; `replay --video` still renders a video of any recorded trajectory (a backfill).
 frames   : poses the agent sees are in the odometry frame: the robot's base_link at the start of the episode (x forward,
            y left, z up). Nothing in the world frame leaves this process.
 
@@ -656,6 +659,63 @@ class _Video:
                 self.error = f"ffmpeg exit {rc}"
         except Exception as exc:  # noqa: BLE001
             self._fail("close", exc)
+
+
+class LiveVideo:
+    """The standard episode's video, recorded while it runs (the sim service, server.py): the head camera's frame that
+    every control step renders anyway (env.step renders once per step for the agent's observations), every `every`-th
+    control step, as the replay's _Video records it. The control loop only copies the frame and queues it; a thread
+    resizes and encodes it, so a call is not slowed by the encoder. A full queue (the encoder behind) drops the frame and
+    counts it. Nothing here decides anything: a failure of the recording loses only the video (PROTOCOL §4)."""
+
+    def __init__(self, path: str, every: int = 3, max_queue: int = 32, video: Any = None):
+        import queue
+        import threading
+        self.every, self.dropped, self.offered = int(every), 0, 0
+        self.v = video if video is not None else _Video(path)
+        self.q: Any = queue.Queue(max_queue)
+        self._full = queue.Full
+        self.t = threading.Thread(target=self._run, daemon=True)
+        self.t.start()
+
+    @property
+    def error(self) -> str | None:
+        return self.v.error
+
+    def offer(self, n: int, grab) -> None:
+        """Control step `n` has just run (0: the start); `grab()` returns its head-camera frame (an RGB array)."""
+        if self.v.p is None or n % self.every:
+            return
+        try:
+            frame = np.array(grab(), dtype=np.uint8, copy=True)
+        except Exception as exc:  # noqa: BLE001
+            self.v._fail("frame", exc)
+            return
+        self.offered += 1
+        try:
+            self.q.put_nowait(frame)
+        except self._full:
+            self.dropped += 1
+
+    def _run(self) -> None:
+        while True:
+            f = self.q.get()
+            if f is None:
+                return
+            self.v.add(f)
+
+    def close(self, timeout: float = 300.0) -> dict:
+        """Drain the queue, finish the mp4; what the record says about it (for episode.json)."""
+        try:
+            self.q.put(None, timeout=timeout)
+        except Exception:  # noqa: BLE001
+            pass
+        self.t.join(timeout)
+        if self.t.is_alive():
+            self.v._fail("close", TimeoutError(f"the encoder did not drain in {timeout:.0f} s"))
+        else:
+            self.v.close()
+        return {"video_frames": self.v.n, "video_dropped_frames": self.dropped, **({"video_error": self.v.error} if self.v.error else {})}
 
 
 def joint_types(s: Session) -> dict[str, dict[str, str]]:
