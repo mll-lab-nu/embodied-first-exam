@@ -54,7 +54,7 @@ import rcb_rsb  # noqa: E402
 import rcb_service  # noqa: E402
 from rcb_service import Refused, main  # noqa: E402
 
-# The two fresh-process replays (side by side) share one deadline, inside the collect hook's 3960 s (task.toml). A replay
+# The two fresh-process replays (side by side) share one deadline, inside the collect hook's 4080 s (task.toml). A replay
 # redoes a subset of the live episode's simulator work (every row and, from 0.5.4, every picture check, without the
 # rendering), so it needs at most about the live episode's wall clock: the agent's 3600 s budget, plus a margin. With
 # 780 s, an episode that filmed a few minutes of robot time (video frames on every call) could never be graded.
@@ -78,6 +78,7 @@ _service_submit, _service_end, _service_status, _service_meta, _service_handle, 
     rcb_service.Service._submit, rcb_service.Service._end, rcb_service.Service.status, rcb_service.Service.meta,
     rcb_service.Service.handle, rcb_service.Service._counters, rcb_service.Service._write_final)
 _service_reset_view = rcb_service.Service._reset_view
+_service_resume = rcb_service.Service._resume
 EXITED = "exited"               # RoboSafeBench 0.5.4: the only word the agent gets about an episode once it has ended
 
 
@@ -206,6 +207,20 @@ rcb_service.Service.handle = _handle
 rcb_service.Service._write_final = _write_final
 
 
+def _resume(self, ev: list[dict]) -> None:
+    """Service._resume, then the picture events the replayed journal did not reach are dropped (realtime: a delivery
+    applied at a tick after the last checkpoint; a capture of a call lost with the crash): the episode resumes from the
+    checkpoint, so they belong to the lost part. Kept, the next picture would fail ("not reached") on every restart."""
+    _service_resume(self, ev)
+    trim = getattr(self.sim, "trim_picture_replay", None)
+    dropped = trim() if callable(trim) else 0
+    if dropped:
+        self.log("picture_events_dropped", n=dropped)
+
+
+rcb_service.Service._resume = _resume
+
+
 class RoboSafe:
     """One frozen RoboSafeBench instance behind the rcb_service.Sim contract."""
 
@@ -325,6 +340,22 @@ class RoboSafe:
     def pictures_transport_completed(self, frame_ids):
         self.s.ep.deliver_picture_frames(frame_ids)
         self._persist_picture_events()
+
+    def trim_picture_replay(self) -> int:
+        """After a resume: drop the recorded picture events the replayed journal did not reach and rewrite
+        DATA/picture_events.jsonl as the events the resumed episode holds (its replays read those). Returns how many."""
+        dropped = len(self.s._picture_replay)
+        if dropped:
+            self.s._picture_replay = []
+            tmp = self._picture_path + ".tmp"
+            with open(tmp, "w") as stream:
+                for event in self.s.ep.picture_events:
+                    stream.write(json.dumps(event) + "\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(tmp, self._picture_path)
+        self._pictures_written = len(self.s.ep.picture_events)
+        return dropped
 
     def _persist_picture_events(self):
         events = self.s.ep.picture_events

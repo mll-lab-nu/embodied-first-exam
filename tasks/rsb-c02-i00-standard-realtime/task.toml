@@ -104,14 +104,14 @@ timeout_sec = 30
 
 # Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which judges it and
 # replays it twice. The loops run on the clock, inside timeout_sec: the verdict ("finalized": true, set before any video
-# is rendered) may take until 3960 s (the replays redo the live episode's rows and picture checks, so they get the
-# agent's 3600 s and a margin: server.py REPLAY_TIMEOUT_S 3900); then the hook waits for the replay video
-# ("video_pending") until 5160 s -- the video replays the rows once more without the picture checks (board 0136: with
+# is rendered) may take until 4080 s (the replays redo the live episode's rows and picture checks, so they get the
+# agent's 3600 s and a margin: server.py REPLAY_TIMEOUT_S 3900, after up to 120 s for the service to come up); then the hook waits for the replay video
+# ("video_pending") until 5280 s -- the video replays the rows once more without the picture checks (board 0136: with
 # 870 s, every episode of more than ~17,000 control steps lost its video). A video not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
-command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 3960 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 5160 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
-timeout_sec = 5190
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 4080 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 5280 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 5310
 
 [agent]
 timeout_sec = 3600.0

@@ -76,7 +76,12 @@ def shared_problems(task: pathlib.Path) -> list:
     task runs: after editing one, copy it into the 84 tasks, then `task_conventions.py <tasks>` and `check_release.py write`."""
     realtime = task.name.endswith("-realtime")
     dirs = ([HERE / "shared/realtime"] if realtime else []) + [HERE / "shared/standard", HERE / "shared/solution", HERE]
-    bad = []
+    sim = ["candidate_identity.py", "picture_delivery.py", "rcb1.py", "rcb_rsb.py", "rcb_service.py", "replay.py", "server.py"]
+    need = ["environment/rcb1.py", "environment/rcb_client.py", "solution/solve.sh", "solution/public_observation_delivery.py",
+            "solution/public_observation_plan.py", "tests/grade.py"] + ["environment/sim/" + f for f in sim]
+    need += (["environment/sim/rcb_realtime.py", "environment/sim/rcb_rsb_rt.py", "solution/oracle_rt.py", "tests/grade_rsb.py"]
+             if realtime else ["solution/oracle_replay.py"])
+    bad = [f"{task.name}/{rel}: missing" for rel in need if not (task / rel).is_file()]
     for f in sorted(task.rglob("*")):
         rel = f.relative_to(task).as_posix()
         if not f.is_file() or not (rel.endswith(".py") or rel == "solution/solve.sh") or rel == "tests/rcb_limits.py" \

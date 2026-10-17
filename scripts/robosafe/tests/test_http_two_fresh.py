@@ -77,6 +77,7 @@ def load_methods():
         exec(compile(ast.Module(body=[copy.deepcopy(nodes[0])], type_ignores=[]), str(path), "exec"), namespace)
         methods[clock] = namespace["verify"]
     methods["_timeout"] = helpers["REPLAY_TIMEOUT_S"]
+    methods["_wait"] = helpers["wait_replays"]
     return methods
 
 
@@ -175,5 +176,31 @@ class ProductionTwoFreshTests(unittest.TestCase):
             self.assertEqual(len(launches),2);self.assertFalse(result['success'])
             self.assertEqual(result['state_sha'],'replays-differ')
             self.assertFalse(json.loads((Path(robot.data)/'verdict.json').read_text())['replays']['agree'])
+
+    def test_replay_deadline_kills_what_still_runs(self):
+        wait_replays = load_methods()["_wait"]
+        killed = []
+
+        def proc(name, hang):
+            p = SimpleNamespace(returncode=None)
+
+            def wait(timeout=None):
+                if hang and timeout is not None and p.returncode is None:
+                    raise subprocess.TimeoutExpired(name, timeout)
+                if p.returncode is None:
+                    p.returncode = 0
+                return p.returncode
+
+            def kill():
+                killed.append(name)
+                p.returncode = -9
+
+            p.wait, p.kill, p.poll = wait, kill, (lambda: p.returncode)
+            return p
+        with self.assertRaises(subprocess.TimeoutExpired):
+            wait_replays([proc("one", False), proc("two", True)], 5)
+        self.assertEqual(killed, ["two"])
+        wait_replays([proc("a", False), proc("b", False)], 5)
+        self.assertEqual(killed, ["two"])
 
 if __name__=='__main__':unittest.main()
