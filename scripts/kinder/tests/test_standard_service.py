@@ -45,6 +45,7 @@ class FakeSim:
     cameras, depth_cameras = ("cam", "side"), ("cam",)
     proprio_layout = ["x", "cmd"]
     raw_dim = 1
+    replay_free = True     # it has a verify() (that raises: the proof that nothing calls it), knowingly
 
     def __init__(self, goal: float = 1.0, on_step=None, save_raises: BaseException | None = None,
                  video_raises: bool = False):
@@ -473,6 +474,47 @@ class EndOfTrial(Base):
         self.assertEqual((f["success"], f["live_rule"], f["held_s"], f["reason"], f["finalized"], f["graded_by"],
                           f["live_success"]), (True, True, 1.0, "success", True, "live", True))
 
+    def test_live_verdict_numpy_values_are_written_as_json(self):
+        sim = FakeSim()
+        sim.live_verdict = lambda rows, success: {"success": np.bool_(True), "held_s": np.float32(1.5),
+                                                  "xs": np.arange(2), "ev": "x", "ts": 1}
+        svc = self.service(sim)
+        self.submit(svc, [[1.0]] * 10)
+        svc.on_sigusr1()
+        svc.poll()
+        f = final(self.data)
+        self.assertEqual((f["success"], f["live_rule"], f["held_s"], f["xs"]), (True, True, 1.5, [0, 1]))
+        self.assertNotIn("ev", f)
+        self.assertIn("verdict", [e["ev"] for e in events(self.data)])
+
+    def test_live_verdict_that_is_not_json_or_not_true_takes_the_success_away(self):
+        for extra in ({"success": True, "obj": object()}, {"success": "false"}, {"success": 1}):
+            with tempfile.TemporaryDirectory() as d:
+                self.data = d
+                sim = FakeSim()
+                sim.live_verdict = lambda rows, success, extra=extra: dict(extra)
+                svc = self.service(sim)
+                self.submit(svc, [[1.0]] * 10)
+                svc.on_sigusr1()
+                svc.poll()
+                f = final(self.data)
+                self.assertEqual((f["success"], f["live_rule"], f["finalized"]), (False, False, True), extra)
+                self.assertNotIn("finalize_error", f)
+
+    def test_a_simulator_that_cannot_hash_at_the_end_keeps_the_verdict(self):
+        sim = FakeSim(goal=99)
+        svc = self.service(sim)
+        self.submit(svc, [[0.5]] * 3)
+
+        def broken():
+            raise RuntimeError("the episode's error broke the simulator")
+        sim.state_sha = broken
+        svc.on_sigusr1()
+        svc.poll()
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["graded_by"], f["state_sha"], f["reason"]), (True, "live", None, "timeout"))
+        self.assertNotIn("finalize_error", f)
+
     def test_live_verdict_that_raises_takes_the_success_away(self):
         sim = FakeSim()
 
@@ -630,6 +672,28 @@ class CrashRecovery(Base):
         f = final(self.data)
         self.assertEqual((f["reason"], f.get("infra_error", 0)), ("sim_crashed_on_call", 0))
 
+    def test_a_fatal_signal_between_calls_stays_infrastructure_in_2_1(self):
+        """2.1 keeps its in-call rule: crash.log's record of a segfault between calls is logged, not the agent's."""
+        if not hasattr(rcb_service, "enable_crash_log"):
+            self.skipTest("a variant without the crash log")
+        import signal
+        svc = self.service(FakeSim(goal=99))
+        self.submit(svc, [[0.5]])
+        code = ("import os, sys; sys.path.insert(0, sys.argv[1]); import rcb_service; "
+                "rcb_service.enable_crash_log(sys.argv[2]); os.kill(os.getpid(), int(sys.argv[3]))")
+        for i in range(3):
+            r = subprocess.run([sys.executable, "-c", code, str(STANDARD), self.data, str(int(signal.SIGSEGV))],
+                               capture_output=True, timeout=60)
+            self.assertEqual(r.returncode, -signal.SIGSEGV)
+            if i < 2:
+                self.service(FakeSim(goal=99))
+        with self.assertRaises(GiveUp):
+            self.service(FakeSim(goal=99))
+        self.assertEqual([e["fatal_signal"] for e in events(self.data) if e["ev"] == "resuming"], [True, True])
+        f = final(self.data)
+        self.assertEqual((f["reason"], f["infra_error"]), ("sim_crashed", 1))
+        self.assertIn(b"Fatal Python error", Path(self.data, "crash.log").read_bytes())
+
     def test_a_restart_after_finalize_keeps_the_verdict(self):
         svc = self.service()
         self.submit(svc, [[1.0]] * 10)
@@ -709,9 +773,10 @@ class CrashRecovery(Base):
         self.assertEqual((f["finalized"], f["graded_by"], f["n_actions"], f["reason"], f["success"]),
                          (True, "live", 2, "timeout", False))
 
-    def test_a_crash_in_live_verdict_resumes_and_judges_again(self):
-        """The process dies in the settle window: the restarted service resumes the episode from the journal (the
-        crash-recovery replay, not a grading one) and judges it on its live simulator."""
+    def test_a_crash_in_live_verdict_is_the_episodes_zero_after_the_restart(self):
+        """The process dies in the settle window (a native crash would repeat on every resume): the restarted service
+        resumes the episode from the journal (the crash-recovery replay, not a grading one) and records the hook as
+        failed, a 0, never infrastructure."""
         def crash(rows, success):
             raise Crash()
         sim = FakeSim()
@@ -723,13 +788,17 @@ class CrashRecovery(Base):
             svc.poll()
         self.assertFalse(final(self.data)["finalized"])
         sim2 = FakeSim()
-        sim2.live_verdict = lambda rows, success: {"success": True}
+        called = []
+        sim2.live_verdict = lambda rows, success: called.append(1) or {"success": True}
         svc2 = self.service(sim2)
         svc2.on_sigusr1()
         svc2.poll()
         f = final(self.data)
-        self.assertEqual((f["finalized"], f["success"], f["live_rule"], f["graded_by"]), (True, True, True, "live"))
-        self.assertEqual(sim2.replays, 0)
+        self.assertEqual((f["finalized"], f["success"], f["live_rule"], f["graded_by"], f["live_success"]),
+                         (True, False, False, "live", True))
+        self.assertTrue(f["live_verdict_error"].startswith("crashed"))   # not run again: it would die again
+        self.assertNotIn("infra_error", f)
+        self.assertEqual((called, sim2.replays), ([], 0))
 
     def test_the_clock_survives_a_restart(self):
         svc = self.service()
@@ -792,14 +861,33 @@ class StartState(Base):
             reset()
             sim.x = 0.3                                      # the reset did not bring the scene back
         sim.reset = bad_reset
-        self.assertEqual(call(svc, "POST", "/reset")[0], 200)
-        self.submit(svc, [[1.0]] * 10)
+        code, body, _ = call(svc, "POST", "/reset")
+        self.assertEqual((code, body["gave_up"]), (409, True))       # the service gives up at once
+        self.assertTrue(body["reason"].startswith("instance_mismatch"))
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["instance_mismatch"], f["infra_error"], f["video_pending"]),
+                         (True, False, True, 1, False))
+        self.assertTrue(f["reason"].startswith("instance_mismatch: a reset"))
+        self.assertFalse([e for e in events(self.data) if e["ev"] == "reset"][0]["start_ok"])
+        self.assertEqual(self.submit(svc, [[1.0]] * 10)[0], 409)    # nothing runs after it
+        self.assertEqual(call(svc, "POST", "/reset")[1]["gave_up"], True)
         svc.on_sigusr1()
         svc.poll()
+        self.assertEqual(final(self.data), f)                       # no verdict, no video comes after it
+
+    def test_give_up_on_a_finalized_verdict_clears_video_pending(self):
+        Path(self.data, "final.json").write_text(json.dumps({"finalized": True, "success": True, "video": False,
+                                                             "video_pending": True, "graded_by": "live"}))
+        rcb_service.give_up(self.data, "restarted after finalize", infra=False)
         f = final(self.data)
-        self.assertEqual((f["live_success"], f["success"], f["instance_mismatch"], f["infra_error"]),
-                         (True, False, True, 1))
-        self.assertFalse([e for e in events(self.data) if e["ev"] == "reset"][0]["start_ok"])
+        self.assertEqual((f["success"], f["video_pending"], f.get("infra_error", 0)), (True, False, 0))
+
+    def test_an_adapter_with_a_replay_is_refused(self):
+        """A verify() the service never calls would drop its rule silently (board 0151): refused at build."""
+        class Replaying(FakeSim):
+            replay_free = False
+        with self.assertRaises(TypeError):
+            Service(Replaying(), data=self.data)
 
     def test_a_good_reset_keeps_the_episode_graded(self):
         sim = FakeSim()
@@ -825,13 +913,15 @@ class StartState(Base):
             sim.x = 0.3
         sim.reset = bad_reset
         call(svc, "POST", "/reset")
-        self.submit(svc, [[0.5]] * 2)
-        sim2 = FakeSim(goal=99)                              # a restart resumes from the frozen start, which the
-        sim2.start_sha = sim2.state_sha()                    # bad reset's episode did not begin at
-        with self.assertRaises(GiveUp):
+        before = final(self.data)
+        sim2 = FakeSim(goal=99)                              # a restart keeps the give-up as it is
+        sim2.start_sha = sim2.state_sha()
+        with self.assertRaises(GiveUp) as ctx:
             self.service(sim2, reset_budget=2)
+        self.assertEqual(str(ctx.exception), "restarted after finalize")
         f = final(self.data)
-        self.assertEqual((f["finalized"], f["success"], f["infra_error"]), (True, False, 1))
+        self.assertEqual(f, before)
+        self.assertTrue(f["reason"].startswith("instance_mismatch: a reset"))
 
 
 class AgentClock(Base):
@@ -989,6 +1079,14 @@ class Grade(Base):
     def test_a_crash_inside_the_agents_calls_is_a_zero_not_infrastructure(self):
         txt, r = self.grade({"finalized": True, "success": False, "done": True, "reason": "sim_crashed_on_call"})
         self.assertEqual((txt, r["success"], r["infra_error"], r["sim_crashed_on_call"]), ("0", 0, 0, 1))
+
+    def test_every_branch_writes_the_same_keys(self):
+        _, ok = self.grade(self.WIN)
+        _, missing = self.grade(None)
+        Path(self.data, "final.json").write_text("[1]")
+        _, broken = self.grade(None)
+        self.assertEqual(set(missing), set(ok))
+        self.assertEqual(set(broken), set(ok))
 
     def test_a_missing_log_is_infrastructure(self):
         txt, r = self.grade(None)

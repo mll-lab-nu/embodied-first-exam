@@ -58,11 +58,17 @@ def realtime_fields(d: dict) -> dict:
     return {"realtime": 1, **{k: kind(num(d.get(k))) for k, kind in REALTIME.items()}}
 
 
+# Every branch writes these keys (PROTOCOL §2.6): a missing or unreadable final.json as well as a graded one.
+BASE = {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "live_rule": 0, "live_verdict_error": 0,
+        "finalized": 0, "missing_log": 0, "infra_error": 0, "grader_error": 0, "sim_error": 0, "sim_crashed_on_call": 0,
+        "instance_mismatch": 0, "n_actions": 0, "sim_steps": 0, "calls": 0, "rows": 0, "resets": 0, "reset_budget": 0,
+        "sim_startups": 0, "elapsed_s": 0.0, "video_rendered": 0}
+
+
 def main() -> None:
     path = os.path.join(DATA, "final.json")
     if not os.path.exists(path):
-        write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0,
-                      "missing_log": 1, "infra_error": 1, "sim_error": 0, "grader_error": 0})
+        write(False, {**BASE, "missing_log": 1, "infra_error": 1})
         return
     try:
         with open(path) as f:
@@ -76,7 +82,7 @@ def main() -> None:
         mismatch = bool(d.get("instance_mismatch")) or str(d.get("reason") or "").startswith("instance_mismatch")
         infra = bool(d.get("infra_error")) or failed_finalize or unfinished or mismatch
         ok = bool(d.get("success")) and live and graded and not infra
-        out = {"success": int(ok), "live_success": int(live), "graded_by_live": 1, "replays": 0,
+        out = {**BASE, "success": int(ok), "live_success": int(live), "graded_by_live": 1, "replays": 0,
                "live_rule": int(bool(d.get("live_rule", True))),
                "live_verdict_error": int(bool(d.get("live_verdict_error"))),
                "finalized": int(not unfinished), "missing_log": 0, "infra_error": int(infra),
@@ -89,8 +95,7 @@ def main() -> None:
                "video_rendered": int(bool(d.get("video"))), **realtime_fields(d)}
     except Exception:  # noqa: BLE001 -- an unreadable final.json is the grader's failure, not the agent's
         traceback.print_exc()
-        write(False, {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0,
-                      "missing_log": 0, "infra_error": 1, "sim_error": 0, "grader_error": 1})
+        write(False, {**BASE, "infra_error": 1, "grader_error": 1})
         return
     for name in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
         try:

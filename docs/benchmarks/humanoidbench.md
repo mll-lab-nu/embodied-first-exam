@@ -74,15 +74,19 @@ replay re-ran the same rows from the frozen start under the same rule (`Session.
 own, so the live rule is exactly as strict; over the 128 archived standard and standard-realtime trials no verdict
 changes. The frozen start is checked on the live simulator: `start_sha` is the state `instance.npz` records (the hash
 of the snapshot `Session` restores), and the instance file's own digest must match its contents; a fresh trial that does
-not start there gives up as infrastructure (`instance_mismatch`, `infra_error = 1`), and a graded episode begun by a reset
-that did not return there is void the same way (every archived start and all 4949 archived resets matched). The video
+not start there gives up as infrastructure (`instance_mismatch`, `infra_error = 1`), and so does the service at once
+when a reset does not return there (every archived start and all 4949 archived resets matched). The video
 is one render pass over `trajectory.npz` after the verdict (`render_video`: CPU physics, EGL rendering on the sidecar's
 GPU; median 19 s a trial); it never changes the verdict. The removed replay cost a physics-only re-run of the episode,
 under 20 s at the median and about 1.5 slot-hours over the archive. `infra_error = 1` only for no or an unfinalized
 `final.json`, a give-up after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), and
-`instance_mismatch`; in standard-realtime also a simulator error that ends the graded episode (the realtime layer's
-rule). Crashes inside the agent's calls (`sim_crashed_on_call`), standard mode's simulator errors raised by its calls,
-timeouts and failures are the agent's 0.
+`instance_mismatch`. Crashes inside the agent's calls (`sim_crashed_on_call`), simulator errors raised by its calls,
+timeouts and failures are the agent's 0. In standard-realtime (owner, 2026-10-17): once the agent's first command has run, a
+simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
+crash (a death with a fatal signal's record in `crash.log`: SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT; past
+`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); before the first command, a failed reset rebuild,
+a kill (SIGKILL, SIGTERM, the OOM killer) and a failed resume are infrastructure. Standard mode keeps its rule: a crash
+is the agent's only inside its call (`fatal_signal` is logged as evidence).
 
 ### Standard mode's reset budget: 50
 
@@ -154,9 +158,12 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STAN
   JSON bodies by a child process), waiting requests are served once the clock has caught up, and the cameras are
   rendered once per control step for everyone who asks (`docs/STANDARD_MODE.md`, "What a request can cost the
   clock"; `scripts/humanoidbench/tests/test_realtime_load.py` measures it on a stub simulator).
-- **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
-  `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator error that
-  ends the graded episode (`reason = "error"`) counts too; `final.json` and `reward.json` carry `infra_error = 1`.
+- **Crashes and errors.** Since 2026-10-17 (owner; before, every simulator crash and every error that ended the
+  graded episode was infrastructure, owner 2026-10-08): after the agent's first command (the first control step of a
+  row it planned, `first_command` in `episode.jsonl`) a simulator error raised by a control step is the agent's 0, and
+  so are simulator crashes (a fatal signal's record in `crash.log`): past `RCB_MAX_RESUMES` such restarts the trial
+  ends `sim_crashed_on_call`. Before it, a kill (no record), a failed resume (`resume_failed`) or a reset whose scene
+  does not rebuild stay infrastructure (`sim_crashed`, `infra_error = 1`).
 
 **What makes it a meaningful task.** A model's turn takes seconds; the H1 falls within 1-3 s of robot time without
 active balance; a whole episode is 20 s (cube: 10 s). An agent that answers each observation with a model call cannot

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import signal
 import sys
 import tempfile
 import threading
@@ -221,7 +222,8 @@ class TestEnd(Live):
 
 
 class TestSimulatorError(Live):
-    """PROTOCOL §4b: a simulator error that ends the graded episode is infrastructure, not the agent's failure."""
+    """A simulator error raised by a control step after the agent's first command is the agent's 0 (owner, 2026-10-17;
+    STANDARD_MODE Part 3; before, every error that ended the graded episode was infrastructure)."""
 
     def make_sim(self):
         def boom(sim):
@@ -231,15 +233,26 @@ class TestSimulatorError(Live):
         sim.on_step = boom
         return sim
 
-    def test_a_simulator_error_is_an_infra_error(self):
+    def test_an_error_after_the_first_command_is_the_agents(self):
         self.r.submit("move", [[1.0]] * 10, interpolate="hold", cameras=[])
         time.sleep(0.15)
         st = self.r.status()
         self.assertTrue(st["done"])
         self.assertEqual(st["reason"], "error")
         fin = self.finalize()
-        self.assertEqual(fin["infra_error"], 1)
+        self.assertNotIn("infra_error", fin)
         self.assertFalse(fin["success"])
+        self.assertIn("first_command", [json.loads(x)["ev"] for x in Path(self.data, "episode.jsonl").read_text().splitlines()])
+
+    def test_an_error_before_any_command_is_infrastructure(self):
+        """The clock started by a watch (get_obs(seconds)): only held steps ran, none the agent planned."""
+        try:
+            self.r.get_obs(cameras=[], seconds=0.2)          # held steps; the fifth raises
+        except Exception:  # noqa: BLE001 -- the watch may end with the episode or answer 500
+            pass
+        time.sleep(0.1)
+        fin = self.finalize()
+        self.assertEqual((fin["reason"], fin.get("infra_error")), ("error", 1))
 
 
 class TestResetAndResume(Live):
@@ -280,6 +293,7 @@ class SportSim:
     proprio_layout = ["step", "mallet_x", "mallet_y"]
     raw_dim = 3
     DIMS = {"mallet": 2, "stroke": 10, "toss": 4, "stop": 1}
+    replay_free = True     # its verify() raises: nothing may call it
 
     def __init__(self):
         self.reset()
@@ -576,6 +590,93 @@ class TestCountersSurviveACrash(ByHand):
         self.svc = svc2
         fin = self.finalize()
         self.assertEqual((fin["stalls"], fin["late_steps"], fin["held_steps"], fin["max_lag_s"]), (3, 2, 96, 0.75))
+
+
+def die_by(data: str, sig: int) -> None:
+    """A process of this trial's sidecar that dies by `sig`, as rcb_service.main() sets it up (crash.log)."""
+    code = ("import os, signal, sys; sys.path.insert(0, sys.argv[1]); import rcb_service; "
+            "rcb_service.enable_crash_log(sys.argv[2]); os.kill(os.getpid(), int(sys.argv[3]))")
+    import subprocess
+    r = subprocess.run([sys.executable, "-c", code, str(Path(rcb_service.__file__).parent), data, str(int(sig))],
+                       capture_output=True, timeout=60)
+    assert r.returncode == -sig, (r.returncode, r.stderr[-300:])
+
+
+class TestCrashOwner(ByHand):
+    """A simulator crash (a fatal signal's record in crash.log) after the agent's first command is the agent's; a kill,
+    or any crash before the first command, is infrastructure (owner, 2026-10-17)."""
+
+    def make_sim(self):
+        return FastSim()
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.data = self.tmp.name
+        rcb_service.count_start(self.data)                   # process 1, as main() counts it
+        self.sim = self.make_sim()
+        self.svc = self.service(self.sim)
+
+    def crash_three_times(self, sig: int, command: bool) -> dict:
+        if command:
+            self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(100)                                  # a checkpoint (one per second of robot time)
+        for i in range(3):
+            die_by(self.data, sig)                           # the process dies ...
+            rcb_service.count_start(self.data)               # ... and compose starts the next
+            if i < 2:
+                self.service(FastSim())
+        with self.assertRaises(rcb_service.GiveUp):
+            self.service(FastSim())
+        return json.loads(Path(self.data, "final.json").read_text())
+
+    def test_segfaults_after_the_first_command_are_the_agents(self):
+        fin = self.crash_three_times(signal.SIGSEGV, command=True)
+        self.assertEqual((fin["reason"], fin.get("infra_error", 0), fin["success"]), ("sim_crashed_on_call", 0, False))
+        ev = [json.loads(x) for x in Path(self.data, "episode.jsonl").read_text().splitlines()]
+        self.assertEqual([e["fatal_signal"] for e in ev if e["ev"] == "resuming"], [True, True])
+
+    def test_aborts_after_the_first_command_are_the_agents(self):
+        fin = self.crash_three_times(signal.SIGABRT, command=True)
+        self.assertEqual(fin["reason"], "sim_crashed_on_call")
+
+    def test_kills_after_the_first_command_are_infrastructure(self):
+        fin = self.crash_three_times(signal.SIGKILL, command=True)
+        self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+
+    def test_segfaults_before_the_first_command_are_infrastructure(self):
+        fin = self.crash_three_times(signal.SIGSEGV, command=False)
+        self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+
+    def test_a_kill_among_segfaults_is_infrastructure(self):
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(100)
+        for i, sig in enumerate((signal.SIGSEGV, signal.SIGKILL, signal.SIGSEGV)):
+            die_by(self.data, sig)
+            rcb_service.count_start(self.data)
+            if i < 2:
+                self.service(FastSim())
+        with self.assertRaises(rcb_service.GiveUp):
+            self.service(FastSim())
+        self.assertEqual(json.loads(Path(self.data, "final.json").read_text())["reason"], "sim_crashed")
+
+
+class TestResetFailure(ByHand):
+    reset_budget = 1
+
+    def make_sim(self):
+        return FastSim()
+
+    def test_a_reset_that_fails_to_rebuild_is_infrastructure(self):
+        """After the first command too: the scene's rebuild failed, not a control step of the agent's commands."""
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(5)
+
+        def boom():
+            raise RuntimeError("the scene did not build")
+        self.sim.reset = boom
+        self.post("/reset", cameras=[])
+        fin = self.finalize()
+        self.assertEqual((fin["reason"], fin.get("infra_error")), ("error", 1))
 
 
 class TestLiveGrading(ByHand):

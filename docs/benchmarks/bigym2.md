@@ -96,13 +96,19 @@ standard-realtime trials no verdict changes. The frozen start is checked on the 
 (`instance_check`, as the replay did: the instance's `t0` state bit for bit, or within upstream's tolerance), a scene that
 does not rebuild it is `instance_mismatch`, and `start_sha` (that accepted start) is checked when an episode begins;
 both give up as infrastructure (`infra_error = 1`) before the agent is served (every archived start matched `t0`
-exactly). The video is one render pass over `trajectory.npz` after the verdict (`render_video`: `rcb_bigym2.replay` with
+exactly), and the service gives up the same way at once if a reset does not return to `start_sha`. Resets are untested
+for that: BiGym 2.0 grants none by default (no archived trial reset); upstream's reset with the seed and its warm-up is
+deterministic on one host, which `RCB_RESET_BUDGET=N` runs would rely on. The video is one render pass over `trajectory.npz` after the verdict (`render_video`: `rcb_bigym2.replay` with
 the recorder; CPU physics and controller, EGL rendering; about a minute a trial at the median); it never changes the
 verdict. The removed replay was a CPU re-run of the episode with the controller (about as long: roughly 3 slot-hours over
 the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the
-agent's calls, and `instance_mismatch`, and in standard-realtime a simulator error that ends the graded episode (the
-realtime layer's rule); standard mode's simulator errors raised by the agent's calls, crashes inside its calls, timeouts
-and failures are the agent's 0.
+agent's calls, and `instance_mismatch`; simulator errors raised by the agent's calls, crashes inside its calls,
+timeouts and failures are the agent's 0. In standard-realtime (owner, 2026-10-17): once the agent's first command has run, a
+simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
+crash (a death with a fatal signal's record in `crash.log`: SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT; past
+`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); before the first command, a failed reset rebuild,
+a kill (SIGKILL, SIGTERM, the OOM killer) and a failed resume are infrastructure. Standard mode keeps its rule: a crash
+is the agent's only inside its call (`fatal_signal` is logged as evidence).
 
 Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carried `deterministic` in
 every branch and `sim_error` (since 2026-10-17 `graded_by_live` and `replays` instead of `deterministic`). The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
