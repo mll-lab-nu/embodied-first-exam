@@ -13,13 +13,12 @@ Inputs: tasks.json, assets.json, bindings.json (as mk_tasks.py), standard/rigs.j
 copied unchanged into every task:
   scripts/eai_standard/v2_4/   rcb_limited.py (the 2.4 service layer), rcb_client.py (the agent's client)
   scripts/eai_standard/        rcb1.py, run.sh, client-requirements.txt
-  scripts/ikea_mujoco/shared/  rcb_ikea.py (the scene runtime the service steps and the verifier replays), grade.py (the
-                               privileged replay grader, the verifier's replay_grade.py)
-  scripts/ikea_mujoco/standard/ server.py, ikea_rig.py, finalize.sh (the sim service), grade.py (the verifier),
+  scripts/ikea_mujoco/shared/  rcb_ikea.py (the scene runtime the service steps)
+  scripts/ikea_mujoco/standard/ server.py, ikea_rig.py, finalize.sh (the sim service), grade.py (the verifier: transcribes
+                               the live episode's final.json; no grading replay, owner 2026-10-17, board 0150/0151),
                                oracle_replay.py (the reference solution); std_reference.py makes the references
-Images: the sim sidecar runs images/ikea-mujoco/sim (eai-ikea-mujoco + Nyx in its own venv, EGL, ffmpeg), the verifier the
-eai-ikea-mujoco image,
-the agent the shared standard client base (scripts/eai_standard/client.env)."""
+Images: the sim sidecar runs images/ikea-mujoco/sim (eai-ikea-mujoco + Nyx in its own venv, EGL, ffmpeg); the agent and the
+verifier the shared standard client base (scripts/eai_standard/client.env)."""
 from __future__ import annotations
 import argparse, json, math, pathlib, shutil, sys, tempfile
 
@@ -136,13 +135,8 @@ def task_text(t: str) -> dict:
                           + " ".join(x["requirements"]) + f" {P.TEXTS['terminal']} Mechanism: {x['mechanism']}")}
 
 
-def verifier_timeout(t: str) -> int:
-    """The verifier's two replays run at the same time (only for a live success): about one replay's wall time, with a
-    margin, and at least what the longest episode the wall clock allows needs on a slower or busier host than the live
-    episode's: a replay is not always faster than the live run (gladom: 3975 s replay vs 3362 s of service time), and a
-    slow trial-class core (Xeon Gold 6230R) is about 1.8 x a fast one, so 2.2 x AGENT_S + 600."""
-    wall = EVID.get(t, {}).get("replay_wall_s")
-    return int(max(2.2 * AGENT_S + 600, 3 * wall + 600 if wall else 0))
+# The verifier transcribes the sidecar's final.json and copies the live video: no replay (board 0151), seconds of work.
+VERIFIER_S = 600
 
 
 def step_ms(t: str) -> float | None:
@@ -164,7 +158,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/{name(t)}"
-description = "STANDARD MODE (robot as a service, {PROTOCOL}): IKEA MuJoCo {x['title']} ({r['short']}, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. {x['goal']} The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records the episode and the verifier replays it."
+description = "STANDARD MODE (robot as a service, {PROTOCOL}): IKEA MuJoCo {x['title']} ({r['short']}, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. {x['goal']} The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 authors = [{{ name = "Xiaoyu" }}]
 keywords = ["robotics", "ikea", "furniture-assembly", "mujoco", "{robot(t)}", "bimanual", "standard-mode", "trajectory"]
 
@@ -179,19 +173,26 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): only 
 protocol = "{PROTOCOL}"           # the shared 2.4 service layer; 2.1 / 2.2 requests are served unchanged
 oracle = "full"
 grasp = "physical (finger friction; no assisted grasp, no welds to a gripper)"
-success_rule = "the scene's success.py + the terminal rules (released, at rest, no breakdown): live after each call (the first settled success ends the episode), and on the verifier's replays at the end of the rows and after a 1.0 s hold"
+success_rule = "the scene's success.py + the terminal rules (released, at rest, no breakdown): evaluated by the sim service on the live episode after each call (the first settled success ends the episode) and at its end: at the last row and again after a 1.0 s hold of it (on a copy); no grading replay"
 instance_seed = 0                 # one frozen scene: images/ikea-mujoco scene {t}, digest {P.ASSETS['tasks'][t]['digest'][:12]}
 expert_time_estimate_hours = {x['hours']}
 
 [verifier]
-timeout_sec = {verifier_timeout(t)}.0
-environment_mode = "separate"     # tests/Dockerfile: the IKEA MuJoCo image; replays /data/trajectory.npz without network
+timeout_sec = {VERIFIER_S}.0
+environment_mode = "separate"     # tests/Dockerfile: the shared client base; transcribes the sim service's final.json, no network
 network_mode = "no-network"
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
 
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json (the verifier replays the trajectory)
-timeout_sec = 7200                # the end waits through a call in progress or a crash-recovery resume
+command = "sh /srv/finalize.sh"   # end (judge the live episode as it stands) + dump + exit the service, write final.json; no replay
+timeout_sec = 7200                # the end waits through a call in progress, a crash-recovery resume and the live video's close
 
 [agent]
 timeout_sec = {AGENT_S}.0             # Agent wall-clock budget (the privileged twin's; PROTOCOL v2.0 H.7); verifier has its own budget
@@ -203,8 +204,8 @@ memory_mb = 16384
 
 [verifier.environment]
 build_timeout_sec = 1800.0
-cpus = 4                          # two replays at once (+ the video replay, privileged): the timeouts assume a core each
-memory_mb = 8192
+cpus = 2                          # reads final.json, copies the live video: no simulator
+memory_mb = 2048
 '''
 
 
@@ -260,12 +261,11 @@ RUN mkdir -p /app/output
 WORKDIR /app
 '''
 
-TESTS_DOCKERFILE = f'''# Separate verifier sandbox: the IKEA MuJoCo image (MuJoCo 3.14.0 + the frozen scenes) with the verifier's own copies of
-# the scene runtime and the binding. It grades the sim service's artifacts (/data) and replays /data/trajectory.npz itself.
-FROM {IMAGE}
-COPY grade.py replay_grade.py rcb_ikea.py test.sh runtime_binding.json /tests/
+TESTS_DOCKERFILE = f'''# Separate verifier sandbox: grades the sim service's own artifacts (/data/final.json, the live episode's verdict);
+# needs nothing but python (no simulator: nothing is replayed, board 0151).
+FROM {CLIENT_IMAGE}
+COPY grade.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /logs/verifier
-ENV PYTHONPATH=/tests
 WORKDIR /tests
 '''
 
@@ -273,8 +273,8 @@ WORKDIR /tests
 
 def test_sh(t: str) -> str:
     return f'''#!/bin/bash
-# Verifier (separate sandbox, no network): the sim sidecar's artifacts were uploaded to /data by Harbor. grade.py checks
-# final.json and replays /data/trajectory.npz in two fresh processes (replay_grade.py, the privileged grader).
+# Verifier (separate sandbox, no network): the sim sidecar's artifacts were uploaded to /data by Harbor. grade.py
+# transcribes final.json, the live episode's verdict (no grading replay), into reward.json / reward.txt.
 rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/rcb/PROTOCOL.md §2.6)
 # The agent's files are untrusted input (PROTOCOL v2.0 H.1): no link out of /app/output, no FIFO, socket or device.
 find /app/output -mindepth 1 \\( -type l -o -type p -o -type s -o -type b -o -type c \\) -delete 2>/dev/null || true
@@ -322,9 +322,8 @@ Here the service checks (1)-(4) after every `submit` and every `get_obs(seconds 
 them after holding your last row 1.0 s more, on a copy (the robot is not moved): if that settled check passes too, the
 episode ends with success (`meta["reason"]` is `success`); if not, the episode goes on and you can still fix it
 (`meta["settle_failed"]` counts such checks). A breakdown ends the episode at once (`meta["reason"]` is
-`sim_breakdown`), with no success. After the episode every executed control step is replayed from the initial state in
-two fresh processes; the task is scored 1 only if the live episode succeeded, both replays pass (1)-(4) at the end of the
-rows and again after the 1.0 s hold, and they end in the live episode's final state.
+`sim_breakdown`), with no success. An episode that ends otherwise (your time is up) is judged as it stands by the same
+two checks. The task is scored 1 only if the live episode succeeded; nothing is replayed afterwards.
 
 ## Physics and mechanism
 
@@ -432,7 +431,7 @@ def readme(t: str) -> str:
     x, r, b = P.TEXTS["tasks"][t], P.robot_text(t), P.BIND["tasks"][t]
     e = EVID.get(t, {})
     checks = e.get("checks")
-    ver = (f"Harbor checks on {e['host']} ({e['date']}): " + "; ".join(f"`{c['agent']}` scored {c['reward']}" + (f" ({c['note']})" if c.get("note") else "")
+    ver = (f"Before 2026-10-17 (graded then by the verifier's two replays; history, not re-run since): Harbor checks on {e['host']} ({e['date']}): " + "; ".join(f"`{c['agent']}` scored {c['reward']}" + (f" ({c['note']})" if c.get("note") else "")
                                                                      for c in checks) + ".") if checks else "Harbor oracle / nop checks: pending."
     ref = e.get("reference", {})
     return f'''# {name(t)}
@@ -446,7 +445,7 @@ def readme(t: str) -> str:
 | Family / instance | `ikea_{t}` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | {AGENT_S} s wall clock (the privileged twin's); tokens: protocol default (PROTOCOL §5) |
-| Base image | `{SIM_IMAGE}` (sim), `{IMAGE}` (verifier) |
+| Base image | `{SIM_IMAGE}` (sim), the shared client base (agent, verifier) |
 
 ## Task
 {x['manual']} in plain MuJoCo 3.14.0 (CPU, float64) with {r['words']}, through the robot service ({PROTOCOL}; 2.1 / 2.2
@@ -471,11 +470,11 @@ row; S.step(4)`), applies the joint-speed rule, evaluates the grader's terminal 
 success.py, released, at rest, no breakdown) after every call and, when they hold, `Session.final_check()` (the same after
 a 1.0 s hold of the last row), both on a snapshot restored bit-exactly afterwards, ends the episode at the first settled
 success or at a breakdown, and journals every executed control step; at the end it writes
-`/data/trajectory.npz` (all executed control steps, float64) and the final state hash. The verifier (`tests/grade.py`,
-separate sandbox, no network, the `{IMAGE}` image) replays the trajectory in two fresh processes with the privileged
-grader (`tests/replay_grade.py`: `final_check()`, the terminal rules at the end of the rows and after a 1.0 s hold; the
-scene checked file by file and by its initial state). Pass iff the live episode succeeded, both replays succeed, and they
-end in the live final state (`live_matches_replay`, `deterministic`).
+`/data/trajectory.npz` (all executed control steps, float64: the replayable deliverable) and the final state hash; an
+episode that ends otherwise (timeout) is judged as it stands by the same two checks. Before the episode the service checks
+the scene file by file against `runtime_binding.json` and by its initial-state hash (`instance_mismatch`, infrastructure).
+The verifier (`tests/grade.py`, separate sandbox, no network, the shared client base) transcribes `final.json`: pass iff
+the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs (owner, 2026-10-17, board 0151).
 
 {ver}
 
@@ -483,11 +482,11 @@ end in the live final state (`live_matches_replay`, `deterministic`).
 | | |
 |---|---|
 | Grasping | physical (finger friction), no assist |
-| Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown): live after every call, and on the replays at the end of the rows and after a 1.0 s hold |
+| Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), on the live episode: after every call and at its end, at the last row and again after a 1.0 s hold of it (on a copy) |
 | Frame | every pose the agent gets or gives is in the robot frame: origin at the left arm's base link, +z up (`spec.world`); the scene's own world frame never leaves the sim service |
 | Speed rule | targets within the robot's real limits ({speed_words(t, 0, True)}; the table and its sources: `rcb_ikea.JOINT_SPEED_LIMITS_RAD_S` / `GRIPPER_SPEED_LIMITS`), clamped per control step, as the privileged twin's Session; faster rows take the control steps they need (`meta.clipped`), as RoboARC's rule |
 | Cameras | `cam_high`, `cam_low` (static), `cam_left_wrist`, `cam_right_wrist` (on the hands); 848 x 480, fovy 58 deg; added at service start (`environment/sim/ikea_rig.py`, `rig.json`), the model is unchanged; RGB: Nyx, RoboARC's renderer and look (path tracer, 32 spp, denoised; studio HDRI and point lights; `environment/sim/ikea_nyx.py` with RoboARC's `nyx_direct.py`); depth: MuJoCo's raster; on the sidecar's GPU |
-| Live video | `/data/live.mp4` (cam_high, 10 frames per simulated second), copied to the verifier logs; never affects the verdict |
+| Video | `/data/live.mp4` (cam_high, 10 frames per simulated second, recorded during the live episode), copied to the verifier logs; never affects the verdict |
 | Scene | `/opt/ikea/scenes/{t}/` in the images; digest `{P.ASSETS['tasks'][t]['digest'][:16]}…` |
 | Initial state | sha256 `{b['initial_state_sha256'][:16]}…` of the mjSTATE_INTEGRATION vector |
 
@@ -497,9 +496,9 @@ counts the same limit from the agent's first request (`spec.budget.wall_clock_s`
 episode with reason `timeout` when it runs out; that count never runs out before Harbor's.
 
 ### Deviations
-- The verifier image is the IKEA MuJoCo image, not the shared client base: it replays the trajectory itself.
 - `ee_pose` is not offered (only `joint_position`, the scene's actuator layout); `/kinematics` gives FK / IK.
-- No fresh-process replay inside the sidecar (finalize.sh only ends the service): the verifier's replays decide.
+- Graded by the live episode (the settled check on the live simulator); no grading replay, in the sidecar or the
+  verifier (owner, 2026-10-17, board 0150/0151).
 
 ### Goal
 {x['goal']}
@@ -517,7 +516,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
 def render(t: str, out: pathlib.Path, refs: pathlib.Path | None) -> None:
     files = {"task.toml": task_toml(t), "instruction.md": instruction(t), "environment/Dockerfile": ENV_DOCKERFILE,
              "environment/docker-compose.yaml": compose(t), "tests/Dockerfile": TESTS_DOCKERFILE, "tests/test.sh": test_sh(t),
-             "solution/solve.sh": SOLVE, "tests/runtime_binding.json": P.binding(t), "environment/sim/runtime_binding.json": P.binding(t),
+             "solution/solve.sh": SOLVE, "environment/sim/runtime_binding.json": P.binding(t),
              "environment/sim/rig.json": json.dumps(rig(t), indent=1) + "\n",
              "environment/sim/task_text.json": json.dumps(task_text(t), indent=1) + "\n",
              "solution/oracle_meta.json": json.dumps({"K": 1, "interpolate": "hold", "dtype": "float64",
@@ -536,7 +535,6 @@ def render(t: str, out: pathlib.Path, refs: pathlib.Path | None) -> None:
               "environment/sim/run.sh": EAI / "run.sh", "environment/sim/rcb_ikea.py": P.SHARED / "rcb_ikea.py",
               "environment/sim/server.py": STD / "server.py", "environment/sim/ikea_rig.py": STD / "ikea_rig.py",
               "environment/sim/finalize.sh": STD / "finalize.sh", "tests/grade.py": STD / "grade.py",
-              "tests/replay_grade.py": P.SHARED / "grade.py", "tests/rcb_ikea.py": P.SHARED / "rcb_ikea.py",
               "solution/oracle_replay.py": STD / "oracle_replay.py",
               "environment/sim/ikea_nyx.py": STD / "ikea_nyx.py", "environment/sim/nyx_direct.py": NYX_DIRECT}
     for rel, src in copies.items():
