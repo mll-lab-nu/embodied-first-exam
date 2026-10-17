@@ -1,0 +1,10 @@
+<mujoco model="hand_board">
+  <!-- Draft: a flat board hand for volleyball (passing and setting surface), normal = local +x. -->
+  <worldbody>
+    <body name="hand">
+      <geom name="wrist" type="cylinder" fromto="0 0 0 0 0 0.04" size="0.035" mass="0.10" rgba="0.2 0.2 0.22 1" group="2"/>
+      <geom name="board" type="box" pos="0 0 0.15" size="0.012 0.11 0.15" mass="0.35" rgba="0.95 0.95 0.97 1" group="2"/>
+      <site name="center" pos="0.012 0 0.15" size="0.005" group="4"/>
+    </body>
+  </worldbody>
+</mujoco>
