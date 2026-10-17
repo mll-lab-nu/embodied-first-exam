@@ -123,14 +123,14 @@ def exact_resume_between_calls():
         r.submit("joint_position", chunk(5, 0.45), dt=0.05, video="none", note="after")
         expect(c.end() == 2, "in-process verdict")
         fin = c.final()
-        expect(fin["deterministic"] is True and fin["finalized"] and fin["resumes"] == 1 and fin["resume_state_mismatch"] == 0, f"final {fin}")
+        expect(fin.get("graded_by") == "live" and fin["finalized"] and fin["resumes"] == 1 and fin["resume_state_mismatch"] == 0, f"final {fin}")
         expect(fin["n_actions"] == st0["control_steps"] + 5 and fin["sim_startups"] == 2, f"trajectory complete {fin}")
         ev = c.events(); rs = [e for e in ev if e["ev"] == "resumed"]
         expect(len(rs) == 1 and rs[0]["exact"] is True and rs[0]["crashed_in_call"] is False, f"resumed event {rs}")
         # a restart after the verdict keeps the verdict
         c.kill_service(); time.sleep(3)
         fin2 = c.final()
-        expect(fin2.get("deterministic") is True and not fin2.get("gave_up"), f"verdict kept {fin2}")
+        expect(fin2.get("graded_by") == "live" and not fin2.get("gave_up"), f"verdict kept {fin2}")
         expect(any(e["ev"] == "restart_refused" and e["reason"] == "restarted after finalize" for e in c.events()), "restart after finalize")
     finally:
         c.down()
@@ -364,7 +364,7 @@ def dump_mode_collect_hook():
         r = c.robot()
         r.submit("joint_position", chunk(5, 0.3), dt=0.05, video="none")
         c.kill_service(); r.wait_ready(60)
-        expect(c.end() == 0, "dumped and exited: the hook replays next")
+        expect(c.end() == 0, "dumped and exited: the hook merges the live verdict next")
         ep = json.load(open(os.path.join(c.data, "episode.json")))
         expect(ep["n_actions"] == 5 and ep["resumes"] == 1, f"episode.json {ep}")
         time.sleep(0.5)
@@ -389,7 +389,7 @@ def usr1_during_resume_is_kept():
         rc = c.end(timeout=60)
         expect(rc == 2, f"verdict after the resume (rc {rc})")
         fin = c.final()
-        expect(fin["n_actions"] == 150 and fin["deterministic"] is True and fin["reason"] == "timeout", f"final {fin}")
+        expect(fin["n_actions"] == 150 and fin.get("graded_by") == "live" and fin["reason"] == "timeout", f"final {fin}")
     finally:
         c.down()
 
@@ -563,12 +563,14 @@ def every_adapter_reports_the_agents_clock():
     layer keeps in E["t_first"]), never from the service's start or the episode's own t0."""
     import glob, hashlib, re
     tasks = os.path.join(os.path.dirname(os.path.dirname(HERE)), "tasks")
-    layer = hashlib.sha256(open(os.path.join(HERE, "rcb_limited.py"), "rb").read()).hexdigest()
+    # a copy of this layer: the same PROTOCOL line (not the same bytes: a layer change reaches the tasks through each
+    # benchmark's own regeneration, board 0151, and the adapters' clock does not depend on it)
+    proto = next(x for x in open(os.path.join(HERE, "rcb_limited.py"), encoding="utf-8") if x.startswith("PROTOCOL ="))
     seen, bad = {}, []
     for f in sorted(glob.glob(os.path.join(tasks, "*", "environment", "sim", "server.py"))):
         lay = os.path.join(os.path.dirname(f), "rcb_limited.py")
-        if not os.path.isfile(lay) or hashlib.sha256(open(lay, "rb").read()).hexdigest() != layer:
-            continue                               # another protocol's service, or a task not yet on this layer
+        if not os.path.isfile(lay) or proto not in open(lay, encoding="utf-8").read().splitlines(keepends=True):
+            continue                               # another protocol's service
         src = open(f, encoding="utf-8").read(); h = hashlib.sha256(src.encode()).hexdigest()
         if h in seen:
             continue

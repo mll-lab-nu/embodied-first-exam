@@ -18,10 +18,9 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
-Meta-World's own success check for `peg-unplug-side-v3` to the state **after the last executed control step**; it must hold in
-the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you want
-graded and stop submitting.
+The episode runs until your time is up. The service then applies Meta-World's own success check for `peg-unplug-side-v3` to the
+live episode's state **after the last executed control step**. A success reached earlier and then lost does not count:
+end in the state you want graded and stop submitting.
 
 For `peg-unplug-side-v3` the check is: The peg's end is within 7 cm of the target point. ("The target point" is `meta["task"]["target_pos"]`; everything the
 check needs to hold must hold in that final state.)

@@ -57,7 +57,8 @@ simulator thread. What a request can cost the clock is bounded:
   BEHIND_PACE times as long, clock on time or not; requests without images (cameras = [], /status) are not held
   back by it, so a controller's loop goes on. Requests can so take at most 1 / (1 + BEHIND_PACE) of the clock's time.
 - Cameras are rendered (and the proprioception read) at most once per control step, however many requests and watches
-  ask for them: all of them get that step's frames.
+  ask for them: all of them get that step's frames. The pending watches together hold at most max_frames_per_call
+  images; a watch that would exceed it is refused (429) until one completes.
 More than MAX_LAG_S behind, the service drops the debt instead of fast-forwarding the robot (a stall: counted, and its
 seconds added to stalled_s).
 
@@ -771,6 +772,16 @@ class RealtimeService(Service):
             n = int(round(seconds / self.sim.control_dt)) if not (self.done or self.stopping) else 0
             rec = Recorder(self.views, cams, fps, depth, video if n or video != "mp4" else "frames")   # no time: no video
             self._frame_budget(rec, n)
+        if n:
+            # Every pending watch holds its images until it completes: together they stay within the per-call frame
+            # budget, or concurrent watches could exhaust the sidecar's memory (an OOM kill is no crash record, so it
+            # would count as infrastructure: a free retry). Nothing ran: a 429 to retry once a watch completes.
+            pending = sum(w.rec.images_per_call(w.end - w.start) for w in self.watches)
+            if pending + rec.images_per_call(n) > self.max_frames:
+                raise Refused(429, {"error": f"the pending watches already hold up to {pending} images and this one "
+                                             f"would add {rec.images_per_call(n)}: more than max_frames_per_call = "
+                                             f"{self.max_frames} in flight; wait for a watch to complete, or ask for "
+                                             "fewer cameras or a lower video_fps", "images_in_flight": pending})
         self.calls += 1
         rec.start()
         if not n:

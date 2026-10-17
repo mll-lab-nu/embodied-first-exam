@@ -3,7 +3,8 @@
 **Can a coding agent program a robot?** Robot Coding Bench is a benchmark of robot-manipulation tasks for coding
 agents such as Claude Code and Codex, built on the [Harbor](https://github.com/harbor-framework/harbor) task format.
 In each task, an agent works in a container with a robot simulator and a Python interface. It must produce a deliverable
-that a verifier checks in a separate sandbox, by replaying it in a fresh process. A program decides pass or fail (no
+that a verifier checks in a separate sandbox (privileged: by replaying it in a fresh process; standard: from the
+trusted simulator service's record of the live episode). A program decides pass or fail (no
 learned judge) and reports numeric diagnostics (for example DexToolBench's goal progress).
 
 The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (the version is stated there). Contributions follow
@@ -20,7 +21,7 @@ Every task instance is offered in two modes that share the same frozen scene.
 | Resets | unlimited | none — one trial is one episode |
 | Actions | the simulator's Python API | action chunks via a client (`eai-standard/2.x`: `/submit`, `/observe`) |
 | Deliverable | a replayable trajectory saved by the agent | the trajectory recorded by the service |
-| Verification | separate sandbox, two fresh replays with matching state hashes | separate sandbox, fresh replay of the recorded episode |
+| Verification | separate sandbox, two fresh replays with matching state hashes | the sim service judges the live episode; a separate sandbox transcribes its record |
 
 Privileged mode measures whether an agent can program a robot when it has full access to the simulator. Standard mode
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
@@ -146,8 +147,8 @@ else in the protocol is a recommended convention, reported by the job `advisorie
   trajectory; under the separate sandbox, the same attack scores 0.
 - **No reference solutions in reach.** Reference solutions live only in `solution/`, which Harbor mounts for the
   oracle agent alone. Upstream experts are removed from the agent's images.
-- **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
-  and writes the verdict inputs. The agent never holds the simulator.
+- **Recorded evidence in standard mode.** The simulator service records every call and judges the episode it ran; the
+  trajectory is kept for the video and audits. The agent never holds the simulator.
 - **Infrastructure retry.** An infrastructure failure allows at most one full retry with the same instance, seed and
   configuration; a normal task failure is never retried (H.5).
 - **Network policy and external material.** By default a task restricts the agent's egress to the model APIs and the package

@@ -694,6 +694,69 @@ class CrashRecovery(Base):
         self.assertEqual((f["reason"], f["infra_error"]), ("sim_crashed", 1))
         self.assertIn(b"Fatal Python error", Path(self.data, "crash.log").read_bytes())
 
+    def die_in_a_call(self, path: str) -> None:
+        """A process that died natively serving a call (no finally ran: call_begin without call_end)."""
+        with open(os.path.join(self.data, "episode.jsonl"), "a") as f:
+            f.write(json.dumps({"ts": time.time(), "ev": "call_begin", "path": path, "call": 99}) + "\n")
+
+    def test_crashes_after_a_success_keep_it(self):
+        """Review round 3: three /observe calls dying after the episode succeeded gave the agent a 0 (sim_crashed_on_call).
+        The outcome was decided: the restart past the limit finalizes it as it ended."""
+        svc = self.service(FakeSim(goal=0.3))
+        self.submit(svc, [[1.0]] * 3)
+        for i in range(3):
+            self.die_in_a_call("/observe")
+            if i < 2:
+                self.service(FakeSim(goal=0.3))
+        with self.assertRaises(GiveUp) as ctx:
+            self.service(FakeSim(goal=0.3))
+        self.assertTrue(str(ctx.exception).startswith("restarted after finalize"))
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["live_success"], f["graded_by"], f["reason"]),
+                         (True, True, True, "live", "success"))
+        self.assertNotIn("infra_error", f)
+        self.assertEqual([e["crashed_in_call"] for e in events(self.data) if e["ev"] == "resuming"], [False] * 3)
+
+    def test_crashes_after_a_final_failure_keep_the_zero_not_infrastructure(self):
+        svc = self.service(FakeSim(goal=99))
+        self.submit(svc, [[1.0]] * 60)                       # the steps run out: failed, no reset to come
+        for i in range(3):
+            self.die_in_a_call("/observe")
+            if i < 2:
+                self.service(FakeSim(goal=99))
+        with self.assertRaises(GiveUp):
+            self.service(FakeSim(goal=99))
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["reason"], f["graded_by"]), (True, False, "failed", "live"))
+        self.assertNotIn("infra_error", f)
+
+    def test_crashes_after_a_failure_with_resets_left_are_not_the_agents(self):
+        """The episode ended but a reset could follow: the outcome is not decided, and a crash in a call after the
+        episode's end does not count as the agent's (only deaths before it do)."""
+        svc = self.service(FakeSim(goal=99), reset_budget=2)
+        self.submit(svc, [[1.0]] * 60)
+        for i in range(3):
+            self.die_in_a_call("/observe")
+            if i < 2:
+                self.service(FakeSim(goal=99), reset_budget=2)
+        with self.assertRaises(GiveUp):
+            self.service(FakeSim(goal=99), reset_budget=2)
+        f = final(self.data)
+        self.assertEqual((f["reason"], f["infra_error"]), ("sim_crashed", 1))
+
+    def test_crashes_inside_a_reset_are_infrastructure(self):
+        """A native death in /reset is the scene's rebuild failing, as a Python error there is (review round 3)."""
+        svc = self.service(FakeSim(goal=99), reset_budget=5)
+        self.submit(svc, [[0.5]])
+        for i in range(3):
+            self.die_in_a_call("/reset")
+            if i < 2:
+                self.service(FakeSim(goal=99), reset_budget=5)
+        with self.assertRaises(GiveUp):
+            self.service(FakeSim(goal=99), reset_budget=5)
+        f = final(self.data)
+        self.assertEqual((f["reason"], f["infra_error"]), ("sim_crashed", 1))
+
     def test_a_restart_after_finalize_keeps_the_verdict(self):
         svc = self.service()
         self.submit(svc, [[1.0]] * 10)

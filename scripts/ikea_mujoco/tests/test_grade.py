@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Unit test of scripts/ikea_mujoco/shared/grade.py's crash handling, without MuJoCo: grade.py runs next to a fake
+"""Unit test of scripts/ikea_mujoco/shared/grade.py's crash handling (the privileged replay grader), without MuJoCo: grade.py runs next to a fake
 rcb_ikea.py whose `replay` either succeeds or kills itself with SIGSEGV, chosen per replay index.
-    python3 scripts/ikea_mujoco/tests/test_grade.py"""
+    python3 scripts/ikea_mujoco/tests/test_grade.py   (then runs test_standard_grade.py, the standard mode's live grading)"""
 import json, os, pathlib, shutil, subprocess, sys, tempfile
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -73,6 +73,8 @@ def main() -> int:
     r = run("33")                                 # the host builds another initial state: infrastructure
     assert r["success"] == 0 and r["infra_error"] == 1 and r["instance_mismatch"] == 1, r
     print("test_grade: ok (no crash, one of two, the other one, both; scene exceptions; instance mismatch)")
+    # the standard mode's grading (live episode, no replay): ci_checks/check-unit-tests.sh runs this file only
+    subprocess.run([sys.executable, str(HERE / "test_standard_grade.py")], check=True)
     return 0
 
 
