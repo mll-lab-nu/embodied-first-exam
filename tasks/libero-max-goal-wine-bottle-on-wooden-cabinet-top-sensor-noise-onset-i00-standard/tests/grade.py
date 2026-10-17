@@ -1,19 +1,20 @@
 """Standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not touch -- wrote.
 
-/data/final.json holds the live run's outcome and the verdict of a fresh replay of the graded episode:
-success = live_success AND replay_success AND deterministic (the replay ends in the live run's final state).
-Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies the evidence (replay video, last
-frame, trajectory, event log) next to them for humans; the evidence never decides the verdict.
+The verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): /data/final.json holds the
+episode the service ran and its verdict, nothing is replayed. success = the live episode ended in LIBERO's success
+(`live_success`; the service ends the episode the moment the success check holds) and the service graded it live
+(`graded_by = "live"`, its `success`). Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies
+the evidence (the video, its last frame and record, the trajectory, the event log) next to them for humans; the
+evidence never decides the verdict.
 
-The verdict is in once the episode ended (`done`) and, for a live success, once the replay's verdict is on disk
-(`deterministic` present: rcb_service writes it before the video is finished). `finalized` only says the video is done
-too: a video still unfinished when the collect hook stops waiting costs the video, never the verdict (PROTOCOL §2.6).
-An episode that ended without a live success (time up, the step cap, a simulator error) is a failure whatever its
-replay says, so it needs no replay.
-infra_error = 1: no verdict on the agent -- the service crashed past its restarts (its own infra_error), the episode
-never ended, or a live success has no replay verdict (the replay did not finish in time or failed).
-reward.json has the same fields on every path, also when final.json is missing or unreadable (all 0 but the error flags;
-`deterministic` is a MUST for trajectory tasks, PROTOCOL §2.6).
+The verdict is in once final.json is `finalized` (the service writes it within seconds of the collect hook's signal,
+before the video is rendered: a video still unfinished when the hook stops waiting costs the video, never the verdict).
+infra_error = 1: no verdict on the agent -- final.json missing, unreadable or never finalized (the service never came
+back), the service's own infra_error (crashes not all inside the agent's calls, a failed resume, the scene not
+starting at the frozen instance's state: instance_mismatch), or a finalize that failed on the service's side.
+A crash inside the agent's calls (sim_crashed_on_call), a simulator error the agent's actions raised (sim_error), the
+time running out and the step cap are the agent's: 0, never infra.
+reward.json has the same fields on every path, also when final.json is missing or unreadable.
 """
 import json
 import os
@@ -24,10 +25,10 @@ DATA = os.environ.get("RCB_DATA", "/data")
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 os.makedirs(LOG, exist_ok=True)
 # Every reward.json field, at the value it has when there is no verdict to read.
-BLANK = {"success": 0, "live_success": 0, "replay_success": 0, "deterministic": 0, "replayed": 0, "finalized": 0,
-         "missing_log": 0, "infra_error": 0, "grader_error": 0, "timeout": 0, "sim_error": 0, "sim_crashed_on_call": 0,
-         "n_actions": 0, "sim_steps": 0, "calls": 0, "rows": 0, "resets": 0, "reset_budget": 0, "sim_startups": 0,
-         "elapsed_s": 0.0, "video_rendered": 0}
+BLANK = {"success": 0, "live_success": 0, "graded_by_live": 0, "replays": 0, "finalized": 0, "missing_log": 0,
+         "infra_error": 0, "grader_error": 0, "instance_mismatch": 0, "timeout": 0, "sim_error": 0,
+         "sim_crashed_on_call": 0, "event_fired": 0, "event_step": 0, "n_actions": 0, "sim_steps": 0, "calls": 0,
+         "rows": 0, "resets": 0, "reset_budget": 0, "sim_startups": 0, "elapsed_s": 0.0, "video_rendered": 0}
 
 
 def write(ok: bool, out: dict) -> None:
@@ -46,17 +47,22 @@ def main() -> None:
     try:
         with open(path) as f:
             d = json.load(f)
-        live, replay, det = (bool(d.get(k)) for k in ("live_success", "replay_success", "deterministic"))
-        ended = bool(d.get("done"))
-        replayed = "deterministic" in d                  # the fresh replay's verdict is on disk
+        if not isinstance(d, dict):
+            raise ValueError("final.json is not a JSON object")
+        live = bool(d.get("live_success"))
+        by_live = d.get("graded_by") == "live"
+        finalized = bool(d.get("finalized"))
         failed_finalize = bool(d.get("finalize_error"))
-        infra = bool(d.get("infra_error")) or not ended or (live and not replayed)
-        ok = live and replay and det and not infra
-        out = {"success": int(ok), "live_success": int(live), "replay_success": int(replay), "deterministic": int(det),
-               "replayed": int(replayed), "finalized": int(bool(d.get("finalized"))), "missing_log": 0,
+        reason = str(d.get("reason") or "")
+        infra = bool(d.get("infra_error")) or not finalized or failed_finalize
+        ok = bool(d.get("success")) and live and by_live and not infra
+        out = {"success": int(ok), "live_success": int(live), "graded_by_live": int(by_live),
+               "replays": int(d.get("replays") or 0), "finalized": int(finalized), "missing_log": 0,
                "infra_error": int(infra), "grader_error": int(failed_finalize),
-               "timeout": int(d.get("reason") == "timeout"), "sim_error": int(d.get("reason") == "error"),
-               "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
+               "instance_mismatch": int(reason.startswith("instance_mismatch")),
+               "timeout": int(reason == "timeout"), "sim_error": int(reason == "error"),
+               "sim_crashed_on_call": int(reason == "sim_crashed_on_call"),
+               "event_fired": int(bool(d.get("event_fired"))), "event_step": int(d.get("event_step") or 0),
                "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps_total") or 0),
                "calls": int(d.get("calls") or 0), "rows": int(d.get("rows") or 0), "resets": int(d.get("resets") or 0),
                "reset_budget": int(d.get("reset_budget") or 0),
@@ -66,7 +72,7 @@ def main() -> None:
         traceback.print_exc()
         write(False, {**BLANK, "infra_error": 1, "grader_error": 1})
         return
-    for name in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
+    for name in ("replay.mp4", "replay.last.png", "replay.video.json", "trajectory.npz", "episode.jsonl"):
         try:
             if os.path.exists(os.path.join(DATA, name)):
                 shutil.copy(os.path.join(DATA, name), os.path.join(LOG, name))

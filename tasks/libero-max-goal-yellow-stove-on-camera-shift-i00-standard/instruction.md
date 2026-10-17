@@ -11,8 +11,8 @@ receptacle jumps there alone: what already rests in or on it stays where it was.
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
-  9000 control steps (450 s of robot time; a technical cap so that the grading replay fits in its
-  time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
+  9000 control steps (450 s of robot time; a technical cap so that the episode's video can be
+  rendered in its time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
 - **Time moves only inside calls.** `submit` runs your actions and `get_obs(seconds=s)` holds still for `s` seconds;
   both use up control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no seconds is free.
 - **No privileged state, no score.** You see two cameras (`agentview` fixed in front of the robot, `wrist` on the hand;
@@ -20,7 +20,7 @@ receptacle jumps there alone: what already rests in or on it stays where it was.
   every submit response carries the current ones in `meta["cameras_now"]`) and the robot's own state. Not the objects'
   poses, not the goal or the success check: the service only tells you that the episode ended and why
   (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"` at the step cap, `"error"` after a simulator error).
-- There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script that
+- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that
   drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so
   do not stop early.
@@ -29,8 +29,8 @@ receptacle jumps there alone: what already rests in or on it stays where it was.
 ## Scoring
 LIBERO's own success check for this task: all of
 - `yellow_stove_1` is on (LIBERO's TurnOn: its knob is turned at least 0.5 rad (29 degrees) counter-clockwise, seen from above, from off)
-The service ends the episode the moment it holds (`reason = "success"`), and a fresh replay of the recorded episode
-(with the same scene change at the same moment) must reach it as well and end in the same state.
+The service ends the episode the moment it holds (`reason = "success"`): that episode, as it ran, is graded (nothing
+is replayed).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;

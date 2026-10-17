@@ -11,7 +11,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 | tasks | `tasks/libero-max-<suite>-<task>-<event>-iNN-privileged` and `...-standard` |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
-| standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` started as one and is LIBERO-MAX's own since #110 (the verdict is in once `deterministic` is on disk; every path writes the same `reward.json` fields); `rcb_service.py` is a byte copy too, plus one hook (3 lines): `verify()` may return `extra`, merged into the verdict, which LIBERO-MAX uses to record `event_fired` / `event_step` (live) and `replay_event_fired` / `replay_event_step` in `final.json` (evidence only, never part of the success rule; a candidate to upstream to the shared service) |
+| standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` started as one and is LIBERO-MAX's own since #110 (every path writes the same `reward.json` fields; since 2026-10-17 it grades the live episode); `rcb_service.py` is a byte copy again since 2026-10-17 (until then it added a 3-line hook for `verify()`'s `extra`; the shared service's `live_verdict()` now carries LIBERO-MAX's event record, `event_fired` / `event_step`, into `final.json`) |
 | generator | `scripts/libero-max/` (`select_cases.py` → `cases.json`, `freeze.sh` → `frozen/`, `generate.py` → `tasks/`, `generate.py --check`) |
 
 ## Task definition
@@ -32,11 +32,12 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 - **Instance.** `instance.json` holds the LIBERO-MAX case (LIBERO-PRO variant, initial-state index, policy seed, the
   frozen event with its trigger) and the hash of the simulator state the agent starts from (after LIBERO's 10 warm-up
   no-op steps). The scene is rebuilt from the pinned upstream data in the image by LIBERO-MAX's own code, and the
-  rebuilt state is checked against the hash on every load.
+  rebuilt state is checked against the hash on every load (the standard service checks it when the episode begins and
+  records a mismatch as `instance_mismatch`, `infra_error = 1`, before the agent is served).
 - **One simulator per process.** In the spike, 2 of 14 cases (a LIBERO-plus Sensor-Noise variant and a LIBERO-PRO
   camera_view_angle variant) did not rebuild bit-exactly a second time in the same process. `lmx_tool` therefore
-  refuses a second Session in one process (loudly, with the reason), and every verification replay and replay video
-  runs in a fresh process (privileged grader, standard service).
+  refuses a second Session in one process (loudly, with the reason), and every verification replay (privileged
+  grader) and every video pass (standard service) runs in a fresh process.
 - **Host CPUs.** The start state is bit-exact only with the numeric kernels it was frozen with, because robosuite's OSC
   controller and LIBERO's code run on numpy and scipy. Two parts of the stack choose kernels by CPU at run time:
   - **OpenBLAS.** numpy 1.22.4 and scipy 1.10.1 bundle OpenBLAS 0.3.18, which picks its kernels per CPU: Zen on the
@@ -73,7 +74,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   service ends the episode with `reason = "success"` there.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ the suite's limit (220 / 280 / 300 / 520 control steps, LIBERO's
   evaluation horizons), counted after the 10 warm-up steps. Standard episodes have only a technical cap of 9,000 control
-  steps (450 s of robot time) so that the fresh grading replay fits the collect hook's wait (see Collect budget).
+  steps (450 s of robot time) so that the episode's video pass fits the collect hook's wait (see Grading).
   LIBERO's environment is built with a horizon beyond both (robosuite refuses actions after its horizon; it does not
   touch the physics).
 - **World frame.** Metres; the robot's base (fixed mount) at (-0.66, 0, 0.912) facing +x: x forward, y left, z up.
@@ -97,54 +98,61 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   0.17 m in x and -0.06 m in y and turn it 45 degrees, so the sentence's spatial relation no longer holds; the
   instructions say which bowl is meant.
 
-## Collect budget (standard mode)
-When the agent's container is gone, the collect hook (`environment/sim/finalize.sh`) signals the service, which ends the
-episode and replays it in a fresh process (`lmx_tool.py --replay`, one simulator per process). That replay is the
-verdict, and it records `replay.mp4` on the way (a second replay for the video would outlast the hook for every long
-episode, #125).
+## Grading (standard mode)
+Owner, 2026-10-17 (boards 0150 / 0151): the standard mode is graded by the live episode; nothing is replayed to grade it
+(docs/PROTOCOL.md H.4). The privileged mode is unchanged (the verifier's two fresh-process replays).
 
-- **The verdict comes first and the video cannot touch it.**
-  - The replay prints its verdict the moment it has executed the last action; `server.py` `verify()` returns it at
-    once and `rcb_service` writes it to `final.json` (`deterministic` appears). The final frame, the encoder's flush
-    and `replay.last.png` come after it; `render_video()` waits for them (at most 120 s) and moves the files into
-    place, then `finalized` is set.
-  - Rendering reads the scene and never steps physics: the final state hash is the same with and without the video.
-  - A failure in the video (a render, the encoder, the disk, a crash or a hang after the verdict) only means
-    `video = false`. The episode is never replayed again for a video. Only a replay process that dies before its
-    verdict (a crash in native code) is replayed once more, without a video; that case is outside the budget below.
-  - The video is written as `replay.part.mp4` and renamed when complete, so a killed replay leaves no truncated file.
-- **The video's cost before the verdict is capped** (`lmx_tool._ReplayVideo`): frames go straight to the encoder; one
-  frame per `replay_video_stride` control steps (in `final.json`): 2 up to 2,400 steps (10 fps, real time), and
-  `ceil(steps / 1200)` beyond (a time-lapse of at most 1,200 frames; 8 for 9,000 steps). A frame is skipped whenever
-  the time spent on the video so far exceeds 240 s × the fraction of the episode replayed, so the video adds at most
-  240 s however slow the host is, and what is skipped is spread over the episode (`LMX_VIDEO_BUDGET_S`,
-  `LMX_VIDEO_MAX_FRAMES` in the sidecar's environment change the two bounds).
-- **Arithmetic.** The replay of N control steps takes B + N × s + V:
+- **Live success.** LIBERO's success check on the episode the sim service ran: `lmx_tool.Session.step` reports it
+  (`wrapped.step`'s `done`), `rcb_service` ends the episode there (`reason = "success"`) and `_finalize()` writes
+  `success = live_success`, `graded_by = "live"`, `replays = 0`, the live end state (`state_sha`) and LIBERO-MAX's
+  event record of the live episode (`event_fired`, `event_step`; `server.py` `live_verdict()`). The rule is the one the
+  grading replay applied: that replay's only other condition, no action after the success (`invalid`), cannot occur
+  live (the episode ends at the success, every later request is refused), and no settle or hold window was ever part
+  of it. `tests/grade.py`: `success = live_success ∧ graded_by = "live" ∧ ¬infra`.
+- **Removed.** The fresh-process grading replay (`lmx_tool.py --replay` in `verify()`), with `replay_success`,
+  `deterministic`, `replay_event_*` and the hook's `RCB_FAIL_WAIT_S` / `RCB_VIDEO_GRACE_S`.
+- **Start state.** The frozen instance records the start state's hash (`initial_state_sha`, after LIBERO's 10 warm-up
+  steps). The live service builds the scene without refusing (`Session(check=False)`) and `rcb_service` compares the
+  state with that hash when the episode begins (`server.py` `start_sha`): a mismatch gives up as `instance_mismatch`
+  (`infra_error = 1`) before the agent is served. A resume after a crash checks the journal replay against the logged
+  hash (`resume_failed`, infra).
+- **Infrastructure** (`infra_error = 1`, at most one retry, PROTOCOL H.5): no, unreadable or unfinalized `final.json`;
+  the service's own give-ups (`sim_crashed` after crashes not all inside the agent's calls, `resume_failed`,
+  `instance_mismatch`); a finalize that failed on the service's side (`grader_error = 1`). The agent's (0, never infra):
+  the time running out, the step cap, a simulator error raised by the agent's actions (`sim_error`), crashes all
+  inside its calls (`sim_crashed_on_call`). Video failures are never infra.
+- **Video: one video-only pass after the verdict** (option b of board 0151). Recording live is not cheap here: every
+  frame is an OSMesa render (about 70 ms at 256×256, 0.24 s on a busy host) inside the agent's calls. So once
+  `final.json` is finalized (`video_pending: true`), `server.py` `render_video()` replays `trajectory.npz` once in a
+  fresh process with the agentview camera on (`lmx_tool.py --replay ... replay.mp4`; its success is not read) and
+  writes `replay.video.json` (the replay's end hash, the live one, `ends_in_live_state`, the stride). A failure, a
+  timeout (`RCB_VIDEO_TIMEOUT_S`, 5,400 s) or a crash costs only the video (`video = false`).
+- **Cost.** Before: one grading replay with the video on the way: B + N × s + V, up to 4,920 s for 9,000 steps on a busy
+  host (CPU, the sim sidecar's 4 CPUs; no GPU). Now: the verdict within seconds of the hook's signal, then the same one
+  pass for the video only. The saving is not the replay's compute (the video still needs one pass) but its place on the
+  verdict path: no verdict waits on it, no live success becomes infra because it was slow, and failed episodes no
+  longer need it to be graded. Measured collect phase before (board 0136): about 20 slot-hours over 112 standard trials.
 
-  | term | value | basis |
-  |---|---|---|
-  | B, building the scene in the fresh process | ≤ 180 s | 1–3 min on a busy sidecar (#110) |
-  | s, per control step (LIBERO renders its two observation cameras every step) | 0.5 s | busy batch host: 2,662 steps in 1,415 s including B, without a video (the example behind #125); about 0.1 s on a quiet host |
-  | V, the video inside the replay | ≤ 240 s | the cap; 1,200 frames at 0.07 s (reference machine) = 84 s, at 0.24 s (measured in a 2-CPU container on a host at load 44 on 32 cores) = 288 s, cut to 240 s |
-  | N = 9,000 (the episode cap) | 180 + 4,500 + 240 = **4,920 s** | |
-  | `RCB_COLLECT_WAIT_S` | **5,400 s** | 480 s (10%) to spare |
-  | the hook's `timeout_sec` | 180 + 5,400 + 120 = **5,700 s** | up to 180 s for the service's PID file, 120 s of slack; `finalize.sh` counts wall-clock seconds |
+### Collect budget
+The video pass of N control steps takes B + N × s + V:
 
-  A second bound that does not rest on the per-step figure: the live episode ran on the same sidecar inside the
-  agent's 3,600 s, at no less per step than the replay (the same `env.step`, plus the images the agent asked for). So
-  5,400 s covers every live success whose replay is up to (5,400 − 180 − 240) / 3,600 = 1.38× slower than its live
-  run. Before 2026-10-10 the wait was 3,000 s (#110: 9,000 × 0.25 s + build, sized without the video and with a
-  per-step figure half of what busy hosts showed): a live success of more than about 5,000 steps on a busy host ended
-  with `infra_error = 1`.
-- **What the hook waits for.** `finalized` (PROTOCOL §4.8), which now follows the verdict within seconds. Three
-  backstops stop it earlier or bound it; none can misgrade, because `tests/grade.py` reads `deterministic`, not
-  `finalized`:
-  - 300 s after the verdict is on disk (`RCB_VIDEO_GRACE_S`), should the service hang while finishing the video;
-  - `RCB_FAIL_WAIT_S` after the start for an episode that ended **without** a live success: it is a failure whatever
-    its replay says, so its replay is evidence only. The default is the overall wait (5,400 s; board 0136, 2026-10-16):
-    the replay records the trial's video, and with the earlier 900 s most failed episodes ended without `replay.mp4`.
-    A lower value trades the video of long failed episodes for verifier time, never the grade;
-  - 5,400 s overall: a live success without a replay verdict by then is `infra_error = 1`.
+| term | value | basis |
+|---|---|---|
+| B, building the scene in the fresh process | ≤ 180 s | 1–3 min on a busy sidecar (#110) |
+| s, per control step (LIBERO renders its two observation cameras every step) | 0.5 s | busy batch host: 2,662 steps in 1,415 s including B, without a video (#125); about 0.1 s on a quiet host |
+| V, the video's frames | ≤ 240 s | `lmx_tool._ReplayVideo`: one frame per `video_stride` control steps (2 up to 2,400 steps, a time-lapse of at most 1,200 frames beyond), frames skipped whenever the time spent exceeds 240 s × the fraction replayed (`LMX_VIDEO_BUDGET_S`, `LMX_VIDEO_MAX_FRAMES`) |
+| N = 9,000 (the episode cap) | 180 + 4,500 + 240 = **4,920 s** | |
+| `RCB_COLLECT_WAIT_S` | **5,400 s** | the hook's whole wait, verdict and video; 480 s (10%) to spare |
+| the hook's `timeout_sec` | 180 + 5,400 + 120 = **5,700 s** | up to 180 s for the service's PID file, 120 s of slack |
+
+The hook (`finalize.sh`) signals the service every 30 s until `final.json` is finalized, then waits while
+`video_pending` is true, up to 5,400 s from its start. Only a service that crashed late in the episode needs the wait
+for its verdict: it resumes by replaying its journal (crash recovery, not grading), at most N × s + B.
+
+## Change log
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  video-only replay of the trajectory in a fresh process after the verdict (`replay.video.json`); the start state is
+  checked when the episode begins (`instance_mismatch`).
 
 ## Licence
 LIBERO-MAX (Zhang et al., [*LIBERO-MAX: Do Robot Policies Adapt When the World Changes?*](https://arxiv.org/abs/2609.36518),
@@ -190,6 +198,7 @@ cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 | `generate.py --check`, `task_conventions.py --check`, `ci_checks/run_all.sh` | clean; no LIBERO-MAX warnings |
 | verdict before video (2026-10-10), stubbed simulator: the real `rcb_service` + `server.py` with a fake replay process; `lmx_tool._ReplayVideo` with the real encoder | encoder open / append / close and render failures, a crash and a hang after the verdict: verdict intact, one replay, `video = false`; verdict on disk before the video is finished; a 1 s budget at 30 ms per frame holds (34 frames, 168 skipped, spread); 9,000 steps → stride 8, 1,126 frames |
 | the same, real simulator (visual_theme_switch, 66 steps; a 2-CPU container on a host at load 44): `lmx_tool.py --replay` with a video; and two standard trials without Harbor (service, the reference through the client, `finalize.sh`, `grade.py`), one of them with a broken encoder | replay: final state hash = `report.json`'s, event at the recorded step, 34 frames; both trials reward 1 with that hash, one replay each: verdict on disk 66 s after the hook started and `finalized` (with the video) 3 s later; with the broken encoder verdict after 53 s, `video = false` |
+| live grading (2026-10-17, board 0151), `scripts/libero-max/tests/test_live_grading.py`: the real `rcb_service` + `server.py` with a stub `lmx_tool` (no simulator), the real `finalize.sh` and `grade.py` | live success → 1, failure → 0, no replay before the verdict (the replay entry point fails the test if called), event record from the live episode; video failure, timeout and a replay that diverges leave the verdict unchanged; `instance_mismatch` at the start, a give-up after crashes between calls → infra; crashes all inside calls → 0, not infra; missing / unreadable / unfinalized `final.json` → infra; the hook stops at the verdict, waits for `video_pending`, and stops at its bound |
 | graders (2026-10-10), synthetic | standard: 10 `final.json` cases (missing, unreadable, verdict without `finalized`, ...) write the same 21 fields, `deterministic` among them; privileged: replay exit code 3 → `infra_error = 1`, any other failure → `grader_error = 1` only |
 | `rebuild_check.sh` (start hash; reference replayed to the recorded final hash, event step and success), 64 instances | 0.1.0 on Intel Xeon 8488C (AWS rcb-cpu): 0/64, OpenBLAS Prescott kernels, 3 references fail; 0.1.1 on the 8488C: 64/64; 0.1.1 on AMD 7950X: 64/64 |
 | `rebuild_check.sh`, 0.1.1, AWS AMD EPYC 7R13 (Zen 3, no AVX-512) | 10 of the first 24 instances rebuild: numpy's AVX-512 loops are missing (OpenBLAS runs Zen); not a supported host |
