@@ -27,14 +27,14 @@ expert_time_estimate_hours = 2.0
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
 min_cpus = 4.0
 min_memory_gb = 7.0
-min_gpu_memory_gb = 7.0
+min_gpu_memory_gb = 2.0
 gpu_required = true
 gpu_class = "any"
 recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 5.0
-verifier_min_gpu_memory_gb = 7.0
-measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
+verifier_min_gpu_memory_gb = 2.0
+measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
