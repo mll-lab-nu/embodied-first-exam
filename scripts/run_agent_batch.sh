@@ -66,8 +66,9 @@
 #                a plain-HTTP base URL with a port (ANTHROPIC_BASE_URL / OPENAI_BASE_URL=http://<host>:<port>, a self-hosted
 #                model server) is forwarded too, to exactly that <host>:<port>
 #   GATEWAY_START_WAIT  seconds to wait for the gateway to come up (10); raise it on busy shared nodes
-#   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
-#                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
+#   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (10000000000 / 10000000000, input
+#                with cached input included; docs/RUNNING.md): past it every further model request is refused and the
+#                trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
@@ -94,7 +95,7 @@ abspath() { case "$1" in ""|/*) printf '%s' "$1" ;; *) printf '%s/%s' "$PWD" "$1
 JOBS="$(abspath "$JOBS")"; ENV_FILE="$(abspath "$ENV_FILE")"; AGENT_CONFIG="$(abspath "$AGENT_CONFIG")"
 [ -n "${RESULTS:-}" ] && RESULTS="$(abspath "$RESULTS")"
 [ -n "${CODEX_AUTH_JSON_PATH:-}" ] && { CODEX_AUTH_JSON_PATH="$(abspath "$CODEX_AUTH_JSON_PATH")"; export CODEX_AUTH_JSON_PATH; }
-TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-100000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000}"
+TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-10000000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
 # (gpt-6-luna -> gpt6_luna), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
