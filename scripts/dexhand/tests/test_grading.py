@@ -213,8 +213,9 @@ class Standard(unittest.TestCase):
                 self.assertEqual((reward, result["infra_error"]), ("0", 0))
 
     def test_a_sim_error_from_the_agents_actions_is_its_zero(self):
-        result, reward = self.grade(self.good(success=False, reason="error"))
-        self.assertEqual((reward, result["sim_error"], result["infra_error"]), ("0", 1, 0))
+        for success in (False, True):   # even a record that says success: a sim error is never one
+            result, reward = self.grade(self.good(success=success, reason="error"))
+            self.assertEqual((reward, result["sim_error"], result["infra_error"]), ("0", 1, 0))
 
     def test_give_up_after_crashes_between_calls_is_infra(self):
         for reason in ("sim_crashed", "resume_failed: replayed state differs from the logged one"):
@@ -362,8 +363,11 @@ class CollectHook(unittest.TestCase):
                         **({"infra_error": 1} if infra else {})}
                 (self.data / "final.json").write_text(json.dumps(gave))
                 final = self.run_hook(end_rc=2)
-                self.assertEqual((final["reason"], final.get("infra_error", 0), final["graded_by"], final["video"]),
-                                 (reason, infra, "live", False))
+                if infra:      # an infrastructure give-up is kept byte for byte: nothing marks it as a live verdict
+                    self.assertEqual(final, gave)
+                else:
+                    self.assertEqual((final["reason"], final.get("infra_error", 0), final["graded_by"], final["video"]),
+                                     (reason, infra, "live", False))
         self.assertEqual(self.calls(), [])
 
     def test_hook_and_grader_together(self):

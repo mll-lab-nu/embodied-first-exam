@@ -38,6 +38,7 @@ def verdict(d):
     no_verdict = not d.get("finalized") or not (d.get("gave_up") or d.get("graded_by") == "live")
     ok = bool(d.get("success")) and d.get("graded_by") == "live" and not no_verdict
     ok = ok and not d.get("instance_mismatch") and not d.get("too_few_cpus") and not d.get("infra_error")
+    ok = ok and d.get("reason") != "error"     # an episode a simulator error ended is never a success
     num = lambda k: float(d.get(k) or 0)  # noqa: E731
     return ok, {
         "success": int(ok),

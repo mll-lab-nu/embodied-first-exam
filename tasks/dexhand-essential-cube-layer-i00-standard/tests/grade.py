@@ -25,7 +25,8 @@ def verdict(data: dict) -> dict:
     no_verdict = not data.get("finalized") or not (live or gave_up)
     mismatch = bool(data.get("instance_mismatch"))
     infra = bool(data.get("infra_error")) or no_verdict or mismatch
-    success = data.get("success") is True and live and not gave_up and not infra
+    # an episode a simulator error ended is never a success
+    success = data.get("success") is True and live and not gave_up and not infra and data.get("reason") != "error"
     return {
         **BASE,
         "success": int(success),

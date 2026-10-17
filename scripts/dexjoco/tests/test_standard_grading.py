@@ -125,10 +125,11 @@ class Hook(unittest.TestCase):
         self.assertEqual((txt, rw["task_failure"], rw["infra_error"]), ("0", 1, 0))
 
     def test_sim_error_from_the_agents_actions_is_0_not_infra(self):
-        self.episode(success=False, reason="error")
-        self.hook()
-        txt, rw = grade(self.data)
-        self.assertEqual((txt, rw["sim_error"], rw["infra_error"]), ("0", 1, 0))
+        for success in (False, True):   # even a record that says success: a sim error is never one
+            self.episode(success=success, reason="error")
+            self.hook()
+            txt, rw = grade(self.data)
+            self.assertEqual((txt, rw["sim_error"], rw["infra_error"]), ("0", 1, 0))
 
     def test_a_failed_video_changes_nothing(self):
         for mode in ("crash", "hang"):

@@ -71,8 +71,10 @@ def main() -> None:
     if code == 2:
         # final.json holds the service's own verdict already (it gave up after crashes, or refused the episode at its
         # start): the live record, kept as it is; there is no trajectory to film.
+        # An infrastructure give-up (sim_crashed, resume_failed, instance_mismatch) is kept untouched: it is no live
+        # verdict on the agent, so nothing marks it as one.
         result = read("final.json")
-        if result.get("finalized"):
+        if result.get("finalized") and not result.get("infra_error"):
             write({**result, **LIVE, "live_success": bool(result.get("success")), "video_pending": False})
         return
     result = read("episode.json")
