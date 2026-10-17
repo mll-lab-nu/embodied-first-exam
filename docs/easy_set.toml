@@ -1,99 +1,110 @@
-# Easy set: proposed by the benchmark owner (Qineng Wang), 2026-10-16
+# The easy set (docs/PROTOCOL.md §4, docs/RUNNING.md "Results"): task bases KEPT in the repository and run like any
+# other task, but reported apart from the main table and left OUT of the headline statistics.
 #
-# Tasks to KEEP in the repository but to leave OUT of the final statistics (report them apart as an "easy set").
-# Selected after the GPT-6 Astra review: tasks whose success came through a shortcut or a goal looser than its text
-# (`reason = "shortcut"`, with the observed pattern), and tasks the owner judges too easy or not discriminative
-# (`reason = "owner"`). Each entry is a task base; it covers every mode the base ships (privileged, standard).
-# How the repository marks and reports an easy set (a [metadata] field, this central list, a results filter, ...)
-# is the maintainer's decision; this file only records the selection.
+# One entry per task base (the task name without its mode suffix); it covers every mode the base ships. Fields:
+#   base       e.g. "behavior-chop-an-onion-i00"
+#   benchmark  the base's label (scripts/task_conventions.py BENCHMARKS)
+#   reason     "shortcut": a success came through a goal looser than the task's text, or a grader shortcut (`note`: the
+#              observed pattern); "owner": the benchmark owner judges the task too easy or not discriminative;
+#              "solved": the screening runs solved it in every mode it ships (`note`: which runs)
+#   note       optional
+# Read by scripts/task_conventions.py (`set_of`: "easy" / "core", recorded with each result as `set`, never part of
+# `config_key`) and checked by `python3 scripts/task_conventions.py easy-set --check` (ci_checks/run_all.sh). Marking a
+# task here changes none of its files: its DIGEST and the results recorded against it stay valid. A task leaves the
+# set by deleting its entry (e.g. after a grader fix and a re-grade).
+#
+# 2026-10-16: the first 84 bases (BEHAVIOR-1K 16, ManiGuard 8, RoboARC 31, RoboLab 19, RoboPaint 8, RoboWits 2), the
+# benchmark owner's (Qineng Wang) selection after the GPT-6 Astra review (#265). Several shortcut patterns are closed
+# by grader fixes (#243, #244, #248, #254), so some tasks may move back to the core set after a re-grade; RoboWits is
+# small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
 
 [[task]]
 base = "behavior-chop-an-onion-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Astra P: loose_goal_pass; Opus P: skipped_instructed_step"
 
 [[task]]
 base = "behavior-dispose-of-glass-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus P: held_object_counts_inside"
 
 [[task]]
 base = "behavior-getting-organized-for-work-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus P: loose_goal_pass:chair_knocked_over"
 
 [[task]]
 base = "behavior-hanging-pictures-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "owner"
 
 [[task]]
 base = "behavior-installing-a-modem-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus S: success_while_object_still_grasped"
 
 [[task]]
 base = "behavior-make-microwave-popcorn-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus P: loose_goal_pass"
 
 [[task]]
 base = "behavior-moving-boxes-to-storage-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "owner"
 
 [[task]]
 base = "behavior-picking-up-toys-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "owner"
 
 [[task]]
 base = "behavior-putting-away-Halloween-decorations-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus P: goal_met_mid_carry"
 
 [[task]]
 base = "behavior-scrubbing-bathroom-floor-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "owner"
 
 [[task]]
 base = "behavior-set-up-a-coffee-station-in-your-kitchen-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus S: loose_goal_pass"
 
 [[task]]
 base = "behavior-setting-mousetraps-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "owner"
 
 [[task]]
 base = "behavior-stacking-wood-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Astra P: loose_goal_pass; Astra S: loose_goal_pass; Sol P: loose_goal_pass; Sol6.1 P: loose_goal_pass; Sol6.1 S: loose_goal_pass"
 
 [[task]]
 base = "behavior-store-honey-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "owner"
 
 [[task]]
 base = "behavior-tidying-bathroom-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Opus S: goal_fired_while_held"
 
 [[task]]
 base = "behavior-tidying-bedroom-i00"
-benchmark = "BEHAVIOR"
+benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Sol S: goal_fired_while_held; Sol6.1 S: goal_fired_while_held"
 

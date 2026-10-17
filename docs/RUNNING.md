@@ -66,7 +66,11 @@ the results site) compare trials only within one comparable configuration (`task
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
-every task, the flag is shown as a marker and may be used as a filter.
+every task, the flag is shown as a marker and may be used as a filter. The easy set ([`easy_set.toml`](easy_set.toml),
+`task_conventions.set_of`: `set` = `easy` in `config.json`) is the exception: its tasks are run and their results kept
+and shown, marked, but the main table and every headline number (success rates, rankings, totals) count `core` tasks
+only; the easy set is reported in a table of its own. The list is read at reporting time, so a task that leaves it
+(e.g. after a grader fix) counts again without any change to its results.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker

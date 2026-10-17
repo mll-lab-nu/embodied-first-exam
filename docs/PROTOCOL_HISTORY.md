@@ -32,6 +32,11 @@ recommending, but CI still blocking every convention and the trust-boundary rule
   `check-standard-texts.sh` and the RoboPaint / ManiGuard leak and tooling checks (now each benchmark's own
   `scripts/<bench>/ci/{invariant,advisory}-*` hooks).
 - PROTOCOL.md went from 793 to about 200 lines; v1's runner material is below ("v1.2-rc text not carried into v2.0").
+- Added on 2026-10-16 (#265, the benchmark owners' easy-set selections; board 0146): §4's easy-set row and
+  `docs/easy_set.toml`, task bases kept and run but reported apart from the main table (`set` = `easy`, a marker like
+  `validated`, never part of `config_key`). A central list rather than a task field or a `-easy` directory name: a field
+  would change 168 task directories' DIGEST and a rename their identity (H.8), and either would detach the results
+  already recorded against them (the runner's `digest_match`, the pool's task keys); the list changes no task.
 - Added on 2026-10-16 (owner, board 0136: "every run must end with a video, except a privileged trial that submitted no trajectory"): §4's video row says every graded trial leaves a playable video and the replayable trajectory it was graded on, the one exception, and that the video's time bound covers the longest episode; `ci_checks/check-video.py` (advisory: a video is evidence for people, never the verdict, and a static scan cannot tell whether a render finishes in time) and the runner's `no_video` flag with an after-the-fact render from the trajectory (RUNNING.md "Recordings"). Found by the survey of 7977 graded trials: 114 without a video for reasons other than the exception (DexHand privileged rendered none; render time bounds shorter than long episodes; a RoboOlympics sport without a spectator camera).
 
 **Version: v1.2-rc** (2026-10-10). Changes in this version: the resource monitor sidecar, the docker caps and the
