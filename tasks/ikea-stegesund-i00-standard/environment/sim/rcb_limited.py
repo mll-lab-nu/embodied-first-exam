@@ -859,7 +859,8 @@ class Episode:
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
             fin = _read_json(self.f_final)
-            fin.update({"success": False, "done": True, "reason": reason, "finalized": True, "gave_up": True, "protocol": PROTOCOL,
+            fin.update({"success": False, "live_success": False, "done": True, "reason": reason, "finalized": True,
+                        "gave_up": True, "replays": 0, "protocol": PROTOCOL, **({} if infra else {"graded_by": "live"}),
                         **self.final_fields(), **({"infra_error": 1} if infra else {})})
             _write_json(self.f_final, fin)
         with open(self.f_pid, "w") as f:
@@ -1121,7 +1122,7 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
     Returns 2: final.json already holds the verdict (the service gave up after crashes, or graded in-process; with
     `wait_key`, also waits for that final.json key, e.g. video_done): keep it, run no replays.
     Returns 0: the service dumped the episode (episode.json) and exited: the hook merges its live verdict next.
-    Returns 1: timed out."""
+    Returns 1: timed out (with a verdict on disk still waiting for `wait_key`, e.g. a slow video: 2, the verdict stands)."""
     t0, sent = time.time(), 0.0
     f_pid, f_dump, f_starts = (os.path.join(data, n) for n in ("server.pid", "episode.json", "startups.jsonl"))
     while time.time() - t0 < timeout:
@@ -1129,6 +1130,8 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
         if fin is not None:
             if not wait_key or fin.get(wait_key) or fin.get("gave_up"):
                 return 2
+            if time.time() - t0 + 2 >= timeout:
+                return 2                     # the verdict is on disk: a video that is not ready never voids it
             time.sleep(2); continue
         try:
             with open(f_pid) as f:
@@ -1150,7 +1153,7 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
                 except OSError:
                     pass
         time.sleep(2)
-    return 1
+    return 2 if final_verdict(data) is not None else 1   # a verdict that landed during the last wait stands
 
 
 if __name__ == "__main__":

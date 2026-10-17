@@ -55,7 +55,8 @@ def grade() -> None:
                       "infra_error": 1, "sim_error": 0, "grader_error": 1})
         return
     sim_error = bool(d.get("sim_error")) and not d.get("infra_error")
-    live = bool(d.get("live_success", d.get("success"))) and not d.get("gave_up")
+    # `success` decides (a live rule recorded beside the live success, e.g. a failed settle, can only take it away)
+    live = bool(d.get("success")) and bool(d.get("live_success", True)) and not d.get("gave_up")
     # a done episode with rows but no trajectory file (the dump failed: disk, ...): the service's fault
     dump_lost = bool(d.get("dump_error")) or (int(d.get("live_rows") or 0) > 0 and not os.path.isfile(f"{DATA}/trajectory.npz"))
     mismatch = bool(d.get("instance_mismatch"))
