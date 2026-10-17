@@ -98,7 +98,8 @@ verifier's, for all 12 tasks.
   (`rcb_ispatialgym.py replay --video`, `replay.mp4`) after the verdict, whose success and hash are not read; the
   collect hook's bound covers it (the end, up to 1 h, + a scene load and the whole step budget + 10 min).
 - **Infrastructure** (`infra_error = 1`): no or unfinalized `final.json`, the service never ended the episode (no
-  `episode.json`; one it dumped before failing to exit in time is still the verdict, `end_timed_out`), a give-up
+  `episode.json`; one the newest service start dumped before failing to exit in time is still the verdict,
+  `end_timed_out`; a resume whose episode goes on deletes one left by a call the crash lost), a give-up
   after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), `instance_mismatch`. A crash inside the
   agent's calls (`sim_crashed_on_call`) and a simulator error raised by its actions (`error`) score 0.
 
