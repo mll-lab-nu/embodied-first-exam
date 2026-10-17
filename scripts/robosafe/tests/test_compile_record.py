@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import make_instances as M
+import numpy  # noqa: F401  imported here, outside the tests' patch.dict(sys.modules): numpy >= 2.4 cannot load twice
 
 
 def call(tool, **args):
