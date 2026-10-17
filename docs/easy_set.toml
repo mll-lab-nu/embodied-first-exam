@@ -21,6 +21,8 @@
 # small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
 # 2026-10-16: DexJoCo 4 (#278, group meeting: a task the screening runs solved in both modes; docs/benchmarks/dexjoco.md
 # "Easy set").
+# 2026-10-17: VLABench 15 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/vlabench.md "Easy set").
 
 [[task]]
 base = "behavior-chop-an-onion-i00"
@@ -494,3 +496,93 @@ base = "robowits-move-cube-i00"
 benchmark = "RoboWits"
 reason = "shortcut"
 note = "Astra P: pushed_off_table_shortcut; Luna P: pushed_off_table_shortcut"
+
+[[task]]
+base = "vlabench-add-condiment-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Astra, Opus, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "vlabench-find-unseen-object-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-heat-food-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1 (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "vlabench-magnetism-qa-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-put-box-on-painting-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-reflection-qa-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-book-spatial-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-chemistry-tube-common-sense-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-chemistry-tube-semantic-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-chemistry-tube-spatial-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-drink-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna; judgment: solved in the first test evaluation (2026-10-02); repo-wide changes only since"
+
+[[task]]
+base = "vlabench-select-fruit-common-sense-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-painting-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-poker-spatial-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-toy-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
