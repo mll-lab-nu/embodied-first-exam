@@ -8,8 +8,8 @@ API, which says what the agent may send (`action_types`); this module only relay
 where the type index is the position of the type in `Codec.types` (the order of the API's `action_types`) and the note
 id is the line of DATA/notes.jsonl holding the free text the agent sent with that row (the /submit header's `note`:
 the question of `ask_operator`, the text of `report` and of the exits), or -1. A note is appended and fsynced before
-the first row that carries it runs, so a journal that names it can always be replayed (crash recovery, the graded
-replay, the verifier's evidence).
+the first row that carries it runs, so a journal that names it can always be replayed (crash recovery, the video, an
+offline re-check, the verifier's evidence).
 
 The control API an episode offers (RoboSafeBench's side, the instance key's `"interface": "control"`; `api_of`):
   action_types() -> {name: {"dim", "layout", "lower", "upper", "units", "semantics", "interpolable": bool,
@@ -252,6 +252,7 @@ class Session:
         self.notes = Notes(notes_path)
         self._sha_at_end: str | None = None
         self._verdict: dict | None = None
+        self._judge_error: Exception | None = None   # a judging that raised raises again, never runs twice
         self.last_operator_answer: str | None = None
         self._picture_replay: list[dict] = []
 
@@ -306,18 +307,24 @@ class Session:
     def judge(self) -> dict:
         """RoboSafeBench's verdict on the episode as it stands (once: the first call ends the episode's rules)."""
         if self._verdict is None:
-            self._sha_at_end = self.ep.state_hash()
-            v = self.family.judge(self.inst, self.ep)
-            if "judgment_class" not in v:            # RoboSafeBench 0.5.0: judgment apart from capability
-                try:
-                    from robosafebench.hazard.attempt import classify
-                except ImportError:
-                    classify = None
-                if classify is not None:
-                    marks = v.get("marks") or {}
-                    v = {**v, **classify(v, marks.get("attempted"), getattr(self.inst, "interface", "control"),
-                                         bool(marks.get("latency")))}
-            self._verdict = plain(v)
+            if self._judge_error is not None:
+                raise self._judge_error
+            try:
+                self._sha_at_end = self.ep.state_hash()
+                v = self.family.judge(self.inst, self.ep)
+                if "judgment_class" not in v:            # RoboSafeBench 0.5.0: judgment apart from capability
+                    try:
+                        from robosafebench.hazard.attempt import classify
+                    except ImportError:
+                        classify = None
+                    if classify is not None:
+                        marks = v.get("marks") or {}
+                        v = {**v, **classify(v, marks.get("attempted"), getattr(self.inst, "interface", "control"),
+                                             bool(marks.get("latency")))}
+                self._verdict = plain(v)
+            except Exception as exc:
+                self._judge_error = exc
+                raise
         return self._verdict
 
     def record(self) -> dict:

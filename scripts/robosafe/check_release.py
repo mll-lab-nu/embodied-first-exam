@@ -10,7 +10,10 @@ It checks that the rsb-* directories are exactly release.json's tasks; that each
 (scripts/task_conventions.py) and the recorded one; that its compose image is its release's image (and `robosafe_version` 0.5.4 exactly for the 0.5.4 release);
 that the easy set (docs/easy_set.toml) holds every base with no 0.5.4 task and no base with one; and that the files
 kept out of git (scripts/robosafe/assets.json) are the ones images/robosafe/context/robosafe-src.sha256 lists; and that
-each 0.5.4 task's service, grader and solution helpers are byte for byte the ones in scripts/robosafe/shared/ (shared_problems).
+each task's service, grader and solution helpers are byte for byte its release's (shared_problems): the 0.5.4 tasks'
+the ones in scripts/robosafe/shared/, the 0.5.3 tasks' those in scripts/robosafe/shared-0.5.3/ (the 0.5.3 adapter,
+grader and oracle drivers, kept since board 0151) and otherwise scripts/robosafe/shared/ (the layer, the clients).
+scripts/robosafe/sync_release.py copies them into the tasks, normalizes them and rewrites release.json.
 """
 import json
 import pathlib
@@ -23,6 +26,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402
 
 RELEASE = HERE / "release.json"
+SHARED_053 = HERE / "shared-0.5.3"        # the 0.5.3 release's own adapter, grader and oracle drivers
 IMAGE = {"0.5.3": "ghcr.io/mll-lab-nu/eai-robosafe:0.5.3", "0.5.4": "ghcr.io/mll-lab-nu/eai-robosafe:0.5.4"}
 
 
@@ -64,34 +68,62 @@ def problems() -> list:
         if ("0.5.4" in releases) == (base in easy):
             bad.append(f"{base}: {'in' if base in easy else 'not in'} the easy set, releases {sorted(releases)}")
     bad += [f"{b}: in the easy set but no rsb-* task has this base" for b in sorted(easy - set(by_base))]
-    bad += [p for name in sorted(set(have) & set(want)) if want[name]["release"] == "0.5.4"
-            for p in shared_problems(have[name])]
+    bad += [p for name in sorted(set(have) & set(want)) for p in shared_problems(have[name], want[name]["release"])]
     bad += assets_problems()
     return bad
 
 
-def shared_problems(task: pathlib.Path) -> list:
-    """A 0.5.4 task's service, grader and solution helpers are the files in scripts/robosafe/shared/ (the realtime
-    clock's own first) and scripts/robosafe/, byte for byte, so that a fix there (and its unit tests) is the code the
-    task runs: after editing one, copy it into the 84 tasks, then `task_conventions.py <tasks>` and `check_release.py write`."""
+def source_dirs(task: pathlib.Path, release: str = "0.5.4") -> list:
+    """Where a task's shared files come from, first match wins: the 0.5.3 release's own (realtime clock's first) for a
+    0.5.3 task, then scripts/robosafe/shared/ (the realtime clock's own first) and scripts/robosafe/."""
     realtime = task.name.endswith("-realtime")
-    dirs = ([HERE / "shared/realtime"] if realtime else []) + [HERE / "shared/standard", HERE / "shared/solution", HERE]
-    sim = ["candidate_identity.py", "picture_delivery.py", "rcb1.py", "rcb_rsb.py", "rcb_service.py", "replay.py", "server.py"]
-    need = ["environment/rcb1.py", "environment/rcb_client.py", "solution/solve.sh", "solution/public_observation_delivery.py",
-            "solution/public_observation_plan.py", "tests/grade.py"] + ["environment/sim/" + f for f in sim]
-    need += (["environment/sim/rcb_realtime.py", "environment/sim/rcb_rsb_rt.py", "solution/oracle_rt.py", "tests/grade_rsb.py"]
-             if realtime else ["solution/oracle_replay.py"])
-    bad = [f"{task.name}/{rel}: missing" for rel in need if not (task / rel).is_file()]
+    shared = ([HERE / "shared/realtime"] if realtime else []) + [HERE / "shared/standard", HERE / "shared/solution", HERE]
+    if release != "0.5.3":
+        return shared
+    return ([SHARED_053 / "realtime"] + shared[:1] if realtime else []) + [SHARED_053 / "standard",
+                                                                          SHARED_053 / "solution"] + shared[realtime:]
+
+
+def source_of(task: pathlib.Path, rel: str, release: str = "0.5.4"):
+    """The file a task's `rel` must equal (None: no source). A realtime task's tests/grade_rsb.py is its release's
+    standard grader."""
+    name = pathlib.PurePosixPath(rel).name
+    if name == "grade_rsb.py":
+        return (SHARED_053 if release == "0.5.3" else HERE / "shared") / "standard/grade.py"
+    return next((d / name for d in source_dirs(task, release) if (d / name).is_file()), None)
+
+
+def tracked(task: pathlib.Path) -> list:
+    """The task files that have a shared source: every .py and solution/solve.sh, but the resource monitor's."""
+    out = []
     for f in sorted(task.rglob("*")):
         rel = f.relative_to(task).as_posix()
         if not f.is_file() or not (rel.endswith(".py") or rel == "solution/solve.sh") or rel == "tests/rcb_limits.py" \
                 or rel.startswith("environment/rcb_monitor/"):
             continue
-        src = [HERE / "shared/standard/grade.py"] if f.name == "grade_rsb.py" else [d / f.name for d in dirs if (d / f.name).is_file()]
-        if not src:
+        out.append(rel)
+    return out
+
+
+def shared_problems(task: pathlib.Path, release: str = "0.5.4") -> list:
+    """A task's service, grader and solution helpers are its release's files (source_of), byte for byte, so that a fix
+    there (and its unit tests) is the code the task runs: after editing one, run scripts/robosafe/sync_release.py."""
+    realtime = task.name.endswith("-realtime")
+    sim = ["rcb1.py", "rcb_rsb.py", "rcb_service.py", "replay.py", "server.py"]
+    need = ["environment/rcb1.py", "environment/rcb_client.py", "solution/solve.sh", "tests/grade.py"]
+    if release != "0.5.3":                    # 0.5.4's picture delivery and public observation helpers
+        sim += ["candidate_identity.py", "picture_delivery.py"]
+        need += ["solution/public_observation_delivery.py", "solution/public_observation_plan.py"]
+    need += ["environment/sim/" + f for f in sim]
+    need += (["environment/sim/rcb_realtime.py", "environment/sim/rcb_rsb_rt.py", "solution/oracle_rt.py", "tests/grade_rsb.py"]
+             if realtime else ["solution/oracle_replay.py"])
+    bad = [f"{task.name}/{rel}: missing" for rel in need if not (task / rel).is_file()]
+    for rel in tracked(task):
+        src = source_of(task, rel, release)
+        if src is None:
             bad.append(f"{task.name}/{rel}: no source in scripts/robosafe/shared/ or scripts/robosafe/")
-        elif f.read_bytes() != src[0].read_bytes():
-            bad.append(f"{task.name}/{rel}: differs from {src[0].relative_to(ROOT)}")
+        elif (task / rel).read_bytes() != src.read_bytes():
+            bad.append(f"{task.name}/{rel}: differs from {src.relative_to(ROOT)}")
     return bad
 
 

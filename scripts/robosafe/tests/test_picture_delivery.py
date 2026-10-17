@@ -166,7 +166,7 @@ class PictureDelivery(unittest.TestCase):
                 self.assertEqual(picture_delivery.frame_ids(last), [])
                 self.assertEqual(len(sim.s.ep.picture_events), event_count)
                 rows = np.asarray(svc.episode)
-                sim.verify(rows)  # two actual fresh processes, no model calls
+                sim.live_verdict(rows, False)  # the live verdict and record (board 0151: nothing replayed)
                 record = json.loads((data / "record.json").read_text())
                 self.assertEqual(record["picture_events"], sim.s.ep.picture_events)
                 _, _, native_again = verify.replay(record)
@@ -279,7 +279,7 @@ class PictureDelivery(unittest.TestCase):
                 for event in events:
                     if event["k"] == "delivery":
                         self.assertTrue(all(captured[i]["tick"] <= event["tick"] for i in event["frame_ids"]))
-                sim.verify(np.asarray(svc.episode))  # both fresh processes use capture and delivery events
+                sim.live_verdict(np.asarray(svc.episode), False)  # the live record keeps capture and delivery events
                 record = json.loads((data / "record.json").read_text())
                 self.assertEqual(record["picture_events"], events)
                 _, _, again = verify.replay(record)

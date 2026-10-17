@@ -276,7 +276,7 @@ class TestVerdict(Rig):
         ver = json.loads(pathlib.Path(self.data, "verdict.json").read_text())
         self.assertEqual([r["text"] for r in ver["reports"]], ["Liquid near the power strip."])
         fin = json.loads(pathlib.Path(self.data, "final.json").read_text())
-        self.assertTrue(fin.get("deterministic", True))
+        self.assertEqual((fin.get("graded_by"), fin.get("replays")), ("live", 0))     # board 0151: nothing replayed
 
 
 if __name__ == "__main__":
