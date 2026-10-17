@@ -100,7 +100,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   if [ -f "$root/scripts/ispatialgym/tests/test_instance.py" ]; then run 300 ispatialgym/tests/test_instance.py; fi
   # board 0151: the live-grading tests of MetaWorld+ and LIBERO-MAX (their pull requests add them)
   for t in metaworldplus/tests/test_live_grading.py libero-max/tests/test_live_grading.py roboarc/tests/test_live_grade.py \
-           roboolympics/tests/test_live_adapter.py; do
+           roboolympics/tests/test_live_adapter.py ispatialgym/tests/test_grading.py; do
     if [ -f "$root/scripts/$t" ]; then run 900 "$t"; fi
   done
   # LIBERO-MAX keeps its own copy of rcb_service.py (since board 0151 the layer's bytes): the classes of the shared
