@@ -27,15 +27,19 @@ learn the scene from @@RT_RESETS_PLUS1@@ real attempts.
 `solution/oracle_plan.py` plans the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step,
 `hold`) into the episode from control step 0 through the realtime client, one chunk of at most 10 s at a time, each at
 its own step (`at`), so every row runs at the control step it was recorded for; it uses no privileged information at run
-time. Checked at S = @@SLOWDOWN@@ (board 0112): live success, fresh-process replay success, the same final state.
+time. Checked at S = @@SLOWDOWN@@ (board 0112, under the grading of then): live success, fresh-process replay success, the
+same final state.
 
 ## Verification
 The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with
 `environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
 every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
-signals the service, which replays the graded episode in a fresh process (`rcb_pandadyn.py replay`) and writes
-`final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, the replay succeeds
-and ends in the same state. The clock's record (`stalls`, `max_lag_s`, `late_steps`, ...) is copied into `reward.json`
+signals the service, which writes the live episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0;
+nothing is replayed to grade it; since 2026-10-17, board 0151) and then renders the video from the graded episode's rows;
+`tests/grade.py` (separate sandbox, no network) passes iff the last episode ended in the task's success (every phase in
+order, no failure: the episode's end, so there is no settle window to add). The frozen start is checked when the first
+episode begins (the state hash against the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure
+failure). The clock's record (`stalls`, `max_lag_s`, `late_steps`, ...) is copied into `reward.json`
 and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
 
 ## Details
@@ -56,3 +60,6 @@ and decides nothing. `nop`: the episode never starts (its clock starts at the fi
   times an agent can rerun and tune a plan on a deterministic scene; with 10, realtime trials succeeded far more often
   than standard ones (no reset), mostly on a late episode (docs/benchmarks/pandadyn.md, "Reset budget"). Instance,
   scene, success check and S are unchanged; results under 10 resets are ranked separately.
+- 2026-10-17 (owner, board 0150/0151): graded by the live episode; no grading replay (until then: one fresh-process
+  replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
+  is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.

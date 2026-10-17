@@ -81,9 +81,9 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
   (joints, fingers, hand TCP and tool poses, velocities, motor torques, the targets in force). No object poses, no success
   signal before the end: the service tells you that an episode ended and why (`meta["done"]`, `meta["reason"]`:
   `"success"`, `"error"` after a simulator error, else `"failed"`).
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
-  process and grades the replay. Keep the program that drives the robot at `/app/output/gen.py` for the record: save it
-  early and keep it current. Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran.
+  Keep the program that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current. Do
+  not stop early: while the episode runs, or a reset is left, the run can still pass.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode, paused
   (never a reset). `r.status()` answers again once it is back; check `control_steps` before you continue.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
