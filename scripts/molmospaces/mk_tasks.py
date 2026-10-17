@@ -50,8 +50,8 @@ REVIEW_PR = 276  # the pull request whose human review covers these tasks (PROTO
 def oracle_evidence(family: str) -> str:
     regraded = (
         "; its verifier's replays ran out of time on a loaded host (the earlier 500 s limit), so it was graded 1 "
-        "offline by the verifier's replay: two fresh replays in the task's image, no time limit, both successes with "
-        "equal final hashes"
+        "offline with the verifier's replay tool: two fresh replays in the task's image, no time limit, both successes "
+        "with equal final hashes"
         if family in REGRADED
         else ""
     )
