@@ -72,6 +72,24 @@ patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14,
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # 2026-10-16, board 0136: the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
+name = "roboolympics-soccer-jointcpu-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["7ae66874c32e"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # 2026-10-17 (#328 review): the walking-policy audit
+           "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A (board 0151), samples the row in effect at every
+                                               # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
+
+[[tasks]]
+name = "roboolympics-soccer-jointgpu-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["7ae66874c32e"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # 2026-10-17 (#328 review): the walking-policy audit
+           "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A (board 0151), samples the row in effect at every
+                                               # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
+
+[[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"

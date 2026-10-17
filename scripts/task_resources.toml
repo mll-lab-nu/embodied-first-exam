@@ -935,7 +935,7 @@ measured = "vanilla Harbor 0.23.0 on mll-4090-3 (32 cores), 2026-10-15, oracle a
 
 # roboolympics, standard-realtime: 13 task(s)
 [[rule]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl|jointcpu|jointgpu)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 1.0
@@ -1091,7 +1091,7 @@ trial_max_memory_gb = 12.0
 measured = "design defaults of RoboOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
 
 [[limit]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl|jointcpu|jointgpu)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2452,7 +2452,7 @@ match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl|jointcpu|jointgpu)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2749,3 +2749,52 @@ main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 match = "^ikea-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+# roboolympics, exported joint-level soccer resource-tier pair (standard-realtime; RoboOlympics
+# pilots/soccer_joint/export_fexam_pair.py): the agent's container is the v5 pilot's seat (6 cores, 16 GB; the GPU tier
+# adds one NVIDIA GPU for training), plus the sim and the practice service sidecars: 2 task(s)
+[[rule]]
+match = "^roboolympics-soccer-joint(cpu|gpu)-i[0-9]{2}-standard-realtime$"
+min_cpus = 16.0
+min_memory_gb = 24.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "RoboOlympics' joint-level soccer pilot v5 (mll-4090-1/2, 2026-10-15/17, docker stats): the agent's container uses its 6 cores (drills, CPU-parallel rollouts, practice matches), the sim up to its 6 cores (the world, the opponent, the cameras), the practice service up to 4 worlds on its 4 cores; CPU tier: no GPU"
+
+[[rule]]
+match = "^roboolympics-soccer-jointgpu-i[0-9]{2}-standard-realtime$"
+min_gpu_memory_gb = 10.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "RTX 4090 24GB / L4 24GB / L40S 48GB"
+measured = "RoboOlympics' joint-level soccer pilot v5 (mll-4090-1, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier"
+
+[[limit]]
+match = "^roboolympics-soccer-joint(cpu|gpu)-i[0-9]{2}-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 13.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 32.0
+measured = "the v5 pilot's seat caps (6 cores, 16 GB, processes 512: design default); whole trial: + the sim's and the practice service's 8 GB caps; provisional"
+
+[[limit]]
+match = "^roboolympics-soccer-jointgpu-i[0-9]{2}-standard-realtime$"
+max_gpu_memory_gb = 12.0
+trial_max_gpu_memory_gb = 12.0
+
+[[cap]]
+match = "^roboolympics-soccer-joint(cpu|gpu)-i[0-9]{2}-standard-realtime$"
+main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }
+practice = { cpus = 4.0, memory_gb = 8.0, pids = 256 }
