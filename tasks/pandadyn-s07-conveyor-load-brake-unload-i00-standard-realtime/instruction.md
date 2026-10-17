@@ -69,7 +69,7 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
   (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground if it ends with the episode. Use
   your turns to start episodes, read what happened, and improve the program.
 - **Episodes and resets.** An episode ends on success, on a failure, when your time is up, or on a simulator error. You
-  have **10 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset and the one
+  have **3 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset and the one
   episode is the run). `r.reset()` puts the robot and the scene back on the same frozen starting state (the scene is
   rebuilt, about a second) and starts a new episode, paused until your next `submit`, either abandoning the running
   episode or after one has ended. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives
@@ -119,7 +119,7 @@ help(rcb_client)"`); the calls and the endpoints they use:
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
 | `r.submit("joint_position", A, dt=0.01, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 8 targets `dt` seconds apart (a chunk covers at most 10 s), from step `at`; answers at once; the first one starts the episode's clock |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
-| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state, paused (at most 10 in all); returns the start's frames |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state, paused (at most 3 in all); returns the start's frames |
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during a watch),
