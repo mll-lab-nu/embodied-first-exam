@@ -8,7 +8,8 @@ draws the players' cameras (sport.worker_init("render"): the Views the match ser
 own MuJoCo model and data) from a read-only snapshot of the match. Nothing here is read back by the match, the replay
 or the grader, and this directory is not part of the match's source_sha (core/ and sport/ are): the replay check and
 the verdict are those of the unchanged service. video.json records whether this replay ended in the verdict replay's
-state (replay_check.json state_sha, scores, k). Written as replay.part.mp4 and renamed when complete.
+state (replay_check.json state_sha, scores, k) and, under live grading (no verdict replay), in the live match's
+(final.json state_sha, scores, steps). Written as replay.part.mp4 and renamed when complete.
 """
 from __future__ import annotations
 
@@ -68,8 +69,15 @@ def render(plugin: str, data: Path, fps: int = 10) -> dict:
     except (OSError, ValueError):
         rc = {}
     same = bool(rc) and all(res.get(k) == rc.get(k) for k in ("state_sha", "scores", "k"))
+    try:                                   # live grading (no verdict replay): the live match's own record
+        fin = json.loads((Path(data) / "final.json").read_text())
+    except (OSError, ValueError):
+        fin = {}
+    live = bool(fin) and res.get("state_sha") == fin.get("state_sha") and res.get("scores") == fin.get("scores") \
+        and res.get("k") == fin.get("steps")
     info = {"video": n > 0, "frames": n, "fps": fps, "renderer": "plugin.Views", "camera": "players' cameras",
-            "scene": "players", "label": None, "matches_verdict_replay": same, "by": "spectator/sport_video.py"}
+            "scene": "players", "label": None, "matches_verdict_replay": same, "matches_live_match": live,
+            "by": "spectator/sport_video.py"}
     (Path(data) / "video.json").write_text(json.dumps(info))
     return info
 

@@ -23,9 +23,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. level 2, the low level (the agent's own act in the loop, uploaded to the simulator): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1.
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
-(technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
+Separate sandbox, no network. Live grading (owner 2026-10-17, board 0151): the verdict is the sim service's own
+record of the live match (`final.json`; `RO_VERDICT_REPLAY` 0, no grading replay, `verdict_replay` = 0 in
+reward.json). The verifier (`tests/grade.py`, our core's grader) applies the validity rule (technical failures void
+the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`).
 
@@ -48,3 +49,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 Source: RoboOlympics task `badminton-match-wallclock-program-lowlevel-standard`, revision `badminton-wallclock-12+duel-14+core-0.2`. The rules, the referee, the scripted
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.
+
+### Change Log
+- 2026-10-17 (robot_coding_bench review, board 0146): before the first result. (1) The uploaded skill could read the simulator's code (`/srv`, readable by `nobody`: the platform's own stroke planner, the scripted opponent, the referee) and return it to the agent in its load error. The sim's code is now mounted at `/root/rosim` (`/root` is 700) and `/srv` is a link to it, so the skill gets `PermissionError` there, as for `/data`. (2) Live grading: `RO_VERDICT_REPLAY` 0 skips the fresh-process grading replay (`core/service.py` `verdict_replay`); the verdict, valid_trial and the winner are those of the live match, and `tests/grade.py` accepts the live record when `final.json` says `verdict_replay` false. The replay video is still drawn after the verdict, and the verdict never depends on it.

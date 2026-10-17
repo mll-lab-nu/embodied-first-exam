@@ -6,6 +6,9 @@
 # sockets and no SO_MARK, which could bypass the egress proxy's mark.
 # Low level: the agent uploads its skill to the service (`game skill upload`); the sim runs it as nobody
 # with no network on one CPU (skilleval/skillhost.py UploadHost); no skill container.
+# robot_coding_bench (board 0146): the simulator's code is mounted under /root (700), /srv is a link to it, so the
+# uploaded skill (nobody) cannot read the simulator (the platform's own skill, the opponent, the referee); and the
+# verdict is the live match's (RO_VERDICT_REPLAY 0: no grading replay; owner 2026-10-17, board 0151).
 services:
   main:
     pids_limit: 8192   # rcb-monitor
@@ -17,10 +20,10 @@ services:
     image: ghcr.io/mll-lab-nu/eai-olympiad:0.1.0
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
+      - ./sim:/root/rosim:ro
       - ./seat_files/opt/robot:/opt/robot:ro   # the toolkit, where the uploaded skill expects it
-    working_dir: /srv
-    command: python3 /srv/core/launch.py
+    working_dir: /root/rosim
+    command: ["sh", "-c", "chmod 700 /root && { [ -L /srv ] || { rmdir /srv && ln -s /root/rosim /srv; }; } && cd /srv && exec python3 /srv/core/launch.py"]
     cpus: 6
     mem_limit: 8g
     pids_limit: 256
@@ -53,6 +56,7 @@ services:
       RCB_SPORT_VIDEO: "1"
       RCB_BROADCAST: "1"
       RO_REPLAY_TIMEOUT_S: "600"
+      RO_VERDICT_REPLAY: "0"
       RCB_VIDEO_TIMEOUT_S: "1800"
       RO_VIDEO_RENDERER: ""
       LP_NUM_THREADS: "2"
