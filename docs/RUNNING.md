@@ -16,8 +16,9 @@ PROTOCOL_HISTORY.md):
   `totals.json` has `refused_paths`, `refused_server_tools` or `refused_bodies` for a look.
 - **No tool outside the container**: the harness's web search, account connectors, apps, plugins, image generation and
   cloud agents off (`WEB_SEARCH=disabled`, `scripts/codex_tools_off.py`; below).
-- **Token budget** per trial: 100M input tokens (Harbor `n_input_tokens`, cache included), 10M output (reasoning
-  included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`); with the gateway, exceeding either stops the agent and
+- **Token budget** per trial: 10B input tokens (Harbor `n_input_tokens`: cached input counts in full) and 10B output
+  (reasoning included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`), set so high that it almost never binds (owner
+  2026-10-17, board 0150; 100M / 10M before, PROTOCOL_HISTORY.md); with the gateway, exceeding either stops the agent and
   fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
   labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
@@ -53,7 +54,22 @@ behavior; no further retries. Normal task failures do not qualify.
   job; batch_eval_live's `run_policy.py` uses it. `write_task_results.py` keeps every attempt of a task x run id in
   `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`).
 - In-trial crash recovery (a sidecar that replays its journal and resumes the episode, STANDARD_MODE.md) is the shared
-  layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure like any other.
+  layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure, unless every crash was
+  the agent's (below).
+- Standard modes (graded by the live episode, PROTOCOL H.4): an infrastructure failure is one where the live record
+  gives no verdict on the agent: no, an unreadable or an unfinalized `final.json` (`finalized`: the verdict is on
+  disk, written before any video); the sidecar gave up after crashes that were not all inside the agent's calls
+  (`sim_crashed`), could not restore the episode after a crash (`resume_failed`, whatever crashed) or ended a native
+  call that hung past its deadline (`call_watchdog`); the scene did not start from the frozen instance, at the start or
+  after a reset (`instance_mismatch`). Only what the service itself records as `infra_error = 1` (or a missing,
+  unreadable or unfinalized record) is one; a grader never infers it from missing fields. What the agent's commands
+  caused stays a result, never an infrastructure failure (a retry would be a free second attempt): crashes all inside
+  its calls (`sim_crashed_on_call`), a simulator error its actions raised where the task counts that as the agent's
+  (standard-realtime: a simulator error or crash after the agent's first command, STANDARD_MODE.md Part 3), the cutoff, no actions, a failed settle or hold, and a crash or error while the service
+  runs a settle or hold window on the agent's final state (it counts as one inside the agent's last call). The video is
+  never one: a render that fails or runs out of time loses only the video. A resume that continued from a state that
+  does not match its checkpoint exactly (`approx` resume class, `resume_state_mismatch = 1`) keeps its live verdict
+  and is flagged for audit.
 
 ## Results
 Results are not committed (published on the results site and the Hugging Face dataset, keyed by run id
@@ -75,6 +91,13 @@ report derives it from `docs/easy_set.toml` at the commit it publishes, so a tas
 grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
 mode by the screening runs its `note` names: core-set numbers of those runs are filtered against them, so report those
 runs on all tasks alongside.
+
+Standard-mode results recorded before the live-grading change (2026-10-17, PROTOCOL H.4) are re-read from their own
+`final.json`: the success the live episode ended with, under that benchmark's live rule, where that version's live
+record applied the task's whole rule (a settle or hold that only the replay ran does not count as checked); the recorded
+verdict (`reward.json`, `result.json`) stays untouched beside it, and a trial whose `final.json` holds no such live
+verdict, whose record shows the episode started off the frozen instance (`instance_mismatch`), or that was re-graded
+later under a stricter rule, keeps the recorded one. Each benchmark's doc says which fields carry the live verdict in each of its versions.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker
@@ -126,9 +149,13 @@ reasoning summaries, tool calls, images and token use with the robot service's l
   task's own image, on the same host class when the replay is only reproducible there, and kept only when the replay
   reaches the recorded final state; `replay.regenerated.json` next to it says how. The grade is never touched, and
   the agent is never rerun for a video.
+- **Standard modes:** no replay grades the episode (PROTOCOL H.4), so the video is what the sidecar recorded during the
+  live episode where that is cheap, or one render of the recorded trajectory after the verdict (each benchmark's doc
+  says which, and what it costs). Either way the verdict is on disk first (`final.json` `finalized`; `video_pending`
+  while the render runs) and `final.json` says `video_source` (`live` / `render`).
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
-  each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
-  costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
+  each stamped with the agent's call and wall/sim time; rendered from the trajectory after the verdict, in the same pass
+  as `replay.mp4`, so it costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
   and a crash-safe trajectory. Details: `docs/STANDARD_MODE.md` (Live recording). Protocol 2.1 also gives the
   agent measured proprioception (encoders, gripper opening, TCP pose, drive effort) and optional depth noise.
 - **Privileged mode:** the agent owns the simulator, so nothing it produces is evidence. `rcb_traj.Session` still dumps every
@@ -358,7 +385,7 @@ included); output includes reasoning: the same convention as Harbor's `n_input_t
 summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
 gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
 before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
-(default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
+(default 10B / 10B; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
 the agent stops; `totals.json` records `over_token_budget = 1` and, from the first refused request, `budget_stop`
 (`limit` input|output, `first_refused_at` / `last_refused_at`, the input / cached / output counts at the stop, `refused`):
 a runner records such a trial as `TokenBudgetExceeded` (not the harness's own exception, which reads as a network or API

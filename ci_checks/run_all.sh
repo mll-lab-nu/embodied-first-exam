@@ -100,9 +100,12 @@ add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
 # PROTOCOL §4b: a standard-realtime task states its slowdown S ([metadata] slowdown, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
-# PROTOCOL §4 (board 0136): every task renders a replay video and the runner can collect it; a declared video time
-# bound is not shorter than the verdict replay's
+# PROTOCOL §4 (board 0136): every task renders a video and the runner can collect it; a declared video time bound is not
+# shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"
+# PROTOCOL H.4 (board 0151): the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
+# decides, and agent-caused ends are never infrastructure failures (synthetic records through each distinct grade.py)
+add python3 ci_checks/check-live-verdict.py"$targs"
 # The task protocol (docs/PROTOCOL.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths
 add python3 ci_checks/check-protocol.py"$pargs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)

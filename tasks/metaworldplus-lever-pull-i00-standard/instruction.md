@@ -18,10 +18,9 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
-Meta-World's own success check for `lever-pull-v3` to the state **after the last executed control step**; it must hold in
-the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you want
-graded and stop submitting.
+The episode runs until your time is up. The service then applies Meta-World's own success check for `lever-pull-v3` to the
+live episode's state **after the last executed control step**. A success reached earlier and then lost does not count:
+end in the state you want graded and stop submitting.
 
 For `lever-pull-v3` the check is: The lever has been turned to within 7.5 degrees (pi/24) of a quarter turn (90 degrees) from the position it starts in. Only that angle is compared; nothing is measured against the target point, which marks where the lever's end is after the turn. ("The target point" is `meta["task"]["target_pos"]`; everything the
 check needs to hold must hold in that final state.)

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Every graded trial leaves a replay video (docs/PROTOCOL.md §4, board 0136): the task must render one and the runner
-must be able to collect it. Advisory: a video is evidence for people and never the verdict, and a static scan cannot
+"""Every graded trial leaves a video (docs/PROTOCOL.md §4, board 0136): the task must render one and the runner must be
+able to collect it. Advisory: a video is evidence for people and never the verdict, and a static scan cannot
 tell whether a render finishes in time (the runner flags a graded trial without a video at run time, RUNNING.md
 "Recordings"). For every task:
   - privileged: the verifier renders the video, so a file under tests/ names an `.mp4` output;
   - standard / standard-realtime: the task's code (environment/ or tests/) renders one (an `.mp4` output, or the
-    exported runtime's `RCB_RENDER_VIDEO` / `RCB_VIDEO_*` switches), and it is collected: task.toml `artifacts` takes a
-    directory or an `.mp4` from a service other than the resource monitor (the sim sidecar's `/data/replay.mp4`,
-    `/out/`), unless the verifier renders it itself (a video writer under tests/);
+    exported runtime's `RCB_RENDER_VIDEO` / `RCB_VIDEO_*` switches) -- recorded during the live episode or rendered from
+    the trajectory after the verdict (no replay grades these modes, PROTOCOL H.4) -- and it is collected: task.toml
+    `artifacts` takes a directory or an `.mp4` from a service other than the resource monitor (the sim sidecar's
+    `/data/replay.mp4`, `/out/`), unless the verifier renders it itself (a video writer under tests/);
   - a declared video time bound is not shorter than the verdict replay's in the same file (`video_timeout_s` vs
-    `replay_timeout_s` in a JSON/TOML/compose file): the video replays the episode again, so a shorter bound loses the
-    video of exactly the long episodes the verdict still grades.
+    `replay_timeout_s` in a JSON/TOML/compose file; privileged, or wherever a task still declares both): the video
+    replays the episode again, so a shorter bound loses the video of exactly the long episodes the verdict still grades.
 
     python3 ci_checks/check-video.py [task dirs]      # default: every task
 Standard library only.
@@ -68,7 +69,7 @@ def check(task: Path) -> list[str]:
             errs.append(f"{task.name}: its verifier renders no replay video (no `.mp4` output under tests/)")
     else:
         if not (in_tests or any(MP4.search(s) or SWITCH.search(s) for _, s in env)):
-            errs.append(f"{task.name}: neither its sim service nor its verifier renders a replay video (no `.mp4` output)")
+            errs.append(f"{task.name}: neither its sim service nor its verifier renders a video (no `.mp4` output)")
         try:
             arts = tomllib.loads((task / "task.toml").read_text()).get("artifacts") or []
         except (OSError, tomllib.TOMLDecodeError) as e:
@@ -92,13 +93,13 @@ def main(argv: list[str]) -> int:
     dirs = [Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
     errs = [e for t in dirs for e in check(t)]
     if errs:
-        print(f"FAIL replay videos (PROTOCOL §4: every graded trial leaves a video; {len(errs)} finding(s)):")
+        print(f"FAIL videos (PROTOCOL §4: every graded trial leaves a video; {len(errs)} finding(s)):")
         for e in errs[:60]:
             print("  -", e)
         if len(errs) > 60:
             print(f"  ... {len(errs) - 60} more")
         return 1
-    print(f"check-video: {len(dirs)} task(s) render and collect a replay video")
+    print(f"check-video: {len(dirs)} task(s) render and collect a video")
     return 0
 
 

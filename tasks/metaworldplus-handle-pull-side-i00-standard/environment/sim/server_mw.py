@@ -13,7 +13,7 @@ episode, /data evidence. Differences, all from Meta-World:
   malformed one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, ...) is a 400 that
   changes nothing.
 - final.json is `finalized` as soon as the verdict is in it; the video is rendered after that and never changes or
-  delays the verdict (`video_done` tells the collect hook that nothing more comes).
+  delays the verdict (`video_pending` while it renders; `video_done` tells the collect hook that nothing more comes).
 - `time_s` / `time_left_s` count from the agent's first request to the service, not from the service's start.
 - camera calibration: the pose is that of the viewpoint the image is rendered from (a free camera's is the mean of the
   scene's two eye cameras; scene.camera[0] alone is the left eye, 3.4 cm to the side).
@@ -22,9 +22,19 @@ What the agent gets: camera RGB (+ depth) with each camera's calibration, the ro
 opening, mocap target, arm and finger joints, last command) and the task's target point. Never an object's pose.
 The episode runs until the agent's time is up; the state after the last executed control step is graded.
 
+Grading (owner 2026-10-17, board 0150/0151; docs/benchmarks/metaworldplus.md "Grading"): the verdict is the live
+episode's. When the episode ends, Meta-World's own success check (`evaluate_state`, the one the privileged verifier
+applies; mw_tool.Session.check()) is read on the live simulator's state after the last executed control step, and
+that is `success`: nothing is replayed to grade it. The check has no hold or settle window (it is a predicate on one
+state), so the live rule is the replay's rule. The frozen start is checked when the episode begins: the instance's
+SHA-256 (RCB_INSTANCE_SHA) and the starting state's hash (RCB_START_SHA = SHA-256 of the instance's MuJoCo
+integration state, which the scene is restored to), both recorded by scripts/metaworldplus/generate.py from the frozen
+instance; a mismatch gives up before the agent is served (instance_mismatch, an infrastructure failure).
+
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
-((T, 4) per control step), a fresh replay's verdict (deterministic = same final state hash), replay.mp4,
-replay.last.png and final.json.
+((T, 4) per control step, the deliverable: it replays the episode from the frozen instance), final.json with the
+live verdict (graded_by "live", replays 0, the live end state's hash), then replay.mp4 and replay.last.png, rendered
+from trajectory.npz in one pass after the verdict is on disk (video_source "render"; for people only).
 """
 
 from __future__ import annotations
@@ -63,7 +73,8 @@ MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
-E.update({"t_first": None, "video_done": False})  # t_first: the agent's first request (its clock starts there)
+# t_first: the agent's first request (its clock starts there); video_pending: the video renders (after the verdict)
+E.update({"t_first": None, "video_done": False, "video_pending": False})
 
 # SIGUSR1 (the collect hook's "episode over") may arrive before the service is ready, e.g. during a resume replay; its
 # default action would kill the process. Until the real handler is installed, only remember it.
@@ -96,6 +107,13 @@ def _write_json(path: str, obj: dict) -> None:
     os.replace(tmp, path)
 
 
+def _verdict_on_disk(fin: dict) -> bool:
+    """final.json holds a verdict: the live one (graded_by, since 2026-10-17) or, from a service of before, a replay's
+    (deterministic), or the service's failure to write one (finalize_error: infrastructure, final as well). It is never
+    rewritten."""
+    return bool(fin.get("finalized")) and ("graded_by" in fin or "deterministic" in fin or "finalize_error" in fin)
+
+
 def _give_up(reason: str, infra: bool) -> None:
     """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and idle."""
     log({"ev": "restart_refused", "reason": reason})
@@ -105,11 +123,12 @@ def _give_up(reason: str, infra: bool) -> None:
         prev = {}
     if not isinstance(prev, dict):
         prev = {}
-    if not (prev.get("finalized") and "deterministic" in prev):  # a verdict already on disk is kept as it is
+    if not _verdict_on_disk(prev):  # a verdict already on disk is kept as it is
         prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL})
         if infra:
             prev["infra_error"] = 1
     prev["video_done"] = True  # nothing more will be written: the collect hook stops waiting
+    prev["video_pending"] = False  # a video being rendered when the process died is not resumed
     _write_json(os.path.join(DATA, "final.json"), prev)
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
     signal.signal(signal.SIGUSR1, lambda *_: None)
@@ -351,6 +370,7 @@ def write_final(extra: dict | None = None) -> None:
         "reason": E["reason"],
         "finalized": E["finalized"],
         "video_done": E["video_done"],
+        "video_pending": E["video_pending"],
     }
     d.update(E.get("verdict") or {})
     d.update(extra or {})
@@ -617,6 +637,10 @@ def do_observe(q: dict):
 
 
 def finalize() -> None:
+    """The episode is over (the agent's container is stopped first: task.toml's collect hooks). The verdict is the live
+    episode's: Meta-World's success check on the live state after the last executed control step, written with
+    "finalized": true in one atomic step, nothing replayed. Then, and only then, the video (render_video())."""
+    A = None
     with LOCK:
         try:
             A = np.asarray(RECORD, float).reshape(-1, N)
@@ -628,42 +652,63 @@ def finalize() -> None:
                 tool=TOOL.__name__,
                 meta=json.dumps({"source": "standard-mode episode", "reason": E["reason"]}),
             )
-            ver = TOOL.Session(INSTANCE, enable_render=True)
-            r1 = ver.replay(A)
-            det = r1["state_sha"] == live_sha
-            v = {
-                "deterministic": bool(det),
+            # An episode ended by a simulator error is no success: Session.step raised before Meta-World's check was
+            # updated, so check() still reports the step before while the state is the failed step's.
+            ok = bool(live["success"]) and E["reason"] != "error"
+            E["verdict"] = {
+                "graded_by": "live",
+                "replays": 0,
+                "live_success": ok,
+                "success": ok,
+                "state_sha": live_sha,
                 "live_state_sha": live_sha,
-                "replay_success": bool(r1["success"]),
-                "live_success": bool(live["success"]),
-                "success": bool(det and r1["success"] and live["success"]),
-                "final_reward": float(r1["final_reward"]),
+                "final_reward": float(live.get("reward") or 0.0),
+                "n_actions": int(len(A)),
+                "video": False,
+                "video_source": "render",
             }
-            # The verdict is final and on disk (finalized) before any video is rendered: the video never changes, hides
-            # or delays it (a slow or failing render, or a collect hook that stops waiting, leaves the verdict as it is).
-            E["verdict"] = v
-            E["finalized"] = True
-            write_final()
-            try:
-                tmp = os.path.join(DATA, "replay.tmp.mp4")  # rendered aside: a half-written replay.mp4 is never collected
-                ver.render_video(A, tmp, every=max(2, len(A) // 600), fps=25)
-                os.replace(tmp, os.path.join(DATA, "replay.mp4"))
-                if os.path.exists(os.path.join(DATA, "replay.tmp.last.png")):
-                    os.replace(os.path.join(DATA, "replay.tmp.last.png"), os.path.join(DATA, "replay.last.png"))
-                E["verdict"]["video"] = True
-            except Exception:  # noqa: BLE001
-                traceback.print_exc()
-        except Exception as exc:  # noqa: BLE001
+            E["video_pending"] = True  # announced with the verdict: whoever sees it knows a video is on its way
+        except Exception as exc:  # noqa: BLE001 -- the service failed to record the verdict (not the agent's doing)
             traceback.print_exc()
-            if not E["finalized"]:  # no verdict was reached: the verification itself failed
-                log({"ev": "finalize_error", "error": repr(exc)})
-                E["verdict"] = {"finalize_error": repr(exc)[:300]}
+            log({"ev": "finalize_error", "error": repr(exc)})
+            E["verdict"] = {"finalize_error": repr(exc)[:300]}
+            A = None
         E["finalized"] = True
-        E["video_done"] = True
+        if A is None:
+            E["video_done"] = True
+        write_final()  # the verdict and "finalized": true, in one atomic write; nothing below changes them
+        log({"ev": "verdict", **{k: v for k, v in E["verdict"].items() if isinstance(v, (bool, int, float, str))}})
+        if A is not None:
+            render_video(A)  # under the lock, as before: no request renders on the live scene meanwhile
+
+
+def render_video(A: np.ndarray) -> None:
+    """The episode's video, for people: one pass over the recorded trajectory in a fresh simulator, after the verdict is
+    on disk. It never changes the verdict: success adds "video": true, and any failure (an exception; a crash, after
+    which the restarted service finds the verdict and idles; the collect hook giving up on it) leaves only the video
+    missing."""
+    t = time.time()
+    try:
+        ver = TOOL.Session(INSTANCE, enable_render=True)
+        tmp = os.path.join(DATA, "replay.tmp.mp4")  # rendered aside: a half-written replay.mp4 is never collected
+        ver.render_video(A, tmp, every=max(2, len(A) // 600), fps=25)
+        os.replace(tmp, os.path.join(DATA, "replay.mp4"))
+        if os.path.exists(os.path.join(DATA, "replay.tmp.last.png")):
+            os.replace(os.path.join(DATA, "replay.tmp.last.png"), os.path.join(DATA, "replay.last.png"))
+        E["verdict"]["video"] = True
+        log({"ev": "video", "video_s": round(time.time() - t, 1)})
+    except Exception as exc:  # noqa: BLE001
+        traceback.print_exc()
         try:
-            write_final()
+            log({"ev": "video_error", "error": repr(exc)[:300]})
         except Exception:  # noqa: BLE001
-            traceback.print_exc()
+            pass
+    E["video_pending"] = False
+    E["video_done"] = True
+    try:
+        write_final()
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
 
 
 def finish(reason: str) -> None:
@@ -785,6 +830,21 @@ def _end_from_signal():
     start_finalize()
 
 
+def _check_start() -> None:
+    """The frozen start, checked when the episode begins (the verdict is the live episode's, so no later replay checks
+    it): the instance is the frozen one (its SHA-256, RCB_INSTANCE_SHA) and the scene was restored to its recorded state
+    (RCB_START_SHA, the state hash of the instance's MuJoCo integration state). Both come from the generator; a
+    mismatch is no trial of this task: an infrastructure failure, before the agent is served."""
+    want = os.environ.get("RCB_INSTANCE_SHA")
+    got = str(getattr(S, "instance_sha", ""))
+    if want and got != want:
+        _give_up(f"instance_mismatch: the instance's SHA-256 is {got[:16]}, the frozen one's {want[:16]}", infra=True)
+    want = os.environ.get("RCB_START_SHA")
+    if want and S.state_sha() != want:
+        _give_up(f"instance_mismatch: the scene started at {S.state_sha()[:16]}, the frozen instance at {want[:16]}",
+                 infra=True)
+
+
 def _resume_or_start() -> None:
     """Fresh start, or (after a crash: compose restarts the container) resume the SAME episode. The journal holds every
     executed control step; the log holds, per completed call, the step count and the state hash. Replaying the journal up
@@ -799,6 +859,7 @@ def _resume_or_start() -> None:
             os.remove(REC_PATH)
         except OSError:
             pass
+        _check_start()
         log({"ev": "start", "tool": TOOL.__name__, "state_sha": S.state_sha(), "protocol": PROTOCOL})
         write_final()
         E["t0"] = time.time()
@@ -807,8 +868,8 @@ def _resume_or_start() -> None:
         fin = json.load(open(os.path.join(DATA, "final.json")))
     except Exception:  # noqa: BLE001
         fin = {}
-    if fin.get("finalized") and "deterministic" in fin:
-        _give_up("restarted after finalize", infra=False)
+    if _verdict_on_disk(fin):  # the verdict is on disk: nothing is replayed, redone or rewritten (at most the video
+        _give_up("restarted after finalize", infra=False)  # is lost)
     resumes = [e for e in ev if e.get("ev") == "resumed"]
     in_call = bool(ev) and ev[-1].get("ev") == "call_begin"
     crashes_in_calls = sum(1 for e in resumes if e.get("crashed_in_call")) + int(in_call)

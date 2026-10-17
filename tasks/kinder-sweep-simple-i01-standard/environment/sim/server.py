@@ -18,8 +18,13 @@ What the agent gets is what the real robot reports: its own cameras, its joint e
               wrist cameras on the same links (the wrist one 3 cm forward, clear of this model's camera housing),
               near-clipped at 1 cm. A move it refuses (a collision) comes back as blocked.
 Odometry is kept in the frame the base starts in, so no world coordinate reaches the agent: actions arrive in that
-frame and are turned into KinDER's world-frame action here (to_sim). The journal, the trajectory and the replay are in
+frame and are turned into KinDER's world-frame action here (to_sim). The journal, the trajectory and the video are in
 KinDER's own (world) frame; calls/NNNNNN/actions.npy has what the agent sent.
+
+The verdict is the live episode's (board 0151): step() reports KinDER's own goal check (`terminated`) at every control
+step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after
+the verdict, to film it. start_sha is the frozen instance's recorded scene_sha (the state hash right after reset), which
+rcb_service checks when an episode begins; a KinDER that no longer builds the instance is InstanceMismatch.
 """
 from __future__ import annotations
 
@@ -32,7 +37,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcb_kinder import CAMERA_HW, GL_BACKEND, Session  # noqa: E402
-from rcb_service import main  # noqa: E402
+from rcb_service import InstanceMismatch, main  # noqa: E402
 
 CAMERAS = ("robot_base", "robot_wrist")       # the robot's own cameras
 DEPTH = ("robot_wrist",)                     # the one that is RGB-D on the real robot
@@ -85,7 +90,7 @@ def depth_spec() -> dict:
 
 class _Robot:
     """What both adapters share: one frozen Session, the base's odometry (the frame it starts in) and its moves turned
-    from that frame into KinDER's world frame, clipping, the fresh replay. KinDER bounds each world axis per step; a move
+    from that frame into KinDER's world frame, clipping, the frozen start's hash. KinDER bounds each world axis per step; a move
     within that bound in any direction (a disc) stays inside them whatever the start heading. A subclass says which
     robot (`robot_type`, its type in KinDER's state), how to render a camera, and its proprioception."""
     robot_type = ""
@@ -95,6 +100,7 @@ class _Robot:
     def __init__(self, s: Session, instance: str, *, room_camera: bool = False, depth: bool = False,
                  task_text: str = ""):
         self.s, self.instance, self.task_text = s, instance, task_text
+        self.start_sha = s.instance.get("scene_sha")  # the frozen start (rcb_service checks it when an episode begins)
         self.depth_cameras = DEPTH if depth else ()
         self.cameras = CAMERAS + (("room_camera",) if room_camera else ())
         self.raw_dim = self.dim = int(self.s.action_space.shape[0])
@@ -147,15 +153,11 @@ class _Robot:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen scene, in a fresh KinDER environment."""
-        r = Session(self.instance).replay(rows)
-        return {"success": r["success"], "state_sha": r["state_sha"]}
-
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         self.s.save_trajectory(rows, path, meta)
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """The episode's video, after the verdict: the trajectory re-run once on this simulator, from the frozen start."""
         self.s.render_video(rows, path)         # the view that frames the task (MuJoCo: task_view)
 
 
@@ -481,7 +483,12 @@ ROBOTS = {cls.robot_type: cls for cls in (TidyBot, Kinova)}
 
 def make(instance: str, **kw) -> _Robot:
     """The adapter for the robot in this instance's scene."""
-    s = Session(instance)
+    try:
+        s = Session(instance)
+    except RuntimeError as exc:                 # rcb_kinder refuses a scene that no longer builds the frozen instance
+        if "drifted" in str(exc) or "task_view" in str(exc):
+            raise InstanceMismatch(str(exc)) from exc
+        raise
     return ROBOTS[next(o.type.name for o in s.state() if o.type.name in ROBOTS)](s, instance, **kw)
 
 

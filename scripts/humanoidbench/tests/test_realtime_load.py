@@ -449,7 +449,7 @@ def grade(bench: str, final: dict | None, files: dict | None = None) -> dict:
 class TestGraders(unittest.TestCase):
     """The three realtime graders repeat the clock's evidence in reward.json; it never changes a verdict."""
 
-    WIN = {"protocol": "eai-standard/2.3", "live_success": True, "replay_success": True, "deterministic": True,
+    WIN = {"protocol": "eai-standard/2.3", "success": True, "live_success": True, "graded_by": "live", "replays": 0,
            "finalized": True, "reason": "success", "realtime": 1, "slowdown": 1.0}
     CLOCK = {"clock_s": 6.0, "max_lag_s": 0.98, "stalls": 6, "stalled_s": 5.9, "stalled_share": 0.9833,
              "held_steps": 3, "late_steps": 2, "requests_refused": 400, "request_busy_s": 0.2}
@@ -465,9 +465,9 @@ class TestGraders(unittest.TestCase):
     def test_a_stalled_trial_keeps_its_verdict(self):
         for bench in GRADERS:
             for live in (True, False):
-                base = grade(bench, {**self.WIN, "live_success": live})
-                out = grade(bench, {**self.WIN, "live_success": live, **self.CLOCK})
-                keys = ("success", "infra_error", "grader_error", "sim_error", "deterministic", "_reward_txt")
+                base = grade(bench, {**self.WIN, "success": live, "live_success": live})
+                out = grade(bench, {**self.WIN, "success": live, "live_success": live, **self.CLOCK})
+                keys = ("success", "infra_error", "grader_error", "sim_error", "graded_by_live", "_reward_txt")
                 self.assertEqual([out[k] for k in keys], [base[k] for k in keys], bench)
                 self.assertEqual(out["success"], int(live))
 
@@ -492,9 +492,10 @@ class TestGraders(unittest.TestCase):
     def test_a_standard_trial_is_graded_as_before(self):
         """The same grader serves standard mode (eai-standard/2.1): no realtime fields there."""
         for bench in ("humanoidbench", "bigym2"):
-            out = grade(bench, {"protocol": "eai-standard/2.1", "live_success": True, "replay_success": True,
-                                "deterministic": True, "finalized": True, "reason": "success"})
-            self.assertEqual(out["success"], 1)
+            out = grade(bench, {"protocol": "eai-standard/2.1", "success": True, "live_success": True,
+                                "graded_by": "live", "replays": 0, "finalized": True, "reason": "success"})
+            self.assertEqual((out["success"], out["graded_by_live"], out["replays"]), (1, 1, 0))
+            self.assertFalse({"replay_success", "deterministic"} & set(out))
             self.assertFalse({"realtime", "stalls", "stalled_s", "stalled_share"} & set(out))
 
 

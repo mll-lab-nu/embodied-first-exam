@@ -3,7 +3,8 @@
 **Can a coding agent program a robot?** Robot Coding Bench is a benchmark of robot-manipulation tasks for coding
 agents such as Claude Code and Codex, built on the [Harbor](https://github.com/harbor-framework/harbor) task format.
 In each task, an agent works in a container with a robot simulator and a Python interface. It must produce a deliverable
-that a verifier checks in a separate sandbox, by replaying it in a fresh process. A program decides pass or fail (no
+that a verifier checks in a separate sandbox (privileged: by replaying it in a fresh process; standard: from the
+trusted simulator service's record of the live episode). A program decides pass or fail (no
 learned judge) and reports numeric diagnostics (for example DexToolBench's goal progress).
 
 The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (the version is stated there). Contributions follow
@@ -20,7 +21,7 @@ Every task instance is offered in two modes that share the same frozen scene.
 | Resets | unlimited | none — one trial is one episode |
 | Actions | the simulator's Python API | action chunks via a client (`eai-standard/2.x`: `/submit`, `/observe`) |
 | Deliverable | a replayable trajectory saved by the agent | the trajectory recorded by the service |
-| Verification | separate sandbox, two fresh replays with matching state hashes | separate sandbox, fresh replay of the recorded episode |
+| Verification | separate sandbox, two fresh replays with matching state hashes | the sim service judges the live episode; a separate sandbox transcribes its record |
 
 Privileged mode measures whether an agent can program a robot when it has full access to the simulator. Standard mode
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
@@ -63,7 +64,7 @@ after every merge: [`TASKS.md` on the branch `task-list`](../../blob/task-list/T
 | MyoSuite (`myosuite-<family>-i00`) | MyoSuite 2.12.2 (MuJoCo 3.6, CPU) · musculoskeletal hand, arm, torso and legs (MyoHand, MyoArm, MyoLegs, with prostheses in two tasks), muscle commands; MyoChallenge and MyoDex tasks | 22 | full on 3 (MyoSuite's NPG baselines), none on 19 (human review) |
 | RoboARC (`roboarc-<family>-<NN>-i01`; formerly TopoGym and RoboTangle; the MuJoCo release replaces the Genesis one, 2026-10-13) | MuJoCo 3.14.0 (CPU float64; the blanket cloth on a deterministic CUDA step), Nyx RGB · ALOHA 2 bimanual; Franka Panda + Robotiq 2F-85 | per release ([docs/benchmarks/roboarc.md](docs/benchmarks/roboarc.md)) | full, or none where no reference exists |
 | BiGym 2.0 (`bigym2-<family>-i00`) | MuJoCo 3.8.1 + NVIDIA GR00T-WBC (CPU; EGL rendering) · Unitree G1 humanoid with Dex1-1 grippers, legs and waist driven by the whole-body controller | 13 (+ 13 standard-realtime) | none (human review) |
-| RoboOlympics (`roboolympics-<family>-i00`, formerly RoboFunOlympics; and RoboOlympics' exported `roboolympics-<sport>-<format>-iNN`) | the RoboOlympics simulator (MuJoCo 3.3.7, CPU, OSMesa) · Unitree G1 (29 joints, with its walking and running policies; 20 families) or the larger Unitree H1-2 (27 joints, walking policy; 30 families), or joint by joint (Unitree LowCmd); 50 single-robot sports at official rule-book sizes judged by a referee of events, geometry and contact rules; the agent may download public tools and controllers; plus 17 tasks RoboOlympics exports with its own service (PROTOCOL §4c): table tennis, badminton, humanoid soccer (2 Booster T1), wheeled soccer (5 v 5) and foosball matches against a scripted opponent (wheeled soccer i01: a learned team; table tennis and badminton duelrl: a learned player), two turn-based fencing bouts, and two skill-engineering tasks | 100 (50 × 2) + 17 exported (13 standard-realtime, 4 standard) | see [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md): full where a reference controller exists, none elsewhere (human review); exported: the reference player or skill |
+| RoboOlympics (`roboolympics-<family>-i00`, formerly RoboFunOlympics; and RoboOlympics' exported `roboolympics-<sport>-<format>-iNN`) | the RoboOlympics simulator (MuJoCo 3.3.7, CPU, OSMesa) · Unitree G1 (29 joints, with its walking and running policies; 20 families) or the larger Unitree H1-2 (27 joints, walking policy; 30 families), or joint by joint (Unitree LowCmd); 50 single-robot sports at official rule-book sizes judged by a referee of events, geometry and contact rules; the agent may download public tools and controllers; plus 15 tasks RoboOlympics exports with its own service (PROTOCOL §4c): table tennis, badminton, humanoid soccer (2 Booster T1), wheeled soccer (5 v 5) and foosball matches against a scripted opponent (wheeled soccer i01: a learned team; table tennis and badminton duelrl: a learned player), and two turn-based fencing bouts | 100 (50 × 2) + 15 exported (13 standard-realtime, 2 standard) | see [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md): full where a reference controller exists, none elsewhere (human review); exported: the reference player or skill |
 | LIBERO-MAX (`libero-max-<suite>-<task>-<event>-iNN`) | robosuite 1.4 (MuJoCo 3.2.6, CPU) · Franka Panda; LIBERO tasks with one change in mid-task (a target, receptacle or obstacle moves, the camera, lighting or scene theme changes, sensor noise sets in, distractors appear) | 64 | full |
 | ManiGuard (`maniguard-<family>-iNN`) | BEHAVIOR-1K 3.7.2 (OmniGibson on Isaac Sim 4.5) · Franka Panda with long fin-ray fingers; tabletop tasks with a safety specification checked at every control step | 30 (6 families × 5) | full on 14, none on 16 (human review) |
 | MolmoSpaces (`molmospaces-<family>-i00`) | Ai2 MolmoSpaces on MuJoCo 3.5 (CPU physics) · Franka FR3 + Robotiq 2F-85 on a fixed base; Rainbow RB-Y1 mobile manipulator | 8 | none (human review) |
@@ -132,7 +133,7 @@ harbor view jobs
 
 **Running official results:**
 - Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (docs/RUNNING.md "Official runs"): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
-- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), each task sets its own (3600 s by default; PROTOCOL §2; history in [docs/CUTOFFS.md](docs/CUTOFFS.md)). The token budget (100M input / 10M output tokens per trial) is enforced by the usage gateway (docs/RUNNING.md "Official runs"). Results are ranked only within one comparable configuration (mode, cutoff, reset budget, S, network); validated and unvalidated tasks are ranked together; tasks of the easy set ([docs/easy_set.toml](docs/easy_set.toml)) are kept and run but reported apart, outside the main table (docs/RUNNING.md "Results").
+- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), each task sets its own (3600 s by default; PROTOCOL §2; history in [docs/CUTOFFS.md](docs/CUTOFFS.md)). The token budget (10B input tokens, cached input included, and 10B output tokens per trial: in practice no limit) is enforced by the usage gateway (docs/RUNNING.md "Official runs"). Results are ranked only within one comparable configuration (mode, cutoff, reset budget, S, network); validated and unvalidated tasks are ranked together; tasks of the easy set ([docs/easy_set.toml](docs/easy_set.toml)) are kept and run but reported apart, outside the main table (docs/RUNNING.md "Results").
 
 ## Integrity
 
@@ -146,8 +147,8 @@ else in the protocol is a recommended convention, reported by the job `advisorie
   trajectory; under the separate sandbox, the same attack scores 0.
 - **No reference solutions in reach.** Reference solutions live only in `solution/`, which Harbor mounts for the
   oracle agent alone. Upstream experts are removed from the agent's images.
-- **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
-  and writes the verdict inputs. The agent never holds the simulator.
+- **Recorded evidence in standard mode.** The simulator service records every call and judges the episode it ran; the
+  trajectory is kept for the video and audits. The agent never holds the simulator.
 - **Infrastructure retry.** An infrastructure failure allows at most one full retry with the same instance, seed and
   configuration; a normal task failure is never retried (H.5).
 - **Network policy and external material.** By default a task restricts the agent's egress to the model APIs and the package
