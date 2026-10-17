@@ -7,6 +7,11 @@ One call returns at most max_frames_per_call images (cameras x frames, per-frame
 is a 400 that executes nothing; before 2026-10-10 a call had no bound, and one request within the documented ranges
 could exhaust the sidecar's memory (review R3B-M2). The largest default requests fit, a camera named more than once is
 one camera (POST /reset too), and a camera on a body of the scene still has no pose.
+
+Live grading (owner, 2026-10-17, board 0151), the service with the real collect hook (shared/standard/finalize.sh, the
+real rcb_limited.py `end`) and grader: the live episode's success is the verdict (graded_by live, replays 0) and no
+replay runs; a failure is the agent's 0; a video render that fails changes nothing; a scene that does not start at the
+frozen instance's recorded hash is refused at the start (instance_mismatch, infrastructure) before the agent is served.
 """
 import json
 import os
@@ -141,6 +146,167 @@ class Service(unittest.TestCase):
         self.assertTrue(np.all(np.isnan(parts["extrinsic_cv/ball_cam"]["data"])))
         self.assertTrue(np.all(np.isfinite(parts["extrinsic_cv/hand_top"]["data"])))
         self.assertIn("last/ball_cam", parts)
+
+
+FAKE_VIDEO = """import json, os, sys, time
+a = dict(zip(sys.argv[1::2], sys.argv[2::2]))
+mode = os.environ.get("RCB_FAKE_VIDEO", "ok")
+if mode == "crash":
+    open(a["--out"], "wb").write(b"half a file")
+    raise RuntimeError("the renderer failed")
+if mode == "hang":
+    open(a["--out"], "wb").write(b"half a file"); time.sleep(600)
+open(a["--out"], "wb").write(b"mp4")
+json.dump({"video": True, "frames": 2}, open(a["--result"], "w"))
+"""
+
+
+class LiveGrading(unittest.TestCase):
+    """The service, then the collect hook, then the verifier, as a trial runs them (no MuJoCo, no replay)."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.srv, self.data, self.bin = Path(self.tmp, "srv"), Path(self.tmp, "data"), Path(self.tmp, "bin")
+        for d in (self.srv, self.data, self.bin):
+            d.mkdir()
+        for f in ("server.py", "finalize.sh", "grade.py"):
+            shutil.copy(MYOSUITE / "shared" / "standard" / f, self.srv)
+        for f in ("rcb_limited.py", "rcb1.py"):
+            shutil.copy(LAYER / f, self.srv)
+        shutil.copy(HERE / "stub_mujoco.py", self.srv / "mujoco.py")
+        shutil.copy(HERE / "stub_rcb_myosuite.py", self.srv / "rcb_myosuite.py")
+        (self.srv / "video.py").write_text(FAKE_VIDEO)
+        # the hook calls `python`, as in the image: this interpreter (a wrapper, not a symlink: a venv's python finds
+        # its packages by its own path)
+        (self.bin / "python").write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+        (self.bin / "python").chmod(0o755)
+        np.savez(self.srv / "instance.npz", task="obj_hold", model__actuator_ctrlrange=np.zeros((NU, 2)))
+        (self.srv / "task.json").write_text(json.dumps({"task_text": "stub", "default_cameras": ["hand_top"], "reference": None}))
+        self.proc = None
+
+    def tearDown(self):
+        if self.proc and self.proc.poll() is None:
+            self.proc.send_signal(signal.SIGKILL)
+        if self.proc:
+            self.proc.wait()
+            self.log.close()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def env(self, **extra) -> dict:
+        return {**os.environ, "RCB_DATA": str(self.data), "RCB_INSTANCE": str(self.srv / "instance.npz"),
+                "RCB_SRV": str(self.srv), "PATH": f"{self.bin}:{os.environ.get('PATH', '')}",
+                "PYTHONDONTWRITEBYTECODE": "1", **extra}
+
+    def start(self, **extra) -> None:
+        with socket.socket() as s:
+            s.bind(("127.0.0.1", 0))
+            port = s.getsockname()[1]
+        self.url = f"http://127.0.0.1:{port}"
+        self.log = open(Path(self.tmp, "server.log"), "w")
+        self.proc = subprocess.Popen([sys.executable, "-B", str(self.srv / "server.py")], cwd=self.tmp, stdout=self.log,
+                                     stderr=subprocess.STDOUT, env=self.env(RCB_PORT=str(port), RCB_RESET_BUDGET="3", **extra))
+        for _ in range(150):
+            try:
+                if self.code("/status")[0] in (200, 409):
+                    return
+            except OSError:
+                time.sleep(0.2)
+        raise RuntimeError("the service did not start: " + Path(self.tmp, "server.log").read_text()[-3000:])
+
+    def code(self, path: str, body: dict | None = None):
+        req = urllib.request.Request(self.url + path, data=None if body is None else json.dumps(body).encode(),
+                                     method="GET" if body is None else "POST")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as h:
+                return h.status, h.read()
+        except urllib.error.HTTPError as e:
+            return e.code, e.read()
+
+    def collect_and_grade(self, **extra) -> tuple[dict, dict]:
+        """The collect hook (it ends the service), then the verifier: -> (final.json, reward.json)."""
+        r = subprocess.run(["sh", str(self.srv / "finalize.sh")], env=self.env(RCB_COLLECT_END_TIMEOUT_S="60", **extra),
+                           capture_output=True, text=True, timeout=300)
+        self.assertEqual(r.returncode, 0, r.stdout[-2000:] + r.stderr[-2000:])
+        log = Path(self.tmp, "verifier")
+        subprocess.run([sys.executable, str(self.srv / "grade.py")], check=True, capture_output=True,
+                       env={**os.environ, "RCB_DATA": str(self.data), "RCB_VERIFIER_LOG_DIR": str(log)})
+        self.assertFalse(Path(self.data, "REPLAYED").exists(), "a replay ran")
+        self.assertFalse(list(self.data.glob("replay[0-9]*")), "a replay ran")
+        final = json.loads(Path(self.data, "final.json").read_text())
+        reward = json.loads(Path(log, "reward.json").read_text())
+        self.assertEqual((log / "reward.txt").read_text().strip(), str(reward["success"]))
+        for k in ("replay_success", "deterministic", "live_matches_replay"):
+            self.assertNotIn(k, final)
+            self.assertNotIn(k, reward)
+        return final, reward
+
+    def test_the_live_success_is_the_verdict_and_nothing_is_replayed(self):
+        self.start()
+        self.assertEqual(self.code("/submit", {"type": "muscle", "actions": [ROW] * 10, "cameras": [], "video": "none"})[0], 200)
+        self.assertEqual(self.code("/submit", {"type": "muscle", "actions": [[99.0] + ROW[1:]], "cameras": [],
+                                               "video": "none"})[0], 200)
+        final, reward = self.collect_and_grade()
+        self.assertEqual((final["success"], final["live_success"], final["graded_by"], final["replays"], final["finalized"],
+                          final["video"], final["video_pending"], final["video_source"], final["reason"]),
+                         (True, True, "live", 0, True, True, False, "render", "success"))
+        self.assertEqual(final["state_sha"], final["live_sha"])
+        self.assertEqual((reward["success"], reward["live_success"], reward["graded_by_live"], reward["replays"],
+                          reward["infra_error"], reward["video_rendered"], reward["n_actions"]), (1, 1, 1, 0, 0, 1, 11))
+
+    def test_a_live_failure_is_the_agents_0(self):
+        self.start()
+        self.assertEqual(self.code("/submit", {"type": "muscle", "actions": [ROW] * 10, "cameras": [], "video": "none"})[0], 200)
+        final, reward = self.collect_and_grade()
+        self.assertEqual((final["success"], final["reason"], final["graded_by"]), (False, "timeout", "live"))
+        self.assertEqual((reward["success"], reward["infra_error"], reward["timeout"], reward["grader_error"]), (0, 0, 1, 0))
+
+    def test_a_video_that_fails_or_runs_out_of_time_changes_nothing(self):
+        for mode, budget in (("crash", "1800"), ("hang", "125")):
+            with self.subTest(mode=mode):
+                if self.proc:
+                    self.tearDown(); self.setUp()
+                self.start()
+                self.code("/submit", {"type": "muscle", "actions": [[99.0] + ROW[1:]], "cameras": [], "video": "none"})
+                final, reward = self.collect_and_grade(RCB_FAKE_VIDEO=mode, RCB_COLLECT_BUDGET_S=budget)
+                self.assertEqual((final["success"], final["video"], final["video_pending"]), (True, False, False))
+                self.assertFalse(Path(self.data, "replay.mp4").exists())      # a cut-off file is removed
+                self.assertEqual((reward["success"], reward["infra_error"], reward["video_rendered"]), (1, 0, 0))
+
+    def test_a_scene_that_is_not_the_frozen_instance_is_refused_at_the_start(self):
+        self.start(RCB_STUB_START_MISMATCH="1")
+        code, body = self.code("/status")
+        self.assertEqual(code, 409, body)                                  # never served
+        self.assertTrue(json.loads(body)["infra_error"])
+        self.assertFalse(Path(self.data, "journal.f64").exists())
+        final, reward = self.collect_and_grade()
+        self.assertEqual((final["instance_mismatch"], final["infra_error"], final["gave_up"], final["success"]),
+                         (1, 1, True, False))
+        self.assertTrue(final["reason"].startswith("instance_mismatch"))
+        self.assertEqual((reward["success"], reward["infra_error"], reward["instance_mismatch"]), (0, 1, 1))
+
+
+    def test_the_render_pass_draws_the_episode_once_and_decides_nothing(self):
+        """The real video.py on the stub simulator (a fake imageio): one pass, the frames, then it stops at the episode's
+        end; a deadline keeps what it drew."""
+        shutil.copy(MYOSUITE / "shared" / "standard" / "video.py", self.srv / "video.py")
+        (self.srv / "imageio").mkdir()
+        (self.srv / "imageio" / "__init__.py").write_text("")
+        (self.srv / "imageio" / "v2.py").write_text(
+            "class _W:\n    def __init__(self, p): self.f = open(p, 'w')\n"
+            "    def append_data(self, a): self.f.write('frame\\n')\n    def close(self): self.f.close()\n"
+            "def get_writer(path, **kw): return _W(path)\n")
+        rows = np.zeros((40, NU)); rows[30, 0] = 99.0                   # the episode succeeds at row 31
+        np.savez(self.data / "trajectory.npz", actions=rows)
+        out, res = self.data / "replay.mp4", self.data / "video.json"
+        r = subprocess.run([sys.executable, "-B", str(self.srv / "video.py"), "--instance", str(self.srv / "instance.npz"),
+                            "--traj", str(self.data / "trajectory.npz"), "--out", str(out), "--result", str(res)],
+                           env=self.env(), capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        got = json.loads(res.read_text())
+        self.assertEqual((got["video"], got["rows"], got["frames"], got["cut_short"]), (True, 40, 32, False), got)
+        self.assertEqual(out.read_text().count("frame"), 32)
+        self.assertNotIn("success", got)
+        self.assertFalse(Path(self.data, "REPLAYED").exists())
 
 
 if __name__ == "__main__":

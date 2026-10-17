@@ -36,8 +36,8 @@ wall-clock time (real time). `spec()["timing"]["slowdown"]` states it.
   tells you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"error"` after a simulator error,
   else `"failed"`). `spec()` gives the body's own facts: the actuators, the joints and their limits, each camera's
   intrinsics and mounting.
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
-  simulator and grades the replay. Keep the controller that drives the body at `/app/output/gen.py` for the record:
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran
+  (nothing is replayed). Keep the controller that drives the body at `/app/output/gen.py` for the record:
   save it early and keep it current.
 - Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 

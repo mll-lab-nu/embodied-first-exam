@@ -2,8 +2,12 @@
 
     python3 -m unittest discover -s scripts/myosuite/tests
 
-What is graded is the sim sidecar's final.json. An infrastructure failure -- no final.json, one that cannot be read, one
-the collect hook never finalized, a replay process that died -- is infra_error = 1, never the agent's 0 (PROTOCOL §2.6).
+What is graded is the sim sidecar's final.json: since 2026-10-17 (owner, board 0151) the live episode's verdict
+("graded_by": "live", nothing replayed). An infrastructure failure -- no final.json, one that cannot be read, one the
+collect hook never finalized, a give-up after crashes that were not all inside the agent's calls, a scene that did not
+start at the frozen instance -- is infra_error = 1, never the agent's 0 (PROTOCOL §2.6); the agent's own failures (a
+crash inside its calls, a simulator error from its actions, a timeout) stay its 0. The service, hook and grader run
+together in test_standard_server.py.
 Last, the privileged verifier (shared/grade.py) and the one file of the agent's it reads as text, the session log.
 """
 import json
@@ -16,8 +20,9 @@ from pathlib import Path
 
 GRADE = Path(__file__).resolve().parents[1] / "shared" / "standard" / "grade.py"
 PRIVILEGED = GRADE.parents[1] / "grade.py"
-GOOD = {"finalized": True, "success": True, "replay_success": True, "deterministic": True, "live_matches_replay": True,
-        "reason": "success", "video": True, "control_steps": 72, "n_actions": 72}
+GOOD = {"finalized": True, "graded_by": "live", "replays": 0, "success": True, "live_success": True, "reason": "success",
+        "video": True, "video_pending": False, "video_source": "render", "control_steps": 72, "n_actions": 72,
+        "live_sha": "abc", "state_sha": "abc"}
 
 
 class Grade(unittest.TestCase):
@@ -31,20 +36,36 @@ class Grade(unittest.TestCase):
             subprocess.run([sys.executable, str(GRADE)], env=env, check=True, capture_output=True)
             reward = json.loads((log / "reward.json").read_text())
             self.assertTrue(all(isinstance(v, (int, float)) for v in reward.values()), reward)   # numbers only
-            for key in ("success", "deterministic", "infra_error", "grader_error"):              # in every branch
+            for key in ("success", "live_success", "graded_by_live", "replays", "infra_error", "grader_error",
+                        "sim_error", "finalized", "missing_log"):                                # in every branch
                 self.assertIn(key, reward)
+            self.assertEqual((reward["graded_by_live"], reward["replays"]), (1, 0))
+            for key in ("replay_success", "deterministic", "live_matches_replay"):              # no replay any more
+                self.assertNotIn(key, reward)
             return (log / "reward.txt").read_text().strip(), reward
 
-    def test_a_finalized_success_passes(self):
+    def test_a_live_success_passes(self):
         txt, r = self.grade(GOOD)
-        self.assertEqual((txt, r["success"], r["infra_error"], r["finalized"], r["video_rendered"]), ("1", 1, 0, 1, 1))
+        self.assertEqual((txt, r["success"], r["live_success"], r["infra_error"], r["finalized"], r["video_rendered"]),
+                         ("1", 1, 1, 0, 1, 1))
 
-    def test_success_needs_live_replay_and_determinism(self):
-        for key in ("success", "replay_success", "deterministic"):
-            txt, r = self.grade({**GOOD, key: False})
-            self.assertEqual((txt, r["success"], r["infra_error"]), ("0", 0, 0), key)
-        txt, r = self.grade({**GOOD, "instance_mismatch": 1, "infra_error": 1})
-        self.assertEqual((txt, r["success"], r["infra_error"], r["grader_error"]), ("0", 0, 1, 1))
+    def test_a_live_failure_is_the_agents_0(self):
+        for reason in ("timeout", "failure: object dropped", "error"):
+            txt, r = self.grade({**GOOD, "success": False, "live_success": False, "reason": reason})
+            self.assertEqual((txt, r["success"], r["infra_error"], r["grader_error"]), ("0", 0, 0, 0), reason)
+        self.assertEqual(self.grade({**GOOD, "success": False, "live_success": False, "reason": "error"})[1]["sim_error"], 1)
+
+    def test_a_window_that_did_not_hold_is_a_failure(self):
+        """The hold / track window is part of the task's rule live: an episode whose window broke never ended in
+        success (the service's success is False), and a success the service's live rule took away is no pass."""
+        txt, r = self.grade({**GOOD, "success": False, "live_success": False, "reason": "failure: on track at 40 of 57 steps"})
+        self.assertEqual((txt, r["success"], r["infra_error"], r["task_failure"]), ("0", 0, 0, 1))
+        txt, r = self.grade({**GOOD, "success": False, "live_success": True, "live_rule": False})
+        self.assertEqual((txt, r["success"], r["live_success"], r["infra_error"]), ("0", 0, 1, 0))
+
+    def test_a_video_that_failed_changes_nothing(self):
+        txt, r = self.grade({**GOOD, "video": False, "video_pending": False})
+        self.assertEqual((txt, r["success"], r["infra_error"], r["video_rendered"]), ("1", 1, 0, 0))
 
     def test_a_missing_final_json_is_infrastructure(self):
         txt, r = self.grade(None)
@@ -55,24 +76,30 @@ class Grade(unittest.TestCase):
             txt, r = self.grade(text)
             self.assertEqual((txt, r["success"], r["infra_error"], r["grader_error"]), ("0", 0, 1, 1), text)
 
-    def test_a_never_finalized_final_json_is_infrastructure(self):
-        """The service's live summary only: the collect hook ran out of time, or died, before its replays' verdict."""
+    def test_a_final_json_without_a_verdict_is_infrastructure(self):
+        """The service's live summary only (the collect hook ran out of time, or died, before it wrote the verdict), or a
+        finalized file that holds neither the live verdict nor a give-up."""
         txt, r = self.grade({"finalized": False, "success": True, "reason": "success", "control_steps": 72})
         self.assertEqual((txt, r["success"], r["live_success"], r["finalized"], r["infra_error"]), ("0", 0, 1, 0, 1))
-
-    def test_an_infrastructure_flag_never_passes(self):
-        txt, r = self.grade({**GOOD, "infra_error": 1})
+        txt, r = self.grade({"finalized": True, "success": True, "reason": "success"})
+        self.assertEqual((txt, r["success"], r["no_verdict"], r["infra_error"]), ("0", 0, 1, 1))
+        txt, r = self.grade({**GOOD, "infra_error": 1, "error": "collect hook: the sim service did not end and dump"})
         self.assertEqual((txt, r["success"], r["infra_error"]), ("0", 0, 1))
-        txt, r = self.grade({**GOOD, "replay_success": False, "deterministic": False, "replay_failed": 1, "infra_error": 1})
-        self.assertEqual((r["success"], r["infra_error"], r["grader_error"]), (0, 1, 1))
 
-    def test_the_agents_failures_stay_the_agents(self):
-        txt, r = self.grade({"finalized": True, "success": False, "replay_success": False, "deterministic": True,
-                             "reason": "timeout"})
-        self.assertEqual((txt, r["success"], r["infra_error"], r["timeout"], r["deterministic"]), ("0", 0, 0, 1, 1))
-        txt, r = self.grade({"finalized": True, "success": False, "replay_success": False, "deterministic": True,
-                             "reason": "error"})
-        self.assertEqual((r["success"], r["infra_error"], r["sim_error"]), (0, 0, 1))
+    def test_crashes_between_calls_are_infrastructure_and_in_calls_the_agents(self):
+        gave_up = {"finalized": True, "gave_up": True, "done": True, "success": False}
+        for reason in ("sim_crashed", "resume_failed: replayed state differs from the logged one"):
+            txt, r = self.grade({**gave_up, "reason": reason, "infra_error": 1})
+            self.assertEqual((txt, r["success"], r["infra_error"], r["gave_up"]), ("0", 0, 1, 1), reason)
+        txt, r = self.grade({**gave_up, "reason": "sim_crashed_on_call"})
+        self.assertEqual((txt, r["success"], r["infra_error"], r["sim_crashed_on_call"], r["no_verdict"]), ("0", 0, 0, 1, 0))
+
+    def test_a_scene_that_was_not_the_frozen_instance_is_infrastructure(self):
+        txt, r = self.grade({"finalized": True, "gave_up": True, "success": False, "infra_error": 1, "instance_mismatch": 1,
+                             "reason": "instance_mismatch: the scene started at 1, the frozen instance records 2"})
+        self.assertEqual((txt, r["success"], r["infra_error"], r["grader_error"], r["instance_mismatch"]), ("0", 0, 1, 1, 1))
+        txt, r = self.grade({**GOOD, "instance_mismatch": 1})        # never a pass, whatever else the file says
+        self.assertEqual((txt, r["success"], r["infra_error"]), ("0", 0, 1))
 
 
 class PrivilegedSessionLog(unittest.TestCase):

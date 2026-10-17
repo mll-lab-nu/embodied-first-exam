@@ -1,8 +1,11 @@
 """A stand-in for rcb_myosuite.py (copied next to the service by test_standard_server.py): what the standard service
 calls, on stub_mujoco's toy model. Control at 50 Hz; images are small (the tests count frames, they do not look at
-them)."""
+them). The episode succeeds at a row whose first command is above 50 (a stand-in for the task's rule, window included);
+the frozen instance's recorded hash is the start's, unless RCB_STUB_START_MISMATCH is set (an image that no longer
+builds the frozen start)."""
 import hashlib
 import json
+import os
 import types
 
 import numpy as np
@@ -40,8 +43,9 @@ class Session:
         self.dt, self.rule, self.hold_steps, self.track_steps = 0.02, "hold", 5, None
         self.base = types.SimpleNamespace(frame_skip=10, robot=types.SimpleNamespace(mj_data=self.data))
         self._renderer = _Renderer()
-        self.instance_sha, self.instance_exact = "stub", True
         self.reset()
+        self.instance_sha = "0" * 16 if os.environ.get("RCB_STUB_START_MISMATCH") else self.state_sha()
+        self.instance_exact = self.instance_sha == self.state_sha()
 
     def reset(self):
         self.data.qpos[:] = 0
@@ -54,7 +58,9 @@ class Session:
         self.data.qpos[5] += 0.001                 # the ball moves
         mujoco.mj_kinematics(self.model, self.data)
         self.steps += 1
-        return True
+        if a[0] > 50:
+            self.done, self.success, self.reason = True, True, "success"
+        return not self.done
 
     def rest_action(self):
         return np.zeros(self.nu)
@@ -78,3 +84,7 @@ class Session:
 
     def save_trajectory(self, actions, path, meta=None):
         np.savez(path, actions=np.asarray(actions, dtype=np.float64), task=self.task, meta=json.dumps(meta or {}))
+
+
+if __name__ == "__main__":   # `rcb_myosuite.py replay ...`: a grading replay; the standard collect hook must run none
+    open(os.path.join(os.environ.get("RCB_DATA", "."), "REPLAYED"), "a").write(" ".join(os.sys.argv[1:]) + "\n")
