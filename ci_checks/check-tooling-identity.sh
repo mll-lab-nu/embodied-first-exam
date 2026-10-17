@@ -52,6 +52,9 @@ SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/s
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
          "environment/sim/rcb1.py": "rcb1.py", "environment/sim/run.sh": "run.sh"}
 sha = lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest()[:16]  # noqa: E731
+# board 0151 (2026-10-17): the layer before final_verdict accepted a live verdict; its copies stay valid while each
+# benchmark's pull request regenerates its tasks onto the new layer (remove this once none is left)
+PREV_LIMITED = {"2.2": "064e29250cc1b14d", "2.4": "aab663c695d49fd5"}
 # 4. benchmarks without a generator check mode: (label, tooling module) by directory prefix; a task that serves
 # environment/sim/server_mj.py belongs to the DexToolBench family whatever its prefix (MuJoCo Playground ALOHA / Panda)
 FAMILY = {"dextoolbench_": ("dextoolbench", "rcb_dtb.py"), "metaworldplus-": ("metaworldplus", "mw_tool.py"),
@@ -128,7 +131,7 @@ for t in sorted(os.listdir(tasks)):
             srcf = f"scripts/eai_standard/{'v2_4/' if v24 and f in V24 else ''}{f}"
             if not os.path.isfile(p):
                 bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
-            elif sha(p) != ref.get(f):
+            elif sha(p) != ref.get(f) and not (f == "rcb_limited.py" and sha(p) == PREV_LIMITED.get(ver)):
                 bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
         cf = os.path.join(tasks, t, "environment/docker-compose.yaml")
         blk = sim_service(cf) if os.path.isfile(cf) else ""
