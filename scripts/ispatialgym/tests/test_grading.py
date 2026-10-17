@@ -95,7 +95,8 @@ def finalize(rc: int, episode: dict | None, final: dict | None = None, video: by
                     f"open({str(td / 'REPLAYED')!r}, 'a').write(' '.join(sys.argv[1:]) + '\\n')\n"
                     "if '--video' in sys.argv and " + repr(render is not None) + ":\n"
                     f"    open(sys.argv[sys.argv.index('--video') + 1], 'wb').write(open({str(td / 'render.bin')!r}, 'rb').read())\n")
-    (bindir / "python").symlink_to(sys.executable)
+    py = bindir / "python"                         # `python` in finalize.sh: this interpreter (a wrapper, not a symlink:
+    py.write_text(f"#!/bin/sh\nexec {sys.executable} \"$@\"\n"); py.chmod(0o755)   # a venv's python resolves by its path)
     if episode is not None:
         (data / "episode.json").write_text(json.dumps(episode))
         np.savez(data / "trajectory.npz", actions=np.zeros((3, 23), np.float32))
@@ -152,6 +153,9 @@ def test_finalize() -> None:
     assert fin == give
     fin, _ = finalize(1, None, final={"success": True, "finalized": False})   # the service never ended the episode
     assert fin["infra_error"] == 1 and fin["success"] is False and G.grade(fin)[1]["infra_error"] == 1
+    fin, calls = finalize(1, ep, video=None, render=mp4)               # dumped, then did not exit in time: still the live verdict
+    assert fin["success"] is True and not fin.get("infra_error") and fin["end_timed_out"] is True and calls == [], (fin, calls)
+    assert fin["video_pending"] is False and G.grade(fin)[0]
     fin, _ = finalize(0, None)                                          # no episode.json: infra
     assert fin["infra_error"] == 1 and G.grade(fin)[1]["infra_error"] == 1
 
@@ -170,7 +174,7 @@ class StubVideo:
             return self._fail("frame", RuntimeError("encoder died"))
         assert frame.shape == (4, 4, 3); self.n += 1
 
-    def close(self):
+    def close(self, wait_s=900.0):
         self.closed = True
 
 
@@ -189,9 +193,12 @@ def test_live_video() -> None:
 
     def boom():
         raise RuntimeError("no frame")
-    lv.offer(0, boom); lv.offer(3, lambda: np.zeros((4, 4, 3), np.uint8))     # a frame that cannot be read stops the video
+    lv.offer(0, boom); lv.offer(3, lambda: np.zeros((4, 4, 3), np.uint8))     # a frame that cannot be read is skipped, counted
     info = lv.close(timeout=30)
-    assert info["video_frames"] == 0 and "video_error" in info
+    assert info["video_frames"] == 1 and info["video_bad_frames"] == 1 and "video_frame_error" in info and "video_error" not in info, info
+    import inspect                                                    # close() is bounded well inside the hook's 3600 s wait
+    sig = inspect.signature(RI.LiveVideo.close).parameters
+    assert 2 * sig["timeout"].default + sig["encoder_wait_s"].default <= 300
 
 
 def test_service_texts() -> None:

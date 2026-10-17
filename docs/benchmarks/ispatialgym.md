@@ -91,12 +91,14 @@ verifier's, for all 12 tasks.
   `instance_mismatch` (`infra_error = 1`). On a resume the rebuilt start is checked again.
 - **Video**: recorded live (`/out/live.mp4`): the head camera's frame that every control step renders anyway for the
   agent's observations, every third step (10 fps, 540 px), copied in the control loop and encoded by a thread
-  (`rcb_ispatialgym.LiveVideo`; a full queue drops a frame rather than wait). A resume records it anew from the start, as
+  (`rcb_ispatialgym.LiveVideo`; a full queue or an unreadable frame drops that frame, counted, rather than wait or stop;
+  closing is bounded to 4 min). A resume records it anew from the start, as
   it replays the journal. The service closes it when the collect hook ends the episode; a failed recording loses only
   the video. Only when `live.mp4` is missing or does not play, `finalize.sh` runs ONE video-only render
   (`rcb_ispatialgym.py replay --video`, `replay.mp4`) after the verdict, whose success and hash are not read; the
   collect hook's bound covers it (the end, up to 1 h, + a scene load and the whole step budget + 10 min).
-- **Infrastructure** (`infra_error = 1`): no or unfinalized `final.json`, the service never ended the episode, a give-up
+- **Infrastructure** (`infra_error = 1`): no or unfinalized `final.json`, the service never ended the episode (no
+  `episode.json`; one it dumped before failing to exit in time is still the verdict, `end_timed_out`), a give-up
   after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), `instance_mismatch`. A crash inside the
   agent's calls (`sim_crashed_on_call`) and a simulator error raised by its actions (`error`) score 0.
 

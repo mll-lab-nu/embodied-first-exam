@@ -650,11 +650,11 @@ class _Video:
         except Exception as exc:  # noqa: BLE001
             self._fail("frame", exc)
 
-    def close(self) -> None:
+    def close(self, wait_s: float = 900.0) -> None:
         if self.p is None:
             return
         try:
-            self.p.stdin.close(); rc = self.p.wait(timeout=900)
+            self.p.stdin.close(); rc = self.p.wait(timeout=wait_s)
             if rc != 0:
                 self.error = f"ffmpeg exit {rc}"
         except Exception as exc:  # noqa: BLE001
@@ -666,12 +666,14 @@ class LiveVideo:
     every control step renders anyway (env.step renders once per step for the agent's observations), every `every`-th
     control step, as the replay's _Video records it. The control loop only copies the frame and queues it; a thread
     resizes and encodes it, so a call is not slowed by the encoder. A full queue (the encoder behind) drops the frame and
-    counts it. Nothing here decides anything: a failure of the recording loses only the video (PROTOCOL §4)."""
+    counts it, and so does a frame that cannot be read (the recording goes on). close() is bounded (60 + 60 + 120 s), so
+    the service exits well within the collect hook's wait for it. Nothing here decides anything: a failure of the
+    recording loses only the video (PROTOCOL §4)."""
 
     def __init__(self, path: str, every: int = 3, max_queue: int = 32, video: Any = None):
         import queue
         import threading
-        self.every, self.dropped, self.offered = int(every), 0, 0
+        self.every, self.dropped, self.offered, self.bad_frames, self.frame_error = int(every), 0, 0, 0, None
         self.v = video if video is not None else _Video(path)
         self.q: Any = queue.Queue(max_queue)
         self._full = queue.Full
@@ -688,8 +690,9 @@ class LiveVideo:
             return
         try:
             frame = np.array(grab(), dtype=np.uint8, copy=True)
-        except Exception as exc:  # noqa: BLE001
-            self.v._fail("frame", exc)
+        except Exception as exc:  # noqa: BLE001 -- one frame lost, counted; the recording goes on
+            self.bad_frames += 1
+            self.frame_error = self.frame_error or f"frame: {exc!r}"[:300]
             return
         self.offered += 1
         try:
@@ -704,8 +707,8 @@ class LiveVideo:
                 return
             self.v.add(f)
 
-    def close(self, timeout: float = 300.0) -> dict:
-        """Drain the queue, finish the mp4; what the record says about it (for episode.json)."""
+    def close(self, timeout: float = 60.0, encoder_wait_s: float = 120.0) -> dict:
+        """Drain the queue, finish the mp4 (at most 2 x timeout + encoder_wait_s); what the record says about it."""
         try:
             self.q.put(None, timeout=timeout)
         except Exception:  # noqa: BLE001
@@ -714,8 +717,10 @@ class LiveVideo:
         if self.t.is_alive():
             self.v._fail("close", TimeoutError(f"the encoder did not drain in {timeout:.0f} s"))
         else:
-            self.v.close()
-        return {"video_frames": self.v.n, "video_dropped_frames": self.dropped, **({"video_error": self.v.error} if self.v.error else {})}
+            self.v.close(wait_s=encoder_wait_s)
+        return {"video_frames": self.v.n, "video_dropped_frames": self.dropped, "video_bad_frames": self.bad_frames,
+                **({"video_frame_error": self.frame_error} if self.frame_error else {}),
+                **({"video_error": self.v.error} if self.v.error else {})}
 
 
 def joint_types(s: Session) -> dict[str, dict[str, str]]:
