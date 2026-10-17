@@ -36,7 +36,7 @@ takes here.
 ```python
 from rcb_robolab import Session
 s = Session("rubiks_cube_right_of_bowl", instance="/app/instance.json")   # ~1-2 min: launches Isaac Sim, builds the scene, restores the frozen state
-s.reset()                          # back to the frozen initial state (as often as you like; an exact state restore)
+s.reset()                          # back to the frozen initial state, as often as you like (not every PhysX internal: see Conventions)
 p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
 s.objects()                        # objects: name -> position, orientation_wxyz, bounds, size, velocity (env-local frame)
 p["move_ee"](pos, quat_wxyz, speed=0.2)   # straight-line fingertip move, one differential-IK update per control step
