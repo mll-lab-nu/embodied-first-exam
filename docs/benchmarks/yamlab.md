@@ -214,3 +214,35 @@ YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). Its service states no `max_frames_per_call` yet (calls are bounded by `max_watch_s`, `max_chunk_s` and the frame rate).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders (for this benchmark from the grading records only: the log review was
+partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus 5.5
+among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna attempted
+it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict. A base
+whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and reported
+apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+5 of 10 bases are in the easy set; by directory: 15 easy, 0 hard, 5 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `yamlab-hang-mug-on-tree-i10` |  | easy: Luna | unverified |
+| `yamlab-hang-mug-on-tree-i13` |  | unverified | easy: Luna |
+| `yamlab-hang-mug-on-tree-i15` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus |
+| `yamlab-hang-mug-on-tree-i20` | yes | easy: Luna | easy: Luna |
+| `yamlab-hang-mug-on-tree-i21` |  | unverified | easy: Luna |
+| `yamlab-put-pot-on-cooktop-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `yamlab-put-pot-on-cooktop-i03` |  | easy: Luna | unverified |
+| `yamlab-put-pot-on-cooktop-i04` |  | easy: Luna | unverified |
+| `yamlab-put-pot-on-cooktop-i07` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus |
+| `yamlab-put-pot-on-cooktop-i08` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |

@@ -1,0 +1,625 @@
+{
+ "task": "gladom",
+ "parts": [
+  "frame_a",
+  "frame_b",
+  "ring",
+  "tray",
+  "screw_long",
+  "screw_bottom",
+  "screw_ring_l",
+  "screw_ring_r"
+ ],
+ "root": "frame_a",
+ "operations": [
+  {
+   "key": "s1-cross-align",
+   "part": "frame_b",
+   "host": "frame_a",
+   "mode": "align",
+   "target_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "alt_target_quat": [
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "note": "no retention joint of its own; checked as prerequisite pose of s1/s2 screws and by the frame_b connection"
+  },
+  {
+   "key": "s1-123451",
+   "part": "screw_long",
+   "host": "frame_a",
+   "mode": "thread",
+   "weld": {
+    "eq": "retain_screw_long"
+   },
+   "target_pos": [
+    0.0,
+    0.0,
+    0.2295
+   ],
+   "alt_target_pos": [],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    1
+   ],
+   "counterparts": [
+    "frame_a"
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25,
+   "min_travel_m": 0.001,
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "prerequisite_poses": [
+    {
+     "part": "frame_b",
+     "target_pos": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "target_quats": [
+      [
+       1,
+       0,
+       0,
+       0
+      ],
+      [
+       0.0,
+       0.0,
+       0.0,
+       1.0
+      ]
+     ],
+     "tilt": "full",
+     "gates": {
+      "axial_m": 0.0008,
+      "lateral_m": 0.001,
+      "axis_deg": 2,
+      "speed_m_s": 0.025,
+      "min_contact_N": 0.01,
+      "dwell_s": 0.15
+     }
+    }
+   ],
+   "exclusive_with": [],
+   "thread_corridor": {
+    "lateral_m": 0.001,
+    "axis_deg": 10.0,
+    "gap_max_m": 0.007,
+    "gap_min_m": -0.002
+   }
+  },
+  {
+   "key": "s2-122202",
+   "part": "screw_bottom",
+   "host": "frame_a",
+   "mode": "thread",
+   "weld": {
+    "eq": "retain_screw_bottom"
+   },
+   "target_pos": [
+    0.0,
+    0.0,
+    -0.1755
+   ],
+   "alt_target_pos": [],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    1
+   ],
+   "counterparts": [
+    "frame_a"
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25,
+   "min_travel_m": 0.001,
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "prerequisite_poses": [
+    {
+     "part": "frame_b",
+     "target_pos": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "target_quats": [
+      [
+       1,
+       0,
+       0,
+       0
+      ],
+      [
+       0.0,
+       0.0,
+       0.0,
+       1.0
+      ]
+     ],
+     "tilt": "full",
+     "gates": {
+      "axial_m": 0.0008,
+      "lateral_m": 0.001,
+      "axis_deg": 2,
+      "speed_m_s": 0.025,
+      "min_contact_N": 0.01,
+      "dwell_s": 0.15
+     }
+    }
+   ],
+   "exclusive_with": [],
+   "thread_corridor": {
+    "lateral_m": 0.001,
+    "axis_deg": 10.0,
+    "gap_max_m": 0.007,
+    "gap_min_m": -0.002
+   }
+  },
+  {
+   "key": "s3-ring-place",
+   "part": "ring",
+   "host": "frame_a",
+   "mode": "place",
+   "target_pos": [
+    0.0,
+    0.0,
+    0.2545
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "alt_target_quat": [
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "note": "retained by ring-connection after both ring screws"
+  },
+  {
+   "key": "s3-122202-left",
+   "part": "screw_ring_l",
+   "host": "frame_a",
+   "mode": "thread",
+   "weld": {
+    "eq": "retain_screw_ring_l"
+   },
+   "target_pos": [
+    -0.18,
+    0.0,
+    0.2395
+   ],
+   "alt_target_pos": [
+    [
+     0.18,
+     0.0,
+     0.2395
+    ]
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    1
+   ],
+   "counterparts": [
+    "frame_a"
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25,
+   "min_travel_m": 0.001,
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "prerequisite_poses": [
+    {
+     "part": "ring",
+     "target_pos": [
+      0.0,
+      0.0,
+      0.2545
+     ],
+     "target_quats": [
+      [
+       1,
+       0,
+       0,
+       0
+      ],
+      [
+       0.0,
+       0.0,
+       0.0,
+       1.0
+      ]
+     ],
+     "tilt": "full",
+     "gates": {
+      "axial_m": 0.0008,
+      "lateral_m": 0.001,
+      "axis_deg": 2,
+      "speed_m_s": 0.025,
+      "min_contact_N": 0.01,
+      "dwell_s": 0.15
+     }
+    }
+   ],
+   "exclusive_with": [
+    "s3-122202-right"
+   ],
+   "thread_corridor": {
+    "lateral_m": 0.001,
+    "axis_deg": 10.0,
+    "gap_max_m": 0.007,
+    "gap_min_m": -0.002
+   }
+  },
+  {
+   "key": "s3-122202-right",
+   "part": "screw_ring_r",
+   "host": "frame_a",
+   "mode": "thread",
+   "weld": {
+    "eq": "retain_screw_ring_r"
+   },
+   "target_pos": [
+    0.18,
+    0.0,
+    0.2395
+   ],
+   "alt_target_pos": [
+    [
+     -0.18,
+     0.0,
+     0.2395
+    ]
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "tilt": "axis",
+   "part_axis": [
+    0,
+    0,
+    1
+   ],
+   "counterparts": [
+    "frame_a"
+   ],
+   "count_turns": true,
+   "turn_sign": -1,
+   "min_turns": 0.25,
+   "min_travel_m": 0.001,
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "prerequisite_poses": [
+    {
+     "part": "ring",
+     "target_pos": [
+      0.0,
+      0.0,
+      0.2545
+     ],
+     "target_quats": [
+      [
+       1,
+       0,
+       0,
+       0
+      ],
+      [
+       0.0,
+       0.0,
+       0.0,
+       1.0
+      ]
+     ],
+     "tilt": "full",
+     "gates": {
+      "axial_m": 0.0008,
+      "lateral_m": 0.001,
+      "axis_deg": 2,
+      "speed_m_s": 0.025,
+      "min_contact_N": 0.01,
+      "dwell_s": 0.15
+     }
+    }
+   ],
+   "exclusive_with": [
+    "s3-122202-left"
+   ],
+   "thread_corridor": {
+    "lateral_m": 0.001,
+    "axis_deg": 10.0,
+    "gap_max_m": 0.007,
+    "gap_min_m": -0.002
+   }
+  },
+  {
+   "key": "s4-tray-place",
+   "part": "tray",
+   "host": "ring",
+   "mode": "tray",
+   "target_pos": [
+    0.0,
+    0.0,
+    0.259
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   },
+   "note": "gravity support on the ring; never jointed"
+  },
+  {
+   "key": "frame_b-connection",
+   "part": "frame_b",
+   "host": "frame_a",
+   "mode": "connection",
+   "weld": {
+    "eq": "retain_frame_b"
+   },
+   "target_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "alt_target_quat": [
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "tilt": "full",
+   "counterparts": [
+    "frame_a"
+   ],
+   "dependencies": [
+    "s2-122202"
+   ],
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   }
+  },
+  {
+   "key": "ring-connection",
+   "part": "ring",
+   "host": "frame_a",
+   "mode": "connection",
+   "weld": {
+    "eq": "retain_ring"
+   },
+   "target_pos": [
+    0.0,
+    0.0,
+    0.2545
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "alt_target_quat": [
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "tilt": "full",
+   "counterparts": [
+    "frame_a"
+   ],
+   "dependencies": [
+    "s3-122202-left",
+    "s3-122202-right"
+   ],
+   "min_travel_m": 0.001,
+   "gates": {
+    "axial_m": 0.0008,
+    "lateral_m": 0.001,
+    "axis_deg": 2,
+    "speed_m_s": 0.025,
+    "min_contact_N": 0.01,
+    "dwell_s": 0.15
+   }
+  }
+ ],
+ "retention_joints": {
+  "screw_long": "retain_screw_long",
+  "screw_bottom": "retain_screw_bottom",
+  "screw_ring_l": "retain_screw_ring_l",
+  "screw_ring_r": "retain_screw_ring_r",
+  "frame_b": "retain_frame_b",
+  "ring": "retain_ring"
+ },
+ "symmetry": {
+  "frame_b": "180 deg about z (identical geometry)",
+  "ring": "180 deg about z",
+  "tray": "7.5 deg about z (48-box rim, disk)",
+  "ring_screws": "screw_ring_l / screw_ring_r are identical parts and may use either ring receiver (distinct)"
+ },
+ "tray": {
+  "part": "tray",
+  "support": "ring",
+  "yaw_period_deg": 7.5,
+  "contact_window_s": 0.15,
+  "min_active_fraction": 0.3333333333333333,
+  "min_contact_N": 0.01
+ },
+ "gates": {
+  "axial_m": 0.0008,
+  "lateral_m": 0.001,
+  "axis_deg": 2,
+  "speed_m_s": 0.025,
+  "min_contact_N": 0.01,
+  "dwell_s": 0.15,
+  "min_turns": 0.25,
+  "min_travel_m": 0.001,
+  "hold_s": 0.15
+ },
+ "thread": {
+  "pitch_m": 0.0005,
+  "nominal_diameter_m": 0.004,
+  "handedness": "right",
+  "bolt_thread_length_m": 0.006225,
+  "nut_top_above_target_tip_m": 0.0063,
+  "engagement_turns_to_target": 12.6
+ },
+ "initial_layout": "frames interlinked as the source parking (frame_b yawed -60 deg about the common axis) but resting at the seated height (the source also lifts frame_b 35 mm and holds it with a world fixture); ring on 3 static pads, tray on the table, screws dropped into an open parts box (seed 20261015) and settled by physics",
+ "collision_geometry": "source shapes exactly (USD cubes/cylinders); Factory thread meshes replaced by tools/threads.py convex pieces (M4 x 0.5 right-hand, source lengths); shared part contact, no SDF",
+ "seat": "the source defines no screw seat: the head (4 mm) fits inside the 5 mm collar bores; the target is the source joint pose"
+}

@@ -1,0 +1,79 @@
+{
+ "task": "lack",
+ "parts": [
+  "tabletop",
+  "leg_0",
+  "leg_1",
+  "leg_2",
+  "leg_3"
+ ],
+ "root": "tabletop",
+ "legs": [
+  "leg_0",
+  "leg_1",
+  "leg_2",
+  "leg_3"
+ ],
+ "slots_in_tabletop_frame": [
+  [
+   0.24849997500000004,
+   -0.2484999199428438
+  ],
+  [
+   -0.248500049,
+   -0.2484999199428438
+  ],
+  [
+   -0.2485,
+   0.24850011405715622
+  ],
+  [
+   0.2485002,
+   0.24850008905715623
+  ]
+ ],
+ "frames": {
+  "tabletop": "origin at the centre of the slab top surface, +z = stud axis (studs point up in the start pose)",
+  "leg": "origin on the nut axis; +z along the leg from the nut (screw) end to the free end; leg bottom face at z = -0.01, nut threads z = 0.010 .. 0.023, square tube z = -0.01 .. 0.39"
+ },
+ "thread": {
+  "standard": "Factory M16 nut/bolt (right-hand), SDF contact",
+  "pitch_m": 0.002,
+  "stud_thread_z_m": [
+   0.0102,
+   0.035
+  ],
+  "leg_origin_z_at_first_thread_contact_m": 0.025,
+  "leg_origin_z_when_bottomed_m": 0.01,
+  "note": "about six measured turns from first contact to seat (source docs: a property of the model, not an IKEA instruction)"
+ },
+ "operations": [
+  {
+   "key": "leg_on_stud",
+   "parts": [
+    "leg_0",
+    "leg_1",
+    "leg_2",
+    "leg_3"
+   ],
+   "host": "tabletop",
+   "mode": "thread",
+   "any_leg_any_stud": true
+  }
+ ],
+ "thresholds": {
+  "seat_z_m": 0.012,
+  "align_xy_m": 0.02,
+  "align_axis_deg": 10.0,
+  "seat_speed_m_s": 0.05
+ },
+ "mechanism": {
+  "period_steps": 4,
+  "welds": [
+   "weld_leg_0",
+   "weld_leg_1",
+   "weld_leg_2",
+   "weld_leg_3"
+  ]
+ }
+}

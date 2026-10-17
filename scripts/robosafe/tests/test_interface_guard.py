@@ -19,10 +19,10 @@ class Ep:
 
 
 def fake_robosafe(build_as=None):
-    pkg, verify = types.ModuleType("robosafe"), types.ModuleType("robosafe.verify")
+    pkg, verify = types.ModuleType("robosafebench"), types.ModuleType("robosafebench.verify")
     verify.start = lambda key: (None, None, Ep(build_as or dict(key).get("interface", "skill")))
     pkg.verify = verify
-    sys.modules["robosafe"], sys.modules["robosafe.verify"] = pkg, verify
+    sys.modules["robosafebench"], sys.modules["robosafebench.verify"] = pkg, verify
 
 
 def refused(key) -> bool:

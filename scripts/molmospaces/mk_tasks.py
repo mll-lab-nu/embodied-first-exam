@@ -27,42 +27,39 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(
     l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#")
 )
-SITE_RUNS = "https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter"
-# Per family, GPT-6 Luna's privileged trial on the kept episode that the separate verifier graded 1 (batch
-# molmospaces-luna-1003; pick: molmospaces-luna-1004-pick, the run that chose its episode under the licence filter;
-# open-door: the earlier round's batch molmospaces-luna-rby1-r2c, same scene and success rule).
+RUN = "codex-gpt6_1_sol-high"  # GPT-6.1 Sol, Codex, effort high, 2026-10-16: not yet on the results site
+# Per family, that run's privileged trial on the kept episode that the separate verifier graded 1, and its batch.
 POSITIVE = {
-    "pick": "molmospaces-pick-i00-privileged__fL6BhKG",
-    "pick-and-place": "molmospaces-pick-and-place-i00-p__rfd3V6M",
-    "pick-and-place-next-to": "molmospaces-pick-and-place-next__g7CLYbk",
-    "pick-and-place-color": "molmospaces-pick-and-place-color__3KgL4cb",
-    "open": "molmospaces-open-i01-privileged__hkZsZtE",
-    "close": "molmospaces-close-i00-privileged__HWWFXrw",
-    "navigate-to": "molmospaces-navigate-to-i00-priv__mENe7qn",
-    "open-door": "molmospaces-open-door-i00-privil__iroCZzB",
+    "pick": "molmospaces-pick-i00-privileged__Y6SSCTZ",
+    "pick-and-place": "molmospaces-pick-and-place-i00-p__w3GRFg3",
+    "pick-and-place-next-to": "molmospaces-pick-and-place-next__HMjmn5X",
+    "pick-and-place-color": "molmospaces-pick-and-place-color__gde8im8",
+    "open": "molmospaces-open-i00-privileged__bVqNR4u",
+    "close": "molmospaces-close-i00-privileged__8SX5TrW",
+    "navigate-to": "molmospaces-navigate-to-i00-priv__YWMd22o",
+    "open-door": "molmospaces-open-door-i00-privil__EJchtFe",
 }
-BATCH = {  # the families re-selected on 2026-10-06 after the filters changed, and run again
-    "pick": "molmospaces-luna-1006c",
-    "pick-and-place": "molmospaces-luna-1006b",
-    "pick-and-place-next-to": "molmospaces-luna-1006c",
-    "pick-and-place-color": "molmospaces-luna-1006b",
-    "navigate-to": "molmospaces-luna-1006b",
-}
-OFF_SITE = {"open": "molmospaces-luna-v3"}  # an earlier round on the same episode, not on the site
-REVIEW_PR = 47  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
+BATCH = {"open": "molmo-harder-sol", "navigate-to": "molmo-v2-sol-rby1", "open-door": "molmo-v2-sol-rby1"}  # else molmo-v2-sol
+# The verifier's replays ran out of time on a loaded host (replay_timed_out, infra_error: before the 2026-10-16 limit):
+# graded again offline, two fresh replays of the trial's trajectory in the task's image without a time limit.
+REGRADED = {"pick-and-place", "pick-and-place-next-to", "pick-and-place-color"}
+IMAGE_OF = {"open": "0.2.4"}  # a trial on an earlier build of the image (not published; same instance, same assets)
+REVIEW_PR = 276  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
 
 
 def oracle_evidence(family: str) -> str:
-    where = (
-        f"run codex-gpt6_luna-medium, batch {OFF_SITE[family]} of 2026-10-03: an earlier round on the same "
-        "episode, kept with the run's records, not on the results site"
-        if family in OFF_SITE
-        else f"run codex-gpt6_luna-medium, batch {BATCH.get(family, 'molmospaces-luna-1006')}; "
-        f"{SITE_RUNS}/{family.replace('-', '_')}/unlimited/"
+    regraded = (
+        "; its verifier's replays ran out of time on a loaded host (the earlier 500 s limit), so it was graded 1 "
+        "offline with the verifier's replay tool: two fresh replays in the task's image, no time limit, both successes "
+        "with equal final hashes"
+        if family in REGRADED
+        else ""
     )
+    image = f", image {IMAGE_OF[family]}, the same instance" if family in IMAGE_OF else ""
     return (
-        f"no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by "
-        f"the separate verifier: {POSITIVE[family]} ({where}); human review in PR #{REVIEW_PR}"
+        f"no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1"
+        f"{'' if family in REGRADED else ' by the separate verifier'}: {POSITIVE[family]} (run {RUN}, batch "
+        f"{BATCH.get(family, 'molmo-v2-sol')}, 2026-10-16{image}{regraded}); human review in PR #{REVIEW_PR}"
     )
 
 

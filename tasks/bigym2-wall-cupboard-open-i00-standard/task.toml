@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/bigym2-wall-cupboard-open-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 wall-cupboard-open on the same frozen instance as bigym2-wall-cupboard-open-i00-privileged. Open both doors of the wall cabinet. The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). 10 resets (the last episode graded), no object state, no success signal; the sim service records every episode, replays the last one in a fresh simulator and grades it with BiGym's own success check."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 wall-cupboard-open on the same frozen instance as bigym2-wall-cupboard-open-i00-privileged. Open both doors of the wall cabinet. The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). One episode, no reset, no object state, no success signal; the sim service records the episode, replays it in a fresh simulator and grades it with BiGym's own success check."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "wall-cupboard-open"]
 

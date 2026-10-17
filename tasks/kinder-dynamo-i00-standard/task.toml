@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/kinder-dynamo-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER Dynamo3D-o3 on the same frozen instance as kinder-dynamo-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). 10 resets (the last episode graded), no privileged state, no goal check; the sim service records every episode, replays the last one in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER Dynamo3D-o3 on the same frozen instance as kinder-dynamo-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode, replays it in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "dynamo"]
 
@@ -26,7 +26,7 @@ simulator = "kinder"
 robot = "tidybot-plus-plus"
 family = "dynamo"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): the task's own declaration
 protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
@@ -101,7 +101,7 @@ command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) 
 timeout_sec = 900
 
 [agent]
-timeout_sec = 3600.0
+timeout_sec = 1800.0
 # The agent container holds no simulator, but KinDER is public: the agent reaches the model APIs and the package registries, nothing else
 # (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

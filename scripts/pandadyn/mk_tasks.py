@@ -46,7 +46,9 @@ REALTIME = {
     "S05": ("1.20-1.21", 2), "S07": ("0.46-0.48", 4), "S08": ("0.29", 6), "S09": ("0.92-1.14", 2),
     "S10": ("0.84", 2), "S11": ("0.69-0.94", 3), "S12": ("0.68", 3),
 }
-RT_RESETS = 10        # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
+RT_RESETS = 3         # the benchmark's choice (PROTOCOL §2), below the mode's default of 10: every reset restores the same
+                      # frozen start, so 10 resets let an agent tune an open-loop plan on a deterministic scene (2026-10-17,
+                      # docs/benchmarks/pandadyn.md "Reset budget"); 10 from 2026-10-14 to 2026-10-17
 POSITION_IN_TEXT = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)")
 
 
@@ -213,7 +215,10 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
               "FROZEN": f"{task}-i{i:02d}", "MAX_ROWS": f"{MAX_ROWS:,}", "MODULE_PATH": module.replace(".", "/") + ".py"}
     priv = {"SCENE_PRIVILEGED": D["scene_privileged"], "PARAMS": params, "GOALS": goals_priv, "SUMMARY": D["summary"],
             "ROBOT_SETUP": D["robot_setup"], "SCENE": D["scene"], "PHASES_BLOCK": phases_block(False), "FAILURES_BLOCK": fails_block(False),
-            "CONTACT_RULES": D["contact_rules"]}
+            "CONTACT_RULES": D["contact_rules"],
+            # only the dynamic families (REALTIME) start moving on their own; in the static ones nothing moves by itself
+            "SCENE_MOTION": " Things move by themselves from the first control step on: the scene does not wait for the robot."
+                            if code in REALTIME else ""}
     std = {"GOALS_STD": goals_std, "STANDARD_NOTES": std_text(D["standard_notes"], f"{code} standard_notes"),
            "SUMMARY": std_text(D["summary"], f"{code} summary"), "ROBOT_SETUP": std_text(D["robot_setup"], f"{code} robot_setup"),
            "SCENE": std_text(D["scene"], f"{code} scene"), "PHASES_BLOCK": phases_block(True), "FAILURES_BLOCK": fails_block(True),

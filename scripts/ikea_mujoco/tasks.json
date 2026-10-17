@@ -1,0 +1,142 @@
+{
+ "note": "Per-task texts of the IKEA MuJoCo tasks (scripts/ikea_mujoco/mk_tasks.py). goal/requirements/mechanism are plain-words summaries of the scene's success.py and scene.py docstrings (the IKEA MuJoCo tree); success.py itself is the check.",
+ "robots": {
+  "panda": {"robot": "franka-panda-bimanual", "words": "two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled)",
+            "short": "dual Franka Panda + Menagerie Panda hand",
+            "action": "per arm (`left_`, then `right_`): `actuator1`..`actuator7` = joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike the real Panda), `actuator8` = gripper command (0 = closed, 255 = open; the hand squeezes at its tendon force limit, about 70 N per finger, at any width when commanded 0)",
+            "tcp": "`left_tcp` / `right_tcp` (between the fingertips)"},
+  "viperx": {"robot": "aloha-2", "words": "two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper",
+             "short": "dual ViperX 300 s (Menagerie ALOHA)",
+             "action": "per arm (`left_`, then `right_`): `waist`, `shoulder`, `elbow`, `forearm_roll`, `wrist_angle`, `wrist_rotate` = joint position targets (rad; `wrist_rotate` unlimited), `gripper` = finger rail position target (0.002 m closed .. 0.037 m open)",
+             "tcp": "`left_gripper` / `right_gripper` (between the fingertips)"}
+ },
+ "terminal": "The benchmark's terminal rules, the same in every IKEA MuJoCo task, come on top of these requirements. When your rows end: (1) the requirements above hold; (2) the parts are released: no robot link touches any part; (3) every part is at rest: at most 0.01 m/s and 0.05 rad/s; (4) the simulation never broke down: no non-finite state, no MuJoCo BADQACC / BADQPOS / BADQVEL warning, no contact of a part deeper than 10 mm, at any time. The grader then holds your last row for 1.0 s more and requires (1)-(4) again at its end.",
+ "tasks": {
+  "lack": {
+   "title": "LACK side table", "manual": "IKEA LACK side table (AA-207276-4, four legs)", "robot": "panda", "hours": 6,
+   "goal": "Screw all four legs onto the four threaded studs of the tabletop.",
+   "requirements": [
+    "The tabletop lies studs up. Each leg (nut end down) is screwed onto a stud; any leg may go on any stud, one leg per stud.",
+    "Every leg is seated and latched on a distinct stud, and at the end, measured in the tabletop frame: the leg origin is 0 to 12 mm above the slab top, within 20 mm laterally of its stud, and the leg axis is within 10 degrees of the tabletop axis."
+   ],
+   "mechanism": "The M16 x 2 right-hand threads are exact convex pieces: a leg advances only by being turned (about six turns from first thread contact to the seat). A leg that is seated on a vacant stud and descends slower than 0.05 m/s is latched to the tabletop at its current pose (a weld, the source's fixed joint)."
+  },
+  "eket": {
+   "title": "EKET cabinet", "manual": "IKEA EKET cabinet (AA-1914763-5), manual steps 1-4", "robot": "panda", "hours": 8, "demo": "eket_vlim",
+   "goal": "Build the EKET cabinet frame: slide the two side panels into the top panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own.",
+   "requirements": [
+    "The seven operations happen in this order, each measured against the top panel: side A entry and slide, side B entry and slide, back slide, bottom entry and slide. Each one must reach its goal pose within the scene's gates (goal error 0.25 to 0.8 mm, angle 0.1 to 1 degree, nearly at rest, with contact with its counterpart panels).",
+    "The four frame joints (side A and side B to the top, the bottom to both sides) are latched, and the five panels are finite.",
+    "At the end the panels are released (no robot contact, no applied force), rest on the table (at least one panel touches the table top, none touches the floor) and move slower than 0.01 m/s and 0.05 rad/s.", "At the end every panel, the back included (it has no frame joint), is still in its assembled place: within 10 mm and 2 degrees of its goal pose relative to the top panel (the benchmark's end-pose rule, rcb_ikea.END_POSE_RULES)."
+   ],
+   "mechanism": "Mitres, keyholes, dowels and back grooves are contact. The four frame joints (welds) latch with the measured relative pose when the side A slide, the side B slide and the bottom slide pass their gates."
+  },
+  "svallet": {
+   "title": "SVALLET work lamp", "manual": "IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2", "robot": "viperx", "hours": 6,
+   "goal": "Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats.",
+   "requirements": [
+    "Both retention joints are connected (shade on the stand, bulb in the shade) and, at the end, each connector is within its gates (axial gap, lateral offset and axis tilt).",
+    "The stand rests on the bench (vertical contact force above 0.1 N) and is within 3 degrees of its upright start orientation.",
+    "No robot contact with any lamp part at the end."
+   ],
+   "mechanism": "The shade's barb cams a spring jaw (a slide joint with a spring, 1200 N/m) open and it snaps back over the barb. The bulb thread (11.9 mm x 1.5 mm right-hand, convex thread pieces) advances only by turning and seats on the socket stop. Retention welds switch on with the current relative pose when the seating gates hold. The prewired cable is not built."
+  },
+  "ikea365": {
+   "title": "IKEA 365+ serving stand", "manual": "IKEA 365+ serving stand (AA-2568481-2)", "robot": "panda", "hours": 8,
+   "goal": "Rebuild the IKEA 365+ serving stand: take the screw out of member A and park it, lay member B across member A, bring the screw back and screw it in through both members until it seats, turn the stand over, and place the bowl on it.",
+   "requirements": [
+    "The seven operations are accepted in this order: remove the screw, park the screw, cross the members, return the screw, reinstall the screw, turn the stand, place the bowl.",
+    "At the end the screw is retained in member A and aligned with its seated pose relative to both members, and member B is retained and aligned with member A (gates: axial 0.1 mm, lateral 0.6 mm, axis 1.5 degrees; member B may be rotated 180 degrees).",
+    "Released and settled: no robot contact with any part, every part slower than 0.025 m/s, the bench carries the parts; the bowl touches the members and member A is turned over (its z axis pointing down).",
+    "A support probe on a copy of the final state: the bench must carry the whole weight, and the weight plus a 2 N downward test load on member A (the grader applies it; it never acts during your episode), with the arms holding their last commands."
+   ],
+   "mechanism": "The M4 x 0.5 thread is exact convex pieces: the screw advances only by being turned. Two retention welds (screw to member A, member B to member A) switch on with the current relative pose once the reinstalled screw is seated."
+  },
+  "vesken": {
+   "title": "VESKEN shelf unit", "manual": "IKEA VESKEN shelf unit (AA-1842283-5), body steps 1-8", "robot": "panda", "hours": 12, "demo": "vesken_vlim",
+   "goal": "Build the VESKEN shelf unit body: snap the four feet into the bottom tray from below, the four columns into the bottom tray, the second tray onto the columns, four columns and a tray for each of the two upper levels, and the four caps into the top tray.",
+   "requirements": [
+    "All 23 snap connections are made in the source order (each depends on the previous: feet, columns, tray, columns, tray, columns, tray, caps) and, at the end, each connector is within its gates (axial gap 0.6 mm, lateral 0.8 mm, outward-axis tilt 2 degrees).",
+    "The feet stand on the bench (summed vertical contact force above 0.1 N) and the bottom tray is within 3 degrees of its upright, unrotated assembly orientation.",
+    "No arm link touches any furniture part or jaw at the end."
+   ],
+   "mechanism": "32 spring jaws (slide joints with springs, 1200 N/m, 2.5 mm travel) are deflected by the hooked snap pins through contact. A retention weld per connection switches on when the acceptance gates hold for 0.15 s (snap passed, jaw returned, seated, at rest)."
+  },
+  "gladom": {
+   "title": "GLADOM tray table", "manual": "IKEA GLADOM tray table (AA-1832218-3), full seven-operation scope", "robot": "panda", "hours": 10,
+   "goal": "Build the GLADOM tray table: cross frame B into frame A, drive the long screw and the bottom screw, place the ring and drive its two screws, and set the tray on the ring.",
+   "requirements": [
+    "The retention joints of frame B, the ring and the four screws are all latched.",
+    "Every part except frame A is at its assembled pose relative to frame A: gap within 0.8 mm along frame A's z axis, lateral within 1 mm, tilt within 2 degrees (screws: axis tilt; frame B and the ring may be rotated 180 degrees, the tray 7.5 degrees), relative speed below 0.025 m/s. The two ring screws may use either ring receiver, but distinct ones.",
+    "The tray is free (never jointed) and supported by the ring (contact above 0.01 N in at least 12 of 36 samples over the last 0.15 s, and above 0.01 N on average over them); no robot contact with any furniture part.",
+    "All of the above hold continuously for 0.15 s."
+   ],
+   "mechanism": "Screw threads and frame A's four nut sleeves are SDF meshes (0.5 mm pitch, right-hand): a screw advances only by being turned. Retention welds to frame A switch on when the scene's acceptance gates hold. The tray is never jointed."
+  },
+  "variera": {
+   "title": "VARIERA shelf insert", "manual": "IKEA VARIERA shelf insert (AA-741461-4), step 1", "robot": "panda", "hours": 8,
+   "goal": "Assemble the VARIERA shelf insert: place the two side frames, lower the shelf onto them, and drive the four screws through the shelf holes into the frames' receivers until they seat.",
+   "requirements": [
+    "Four distinct receivers each hold a screw that was turned relative to that receiver (at least 0.4 measured turns, with a descent matching turns x pitch), its head seated at the shelf hole (axial 0.2 mm, lateral 0.6 mm, axis 1.5 degrees).",
+    "The frames are aligned under the shelf, parts are slower than 0.02 m/s, the assembly stands on the bench on its own, and no robot touches any furniture part.",
+    "All of the above hold for 0.5 s."
+   ],
+   "mechanism": "Screw threads and receivers are non-convex SDF meshes (0.5 mm pitch, right-hand): a screw advances only by being turned. There are no welds or other non-contact mechanisms."
+  },
+  "burvik": {
+   "title": "BURVIK side table", "manual": "IKEA BURVIK side table (AA-2445102-1), seven operations", "robot": "panda", "hours": 10,
+   "goal": "Assemble the BURVIK side table: screw two legs into the upside-down top, turn the top on its side, push the handle through the two remaining top holes, screw the other two legs into the handle's sleeves, and turn the table upright.",
+   "requirements": [
+    "All five retention joints (the four legs and the handle to the top) are latched.",
+    "Every leg and the handle is at its assembled pose in the top's frame: gap within 0.8 mm, lateral within 1 mm, tilt within 2 degrees (legs: thread axis; handle: full rotation, both rod ends within 1 mm of the two top holes), relative speed below 0.025 m/s.",
+    "The top ends upright: its normal within 2 degrees of world +z."
+   ],
+   "mechanism": "Each leg end is a right-hand M8 thread (1 mm lead, SDF mesh) in an SDF nut: about 12.5 turns from first engagement to the seat. Retention welds (legs and handle to the top) switch on once the scene's gates hold for 0.15 s."
+  },
+  "stegesund": {
+   "title": "STEGESUND roll stand", "manual": "IKEA STEGESUND toilet roll stand (AA-2652783-1), manual steps 1-3", "robot": "panda", "hours": 8, "demo": "stegesund_vlim",
+   "robot_text": {"action": "per arm (`left/`, then `right/`): `actuator1`..`actuator7` = joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike the real Panda), `actuator8` = gripper command (0 = closed, 255 = open; the hand squeezes at its tendon force limit, about 70 N per finger, at any width when commanded 0)", "tcp": "`left/tcp` / `right/tcp` (between the fingertips)"},
+   "goal": "Build the STEGESUND roll stand: press half B onto half A at the two leg crossings, push the shelf in from the foot end, drive the four bolts through the legs into the shelf's rail ends with the hex key, stand the frame up and drop the top rod into the two crotches.",
+   "requirements": [
+    "Every part except half A and the hex key is at its assembled pose relative to half A (a bolt: relative to the shelf): half B and the shelf within 0.6 mm and 1 degree; the top rod within 3 mm and 1 degree (up to the rod's own symmetry: it may lie end for end, or turned by a facet); each bolt within 0.6 mm along and across its bore axis, its axis within 2 degrees (spin free).",
+    "The stand is upright: half A's z axis within 1 degree of world +z.",
+    "success.py checks only the end state, and the hex key may be anywhere at the end; the terminal rules below add the release, rest and no-breakdown checks."
+   ],
+   "mechanism": "Each bolt's coarse right-hand thread (2.5 mm pitch) is a capsule helix against a matching helix in the shelf's rail end: a bolt advances only by being turned, by the hex key in its 4 mm socket. The half-lap crossings are press fits (contact and friction, no weld). A bolt's seat weld is armed at its first thread contact; once its head touches and it has stopped relative to the shelf for 0.05 s, the bolt and the half it clamps are welded to the shelf at their current pose, and the bolt and its rail-end thread stop colliding."
+  },
+  "kyrre": {
+   "title": "KYRRE stool", "manual": "IKEA KYRRE stool (AA-2118871-4), manual step 1: three legs, six screws", "robot": "panda", "hours": 10, "demo": "kyrre_vlim",
+   "goal": "Fasten the three legs to the upside-down seat of the KYRRE stool: place each leg and drive its two screws, in the scene's order (leg 1, its two screws, leg 2, its two screws, leg 3, its two screws), and leave the stool upside-down on the table.",
+   "requirements": [
+    "All nine retention welds (three legs, six screws) are engaged, each by its operation's acceptance gates, strictly in the scene's operation order.",
+    "Every operation is still within its gates: worst connector gap below 0.6 mm (a screw's seat gap 0.7 mm), lateral within 0.8 mm, axis within 2 degrees; every screw head is seated on its leg's bearing pad.",
+    "The assembly stayed rigid after the last weld: every part within 1 mm and 1 degree of its pose relative to the seat at that moment.",
+    "At the end it is released (no robot contact with any part), and all of the above held for 1.5 s with the seat drifting less than 1 cm and tilting less than 3 degrees over the hold."
+   ],
+   "mechanism": "One retention weld per operation, switched on with the current relative pose once its gates hold for 0.15 s: the previous operation latched, gap, lateral and tilt near the seat, at least 4 mm of travel, contact with the counterpart, slow, and for a screw more than a quarter turn of tightening. The screw threads (0.5 mm pitch, right-hand) are contact geometry: a screw advances only by being turned. Once a screw's weld latches, the screw and its insert's thread stop colliding (sw_cutover.json: from the first operation on). Each leg still carries the idle spring jaw of its removed press-in pin."
+  },
+  "stenerik": {
+   "title": "STENERIK laptop stand", "manual": "IKEA STENERIK laptop stand (AA-2372559-2), all 17 operations", "robot": "panda", "hours": 10,
+   "goal": "Build the STENERIK laptop stand: set up the two side supports and the crossbar, drive the six screws through the supports into the crossbar's threaded inserts, then peel the four pads off the backing strip and press them onto the supports' pad sites.",
+   "requirements": [
+    "Each of the crossbar's six inserts holds a retained screw (its weld to the crossbar latched), aligned to the insert and to the support hole it passes through: axial gap below 0.1 mm, lateral within 0.6 mm, thread axis within 1.5 degrees, slower than 0.02 m/s. Screws, pads and the two supports are interchangeable.",
+    "Both supports are joined to the crossbar (join weld latched) and at their side pose: gap below 0.1 mm, lateral within 0.6 mm, orientation within 1.5 degrees, slower than 0.02 m/s.",
+    "Each of the four pad sites holds a pad that is bonded to that support, no longer bonded to the backing, and aligned (same gates).",
+    "At the end no robot touches any part (the backing strip excepted), every part is slower than 0.025 m/s and the bench carries the parts: on a copy of the state, 2 s with the arms holding their targets, then a 2 N downward load on the crossbar, the bench reaction equals the parts' weight (plus the load) within max(0.05 N, 2 %)."
+   ],
+   "mechanism": "The M4 x 0.5 right-hand threads are exact convex pieces: a screw advances only by being turned. Retention welds switch on with the measured relative pose once the scene's gates hold: a screw seated in its insert (contact with the crossbar and the support, at least 0.4 turns and some tightening work, held 0.15 s); each support joins the crossbar with the third screw of its side; a pad on its site (0.30 s). The pads start bonded to the backing and come free once pulled off it with at least 1.5 N for 0.25 s."
+  },
+  "uppsta": {
+   "title": "UPPSTÅ toy hammering block", "manual": "IKEA UPPSTÅ toy hammering block (AA-2300462-4), all manual steps and the 8 pegs", "robot": "panda", "hours": 10, "demo": "uppsta_vlim", "keyframe": "box", "demo_substeps": 8,
+   "robot_text": {"action": "per arm (`left/`, then `right/`): `actuator1`..`actuator7` = joint position targets (rad; joint 7, the wrist, has no joint limit in these scenes, unlike the real Panda), `actuator8` = gripper command (0 = closed, 255 = open; the hand squeezes at its tendon force limit, about 70 N per finger, at any width when commanded 0)", "tcp": "`left/tcp` / `right/tcp` (between the fingertips)"},
+   "goal": "Build the UPPSTÅ hammering block: set two dowels into one board end, press end block b onto them and drive screw b with the hex key; turn it over, set the other two dowels, press end block a on and drive screw a; stand the block on its feet and push the eight pegs into their holes.",
+   "requirements": [
+    "Both screws are seated and their seat welds engaged, each in its own hole within 0.6 mm along and across the hole axis, its axis within 2 degrees (spin free).",
+    "Measured in the board frame against the scene's 'assembled' keyframe: both end blocks within 0.6 mm and 1 degree; every dowel position holds a dowel within 0.6 mm, its axis within 2 degrees (the four dowels are interchangeable).",
+    "Every peg hole holds a peg (the eight are interchangeable) within 1 mm of the hole axis, its axis within 2 degrees, pushed down to the up position (at most 0.5 mm above it).",
+    "The block stands on its feet (the board's assembled up direction within 1 degree of world +z) and no robot body touches any part at the end."
+   ],
+   "mechanism": "Each screw's coarse right-hand thread (2.5 mm pitch) runs in a helical thread in the board end: a screw advances only by being turned, by the hex key in its socket. Dowels and pegs hold by compliant flutes (spring-loaded slide joints, an interference fit) and friction. A screw's seat weld is armed once it is on its hole's axis within 3 mm of its seat; once its head touches and it has stopped relative to the board for 0.05 s, the screw and the end block it clamps are welded to the board at their current pose, and the screw and its hole's thread stop colliding. The scene's tick is 8 physics steps (2.5 ms); a row here is 4 of them (1.25 ms, 800 Hz)."
+  }
+ }
+}

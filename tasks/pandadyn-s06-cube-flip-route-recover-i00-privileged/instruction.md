@@ -5,7 +5,7 @@ You control one simulated **Franka Panda** arm (7 joints, its standard hand, and
 
 This is a *fixed scene instance*: everything starts the same way after every reset, and you may reset and retry as many
 times as you want. Your deliverable is **one replayable trajectory** of the robot's low-level actions, not a general
-policy. Things move by themselves from the first control step on: the scene does not wait for the robot.
+policy.
 
 ## Scene
 One Panda, base at (-0.40, 0, 0), yaw 0 (facing +x). Its hand carries a small blue pusher blade: a box 8 mm thick (tool x) x 50 mm wide (tool y) x 12 mm tall (tool z), centred at the tool frame origin; its pushing faces are normal to the tool x axis. The blade hangs from a rigid side adapter (part of the tool): from the hand a horizontal bar at tool z = 0.035 runs from tool x = -0.12 to 0 at tool y = +0.13, then along y to y = 0.07, ending in a short 12 mm x 12 mm post at (0, 0.07) reaching down from z = 0.036 to z = 0 (the blade's mid-height); the post stands 45 mm beyond the blade's +y end and is not joined to it visibly, but blade, bars and post are one rigid tool. The Panda TCP is at (-0.12, 0.13, 0.04) in the tool frame, so with the blade level the gripper points straight down. At the start the blade is level (tool axes aligned with the world axes, pushing faces normal to world x), its centre at (-0.05, -0.08, 0.179).

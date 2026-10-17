@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/molmospaces-open-i00-privileged"
-description = "MolmoSpaces open (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Open the cabinet. Frozen episode: upstream benchmark ithor/FrankaOpenHardBench/FrankaOpenHardBench_20260206_json_benchmark, episode 49."
+description = "MolmoSpaces open (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Open the dishwasher. Frozen episode: upstream benchmark ithor/FrankaOpenHardBench/FrankaOpenHardBench_20260206_json_benchmark, episode 52."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "code-as-policy", "trajectory", "open"]
 
@@ -18,7 +18,7 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): sc
 # scene = environment/instance.json (one upstream benchmark episode + its t = 0 state hash); identity = the dataset.toml digest
 expert_time_estimate_hours = 2.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-i01-privileged__hkZsZtE (run codex-gpt6_luna-medium, batch molmospaces-luna-v3 of 2026-10-03: an earlier round on the same episode, kept with the run's records, not on the results site); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-i00-privileged__bVqNR4u (run codex-gpt6_1_sol-high, batch molmo-harder-sol, 2026-10-16, image 0.2.4, the same instance); human review in PR #276"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)

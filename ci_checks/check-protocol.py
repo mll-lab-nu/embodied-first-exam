@@ -22,23 +22,25 @@ import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.16
 # standard-realtime 2.3 (the realtime capability, §4b), privileged none
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
 # Tasks a benchmark exports with its own service inside (PROTOCOL §4c): each such benchmark keeps a manifest,
-# scripts/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol each mode serves
-# (`[protocols]`); a listed directory may declare its manifest's protocol for its mode. No per-benchmark table here.
-def _own_protocols() -> dict[str, dict[str, str]]:
-    out: dict[str, dict[str, str]] = {}
+# scripts/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol(s) each mode serves
+# (`[protocols]`, a string or a list); a listed directory may declare one of its manifest's protocols for its mode. No
+# per-benchmark table here.
+def _own_protocols() -> dict[str, dict[str, set[str]]]:
+    out: dict[str, dict[str, set[str]]] = {}
     for man in sorted((ROOT / "scripts").glob("*/exported.toml")):
         d = tomllib.loads(man.read_text())
+        protos = {m: {p} if isinstance(p, str) else set(p) for m, p in d.get("protocols", {}).items()}
         for t in d.get("tasks", []):
-            out[t["name"]] = d.get("protocols", {})
+            out[t["name"]] = protos
     return out
 
 
 OWN_PROTOCOLS = _own_protocols()
 
 
-def own_protocol(name: str, mode: str | None) -> str | None:
-    """The protocol a benchmark's own exported task may declare instead (None: not such a task)."""
-    return OWN_PROTOCOLS.get(name, {}).get(mode or "")
+def own_protocols(name: str, mode: str | None) -> set[str]:
+    """The protocols a benchmark's own exported task may declare instead (empty: not such a task)."""
+    return OWN_PROTOCOLS.get(name, {}).get(mode or "", set())
 
 
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
@@ -85,7 +87,7 @@ def check_task(task: Path) -> None:
     if name.endswith("-realtime") and not name.endswith("-standard-realtime") or mode == "realtime":
         warn("mode name `realtime` / `-realtime` (the third mode is `standard-realtime`, PROTOCOL D12)", name)
     proto = meta.get("protocol")
-    if proto is not None and proto == own_protocol(name, mode):
+    if proto is not None and proto in own_protocols(name, mode):
         pass                                   # PROTOCOL §4c: the benchmark's own protocol
     else:
         for m in {mode, named} & set(tc.MODES):

@@ -1,0 +1,725 @@
+{
+  "canonical_rotation": [
+    [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      1.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "rest_height": 1.630604068748653,
+  "template_height": 1.72,
+  "template_scale": 1.054823812208411,
+  "support_coordinate": -0.17791563272476196,
+  "placement_translation": [
+    0.8527155219176845,
+    0.15594273416214766,
+    0.18766964596220495
+  ],
+  "contacts_min_z": {
+    "all": -0.0017625648231178737,
+    "trunk": 0.0,
+    "head": 0.0067948087368488175,
+    "upper_arm_left": 0.22765278201765235,
+    "upper_arm_right": 0.0002805209245753948,
+    "forearm_left": 0.11603286640245217,
+    "forearm_right": 0.044969671735376276,
+    "hand_left": 0.001498186386890088,
+    "hand_right": 0.008670166643104077,
+    "thigh_left": 0.12855624658592896,
+    "thigh_right": -0.0017625648231178737,
+    "shin_left": 0.023409893186791347,
+    "shin_right": 0.031263677451819516,
+    "foot_left": 0.0009968575983355932,
+    "foot_right": 0.017822706046576514
+  },
+  "landmark_errors_m": {
+    "head": 0.06704986848572163,
+    "pelvis": 0.07576477026422292,
+    "torso": 0.07576477026422293,
+    "upper_arm_left": 0.17619852778047806,
+    "forearm_left": 0.07755028665218183,
+    "hand_left": 0.08950952771293118,
+    "thigh_left": 0.034328364571728755,
+    "shin_left": 0.0774268811288254,
+    "foot_left": 0.010427360207929086,
+    "upper_arm_right": 0.1512072353610294,
+    "forearm_right": 0.13138214491203604,
+    "hand_right": 0.09060098706196561,
+    "thigh_right": 0.026546185354892365,
+    "shin_right": 0.07209179609369915,
+    "foot_right": 0.0601911185312704
+  },
+  "support_probes": {
+    "coordinate_frame": "pack",
+    "trunk": {
+      "points": [
+        [
+          -0.17791563272476196,
+          -0.005002887453883886,
+          0.8178133964538574
+        ],
+        [
+          -0.17791563272476196,
+          -0.005002887453883886,
+          0.8178133964538574
+        ],
+        [
+          -0.17614734172821045,
+          -0.04605231434106827,
+          0.8649133443832397
+        ],
+        [
+          -0.17475448548793793,
+          -0.022411730140447617,
+          0.8392964005470276
+        ],
+        [
+          -0.17408503592014313,
+          -0.019799280911684036,
+          0.8682036995887756
+        ],
+        [
+          -0.17283646762371063,
+          -0.061399612575769424,
+          0.8259520530700684
+        ],
+        [
+          -0.17093971371650696,
+          -0.03529931977391243,
+          0.8563883900642395
+        ],
+        [
+          -0.169862300157547,
+          0.012578997761011124,
+          1.2892783880233765
+        ],
+        [
+          -0.16932980716228485,
+          0.0030505266040563583,
+          0.8701241612434387
+        ],
+        [
+          -0.1691140979528427,
+          -0.020651800557971,
+          0.9020333290100098
+        ],
+        [
+          -0.1689259111881256,
+          0.009245764464139938,
+          0.8491460680961609
+        ],
+        [
+          -0.16865834593772888,
+          0.02521948143839836,
+          0.8278796076774597
+        ],
+        [
+          -0.16865834593772888,
+          0.02521948143839836,
+          0.8278796076774597
+        ],
+        [
+          -0.16799631714820862,
+          -0.017117075622081757,
+          1.198381781578064
+        ],
+        [
+          -0.16751141846179962,
+          -0.043317124247550964,
+          0.9010675549507141
+        ],
+        [
+          -0.16735123097896576,
+          -0.045047033578157425,
+          0.867045521736145
+        ]
+      ],
+      "cloud_count": 1183,
+      "cloud_sha256": "8c6121e6705ab5362ca646579bd012f4a1e6bc2f6e130432c8c19db2b8f5c988"
+    },
+    "head": {
+      "points": [
+        [
+          -0.17147397994995117,
+          0.0006966479122638702,
+          1.5119014978408813
+        ],
+        [
+          -0.17124706506729126,
+          0.001337587833404541,
+          1.5118693113327026
+        ],
+        [
+          -0.17118865251541138,
+          0.004677165299654007,
+          1.527026653289795
+        ],
+        [
+          -0.17117971181869507,
+          0.005006954073905945,
+          1.52700674533844
+        ],
+        [
+          -0.16953420639038086,
+          0.0021124258637428284,
+          1.5119000673294067
+        ],
+        [
+          -0.16947448253631592,
+          0.005134891718626022,
+          1.5267237424850464
+        ],
+        [
+          -0.16903036832809448,
+          -0.0013180151581764221,
+          1.4966487884521484
+        ],
+        [
+          -0.1689969301223755,
+          -0.0004296936094760895,
+          1.4964829683303833
+        ],
+        [
+          -0.16804510354995728,
+          0.026282861828804016,
+          1.5091469287872314
+        ],
+        [
+          -0.16804397106170654,
+          0.02508493885397911,
+          1.5091713666915894
+        ],
+        [
+          -0.1677546501159668,
+          0.025628741830587387,
+          1.5240172147750854
+        ],
+        [
+          -0.16769695281982422,
+          0.026119522750377655,
+          1.523938775062561
+        ],
+        [
+          -0.16721397638320923,
+          0.0014266632497310638,
+          1.496874451637268
+        ],
+        [
+          -0.16661781072616577,
+          0.025710832327604294,
+          1.4948318004608154
+        ],
+        [
+          -0.16652917861938477,
+          0.009168736636638641,
+          1.5442944765090942
+        ],
+        [
+          -0.16652917861938477,
+          0.009168736636638641,
+          1.5442944765090942
+        ]
+      ],
+      "cloud_count": 4392,
+      "cloud_sha256": "9e8e0a6ab8da7b32e72dcd807085d97c7f626bbeb2c45bff31a94bbfd37d442a"
+    }
+  },
+  "bone_angles_degrees": {
+    "foot.L": [
+      22.739409001812245,
+      -0.0,
+      -34.2385805922096
+    ],
+    "foot.R": [
+      33.13072049373895,
+      -0.0,
+      34.99999983559887
+    ],
+    "head": [
+      14.322212571542336,
+      2.1895712445907356,
+      0.808873476751811
+    ],
+    "lowerarm01.L": [
+      -50.122059148574614,
+      -0.0,
+      8.004796438373708
+    ],
+    "lowerarm01.R": [
+      -115.04758343628971,
+      -0.0,
+      -109.74632528179515
+    ],
+    "lowerleg01.L": [
+      54.44080142115201,
+      -0.0,
+      0.0
+    ],
+    "lowerleg01.R": [
+      0.004720291041553582,
+      -0.0,
+      0.0
+    ],
+    "neck01": [
+      -60.000001669652114,
+      69.41494615746196,
+      -39.56941005071574
+    ],
+    "neck02": [
+      -8.013285509738386,
+      -1.772624481141423,
+      5.448863238213597
+    ],
+    "upperarm01.L": [
+      57.49171031961331,
+      -24.313651492284293,
+      -120.00000333930423
+    ],
+    "upperarm01.R": [
+      72.69864156321563,
+      37.655539818859395,
+      -120.00000333930423
+    ],
+    "upperleg01.L": [
+      -36.2826103239843,
+      -0.0,
+      27.10908228748314
+    ],
+    "upperleg01.R": [
+      16.298168369180456,
+      -0.0,
+      -8.541401712779297
+    ],
+    "wrist.L": [
+      -100.0000005060238,
+      72.21063820739656,
+      -97.39187228088691
+    ],
+    "wrist.R": [
+      89.18664991773471,
+      87.46713613380565,
+      77.74274992564838
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 0,
+      "squared_error": 4.820535353084932,
+      "accepted": true
+    },
+    {
+      "iteration": 1,
+      "squared_error": 2.8322208190224942,
+      "accepted": true
+    },
+    {
+      "iteration": 2,
+      "squared_error": 1.4845586736938488,
+      "accepted": true
+    },
+    {
+      "iteration": 3,
+      "squared_error": 0.8732802882260406,
+      "accepted": true
+    },
+    {
+      "iteration": 4,
+      "squared_error": 0.7947014616623498,
+      "accepted": true
+    },
+    {
+      "iteration": 5,
+      "squared_error": 0.7785116587830753,
+      "accepted": true
+    },
+    {
+      "iteration": 6,
+      "squared_error": 0.7772049073834382,
+      "accepted": true
+    },
+    {
+      "iteration": 7,
+      "squared_error": 0.7623076305783766,
+      "accepted": true
+    },
+    {
+      "iteration": 8,
+      "squared_error": 0.7623011316175292,
+      "accepted": true
+    },
+    {
+      "iteration": 9,
+      "squared_error": 0.7402140765823535,
+      "accepted": true
+    },
+    {
+      "iteration": 10,
+      "squared_error": 0.7142656508983934,
+      "accepted": true
+    },
+    {
+      "iteration": 11,
+      "squared_error": 0.7063216145218957,
+      "accepted": true
+    },
+    {
+      "iteration": 12,
+      "squared_error": 0.6994579340845903,
+      "accepted": true
+    },
+    {
+      "iteration": 13,
+      "squared_error": 0.6983546444653908,
+      "accepted": true
+    },
+    {
+      "iteration": 14,
+      "squared_error": 0.6933032115400177,
+      "accepted": true
+    },
+    {
+      "iteration": 15,
+      "squared_error": 0.6930032770999854,
+      "accepted": true
+    },
+    {
+      "iteration": 16,
+      "squared_error": 0.692537798030724,
+      "accepted": true
+    },
+    {
+      "iteration": 17,
+      "squared_error": 0.6924766708182852,
+      "accepted": true
+    },
+    {
+      "iteration": 18,
+      "squared_error": 0.6917176451379916,
+      "accepted": true
+    },
+    {
+      "iteration": 19,
+      "squared_error": 0.6915481916931714,
+      "accepted": true
+    },
+    {
+      "iteration": 20,
+      "squared_error": 0.6914451155426525,
+      "accepted": true
+    },
+    {
+      "iteration": 21,
+      "squared_error": 0.691440188121564,
+      "accepted": true
+    },
+    {
+      "iteration": 22,
+      "squared_error": 0.6907026110002147,
+      "accepted": true
+    },
+    {
+      "iteration": 23,
+      "squared_error": 0.6905629474968399,
+      "accepted": true
+    },
+    {
+      "iteration": 24,
+      "squared_error": 0.690469362620117,
+      "accepted": true
+    },
+    {
+      "iteration": 25,
+      "squared_error": 0.6904692253089919,
+      "accepted": true
+    },
+    {
+      "iteration": 26,
+      "squared_error": 0.6897511798310055,
+      "accepted": true
+    },
+    {
+      "iteration": 27,
+      "squared_error": 0.6896258273231823,
+      "accepted": true
+    },
+    {
+      "iteration": 28,
+      "squared_error": 0.6895456715473256,
+      "accepted": true
+    },
+    {
+      "iteration": 29,
+      "squared_error": 0.6888631052643934,
+      "accepted": true
+    },
+    {
+      "iteration": 30,
+      "squared_error": 0.7450587115810248,
+      "accepted": true
+    },
+    {
+      "iteration": 31,
+      "squared_error": 0.7449570222226952,
+      "accepted": true
+    },
+    {
+      "iteration": 32,
+      "squared_error": 0.7449462679348741,
+      "accepted": true
+    },
+    {
+      "iteration": 33,
+      "squared_error": 0.7441108873413077,
+      "accepted": true
+    },
+    {
+      "iteration": 34,
+      "squared_error": 0.742465843529984,
+      "accepted": true
+    },
+    {
+      "iteration": 35,
+      "squared_error": 0.7424327214970543,
+      "accepted": true
+    },
+    {
+      "iteration": 36,
+      "squared_error": 0.7423274314666027,
+      "accepted": true
+    },
+    {
+      "iteration": 37,
+      "squared_error": 0.7418376065564676,
+      "accepted": true
+    },
+    {
+      "iteration": 38,
+      "squared_error": 0.7418305287853489,
+      "accepted": true
+    },
+    {
+      "iteration": 39,
+      "squared_error": 0.7417659585294355,
+      "accepted": true
+    },
+    {
+      "iteration": 40,
+      "squared_error": 0.7417632811951576,
+      "accepted": true
+    },
+    {
+      "iteration": 41,
+      "squared_error": 0.7412832091423323,
+      "accepted": true
+    },
+    {
+      "iteration": 42,
+      "squared_error": 0.808568958386288,
+      "accepted": true
+    },
+    {
+      "iteration": 43,
+      "squared_error": 0.8085629223234109,
+      "accepted": true
+    },
+    {
+      "iteration": 44,
+      "squared_error": 0.8085621387406726,
+      "accepted": true
+    },
+    {
+      "iteration": 45,
+      "squared_error": 0.8071743683361038,
+      "accepted": true
+    },
+    {
+      "iteration": 46,
+      "squared_error": 0.8070965991334155,
+      "accepted": true
+    },
+    {
+      "iteration": 47,
+      "squared_error": 0.8070956361190601,
+      "accepted": true
+    },
+    {
+      "iteration": 48,
+      "squared_error": 0.8023726373474003,
+      "accepted": true
+    },
+    {
+      "iteration": 49,
+      "squared_error": 0.8019409042333621,
+      "accepted": true
+    },
+    {
+      "iteration": 50,
+      "squared_error": 0.8015586346838571,
+      "accepted": true
+    },
+    {
+      "iteration": 51,
+      "squared_error": 0.8015558990388988,
+      "accepted": true
+    },
+    {
+      "iteration": 52,
+      "squared_error": 0.8011928377825759,
+      "accepted": true
+    },
+    {
+      "iteration": 53,
+      "squared_error": 0.8011862279419354,
+      "accepted": true
+    },
+    {
+      "iteration": 54,
+      "squared_error": 0.8517328659621543,
+      "accepted": true
+    },
+    {
+      "iteration": 55,
+      "squared_error": 0.8516343600451098,
+      "accepted": true
+    },
+    {
+      "iteration": 56,
+      "squared_error": 0.8516151562272911,
+      "accepted": true
+    },
+    {
+      "iteration": 57,
+      "squared_error": 0.8513717866664156,
+      "accepted": true
+    },
+    {
+      "iteration": 58,
+      "squared_error": 0.851205113124356,
+      "accepted": true
+    },
+    {
+      "iteration": 59,
+      "squared_error": 0.8512025633842123,
+      "accepted": true
+    },
+    {
+      "iteration": 60,
+      "squared_error": 0.8512001207837738,
+      "accepted": true
+    },
+    {
+      "iteration": 61,
+      "squared_error": 0.850982696126935,
+      "accepted": true
+    },
+    {
+      "iteration": 62,
+      "squared_error": 0.850892359852861,
+      "accepted": true
+    },
+    {
+      "iteration": 63,
+      "squared_error": 0.8508852244612206,
+      "accepted": true
+    },
+    {
+      "iteration": 64,
+      "squared_error": 0.8508801251949389,
+      "accepted": true
+    },
+    {
+      "iteration": 65,
+      "squared_error": 0.8506767837330147,
+      "accepted": true
+    },
+    {
+      "iteration": 66,
+      "squared_error": 0.9059150834018955,
+      "accepted": true
+    },
+    {
+      "iteration": 67,
+      "squared_error": 0.9058155446519968,
+      "accepted": true
+    },
+    {
+      "iteration": 68,
+      "squared_error": 0.905299318635797,
+      "accepted": true
+    },
+    {
+      "iteration": 69,
+      "squared_error": 0.905156880212481,
+      "accepted": true
+    },
+    {
+      "iteration": 70,
+      "squared_error": 0.9051223359424453,
+      "accepted": true
+    },
+    {
+      "iteration": 71,
+      "squared_error": 0.9051203312631952,
+      "accepted": true
+    },
+    {
+      "iteration": 72,
+      "squared_error": 0.9038392911003549,
+      "accepted": true
+    },
+    {
+      "iteration": 73,
+      "squared_error": 0.9037278853365994,
+      "accepted": true
+    },
+    {
+      "iteration": 74,
+      "squared_error": 0.9036964321377705,
+      "accepted": true
+    },
+    {
+      "iteration": 75,
+      "squared_error": 0.9036958407357805,
+      "accepted": true
+    },
+    {
+      "iteration": 76,
+      "squared_error": 0.9033211450072038,
+      "accepted": true
+    },
+    {
+      "iteration": 77,
+      "squared_error": 0.9033012293798564,
+      "accepted": true
+    },
+    {
+      "iteration": 78,
+      "squared_error": 0.9551801204820516,
+      "accepted": true
+    },
+    {
+      "iteration": 79,
+      "squared_error": 0.9551723026648119,
+      "accepted": true
+    },
+    {
+      "iteration": 80,
+      "squared_error": 0.9546000741028621,
+      "accepted": false
+    }
+  ],
+  "pose": "side",
+  "target_json": "historical-source://calibration/pose_fix/side_target.json",
+  "physics_modified": false,
+  "calibration": "rig rotations, uniform authored-height scale, trunk support plane"
+}

@@ -3,7 +3,7 @@
 **Task:** Close the cabinet.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark`,
-episode 51: a hinged door (revolute joint)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 346: a hinged door (revolute joint)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 
@@ -11,11 +11,12 @@ often as you like. Your deliverable is **one open-loop trajectory**, not a gener
 The episode ends after the last row of your trajectory, or after **455 control steps** (the benchmark's
 30 s horizon at 15.152 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
 at that moment: the target's joint is open at most 15% of its range (it starts 50% open). The task has to hold at the end: met earlier and undone by then does not count, and ending
-your trajectory right after the task is met is how you stop there.
+your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
+same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
 `/app/output/trajectory.npz` with `actions`: float64 (T, 8), one row per control step, the targets of upstream's
-joint-position controllers in this order: `fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper` (fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open, but its controller target is already 255 (closed): holding the current targets closes it; command 0 to keep it open. `s.save_trajectory(rows)` writes it. Also leave the
+joint-position controllers in this order: `fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper` (fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open and its target is 0. `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
 you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling also writes
 `/app/output/rcb_session_log.jsonl` (your sessions, resets and simulated steps, reported as cost; not graded): leave it

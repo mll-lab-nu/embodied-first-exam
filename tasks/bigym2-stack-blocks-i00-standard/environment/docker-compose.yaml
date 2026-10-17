@@ -21,11 +21,11 @@ services:
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Move the blocks to the other table and stack them on the green pad."
-      RCB_EPISODE: "10 resets, the last episode graded: an episode succeeds when this has held for 1 s (50 control steps): the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper (held = a finger of the gripper touching the object); a block touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 8750 control steps"
+      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper (held = a finger of the gripper touching the object); a block touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 8750 control steps"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"        # BiGym2 standard: 10 resets (docs/benchmarks/bigym2.md); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode (the protocol's default)
       RCB_IMAGE_HW: "${RCB_IMAGE_HW:-84}"               # the side of each onboard camera's square image, pixels (84: upstream's)
       RCB_SESSION_LOG: ""
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
