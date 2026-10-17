@@ -37,8 +37,8 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# The agent's time is up: stop whatever it left running in its container, so nothing drives the robot past the deadline
-# (Harbor stops that container only after collecting from it).
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
 [[verifier.collect]]
 service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
