@@ -23,8 +23,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. screening round 16 (2026-10-13, revision 12): the truth-state reference beat level 2 in 10 of 20 seeds, the camera-only version did not win level 2; a model did (Opus 11:8, 11:6); this development seed was not screened.
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
+`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
+the validity rule
 (technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`).

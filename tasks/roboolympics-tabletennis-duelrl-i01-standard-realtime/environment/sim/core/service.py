@@ -28,6 +28,20 @@ from .sport import MatchBase
 from .workers import ProcessWorker
 
 ROOT = Path(__file__).resolve().parent
+
+
+class _NoReplay(Exception):
+    pass
+
+
+def verdict_replay() -> bool:
+    """robot_coding_bench (owner 2026-10-17, board 0151): standard and standard-realtime are graded by the sim
+    sidecar's live record only. RO_VERDICT_REPLAY=0 (the task's compose file): no fresh-process grading replay; the
+    verdict (valid_trial, winner) is the live match's; final.json says so (verdict_replay false, deterministic null).
+    Unset or 1: RoboOlympics' own rule (the replay must agree)."""
+    return os.environ.get("RO_VERDICT_REPLAY", "1") != "0"
+
+
 FORFEIT_REASONS = ("ready_timeout", "clock", "abandoned", "no_show")
 CAMERA_KIND = "camera"           # the core's own render worker: the sport's cameras drawn by the task's renderer
 # final.json compatibility (the readers of Season 1: live_board, the site extractors, regrade_transient, broadcast):
@@ -392,10 +406,14 @@ class Service:
 
     def finalize(self):
         try:
+            if not verdict_replay():         # live grading (robot_coding_bench, owner 2026-10-17): no replay
+                raise _NoReplay
             subprocess.run([sys.executable, "-m", "core.episode", self.plugin, str(self.data)], check=True,
                            timeout=float(os.environ.get("RO_REPLAY_TIMEOUT_S", "600")), cwd=ROOT.parent,
                            stdout=subprocess.DEVNULL)
             self.replay = json.loads((self.data / "replay_check.json").read_text())
+        except _NoReplay:
+            pass
         except Exception as exc:  # noqa: BLE001
             self.errors.append({"where": "replay", "error": str(exc)[:300]})
         with self.cond:
@@ -459,7 +477,8 @@ class Service:
             single = len(self.cfg.side_list()) == 1
             complete = self.reason == "match_over" or (self.reason in FORFEIT_REASONS and
                                                        (out.winner is not None or single))
-            valid = bool(self.finalized and complete and replay_ok and not self.errors
+            live = not verdict_replay()      # live grading: the verdict is this record's, no replay agreement
+            valid = bool(self.finalized and complete and (replay_ok or live) and not self.errors
                          and not any(v["meter_error"].values()) and not any(v["proxy_error"].values()))
             cont = self.continuous()
             valid = valid and not self.errors
@@ -476,7 +495,8 @@ class Service:
                      "scores": self.m.scores(), "match_winner": out.winner, "decided_by": out.decided_by,
                      "ranking": out.ranking, "solo": out.solo,
                      "winner": out.winner if valid else None, "state_sha": sha, "commands_sha": cmds,
-                     "steps": self.m.k, "deterministic": replay_ok, "replay_scores": r.get("scores"),
+                     "steps": self.m.k, "deterministic": None if live else replay_ok, "replay_scores": r.get("scores"),
+                     "verdict_replay": not live,
                      "finalized": self.finalized, "graded_ready": self.finalized, "valid_trial": valid,
                      "technical_failure": not valid, "errors": self.errors, "seats": seats,
                      "joined": {s: st.joined for s, st in self.seats.items()}, "reviews": self.reviews,
@@ -484,6 +504,8 @@ class Service:
                      "video": bool(self.video_info.get("video")), "video_info": self.video_info, "elapsed_s": round(time.monotonic() - self.t0, 1), **v, **self.extra_final(),
                      "continuous": cont, "seed_proof": self.seed_proof(),
                      "sport_fields": sport}
+            if live:                             # the protocol's own fields (board 0151): graded by the live match
+                final.update(graded_by="live", replays=0)
             compat = {k: v for k, v in sport.items() if k not in final}     # see COMPAT below
             if "score" not in final and "score" not in compat:
                 compat["score"] = final["scores"]

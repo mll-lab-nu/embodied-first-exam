@@ -25,8 +25,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. TOPBM calibration 2026-10-16 (Quest, S = 20, perception-free players, seeds 1001-1040): the reference's own prediction and strokes placing every shot short to a random front corner won 5 of 40 (this seed 11:8), the reference itself 0 of 40 (this seed 1:11), short alternating 0 of 40 (the other simple baselines: RoboOlympics PR #181); our camera-only reference does not win level 2, so the oracle run checks the pipeline (a valid, replayed match), not a win.
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
+`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
+the validity rule
 (technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`).
