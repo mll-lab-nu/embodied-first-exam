@@ -5,15 +5,54 @@ of STUB_PLAN (comma-separated, one per process, the counter in STUB_STATE):
   diff           succeeds, ending in state "B"
   mismatch       succeeds, but the rebuilt start differs from the instance's record (instance_matches false)
   die            exits 1 without a result        error   prints a result line without `replays`
-  sleep          sleeps past any limit           novideo succeeds; a --video call writes no video"""
+  sleep          sleeps past any limit           novideo succeeds; a --video call writes no video
+The standard collect hook's video pass (template/standard/environment/sim/finalize.sh) imports it as a module instead:
+Session / load_trajectory / render_video / render_frame, every Session counted in STUB_SESSIONS; STUB_VIDEO = ok (the
+filmed run ends in state STUB_VIDEO_SHA, default "L"), fail (render_video raises) or sleep (past the pass's limit)."""
 import json, os, sys, time
 
 MAX_ROWS = 4500
+SESSION_LOG = ""
+
+
+def _count(var: str) -> None:
+    path = os.environ.get(var)
+    if path:
+        n = int(open(path).read()) if os.path.exists(path) else 0
+        open(path, "w").write(str(n + 1))
+
+
+class Session:
+    task, dim = "S00-Stub", 8
+
+    def __init__(self, instance, strict: bool = False):
+        _count("STUB_SESSIONS")
+
+    def render_video(self, actions, path, fps: int = 25, camera: str = "overview") -> dict:
+        what = os.environ.get("STUB_VIDEO", "ok")
+        if what == "fail":
+            raise RuntimeError("stub: the renderer failed")
+        if what == "sleep":
+            time.sleep(30)
+        open(path, "wb").write(b"\x00" * 64)
+        return {"state_sha": os.environ.get("STUB_VIDEO_SHA", "L"), "success": True}
+
+    def render_frame(self, camera: str = "overview"):
+        return [[0]]
+
+    def close(self) -> None:
+        pass
+
+
+def load_trajectory(path, task: str, dim: int):
+    import numpy as np
+    return np.asarray(np.load(path, allow_pickle=False)["actions"], dtype=np.float64)
 
 
 def main() -> int:
     if len(sys.argv) < 2 or sys.argv[1] != "replay":
         return 2
+    _count("STUB_REPLAYS")                     # any replay CLI process (the standard hook must start none)
     state = os.environ["STUB_STATE"]
     n = int(open(state).read()) if os.path.exists(state) else 0
     open(state, "w").write(str(n + 1))
