@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboOlympics |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
+| Twin | `roboolympics-soccerssl-match-i00-privileged` |
 | Simulator / robot | `mujoco` / `ssl-robot` |
 | Family / instance | `soccer_ssl_match` / seed 7 |
 | Oracle | `partial` — screening (soccer_ssl-1): the camera reference's result at level 2 is not established for this development seed; a model won level 2 (Opus 4:3, camera only). The oracle run checks the pipeline |
