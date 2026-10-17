@@ -29,7 +29,7 @@ fail-fast and permanent and are checked after every 2 ms physics substep: a cell
 below the table top or outside the workspace box, any of them touching the floor, the remote or the tray moved more
 than 3 cm or tilted more than 15 degrees, the gray cell touching the table, the green cell touching the table again
 after it was lifted, a cell without hand contact moving down faster than 0.886 m/s (a drop from more than 4 cm), a
-cell touching nothing at all moving down faster than 0.5 m/s (no catch window), unstable physics, or the 6,000-control
+cell touching nothing at all moving down faster than 0.5 m/s (no catch window), the parked left arm or left hand touching a task object, unstable physics, or the 6,000-control
 budget. The frozen instance and thresholds come from the task, never from an agent archive. A no-op
 fails. Human review and full agent-trial calibration remain pending; report this task as provisional.
 

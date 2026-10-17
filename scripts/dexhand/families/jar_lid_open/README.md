@@ -78,7 +78,7 @@ position), `jar_lifted` (> 15 mm), `lid_knocked_off` (lid touches the worktop be
 nothing while its centre of mass moves down faster than 0.3 m/s - no catch window - or moves down faster than
 1.0 m/s at any time), `lid_off_table` / `jar_off_table` (floor contact, origin below the worktop
 top by 5 mm, or outside the worktop footprint), `object_left_workspace`, `lid_forced_through_thread` (the lid leaves the
-thread zone upward while its lugs are not in a ramp gap, +-0.03 rad), `unstable_physics`, `episode_budget` (3000 controls).
+thread zone upward while its lugs are not in a ramp gap, +-0.03 rad), `left_arm_contact` (the parked left arm or left hand touches the jar or the lid), `unstable_physics`, `episode_budget` (3000 controls).
 
 ## Evidence commands
 

@@ -32,7 +32,7 @@ in privileged mode; the hand of the trusted service episode in standard mode) an
 twice in fresh processes. Both replays must succeed and have identical final state hashes (integration state, verdict
 state and physics parameters); in standard mode the replay hash must also equal the live final hash. A replay ends at the first
 success or the first failure. Failures are fail-fast and permanent (jar tipped, slid or lifted, lid knocked off or
-dropped, an object off the worktop or out of the workspace, the lid forced through the thread, unstable physics, or
+dropped, an object off the worktop or out of the workspace, the lid forced through the thread, the parked left arm or left hand touching the jar or the lid, unstable physics, or
 the 3,000-control budget). A no-op fails. Human review and full agent-trial calibration remain pending; report this
 task as provisional.
 

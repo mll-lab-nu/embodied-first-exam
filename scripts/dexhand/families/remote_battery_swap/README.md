@@ -71,7 +71,7 @@ grace window): task body below the table top or outside the workspace box, floor
 or tilted > 15 deg, gray cell touching the table, green cell touching the table after it was lifted (lifted = the
 first control it is clear of the table and > 1 cm above its start), a cell without hand contact moving down faster
 than 0.886 m/s (free drop from 4 cm), a cell touching nothing at all moving down faster than 0.5 m/s (reviewer RB-1;
-the oracle's own peak unsupported fall is 0.16 m/s), unstable physics, 6,000-control budget. `state_sha` hashes the integration state, the
+the oracle's own peak unsupported fall is 0.16 m/s), the parked left arm or left hand touching a task object (`left_arm_contact`), unstable physics, 6,000-control budget. `state_sha` hashes the integration state, the
 predicate state, the hand and the physics/predicate parameters of `task.json` (never the prose keys), so text edits
 do not change evidence hashes.
 

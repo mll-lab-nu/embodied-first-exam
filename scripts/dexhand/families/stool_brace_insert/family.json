@@ -55,6 +55,6 @@
     "video_sec": 1200
   },
   "notes": {
-    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; the wrist x/y/z targets are offsets from the stage origin (task.json stage_origin) along the world axes, and at zero wrist angles the palm faces down with the fingers along +x."
+    "layout": "Both hands hang from the same six-axis wrist stage, with the same wrist joints, ranges, gains and start targets; the wrist x/y/z targets are offsets from the stage origin (stage origin (0.55, -0.1, 1.15) m) along the world axes, and at zero wrist angles the palm faces down with the fingers along +x."
   }
 }
