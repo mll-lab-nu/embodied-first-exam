@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboOlympics |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
+| Twin | `roboolympics-soccer-match-i00-privileged` |
 | Simulator / robot | `mujoco` / `booster-t1` |
 | Family / instance | `soccer_match` / seed 7 |
 | Oracle | `partial` — screening 2026-10-12 (soccer-2v2-9): our built-in camera reference does not beat level 2 (0/10; it cannot kick while walking); a model did (Astra 12:2 at level 2, camera only). The oracle run checks the pipeline (a valid, replayed match), not a win. S = 5 (an official match slowdown) so that 2 x 5 min of game time (3000 s of wall time) and the reviews fit the hub's 7200 s |
