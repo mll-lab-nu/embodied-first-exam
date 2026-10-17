@@ -3,6 +3,7 @@ calls, on stub_mujoco's toy model. The object `link_19` drifts 1 mm in x per con
 the episode; images are small (the tests count frames, they do not look at them)."""
 import hashlib
 import json
+import os
 
 import numpy as np
 
@@ -49,7 +50,8 @@ class Session:
         self.data = mujoco.Data(self.model)
         self._renderer = _Renderer()
         self.steps, self.done, self.success, self.reason = 0, False, False, None
-        self.instance_sha, self.instance_exact = "stub", True
+        # STUB_INSTANCE_EXACT=0: the scene does not rebuild to the frozen instance's recorded hash
+        self.instance_sha, self.instance_exact = "stub", os.environ.get("STUB_INSTANCE_EXACT", "1") != "0"
 
     def arms(self):
         return mujoco.ARMS
