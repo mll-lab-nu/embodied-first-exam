@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
-Win one complete match against the frozen sport's scripted L2 opponent, seed 22: the same frozen instance as `roboolympics-tabletennis-match-i01-standard-realtime` (its privileged twin; there you see only camera images).
+Win one complete match against the frozen sport's scripted L2 opponent, seed 22: the same frozen instance as `roboolympics-tabletennis-match-i01-standard-realtime` (its standard-realtime twin; there you see only camera images).
 
 ## Difficulty
 Same frozen sport and instance as `roboolympics-tabletennis-match-i01-standard-realtime`: scripted level 2, seed 22; full-simulator
@@ -23,7 +23,13 @@ development and the full state instead of camera images.
 planner fed the true ball state).
 
 ## Verification
-Separate no-network verifier; root-owned trusted source, nobody policy, original core clock, two fresh journal replays.
+Separate no-network verifier; root-owned trusted source (unreadable to the program), the program as `nobody` with a
+public read-only copy of the full simulator (`/opt/dev`), the original core clock at S = 10, one fresh-process journal
+replay (the original service's own) that must agree with the live match, then the replay video (`replay.mp4`, after
+the verdict). The match ends as in the twin: over, or unfinished at 7200 s. The verdict of this live,
+closed-loop match depends on the verifier host's speed, as for the standard-realtime twin: the verifier's CPUs are
+pinned (4, minimum = cap). If any process of the program's user survives the end of the match, the trial
+is an infra error (`infra_error` 1), never a win.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.

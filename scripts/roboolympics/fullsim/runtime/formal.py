@@ -12,8 +12,6 @@ import json
 import os
 import shutil
 import stat
-import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -21,7 +19,7 @@ from pathlib import Path
 
 from core.realtime import RealtimeService
 from core.sport import MatchConfig, Refused
-from tools.tt_fullsim.runner import Program, child_env
+from tools.tt_fullsim.runner import Program
 from tools.tt_fullsim.session import FROZEN, ROOT, plain, plugin
 
 
@@ -61,30 +59,46 @@ class FullSimService(RealtimeService):
         return None
 
 
+def _alive_of(uid):
+    """PIDs of `uid`'s live processes (zombies excluded: they hold nothing and only their parent can reap them)."""
+    alive = []
+    for d in Path("/proc").iterdir():
+        if not d.name.isdigit():
+            continue
+        try:
+            if d.stat().st_uid != uid:
+                continue
+            if (d / "stat").read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                continue
+        except (OSError, IndexError):
+            continue
+        alive.append(int(d.name))
+    return alive
+
+
 def end_uid_processes(uid, rounds=50):
-    """Kill every process of the policy's user that is still alive (a double fork or setsid leaves the program's
-    process group), until none is left; raises if one survives. Nothing is graded before this returns."""
+    """End every process of the policy's user (a double fork or setsid leaves the program's process group): a child
+    that drops to `uid` sends kill(-1, SIGKILL), which reaches every process of that user at once (a fork loop cannot
+    outrun it; RLIMIT_NPROC bounds it anyway), round after round until none is left. Returns False when one survives:
+    the caller writes infra_error = 1 instead of raising, so a reward is always written (#282 review, H.1)."""
     import signal
 
     for _ in range(rounds):
-        alive = []
-        for d in Path("/proc").iterdir():
-            if not d.name.isdigit():
-                continue
+        if not _alive_of(uid):
+            return True
+        pid = os.fork()
+        if pid == 0:  # the killer: as `uid`, kill(-1) signals exactly that user's processes (and not itself)
             try:
-                if d.stat().st_uid == uid:
-                    alive.append(int(d.name))
-            except OSError:
-                continue
-        if not alive:
-            return
-        for pid in alive:
-            try:
-                os.kill(pid, signal.SIGKILL)
+                os.setgroups([])
+                os.setgid(uid)
+                os.setuid(uid)
+                os.kill(-1, signal.SIGKILL)
             except OSError:
                 pass
+            os._exit(0)
+        os.waitpid(pid, 0)
         time.sleep(0.05)
-    raise RuntimeError(f"processes of uid {uid} survive")
+    return not _alive_of(uid)
 
 
 def sanitize(source, destination):
@@ -113,7 +127,9 @@ def sanitize(source, destination):
         raise ValueError("missing policy/program.py")
 
 
-def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsafe_local=False, dev_root=None):
+def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=7200, unsafe_local=False, dev_root=None):
+    """wall_limit: the formal match's wall-clock bound, the standard-realtime twin's own cutoff (its agent session,
+    RCB_WALL_CLOCK_S): the match ends as there (match over; at the bound it is unfinished and not won)."""
     if level not in (1, 2, 3, 4) or isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed < 100000:
         raise ValueError("opponent level 1-4 and a public seed below 100000 required")
     if not unsafe_local and os.geteuid() != 0:
@@ -141,6 +157,7 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
     program = service = None
     reason = error = None
     refusals = calls = 0
+    isolated = True
     public = Path(tempfile.mkdtemp(prefix="tt-policy-"))
     public.chmod(0o755)
     try:
@@ -247,9 +264,12 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
         reason, error = "policy_error", f"{type(exc).__name__}: {exc}"
     finally:
         if program is not None:
-            program.close()
+            try:
+                program.close()
+            except Exception:  # noqa: BLE001 -- the sweep below ends whatever is left
+                pass
         if not unsafe_local:
-            end_uid_processes(65534)
+            isolated = end_uid_processes(65534)
         if service is not None and service.phase != "over":
             service.collect()
         if service is not None:
@@ -259,7 +279,7 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
             with service.cond:
                 while not service.finalized and time.monotonic() < deadline:
                     service.cond.wait(timeout=1.0)
-        shutil.rmtree(public)
+        shutil.rmtree(public, ignore_errors=True)
     result = {
         "success": 0,
         "valid": 0,
@@ -273,6 +293,7 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
         "slowdown": slowdown,
         "replays": 0,
         "isolation_checked": int(not unsafe_local),
+        "isolation_failed": int(not isolated),
     }
     diagnostics = {
         "reason": reason,
@@ -287,17 +308,9 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
             final = json.loads((out / "match/final.json").read_text())
             if not final.get("graded_ready"):
                 raise ValueError("the service's final.json is not graded yet (replay unfinished)")
-            # Original service already replayed once in a fresh process. Do a second fresh journal replay.
-            second = subprocess.run(
-                [sys.executable, "-m", "core.episode", str(ROOT / "sports/tabletennis/plugin.py"), str(out / "match")],
-                cwd=ROOT,
-                env=child_env(),
-                capture_output=True,
-                text=True,
-                timeout=600,
-                check=False,
-            )
-            rep = json.loads((out / "match/replay_check.json").read_text()) if second.returncode == 0 else {}
+            # One replay (#282 decision 4): the original service replayed the journal in a fresh process for its
+            # verdict (final.json "deterministic", replay_check.json); its record must agree with the live match.
+            rep = json.loads((out / "match/replay_check.json").read_text())
             equal = bool(
                 final["deterministic"]
                 and rep.get("state_sha") == final["state_sha"]
@@ -308,13 +321,14 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
             )
             valid = bool(
                 final["valid_trial"] and final["reason"] == "match_over" and equal and not error and not reason
+                and isolated
             )
             result.update(
                 success=int(valid and final["match_winner"] == "A"),
                 valid=int(valid),
                 deterministic=int(equal),
-                infra_error=int(bool(final["errors"]) or second.returncode != 0),
-                replays=2,
+                infra_error=int(bool(final["errors"]) or not isolated),
+                replays=1,
                 points_for=final["scores"]["A"],
                 points_against=final["scores"]["opponent"],
                 steps=final["steps"],
@@ -324,11 +338,13 @@ def evaluate(policy, out, *, level, seed=22, slowdown=10, wall_limit=1800, unsaf
                 final_reason=final["reason"],
                 source_sha=final["source_sha"],
                 continuous=final.get("continuous"),
-                replay_stderr=second.stderr[-2000:],
             )
-    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+    except Exception as exc:  # noqa: BLE001 -- a verification failure is an infra error, never a crash
         result.update(success=0, valid=0, infra_error=1)
         diagnostics["verification_error"] = f"{type(exc).__name__}: {exc}"
+    if not isolated:
+        result.update(success=0, valid=0, infra_error=1)
+        diagnostics["isolation"] = "processes of the policy's user (nobody) survived kill(-1)"
     (out / "reward.txt").write_text(str(result["success"]) + "\n")
     (out / "reward.json").write_text(json.dumps(result, indent=2))
     (out / "diagnostics.json").write_text(json.dumps(diagnostics, indent=2))
@@ -342,7 +358,7 @@ def main():
     p.add_argument("--level", type=int, choices=(1, 2, 3, 4), required=True)
     p.add_argument("--seed", type=int, default=22)
     p.add_argument("--dev-root", type=Path)
-    p.add_argument("--wall-limit", type=float, default=1800)
+    p.add_argument("--wall-limit", type=float, default=7200)
     p.add_argument("--slowdown", type=float, default=10)
     p.add_argument("--unsafe-local", action="store_true")
     args = p.parse_args()

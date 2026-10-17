@@ -13,7 +13,6 @@ import importlib
 import json
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -30,8 +29,14 @@ TWINS = {
     for i, _, _ in INSTANCES
 }
 SOURCE_TEMPLATE = "tasks/@TWIN@/environment/sim"
-UPSTREAM = True  # True in the copy installed upstream (scripts/roboolympics/fullsim/generate.py)
 INSTANCE_FILE = "match_instance.json"  # not instance.json: the twin's frozen instance is its sim tree + seed + level
+# The formal match ends as in the standard-realtime twin (#282 decision 5): when it is over, or, unfinished and not won,
+# at the twin's own cutoff (its agent session, RCB_WALL_CLOCK_S). The verifier's timeout holds that bound, the
+# service's replay and verdict (650 s), the replay video (VIDEO_S), the program's load and the monitor's seal.
+WALL_LIMIT_S = 7200
+VIDEO_S = 1800
+VERIFIER_TIMEOUT_S = WALL_LIMIT_S + 650 + VIDEO_S + 30 + 120 + 200
+VERIFIER_CPUS = 4  # pinned: the minimum is the cap (#282 decision 1: a live match's verdict depends on the host's speed)
 
 
 def source_for(name):
@@ -156,7 +161,7 @@ min_memory_gb = 8.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 4.0
+verifier_min_cpus = {VERIFIER_CPUS}.0
 verifier_min_memory_gb = 8.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "author estimate; CPU-only frozen MuJoCo, full simulator development and original realtime formal service"
@@ -184,12 +189,12 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 8192
 [verifier]
-timeout_sec = 5100.0
+timeout_sec = {VERIFIER_TIMEOUT_S}.0
 environment_mode = "separate"
 network_mode = "no-network"
 [verifier.environment]
 build_timeout_sec = 1800.0
-cpus = 4
+cpus = {VERIFIER_CPUS}
 memory_mb = 8192
 '''
 
@@ -199,13 +204,13 @@ def instruction(level, name):
     return f"""# Full-simulator table tennis: develop a program against L{level}
 
 Win one complete match against the frozen sport's scripted L{level} opponent, seed {seed}: the same frozen instance
-as `{TWINS[name]}` (its privileged twin; there you see only camera images).
+as `{TWINS[name]}` (its standard-realtime twin; there you see only camera images).
 The original Franka Panda, high-level actions, serve laws, limits, scoring and opponent are unchanged.
 First to five, win by two from 4:4, cap seven. Full simulator development is allowed; no video is required.
 
 ## Development and deliverable
 Use `from tools.tt_fullsim.session import Session`; `Session(level={level}, seed={seed})` gives `state()`, `world`,
-`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. Your source and simulator are at `/opt/fullsim`.
+`spec()`, `act(command)`, `step(n)`, `ready()` and `reset()`. The full simulator (source included) is at `/opt/fullsim`.
 Reset rebuilds the WHOLE same-seed match at 0:0. You may inspect/modify private worlds and develop/search with
 repeated resets within your agent resource and time limits. These changes never enter the formal match.
 Read `/opt/fullsim/README.md` for the complete program API, observation fields, serving phases and game-time units.
@@ -219,13 +224,15 @@ not a pre-recorded trajectory or a claimed score. Write a valid program early an
 
 ## Formal evaluation
 After development, a separate no-network verifier runs your final program as an unprivileged process against a
-fresh unmodified original simulator. It has a separate readable development simulator for private predictions;
-it cannot access the trusted referee or logs. Formal full-state snapshots are read-only values, not a mutable
+fresh unmodified original simulator. Your program may read a public read-only copy of the full simulator
+(`/opt/dev`, the same files as `/opt/fullsim`) for its own predictions; it cannot read the trusted simulator, referee
+or logs. Formal full-state snapshots are read-only values, not a mutable
 world object. Formal reset and score rollback are not allowed. The original realtime clock runs at S=10 even
 while your program computes; point reviews freeze the world under the existing rules. One response per observation,
 one action at a time. See `config["spec"]` and the README for the policy execution, load, review and call limits.
-The independent match has its own execution cutoff; unfinished/error programs do not win. The platform records
-executed actions and replays that trusted journal twice in fresh processes. Success requires a completed win,
+The match ends as in `{TWINS[name]}`: when it is over, or at that task's cutoff ({WALL_LIMIT_S} s of wall
+time), where an unfinished match is not won; a program error does not win either. The platform records the executed
+actions and replays that trusted journal in a fresh process. Success requires a completed win,
 valid original referee result and matching hashes/scores/steps/outcome. The generated trajectory is evidence,
 not your submission. This fixed-instance result does not measure unseen-instance generalization.
 
@@ -279,7 +286,9 @@ WORKDIR /opt/trusted
 """
         )
         shutil.copy2(TEMPLATES / "grade.py", tests / "grade.py")
-        (tests / INSTANCE_FILE).write_text(json.dumps({"level": level, "seed": seed, "slowdown": 10}) + "\n")
+        (tests / INSTANCE_FILE).write_text(
+            json.dumps({"level": level, "seed": seed, "slowdown": 10, "wall_limit_s": WALL_LIMIT_S}) + "\n"
+        )
         (env / INSTANCE_FILE).write_text((tests / INSTANCE_FILE).read_text())
         (tests / "test.sh").write_text("""#!/bin/bash
 set -eu
@@ -318,7 +327,13 @@ development and the full state instead of camera images.
 planner fed the true ball state).
 
 ## Verification
-Separate no-network verifier; root-owned trusted source, nobody policy, original core clock, two fresh journal replays.
+Separate no-network verifier; root-owned trusted source (unreadable to the program), the program as `nobody` with a
+public read-only copy of the full simulator (`/opt/dev`), the original core clock at S = 10, one fresh-process journal
+replay (the original service's own) that must agree with the live match, then the replay video (`replay.mp4`, after
+the verdict). The match ends as in the twin: over, or unfinished at {WALL_LIMIT_S} s. The verdict of this live,
+closed-loop match depends on the verifier host's speed, as for the standard-realtime twin: the verifier's CPUs are
+pinned ({VERIFIER_CPUS}, minimum = cap). If any process of the program's user survives the end of the match, the trial
+is an infra error (`infra_error` 1), never a win.
 """)
         if hub:
             sys.path.insert(0, str(hub / "scripts"))
@@ -343,7 +358,8 @@ def twin_identity(tasks):
     for level, name in TASKS:
         sim = tasks / TWINS[name] / "environment/sim"
         compose = (tasks / TWINS[name] / "environment/docker-compose.yaml").read_text()
-        for key, value in (("RO_SEED", SEEDS[name]), ("RO_LEVEL", level)):
+        for key, value in (("RO_SEED", SEEDS[name]), ("RO_LEVEL", level), ("RO_FORMAT", "match"), ("RO_SLOWDOWN", 10),
+                           ("RCB_ACTION_LEVEL", "high"), ("READY_TIMEOUT_S", 300), ("RCB_WALL_CLOCK_S", WALL_LIMIT_S)):
             if f'{key}: "{value}"' not in compose:
                 raise SystemExit(f"{name}: twin {TWINS[name]} does not run {key} = {value}")
         for copy in ("tests/trusted", "tests/dev", "environment/fullsim"):
@@ -384,11 +400,7 @@ def main():
             twin_identity(out)
         print("fullsim policy tasks match exporter; the trusted simulator is byte-identical to each twin's")
     else:
-        if args.hub and not UPSTREAM:  # install the self-contained generator; it renders the tasks from the twins' sims
-            install_upstream(args.hub)
-            subprocess.run([sys.executable, str(args.hub / "scripts/roboolympics/fullsim/generate.py")], check=True)
-        else:
-            build(out, args.hub)
+        build(out, args.hub)
         print("wrote " + ", ".join(n for _, n in TASKS))
 
 
