@@ -11,12 +11,13 @@ artifacts = [
   { source = "/data/calls.jsonl", service = "sim" },
   { source = "/data/submitted.f64", service = "sim" },
   { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/@@RT@@"
-description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = @@SLOWDOWN@@): Panda Dynamic Scenes @@CODE@@ @@TITLE@@ (@@ARMS_SHORT@@) on the same frozen instance as the privileged task. @@GOAL_TOML@@ Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). @@RT_RESETS@@ resets, only the last episode graded; no privileged state; the sim service records every executed control step, replays the last episode in a fresh process and grades it."
+description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = @@SLOWDOWN@@): Panda Dynamic Scenes @@CODE@@ @@TITLE@@ (@@ARMS_SHORT@@) on the same frozen instance as the privileged task. @@GOAL_TOML@@ Once an episode starts the scene and the robot move whatever the agent does (at 1/S of real speed), so the agent plans or streams joint_position targets from a program of its own through the realtime client (RGB, depth + proprioception). @@RT_RESETS@@ resets, only the last episode graded; no privileged state; the sim service records every executed control step and grades the last episode as it ran live (no replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", @@KW_ARMS@@, "dynamic-manipulation", "standard-realtime-mode", "trajectory"]
 
@@ -45,11 +46,13 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it: a replay
-# of the graded episode in a fresh process (a scene build + at most the horizon's control steps, 1-3 min), then the
-# video, filmed by a live replay. The verdict ("finalized": true, set before any video is rendered) may take until
-# 1500 s; then the hook waits for the video ("video_pending") until 2100 s -- a video that is not ready by then is lost,
-# the verdict is not.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it: the
+# live episode's verdict, nothing replayed (owner, 2026-10-17, board 0151), written at once ("finalized": true) unless
+# the service is resuming after a crash (a scene build + the journal's control steps); the hook waits for it until
+# 1500 s, so a slow resume never turns a live result into an infrastructure failure. Then the video, rendered from the
+# graded episode's rows by the service after the verdict (a scene build + at most the horizon's control steps, filmed:
+# 1-3 min); the hook waits for it ("video_pending") until 2100 s -- a video that is not ready by then is lost, the
+# verdict is not.
 [[verifier.collect]]
 service = "sim"
 command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 1500 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 2100 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
