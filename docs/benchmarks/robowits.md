@@ -132,9 +132,15 @@ each task's own `[agent] timeout_sec`, written by the generator (history in [`do
   the table top). Privileged: the verifier runs the window after the trajectory's last row (`replay`); its state hash is
   taken after the window. Standard: after a call that leaves the goal holding, the service runs the window inside that
   call (its steps are part of the episode, journaled and recorded) and ends the episode only if it passes
-  (`meta["settle"]` says why not); when the agent's phase ends the window decides once more; the grading replay must end
-  the recorded rows in the live state (`state_sha_rows`) and pass its own window. Re-grades of the recorded positives:
-  the pull request that made this change, and `scripts/robowits/regrade.py` re-grades recorded trials (Re-grading).
+  (`meta["settle"]` says why not); when the agent's phase ends the window decides once more, after the agent's last
+  command (journaled and recorded too). The grading replay (`server.py` `grading_replay`, since 2026-10-17) must end
+  the recorded rows in the live state (`state_sha_rows`) and checks ONE window: the one that ended the episode, over its
+  recorded rows (the last `final_window` rows; `final.json` and the episode log's `end` event carry the length). Before
+  2026-10-17 it replayed those rows and then ran a second window after them, which the instruction did not state
+  (instruction audit M5: robowits-hold-cup-i00-standard, 10-15, passed live with 0.13 mm of motion and failed the
+  replay's second window). An episode without a completed live window (a simulator error, a window that raised) gets
+  the window after its last row; one that ended at the step cap gets none (below). Re-grades of the recorded positives:
+  the pull requests that made these changes, and `scripts/robowits/regrade.py` re-grades recorded trials (Re-grading).
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier
   replays the trajectory twice in a fresh process and compares the final-state hashes and the rebuilt frozen scene; it
   writes the verdict before it renders the video. The standard service grades in-process (its replay of the recorded
@@ -154,7 +160,9 @@ each task's own `[agent] timeout_sec`, written by the generator (history in [`do
 - The technical cap: 200000 control steps per episode or trajectory (`rcb_robowits.MAX_STEPS`, about 1.85 h of
   simulated time at 30 Hz), stated in both instructions and, in standard mode, in `/spec` as `max_control_steps`
   (PROTOCOL §4.5; `budget.steps` stays null: the wall clock is the budget). A standard episode ends there (reason
-  `step_guard`) and is graded as it stands; the privileged grader scores a longer trajectory 0 (`bad_trajectory`).
+  `step_guard`) without a settle window (none fits under the cap), so it is graded a failure (since 2026-10-17; before,
+  the replay's window raised past the cap and the trial was recorded as a grading error); the privileged grader scores
+  a longer trajectory 0 (`bad_trajectory`).
 - The GPU backend (`RCB_ROBOWITS_BACKEND=gpu`, the particle families stabilize_bottle and the dropped
   separate_marbles_and_sand: their CPU-backend builds take 39-86 min) is not bit-exact: their graders report determinism
   without requiring it. None of them is in the repository.
@@ -249,12 +257,18 @@ the recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; stan
 its `journal.f64`) and the recorded verdict. Per family it starts one container of the image with the current task's own
 grader copies (`tests/`). It replays each trajectory twice from the frozen instance and reports three things: the old
 verdict (RoboWits' predicate after the last row), the new verdict (the settle window, deterministic, instance ok) and the
-window's reason. The 12 BlenderKit families need `$RCB_ROBOWITS_BLENDERKIT`.
+window's reason. Standard trials are replayed as the service's grading replay does (`replay_standard`, since 2026-10-17):
+the window that ended the episode over its recorded rows, its length and the episode's reason read from the trial's
+episode log (`verifier/episode.jsonl`), else `artifacts/data/final.json`, else the trajectory's meta; with
+`artifacts/data/final.json` it also reports `replay_matches_live`. The 12 BlenderKit families need `$RCB_ROBOWITS_BLENDERKIT`.
 - **Same CPU vendor.** Genesis' CPU backend is bit-exact within one vendor only (Hosts). The tool prints the host's
   vendor and flags a trial `inconclusive` when its recorded success does not reproduce under the old rule here.
-- **Standard trials are conservative.** Under the current rule a failed window does not end the episode, and the agent
-  could have gone on; the label is "re-graded under 2026-10-14 rules (conservative)". The stand_pages and hold_cup texts
-  also changed, and the recorded agents never read them.
+- **Standard trials.** A trial recorded with the live settle window (from 2026-10-14) is re-graded exactly: the same
+  window over the same rows; the label is "re-graded under 2026-10-17 rules". An earlier trial had no live window (its
+  episode ended at the first call after which the predicate held) and gets the window after its last row; that is
+  conservative: under the current rule a failed window does not end the episode, and the agent could have gone on. Its
+  label is "re-graded under 2026-10-17 rules (conservative)". The stand_pages and hold_cup texts also changed, and the
+  recorded agents never read them.
 - **Privileged trials are close to exact.** The deliverable is the trajectory; only the window after its last row is new.
 
 ## Licences
