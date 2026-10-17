@@ -26,9 +26,10 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   and returns what the cameras saw. It never changes the plan.
 - `cameras = []` asks for no images at all (in 2.1 an empty list means every camera): a controller's proprio-only call.
 
-Grading is unchanged: every executed control step's sim row is journaled (trajectory_live.f64) and the graded episode's
-rows are replayed in a fresh simulator at the end. What is graded is the rows the simulator applied, not what was
-submitted, so the replay equals the live run however the timing went. Evidence added (never visible to the agent):
+Grading is 2.1's: the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151), judged by
+this service, nothing replayed. Every executed control step's sim row is journaled (trajectory_live.f64) and the graded
+episode's rows are saved as the trajectory: the rows the simulator applied, not what was submitted, so the trajectory
+reproduces the live run however the timing went (the video is rendered from it). Evidence added (never visible to the agent):
 ticks.f64 (per journal row: wall time, and the call whose chunk gave the row, -1 for a held one), calls.jsonl (one line
 per call; no calls/NNNNNN/ directories: a controller calls 50 times a second) and submitted.f64 (every row as sent:
 call id, then the row). final.json adds realtime, slowdown, held_steps, late_steps, max_queue_wait_s (the longest a

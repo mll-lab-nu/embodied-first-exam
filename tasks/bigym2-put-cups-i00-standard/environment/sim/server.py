@@ -10,6 +10,11 @@ Settings come from environment/docker-compose.yaml:
   RCB_EPISODE      what ends an episode, for /spec (the instruction's words)
   RCB_IMAGE_HW     the side of every onboard camera's square image, pixels (default 84, upstream's)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA, RCB_SLOWDOWN   the service's own
+The verdict is the live episode's (board 0151): step() reports upstream's is_success (the task's success held for 1 s,
+no fall) and the episode ends where upstream ends it, so nothing is replayed to grade it; render_video() re-runs the
+trajectory once, after the verdict, to film it. The frozen start is checked when the scene is built (instance_check: the
+instance's t0 state exactly, or within upstream's tolerance on another CPU): a scene that does not rebuild it is
+InstanceMismatch, and start_sha (the start this image accepts) is checked by rcb_service when an episode begins.
 What leaves this process: the three onboard cameras' images and upstream's low-dimensional observation (the robot's
 joint angles and velocities, gripper states, the pelvis pose its base controller tracks). Never an object's pose, the
 success check or its parts.
@@ -23,7 +28,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcb_bigym2 import CAMERAS, Episode, load_instance, replay  # noqa: E402
-from rcb_service import main  # noqa: E402
+from rcb_service import InstanceMismatch, main  # noqa: E402
 
 ACTION = "whole_body"
 
@@ -34,8 +39,12 @@ class BiGym2:
     def __init__(self, instance: str, task_text: str = "", episode: str = "", image_hw: int = 84):
         self.instance = load_instance(instance)
         self.ep = Episode(self.instance, image_hw=image_hw)
-        if not self.ep.instance_check(self.instance)["ok"]:
-            raise RuntimeError("this image does not rebuild the frozen instance's starting state")
+        check = self.ep.instance_check(self.instance)
+        if not check["ok"]:
+            raise InstanceMismatch(f"this image does not rebuild the frozen instance's starting state (state "
+                                   f"{self.ep.t0_sha}, instance {self.instance['t0']['state_sha']}, max joint deviation "
+                                   f"{check['max_joint_dev']:.2e})")
+        self.start_sha = self.ep.t0_sha   # the instance's start (exact, or within tolerance): every episode begins there
         self.task_text, self.episode = task_text, episode
         self.control_dt, self.max_control_steps = self.ep.control_dt, self.ep.horizon
         self.cameras, self.depth_cameras = CAMERAS, ()
@@ -125,17 +134,13 @@ class BiGym2:
     def state_sha(self) -> str:
         return self.ep.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen instance, in a fresh environment of upstream's."""
-        r = replay(self.instance, rows)
-        return {"success": r["success"], "state_sha": r["state_sha"]}
-
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim),
                  layout=np.array(self.ep.layout), task=self.ep.task,
                  **{k: str(v) for k, v in meta.items()})
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """The episode's video, after the verdict: the trajectory re-run once from the frozen instance, filmed."""
         replay(self.instance, rows, video=path)
         try:  # the last frame, for the verifier's evidence
             import subprocess

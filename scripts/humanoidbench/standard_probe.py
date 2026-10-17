@@ -13,8 +13,8 @@ In process, through rcb_service.Service.handle (the HTTP surface without the soc
   reset       (the optional capability) back to the frozen start, every camera's image included; a chunk is
               bit-identical to the same rows sent one at a time (one row a control step, and rows two control steps
               apart, interpolated linearly); the servo targets are the rows mapped linearly onto spec()'s ranges
-  success     with the pass mark lowered in this process only, the episode ends as a success and the finalize replays
-              it in a fresh simulator (success, deterministic) and renders a video that is not black
+  success     with the pass mark lowered in this process only, the episode ends as a success, the finalize grades
+              it live (graded_by "live", no replay) and renders a video that is not black
 Then through the real HTTP service and the shipped client: a crash (SIGKILL) and restart that must resume the same
 episode, and the cost per control step: one row a call with one head camera, with both, and chunks of 10 rows.
 Prints PASS/FAIL lines and a last JSON line for gen_tasks.py.
@@ -136,7 +136,7 @@ run(svc, B, **lin)
 check("chunk = rows, linear", sim.state_sha() == one_by_one, rows=len(B), dt=lin["dt"])
 
 call(svc, "/reset", {"video": "none"})
-bar = type(sim.s.low.task).success_bar                     # lowered for the live episode and the fresh replay alike
+bar = type(sim.s.low.task).success_bar                     # lowered for the live episode (and the video's pass)
 type(sim.s.low.task).success_bar = facts["nop_return"] / 2 if facts["nop_return"] > 0 else -1e9
 sim.s.success_bar = type(sim.s.low.task).success_bar
 m = run(svc, np.zeros((facts["max_steps"], nu)))
@@ -148,8 +148,8 @@ if fin.get("video"):
     import imageio.v2 as imageio
     frames = imageio.mimread(f"{data}/inproc/replay.mp4", memtest=False)
     vid = len(frames) > 1 and float(np.mean(frames[len(frames) // 2])) > 5
-check("success", m["reason"] == "success" and fin.get("replay_success") and fin.get("deterministic") and vid,
-      control_steps=m["control_steps"], final={k: fin.get(k) for k in ("live_success", "replay_success", "deterministic", "video")})
+check("success", m["reason"] == "success" and fin.get("success") and fin.get("graded_by") == "live" and vid,
+      control_steps=m["control_steps"], final={k: fin.get(k) for k in ("live_success", "success", "graded_by", "video")})
 type(sim.s.low.task).success_bar = sim.s.success_bar = bar
 del svc, sim
 
@@ -202,7 +202,7 @@ try:
         if fin.get("finalized") and not fin.get("video_pending"):   # the verdict, then the video
             break
         time.sleep(1)
-    check("finalize", bool(fin.get("deterministic")) and fin.get("sim_startups") == 2, final=fin)
+    check("finalize", fin.get("graded_by") == "live" and fin.get("sim_startups") == 2, final=fin)
 finally:
     srv.terminate()
 step_ms = {k: round(statistics.median(v), 2) for k, v in runs.items()}

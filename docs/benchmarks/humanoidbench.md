@@ -61,8 +61,28 @@ Why these (no model's results enter the choice):
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
-| standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
-| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §4.5; the realtime template's default is 10) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
+| standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, as it ran (live; nothing replayed) |
+| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §4.5; the realtime template's default is 10) | the last episode, as it ran (live; nothing replayed) |
+
+### Grading in the standard modes: the live episode
+
+Since 2026-10-17 (owner, board 0150/0151) the standard and standard-realtime verdict is the live episode's: the sim
+sidecar judges the episode it runs with HumanoidBench's own rule (the episode's return reaches the pass mark;
+`step()` in `scripts/humanoidbench/shared/standard/server.py`) and ends it there, and `rcb_service.py` writes that
+verdict (`graded_by = "live"`, `replays = 0`) once the agent's container is stopped. No grading replay runs. The old
+replay re-ran the same rows from the frozen start under the same rule (`Session.replay`), with no settle or hold of its
+own, so the live rule is exactly as strict; over the 128 archived standard and standard-realtime trials no verdict
+changes. The frozen start is checked on the live simulator: `start_sha` is the state `instance.npz` records (the hash
+of the snapshot `Session` restores), and the instance file's own digest must match its contents; a fresh trial that does
+not start there gives up as infrastructure (`instance_mismatch`, `infra_error = 1`), and a graded episode begun by a reset
+that did not return there is void the same way (every archived start and all 4949 archived resets matched). The video
+is one render pass over `trajectory.npz` after the verdict (`render_video`: CPU physics, EGL rendering on the sidecar's
+GPU; median 19 s a trial); it never changes the verdict. The removed replay cost a physics-only re-run of the episode,
+under 20 s at the median and about 1.5 slot-hours over the archive. `infra_error = 1` only for no or an unfinalized
+`final.json`, a give-up after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), and
+`instance_mismatch`; in standard-realtime also a simulator error that ends the graded episode (the realtime layer's
+rule). Crashes inside the agent's calls (`sim_crashed_on_call`), standard mode's simulator errors raised by its calls,
+timeouts and failures are the agent's 0.
 
 ### Standard mode's reset budget: 50
 
@@ -75,14 +95,14 @@ first guess, and in standard mode there is no simulator to practise in. This is 
 
 - `POST /reset` (`r.reset()`) abandons the running episode, or follows one that has ended (`failed`: a fall or the
   step limit; `error`), and starts a new one from the frozen instance: `Session.reset()` restores the robot, the scene,
-  the task state and the model-side goals, the same restore the verifier's fresh replay starts from. Each episode has
+  the task state and the model-side goals, the same restore every episode starts from. Each episode has
   its own `max_control_steps`; the wall clock is the trial's and never restarts. The reply carries the start's images
   and proprioception, `episode` and `resets_left`.
 - Refused (409) once an episode has succeeded (a success ends the trial), once the agent's time is up, or when the
   budget is spent; then the running episode is the last one.
-- **Only the last episode is graded.** The finalize replays the episode since the last reset in a fresh simulator;
+- **Only the last episode is graded.** The finalize grades the episode since the last reset as it ran;
   `trajectory.npz`, `replay.mp4` and `replay.last.png` are that episode. Since a success ends the trial at once, this
-  is the same as "the trial passes iff some episode passes and its replay agrees". Every episode stays in the
+  is the same as "the trial passes iff some episode passes". Every episode stays in the
   evidence: `trajectory_live.f64` journals every control step of the trial, `episode.jsonl` logs each reset (its
   checkpoint's `ep_start` is where the new episode begins in the journal) and `calls/` each call.
 - `final.json` and `reward.json` report `reset_budget` (50), `resets` (used), `n_actions` (the graded episode's steps)
@@ -115,15 +135,16 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STAN
   fixed 2026-10-10; HumanoidBench has one type, a target, and its plan behaves as it always did.)
 - **Observations.** `get_obs()` is the robot now; `get_obs(seconds=s)` watches the next s seconds and returns what the
   cameras saw, without touching the plan. `cameras=[]` returns proprioception only (the controller's call).
-- **Grading.** Unchanged: the journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control
-  step, whatever was submitted, and the finalize replays the last episode's rows in a fresh simulator. The replay
-  therefore equals the live run however late or early the agent was; `deterministic` checks it. Evidence beside it:
+- **Grading.** The live episode, as in standard mode (above; before 2026-10-17 the last episode's rows were replayed
+  in a fresh simulator). The journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control
+  step, whatever was submitted, so the trajectory reproduces the live run however late or early the agent was.
+  Evidence beside it:
   `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
   row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps` (since 2026-10-10 they cover
   the whole trial after a crash-resume, not only what followed the last restart), with `clock_s`, `stalled_s` and
   `stalled_share` (the wall time the clock ran, the time its stalls dropped, and their ratio), `requests_refused` and
   `request_busy_s`; `reward.json` repeats them (review R2 M1: before, `reward.json` had none of them and `max_lag_s`
-  never passed 0.5). They are evidence: a stalled trial is flagged, not failed. In both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict (2026-10-10).
+  never passed 0.5). They are evidence: a stalled trial is flagged, not failed. In both service modes `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict (2026-10-10).
 - **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
   physics takes 0.4–2.1 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
@@ -206,7 +227,7 @@ repository root).
 ## Results
 
 Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
-`reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
+`reward.json`, the video's last frame and videos are published on the results site, keyed by run id. Standard-mode
 results state their reset budget: the standard configuration is 50 resets (since 2026-10-07); runs with 0 -- every
 HumanoidBench standard-mode run recorded before that date -- are reported separately, and runs recorded before
 protocol v1.0 are marked as such. Standard-realtime results (`-standard-realtime`) are their own mode and are never pooled with
