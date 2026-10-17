@@ -5,16 +5,16 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/out/trajectory.npz", service = "sim" },
   { source = "/out/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/out/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/out/replay.mp4", service = "sim" },
+  { source = "/out/live.mp4", service = "sim" },             # the live episode's head camera, recorded while it ran
+  { source = "/out/replay.mp4", service = "sim" },           # ... or the video-only render, only when that one is missing
+  { source = "/out/video.log", service = "sim" },
   { source = "/out/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
-  { source = "/out/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/out/replay2.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/ispatialgym-alignment-axial-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): iSpatialGym alignment_axial (upstream subtask alignment_axial_board_game, instance 0). The goal is an image: make the scene look like /app/goal.png, the head camera's view once the task is done. The agent only gets a client: the R1Pro's three RGB cameras, its proprioception in the odometry frame and stateless kinematics; 23-D JoyLo actions in chunks. No object poses, no goal check, no reset; the sim service records the episode, replays it twice in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): iSpatialGym alignment_axial (upstream subtask alignment_axial_board_game, instance 0). The goal is an image: make the scene look like /app/goal.png, the head camera's view once the task is done. The agent only gets a client: the R1Pro's three RGB cameras, its proprioception in the odometry frame and stateless kinematics; 23-D JoyLo actions in chunks. No object poses, no goal check, no reset; the sim service records the episode and grades it as it runs (no replay)."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "ispatialgym", "spatial-intelligence", "goal-image", "omnigibson", "isaac-sim", "r1pro", "standard-mode", "trajectory", "alignment"]
 
@@ -43,7 +43,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 6.0
 verifier_min_memory_gb = 16.0
 verifier_min_gpu_memory_gb = 6.0
-measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only"
+measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process (plus the live video's encoder, 540 px at 10 fps, not measured), the collect hook replays nothing (graded live, 2026-10-17); the agent's container runs the client only"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -59,7 +59,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 9.0
 trial_max_memory_gb = 21.0
-measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults"
+measured = "freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process (plus the live video's encoder, 540 px at 10 fps, not measured), the collect hook replays nothing (graded live, 2026-10-17); the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
@@ -84,10 +84,18 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end the episode, replay twice in fresh processes, write final.json
-timeout_sec = 7788               # the episode end (up to 1 h through a resume) + two replays (a scene load + 1612 steps each) with margin
+command = "sh /srv/finalize.sh"   # end the episode, write final.json from the live episode's result (nothing is replayed)
+timeout_sec = 5994               # the episode end (up to 1 h through a resume) + a video-only render (a scene load + 1612
+                                  # steps), run only when the live video is missing, after the verdict + margin
 
 [agent]
 timeout_sec = 3600.0
