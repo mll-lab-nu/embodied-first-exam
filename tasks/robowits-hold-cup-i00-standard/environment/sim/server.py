@@ -203,6 +203,11 @@ def settle(step) -> bool:
     goal must hold for 2 s, the graded objects released and at rest. Its steps are part of the episode (journaled and
     recorded, so the grading replay runs them too). Remembers the result for final.json and the call's meta."""
     r = S.settle_check(step=step); E["settle"] = r
+    if not r["success"] and r["why"].startswith("the step cap") and not S.episode_done:   # the call was stopped instead
+        r["why"] = ("the call stopped during the settle window (max_call_wall_s reached, the client hung up, or the "
+                    "session is ending)")
+    if r["success"]:                    # a passed window ends the episode: the recorded rows end with it (grading_replay),
+        E["final_window"] = int(r["steps"])   # even if the call then fails before finish("success")
     log({"ev": "settle", **r})
     return bool(r["success"])
 

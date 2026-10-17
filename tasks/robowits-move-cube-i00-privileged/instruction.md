@@ -48,7 +48,8 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
   below the table top (a cube pushed off the table does not count), no part of the robot touches it, and it moves at
   most 2 mm during the check window. The cubes that count (past the line and on the table) are taken when the check
   window begins and must stay the same through it: a further cube that crosses the line, or a counted cube that leaves
-  the table or comes back over the line, during those 2 s fails the window.
+  the table or comes back over the line, fails the window when a checked step (every 6th control step of those 2 s and
+  the last) finds the set changed.
 
 Not checked: anything else: whether the cube is on the table top or still on a slope, its height and orientation, and
 the other two cubes (except that neither may become a counted cube during the check window).
