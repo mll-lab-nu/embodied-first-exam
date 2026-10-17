@@ -207,7 +207,8 @@ def finish(reason: str) -> None:
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
     try:
-        E["success"] = S.success()
+        # a simulator error raised by the agent's actions (reason "error") leaves a post-exception state: never judged
+        E["success"] = False if reason == "error" else S.success()
     except Exception:  # noqa: BLE001
         traceback.print_exc()
     EP.log(

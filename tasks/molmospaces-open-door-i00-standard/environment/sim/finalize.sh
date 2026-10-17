@@ -4,7 +4,8 @@
 #   1. `rcb_limited.py end` (docs/STANDARD_MODE.md §13.3): SIGUSR1 to the service, which ends the episode if the
 #      agent had not (reason "timeout"), writes trajectory.npz + episode.json (live verdict, final-state hash) and exits.
 #      It exits 2 when final.json already holds the verdict (a give-up: after crashes, or a frozen start that did not
-#      rebuild): that verdict stays.
+#      rebuild): that verdict stays. Any other non-zero exit with an episode.json the service did dump (it ended the
+#      episode, then did not exit in time) still has the live verdict; only without one is it infrastructure.
 #   2. merge episode.json into final.json (finalized, graded_by "live", replays 0, video_pending), the only thing the
 #      verifier sandbox grades;
 #   3. ONE video-only pass renders replay.mp4 from trajectory.npz in a fresh process (`rcb_molmospaces.py replay
@@ -20,7 +21,9 @@ python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-9
 if [ "$rc" = 2 ]; then
     echo "[finalize] final.json already holds the verdict (a give-up)"; exit 0
 fi
-if [ "$rc" != 0 ]; then
+if [ "$rc" != 0 ] && [ -s "$DATA/episode.json" ]; then
+    echo "[finalize] the service dumped its episode but did not exit in time (rc $rc): final.json from its episode.json"
+elif [ "$rc" != 0 ]; then
     echo "[finalize] the service did not end and dump the episode in time (rc $rc): an infrastructure failure"
     python - <<'PY'
 import json, os
@@ -43,10 +46,11 @@ PY
 fi
 echo "[finalize] episode dumped; final.json from the live episode (no replay)"
 rm -f "$DATA/video.json" "$DATA/video.log"
-python - <<'PY'
+RCB_END_RC="$rc" python - <<'PY'
 import json, os
 d = os.environ.get("RCB_DATA", "/data")
-out = {"video": False, "video_pending": True, "video_source": "render"}
+out = {"video": False, "video_pending": True, "video_source": None,
+       "end_timed_out": os.environ.get("RCB_END_RC", "0") != "0"}   # the service dumped but did not exit in time
 try:
     ep = json.load(open(os.path.join(d, "episode.json")))
     if not isinstance(ep, dict):
@@ -64,7 +68,7 @@ os.replace(p + ".tmp", p)
 print(json.dumps(out))
 PY
 left=$(( T0 + HOOK_BUDGET_S - $(date +%s) ))
-if [ -s "$DATA/trajectory.npz" ] && [ "$left" -ge 20 ]; then
+if [ "$rc" = 0 ] && [ -s "$DATA/trajectory.npz" ] && [ "$left" -ge 20 ]; then   # not while a late service may still run
     limit=""; command -v timeout > /dev/null 2>&1 && limit="timeout -k 10 $left"
     RCB_SESSION_LOG= $limit python "$TOOL" replay --instance "$INSTANCE" --traj "$DATA/trajectory.npz" --out "$DATA/video.json" \
         --video "$DATA/replay.mp4" > /dev/null 2> "$DATA/video.log"
@@ -82,6 +86,7 @@ except (OSError, ValueError, AttributeError):
 p = os.path.join(d, "final.json")   # the verdict is on disk: only the video fields change, in a copy renamed into place
 try:
     out = json.load(open(p)); out["video"] = shown and os.path.exists(os.path.join(d, "replay.mp4")); out["video_pending"] = False
+    out["video_source"] = "render" if out["video"] else None
     with open(p + ".tmp", "w") as f:
         json.dump(out, f); f.flush(); os.fsync(f.fileno())
     os.replace(p + ".tmp", p)

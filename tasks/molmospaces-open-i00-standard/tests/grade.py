@@ -35,7 +35,8 @@ def grade(d: dict):
     reason = str(d.get("reason") or "")
     mismatch = bool(d.get("instance_mismatch")) or reason.startswith("instance_mismatch")
     live = bool(d.get("live_success", d.get("success")))
-    ok = live and bool(d.get("success")) and not mismatch and not d.get("gave_up") and not infra
+    # reason "error": a simulator error the agent's actions raised; the state after it is never judged (the agent's 0)
+    ok = live and bool(d.get("success")) and reason != "error" and not mismatch and not d.get("gave_up") and not infra
     num = lambda k: float(d.get(k) or 0)  # noqa: E731
     return ok, {
         "success": int(ok),
