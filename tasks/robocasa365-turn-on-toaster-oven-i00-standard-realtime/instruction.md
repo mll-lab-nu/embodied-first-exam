@@ -35,16 +35,15 @@ S x 0.05 s = 0.1 s of wall-clock time. `spec()["timing"]["slowdown"]` states it.
   joints, end effector, the command in force, and each camera's current pose. No object poses, no scene layout, no
   success signal: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
   `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
-  simulator and grades the replay. Keep the controller at `/app/output/gen.py` for the record.
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran
+  (nothing is replayed). Keep the controller at `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
 - Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Scoring
 The episode is graded by the environment's own success check for `TurnOnToasterOven` (`_check_success`, run twice after every
 control step, as in the privileged verifier) on the state after its last control step; the episode ends the moment it
-holds. The fresh replay of the recorded episode, the commands the robot actually executed at each control step, must
-succeed as well and end in the same state.
+holds. The live episode is the verdict: the episode the service ran, as it ran; nothing is replayed.
 
 The check for `TurnOnToasterOven` requires that the timer knob is at 0.1 or more of its range (normalised) at the end; a set timer slowly runs down.
 

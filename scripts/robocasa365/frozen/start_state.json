@@ -1,0 +1,297 @@
+{
+ "_about": "The state hash (casa_tool.state_hash) the standard-mode sim service logs when a fresh episode starts (episode.jsonl, ev start), per frozen instance: the hash logged by the archived standard and standard-realtime episodes of the RoboCasa series (jobs/, 2026-10-02 .. 2026-10-17, every runner host; `episodes` counts this benchmark's current runs; with the superseded runs, 776 episodes of 102 tasks, every episode of a task logged the same hash; board 0151). The generator writes it into the sim service's environment (RCB_START_SHA): a fresh episode that does not start in this state is refused as instance_mismatch, an infrastructure failure. An instance without an entry is checked by its file's hash only (RCB_INSTANCE_SHA). Re-record it whenever the image or casa_tool changes how a scene is built (import_references.py records start_state_sha for a newly imported instance).",
+ "add-lemon-to-fish": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "7f1b49b0d10e68a1375bfa1dca201249505ca2302046d4179370dbf14921159f"
+ },
+ "assemble-cooking-array": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "8008ef8746ee25d827aadca2fca6989e7cf6d09bd46a8b6d12d329048e6a22c4"
+ },
+ "beverage-sorting": {
+  "episodes": 7,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "63b47186b1d1be4310aea9a7ecfd4109149cacab56abe1790e7574aa4cce30b6"
+ },
+ "bread-and-cheese": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "de0dae5b6b1b28a2dda533c399cd81db78c719c844c1382fc37d03619fec8d4a"
+ },
+ "candle-cleanup": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "64a08f031c4f105d8e66302667afaf40a75629b6291dd5afbe44e365cd59b56c"
+ },
+ "cereal-and-bowl": {
+  "episodes": 8,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "fbb96f78e59f603e4e6b88ebec543b6af2cd9512e0a77f1a5480d1f16f26dfe8"
+ },
+ "choose-measuring-cup": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "c63dfbe443d39a59b1ab98c089ce751d95d3664059ce1cb202f2922a82e5ecdd"
+ },
+ "clear-food-waste": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "6762ca02b2d6c649a74156b3b7e78054828c3fea417edd3dead5dc54edfe975e"
+ },
+ "clear-sink": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "5bdec1bf7256724298dc1cec2cc1f4eaac099666effa943acee9833ef392f7fb"
+ },
+ "close-drawer": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "609135c3079693afb65cb53718ec4013eb2dfe67d45489fe99b12d2516f478d0"
+ },
+ "close-oven": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "b1c3e13b58fb48d579c5d82f72c85eebd79642df62dab6883781667473bb7216"
+ },
+ "close-stand-mixer-head": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "170812bff1e03936adee613e72041153987dc10ba90e378cd98e9bff0ee88bd2"
+ },
+ "cookie-dough-prep": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "2a8003585b760749b756ff8a0fc3745c0f099a886ecc2c31e4a8b0534338f00c"
+ },
+ "deliver-brewed-coffee": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "17f5913f47b818c8e10e41d34d3855cad08b8b8bf1e0e66d2aa612f24cda3036"
+ },
+ "dessert-upgrade": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "2894a370012bf72763c9d8a4b1172dfc23391caad47128dd06626b4f0ac93993"
+ },
+ "display-meat-variety": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "d425cb44a4ab78e4c9963f57b8a838f4aa10487e9691cfd517403036bf7cabf3"
+ },
+ "divide-basins": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "4f8bbeab48ec4eaf6ccaffb606e4ccf917298a4f79b0fc999fbd151df9f2cc8e"
+ },
+ "drain-veggies": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "182eed79b2913e53faf68e7ae0219e58eba2819121fd4ac1852ae66fbb11065e"
+ },
+ "drinkware-consolidation": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "877f879ee966a1e326540e94425b7e61b25a5fb8ffd2cc157397c9bf66e33da5"
+ },
+ "make-ice-lemonade": {
+  "episodes": 8,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "2052ea88b10fb1d5ab64562f6c344a4c3d5d13380c5364d450736616e46c1efc"
+ },
+ "make-loaded-potato": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "cd6f863e930291948764ff75525adc02ee38e9e512de83c92abb72240fe33de9"
+ },
+ "meal-prep-staging": {
+  "episodes": 8,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "13c4e63dbb7d7c10769c27dd89949df47ade1fed9596852cf177725d0c066d1a"
+ },
+ "microwave-defrost-meat": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "b7835ee44eba3b281a9e733038478da61ad0e3a2866094e930bf098882ecb575"
+ },
+ "open-dishwasher": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "67a92ee0723249cadf34806e2959cb45eea8c176ac7a176f1f081e0cf2e88ffa"
+ },
+ "organize-coffee-condiments": {
+  "episodes": 8,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "daacb0e7155c20d44da784646ea3760f2d3cea9a60e58b03d8bab4822cd30112"
+ },
+ "oven-broil-fish": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "68dcc57e7e23416b9b4e7d0b0a4ea6670e9127469adf456472e0053f9ab6895f"
+ },
+ "pack-dessert": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "37796b16cc769d597321b5ffca0ec3160371094799496f331919ef8f56c478dc"
+ },
+ "pick-place-cabinet-to-counter": {
+  "episodes": 8,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "a05705c5056523ce6857bfc698460d62f8baec7ee84e28adc66ca095a0edd5ce"
+ },
+ "pick-place-sink-to-counter": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "17a7eec4c4d73aaf6d5ceaa61469e0ba3519a0e50533f0d3fcad14956b9f663d"
+ },
+ "plate-steak-meal": {
+  "episodes": 9,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "853b76f9fbf4b058d4154b922f5c919df11300b94ed79d92f44e412e7acf4bd2"
+ },
+ "pre-rinse-station": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "a89f6fec0b65557e558bbb729b34ede223dbe9bafe009071e30c445ca07cff92"
+ },
+ "prep-for-sanitizing": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "5c046844e416868c8fa7f7baab1949d23137d858e2452344dd0f6774f955917e"
+ },
+ "prep-marinating-meat": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "339efa0e53387a05eab88af006e5a5b026a8373b6ed9807578b25eadd112b0c6"
+ },
+ "reheat-meal": {
+  "episodes": 7,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "3d2828e745fb57f9846f150be97440079d6e2ea77a63d2205c9294bfc14da68c"
+ },
+ "retrieve-meat": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "4920b915e4c04096bed2c5f51547483e615e196ac0ef3fd6be6f36bcdfd21f1a"
+ },
+ "sanitize-prep-cutting-board": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "e0a46e7c3986ff6d307ce4ee5aa9a6f6aca299e5f463c80ee95247eb860d2c3c"
+ },
+ "scrub-bowl": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "43be995f2136dbe826539532d11cddc9242d0d1adf5fdaf5cf1fe67e251b2627"
+ },
+ "searing-meat": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "82d0707efea1ee93174a3e6b7273fcd6c19649a8f7ed9235f0ffaabc98d5111e"
+ },
+ "seasoning-spice-setup": {
+  "episodes": 9,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "4b9565899fcee8227353bd27460b2719a7766b054dfcbfdd71ca15a817d7d3cd"
+ },
+ "set-up-cutting-station": {
+  "episodes": 8,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "c3ca04bb63cbb37329089276bc98ffb811322c1bd62b7350bc887af534cef72e"
+ },
+ "stocking-breakfast-foods": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "379e15ccae98393493076d81b2edb4537f374b939fa26837db1362501b180030"
+ },
+ "sweeten-coffee": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "ece01a6810c4060f8f596d9290481e13506603877ed0d9cc5edfe1cf44446764"
+ },
+ "thaw-in-sink": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "c942572b37cae93b7bd7570894a9765dfa1ab3c293f85aa3bbffe4953a182001"
+ },
+ "tong-buffet-setup": {
+  "episodes": 9,
+  "first": "2026-10-04",
+  "last": "2026-10-17",
+  "start_state_sha": "c6088e5c66fe6de90fb35c84a5547b483fc3f1e356191d0869fa21b5909bf2b3"
+ },
+ "turn-off-microwave": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "b88168e558ec6c590f9897530b1fd75131ca3231130a0f04f786c9a5f92a04ab"
+ },
+ "turn-on-microwave": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "99ef38c7be9a992c1edfb57e6284700ce6c83fbc5da6a9102e41e4c4b6307092"
+ },
+ "turn-on-sink-faucet": {
+  "episodes": 1,
+  "first": "2026-10-04",
+  "last": "2026-10-04",
+  "start_state_sha": "18744237a79b4de7483fdbacef1ec97fd4993f894fbcf58508e7c00828412626"
+ },
+ "turn-on-stove": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "4ee9e115f55210b4dce04ddf55a01a60fa944cf8f805455cb08dce2eee33f360"
+ },
+ "turn-on-toaster-oven": {
+  "episodes": 2,
+  "first": "2026-10-03",
+  "last": "2026-10-15",
+  "start_state_sha": "47a28febb4d391f26fb58b4dd7f95837bf1314b3fb9779d1a00c7236bb407a64"
+ }
+}

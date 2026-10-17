@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/robocasa365-tong-buffet-setup-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa365 (TongBuffetSetup, a Franka Panda arm on an Omron mobile base (with a torso lift)): Take the tongs from the drawer on the left and place them on the dining counter next to the tray containing the hot dog. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa365 (TongBuffetSetup, a Franka Panda arm on an Omron mobile base (with a torso lift)): Take the tongs from the drawer on the left and place them on the dining counter next to the tray containing the hot dog. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -87,11 +87,13 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
-# restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
-# waits for that verdict (up to 3450 s), then, bounded, for the optional replay video, which decides nothing.
-# timeout_sec was sized for an episode as long as a 3600 s agent time limit: the replay runs the episode's own physics
-# once more, without its cameras, so it cannot take longer than the episode did (about 0.035 s per control step + one
-# scene build; finalize.sh has the sums). Look at it when the agent's cutoff is raised.
+# restarting), which writes the live episode's verdict with "finalized": true (nothing is replayed to grade it; board
+# 0151): at once, or once a service that crashed has resumed the episode from its journal. The hook waits for that
+# verdict, then for the optional video (rendered from the trajectory in one pass), which decides nothing: up to
+# 3450 s in all. timeout_sec was sized for an episode as long as a 3600 s agent time limit: the render pass
+# runs the episode's own physics once more, plus about 300 frames, so it takes about as long as the episode's physics
+# (about 0.035 s per control step + one scene build; finalize.sh has the sums). Look at it when the agent's cutoff is
+# raised.
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
