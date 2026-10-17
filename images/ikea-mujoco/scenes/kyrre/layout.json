@@ -1,0 +1,1216 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.5,
+    0.1
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.1
+  },
+  "right": {
+   "pos": [
+    0.0,
+    0.5,
+    0.1
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.1
+  }
+ },
+ "parts": {
+  "seat": {
+   "pos": [
+    0.0,
+    0.0,
+    0.1102
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "seat_b00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "seat_b14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 1.0
+  },
+  "leg_1": {
+   "pos": [
+    -0.3,
+    -0.01,
+    0.10020000000000001
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "geoms": [
+    {
+     "geom": "leg_1_b00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b15",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b16",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b17",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b18",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b19",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b20",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b21",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_1_b22",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.4000000059604645
+  },
+  "leg_2": {
+   "pos": [
+    -0.38,
+    -0.01,
+    0.10020000000000001
+   ],
+   "quat": [
+    0.9659258262890682,
+    0.0,
+    0.0,
+    -0.2588190451025209
+   ],
+   "geoms": [
+    {
+     "geom": "leg_2_b00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b15",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b16",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b17",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b18",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b19",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b20",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b21",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_2_b22",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.4000000059604645
+  },
+  "leg_3": {
+   "pos": [
+    -0.46,
+    -0.01,
+    0.10020000000000001
+   ],
+   "quat": [
+    0.2588190451025205,
+    0.0,
+    0.0,
+    -0.9659258262890683
+   ],
+   "geoms": [
+    {
+     "geom": "leg_3_b00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b15",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b16",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b17",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b18",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b19",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b20",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b21",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "leg_3_b22",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.4000000059604645
+  },
+  "130915_1_1": {
+   "pos": [
+    0.3163170710824306,
+    -0.00994522999659704,
+    0.15972212829762708
+   ],
+   "quat": [
+    0.6018802281751746,
+    0.43713902335923954,
+    -0.32481925586141525,
+    -0.5840737249782484
+   ],
+   "geoms": [
+    {
+     "geom": "130915_1_1_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_1_1_c1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_1_1_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "130915_1_2": {
+   "pos": [
+    0.31082922440498184,
+    0.0609942378107477,
+    0.14668061663592977
+   ],
+   "quat": [
+    -0.14027997179838783,
+    -0.798825464382623,
+    -0.4694988923268573,
+    -0.348955866937331
+   ],
+   "geoms": [
+    {
+     "geom": "130915_1_2_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_1_2_c1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_1_2_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "130915_2_1": {
+   "pos": [
+    0.2673077022296251,
+    0.06267355108523767,
+    0.16391629807367633
+   ],
+   "quat": [
+    -0.08212135615202379,
+    0.8730394647131219,
+    -0.42499577499657476,
+    0.2245813152340126
+   ],
+   "geoms": [
+    {
+     "geom": "130915_2_1_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_2_1_c1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_2_1_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "130915_2_2": {
+   "pos": [
+    0.3527784284795821,
+    -0.07229806989955177,
+    0.15564465020582247
+   ],
+   "quat": [
+    -0.6320151087107432,
+    -0.31385664854230005,
+    0.15098493377975672,
+    -0.6922820641174124
+   ],
+   "geoms": [
+    {
+     "geom": "130915_2_2_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_2_2_c1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_2_2_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "130915_3_1": {
+   "pos": [
+    0.318680870319125,
+    -0.0678440960658186,
+    0.15114589492189284
+   ],
+   "quat": [
+    0.2733546806600918,
+    0.4525444447023205,
+    -0.8326089692680196,
+    -0.16505468313481303
+   ],
+   "geoms": [
+    {
+     "geom": "130915_3_1_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_3_1_c1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_3_1_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "130915_3_2": {
+   "pos": [
+    0.36280548704009585,
+    0.059543151870667596,
+    0.15269561434058126
+   ],
+   "quat": [
+    0.6921825926166832,
+    0.6153490391768769,
+    0.35722416148131847,
+    0.12091202138956232
+   ],
+   "geoms": [
+    {
+     "geom": "130915_3_2_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_3_2_c1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "130915_3_2_thread_envelope",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "112357_1": {
+   "pos": [
+    0.36252968461621404,
+    -0.008828639303896112,
+    0.14408351181636983
+   ],
+   "quat": [
+    0.7032519069042193,
+    0.5133388822536981,
+    0.1395002169916923,
+    -0.47165626982090897
+   ],
+   "geoms": [
+    {
+     "geom": "112357_1_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_1_peg0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_1_peg1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_1_peg2",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_1_peg3",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961
+  },
+  "112357_2": {
+   "pos": [
+    0.2560404260212882,
+    -0.06690896320356944,
+    0.13995539133527768
+   ],
+   "quat": [
+    0.2647408457956926,
+    0.28801853809852307,
+    0.4663645946950808,
+    -0.793386205510194
+   ],
+   "geoms": [
+    {
+     "geom": "112357_2_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_2_peg0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_2_peg1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_2_peg2",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_2_peg3",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961
+  },
+  "112357_3": {
+   "pos": [
+    0.2589903088793643,
+    0.008842262210129957,
+    0.14495330504734485
+   ],
+   "quat": [
+    0.936931946600696,
+    -0.2671284265098061,
+    0.17720354581413061,
+    -0.13928328880495652
+   ],
+   "geoms": [
+    {
+     "geom": "112357_3_c0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_3_peg0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_3_peg1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_3_peg2",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "112357_3_peg3",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961
+  }
+ },
+ "meta": {
+  "seat": {
+   "mass": 1.0,
+   "collision": "15 merged exact boxes (from 133) + 6 threads.py female inserts (M3.92 x 0.5, 3.25 mm)"
+  },
+  "leg_1": {
+   "mass": 0.4000000059604645,
+   "yaw_rad": 1.5707963267948966,
+   "collision": "23 merged exact boxes (from 25)",
+   "jaw": "jaw_s2_press_in_1_0",
+   "jaw_rel_pos": [
+    0.003500000000000003,
+    0.0,
+    0.021500000000000005
+   ]
+  },
+  "leg_2": {
+   "mass": 0.4000000059604645,
+   "yaw_rad": -0.5235987755982991,
+   "collision": "23 merged exact boxes (from 25)",
+   "jaw": "jaw_s2_press_in_2_0",
+   "jaw_rel_pos": [
+    0.003500000000000003,
+    0.0,
+    0.021500000000000005
+   ]
+  },
+  "leg_3": {
+   "mass": 0.4000000059604645,
+   "yaw_rad": -2.617993877991495,
+   "collision": "23 merged exact boxes (from 25)",
+   "jaw": "jaw_s2_press_in_3_0",
+   "jaw_rel_pos": [
+    0.003500000000000003,
+    0.0,
+    0.021500000000000005
+   ]
+  },
+  "130915_1_1": {
+   "mass": 0.014999999664723873,
+   "geometric_mass_properties": {
+    "com": [
+     -3.8925914084494304e-20,
+     -2.0853168259550516e-21,
+     -0.006546582723439306
+    ],
+    "inertia_diag": [
+     1.2401906944630758e-06,
+     1.2401906944630758e-06,
+     1.620252403924011e-07
+    ]
+   },
+   "collision": "head + shank 24-gon prisms, threads.py male thread M3.92 x 0.5 x 6.23 mm"
+  },
+  "130915_1_2": {
+   "mass": 0.014999999664723873,
+   "geometric_mass_properties": {
+    "com": [
+     -3.8925914084494304e-20,
+     -2.0853168259550516e-21,
+     -0.006546582723439306
+    ],
+    "inertia_diag": [
+     1.2401906944630758e-06,
+     1.2401906944630758e-06,
+     1.620252403924011e-07
+    ]
+   },
+   "collision": "head + shank 24-gon prisms, threads.py male thread M3.92 x 0.5 x 6.23 mm"
+  },
+  "130915_2_1": {
+   "mass": 0.014999999664723873,
+   "geometric_mass_properties": {
+    "com": [
+     -3.8925914084494304e-20,
+     -2.0853168259550516e-21,
+     -0.006546582723439306
+    ],
+    "inertia_diag": [
+     1.2401906944630758e-06,
+     1.2401906944630758e-06,
+     1.620252403924011e-07
+    ]
+   },
+   "collision": "head + shank 24-gon prisms, threads.py male thread M3.92 x 0.5 x 6.23 mm"
+  },
+  "130915_2_2": {
+   "mass": 0.014999999664723873,
+   "geometric_mass_properties": {
+    "com": [
+     -3.8925914084494304e-20,
+     -2.0853168259550516e-21,
+     -0.006546582723439306
+    ],
+    "inertia_diag": [
+     1.2401906944630758e-06,
+     1.2401906944630758e-06,
+     1.620252403924011e-07
+    ]
+   },
+   "collision": "head + shank 24-gon prisms, threads.py male thread M3.92 x 0.5 x 6.23 mm"
+  },
+  "130915_3_1": {
+   "mass": 0.014999999664723873,
+   "geometric_mass_properties": {
+    "com": [
+     -3.8925914084494304e-20,
+     -2.0853168259550516e-21,
+     -0.006546582723439306
+    ],
+    "inertia_diag": [
+     1.2401906944630758e-06,
+     1.2401906944630758e-06,
+     1.620252403924011e-07
+    ]
+   },
+   "collision": "head + shank 24-gon prisms, threads.py male thread M3.92 x 0.5 x 6.23 mm"
+  },
+  "130915_3_2": {
+   "mass": 0.014999999664723873,
+   "geometric_mass_properties": {
+    "com": [
+     -3.8925914084494304e-20,
+     -2.0853168259550516e-21,
+     -0.006546582723439306
+    ],
+    "inertia_diag": [
+     1.2401906944630758e-06,
+     1.2401906944630758e-06,
+     1.620252403924011e-07
+    ]
+   },
+   "collision": "head + shank 24-gon prisms, threads.py male thread M3.92 x 0.5 x 6.23 mm"
+  },
+  "112357_1": {
+   "mass": 0.00800000037997961,
+   "geometric_mass_properties": {
+    "com": [
+     0.00010326400143544799,
+     6.991469133209882e-21,
+     0.00037950878389595273
+    ],
+    "inertia_diag": [
+     2.906587328043356e-07,
+     2.921748115422416e-07,
+     1.0093192936722591e-07
+    ]
+   },
+   "collision": "head 24-gon prism + 4 convex frusta (exact decomposition of the source SDF peg)"
+  },
+  "112357_2": {
+   "mass": 0.00800000037997961,
+   "geometric_mass_properties": {
+    "com": [
+     0.00010326400143544799,
+     6.991469133209882e-21,
+     0.00037950878389595273
+    ],
+    "inertia_diag": [
+     2.906587328043356e-07,
+     2.921748115422416e-07,
+     1.0093192936722591e-07
+    ]
+   },
+   "collision": "head 24-gon prism + 4 convex frusta (exact decomposition of the source SDF peg)"
+  },
+  "112357_3": {
+   "mass": 0.00800000037997961,
+   "geometric_mass_properties": {
+    "com": [
+     0.00010326400143544799,
+     6.991469133209882e-21,
+     0.00037950878389595273
+    ],
+    "inertia_diag": [
+     2.906587328043356e-07,
+     2.921748115422416e-07,
+     1.0093192936722591e-07
+    ]
+   },
+   "collision": "head 24-gon prism + 4 convex frusta (exact decomposition of the source SDF peg)"
+  }
+ },
+ "drop_displacement_m": 0.05461710149614303,
+ "settle_displacement_m": 1.3285013270695226e-05,
+ "parts_box": {
+  "center": [
+   0.31,
+   0.0
+  ],
+  "inner": [
+   0.14,
+   0.2
+  ],
+  "wall_h": 0.03,
+  "floor_top": 0.10400000000000001,
+  "drop_seed": 0
+ },
+ "hex_head": {
+  "radius": 0.006,
+  "height": 0.002,
+  "across_flats": 0.004,
+  "depth": 0.0012,
+  "bearing_z_in_screw_frame": -0.001
+ },
+ "hex_key": {
+  "info": {
+   "long_arm": 0.09,
+   "short_arm": 0.025,
+   "across_flats": 0.0038,
+   "chamfer": 0.0005,
+   "bend_z": 0.0881,
+   "long_tip": {
+    "pos": [
+     0,
+     0,
+     0
+    ],
+    "axis_into_key": [
+     0,
+     0,
+     1
+    ],
+    "flat_normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   "short_tip": {
+    "pos": [
+     0.025,
+     0,
+     0.0881
+    ],
+    "axis_into_key": [
+     -1,
+     0,
+     0
+    ],
+    "flat_normal": [
+     0,
+     1,
+     0
+    ]
+   }
+  },
+  "clearance": 0.0001,
+  "rest_center_xy": [
+   -0.23,
+   0.0
+  ],
+  "rest_size": [
+   0.03,
+   0.07,
+   0.05
+  ],
+  "rest_hole_y": 0.025,
+  "stand_center_xy": [
+   0.42,
+   -0.25
+  ],
+  "stand_height": 0.05,
+  "stand_hole": 0.005,
+  "stand_holes_y": [
+   -0.025,
+   0.0,
+   0.025
+  ]
+ }
+}
