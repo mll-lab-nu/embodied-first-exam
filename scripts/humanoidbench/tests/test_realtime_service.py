@@ -23,6 +23,7 @@ from test_standard_service import FakeSim  # noqa: E402   (puts shared/standard/
 REALTIME = HERE.parents[0] / "shared" / "realtime"
 sys.path.append(str(REALTIME))                     # appended: `import rcb_client` elsewhere stays the standard client
 import rcb_realtime  # noqa: E402
+import rcb_service  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("rcb_client_realtime", REALTIME / "rcb_client.py")
 rcb_client_realtime = importlib.util.module_from_spec(_spec)
@@ -141,8 +142,9 @@ class TestPlan(Live):
         np.testing.assert_array_equal(j[:20], 1.0)
         np.testing.assert_array_equal(j[20:25], -1.0)
         np.testing.assert_array_equal(j[25:], -1.0)        # then held
-        self.assertTrue(fin["deterministic"])
-        self.assertEqual(fin["realtime"], 1)
+        self.assertEqual((fin["graded_by"], fin["replays"], fin["realtime"]), ("live", 0, 1))
+        self.assertNotIn("deterministic", fin)
+        self.assertEqual(self.svc.sim.replays, 0)            # the verdict is the live episode's: nothing replayed
 
     def test_a_late_chunk_drops_the_rows_whose_steps_are_gone(self):
         self.r.submit("move", [[0.0]], cameras=[])
@@ -196,8 +198,19 @@ class TestEnd(Live):
         with self.assertRaises(EpisodeOver):
             self.r.submit("move", [[1.0]], cameras=[])
         fin = self.finalize()
-        self.assertTrue(fin["success"])
+        self.assertEqual((fin["success"], fin["live_success"], fin["graded_by"], fin["replays"]), (True, True, "live", 0))
         self.assertEqual(fin["protocol"], "eai-standard/2.3")
+        self.assertNotIn("infra_error", fin)
+        self.assertEqual(self.svc.sim.replays, 0)
+
+    def test_live_verdict_can_take_the_success_away(self):
+        """A settle window on the live simulator, run after the clock stopped (live_verdict); the verdict stays live."""
+        sim = self.svc.sim
+        sim.live_verdict = lambda rows, success: {"success": False, "settled": 0}
+        self.r.submit("move", [[1.0]] * 10, interpolate="hold", cameras=[])
+        time.sleep(0.15)
+        fin = self.finalize()
+        self.assertEqual((fin["live_success"], fin["live_rule"], fin["success"], fin["settled"]), (True, False, False, 0))
         self.assertNotIn("infra_error", fin)
 
     def test_a_watch_ends_with_the_episode(self):
@@ -324,10 +337,7 @@ class SportSim:
         return f"{self.t}:{self.target}"
 
     def verify(self, rows) -> dict:
-        s = SportSim()
-        for r in rows:
-            s.step(r)
-        return {"success": False, "state_sha": s.state_sha()}
+        raise AssertionError("a grading replay ran: the standard modes are graded by the live episode (board 0151)")
 
     def save_trajectory(self, rows, path, meta) -> None:
         np.savez(path, rows=rows)
@@ -393,7 +403,7 @@ class TestMixedActionTypes(ByHand):
         self.assertFalse(self.svc.done, self.svc.reason)
         self.assertEqual(len(self.svc.episode), steps)
         fin = self.finalize()
-        self.assertEqual((fin["reason"], fin["deterministic"]), ("timeout", True))
+        self.assertEqual((fin["reason"], fin["graded_by"], fin["replays"], fin["success"]), ("timeout", "live", 0, False))
         self.assertNotIn("infra_error", fin)
         return fin
 
@@ -568,6 +578,49 @@ class TestCountersSurviveACrash(ByHand):
         self.assertEqual((fin["stalls"], fin["late_steps"], fin["held_steps"], fin["max_lag_s"]), (3, 2, 96, 0.75))
 
 
+class TestLiveGrading(ByHand):
+    """Board 0151: the realtime verdict is the live episode's too; the frozen start is checked on the live simulator."""
+
+    def make_sim(self):
+        return FastSim()
+
+    def test_a_scene_off_the_frozen_start_gives_up_before_serving(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            sim = FastSim()
+            sim.start_sha = "not-this-one"
+            svc = rcb_realtime.RealtimeService(sim, data=tmp.name, slowdown=1000.0)
+            with self.assertRaises(rcb_service.GiveUp):
+                svc.start()
+            fin = json.loads(Path(tmp.name, "final.json").read_text())
+            self.assertEqual((fin["finalized"], fin["success"], fin["infra_error"]), (True, False, 1))
+            self.assertTrue(fin["reason"].startswith("instance_mismatch"))
+        finally:
+            tmp.cleanup()
+
+    def test_more_crashes_than_resumes_are_infrastructure(self):
+        """No call spans a crash in realtime mode (submit answers at once): a give-up after crashes is sim_crashed."""
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(100)                                  # a checkpoint
+        rcb_service.count_start(self.data)                   # (setUp's process start)
+        for _ in range(2):
+            rcb_service.count_start(self.data)
+            self.service(FastSim())
+        rcb_service.count_start(self.data)
+        with self.assertRaises(rcb_service.GiveUp):
+            self.service(FastSim())
+        fin = json.loads(Path(self.data, "final.json").read_text())
+        self.assertEqual((fin["reason"], fin["infra_error"], fin["success"]), ("sim_crashed", 1, False))
+
+    def test_a_timeout_is_graded_live_and_nothing_is_replayed(self):
+        self.submit("move", [[0.1]] * 3, at=0)
+        self.run_steps(10)
+        fin = self.finalize()
+        self.assertEqual((fin["reason"], fin["graded_by"], fin["replays"], fin["success"], fin["n_actions"]),
+                         ("timeout", "live", 0, False, 10))
+        self.assertEqual(self.sim.replays, 0)
+
+
 class TestVideoNeverDecides(ByHand):
     def test_the_realtime_verdict_is_finalized_before_the_video(self):
         seen = {}
@@ -575,8 +628,8 @@ class TestVideoNeverDecides(ByHand):
         self.submit("mallet", [[0.2, 0.0]])
         self.run_steps(3)
         fin = self.finalize()
-        self.assertEqual((seen["finalized"], seen["video_pending"], seen["deterministic"], seen["realtime"]),
-                         (True, True, True, 1))
+        self.assertEqual((seen["finalized"], seen["video_pending"], seen["graded_by"], seen["realtime"]),
+                         (True, True, "live", 1))
         self.assertEqual((fin["finalized"], fin["video_pending"], fin["video"], fin["protocol"]),
                          (True, False, True, "eai-standard/2.3"))
 
