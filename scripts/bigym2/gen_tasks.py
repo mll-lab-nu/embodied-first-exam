@@ -28,10 +28,10 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 REVIEW_PR = 123  # the pull request that holds the human review of these tasks (PROTOCOL §2.7)
 IMAGE_HW = 84  # the onboard cameras' default image side in standard modes (compose RCB_IMAGE_HW): upstream's, its agents' and policies'
 MODES = {"privileged": "privileged", "standard": "standard", "standard-realtime": "realtime"}
-# the service modes' default reset budget (RCB_RESET_BUDGET's default; BiGym 2.0's own choice, PROTOCOL §4.5; owner
-# 2026-10-11): standard 10, since the horizon bounds each episode and without a reset the practice and the graded
-# attempt share it; ten, as MyoSuite, because a scripted episode ends in about a minute; standard-realtime keeps 0, as its twins have since 2026-10-08
-RESET_BUDGET = {"standard": 10, "standard-realtime": 0}
+# the service modes' default reset budget (RCB_RESET_BUDGET's default; BiGym 2.0's own choice, PROTOCOL §2; author
+# 2026-10-16, before it standard 10 from 2026-10-11): 0 in both, the protocol's default: one episode, whose horizon the
+# practice and the graded attempt share; standard-realtime has had 0 since 2026-10-08
+RESET_BUDGET = {"standard": 0, "standard-realtime": 0}
 CLIENT = dict(
     line.split("=", 1)
     for line in (ROOT / "scripts/eai_standard/client.env").read_text().splitlines()
@@ -133,6 +133,40 @@ def episode_text(task: dict, t0: dict, resets: int) -> str:
     )
 
 
+def reset_vals(n: int, horizon: int) -> dict:
+    """The standard texts that depend on the reset budget n: with n = 0 the service has no POST /reset (and no episode
+    counters), so the texts describe one episode and no reset."""
+    if not n:
+        return {
+            "RESET_DESC": "One episode, no reset",
+            "RESET_README": "gets one episode, no reset",
+            "RESET_RULE": "**One episode, no reset.** The episode starts when the service comes up, from a fixed starting "
+            "state; what ends it is under Success below. `spec()[\"budget\"][\"reset\"]` is authoritative: it is 0 here, "
+            "so the one episode is the run. Once it has ended, the run is over and `submit` raises `EpisodeOver`.",
+            "RECORDED": "records the episode, replays it",
+            "STATUS_EXTRA": "",
+            "RESET_ROW": "",
+            "RESET_LEFT": "",
+        }
+    return {
+        "RESET_DESC": f"{n} resets (the last episode graded)",
+        "RESET_README": f"gets {n} resets (only the last episode is graded)",
+        "RESET_RULE": f"**Episodes and resets.** The episode starts when the service comes up, from a fixed starting state; "
+        f"what ends it is under Success below. You have **{n} resets** (`spec()[\"budget\"][\"reset\"]`, which is "
+        "authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the robot and "
+        f"the scene back on the same starting state and starts a new episode with its own {horizon} control steps, "
+        "either abandoning the running episode or after one has ended; it takes no robot time and returns the start's "
+        "frames. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you "
+        "reset. **Only the last episode is graded**: a success ends the run at once, and when your time is up the "
+        "episode then running is the one graded; `meta[\"episode\"]` and `meta[\"resets_left\"]` count the episodes.",
+        "RECORDED": "records every episode, replays the last one",
+        "STATUS_EXTRA": ", and `episode`, `resets_left`, `control_steps_total` (all episodes)",
+        "RESET_ROW": "| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting state "
+        f"(at most {n} in all); returns the start's frames |\n",
+        "RESET_LEFT": ", or a reset is left",
+    }
+
+
 def yaml(s: str) -> str:
     return json.dumps(s).replace("$", "$$")   # a double-quoted YAML scalar; compose interpolates $
 
@@ -212,6 +246,7 @@ def plan(fam: str, task: dict, version: str) -> dict[str, dict[str, tuple[bytes,
         vals["RESET_COMMENT"] = (f"BiGym2 standard: {vals['RESET_BUDGET']} resets (docs/benchmarks/bigym2.md); 0: one episode"
                                  if vals["RESET_BUDGET"] else "0: one episode (the protocol's default)")
         vals["EPISODE_TEXT_YAML"] = yaml(episode_text(task, inst["t0"], vals["RESET_BUDGET"]))
+        vals.update(reset_vals(vals["RESET_BUDGET"], inst["t0"]["horizon_steps"]))
         if mode == "privileged":
             files = files_of(HERE / "templates/privileged", vals)
             for rel in ("environment/rcb_bigym2.py", "tests/rcb_bigym2.py"):

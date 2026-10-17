@@ -13,7 +13,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/@@STD@@"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 @@FAMILY@@ on the same frozen instance as @@PRIV@@. @@SENTENCE_TOML@@ The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). @@RESET_BUDGET@@ resets (the last episode graded), no object state, no success signal; the sim service records every episode, replays the last one in a fresh simulator and grades it with BiGym's own success check."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 @@FAMILY@@ on the same frozen instance as @@PRIV@@. @@SENTENCE_TOML@@ The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). @@RESET_DESC@@, no object state, no success signal; the sim service @@RECORDED@@ in a fresh simulator and grades it with BiGym's own success check."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "@@FAMILY@@"]
 
