@@ -18,10 +18,9 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
-the environment's own success check for `CandleCleanup` to the state **after the last executed control step**; it must hold
-in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
-want graded and stop submitting.
+The episode runs until your time is up. The service then applies the environment's own success check for `CandleCleanup` to
+the state of the live episode **after the last executed control step**: the episode as the service ran it, nothing is
+replayed. A success reached earlier and then lost does not count: end in the state you want graded and stop submitting.
 
 The check for `CandleCleanup` requires that the candle and the jar are both inside the cabinet, and the cabinet is closed (every door at most 0.5% open, normalised).
 

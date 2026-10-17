@@ -94,6 +94,7 @@ def verify(env: str) -> dict:
     s.step(s.hold_targets())
     s.reset()
     rec["reset_exact"] = s.state_sha() == sha0
+    rec["start_state_sha"] = sha0  # a fresh episode's starting state: the standard services check it (RCB_START_SHA)
     s.close()
     live, s = run_live(d / "instance.npz", actions)
     rec.update(reference_actions=len(actions), first_success=live["first_success"], truncated=False)

@@ -1,0 +1,147 @@
+{
+ "_about": "The state hash (casa_tool.state_hash) the standard-mode sim service logs when a fresh episode starts (episode.jsonl, ev start), per frozen instance: the hash logged by the archived standard and standard-realtime episodes of the RoboCasa series (jobs/, 2026-10-02 .. 2026-10-17, every runner host; `episodes` counts this benchmark's current runs; with the superseded runs, 776 episodes of 102 tasks, every episode of a task logged the same hash; board 0151). The generator writes it into the sim service's environment (RCB_START_SHA): a fresh episode that does not start in this state is refused as instance_mismatch, an infrastructure failure. An instance without an entry is checked by its file's hash only (RCB_INSTANCE_SHA). Re-record it whenever the image or casa_tool changes how a scene is built (import_references.py records start_state_sha for a newly imported instance).",
+ "bottle-to-cabinet-close": {
+  "episodes": 7,
+  "first": "2026-10-03",
+  "last": "2026-10-16",
+  "start_state_sha": "f4f605e26caa5b64031ee6590b9a5a02eca1aafb511f9ef60930f231dca77b93"
+ },
+ "can-to-drawer-close": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "debfe80a50bbf997b3925d3ef4a21c8debc9e19999307dd11b4bed6207c7d762"
+ },
+ "cup-to-drawer-close": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "357018ed33efccd95d8a4675470aba068b6b63084bb09905974d8fa0017be6db"
+ },
+ "cuttingboard-to-basket": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-16",
+  "start_state_sha": "3d725339672b314908bffcd4b3caf5462548909227a4fd8bb4e825cad94f2fea"
+ },
+ "cuttingboard-to-cardboardbox": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "abaf152d20c1e4cbe32d22fa6a4449c1f6deaea81b550a21f3ae9f7a5862a10e"
+ },
+ "cuttingboard-to-pan": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-16",
+  "start_state_sha": "f39bc2ed0254cdb7aff9908b642e3370bb5f30d3d17854b8cb30abb2652b937a"
+ },
+ "cuttingboard-to-pot": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "2636a2c69a1d142a09292149a6532d1b6c7e4799fdcef4f1ff1a4f13b8ec4214"
+ },
+ "cuttingboard-to-tieredbasket": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "941909addf8db88c364a4892c40a65e3e4f59cb4e94cc046eccd35e3384dc6c5"
+ },
+ "milk-to-microwave-close": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "87bd46cdf8025f02125554ace5d2ee458aa1c337f208a6bb50b4f96abfe80ec1"
+ },
+ "placemat-to-basket": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "18f68e4153e0fccadb4b9612d109382f79969a13538a174c7d6ada0b39fccf5d"
+ },
+ "placemat-to-bowl": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "074b4e377577518302e004e848d10380b69896324529c9ac2a822bc2e8fdf14b"
+ },
+ "placemat-to-plate": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "e541d66b2a5e3a30a4572189fa4f7119d10119943eb0db80c5dca656ffb60007"
+ },
+ "placemat-to-tieredshelf": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "63deda29b01f90e335e8fc7be621389b3be3154c6352c057f96aee1997952569"
+ },
+ "plate-to-bowl": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "80734a79a1db4f5612c2a4e84e09d7120a3a9b428adcaa2fdab5f4980e23c999"
+ },
+ "plate-to-cardboardbox": {
+  "episodes": 7,
+  "first": "2026-10-09",
+  "last": "2026-10-17",
+  "start_state_sha": "65925d225525c49ef62676b346beb9b25444d1eb4c683845958b6b32e29f6b26"
+ },
+ "plate-to-pan": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "04025a6fd9038d5531843ba7eed70750ed43f9ca8e82f63d7601171e1b4568ae"
+ },
+ "plate-to-plate": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "52e176c2b644e5e7464ab84635d76652ee1f9308e7815a2dd54cea1433f9c7e4"
+ },
+ "potato-to-microwave-close": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "1308748716a80e2b631f25f28b9176ab09479f1cb60220875ad229c2af0e4ed8"
+ },
+ "tray-to-cardboardbox": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "ec358a9b5f6dcdd0b0c2c5e5af75c681a133911a572a93fa01babc3449e2ab22"
+ },
+ "tray-to-plate": {
+  "episodes": 1,
+  "first": "2026-10-02",
+  "last": "2026-10-02",
+  "start_state_sha": "ab70ad7250303cae6ab17db48641d72a6d69cf13bfb5a96dbe1de20b83ecd130"
+ },
+ "tray-to-pot": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "25e624db53d3bd939a614b421b03f9e7286949441a2ed93b12388bb444b83e40"
+ },
+ "tray-to-tieredbasket": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "659d89e074d20add5c8cd8c310ac7a3f3fa4b9b4b5183228f2dd6cda899c9603"
+ },
+ "tray-to-tieredshelf": {
+  "episodes": 7,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "fd21af4db6fe363294e049af68a16bcbe74f88a84fbf69fba580d04db5680fd4"
+ },
+ "wine-to-cabinet-close": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "aff4885b77eba65ae6daef8b6b77080d91b2c926e634a5f5f010a671d280cf5c"
+ }
+}

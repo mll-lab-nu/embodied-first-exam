@@ -40,7 +40,7 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
   were validated with). Every reference's success also holds for 10 more still steps.
 - **Determinism.** CPU physics, bit-exact; MuJoCo's process-wide mesh cache is turned off in `casa_tool` (a mesh
   served from the cache can differ from a cold compile of the same file, which breaks bit-exact replay across
-  processes), so every build is a cold build.
+  processes), so every build is a cold build (the standard service's start hash and its video pass rely on it).
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 123–393.
   Standard episodes have no step limit (D1).
 - **Standard-mode observations.** The humanoid's six cameras (`robot0_agentview_center/left/right`, `egoview`,
@@ -55,9 +55,17 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 `images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's (PR #22, not merged
 yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect
 hook is `scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte
-(`docs/benchmarks/robocasa.md`: verdict final before the video, the hook's budget, request validation).
+(`docs/benchmarks/robocasa.md`: since 2026-10-17 graded by the live episode, nothing replayed, the start checked
+against the frozen instance, the video one render pass after the verdict; the hook's budget; request validation).
 Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint, not MuJoCo's left-eye camera 3.4 cm to
 its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results from before used the offset calibration.
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass from the trajectory after the verdict; the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
+  `RCB_START_SHA` from `scripts/robocasa-gr1/frozen/start_state.json`) before the agent is served, a mismatch is infrastructure
+  (`docs/benchmarks/robocasa.md`, service items 6, 7 and 11). Scene, instances, success check, cutoff and what
+  the agent sees except the instruction's scoring sentence unchanged, so the tasks keep their names.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image
