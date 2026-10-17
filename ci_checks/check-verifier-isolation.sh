@@ -261,7 +261,7 @@ if env_c.is_file():
                 fail(f"artifact {src}: service {who!r} is not a sidecar of environment/docker-compose.yaml")
         hooks = {h.get("service") for h in (d.get("verifier") or {}).get("collect") or [] if isinstance(h, dict)}
         if sidecars and not (hooks & set(sidecars)):
-            fail("no [[verifier.collect]] hook on a sidecar (the sidecar finalizes its own evidence, PROTOCOL §4.8)")
+            fail("no [[verifier.collect]] hook on a sidecar (the sidecar ends the episode and finalizes its own record, PROTOCOL H.4)")
 if test_c.is_file():
     services, bad = compose_services(test_c)
     for b in bad: fail(f"tests/docker-compose.yaml: {b}")

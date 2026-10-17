@@ -137,16 +137,20 @@ on which the frozen instance does not rebuild to its stored initial state report
 
 ### Evidence and grading (agent never sees this)
 `/data/episode.jsonl` (one record per call: type, rows, dt, cameras, note, clipped, plan, physics steps, success),
-`/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz`, a fresh replay (`replay_success`,
-`deterministic`), `replay.mp4`, `final.json`. The collect hook signals the service by PID after the agent container is
-stopped; a separate verifier grades `final.json` (PROTOCOL §4). `infra_error = 1` means there is no verdict on the
-agent: `final.json` is missing or unreadable, the replay's verdict is not in it, or the service reported
-`sim_crashed`, `resume_failed` or `instance_mismatch`. A verdict that is on disk is graded whether or not `finalized`
-(the videos) was reached.
+`/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz` (the graded episode, the deliverable),
+`final.json`, then `replay.mp4`. The collect hook signals the service by PID after a collect hook has stopped
+the agent's processes; from then on the service refuses every request, and it judges the episode it ran (the task's success rule, with any settle or hold window run on the live simulator)
+and writes the verdict into `final.json` (`success`, the verdict; `live_success`, how the episode itself ended, before
+any settle or hold check; `graded_by` = `live`, `replays` = 0); nothing is
+replayed to grade it (PROTOCOL H.4). The video is recorded during the episode or rendered from `trajectory.npz` after
+the verdict (`video_source`), and never decides anything. A separate verifier transcribes `final.json` into
+`reward.json` (`graded_by_live` = 1). `infra_error = 1` means there is no verdict on the agent: `final.json` is
+missing, unreadable or not finalized, or the service reported `sim_crashed`, `resume_failed`, `instance_mismatch` or
+(2.4) `call_watchdog`.
 
 ### Live recording (optional, sidecar only; the agent sees none of it)
 `live.mp4`, `live_timeline.jsonl`, `live_segments.jsonl`, `trajectory_live.f64`, `startups.jsonl`: rendered from the
-replay by default, frames stamped with the call, never affecting the verdict. The reference recording is RoboTwin's
+recorded trajectory by default, frames stamped with the call, never affecting the verdict. The reference recording is RoboTwin's
 (docs/benchmarks/robotwin.md).
 
 ### Proprioception (2.1)
@@ -197,8 +201,8 @@ the smallest complete one).
    proprioception), never the world's ground truth (§10).
 3. *Everything new is optional.* Depth, for example, costs a render and is off by default.
 4. *Binary data, kept by the agent's code.* RCB1 frames, never base64; nothing is pushed into the model's context.
-5. *Evidence the agent cannot touch.* The service records every call; grading replays the record in fresh processes,
-   in a container the agent never saw.
+5. *Evidence the agent cannot touch.* The service records every call and judges the episode it ran, in a container the
+   agent never saw; the recorded trajectory stays replayable (the video, audits).
 
 ### 1. Endpoints
 | method | path | body | response |
@@ -396,10 +400,10 @@ each benchmark's class is in its doc):
 | `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) |
 | `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) |
 
-A mismatch cannot raise a score where the verdict comes from fresh replays of the complete recorded trajectory (the
-replayed prefix plus everything after the resume): it only perturbs what the agent saw, and the flags say so. Where a
-task is graded by the live episode the trusted service ran (PROTOCOL §4), the verdict after a resume is the live state
-the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch` for it.
+The standard modes are graded by the live episode the trusted service ran (PROTOCOL H.4): the verdict after a resume
+is judged on the live state the resumed service continued from, so under `approx` a mismatch can perturb it as well as
+what the agent saw; `reward.json` reports `resumes` and `resume_state_mismatch` for it (a trial with
+`resume_state_mismatch = 1` can be audited by replaying its trajectory).
 
 #### 13.2 Evidence fields
 `final.json` and `episode.json` carry `sim_startups`, `resumes`, `resume_state_mismatch` (0/1), `resume_max_tcp_dev_m`,
@@ -421,7 +425,8 @@ numeric ones into `reward.json`, with `infra_error`.
 - The collect hook starts with `python3 /srv/rcb_limited.py end "$DATA"`: it waits through a resume (no PID file until the
   service is ready), signals only the process that wrote the newest `startups.jsonl` line, resends SIGUSR1 every 30 s, and
   exits 2 when `final.json` already holds the verdict (a give-up, or an in-process grade), 0 when the service dumped the
-  episode and exited (the hook replays next).
+  episode and exited (the hook then merges the live verdict into `final.json` and renders the video; it replays
+  nothing to grade).
 - Adapters: `EP = L.Episode(DATA, dim, resume, persist)`; `EP.startup()` before the scene is built and `EP.scene_built()`
   after; `EP.journal(a)` in the control step (its True return stops the call: loops that test `E["done"]` test
   `EP.stopping` too); `S.record_start()` then `EP.begin(...)` instead of logging `start` and installing a SIGUSR1
@@ -440,10 +445,11 @@ negative `Content-Length` (CI job `unit-tests`).
 
 ### 14. Evidence and grading (the agent never sees this)
 `episode.jsonl` (calls, checkpoints, resumes), `journal.f64`, `startups.jsonl`, `calls/NNNNNN/` (meta + last frames per call),
-`server.log`, and at the end `trajectory.npz`, the replays, `replay.mp4`, `final.json`. The collect hook signals the service
-by PID after the agent container is stopped; a service grades in-process or dumps the episode, exits, and the hook
-replays it in fresh processes (which one: the benchmark's doc). A separate, network-less verifier grades `final.json`
-(PROTOCOL §4). A GPU lost to a host systemd reload is reported as `gpu_lost` / `grader_error`.
+`server.log`, and at the end `trajectory.npz`, `final.json`, `replay.mp4`. The collect hook signals the service by PID
+after a collect hook has stopped the agent's processes; the service judges the live episode in-process (or dumps it with its live verdict
+and exits), and the hook writes `final.json`, then the video (recorded live or rendered from the trajectory: the
+benchmark's doc). A separate, network-less verifier transcribes `final.json` (PROTOCOL H.4). A GPU lost to a host
+systemd reload before the episode was judged is reported as `gpu_lost` (`infra_error`).
 
 ### 15. Privileged-mode parity
 Recommended: a benchmark's privileged Session offers the same robot information from the same code: `s.camera_info()`,
@@ -452,7 +458,7 @@ mode stays privileged (object state through the tooling).
 
 ### 16. Per-simulator notes
 Moved to the benchmarks' docs (2026-10-14): each describes its control rate, `joint_position` and `ee_pose` layouts,
-cameras, depth source, `/kinematics` model, proprio columns, grading replays and resume class.
+cameras, depth source, `/kinematics` model, proprio columns, live success rule and video, and resume class.
 
 ### 17. Known issues
 Moved to the benchmarks' docs (2026-10-14).
@@ -489,8 +495,9 @@ are part of a result's configuration (RUNNING.md).
 - **`/observe`** with `seconds = 0` answers at once; with `seconds > 0` it waits while that much robot time runs and
   returns what the cameras saw (2.1's video, frames, proprio rows); it never changes the plan. `cameras: []` asks for
   no images, only proprioception.
-- **Grading** is 2.1's: the journal holds the sim row the simulator applied at every control step, and the graded
-  episode's rows are replayed in a fresh simulator, so the replay equals the live run whatever the timing. Evidence
+- **Grading** is 2.1's: the live episode, judged by the service (PROTOCOL H.4). The journal holds the sim row the
+  simulator applied at every control step, so the graded episode's trajectory reproduces the live run whatever the
+  timing (the video is rendered from it). Evidence
   added: `ticks.f64` (per journal row: wall time, the call whose chunk gave the row, -1 when held), `calls.jsonl` and
   `submitted.f64` (one line per call and every row as sent, instead of `calls/NNNNNN/`), and in `final.json`
   `realtime`, `slowdown`, `held_steps`, `late_steps`, `max_queue_wait_s`, the clock's record -- `clock_s` (wall seconds
@@ -520,9 +527,22 @@ are part of a result's configuration (RUNNING.md).
   and stalls while it lasts -- counted in `stalls` and `stalled_s`. Refusals the episode's state decides (409; an `at`
   too far ahead; too many frames) are answered by the simulator's thread, and a 409 still comes before a 400 for a
   request's fields.
-- **Crashes are infrastructure.** No call spans a crash (`/submit` answers at once), so a crash is never put down to the
-  agent: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator
-  error that ends the graded episode (`reason = "error"`) is one too; `final.json` carries `infra_error = 1` in all three.
+- **Crashes and simulator errors.** No call spans the clock (`/submit` answers at once), so what the agent's commands
+  caused is told apart by time and by kind (owner, 2026-10-17, board 0151; PROTOCOL H.5: a normal task failure is no
+  infrastructure failure). "After the first command" means after the first control step that ran a row the agent
+  sent (held steps before it do not count).
+  - A simulator error raised by a control step after the first command (`reason = "error"`) ends the episode as the
+    agent's result: `sim_error = 1`, `infra_error = 0`. Before it: infrastructure.
+  - A crash (the process dies) is resumed as in 2.1. It counts as the agent's when it happened inside a control step
+    after the first command and the process died on SIGSEGV, SIGBUS, SIGFPE, SIGILL or SIGABRT (the service records
+    the signal and the crashing stack with `faulthandler` in `crash.log`, a collected artifact, before it dies); a
+    crash while the process builds the scene, replays its journal, renders or finalizes is not the agent's; past `RCB_MAX_RESUMES` restarts the trial then ends `sim_crashed_on_call` (the
+    agent's 0) if every crash was the agent's, else `sim_crashed` (`infra_error = 1`). A process killed from outside
+    (SIGKILL, SIGTERM, the out-of-memory killer: nothing recorded) and a crash before the first command are not the
+    agent's; a failed resume is `resume_failed` (`infra_error = 1`). A reset whose new episode the simulator fails to
+    build is infrastructure in both standard modes.
+  - The 2.3 layer (`rcb_realtime.py`) implements this from robot_coding_bench #312; tasks generated before it still
+    record every simulator error and crash as infrastructure.
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
   through the client, not code uploaded next to the simulator.
 
@@ -546,7 +566,7 @@ means "required of a service that reports 2.4" (what a 2.4 client may rely on).
   operations capability is a 2.4 service.
 - Standard-mode tasks may declare `protocol = "eai-standard/2.4"`. Standard-realtime tasks stay on 2.3.
 - Everything in Parts 1 and 2 holds unchanged: four endpoints (plus `/kinematics`, `/reset` within a declared budget and
-  the one below), RCB1, and grading by a fresh replay.
+  the one below), RCB1, and grading by the live episode.
 - `/spec.protocol` is `eai-standard/2.4`.
 
 Why: a native simulator call can run for minutes (IPC and PBD deformables). Under 2.2, a client whose HTTP read timed
@@ -603,7 +623,7 @@ As in 2.2 (`/data/episode.jsonl`, `trajectory.npz`, `final.json`, `calls/`), plu
 - `journal.ticks.i64`, when kept;
 - `call-watchdog.json`, while a call is running, and `call-watchdog.trace` (what the watchdog printed, if it fired).
 
-The verifier still grades `final.json` only.
+The verifier still transcribes `final.json` only.
 
 `python3 scripts/eai_standard/v2_4/selftest.py` tests the watchdog's evidence, the tick ledger and the 400 for malformed
 bodies on the CPU (numpy only, about 15 s).
