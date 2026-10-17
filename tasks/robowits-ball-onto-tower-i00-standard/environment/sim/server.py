@@ -559,7 +559,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: E["final_window"] = int(settled["steps"]); finish("success")   # the recorded rows end with this window
+    if succ: finish("success")          # settle() recorded the window: the recorded rows end with it
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -580,7 +580,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         if not E["done"] and not EP.stopping and check_success():
             E["success"] = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
         rec.tick(force=True, last=True)
-        if E["success"]: E["final_window"] = int(settled["steps"]); finish("success")   # the recorded rows end with this window
+        if E["success"]: finish("success")  # settle() recorded the window (finish drops it if rows came after it)
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
            "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {}),

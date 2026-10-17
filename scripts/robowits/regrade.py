@@ -221,7 +221,7 @@ def worker(tests: str, family: str, items_path: str, out_path: str, repeat: int)
                      goal_at_end=bool(o.get("goal_at_end")), why=(o.get("settle") or {}).get("why"),
                      settle_steps=int((o.get("settle") or {}).get("steps") or 0),
                      settle_max_move_mm=round(1000 * float((o.get("settle") or {}).get("max_move_m") or 0), 2))
-            if it.get("mode") == "standard" and it.get("live_sha"):
+            if it.get("mode") == "standard" and it.get("live_sha") and not r.get("rows_mismatch"):   # (fewer rows: another state)
                 r["replay_matches_live"] = o.get("state_sha") == it["live_sha"]
             if it.get("mode") == "standard" and (r.get("final_window") or r.get("window_after_rows_exact")) \
                     and it.get("live_success") is False and r["new_verdict"]:
