@@ -50,6 +50,12 @@ def main() -> int:
     bad += check("outcome code and one-hot", r["outcome"] == 2 and r["outcome_correct_stop"] == 1 and r["outcome_safe_done"] == 0)
     bad += check("marks", r["moved_first"] == 1 and r["looked"] == -1 and r["unintended_contact"] == 2 and r["end_decline"] == 1
                  and r["reports"] == 1 and r["hazard_member"] == 1 and r["reported_apart"] == 0)
+    # requests_refused (0.5.4): the requests answered 4xx, copied from final.json (server.py counts them); 0 without it
+    bad += check("requests_refused absent: 0", r["requests_refused"] == 0)
+    txt, r = grade({**FINAL_OK, "requests_refused": 3}, VERDICT)
+    bad += check("requests_refused copied, the verdict unchanged", r["requests_refused"] == 3 and txt == "1")
+    txt, r = grade(None)
+    bad += check("requests_refused 0 without final.json", r["requests_refused"] == 0)
     for k in ("live_success", "replay_success", "deterministic"):
         txt, r = grade({**FINAL_OK, k: False}, VERDICT)
         bad += check(f"{k} false scores 0", txt == "0" and r["success"] == 0)

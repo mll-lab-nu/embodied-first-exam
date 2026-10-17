@@ -1,0 +1,85 @@
+{
+ "kind": "plate",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 3464,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false,
+     "material": {
+      "specular": "0.5",
+      "shininess": "0.6"
+     }
+    }
+   ],
+   "raw_triangles": 3464,
+   "after_bbox": [
+    [
+     -0.1253,
+     -0.1253,
+     0.0
+    ],
+    [
+     0.1253,
+     0.1253,
+     0.0253
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.125335,
+     -0.125335,
+     0.0
+    ],
+    [
+     0.125335,
+     0.125335,
+     0.025273
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    0.9132142284656748,
+    0.9149408338017475,
+    0.7589945342062586
+   ],
+   "rotation": ""
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "shell",
+  "mode": "whole"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+   "name": "Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring",
+   "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring",
+   "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring/1/Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring.zip",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "author": "Google LLC (Google Scanned Objects)",
+   "attribution": "\"Threshold_Bistro_Ceramic_Dinner_Plate_Ruby_Ring\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+  }
+ },
+ "original_files": {
+  "model.zip": "cfb92109cdda35983e853a5bc8de54fac9e4bc5d66d14c5ea2ab40f18d7105bf"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "ba9c557654ba9f14b2817de74cbf9943bbb85c72d67ea9397b566bbb5c1b65fe",
+  "default_0.png": "0e62d77d678097baba619ff15515912674232a97e79f899c192ef3d036d7627e"
+ }
+}

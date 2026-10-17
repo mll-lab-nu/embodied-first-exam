@@ -8,7 +8,8 @@
 # tasks by scripts/robotwin_sync_shared.py --check. RoboPaint's check
 # (robopaint_strict/mk_tasks.py) runs robopaint_brush_mk_task.py --refresh into a temporary directory and adds the process rules
 # (standard library only), as does RoboOlympics' (scripts/roboolympics/gen_tasks.py check, which compares the executable
-# bits too). The VLABench, RoboCasa, MuJoCo Playground (quadruped) and LIBERO-MAX checks also compare file modes, so run
+# bits too). RoboSafeBench's tasks are a frozen release (scripts/robosafe/check_release.py: every rsb-* task is the
+# one in release.json; its generators need release tooling this repository does not carry). The VLABench, RoboCasa, MuJoCo Playground (quadruped) and LIBERO-MAX checks also compare file modes, so run
 # them from a checkout made with umask 022.
 # Usage: check-generated-tasks.sh [--only <path prefix>...]   (repo-level; run_all.sh calls it once)
 #   --only: run just the generators whose script path (scripts/...) starts with one of the prefixes (a pull request's
@@ -40,7 +41,7 @@ for g in "roboolympics/gen_tasks.py check" "roboarc/mk_tasks.py --check" "yamlab
          "bigym2/gen_tasks.py check" "robofunolympics/gen_tasks.py check" \
          "dexhand/generate.py --check --release" \
          "molmospaces/mk_tasks.py --check" \
-         "robosafe/gen_tasks.py check" "robosafe/gen_realtime.py check" \
+         "robosafe/check_release.py check" \
          "robotwin_sync_shared.py --check"; do   # RoboTwin 2.0: every task's shared files are the template tasks' (no simulator needed)
   [ -f "$root/scripts/${g%% *}" ] && gens+=("$g")
 done

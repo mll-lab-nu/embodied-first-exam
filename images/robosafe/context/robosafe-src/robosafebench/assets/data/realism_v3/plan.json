@@ -1,0 +1,702 @@
+{
+ "BY_RSB_MATERIAL": {
+  "aluminium": "brushed_metal",
+  "anodised": "brushed_metal",
+  "brass": "brushed_metal",
+  "deck": "brushed_metal",
+  "enamel_white": "ceramic",
+  "glass": null,
+  "glass_clear": null,
+  "glass_frosted": null,
+  "glow": null,
+  "housing_dark": "plastic",
+  "housing_light": "plastic",
+  "housing_mid": "plastic",
+  "ink_black": null,
+  "ink_blue": null,
+  "metal": "brushed_metal",
+  "plastic_black": "plastic",
+  "plastic_blue": "plastic",
+  "plastic_clear": null,
+  "plastic_green": "plastic",
+  "plastic_natural": "plastic",
+  "plastic_orange": "plastic",
+  "plastic_red": "plastic",
+  "plastic_teal": "plastic",
+  "plastic_white": "plastic",
+  "plastic_yellow": "plastic",
+  "rubber": "rubber",
+  "steel": "brushed_metal",
+  "string": null,
+  "table": null,
+  "wood": "wood"
+ },
+ "DEFAULT_FINISH": "plastic",
+ "S": {
+  "aerosol_can": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "apple": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "apple",
+    "mode": "saturated"
+   }
+  },
+  "basin": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "beaker": {
+   "mode": "kept"
+  },
+  "bed": {
+   "finish": "fabric",
+   "geom_mat": {
+    "blanket": "fabric_coarse",
+    "frame": "wood",
+    "head": "wood",
+    "leg": "wood",
+    "mattress": "fabric",
+    "pillow": "fabric"
+   },
+   "mode": "material"
+  },
+  "belt_conveyor": {
+   "finish": "rubber",
+   "geom_mat": {
+    "belt": "rubber"
+   },
+   "mode": "material"
+  },
+  "billy_can": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "biohazard_bin": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "blade_box": {
+   "mode": "kept"
+  },
+  "bottle": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "bottle_cap": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "bowl": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "shell",
+    "mode": "whole"
+   }
+  },
+  "bread_loaf": {
+   "mode": "mesh"
+  },
+  "bucket": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "cabinet": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "candle": {
+   "finish": "wax",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "carboy": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "card": {
+   "mode": "kept"
+  },
+  "cardboard_box": {
+   "finish": "cardboard",
+   "geom_mat": {
+    "tape": "plastic"
+   },
+   "mode": "material"
+  },
+  "cat": {
+   "mode": "mesh",
+   "tint": {
+    "fur": "body"
+   }
+  },
+  "chair": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "leg_0",
+    "keep_if": "wood",
+    "mode": "whole"
+   }
+  },
+  "charging_dock": {
+   "finish": "painted",
+   "geom_mat": {
+    "mat": "rubber"
+   },
+   "mode": "material"
+  },
+  "chocolate_bar": {
+   "finish": "paper",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "coaster": {
+   "finish": "wood_light",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "coin_cell_pack": {
+   "mode": "kept"
+  },
+  "counter": {
+   "finish": "painted",
+   "geom_mat": {
+    "worktop": "wood"
+   },
+   "mode": "material"
+  },
+  "cover_box": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "cup": {
+   "finish": "paper",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "cutting_board": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "board",
+    "keep_if": "wood",
+    "mode": "whole"
+   }
+  },
+  "dining_table": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "top_board",
+    "keep_if": "wood",
+    "mode": "whole"
+   }
+  },
+  "document": {
+   "mode": "kept"
+  },
+  "dog": {
+   "mode": "mesh",
+   "tint": {
+    "fur": "body"
+   }
+  },
+  "dog_biscuit": {
+   "finish": "cardboard",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "dog_biscuit_box": {
+   "finish": "cardboard",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "dog_bowl": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "doll": {
+   "finish": "fabric",
+   "geom_mat": {
+    "arm": "plastic",
+    "foot": "plastic",
+    "hand": "plastic",
+    "head": "plastic",
+    "leg": "plastic"
+   },
+   "mode": "material"
+  },
+  "door": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "drawer_unit": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "drying_rack": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "estop_button": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "eyeglasses": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "rim_left",
+    "mode": "whole"
+   }
+  },
+  "floor_cord": {
+   "mode": "kept"
+  },
+  "floor_sign": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "flower_pot": {
+   "hide_only": [
+    "shell"
+   ],
+   "mode": "mesh",
+   "recolor": null
+  },
+  "flyer_stack": {
+   "mode": "kept"
+  },
+  "food_can": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "glass": {
+   "mode": "kept"
+  },
+  "glove": {
+   "finish": "rubber",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "hand": {
+   "keep": [],
+   "mode": "mesh",
+   "tint": {
+    "skin": "palm"
+   }
+  },
+  "high_shelf": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "hob_counter": {
+   "finish": "painted",
+   "geom_mat": {
+    "worktop": "granite"
+   },
+   "mode": "material"
+  },
+  "hot_plate": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "infant": {
+   "mode": "mesh",
+   "tint": {
+    "hair": "hair",
+    "shirt": "torso_shape",
+    "skin": "head"
+   }
+  },
+  "iron": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "kettle": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "keyboard": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "knife": {
+   "mode": "mesh"
+  },
+  "knife_block": {
+   "finish": "wood_light",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "laptop": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "light_bulb": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "low_table": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "top_board",
+    "keep_if": "wood",
+    "mode": "whole"
+   }
+  },
+  "machine_hopper": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "marker_pen": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "melon": {
+   "mode": "mesh"
+  },
+  "metal_cube": {
+   "mode": "kept"
+  },
+  "microwave": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "mug": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "shell",
+    "mode": "whole"
+   }
+  },
+  "packing_box": {
+   "finish": "cardboard",
+   "geom_mat": {
+    "tape": "plastic"
+   },
+   "mode": "material"
+  },
+  "paper_stack": {
+   "finish": "paper",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "passport": {
+   "mode": "kept"
+  },
+  "person": {
+   "keep": [
+    "seat"
+   ],
+   "mode": "mesh",
+   "tint": {
+    "hair": "hair",
+    "shirt": "upper_arm_left",
+    "skin": "head",
+    "trousers": "thigh_left"
+   }
+  },
+  "person_down": {
+   "mode": "mesh",
+   "tint": {
+    "hair": "hair",
+    "shirt": "upper_arm_left",
+    "skin": "head",
+    "trousers": "thigh_left"
+   }
+  },
+  "pet_carrier": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "pill_bottle": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "pill_organizer": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "plate": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "shell",
+    "mode": "whole"
+   }
+  },
+  "plug_adapter": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "plug_stand": {
+   "finish": "wood_light",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "pot": {
+   "finish": "brushed_metal",
+   "geom_mat": {
+    "handle": "plastic",
+    "shell": "brushed_metal"
+   },
+   "mode": "material"
+  },
+  "power_bank": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "power_strip": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "puddle": {
+   "mode": "kept"
+  },
+  "purse": {
+   "finish": "leather_t",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "reagent_bottle": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "room_door": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "rubber_block": {
+   "finish": "rubber",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "rug": {
+   "finish": "fabric_coarse",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "salt_jar": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "sample_tube": {
+   "mode": "kept"
+  },
+  "saucer": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "shell",
+    "mode": "whole"
+   }
+  },
+  "screwdriver": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "handle",
+    "mode": "saturated"
+   }
+  },
+  "sharps_box": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "shelf": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "shredder": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "sink": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "sofa": {
+   "material_roles": {
+    "default": {
+     "0": "wood",
+     "1": "fabric",
+     "2": "leather"
+    }
+   },
+   "mode": "mesh",
+   "recolor": {
+    "geom": "cushion_shape_0",
+    "mode": "whole",
+    "roles": [
+     "fabric",
+     "leather"
+    ]
+   }
+  },
+  "solvent_cabinet": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "space_heater": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "spice_jar": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "spoon": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "stack_light": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "sticky_note": {
+   "mode": "kept"
+  },
+  "storage_tray": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "tablet": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "tag_card": {
+   "mode": "kept"
+  },
+  "tennis_ball": {
+   "finish": "fabric_coarse",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "threshold_strip": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "toaster": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "toddler": {
+   "mode": "mesh",
+   "tint": {
+    "hair": "hair",
+    "shirt": "torso_shape",
+    "skin": "head",
+    "trousers": null
+   }
+  },
+  "tool_basket": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "tool_holder": {
+   "finish": "wood_light",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "tote": {
+   "mode": "mesh",
+   "recolor": {
+    "geom": "shell",
+    "mode": "whole"
+   }
+  },
+  "towel": {
+   "finish": "fabric",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "towel_warmer": {
+   "finish": "brushed_metal",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "toy_ball": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "tray": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "utility_knife": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "wall_sign": {
+   "mode": "kept"
+  },
+  "washing_machine": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "waste_bin": {
+   "finish": "plastic",
+   "geom_mat": {},
+   "mode": "material"
+  },
+  "wine_glass": {
+   "mode": "kept"
+  },
+  "work_arm": {
+   "finish": "painted",
+   "geom_mat": {},
+   "mode": "material"
+  }
+ }
+}

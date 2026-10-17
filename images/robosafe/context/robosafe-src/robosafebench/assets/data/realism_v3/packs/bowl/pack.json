@@ -1,0 +1,85 @@
+{
+ "kind": "bowl",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 10000,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": true,
+     "material": {
+      "specular": "0.5",
+      "shininess": "0.6"
+     }
+    }
+   ],
+   "raw_triangles": 14030,
+   "after_bbox": [
+    [
+     -0.0797,
+     -0.0764,
+     0.0
+    ],
+    [
+     0.0785,
+     0.0786,
+     0.0659
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.075286,
+     -0.07901,
+     0.0
+    ],
+    [
+     0.075286,
+     0.07901,
+     0.065917
+    ]
+   ],
+   "fit": "z",
+   "scale": [
+    0.9320315593009444,
+    0.9320315593009444,
+    0.9320315593009444
+   ],
+   "rotation": ""
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "shell",
+  "mode": "whole"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+   "name": "Threshold_Bead_Cereal_Bowl_White",
+   "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Bead_Cereal_Bowl_White",
+   "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Threshold_Bead_Cereal_Bowl_White/1/Threshold_Bead_Cereal_Bowl_White.zip",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "author": "Google LLC (Google Scanned Objects)",
+   "attribution": "\"Threshold_Bead_Cereal_Bowl_White\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+  }
+ },
+ "original_files": {
+  "model.zip": "dbc667d1373cc7e4252bcdd21feab246f17794d17ebce3a2693568a6ea197379"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "ea4aebd998ef5dde8d14337ca9977b938c1692cfcde08c64b31bc9665957ea46",
+  "default_0.png": "b14c3d1c73e4d02268b0171f072c588a75d05bfb969be5113f26c579c5b97c5b"
+ }
+}

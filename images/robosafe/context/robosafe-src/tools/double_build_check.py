@@ -12,7 +12,7 @@ clock runs:
       each (`verify.run` with the same think schedule): each one's final hash;
   (b) two live episodes at once: a first one built and kept alive (stepped five ticks under realtime), a second one
       built next to it that runs the reference: its start and final hash;
-  (c) a fresh process: `python -m robosafe verify` replays (a)'s first record.
+  (c) a fresh process: `python -m robosafebench.verify` replays (a)'s first record.
 
 It checks, per task and clock: the start hashes of every build agree; the final hashes of (a), (a) again, (b) and (c)
 agree. Paused and realtime start hashes differ by design and are not compared with each other: the state hash of a
@@ -36,7 +36,7 @@ AB05 = "a_pet_appliance"
 
 
 def tasks(families=None, robot: str = "ur5e_2f85", movers: str = "scripted") -> list:
-    from robosafe import families as F
+    from robosafebench import families as F
     out = []
     for fid in (families or D_FAMILIES + (AB05,)):
         fam = F.get(fid)
@@ -58,7 +58,7 @@ def tasks(families=None, robot: str = "ur5e_2f85", movers: str = "scripted") -> 
 
 def check(job) -> dict:
     key, clock, think = job
-    from robosafe import verify
+    from robosafebench import verify
     k = dict(key, **({"clock": "realtime"} if clock == "realtime" else {}))
     sched = think if clock == "realtime" else None
     row = {"key": key, "clock": clock}
@@ -76,8 +76,14 @@ def check(job) -> dict:
         f0, i0, ep0 = verify.start(k)
         starts.append(ep0.state_hash())
         if clock == "realtime":
+            # a one-step plan of the command in force (the walking G1: its `whole_body` hold row; the arms: `joint_position`)
+            typ, hold = ep0.control.hold()
             for _ in range(5):
-                ep0.execute({"tool": "joint_position", "args": {"row": ep0.command("joint_position").tolist()}}, think_ticks=1)
+                if "delta" in ep0.action_types():     # the TidyBot (0.5.4): its hold row, one 10 Hz step
+                    typ, hold = ep0.control.hold()
+                    ep0.execute({"tool": typ, "args": {"row": hold.tolist()}}, think_ticks=ep0.step_ticks)
+                else:
+                    ep0.execute({"tool": typ, "args": {"row": [float(v) for v in hold]}}, think_ticks=1)
         f1, i1, ep1 = verify.start(k)
         starts.append(ep1.state_hash())
         ep1.world.close()
@@ -88,7 +94,7 @@ def check(job) -> dict:
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
             json.dump(recs[0], fh)
             path = fh.name
-        out = subprocess.run([sys.executable, "-m", "robosafe", "verify", path, "--json"], capture_output=True, text=True, timeout=1800)
+        out = subprocess.run([sys.executable, "-m", "robosafebench.verify", path, "--json"], capture_output=True, text=True, timeout=1800)
         os.unlink(path)
         if out.returncode != 0:
             raise RuntimeError(f"fresh-process verify failed: {out.stderr[-500:]}")
@@ -106,7 +112,7 @@ def check(job) -> dict:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python tools/double_build_check.py")
     p.add_argument("--families", nargs="*")
-    p.add_argument("--robot", default="ur5e_2f85", help="0.5.1: e.g. tidybot or g1_wbc (room families, both camera conditions; paused clock only)")
+    p.add_argument("--robot", default="ur5e_2f85", help="0.5.1: e.g. tidybot or g1_wbc (room families, both camera conditions); 0.5.4: the TidyBot under both clocks")
     p.add_argument("--clocks", nargs="*", default=["paused", "realtime"])
     p.add_argument("--think", type=float, default=2.0)
     p.add_argument("--jobs", type=int, default=8)

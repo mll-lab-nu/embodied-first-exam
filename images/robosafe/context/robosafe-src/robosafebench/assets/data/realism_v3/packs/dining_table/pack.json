@@ -1,0 +1,86 @@
+{
+ "kind": "dining_table",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 952,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false
+    }
+   ],
+   "raw_triangles": 952,
+   "after_bbox": [
+    [
+     -0.7,
+     -0.4,
+     0.0
+    ],
+    [
+     0.7,
+     0.4,
+     0.75
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.7,
+     -0.4,
+     0.0
+    ],
+    [
+     0.7,
+     0.4,
+     0.75
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    0.7779299377254697,
+    1.217332415103413,
+    1.3664953926764014
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "top_board",
+  "mode": "whole",
+  "keep_if": "wood"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Poly Haven",
+   "name": "Wooden Table 01",
+   "url": "https://polyhaven.com/a/WoodenTable_01",
+   "file_url": "https://api.polyhaven.com/files/WoodenTable_01",
+   "license": "CC0 1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "author": "Ethan Place",
+   "attribution": "\"Wooden Table 01\" by Ethan Place, Poly Haven (CC0; credit not required)"
+  }
+ },
+ "original_files": {
+  "WoodenTable_01_1k.gltf": "413804e054055c397b4cfbd0916027097d2a20853b165b533007a46d131e1d17",
+  "WoodenTable_01.bin": "1083a3442969d27e18e6a7a454bc164407439e3908bf8f17f5fb24d58cd0172e",
+  "WoodenTable_01_arm_1k.jpg": "ad876f814215006d35f74670d4fc14a9f6eab386a9307764521449464a1cd6ef",
+  "WoodenTable_01_diff_1k.jpg": "9535de577ad6b64deb68457af14240dd9b6d82143da0b6d2bf337660ebd855f3",
+  "WoodenTable_01_nor_gl_1k.jpg": "330655534ea1fc7c7387b5d2ba5ca3231711a9fa680b980933a3a9c82cdb1c67"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "3464ed3e70eafd27df5e5eea9735fc25c66b34e58457e0ef5226bb5b4a57381b",
+  "default_0.png": "0ab86a535bee0d5bce0f2b9714fe39c1a59a523e99b7a2b8dc312b8f1a3aa5e9"
+ }
+}

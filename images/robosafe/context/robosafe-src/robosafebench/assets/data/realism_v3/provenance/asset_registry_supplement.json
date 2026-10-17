@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "reason": "Standalone hand conversion appended used cuffs after the original registry was written.",
+  "remedy": "Explicit checksum supplement; frozen pack manifests and every OBJ/PNG remain unchanged.",
+  "packs": {
+    "hand": {
+      "pack_sha256": "4f0c6f99e6e75aebe7f2cb5d86000155d5838fbed77a50a9af6f5ef0f0fe4169",
+      "source_pack": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/pack.json",
+      "source_pack_sha256": "43a9d6a72b371da5a6599807304b785bf343fdfc71c0c8eff342f674d687a460",
+      "files": {
+        "hd_L_sleeve.obj": {
+          "sha256": "f84a8c539c2fff338b7d5c766b104f5d860a7766d601c924cde35b22fe90ea2f",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hd_L_sleeve.obj"
+        },
+        "hd_L_sleeve.png": {
+          "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hd_L_sleeve.png"
+        },
+        "hd_R_sleeve.obj": {
+          "sha256": "6507fe426b4907deba9bfa959dcc2f1af3abbb42d6be27be8aef0a5e225afc31",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hd_R_sleeve.obj"
+        },
+        "hd_R_sleeve.png": {
+          "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hd_R_sleeve.png"
+        },
+        "hl_L_sleeve.obj": {
+          "sha256": "022893118f9112831aef7ea667bb1f33c40dc063af012abbe9988f379d10f1c2",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hl_L_sleeve.obj"
+        },
+        "hl_L_sleeve.png": {
+          "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hl_L_sleeve.png"
+        },
+        "hl_R_sleeve.obj": {
+          "sha256": "f2ea82f89ff12cda0fb5267d875dd9e1529356d47959b6ca210655e0cec1f73a",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hl_R_sleeve.obj"
+        },
+        "hl_R_sleeve.png": {
+          "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hl_R_sleeve.png"
+        },
+        "hm_L_sleeve.obj": {
+          "sha256": "1de5fb2a6c6a9f6f4c9de6ff904e40e317e6a01ff64f43a5603f07157c1297cf",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hm_L_sleeve.obj"
+        },
+        "hm_L_sleeve.png": {
+          "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hm_L_sleeve.png"
+        },
+        "hm_R_sleeve.obj": {
+          "sha256": "8e1effd285faeb52b416a96a421bdfc28d72fe4d3bdaf15692c43ad9f81737b3",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hm_R_sleeve.obj"
+        },
+        "hm_R_sleeve.png": {
+          "sha256": "7cf981077ad15bae00c24620308c6a9a6ca207a5e8ab260698456c1b7ef53411",
+          "previously_registered_source": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/hm_R_sleeve.png"
+        }
+      }
+    }
+  }
+}

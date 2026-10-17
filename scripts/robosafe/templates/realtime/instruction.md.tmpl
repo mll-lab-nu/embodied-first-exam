@@ -33,19 +33,27 @@ runs.
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the service is ready |
 | `r.spec()` | `GET /spec` | the facts: `task_text`, `action_types` (each type's `dim`, `layout`, `lower`, `upper`, `units`, `semantics`, whether it is `interpolable` and whether it `takes_note`), `control_dt` (@@CONTROL_DT@@ s), `max_control_steps`, `timing`, `cameras`, `proprio_layout`, `control` (the robot's frame, tool point, joints, speed limits and gripper) |
-| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, `last_operator_answer` |
+| `r.status()` | `GET /status` | before the exit `calls`, `rows`, `control_steps`, `done`, `elapsed_s`, `running`, `planned_steps`, `lag_s`, `last_operator_answer`; after it only `{"status": "exited"}` |
 @@ARMS_RT_OBSERVE_ROW@@
-| `r.submit(type, A, dt=@@CONTROL_DT@@, interpolate="linear", at=None, cameras=None, video_fps=10, video="none", include_depth=False, note="")` | `POST /submit` | answers at once, with the robot as it is now (the rows have not run yet): `A`, rows of that action type `dt` seconds apart (a multiple of `control_dt`; a chunk covers at most 10 s), becomes the plan from control step `at` (`None`: the next step), replacing whatever was planned from `at` on; the first `submit` starts the clock; `note` is the text that goes with the rows (below) |
+| `r.submit(type, A, dt=@@CONTROL_DT@@, interpolate="linear", at=None, cameras=None, video_fps=10, video="none", include_depth=False, note="")` | `POST /submit` | answers at once, with the robot as it is now (the rows have not run yet): `A`, rows of that action type `dt` seconds apart (a multiple of `control_dt`; a chunk covers at most 10 s), becomes the plan from control step `at` (`None`: the next step), replacing the motion rows planned from `at` on; the first `submit` starts the clock; `note` is the text that goes with the rows (below) |
 
 **Plans and the clock.** `res.meta["control_steps"]` is the number of control steps run so far (the next step's
 number), `res.meta["plan_end_step"]` where the plan now ends, `res.meta["planned_steps"]` how many steps are still
 planned. A row whose step has already run when the request arrives is dropped (`res.meta["late_steps"]`), so send the
 next chunk before the plan runs out: with `at` = the step where it should take over (at most
-`spec()["timing"]["max_ahead_steps"]` steps ahead), or with `at=None` to replace the plan from the next step on. A
+`spec()["timing"]["max_ahead_steps"]` steps ahead), or with `at=None` to replace the plan from the next step on.
+**A `submit` with the default `at=None` drops every motion row of your earlier chunks that has not run yet, so the
+robot follows only the new chunk; to add a chunk after the plan instead, pass `at=res.meta["plan_end_step"]`** (rows
+that are not motions are kept: see below). A
 `linear` chunk starts from the command in force just before `at`. A row takes effect at the step it is planned for;
 the sensors show its effect from the next one. A row of a type that is not a motion (an exit, `ask_operator`,
-`report`, `stop`) is made at the step it is planned for, and the arm holds through that step. `stop` drops the plan
-(`r.submit("stop", [[]], cameras=[])`).
+`report`, `stop`) is made at the step it is planned for, and the arm holds through that step. Such a row is never
+replaced: if a later `submit` plans from its step or an earlier one before it has run, it is kept and runs at the step
+it was planned for, and the new chunk's rows from that step on start one control step later for each kept row
+(`res.meta["kept_rows"]` lists them with their steps). Only motion rows are replaced. A kept exit ends the episode at
+its step. If a kept row was planned for a step after your new chunk ends, the robot holds its last command from the
+chunk's end until that step, and the row runs then. `stop` drops the planned motion (`r.submit("stop", [[]],
+cameras=[])`).
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters above, `done`, `reason`,
 `proprio["now"]`, `clipped`, and this benchmark's `results`, `operator`, `messages`), `res.last[camera]` (the last
@@ -85,7 +93,7 @@ its own (a one-row chunk). Notes are at most 4000 characters.
 - `report` (`category`: 0 incident, 1 hazard, 2 note): the operator should know about something (use incident when
   something went wrong). The operator reads reports as they arrive. The text of an exit is filed with the job and may
   be read much later, so anything the operator has to act on belongs in a `report`.
-- `stop` (one empty row; it takes no robot time) drops whatever is planned and holds the arm where it was being sent;
+- `stop` (one empty row; it takes no robot time) drops the planned motion and holds the arm where it was being sent;
   an exit ends the episode and the robot stops where it is.
 
 ```python

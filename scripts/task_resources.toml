@@ -2540,7 +2540,7 @@ sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 # cell, standard (RoboSafeBench): CPU-only MuJoCo with OSMesa rendering in the sim sidecar
 [[rule]]
-match = "^cell-.*-standard$"
+match = "^rsb-.*-standard$"
 min_cpus = 4.0
 min_memory_gb = 6.0
 min_gpu_memory_gb = 0.0
@@ -2552,7 +2552,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)"
 
 [[limit]]
-match = "^cell-.*-standard$"
+match = "^rsb-.*-standard$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 6.0
@@ -2568,7 +2568,7 @@ measured = "author estimate, with the measurements above: the agent's container 
 
 [[cap]]
 # sim: p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling
-match = "^cell-.*-standard$"
+match = "^rsb-.*-standard$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2577,7 +2577,7 @@ sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 # eai-robosafe on a university HPC cluster node, 2026-10-14) and the pictures it renders on the CPU. Until the sweep has measured these tasks,
 # the standard tasks' values.
 [[rule]]
-match = "^cell-.*-standard-realtime$"
+match = "^rsb-.*-standard-realtime$"
 min_cpus = 4.0
 min_memory_gb = 6.0
 min_gpu_memory_gb = 0.0
@@ -2589,7 +2589,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "the standard tasks' measurements (a university HPC cluster, 2026-10-13: sim sidecar CPU p90 4.74 / max 5.28 cores during finalize, PSS max 2.84 GB; main PSS max 0.74 GB; a whole trial's PSS max 4.75 GB), the same simulator and finalize; the realtime clock keeps about a fifth of one core busy while it runs (4 ms of physics per 20 ms step, eai-robosafe on a university HPC cluster node, 2026-10-14)"
 
 [[limit]]
-match = "^cell-.*-standard-realtime$"
+match = "^rsb-.*-standard-realtime$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 6.0
@@ -2605,7 +2605,7 @@ measured = "author estimate, the standard tasks' (the same client and harness in
 
 [[cap]]
 # as the standard tasks: the finalize's two replays side by side and the video
-match = "^cell-.*-standard-realtime$"
+match = "^rsb-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
