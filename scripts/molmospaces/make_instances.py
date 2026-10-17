@@ -8,7 +8,8 @@ whose rule picks another episode is reported and not written.
     python scripts/molmospaces/make_instances.py --bench <dir> --refresh [family ...]   # recompute facts / t = 0 only
 
 Needs the simulator (molmo-spaces 0.2.9, MuJoCo 3.5.0, MLSPACES_ASSETS_DIR / MLSPACES_CACHE_DIR set, and
-MLSPACES_PINNED_ASSETS_FILE=images/molmospaces/pinned_assets.json, the Objaverse version the benchmark was made with)
+MLSPACES_PINNED_ASSETS_FILE=images/molmospaces/pinned_assets.json, the Objaverse version the benchmark was made with),
+a GPU (EGL, the renderer the tasks use: the pixel gate counts EGL pixels; OSMesa's differ by up to 2 per object)
 and the network: upstream installs the assets an episode uses on first load, and the houses of the public MolmoBot
 trajectories are read from Hugging Face. An instance is the upstream episode unchanged except: `source` (the path of the
 episode's own expert trajectory) is dropped, and the navigation text, wrong in this package ("pick up the black
@@ -17,6 +18,7 @@ television."), is upstream NavToObjTask's own description."""
 import argparse
 import json
 import math
+import os
 import re
 import sys
 import urllib.request
@@ -24,6 +26,7 @@ from pathlib import Path
 
 import numpy as np
 
+os.environ["MUJOCO_GL"] = os.environ["PYOPENGL_PLATFORM"] = "egl"  # the tasks' renderer (view_px), before mujoco loads
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "shared"))
 import rcb_molmospaces as M  # noqa: E402
@@ -32,6 +35,20 @@ BENCHMARK = "molmospaces-bench-v2/20260415"
 CLUTTER_M, CLUTTER_N = 0.3, 5  # pick families: other objects whose pose lies within 30 cm of the target's
 NAV_MIN_M = 8.0  # navigation: the nearest target's distance from the robot base at t = 0
 SAME_KIND_M = 1.0  # pick families: no other object of the named object's WordNet synset this close to it
+OPEN_MAX_JOINTS = 3  # open: at most this many joints count toward upstream's success check
+FIXTURE_MIN_M = 0.75  # open, close: the fixture's horizontal distance from the robot base (package median, 2026-10-15)
+TRANSFER_MIN_M = 0.25  # pick-and-place(-color): the receptacle's distance from the target (package median, 2026-10-15)
+VIEW_MIN_PX = 200  # pick families: the target and the receptacle / reference object show in at least this many pixels
+#   of one camera off the arm at t = 0 (view_px), so the goal can be told from the robot's own images
+VIEW_MAX_PX = {  # pick families: the target shows in at most this many pixels of its best camera off the arm at t = 0
+    # (view_px; each package's lower quartile over every 20th episode, 2026-10-16, rounded down to two digits)
+    "pick": 1200,
+    "pick-and-place": 630,
+    "pick-and-place-next-to": 1100,
+    "pick-and-place-color": 670,
+}
+TRAVEL_MIN_M = {"open": 0.06, "close": 0.14}  # how far the fixture's moving part must move to reach upstream's success
+#   threshold (success_travel; each package's upper quartile, 50 sampled episodes, 2026-10-16)
 MOLMOBOT = "https://huggingface.co/datasets/allenai/molmobot-data"
 MOLMOBOT_CONFIGS = (
     "DoorOpeningDataGenConfig",
@@ -79,6 +96,13 @@ def ruled_out(family: str, episode: dict) -> str | None:
     """Why an episode is not used, from its upstream fields alone (no simulator): an ambiguous target, or not hard
     enough. None if it may be."""
     t, poses = episode["task"], episode["scene_modifications"].get("object_poses", {})
+    if family in ("pick-and-place", "pick-and-place-color"):
+        d = math.dist(t["pickup_obj_start_pose"][:3], t["place_receptacle_start_pose"][:3])
+        if d < TRANSFER_MIN_M:
+            return f"the receptacle is {d:.2f} m from the target"
+    if family in ("open", "close"):
+        d = math.dist(t["pickup_obj_start_pose"][:2], t["robot_base_pose"][:2])
+        return f"the fixture is {d:.2f} m from the robot base" if d < FIXTURE_MIN_M else None
     if family.startswith("pick"):
         copies = [
             n
@@ -117,11 +141,88 @@ def checked(family: str, hit: str, ep: M.Episode) -> str | None:
     kind = joint_kind(ep) if family in ("open", "close") else None
     if kind and kind != ("slide" if hit == "a" else "hinge"):
         return f"the target joint is a {kind} joint"
+    if family == "open":
+        n = counted_joints(ep)
+        if n > OPEN_MAX_JOINTS:
+            return f"{n} joints count toward success"
+    if family in ("open", "close"):
+        d = success_travel(family, ep)
+        return f"the moving part needs {d:.3f} m to succeed" if d < TRAVEL_MIN_M[family] else None
     if family == "navigate-to":
         return nav_targets(hit, ep) or nav_far(ep)
     if family.startswith("pick"):
-        return same_kind(family, ep)
+        return same_kind(family, ep) or in_view(family, ep)
     return None
+
+
+def in_view(family: str, ep: M.Episode) -> str | None:
+    """Why the named objects are not small but identifiable in the robot's fixed cameras at t = 0, or None: the
+    target in at most VIEW_MAX_PX[family] pixels of its best camera off the arm, and it and the receptacle / reference
+    object in at least VIEW_MIN_PX of one."""
+    t = ep.inst["episode"]["task"]
+    px = {name: view_px(ep, name) for name in (t["pickup_obj_name"], t.get("place_receptacle_name")) if name}
+    small = [f"{n} ({v} px)" for n, v in px.items() if v < VIEW_MIN_PX]
+    if small:
+        return "not in view at t = 0: " + ", ".join(small)
+    v = px[t["pickup_obj_name"]]
+    return f"the target shows in {v} px at t = 0" if v > VIEW_MAX_PX[family] else None
+
+
+def view_px(ep: M.Episode, body: str) -> int:
+    """The most pixels the body (with its descendants) shows in one agent camera that does not move with the arm (fixed,
+    or on the fixed base) at t = 0, by upstream's segmentation render."""
+    best = 0
+    for cam in ep.agent_cameras:
+        if ep.camera_info(cam)["mount"].get("parent_link", "base") != "base":
+            continue
+        mask = ep.env.get_segmentation_mask_of_object(body, cam)
+        best = max(best, int(mask.sum()) if mask is not None else 0)
+    return best
+
+
+def counted_joints(ep: M.Episode) -> int:
+    """The joints upstream's open success takes the most open of (OpeningTask.get_reward): every joint of every
+    articulated object of the named category, less free joints and joints without range."""
+    import mujoco
+
+    arts = ep.task.articulation_objects[ep.env.current_batch_index]
+    return sum(
+        1
+        for a in arts
+        for j in range(a.njoints)
+        if a.get_joint_type(j) != mujoco.mjtJoint.mjJNT_FREE and abs(np.diff(a.get_joint_range(j))[0]) > 0
+    )
+
+
+def success_travel(family: str, ep: M.Episode) -> float:
+    """How far (m) the fixture has to move from t = 0 to reach upstream's success threshold: the largest displacement
+    of a geom of the moving part when its joint goes to the threshold (upstream's openness |q| / range, closed at 0),
+    for the joint that needs the least of it (open: any counted joint; close: the target joint). Kinematics only, on
+    a copy of the state."""
+    import mujoco
+    from molmo_spaces.utils.mj_model_and_data_utils import descendant_geoms
+
+    t, m = ep.inst["episode"]["task"], ep.env.current_model
+    arts = ep.task.articulation_objects[ep.env.current_batch_index]
+    if family == "open":
+        joints, frac = [(a, j) for a in arts for j in range(a.njoints) if abs(np.diff(a.get_joint_range(j))[0]) > 0], \
+            t["task_success_threshold"]
+    else:
+        joints, frac = [(arts[0], t["joint_index"])], 1 - t["task_success_threshold"]
+    d = mujoco.MjData(m)
+    out = []
+    for a, j in joints:
+        lo, hi = a.get_joint_range(j)
+        q0, jid = float(a.get_joint_position(j)), a.joint_ids[j]
+        goal = math.copysign(frac * abs(hi - lo), q0 if q0 else (hi if abs(hi) >= abs(lo) else lo))
+        geoms = descendant_geoms(m, int(m.jnt_bodyid[jid]), visible_only=False)
+        mujoco.mj_copyData(d, m, ep.env.current_data)
+        mujoco.mj_kinematics(m, d)
+        before = d.geom_xpos[geoms].copy()
+        d.qpos[int(m.jnt_qposadr[jid])] = goal
+        mujoco.mj_kinematics(m, d)
+        out.append(float(np.max(np.linalg.norm(d.geom_xpos[geoms] - before, axis=1))))
+    return min(out)
 
 
 def same_kind(family: str, ep: M.Episode) -> str | None:

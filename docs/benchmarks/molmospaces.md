@@ -10,18 +10,18 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | robots | `franka-robotiq-2f85` (Franka FR3 + Robotiq 2F-85 on a fixed base, the DROID setup); `rainbow-rby1` (RB-Y1: holonomic base, 6-joint torso, two 7-joint arms) |
 | score | upstream's `judge_success()` on the state at the episode's end |
 | tasks | 8 families × 2 modes: `tasks/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
-| image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3` (`images/molmospaces/`, ~1.8 GB of assets) |
-| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`), human review in PR #47 |
+| image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
+| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes, 2026-10-16), human review in PR #276 |
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
 |---|---|---|---|---|---|
-| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #387: a white light switch plate | 303 steps (20 s) |
-| pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #134: a small white bird figurine into a black bowl | 606 (40 s) |
-| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #89: a red VHS tape beside a soap bottle | 455 (30 s) |
-| pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #26: a stopwatch into the red bowl | 606 (40 s) |
-| open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | drawer / hinged door | #49: a cabinet's hinged door (any cabinet in the room counts) | 455 (30 s) |
-| close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | drawer / hinged door | #51: a cabinet's hinged door | 455 (30 s) |
-| navigate-to | `holodeck-objaverse/NavToObjDataGenConfig` | RB-Y1, 200 ms | one target / several (nearest counts) | #94: a bed two rooms away | 500 (100 s) |
+| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #806: a pie slice among goblets | 303 steps (20 s) |
+| pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #228: a purple bottle into a clear ashtray | 606 (40 s) |
+| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #479: a black rail mount beside the bread | 455 (30 s) |
+| pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #299: a small dark bird figurine into the red bowl | 606 (40 s) |
+| open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | drawer / hinged door | #52: a dishwasher's door (one joint counts) | 455 (30 s) |
+| close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | drawer / hinged door | #346: an upper cabinet's hinged door | 455 (30 s) |
+| navigate-to | `holodeck-objaverse/NavToObjDataGenConfig` | RB-Y1, 200 ms | one target / several (nearest counts) | #237: a table lamp (two in the house; the nearest counts) | 500 (100 s) |
 | open-door | `procthor-10k/rby1_benchmarks/door_opening_benchmark` | RB-Y1 (RBY1M), 100 ms | push / pull | #0: a door to pull | 400 (40 s) |
 
 ## Instances (`scripts/molmospaces/make_instances.py`)
@@ -37,9 +37,13 @@ the choice; `keep` in `families.json` records it, `make_instances.py` checks it)
 | families | rule |
 |---|---|
 | pick, pick-and-place(-next-to, -color) | at least 5 other objects within 30 cm of the target |
-| open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras |
+| pick-and-place(-color) | the receptacle at least 0.25 m from the target (the packages' median, measured 2026-10-15) |
+| pick, pick-and-place(-next-to, -color) | the target small in the robot's fixed cameras (not on the arm) at t = 0: at most 1200 / 630 / 1100 / 670 pixels (pick / pick-and-place / -next-to / -color) in the best one (EGL, the tasks' renderer), the packages' lower quartiles (every 20th episode, 2026-10-16); it and the receptacle or reference object at least 200 pixels in one, so the goal can be told from the images |
+| open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras; the fixture at least 0.75 m (horizontally) from the robot base (the packages' median, measured 2026-10-15) |
+| open | at most 3 joints count toward upstream's success (every joint of every fixture of the named kind) |
+| open, close | the moving part has to travel at least 6 cm (open) / 14 cm (close) to reach upstream's success threshold (largest geom displacement; the packages' upper quartiles, every 40th episode, 2026-10-16) |
 | navigate-to | the nearest target at least 8 m from the base and out of `head_camera`'s view at t = 0 |
-| open-door | none beyond the package |
+| open-door | none beyond the package (the handle's distance from the base and its size in `head_camera` hardly vary: 1.30–1.42 m, 26–36 pixels) |
 
 The instance is the upstream episode with `source` (its expert trajectory's path) removed; navigation's text is upstream
 `NavToObjTask`'s own. Assets: Objaverse `20251016_from_20250610`, the version the benchmark was made with (0.2.9 defaults
@@ -80,8 +84,9 @@ What is not the agent's failure is flagged, and a reward is always written (2026
 did not write its verdict; these three used to be the agent's 0 or no reward at all), a give-up after crashes between
 calls or a failed resume, a service that did not end its episode for the hook, a replay process without a result
 (`replay_failed`), replays that did not start in the t = 0 state (`instance_mismatch`); a give-up after crashes during a
-call stays the agent's failure. `finalize.sh` writes `final.json` whole and renames it into place, and ends a replay at
-500 s or at the hook's own deadline (1740 s of its 1800 s), whichever comes first. Privileged: a file that cannot be read
+call stays the agent's failure. `finalize.sh` writes `final.json` whole and renames it into place; its two grading replays
+share the time left before the hook's own deadline (1740 s of its 1800 s; the first gets half), as do the privileged
+verifier's within its 1800 s (500 s each before 2026-10-16, which a loaded host exceeded). Privileged: a file that cannot be read
 as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory` (was `grader_error`). The service
 checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,
 `interpolate` or `type` is a 400 (a null `dt` or `seconds` and a non-string `note` used to be a 500 that ended the
