@@ -23,7 +23,7 @@ ROOT = _HERE.parents[2] if len(_HERE.parents) > 2 else pathlib.Path("/")
 PROBE = r"""
 import json, os, sys
 task, rcb = sys.argv[1], sys.argv[2]
-sys.path[:0] = [os.path.join(task, "environment", "sim"), os.path.join(rcb, "scripts", "robosafe")]
+sys.path[:0] = [os.path.join(task, "environment", "sim"), os.path.join(rcb, "scripts", "robosafebench")]
 import numpy as np
 import make_instances as mi
 inst = json.load(open(os.path.join(task, "environment", "sim", "instance.json")))
@@ -40,8 +40,8 @@ def inside(tasks: list[str]) -> int:
 
     def one(t):
         name = os.path.basename(t.rstrip("/"))
-        base = name[len("cell-"):].rsplit("-standard", 1)[0]
-        want = json.load(open(os.path.join(rcb, "scripts", "robosafe", "oracles", f"{base}.json")))["result"]
+        base = name[len("rsb-"):].rsplit("-standard", 1)[0]
+        want = json.load(open(os.path.join(rcb, "scripts", "robosafebench", "oracles", f"{base}.json")))["result"]
         r = subprocess.run([sys.executable, "-c", PROBE, t, rcb], capture_output=True, text=True)
         try:
             got = json.loads(r.stdout.strip().splitlines()[-1])
@@ -62,7 +62,7 @@ def inside(tasks: list[str]) -> int:
 
 
 def image(tag: str, tasks: list[str]) -> int:
-    tasks = [pathlib.Path(t).resolve() for t in tasks] or sorted((ROOT / "tasks").glob("cell-*-standard"))
+    tasks = [pathlib.Path(t).resolve() for t in tasks] or sorted((ROOT / "tasks").glob("rsb-*-standard"))
     inner = [f"/rcb/tasks/{t.name}" for t in tasks]
     cmd = ["podman", "run", "--rm", "-e", f"JOBS={os.environ.get('JOBS', '6')}", "-e", "RCB=/rcb", "-e",
            "PYTHONDONTWRITEBYTECODE=1", "-v", f"{ROOT}:/rcb:ro", "-w", "/tmp", tag,

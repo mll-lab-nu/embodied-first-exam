@@ -1,0 +1,108 @@
+{
+ "kind": "sofa",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 48,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false
+    },
+    {
+     "tris": 7406,
+     "obj": "default_1.obj",
+     "png": "default_1.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": true
+    },
+    {
+     "tris": 4568,
+     "obj": "default_2.obj",
+     "png": "default_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": true
+    }
+   ],
+   "raw_triangles": 24388,
+   "after_bbox": [
+    [
+     -0.95,
+     -0.44,
+     0.0
+    ],
+    [
+     0.95,
+     0.44,
+     0.8
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.95,
+     -0.44,
+     0.0
+    ],
+    [
+     0.95,
+     0.44,
+     0.8
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    0.690876446839807,
+    0.9871812159988758,
+    0.9784532343365915
+   ],
+   "rotation": "x:90"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "cushion_shape_0",
+  "mode": "whole"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Objaverse 1.0 (Sketchfab upload)",
+   "name": "Modern Couch",
+   "url": "https://sketchfab.com/3d-models/9b1e09abe5e34d6397937ebf59901898",
+   "file_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-017/9b1e09abe5e34d6397937ebf59901898.glb",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "author": "Smitty__Werben",
+   "uploader_says": "A simple Modern Couch. While it is not *perfect*, it is not *perfect*.\n\n* Model by *me*. \n* Base Textures from [Texturehaven](https://texturehaven.com/)",
+   "attribution": "\"Modern Couch\" by Smitty__Werben (https://sketchfab.com/3d-models/9b1e09abe5e34d6397937ebf59901898), CC BY 4.0, modified (re-meshed, decimated, re-textured for MuJoCo)"
+  }
+ },
+ "original_files": {
+  "model.glb": "adef2da02c7df84a32c53391f4fdd8b4eceefeb1d4a61402c64311dd9a69acff"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "3896a91282b1f9c8862d25e5be1821154df1954303f079623560a04e2f031459",
+  "default_0.png": "63725e503275b7c4ec86b8581676505909c3d63ac08403fef2fbada21cd23f0a",
+  "default_1.obj": "31676bf040d271e5af558bb10b48f02ae745ff0495ed67f8edae94057f51c6f4",
+  "default_1.png": "3cc411892aed449de6db3d8502d549ec6253c32f3b564215242e67d28fb08d4d",
+  "default_2.obj": "450b390834ad68896ce59583dd23aa6d492c4b1c4ccc631967c20311e0353bdc",
+  "default_2.png": "5edcac2d37f27e43ed5afd2e71ecb5fb8733ebe7be5d3b6668f40625b46c2bff"
+ }
+}

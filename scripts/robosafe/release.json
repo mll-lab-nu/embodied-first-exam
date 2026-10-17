@@ -1,0 +1,2269 @@
+{
+ "schema": "rsb.rcb-release/1",
+ "tasks": {
+  "rsb-a01-i00-standard": {
+   "digest": "sha256:5eb23188e8a307b926ca5d37dc7d8ccd567acd1165719acd875208f23325e2e5",
+   "release": "0.5.3"
+  },
+  "rsb-a01-i01-standard": {
+   "digest": "sha256:ba14dae883ecbbc5e096e80ca47bc9149b1b0a89e1f0a0ab51250be4b968a7b1",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i02-standard": {
+   "digest": "sha256:b2039e4e6dfa0d67f951e9f82fc4fa92695b4fc413a5c5ce3f7b8e007c3d8813",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i03-standard": {
+   "digest": "sha256:5c94175da0144a77bc2112aa8e5bb4e0f67cccbf3fdd3ecfbd986d5e78f77298",
+   "release": "0.5.3"
+  },
+  "rsb-a01-i04-standard": {
+   "digest": "sha256:d1fa2ccafd15f644a8008f29a982fbeae405245b3fbb4693deb5642961c6bda9",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i05-standard": {
+   "digest": "sha256:6e1a21801c02ebf9aa07cdda50ed2f261129878f075be18b79459dbc24142951",
+   "release": "0.5.3"
+  },
+  "rsb-a01-i06-standard": {
+   "digest": "sha256:ede7299d2978ced261899161a06b26510efd7c0df044ffeb20d5fb6c6b6cd8a3",
+   "release": "0.5.3"
+  },
+  "rsb-a01-i08-standard": {
+   "digest": "sha256:d122929d8643b7a499f8d7e4b031799e3639099195797685fdc4c6bdf3293984",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i09-standard": {
+   "digest": "sha256:d1fcbe7bfac617061c0db4b19732dc8bce0d25e325565e3caa21b260e71f2f3c",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i10-standard": {
+   "digest": "sha256:b9dd193750ad8fc85e89db8c9a425a979fdf6ee3ece9af8a35339dddbeb6e6a1",
+   "release": "0.5.3"
+  },
+  "rsb-a01-i11-standard": {
+   "digest": "sha256:d3abbbc6bd7f0fd718093f29a580c574c1f44ebe6dd65935bb53ea5f1b855a3b",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i00-standard": {
+   "digest": "sha256:d85f0e8caba8266a35e2b609fdc607d22d6dc9526fe94c9bfe19a06ac477e8ba",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i01-standard": {
+   "digest": "sha256:b4e86cee78de3aa28f12e9c0d8188ef76c165c6bf0cbaae0dc8d3ac306408179",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i02-standard": {
+   "digest": "sha256:b5c6ff6307048a10c8a5686b012992fa50987f4bff6eee71e56781362b651e49",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i03-standard": {
+   "digest": "sha256:440acfa0548aa6afa6f5af3bac1abad681e63d4de6d5f60671014891872cc89b",
+   "release": "0.5.4"
+  },
+  "rsb-a02-i04-standard": {
+   "digest": "sha256:cfb55cd3d0ab1089b772df2c638cb6b5f2f17fc3562fe9ad9f2ecbdaf3e5d584",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i05-standard": {
+   "digest": "sha256:080688040a50a40f3b877d46af9a1d6ec2c3dfa608bf1772f79d6a8ce8e92f55",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i06-standard": {
+   "digest": "sha256:eff53b39570baf1241edcb7d10f25aaf934d4703e54e817acbf5deac0274c799",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i07-standard": {
+   "digest": "sha256:9445a75b9dfbeef929563cc44655b73483ced774aa678a7765a5dc0a3be2caa4",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i08-standard": {
+   "digest": "sha256:43a32a3c9395b82e5678c070500dd4b531265a7287b8a1da1f839a853ec731a4",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i09-standard": {
+   "digest": "sha256:5ee981239e06056b7e9968b07d434a8c185c87ab481d8668f9c2446e214f2f4d",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i10-standard": {
+   "digest": "sha256:0515e8335f0acf1c84d7190d8b16f29be2cbaf38ed2ea53e0026d38a97d02921",
+   "release": "0.5.3"
+  },
+  "rsb-a02-i11-standard": {
+   "digest": "sha256:8c7681d9bb8cb56ca62c705e41a5c94d9de63f675df291af66691f69d309f59b",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i00-standard": {
+   "digest": "sha256:20734902ebfe189a49e4b6fdf80c15006b4c2aa62ba5861a898c397426fbb78b",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i01-standard": {
+   "digest": "sha256:8d65c8297ba4aa02e8e6d5c9d0908c709562c59e2080f5dd43e0811bef7fc648",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i02-standard": {
+   "digest": "sha256:f156ecb8d8c587ac142ef07d6ca554800d3314d4b06b279c9696c486226d4670",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i03-standard": {
+   "digest": "sha256:f4d2df7c563fbdaba8a008ced3b85bb2981d2b1628c58221c8dbb0faf4cec440",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i04-standard": {
+   "digest": "sha256:79e1fe817dcf4da69a31f7e61a041cc971437bcf0a84e1db510b0c07550bc60c",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i05-standard": {
+   "digest": "sha256:0448a60c0f3aa0138383f5bea995ab07fa7173e2fcbfb3a93d7df38460f3ffa0",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i06-standard": {
+   "digest": "sha256:653cc191dc28fe927cae731dc3ecade7a64db45d933b15eb828468163c4142f1",
+   "release": "0.5.3"
+  },
+  "rsb-a03-i07-standard": {
+   "digest": "sha256:47aac83a82b4519f4685a15fd9ec79e77bb410bc9ea9da1f83e471928fb0b3ee",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i00-standard": {
+   "digest": "sha256:ec1c56b359d8c42224ca563660bb2bdb155034d95c50449ed7955a54d11e011b",
+   "release": "0.5.4"
+  },
+  "rsb-a04-i01-standard": {
+   "digest": "sha256:8bc4a72406fe488d31bf309e5754b87040e952efb93cc05c4218a335aadc1b13",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i02-standard": {
+   "digest": "sha256:4248679346d96bc28ef7d4c7e9961f9dac22b668553843aeba8df8577742e265",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i03-standard": {
+   "digest": "sha256:83d091d62ddc6214b51d23f415c3b7207c7d7c6365fef921735c458b82e21076",
+   "release": "0.5.4"
+  },
+  "rsb-a04-i04-standard": {
+   "digest": "sha256:9e491407db78ce816b64e73d301eeb4a50072bcb98a403b43c855766074112e8",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i05-standard": {
+   "digest": "sha256:f718248b3a02eb54207dce2b29f9331c13d2550f0544e4784f540ac97abf73d6",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i06-standard": {
+   "digest": "sha256:d119b18de0f0a08c8c3ffea4a1477857cccc8746143bd9dd42fdf6c971f6b935",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i07-standard": {
+   "digest": "sha256:722eb52dc67e8309d71c1faa3b12f3488bdbc6ee5e99a1e63a7a8c274f928c0b",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i08-standard": {
+   "digest": "sha256:ee6591c369d576cbc09d501f9f5f0b03140e3bb8b5bd4deda923d2dade8d93ff",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i09-standard": {
+   "digest": "sha256:319c81e6aecae36103483299711a9aaa162ea54e83255d56bc80e6f4419b5dc5",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i10-standard": {
+   "digest": "sha256:17f0164e69e95de230afc14125a3af649a77359cd4101425860c2469bc32d2d3",
+   "release": "0.5.3"
+  },
+  "rsb-a04-i11-standard": {
+   "digest": "sha256:e9c81d23d2cd558beea5dc1597b26a8ce53a0391ac107e36d04f3a7527a608cb",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i00-standard": {
+   "digest": "sha256:355a0613783a42190704c2f9ae1536c3ea4f6bf33b26933fe6627af60a2a18be",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i00-standard-realtime": {
+   "digest": "sha256:1d0c34e0e434d516cb26e3499ebe695e7f1101c564ea332f6dcb37de2711e0ee",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i01-standard": {
+   "digest": "sha256:f1da1055b6836bf68ef9f8c8934eaaa5396708aa5189fef79b702f2b5421094f",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i01-standard-realtime": {
+   "digest": "sha256:b5ec27462b50b14873d1170aaa416dcdb9024f2a8f447c6d1891cac12c3a0f1c",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i02-standard": {
+   "digest": "sha256:bca4140274c3ff65e508fe7b66d09dcbe3199606b76249b02ac40262262a8e12",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i02-standard-realtime": {
+   "digest": "sha256:1c0c2464f3134210df527f70d20feb69ce40b9a2d49b830a116e1fdadeabde4e",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i03-standard": {
+   "digest": "sha256:a4e50aee420f084cb84c7f546eb66f56cd3a8550ff3291cf685304a8637ea960",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i03-standard-realtime": {
+   "digest": "sha256:65c6c822707f6d5a076a23487feeea33050513420cd2c3e4b32ba33758ad819f",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i04-standard": {
+   "digest": "sha256:d137e670c55f7be31eb7eb320f260eb1e963a4535e47bf41b53b1c7784dadaa4",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i04-standard-realtime": {
+   "digest": "sha256:8bd6988a16c56f469dfb975f1b06e8e56ab2d8ac67a0822d856be13a87fe7485",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i05-standard": {
+   "digest": "sha256:c1fb29223b937fe259dfc3f56a97a2595d5d7cbb6eb19576335da30ce196b570",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i06-standard": {
+   "digest": "sha256:04541ae3fd3e50ca39ac02c2df9f463ef9ffaf121e33a78e81ce0a1e672b565e",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i07-standard": {
+   "digest": "sha256:c10fd33e7b8d25983b14ff5e1f1065313fb42be3be0bf9de0f58be13bb6d6909",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i08-standard": {
+   "digest": "sha256:ae260d813311c3d94257871a749a3c492cadace443e591e558b230414417d644",
+   "release": "0.5.3"
+  },
+  "rsb-a05-i09-standard": {
+   "digest": "sha256:fc223f0e7ba3e6ed15c6ff7bebab14ad9dd8dadbb6397de50153563a818d627e",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i00-standard": {
+   "digest": "sha256:6a01f1f2bdb77e133bb1402a5986ac7558b3c56b8f6483786e6881234db8c406",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i01-standard": {
+   "digest": "sha256:569f1b71648f438ca4d0e316dcd943363c6837b6d6e15c6410031ce65c2ccdca",
+   "release": "0.5.4"
+  },
+  "rsb-a06-i02-standard": {
+   "digest": "sha256:2426d53de4da8206c691cf81855127e876c6800502486cc9cb4d2852c36666b7",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i03-standard": {
+   "digest": "sha256:0e06a410da63de984caf4bcfd660bb86e18d26d56a867256db5acbbd7dead7aa",
+   "release": "0.5.4"
+  },
+  "rsb-a06-i04-standard": {
+   "digest": "sha256:6d435d5300e0763ff3464ce73064367d08ceb1aa9e391604dc678e58cb9fc333",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i05-standard": {
+   "digest": "sha256:a8df2db06e340246b6dce8426918fa2bc513656c09882728ed3ed68c6a6cae68",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i07-standard": {
+   "digest": "sha256:a4abe703d2d6e36db244a0543bbbc3eba8045d5fef2768126c20956352dc78f5",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i08-standard": {
+   "digest": "sha256:b6e5840158642ba861fe6c84f0d35e06890be0b3fee4c56a0be42f40c31f4def",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i09-standard": {
+   "digest": "sha256:625b4e7e88045f89bc3cc4d017f42c540eade157f903dd0776c2fd37fe8bbf7d",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i10-standard": {
+   "digest": "sha256:de5f9a18b7a61d8ff93ccf83f2b43f446d9d2205e82c4eb3878cfd3a8fb1f66c",
+   "release": "0.5.3"
+  },
+  "rsb-a06-i11-standard": {
+   "digest": "sha256:c4095ede47df6dc752acb2ad36a5b26e9666c39af584bba6c464a86e99f9e732",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i00-standard": {
+   "digest": "sha256:5e1aff59a60060b2cf8622d696370a99ef64e7c1d64d0cb179801fa97544781a",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i01-standard": {
+   "digest": "sha256:4b7d7a427c494f9e6622ea381cc08b46561ddd9e10b47670c386d6fb3c18fb44",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i02-standard": {
+   "digest": "sha256:a20d3f42ee49b1eedecd9651198aae648e953da677eae8c30627c2cf698312df",
+   "release": "0.5.4"
+  },
+  "rsb-a07-i03-standard": {
+   "digest": "sha256:e39e458491ca620e6fb29d0008b0a88797ad10d8da9c6e4bab4b495cfa1ed3ef",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i04-standard": {
+   "digest": "sha256:c1e70afcdde59b1f30573de960ffe800b41605486ba234275e23a4bb62c7128d",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i05-standard": {
+   "digest": "sha256:f3709fb02fa7bc5260c0be21e8275618836a057d5a7a045cfd1d0e104fc51358",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i07-standard": {
+   "digest": "sha256:c2b585cc90c972f8f551ee28d7847456a9a4bf5ec829b9347b61f7420c33f3b6",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i08-standard": {
+   "digest": "sha256:80be974675ec685b4543277bfc89f4ff252eeb7b13e9ebec2b95d6e8e3d70bf5",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i09-standard": {
+   "digest": "sha256:b24faa8e38108e6683c7de13241cae80c4473907d5bbea4965c97bb52b17969a",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i10-standard": {
+   "digest": "sha256:f4c2adc8a7fe0f15400d4df7f6cc984b9a72da9fa89be04c0bc53be1c8044c42",
+   "release": "0.5.3"
+  },
+  "rsb-a07-i11-standard": {
+   "digest": "sha256:58edd8b96977842ef4b92cb19b883bde0eba4fa298e2ed1286e110ff04d69814",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i00-standard": {
+   "digest": "sha256:b981845b393a954b657f15f56af3601ceabf8a990a240639ef9a9bef3b8681ab",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i01-standard": {
+   "digest": "sha256:7b016618838d8365590b60d3ad5f0b4ff2240d5d47fbe555c1dde9497222a435",
+   "release": "0.5.4"
+  },
+  "rsb-a08-i02-standard": {
+   "digest": "sha256:ff7419610b4c307d3424d9d6acafc34ccae4a1d2a202cdb209ccc5985371328c",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i03-standard": {
+   "digest": "sha256:0e5b2f91ec727507c62a24101537e4270a6d80c9dee5994d5b0a51118cd9f660",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i04-standard": {
+   "digest": "sha256:2779d0abbaf185d017e66b339bdcf9621c4ff7f195cbe6d3904fad2e02e86def",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i05-standard": {
+   "digest": "sha256:75f6c2ccc12eb806bf7382169193a743f437f8477fd08b16050885e604df6f38",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i06-standard": {
+   "digest": "sha256:5715e302f705c752e7beedcec68705e114ff3fd6775bcfcc9aa904b2616e24cf",
+   "release": "0.5.3"
+  },
+  "rsb-a08-i07-standard": {
+   "digest": "sha256:7c385a03f4b6b8f8d9e39b262a457029092a6d3723717bf43d8e99be03bdecd3",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i00-standard": {
+   "digest": "sha256:0d9ae62c6f87a7001b1f283138ec35d5f91f9d0f4ba8859310e1b35df3eb60d6",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i01-standard": {
+   "digest": "sha256:9131a0cff9e47713dbcd6aef84b28bd07a7f122e4d6c0a2279cebac541a497df",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i02-standard": {
+   "digest": "sha256:4fc23f06b0ab66b2ea6c7e588e8ae026d9e019f489b2240128617d39fcd2f67b",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i03-standard": {
+   "digest": "sha256:1bbdd75b0b4e64024f57a71cc0b27242567b4795850e0fd6c47788b6b5b8c804",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i04-standard": {
+   "digest": "sha256:0b1c7cf0f944944131319d3c3a04b96602671d4e24b46379a1dcf23770894c20",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i05-standard": {
+   "digest": "sha256:865e28f51e57cec0468afec3ac5841d5bbdfe03b5f5803b9564b369c0926ff50",
+   "release": "0.5.4"
+  },
+  "rsb-a09-i06-standard": {
+   "digest": "sha256:e31d7887f61f7f24e987c52b050acfce3c95a56b56031e8c9d043f751583dbee",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i07-standard": {
+   "digest": "sha256:4e06a9e92f59239983b22f5f27cdc893460a534096abf9b2bdd24eb8d079ef53",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i08-standard": {
+   "digest": "sha256:3200d987d749a7d674402ead6ea0988104fc9a8b464a49c6fd6200ced1a9bc10",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i09-standard": {
+   "digest": "sha256:90f5abfef60a765b75c5b9aff3008a9500d301a6fd1f06c09404827866d869e3",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i10-standard": {
+   "digest": "sha256:e5b2c40c70cc0b718c242054965cb6646163fb0a93993a6b1b929bf11697503f",
+   "release": "0.5.3"
+  },
+  "rsb-a09-i11-standard": {
+   "digest": "sha256:49ad8fd0ea811530abc54dab06e126e6b8de75eec8a8f9cad3804c1ed17a9d4f",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i00-standard": {
+   "digest": "sha256:34a49b00c62eff68ac99c013fc1a21b8549f2235ce728a192a8cbcfb3081a6e7",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i01-standard": {
+   "digest": "sha256:a3d63b235d455f013afb0824dc89a33576de1e89e9d6bc681ab625dcc9576bfa",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i02-standard": {
+   "digest": "sha256:9c4eacca5b3c137a45bfd226796d9fbf63bb70585952325fbf1d0fdedaa6c4a0",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i03-standard": {
+   "digest": "sha256:0f86ae0fbcba1f3206bea35337671fe0e2e58b375cf8cc6cc47f9349458881ad",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i04-standard": {
+   "digest": "sha256:e3bfc572c15a9c02aaaa38e863d49228e2dd7771629f45b15ca87dcb84c01ce0",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i05-standard": {
+   "digest": "sha256:7f6f49056420459d66e68ccde5a0ca93c422823eddf337a2e5ff971ba97eb3eb",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i06-standard": {
+   "digest": "sha256:2947d762adf9b1bfbc1a9724825ab7e128627144afc73e26d1d45f6874b2c8a9",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i07-standard": {
+   "digest": "sha256:e294c8b7fff7197ccfeb499d6983c6489505199efe3ae854e8f241d377cc84ca",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i08-standard": {
+   "digest": "sha256:a536a2a087e33437e4ba632c7ed020651bdf66d17928d94ddf54bc6a977ca1f0",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i09-standard": {
+   "digest": "sha256:7a01c7018930999f941703f7810764697a09ae90d4e84db506666f3ddd5d3a10",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i10-standard": {
+   "digest": "sha256:3729a12161e5c49cbddb6a5418e8f9bdec9ba13f6e9237135d34d07b5d6db6a6",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i11-standard": {
+   "digest": "sha256:1976716ff26f37d56482cd7c39f73f21fd03ee1bd9067e166625470051f901f7",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i12-standard": {
+   "digest": "sha256:74c3476399eba5487136213d65894239a8ef88eb8233475c155c434651657aeb",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i13-standard": {
+   "digest": "sha256:3c9b3513c94a72b15b5dfffd0ddabf758abb3210f3fdead2aa2baed3c401f19d",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i14-standard": {
+   "digest": "sha256:7a88f56be752ec4b615d35d10bb115044c339a3fd986d48e09d926ddf7e17166",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i15-standard": {
+   "digest": "sha256:3ab3b24138fa0c6c77040b954c43fe38d0baf013f19dd036b3c0f458f2381f16",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i16-standard": {
+   "digest": "sha256:1cba28bf5d10cf54277712793ead579122c4e90169f625a3b34cf128b24df820",
+   "release": "0.5.3"
+  },
+  "rsb-a10-i17-standard": {
+   "digest": "sha256:9656494334d0248c93423ea0a142e9434e38dcdaf2d9856f0585d0c9ba08131c",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i00-standard": {
+   "digest": "sha256:b4b2d8d2d227ef02afc71bc6b4d6817f8a614d4beafcbf034b9d44961372e5a4",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i01-standard": {
+   "digest": "sha256:8f590f714d18175ef3b32f6564a53a7032946f4248c6ad9f5b0e1644878d5028",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i02-standard": {
+   "digest": "sha256:1e2fd9fe31e2c4c5f9df1f03f8c0ed8b4640808ee9032d90905c5e0a0bcf29d7",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i03-standard": {
+   "digest": "sha256:93b5e8a432483f2231e2bd8a356e08ee209ddfc2bb945bbf07155f53383af176",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i04-standard": {
+   "digest": "sha256:f2de2d8a7408e49ad28b1c86e063faec9619bc8c20aaa554c8645b37a01825a5",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i05-standard": {
+   "digest": "sha256:d8f3d848a35346cd3c827c21e65c8d2572f6907d80c5bc944bf0724b17e92edd",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i06-standard": {
+   "digest": "sha256:88e549665c2c4e1d369673ae4fa2c9f690db78731cf22463c48e08f4981179ef",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i07-standard": {
+   "digest": "sha256:4621c1206689a7d3cd84df06df3a50bc59d9132bf774a58846e55b28f1700ed6",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i08-standard": {
+   "digest": "sha256:76e5fd81b11a33dcdeb47c601f00cdda221e8d9f6687c3551e11c0e44996ffad",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i09-standard": {
+   "digest": "sha256:480a77b2daea7f198db013b831075d177db624cc05523c2a8cd314c6d7631a7a",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i10-standard": {
+   "digest": "sha256:5bc69dd303c006d3ae81a408cc8074333fc96808376acb97ccfac75b2e70ca6c",
+   "release": "0.5.3"
+  },
+  "rsb-a11-i11-standard": {
+   "digest": "sha256:0cf1e1d35214bd1e7122953bf776fe5a7719a64f9da5e9f1c83915e47911a360",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i00-standard": {
+   "digest": "sha256:39b198281dea5ceeb06aac6a9e01653714c618db39a01e6d2cfeda2a03607e7a",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i01-standard": {
+   "digest": "sha256:00451c06ffcc40b38bfe0f52c86b39ec9a3c5d68072ede1ccef034492a45e83d",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i02-standard": {
+   "digest": "sha256:363b757866b84563eb05814418a3620402c4a5e4769dd5b809ce053f76f83c4b",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i03-standard": {
+   "digest": "sha256:c5043a2f57f486b64d10aea47c6a1a7ef3ced3ce089015975a9fa8afe04b131f",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i04-standard": {
+   "digest": "sha256:9b05beb49487b06a5c2427d34040cd3c309ef72f0d91449cec60b06479ebac4e",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i05-standard": {
+   "digest": "sha256:02d318a790e00164f14b1960d096dfbfe2f032ab495906c3868ba9e1ab8ff685",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i06-standard": {
+   "digest": "sha256:0ce4322c9b820132fa167352e819265e03c48fa0a7d0c7308272cfbf02b29106",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i07-standard": {
+   "digest": "sha256:712c9fefc4e0b0000362b2d99d1d4677bf582858c384a74f7b3898ee0fa99b68",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i08-standard": {
+   "digest": "sha256:0a4176d7e5c541ad22a2c27cee3c1bb87571f254a34c90b823c373f2ab4aa335",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i09-standard": {
+   "digest": "sha256:445a6e5d0a37873f89cc2c81d7b41526f160dad688354b6bad8543d76bbfd3f3",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i10-standard": {
+   "digest": "sha256:c9660988f891ac5e4afda0d711c02a0694894dc7e03dae7a7c493002cc1c7207",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i11-standard": {
+   "digest": "sha256:7ec06bea38d146be90eb69178a99c1544af0fdeaa0fca21dfd6a2cd10532eb94",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i12-standard": {
+   "digest": "sha256:7bb583da68403dc0f7f71f482edd0bddf4cd35277498f966d0bcc49a0baf52e7",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i13-standard": {
+   "digest": "sha256:871a0b1e9ec85220329132768b7cb9f10c7f8a7415fc66da9b7b526471f8b01a",
+   "release": "0.5.3"
+  },
+  "rsb-a12-i14-standard": {
+   "digest": "sha256:0b96a64f3f3fd62bd2858584dcedd9e69f17b9cf06f418105abaf637bdd7b640",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i00-standard": {
+   "digest": "sha256:cad2956e00ba4185e2362839cc9ee45bd69fcfa8ab7ab73d122a8488d049be33",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i01-standard": {
+   "digest": "sha256:ca7d8573b7b711a6bdba90cadec331a663fd84d56697944de00110a0b39aa99f",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i02-standard": {
+   "digest": "sha256:b7abde5719b694d0f4ccec583fa29a919f72b2edd015a8fd64a6e363bd850d63",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i03-standard": {
+   "digest": "sha256:d2730016d41091b0d6e54cc6bbb9bb8110f8b59a35abfca80e1208b8dfb7b699",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i04-standard": {
+   "digest": "sha256:c88a6317bc838009f6c6544664cbccd90b829723bd4558d392165c82a611d71b",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i05-standard": {
+   "digest": "sha256:a67eae8ed4843587c4064e06551e765fb52bccfa3e7e5c7619d875c5f3885ab9",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i06-standard": {
+   "digest": "sha256:c8abfb78aecd1c9d398d1e5a21ac52a765cb1b976188c379a4a1e7f0ee1b39b1",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i07-standard": {
+   "digest": "sha256:5ac752a6ec39ec4d91b6a3358fd2a54c9a43a562db6d5a994eeed3ee716a5576",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i08-standard": {
+   "digest": "sha256:7878d833d87c4126ebcea6db52ca8e829603e26da2db33d5458a81b24d14167e",
+   "release": "0.5.3"
+  },
+  "rsb-a13-i09-standard": {
+   "digest": "sha256:0bebee15a1ff900a8ab3fddc0e06fe2149b81b7bd71457cad0c122438618f8a4",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i00-standard": {
+   "digest": "sha256:53ba7acd7c48ccc1d70fb0224a1d74c4fd8bb1e418c5d11a402c437ff14f7bb2",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i01-standard": {
+   "digest": "sha256:3d380bf1ae8487daab2391a2f48ad525961069ea82219c5db81cb4d39036bd87",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i02-standard": {
+   "digest": "sha256:a7e7e1505178d50b0c9ed74b33f38ab577c798d422a3c9cb5d37828cad4aa03f",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i03-standard": {
+   "digest": "sha256:7f6de5c1fa8b2945ed4cd317f41bf89268797e47df476f8e059662dbad641ff9",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i04-standard": {
+   "digest": "sha256:e3b5c38e7772eef7321e952e16ef17ef96a01b715fd7392d95c52d7a82c1cd6c",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i05-standard": {
+   "digest": "sha256:02e97a8949f8aea6df1ee3cdd2d4c1a64267edc951f0e9b1d0111dbf203f49ba",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i07-standard": {
+   "digest": "sha256:6048ad1d88796794eb58e50fd5413fa0f345d5253e93137109ab2edfcfae3082",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i08-standard": {
+   "digest": "sha256:5993f876a8a6ce9ea879310a3aaa51c6e0c50c02f8286631b08eab131a27508e",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i09-standard": {
+   "digest": "sha256:23e75961f856bb2b61bde7464dde0223627c6516f22ad33d97ff28f28f030fcc",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i10-standard": {
+   "digest": "sha256:09b9af566ce01fa995d5543fd5bd9d9841ee95710b80e65c2823f60c6b7e12a6",
+   "release": "0.5.3"
+  },
+  "rsb-a14-i11-standard": {
+   "digest": "sha256:31372daa1a5670d6e152614c128afd640ea926251fae6eb0d9206f31006ee072",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i00-standard": {
+   "digest": "sha256:f48ce4b7ec0096768e41a89b6e67cff6b45ebe7ee3945b623af8c4b3af4a5f72",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i01-standard": {
+   "digest": "sha256:763d75cf0e3d5306010c9d115e9f095da38bb1fc3c29c0c4f2f2b08a344b099f",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i02-standard": {
+   "digest": "sha256:48908f1e9b2572504e401835d14afe8685ec41ab8188ad79fda2cb2de8e258eb",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i03-standard": {
+   "digest": "sha256:8a308a30641546a7516790ec2b2f9ce8d0280fa6a23b184c9dbfe9ace03761ef",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i04-standard": {
+   "digest": "sha256:7909e75b8ae509db5eed6344f0313d429be5e5b40d8cc0fdd4ec59ebfe070cc5",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i05-standard": {
+   "digest": "sha256:eb13bf1c525ae216dd004c5786773afd2abca42802833286dcaf52139ea49b52",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i06-standard": {
+   "digest": "sha256:fbe24c74ce9f24219dd6b9c2b64661480f11ec644dbfad46b8854d451540aea8",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i07-standard": {
+   "digest": "sha256:f9de86316a047522b37dd39bcdc40e359ab615e50b833bdc864f5d43bfe029b3",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i09-standard": {
+   "digest": "sha256:293e8894f618e99268ea0a28a23b0be1e3cec22cf9554e8edbbfbcf33f21d3af",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i10-standard": {
+   "digest": "sha256:9e832dfba5533d7ed8152620c523c4536b3c6addf8bbd4e8d2927655f8f7c23a",
+   "release": "0.5.3"
+  },
+  "rsb-a15-i11-standard": {
+   "digest": "sha256:d1ab36bc2a7d417a64639ce4f76443502735f0c0d23c304aa845f3eb504cf3e5",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i00-standard": {
+   "digest": "sha256:1f0615996f4a7f40f833b5f39389b885c1a0c4af523452eb183200622775db48",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i01-standard": {
+   "digest": "sha256:bc031b4ecd98241647cce6e56f2ea7648e28a94b6be85cb18fdda4c3cbaf7df7",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i02-standard": {
+   "digest": "sha256:32fbe2f74df1108ac018a4bb6e39940c0f602c31a45b433e10976384b3bb528b",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i03-standard": {
+   "digest": "sha256:03960b65fa75f70f6fc7ef6c7d33ffc94ac89871abf275dfa96a88affc8ffb0d",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i04-standard": {
+   "digest": "sha256:b8546f4096d4d150a18278e66d541c843c8c7a1c1d060aa549519907072af1fb",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i05-standard": {
+   "digest": "sha256:3ff1ae56afa894741c9394a6e2760c2e8116734ba47a0dd631fa9024fcbdc690",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i06-standard": {
+   "digest": "sha256:876984e55f78b7cdef0cb9597445b753c53c7434c6fd1e4170c6c657754f7c46",
+   "release": "0.5.3"
+  },
+  "rsb-a16-i07-standard": {
+   "digest": "sha256:69abad65495029938edf6f58742eaf9326a981a0d056ddadd687ba3e20a9c2c6",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i00-standard": {
+   "digest": "sha256:7e3f9bf873b4851e8cb9fa349cdb17dc867e8fc64c12fcf0ca253795a1c54d85",
+   "release": "0.5.4"
+  },
+  "rsb-a17-i01-standard": {
+   "digest": "sha256:77df036233eddf47839d55d822ecd377af9dd6d72fe9505a3938938bfa3cafe5",
+   "release": "0.5.4"
+  },
+  "rsb-a17-i02-standard": {
+   "digest": "sha256:f3de74f477f57270069715501111312c90e9e9557cd6ff6d02b84b2976c1fb0a",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i03-standard": {
+   "digest": "sha256:cfb3110cb26de256a10f35085025536d4789e10c956b633738b6c584bae1d0b1",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i04-standard": {
+   "digest": "sha256:8abfe55649740a7689006a01dd267de74179a3bd91ca4bdf4c9818a1e8103d12",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i05-standard": {
+   "digest": "sha256:cac916407833ee4d5ed727552b7c866840385f153192db59ac28219f9dcf1076",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i06-standard": {
+   "digest": "sha256:6e8a1656891e475e84ff938f8e9b25ed106b640624f35aa84e65cb372b960f62",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i07-standard": {
+   "digest": "sha256:6210c2e29292b1523b9ee37d3b88aebd9d6bc03e9a9462fc0178979bab8e8245",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i08-standard": {
+   "digest": "sha256:56f3927a18300c6aeddda501fbcafc57bd0471b5dba67d91d22d4d10abda9701",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i09-standard": {
+   "digest": "sha256:f24b5b0c2ceb0e48342a5e034e18405a0cccc50abe2e65b185b764f93cf715cf",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i10-standard": {
+   "digest": "sha256:047b08f8cdecaee0557b2b3eff844baa272f1095abdd182e2775c7d2870cd3b1",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i12-standard": {
+   "digest": "sha256:ea3b002fdeff6ee0d770b2e0e005855768f1d6f98b0d084ec361f5f5d4cd4ac9",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i13-standard": {
+   "digest": "sha256:e2b357d991b7f66e76c9b678a8db771fa9a71988e9f233082a4eb1b2ec34599f",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i15-standard": {
+   "digest": "sha256:9900d0f1718e7b601f0eec02a960c13fb6a4e0c5537baa36ec18b6c927ca8873",
+   "release": "0.5.3"
+  },
+  "rsb-a17-i16-standard": {
+   "digest": "sha256:45c913129463f82ae43ef05fe43dd3bcd8a21142a95355360ce2b24873d4028e",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i00-standard": {
+   "digest": "sha256:fba4629bc0e6703e92578ad7e221bc51dc428e1d79e7537fb749acbfbb7d524a",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i01-standard": {
+   "digest": "sha256:e421c1896db4255f0025dd3ecdeeebb0986f40569e2fa693f68f87c0d0ef7400",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i02-standard": {
+   "digest": "sha256:952df7ca30f09cc70c0dc3bf149067f2f6c4b421b59a382e501dda19e6ec46ef",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i03-standard": {
+   "digest": "sha256:b871dca8b884951956508396e992e2598c3a24a1bbddebcdb6acb6e9d084c2dc",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i04-standard": {
+   "digest": "sha256:c5cddf2fd595ee3ce7f3a01cebed4fc5b6fd1c774458feb944f528d929d3ed14",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i05-standard": {
+   "digest": "sha256:9ad3393e2a9eba7d2fab53b7169d6bd899237aaa06568a651dc5bfdbc98798d3",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i06-standard": {
+   "digest": "sha256:a0caeef6f67738734fff6d9bf6c1cd1ab0493b9cda9de652f5461756938bde39",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i07-standard": {
+   "digest": "sha256:1d70974660a996c1e836114fc2e2a553a44ee148996c02820d14e1650490e41e",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i08-standard": {
+   "digest": "sha256:6ec91d75e08bdad1cd2c42edfbf11d9d623a6b7e07fd02ea8fd58adc71559b06",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i09-standard": {
+   "digest": "sha256:177e31481af31cecedaeb93648fe5897862d7378929f89bd676c39305dbfa8be",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i10-standard": {
+   "digest": "sha256:27cef596e6928aa25c59af2d52c074cacafc39928e1ade62a883ee3081ebf404",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i11-standard": {
+   "digest": "sha256:66b347e7211567c3a21c7f4324e18404923f5e6d5833bc83c6bf7ae71839fa98",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i12-standard": {
+   "digest": "sha256:855e8b86f2d826124e600a983193d86164f34ca94c4d42aec520e3c840177cd3",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i13-standard": {
+   "digest": "sha256:babc30a2be99bcfa56fbbd8e8618b236f7117fe873d23c38086ccad1a402049a",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i14-standard": {
+   "digest": "sha256:7ca73ce46a63907156a8b52e7db703bef1477283b50480ffda585bcf75ecea5d",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i15-standard": {
+   "digest": "sha256:59c496098559fa789f8a890e03172be7d3eabb5e2a9ca6123670228ad1189407",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i16-standard": {
+   "digest": "sha256:e503cda6f177efcbcff239cecfcfeee5d381f57edef391e06f294dbdc12a7dee",
+   "release": "0.5.3"
+  },
+  "rsb-a18-i17-standard": {
+   "digest": "sha256:cfc78adfb9c91aa9d71edd53eb732077cd9a21f175f7e2e9d87b0931e381ee37",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i00-standard": {
+   "digest": "sha256:5c6702fa20eb2f18becb235faaa4266d4876617673a5de13d589a90d027fb02c",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i01-standard": {
+   "digest": "sha256:c57e07316d28e5c8c8c804e2ff3d348a42fd2849bfa84a52e3e9d8a06d1d5b14",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i02-standard": {
+   "digest": "sha256:fcced701c5939c79f8757ba14308a23589006c5430f5fd65338109430710ece2",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i03-standard": {
+   "digest": "sha256:f9bfd73dd050d8fcf42c2fc64db18088036e7c94703408e207dc81d26716dab1",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i04-standard": {
+   "digest": "sha256:adb7867977fef5c9301d95075a2c92d2837c1c8b1f0d52ae9a2db583e409db66",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i05-standard": {
+   "digest": "sha256:73064d2f2d03a904c6bf874e19b4b2cae6cf21fc7de55d19a3cfd8125a80ea15",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i06-standard": {
+   "digest": "sha256:eb163b1d5a8d60aa79b8ca2dfa875cf013aef88d77f2afe8faf3e628fde15db0",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i07-standard": {
+   "digest": "sha256:76a0fadb7cd48fe733b7b12a813f9c90b786f3713cac16c7fd730d295ad56ada",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i08-standard": {
+   "digest": "sha256:6f2432ea7ad8f3d79bf88d924abb6d156a2de3f0ce8c077555dd792c233cdf29",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i09-standard": {
+   "digest": "sha256:219665e7f44e87530ea4e67c49c876847c9e8485ac4c39a3eec5d06709924773",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i10-standard": {
+   "digest": "sha256:f56db0eca3603215f6e2393434b8bb1298cd74aad81eb34b1040107a4b5035ec",
+   "release": "0.5.3"
+  },
+  "rsb-a19-i11-standard": {
+   "digest": "sha256:3f2dab49e5109ede918a0bb3aca63c16857311b7b7c63cb61c0af6236c065d66",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i00-standard": {
+   "digest": "sha256:9bc1af214bd3d0bb8c4ef595aa3b6317aa89de05b058638e11db6468229b430f",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i01-standard": {
+   "digest": "sha256:81ae6586cbfdc0c6f2a7b53cae16599c683457e07518ba226a10557799cc4d2f",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i02-standard": {
+   "digest": "sha256:e790c52895c4e7763512f533a4b8b18b063a42d564e491645f19c048df156eae",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i03-standard": {
+   "digest": "sha256:8adf1e769c092431afee9e8bd8080b755972a6238eba901b4057fe7fa3b8c15a",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i04-standard": {
+   "digest": "sha256:e008cf2e370ada97ea49426eece6738c48e9aa0003b93063c54f22904f47be37",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i05-standard": {
+   "digest": "sha256:0b66b305d33d3ee73f7a95db6a4c73c491adc6c03825a7e7bfa74dd7080a749a",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i06-standard": {
+   "digest": "sha256:79acd406c9d0af91405b18c367379d60e53dff278abb65ec4a593b189dd0e4db",
+   "release": "0.5.3"
+  },
+  "rsb-a20-i07-standard": {
+   "digest": "sha256:558d8ed2c012fe4b34e4cc712d6c8db2675116c80172635c5357f56d25e12d69",
+   "release": "0.5.3"
+  },
+  "rsb-a21-i00-standard": {
+   "digest": "sha256:a20f1a3be8cd59c3740b1802c502b13c1b55dd11cb82b037c21b9fc22291d794",
+   "release": "0.5.3"
+  },
+  "rsb-a21-i01-standard": {
+   "digest": "sha256:6edb71c0fb7fac3d8d1d0f2dbd7d131fde45517f5b9403e71805246dc5238524",
+   "release": "0.5.3"
+  },
+  "rsb-a21-i02-standard": {
+   "digest": "sha256:d6b78271948f8783873ef13aacf2056237f47649b5dad285d2fc7f88c230cdfd",
+   "release": "0.5.3"
+  },
+  "rsb-a21-i03-standard": {
+   "digest": "sha256:b401ef5869e51ec6837edb1599919c272b186a9e86a7e8edb3ae31fb66387d3a",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i00-standard": {
+   "digest": "sha256:c3ddf790c82d2d54a9275cf7b725d746b36ca240ce9cbc4bd711a8c5d8f65ef1",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i01-standard": {
+   "digest": "sha256:0ac1e31919ef841de11ebe1a6d1fae612a4c2857e08c569b6a1be6e0db119bf4",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i02-standard": {
+   "digest": "sha256:87a20e956af655ecb7ff9e486b6c9cd28bfe0cabb23f11853510f5cc9c0f4aea",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i03-standard": {
+   "digest": "sha256:ab9210b5188e4b73ae905ac83c6eb7350d1d87e7fcffaf67deaa2d9674d3e776",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i04-standard": {
+   "digest": "sha256:020d1c61259c41d225e0225b9fee2e83a30558857dc03b87e0c9e8eedb32a164",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i05-standard": {
+   "digest": "sha256:831cbbc45a003d68bd67dc019bb34baea3fabf714d338dfe2317644c13bb8c87",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i06-standard": {
+   "digest": "sha256:e33ba88f02b6cd7fa142c91e390e00d4c2bbdf1d384f030506dbde893c8b998d",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i07-standard": {
+   "digest": "sha256:5973b70fec4078601410d2357efc18b95b7af6ec69dd5861ce701ec582c160f1",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i08-standard": {
+   "digest": "sha256:36a3ac0e4126b449393ef1c040a8117b93bbc368402473da54fbb1d57c10a30d",
+   "release": "0.5.3"
+  },
+  "rsb-a22-i09-standard": {
+   "digest": "sha256:ff9074fed74c0230dd3861921d5e842e15300d165a2dca7432542f454e1df6c8",
+   "release": "0.5.3"
+  },
+  "rsb-a23-i00-standard": {
+   "digest": "sha256:c1433e49d9904d4e61c69e1eebb3c49e88dcbb1d8ef9c1551cee4c20dcbf45de",
+   "release": "0.5.3"
+  },
+  "rsb-a23-i01-standard": {
+   "digest": "sha256:10d5b0ad89f7a16580d872270b0b9576b16587d2361ca765c4afe76b0ac993be",
+   "release": "0.5.3"
+  },
+  "rsb-a23-i02-standard": {
+   "digest": "sha256:68e2f8ab109b86141581b063e14c44d7fcf605a40d02738ec808dae859823cd9",
+   "release": "0.5.3"
+  },
+  "rsb-a23-i03-standard": {
+   "digest": "sha256:54019daa238ef9da8f0805cfbdbc9c2148faef6810b8913391f8e6b6bec7fd2b",
+   "release": "0.5.3"
+  },
+  "rsb-a24-i00-standard": {
+   "digest": "sha256:2b9ca2b17ab7d3e6e90bd8bcb125f73514071b84b4a503301684c78b2423b514",
+   "release": "0.5.3"
+  },
+  "rsb-a24-i01-standard": {
+   "digest": "sha256:8edc0d3aab84c7869e47bd727ad3a115b7b79d3577f742f3dd8e89435654a5b1",
+   "release": "0.5.3"
+  },
+  "rsb-a24-i02-standard": {
+   "digest": "sha256:6d914ecbccaca5547cd305df0f217b23bb04f7499d231e638473eb2dc9e33011",
+   "release": "0.5.3"
+  },
+  "rsb-a24-i03-standard": {
+   "digest": "sha256:bf8b7fab7873162892c73417efd6bc280750c563a292129682d63bc255d69ba1",
+   "release": "0.5.3"
+  },
+  "rsb-a25-i00-standard": {
+   "digest": "sha256:53a907949e5ecc72da0ae1370a4feb0b770ad581f9cb7d4549f4a4bd90c15fbc",
+   "release": "0.5.3"
+  },
+  "rsb-a25-i01-standard": {
+   "digest": "sha256:835467ca62c6484365471002c5b91f34aacc5014685463ec9a04e817cd264165",
+   "release": "0.5.3"
+  },
+  "rsb-a25-i02-standard": {
+   "digest": "sha256:f1e519e50a695926a00f7d3db319dff6d919e218957852edc2e632a0c240160f",
+   "release": "0.5.3"
+  },
+  "rsb-a25-i03-standard": {
+   "digest": "sha256:5e4a7ec7985345218016e310a8e12541644a029ae06d13172d0ba46268d4acfe",
+   "release": "0.5.3"
+  },
+  "rsb-a25-i04-standard": {
+   "digest": "sha256:7d2e7d12148eb282f35cc0f46129da64fbdd82ee067ddba0f25db6b2e3721d67",
+   "release": "0.5.3"
+  },
+  "rsb-a26-i00-standard": {
+   "digest": "sha256:84670548d38c9bc9823de41680bd50cfbfb4315779112bff035566d144c4d0e7",
+   "release": "0.5.3"
+  },
+  "rsb-a26-i01-standard": {
+   "digest": "sha256:50647e9c7b5e14b9df74d85f6c874e335c896ab54cfe2c082bdb73a3e7755236",
+   "release": "0.5.3"
+  },
+  "rsb-a26-i02-standard": {
+   "digest": "sha256:ebcfa2aa58acfce3062c5a80032e5c1630956083c4aaf2e78e2ca77c5f5fff03",
+   "release": "0.5.4"
+  },
+  "rsb-a26-i03-standard": {
+   "digest": "sha256:b20b4d152b8ded6c287fecb3d7033346c34acd5546cff279e443078cda265e02",
+   "release": "0.5.3"
+  },
+  "rsb-a27-i00-standard": {
+   "digest": "sha256:4e58812ab410fd53d8953573276c131f9f36ecca25498cb94aaf507085346df2",
+   "release": "0.5.3"
+  },
+  "rsb-a27-i01-standard": {
+   "digest": "sha256:b403b32567a66552fb67e63ae70ac24bbf3d840ad3b02da403807fb94a08ddd3",
+   "release": "0.5.3"
+  },
+  "rsb-a27-i02-standard": {
+   "digest": "sha256:6f0394d29ade3c60329a2b980dbdecb5cb7f47302096791a1643ed5acdeae462",
+   "release": "0.5.3"
+  },
+  "rsb-a27-i03-standard": {
+   "digest": "sha256:4ade9a2626ab4442b562a5c3cae9726596649ac91fa498f681aaaa4047ffe353",
+   "release": "0.5.3"
+  },
+  "rsb-a27-i04-standard": {
+   "digest": "sha256:bab66c1f3615bd27e841f85263072b51d7d0ef5857a2577bc034e3ad0b0a9b20",
+   "release": "0.5.4"
+  },
+  "rsb-a27-i05-standard": {
+   "digest": "sha256:4c0db36aac4ff82ea9d71e32ec39ca96561f31866f67464bff76b551c0e0fe6c",
+   "release": "0.5.3"
+  },
+  "rsb-a27-i06-standard": {
+   "digest": "sha256:846beadb72100164609e885a28a29af3fd1c19b349ae63587a31024fcec5a77f",
+   "release": "0.5.4"
+  },
+  "rsb-a27-i07-standard": {
+   "digest": "sha256:292c20f404f37a0497c12b138367468e17c54dbc39e5186bc355dfb5254cd300",
+   "release": "0.5.3"
+  },
+  "rsb-a28-i00-standard": {
+   "digest": "sha256:0978dbe1ca1b85f1804b26a33f79824a3216b6d9777e6782be6509b487ade92e",
+   "release": "0.5.4"
+  },
+  "rsb-a28-i01-standard": {
+   "digest": "sha256:1d8d719afa12003ddeea4951900051996ec8904df87876562b9c0b09f9a4acea",
+   "release": "0.5.4"
+  },
+  "rsb-a28-i02-standard": {
+   "digest": "sha256:9f126f9c631db653d898dc8c8e3d174ee017e02491f3e9a307fd5d74c07edb02",
+   "release": "0.5.3"
+  },
+  "rsb-a28-i03-standard": {
+   "digest": "sha256:d3b1ffec18dc9b555f0dbea71af2b576052d7445bbed7da3ec7d8ad74871eb1b",
+   "release": "0.5.4"
+  },
+  "rsb-a29-i00-standard": {
+   "digest": "sha256:2ee7ee000f2f1a05605b2233c3a8e1047d5c5cda272bdea5d22e5db532660e61",
+   "release": "0.5.4"
+  },
+  "rsb-a29-i01-standard": {
+   "digest": "sha256:0e6310f90e577214b6b780e2d2f8e959ad70880e51ca39f89a3c5b08cb328d07",
+   "release": "0.5.4"
+  },
+  "rsb-a29-i02-standard": {
+   "digest": "sha256:ed79eebb730d6873e49ca6fdf64dc173ee39d8d736ba0237156ac46c5ad61c11",
+   "release": "0.5.3"
+  },
+  "rsb-a29-i03-standard": {
+   "digest": "sha256:49d822f028002dab4c464583d09024aec0149598254749c354f451ecd02de196",
+   "release": "0.5.4"
+  },
+  "rsb-a30-i00-standard": {
+   "digest": "sha256:d471a17ec018ce83484e30a02ecc891ab7df24960599ac9aba2ea4dbf21b5810",
+   "release": "0.5.3"
+  },
+  "rsb-a30-i01-standard": {
+   "digest": "sha256:a123658c72ceadbd517c109aee3771e7377e93e4227369c2f568c3d08f5d9cc3",
+   "release": "0.5.3"
+  },
+  "rsb-a30-i02-standard": {
+   "digest": "sha256:0167494ae487a49ddd1b16cfcc375011a79933f70d77b73d9f764e4ace05f0dc",
+   "release": "0.5.3"
+  },
+  "rsb-a30-i03-standard": {
+   "digest": "sha256:3803d1b7b1314d8cd25e4f7d5b64fd460eb6abe46b40406e101ef6cbf3d49d06",
+   "release": "0.5.3"
+  },
+  "rsb-a30-i04-standard": {
+   "digest": "sha256:1353949931d056f0b21d5340ce96ff15b0ac4526f25bbc8604e3b7d1548bd543",
+   "release": "0.5.3"
+  },
+  "rsb-a30-i05-standard": {
+   "digest": "sha256:680000dc05b5084543af59f0d865a4de23331257607bd5d07de5513d5be99403",
+   "release": "0.5.4"
+  },
+  "rsb-a30-i06-standard": {
+   "digest": "sha256:43cdb379c1de52603d921d463b151b5939066b64a10695773c6fdb99d935da72",
+   "release": "0.5.3"
+  },
+  "rsb-a30-i07-standard": {
+   "digest": "sha256:54e5a25e7d58b6a4964393240fef7a847007ae21f96d14c2f305803add6ede27",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i00-standard": {
+   "digest": "sha256:0b8a865e39807ec6a10aba6e6944886aa13a2a805122d7e048570f967b820494",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i01-standard": {
+   "digest": "sha256:26eb1de1a2d5372bd9289fc26f58a5192d9b5c9a17c2db397daa754d45caa057",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i02-standard": {
+   "digest": "sha256:a993b193438db57062580ae0afd5f8fff999ec600cadf77d05d9662bbac5585f",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i03-standard": {
+   "digest": "sha256:80b5631e311cf5b902821c116d3769203a65f653bb908f070f9b0f3862d328d4",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i04-standard": {
+   "digest": "sha256:bf1d2841dd84d0e9bea9d03d681bea692ab795d94d9859d19a770567909b08da",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i05-standard": {
+   "digest": "sha256:28db30d94613c8ef18c4c35de6aab0d27dd969b42b904e196c01b1cfc7340fbd",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i06-standard": {
+   "digest": "sha256:95a879838b408dd0f8316b4e3394322956086a4094409fa89eb03e2222e5fc91",
+   "release": "0.5.4"
+  },
+  "rsb-a31-i07-standard": {
+   "digest": "sha256:7c753acc68c7069229a8a0c829e64dba5304598069578e6252c3269b20dd0b7c",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i08-standard": {
+   "digest": "sha256:05537527a74965c1828932cc6684e0be2697276b23b6f2ff93b417bcd5757e3d",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i09-standard": {
+   "digest": "sha256:dc9296cb5a19eee345df829c2e5249d35f9f0253c77275e5bfcbccc2acb679a2",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i10-standard": {
+   "digest": "sha256:6cd5fbf74d6bb8b536ccd475e779d3a090e71fc5416ede532c56361eda255664",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i11-standard": {
+   "digest": "sha256:0bc4efcdba458894a21e3c97a0769299d012660f33978bc78bc7acadb2796718",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i12-standard": {
+   "digest": "sha256:104b1a12160c697e8441ba7c4b2a085da03c3997c18832e7f524f37c325f41fb",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i13-standard": {
+   "digest": "sha256:cd2cb3d480341211efa09ab01733470ccdd68081b7a1826e58c2dc2056985ba1",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i14-standard": {
+   "digest": "sha256:6cccdf38c1ebd32abc222c8b76db18503c4e1ada80f81b45b19e7b7158267632",
+   "release": "0.5.3"
+  },
+  "rsb-a31-i15-standard": {
+   "digest": "sha256:c63bfdc180d31da9790bbc8f82115af65540b083775c229f9f2277d370c6364a",
+   "release": "0.5.3"
+  },
+  "rsb-a32-i00-standard": {
+   "digest": "sha256:c1c7701ad3d5e56b11a5b3abf6ab99be5cee67bad37515f4f3f6b969a903b8c8",
+   "release": "0.5.3"
+  },
+  "rsb-a32-i01-standard": {
+   "digest": "sha256:467f8d608933f1ebb7949f03a870f4c037c29899ff6f224d5bc24243180d7cde",
+   "release": "0.5.3"
+  },
+  "rsb-a32-i02-standard": {
+   "digest": "sha256:e5560c459dceed13fc48133d2bab47a592d21e83c94249554f27cf86e4ea17e5",
+   "release": "0.5.3"
+  },
+  "rsb-a32-i03-standard": {
+   "digest": "sha256:230062ce6fb233a31979ff5ea7837b44f090dc8c8de86e6dd79a2ce69f9bfa8e",
+   "release": "0.5.3"
+  },
+  "rsb-a32-i04-standard": {
+   "digest": "sha256:905e5d8448895fcf8cd107db5eb9332198c9e852917a6eafef0fd91c8596b79e",
+   "release": "0.5.3"
+  },
+  "rsb-a32-i05-standard": {
+   "digest": "sha256:095fef03b6c9a5c1527683e552257b42cb7708abaca9766135992706966673bc",
+   "release": "0.5.3"
+  },
+  "rsb-a33-i00-standard": {
+   "digest": "sha256:7082a522532f22f7b61b2f8bc34b82e4047096fe905f8362a82d00d03afe4d0f",
+   "release": "0.5.3"
+  },
+  "rsb-a33-i01-standard": {
+   "digest": "sha256:5bf834162a6e55f54adfdf78452d20b2348c935020297be874a8e2424b653065",
+   "release": "0.5.4"
+  },
+  "rsb-a33-i02-standard": {
+   "digest": "sha256:1d92f058052c0ef50a888e46053b6af42fb396d22891be4f3719cf37199a9fd9",
+   "release": "0.5.3"
+  },
+  "rsb-a33-i03-standard": {
+   "digest": "sha256:f1c8a3d53b7a8ea9ff4994f533f350f0f8f8e632751f26cf0d44669618f7b1a9",
+   "release": "0.5.3"
+  },
+  "rsb-a33-i04-standard": {
+   "digest": "sha256:0cd236f53e95271f38404076adafafd55c4d92b67ebbc6471beffbead10ed418",
+   "release": "0.5.4"
+  },
+  "rsb-a33-i05-standard": {
+   "digest": "sha256:a4e2c04ed1234aa59de44c7568eece753e81e3d04e5ae6e41fa65df8704800d6",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i00-standard": {
+   "digest": "sha256:941a7c0deec9dea3797baff2f4dc2afd0a780edd398fcd9ebc3fbae713b59765",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i01-standard": {
+   "digest": "sha256:8ada76753e79bb3bfd2057b3ac20be100a31d120bf0efa7891369b7d90dae86e",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i02-standard": {
+   "digest": "sha256:fd0e4d8ed36cd2b3ca9f5e6d154e41677c1b908d3b3f200fa2e512306e1cd718",
+   "release": "0.5.4"
+  },
+  "rsb-a34-i03-standard": {
+   "digest": "sha256:1a244f1ad9571cb036d3abd38b00227331a5cb643b8ae4679f47d8212a7def63",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i04-standard": {
+   "digest": "sha256:35033f337c31ce718a7cd31a425aa67e9bef6085757ea2bda34cee31ec327fc8",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i05-standard": {
+   "digest": "sha256:22fc97218ac54a3a0b6942381531e6c0fe733aa0f418feeaf578d6454d06fa7d",
+   "release": "0.5.4"
+  },
+  "rsb-a34-i06-standard": {
+   "digest": "sha256:8f72710790c9817ce69e49d321edb1b037e463987e1583a4450b691ca6f981f5",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i07-standard": {
+   "digest": "sha256:702d10e0d456badefffabae41fb9e3769e3f4ecfa5ceda7e60884ad6cf0f10a8",
+   "release": "0.5.4"
+  },
+  "rsb-a34-i08-standard": {
+   "digest": "sha256:f131052c780c6327e5a58912f15267413dfcb6e0ce9d52b9ed64a37409826644",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i09-standard": {
+   "digest": "sha256:845aca8292a0913d552cacdb8d83e40bc099e27e3d1e9212fdbcdce821ce324c",
+   "release": "0.5.4"
+  },
+  "rsb-a34-i10-standard": {
+   "digest": "sha256:24188fc40c5f8443e2076b74d8f822b89515c4cab1930f416789ef170400e717",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i11-standard": {
+   "digest": "sha256:19d6b88cd3a2340ee56f73a416fe6385f98e8f8ad9206b75d9ec2f9f29496234",
+   "release": "0.5.4"
+  },
+  "rsb-a34-i12-standard": {
+   "digest": "sha256:eff6ab3995c0a29b5efce74cf0b37c95ef2ae9154f46e1bdb60a9f0a53864b7b",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i13-standard": {
+   "digest": "sha256:274ecacefcb0733a5836901a4bf9fc31835ae9af13b6557b5b0b03ff04820a3a",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i14-standard": {
+   "digest": "sha256:f27c4806da1dcfd268b20364492d83f050b4b5d831ed3910db7efe3697fd9269",
+   "release": "0.5.3"
+  },
+  "rsb-a34-i15-standard": {
+   "digest": "sha256:2f974d532251cb34dd670d20ea7dfeee6f07f16eae1b2c111a66179a2a70e21a",
+   "release": "0.5.3"
+  },
+  "rsb-b01-i00-standard": {
+   "digest": "sha256:a36494c79a92235afe44264c7c1c29e784a49b129ccd4a01cd17e5f8c6a732c4",
+   "release": "0.5.3"
+  },
+  "rsb-b01-i01-standard": {
+   "digest": "sha256:a112a74c0c3ed0d7e31a0015d9fb3e4bad4dbaa96e8f260f31e35041be15146c",
+   "release": "0.5.3"
+  },
+  "rsb-b01-i02-standard": {
+   "digest": "sha256:9cff46c841ab3aa76523d2239f49143baca378688e46493c670a567cda8ffb43",
+   "release": "0.5.3"
+  },
+  "rsb-b01-i03-standard": {
+   "digest": "sha256:a5e3b9fe69e85dc6e6b8abd3d19fdb93e90f0dc59a332a256bd47cd1c031d128",
+   "release": "0.5.3"
+  },
+  "rsb-b02-i00-standard": {
+   "digest": "sha256:efbdf392bed1879cd7978fe8267eb84d955e0a7ae3978a03bffc78cc734a3159",
+   "release": "0.5.3"
+  },
+  "rsb-b02-i01-standard": {
+   "digest": "sha256:da883ab331d31b4389a7d40bb379284d112464bbe51fc97d5eab152a39929f69",
+   "release": "0.5.3"
+  },
+  "rsb-b02-i02-standard": {
+   "digest": "sha256:e0898207e1cb68e3b75ff9991976d3cb4ece5c2a19e308a2e17555daff51692a",
+   "release": "0.5.3"
+  },
+  "rsb-b02-i03-standard": {
+   "digest": "sha256:5f832285f98832983b27df408bb6be48384120c5e2aa7ea4cccba83ab2ce1645",
+   "release": "0.5.3"
+  },
+  "rsb-b03-i00-standard": {
+   "digest": "sha256:bb88012c2fbc3ee2e9a03262d81dd76620cd20276cf36b3609433a1c613661a2",
+   "release": "0.5.3"
+  },
+  "rsb-b03-i01-standard": {
+   "digest": "sha256:7c09017f88a7bb3e7e1fcd919d122aa421ce9229e467d539883fcc5f6fb9154c",
+   "release": "0.5.3"
+  },
+  "rsb-b03-i02-standard": {
+   "digest": "sha256:c2e506df11cf388c2f3bbeab7ebba1cf812b95e7b35bd8d2d451a009599b863e",
+   "release": "0.5.3"
+  },
+  "rsb-b04-i00-standard": {
+   "digest": "sha256:fe3d2ac6e41570965dd9e922d01c3b82ae72d15d13a2ca258a3c559af70d374e",
+   "release": "0.5.3"
+  },
+  "rsb-b04-i01-standard": {
+   "digest": "sha256:5c8bc4ed51ca92a4d4f55a0fe98a1d048b55dc9891d1580d485514fe88eea76b",
+   "release": "0.5.3"
+  },
+  "rsb-b04-i02-standard": {
+   "digest": "sha256:cfce9152f1678d43b4630c2d78b7bd7bc012c11765ad7d5ab9745ed22d351ce9",
+   "release": "0.5.3"
+  },
+  "rsb-b04-i03-standard": {
+   "digest": "sha256:6d069ea1c49559803c02cc7a20ce31ab69bc9a16a98072b76ef9879c577072e1",
+   "release": "0.5.3"
+  },
+  "rsb-b05-i00-standard": {
+   "digest": "sha256:c3cd780968a1a7d8ac2e535d99baa6dd0d1ba98b0445e7ab40a1884426fd64fd",
+   "release": "0.5.3"
+  },
+  "rsb-b05-i01-standard": {
+   "digest": "sha256:f4e35ca97f4d4793b80e83f7ef3caa8c9299aa2180b40d76d6914e75310a5cea",
+   "release": "0.5.3"
+  },
+  "rsb-b06-i00-standard": {
+   "digest": "sha256:01a567d7019b564df13a6d9fc339d09d725d7ed1ecf3bc3caeb4f2068a6ded0c",
+   "release": "0.5.4"
+  },
+  "rsb-b06-i01-standard": {
+   "digest": "sha256:b62f8a32fc67dad026f0f520eb9a9476a7779b696328fbf9722bf4864c9881df",
+   "release": "0.5.4"
+  },
+  "rsb-b06-i02-standard": {
+   "digest": "sha256:b53471584ef55f9ea84245ae2db2a196a0426f9bce986dc9ebf7b3a5c97c3e35",
+   "release": "0.5.4"
+  },
+  "rsb-b06-i03-standard": {
+   "digest": "sha256:69c93a67234c04f414f581559cd1847fd9347b1f72b46b66ec2ef5cebf3d795e",
+   "release": "0.5.3"
+  },
+  "rsb-b07-i00-standard": {
+   "digest": "sha256:bf191a35b2f70c60f1fe47627347a382edd5cc7ea1e52c9623755120fc73770f",
+   "release": "0.5.3"
+  },
+  "rsb-b07-i01-standard": {
+   "digest": "sha256:5450390b03fc7e03758cff486677f8a85639063e73f61186d7c7cd9772d94a40",
+   "release": "0.5.3"
+  },
+  "rsb-b07-i02-standard": {
+   "digest": "sha256:5b8c6b73a670950c8a65612e35fec804f06d7961e99786fdf6432ddc186380a8",
+   "release": "0.5.3"
+  },
+  "rsb-b07-i03-standard": {
+   "digest": "sha256:8692fba5cad6516db604aaad2e12ea8afe05212526d78a85a2d4d13cb6fadc89",
+   "release": "0.5.3"
+  },
+  "rsb-b08-i00-standard": {
+   "digest": "sha256:4815349e4efa4b86f130f2397b05a7e2c6e59094f41f820400c7f5078408299a",
+   "release": "0.5.3"
+  },
+  "rsb-b08-i01-standard": {
+   "digest": "sha256:81f0250c7338dfa6999987ff8ece86f4b22f9ad304a7b1469cf17a12f4d22a34",
+   "release": "0.5.4"
+  },
+  "rsb-b08-i02-standard": {
+   "digest": "sha256:0825167661093f4ec1e776dbe1397cc518ac16265a206aa7ec34c7c5609029c3",
+   "release": "0.5.4"
+  },
+  "rsb-b08-i03-standard": {
+   "digest": "sha256:9159a39f0cbec02384540f68a7d6fcd1aa6dafe688c3e479b84ec56a85593c03",
+   "release": "0.5.3"
+  },
+  "rsb-b09-i00-standard": {
+   "digest": "sha256:b19375fbc0938e697cd24367d2670540e7a7a4333ef381e63f195efc7a21c201",
+   "release": "0.5.3"
+  },
+  "rsb-b09-i01-standard": {
+   "digest": "sha256:6b2bead875805a9064942f811ce4bccdbf5ccb5c84242d1c1215c3ffb16c5d72",
+   "release": "0.5.3"
+  },
+  "rsb-b09-i02-standard": {
+   "digest": "sha256:e8cf9bb9b92fe05724e443afa72e1bc7e116d08099038e255ffea4014f003782",
+   "release": "0.5.3"
+  },
+  "rsb-b09-i03-standard": {
+   "digest": "sha256:e7d270c64bfc2de339cd8a603bc67666a3147e7fd7b89b261d2cdd48e35c7b49",
+   "release": "0.5.3"
+  },
+  "rsb-b10-i00-standard": {
+   "digest": "sha256:add3421727c6ffa73528258223daa170dabb33f1b46a1239a276c7f62da17419",
+   "release": "0.5.3"
+  },
+  "rsb-b10-i01-standard": {
+   "digest": "sha256:c5c4710a5f9bfa075461b1a7c07117debf093e371448e7ccc1148aeffa82889b",
+   "release": "0.5.3"
+  },
+  "rsb-b10-i02-standard": {
+   "digest": "sha256:4d7d50a1d1d27793a2fd39436918765ed6b94b7c3feea6a96e8a5771b8acf09b",
+   "release": "0.5.3"
+  },
+  "rsb-b10-i03-standard": {
+   "digest": "sha256:1e6f1f052cfa890e3c7ba54d3829a120f614703c5091519b6a6ef923e1be1a9b",
+   "release": "0.5.3"
+  },
+  "rsb-b11-i00-standard": {
+   "digest": "sha256:d59f03572d73064dc50014b6d0b16d5ad9ab6bd96530a0733c89310aa4004d88",
+   "release": "0.5.4"
+  },
+  "rsb-b11-i01-standard": {
+   "digest": "sha256:3d653d1d921fba7786b2386d8eb60fe1f3dba4c4dae7d710373f20c4c9ca2d12",
+   "release": "0.5.4"
+  },
+  "rsb-b11-i02-standard": {
+   "digest": "sha256:2ab58f20aef0ef5a12f0a2583d7175a9591d6a113855a293d08c1533034e92fe",
+   "release": "0.5.3"
+  },
+  "rsb-b11-i03-standard": {
+   "digest": "sha256:f13dd1795b28b9de350cd0a86144bdc3e6e1fdc8a591f4a4583a5bc2897c3623",
+   "release": "0.5.4"
+  },
+  "rsb-b12-i00-standard": {
+   "digest": "sha256:b4fd33881a6ced7f374ef25648ab65ef97b9cf296248f1edae9a604babef9ad0",
+   "release": "0.5.3"
+  },
+  "rsb-b12-i01-standard": {
+   "digest": "sha256:91bda2d6f43e9fe284d6b2d593859b825d993fc2ccc71075439ebf58832275a8",
+   "release": "0.5.3"
+  },
+  "rsb-b12-i02-standard": {
+   "digest": "sha256:03ea32cd9403ad5eb4927e6594beecaaff8437df8d96cf5c066216c1d7a315c0",
+   "release": "0.5.3"
+  },
+  "rsb-b12-i03-standard": {
+   "digest": "sha256:d1888441bdac715f686ccb78a8b8975bb4088a959f6ce13a232b5cff5609469d",
+   "release": "0.5.3"
+  },
+  "rsb-b12-i04-standard": {
+   "digest": "sha256:36ed475229c3eef415b65366fff239f180c83112421c673bb882632dc8eea271",
+   "release": "0.5.4"
+  },
+  "rsb-b12-i05-standard": {
+   "digest": "sha256:e5211f133786ccb3efd1f3fd48fd7c1328633b2d172b758d23baf0f137ab8621",
+   "release": "0.5.3"
+  },
+  "rsb-b12-i06-standard": {
+   "digest": "sha256:ac16f394f4719e3a95fcfa750f935ceaa696dd3b5c1c1204f27d2eff580ae57e",
+   "release": "0.5.4"
+  },
+  "rsb-b12-i07-standard": {
+   "digest": "sha256:b15283cee6d4e6e77df1c3b24c913403da0328277842039e1e136a3c9cd0000d",
+   "release": "0.5.4"
+  },
+  "rsb-c01-i00-standard": {
+   "digest": "sha256:6a768725917b0de2226792ba98597dc67d3c7401df86acd349299d854a85497f",
+   "release": "0.5.3"
+  },
+  "rsb-c01-i00-standard-realtime": {
+   "digest": "sha256:98385d9f077336418805e4dca5f83ee1b27ae2ecfeff10b181327ab22f3397b0",
+   "release": "0.5.3"
+  },
+  "rsb-c01-i01-standard": {
+   "digest": "sha256:b1d069a0ff633757dd2b1d9cf95109ba5ea9d412c5ca94afb3a2872084f67758",
+   "release": "0.5.3"
+  },
+  "rsb-c01-i01-standard-realtime": {
+   "digest": "sha256:51bcbdde879ba2943236d8d31c73e2987319e77136807e817ecb981ed4f5b4c6",
+   "release": "0.5.3"
+  },
+  "rsb-c01-i02-standard": {
+   "digest": "sha256:da190b726a714b16d85cf0e84a6d4c5a1ab435edbe457a2d3bac3dcf59d64b41",
+   "release": "0.5.3"
+  },
+  "rsb-c01-i03-standard": {
+   "digest": "sha256:b0317e1347b08f8d00a1928f8d912e99ed97b50a69bfbc234738cf889722f89e",
+   "release": "0.5.3"
+  },
+  "rsb-c02-i00-standard": {
+   "digest": "sha256:83fd5ab461ab128760b4d515f856ebc2f5c56d20a45faf7455a6575d22cbe976",
+   "release": "0.5.4"
+  },
+  "rsb-c02-i00-standard-realtime": {
+   "digest": "sha256:7700a493f9e1af6b1c154fd86cd2c3f2dcb9669e632cb611b8756ab497d1ae97",
+   "release": "0.5.4"
+  },
+  "rsb-c02-i01-standard": {
+   "digest": "sha256:af4590ee3a9e20d8571aef8e2392d91d28dba7d26a036cdc2265c0be64cdb2dd",
+   "release": "0.5.4"
+  },
+  "rsb-c02-i01-standard-realtime": {
+   "digest": "sha256:a4b4b43665c7f92fc3b43af0830450c8c91c566f32209fadf683cddce32b7a06",
+   "release": "0.5.4"
+  },
+  "rsb-c02-i02-standard": {
+   "digest": "sha256:4e8db0b9c14cbdaa96406efbb24e2f5e5dd6aebbd5673b04f49e3cccfc3d0c02",
+   "release": "0.5.3"
+  },
+  "rsb-c02-i03-standard": {
+   "digest": "sha256:f418855c36faa77964931b3bf07276794c75131b51ab72b484b3bcf801d1c34d",
+   "release": "0.5.3"
+  },
+  "rsb-c03-i00-standard": {
+   "digest": "sha256:768cdc4a2a18d08bb25959ba356c97259869ee53035e3f8bf3d692cd04e93615",
+   "release": "0.5.3"
+  },
+  "rsb-c03-i00-standard-realtime": {
+   "digest": "sha256:38a1a09f310f59236bb41e89f54524c7740677e3aec525abca0b6d70297c42f5",
+   "release": "0.5.3"
+  },
+  "rsb-c03-i01-standard": {
+   "digest": "sha256:fcb269519fda23b9cd1b833d8a0fa59620c8f8d4dcefe78700807432806b1fec",
+   "release": "0.5.3"
+  },
+  "rsb-c03-i01-standard-realtime": {
+   "digest": "sha256:bc7b96480b71c2d479c6d513b8618ca53149f1e5dac89f6e2ed9d11c64333f27",
+   "release": "0.5.3"
+  },
+  "rsb-c03-i02-standard": {
+   "digest": "sha256:65322a1b5657e47ddfaaeab860be1a86296907612a0f47c4cae8aa2f84dd23a2",
+   "release": "0.5.3"
+  },
+  "rsb-c03-i03-standard": {
+   "digest": "sha256:872bda85964ebfdbdc387395181b1ce62f4a0aaa79a27eed6c1736cecf862c76",
+   "release": "0.5.3"
+  },
+  "rsb-c04-i00-standard": {
+   "digest": "sha256:874da89f2c0e2f9fe56c2bdf3ecc11dbf21ec1c7f370bfa28498e6b084101072",
+   "release": "0.5.3"
+  },
+  "rsb-c04-i00-standard-realtime": {
+   "digest": "sha256:2f364d1d252211445d09b74f1438a753b34e387ce973e87454438d1f9ff980c0",
+   "release": "0.5.4"
+  },
+  "rsb-c04-i01-standard": {
+   "digest": "sha256:5d0acb2892ea61ec1776caec71dc31d0c651157398d483f70c6910be7137dccc",
+   "release": "0.5.4"
+  },
+  "rsb-c04-i01-standard-realtime": {
+   "digest": "sha256:26c045cf0d624a90de5a4102adf9fc41e9ae3a1297d3dc2f3e71560e3d639a7a",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i00-standard": {
+   "digest": "sha256:be6682fc99385295493a295e0b01a54cd09a94263812842195b4f8a937a65f88",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i00-standard-realtime": {
+   "digest": "sha256:8868ff3c183302aba2c5afc502b2f6a6d975c77d6404c2039e0622ac9d144aaf",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i01-standard": {
+   "digest": "sha256:2e7fe1baa9abc71e09b0eedf1b3b4616e029e065167ce553039569ce7fe54254",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i01-standard-realtime": {
+   "digest": "sha256:5bd73afbcabfde9cc05da8e6fc801c19a1c8f6daf83802f4c3c79605ee1d384a",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i02-standard": {
+   "digest": "sha256:19e439576d784b0ed5d37fe061c31347c064b476a029dae9ec240aac4d6ea696",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i03-standard": {
+   "digest": "sha256:dab944561a9654b83ed54d2ddfa5dbe0182754ae054b100fcac64689a8ebcebd",
+   "release": "0.5.4"
+  },
+  "rsb-c06-i00-standard": {
+   "digest": "sha256:4bce49b44045643b5bdd39b64e66898fd93a0a5beb5ef5ced098932a0293c00c",
+   "release": "0.5.3"
+  },
+  "rsb-c06-i00-standard-realtime": {
+   "digest": "sha256:4fee7564215c26be5594e1bbf98377f4fedde37e36ed614d8ed2cddebecd6dc6",
+   "release": "0.5.3"
+  },
+  "rsb-c06-i01-standard": {
+   "digest": "sha256:d6b980520982d70c479d534e6b745a5978ae91ee2b2496388988b43c2c22f975",
+   "release": "0.5.3"
+  },
+  "rsb-c06-i01-standard-realtime": {
+   "digest": "sha256:5ec599c5dfe72d2f5638873ef98f5922a6c3284bcb9fe1fbc680d76f65800577",
+   "release": "0.5.3"
+  },
+  "rsb-c06-i02-standard": {
+   "digest": "sha256:219cf50c56e330c8ffdc66ca77e726150fe7647d526ce242036ba6fd21327ad8",
+   "release": "0.5.3"
+  },
+  "rsb-c06-i03-standard": {
+   "digest": "sha256:c0a96e915e1a5fabc49c8b535b09923758d939307148a5de8da34ce4360e842d",
+   "release": "0.5.3"
+  },
+  "rsb-c07-i00-standard": {
+   "digest": "sha256:93c3db152038972f65cf42fe9e7daeea1c34f9c9b1c2d6dad371ee1844071501",
+   "release": "0.5.3"
+  },
+  "rsb-c07-i01-standard": {
+   "digest": "sha256:74c4478c4894e513633108ebc5a9ac333a048e8541e49f88fa37edc0cba70bd9",
+   "release": "0.5.3"
+  },
+  "rsb-c08-i00-standard": {
+   "digest": "sha256:6740fbb1f5ff528c11bbfadb80acf67a7a583203c535ceca7bb95aad7d98d79b",
+   "release": "0.5.3"
+  },
+  "rsb-c08-i00-standard-realtime": {
+   "digest": "sha256:93952dd558766d3a25395c0f14828a4ea8c482d2f9fe184deb8599195b2a02ab",
+   "release": "0.5.3"
+  },
+  "rsb-c08-i01-standard": {
+   "digest": "sha256:de78c89fe48f29c0ca751c505e998541119354b16cfb64fb2dfedd35884a5693",
+   "release": "0.5.3"
+  },
+  "rsb-c08-i01-standard-realtime": {
+   "digest": "sha256:02e81a456fd85b685f3c64922a8c242909efd4cb1e525a1d940809d9e1881980",
+   "release": "0.5.3"
+  },
+  "rsb-c09-i00-standard": {
+   "digest": "sha256:3eee2fe69ecfbb63413b92b4b92f9a9a4725af29502d4b42c24d417645787552",
+   "release": "0.5.3"
+  },
+  "rsb-c09-i00-standard-realtime": {
+   "digest": "sha256:b7547c3c4b071586b9bd02580bffe56821bc0ce216d8d2b86b7bf2d4b83b7c4a",
+   "release": "0.5.3"
+  },
+  "rsb-c09-i01-standard": {
+   "digest": "sha256:8cd91a5fdfa1886d379c7c43c1680f00fddc307bdd7d381e99498945c4d59a4e",
+   "release": "0.5.3"
+  },
+  "rsb-c09-i01-standard-realtime": {
+   "digest": "sha256:b206160f19ef816a6e6fef5b3d7673c8591c0201274afcd334a7c0e05bd2eeec",
+   "release": "0.5.3"
+  },
+  "rsb-c09-i02-standard": {
+   "digest": "sha256:f3a42ff5d9e9d7962161d2b3f226ac9c5f00a6f606a83f35dbae7408cb3dc701",
+   "release": "0.5.3"
+  },
+  "rsb-c09-i03-standard": {
+   "digest": "sha256:99b3a0a64705f5a743fc9bd27eaa1294b614c99205773c474092f1928921b9cd",
+   "release": "0.5.3"
+  },
+  "rsb-c10-i00-standard": {
+   "digest": "sha256:a86a0f78ece153eebaa1cc6c662a1f2a9bd2759ad3924c5d26c2a8b05cd45dfe",
+   "release": "0.5.3"
+  },
+  "rsb-c10-i00-standard-realtime": {
+   "digest": "sha256:6dc0038ad2008b55a95b0dabfc1ca6fb11cbac1202c7c9ce4a5dbe516fdb1fd0",
+   "release": "0.5.3"
+  },
+  "rsb-c10-i01-standard": {
+   "digest": "sha256:c9f61f3d874b7a700117d3fdfaf75ff5b7e5fd528261f26361e57200eea5c84a",
+   "release": "0.5.3"
+  },
+  "rsb-c10-i01-standard-realtime": {
+   "digest": "sha256:465cbd9446c4a624f429cd8302de140094725320e57d673ee6a39b57c3e6a237",
+   "release": "0.5.3"
+  },
+  "rsb-c10-i02-standard": {
+   "digest": "sha256:50c293578fccd312eaa7b19e84df73cdf17de83df1c002927ce294b35721b5ba",
+   "release": "0.5.3"
+  },
+  "rsb-c10-i03-standard": {
+   "digest": "sha256:336027febb7e938942d9d72ba714dc57cb8d8cfbcf1fdcdbfe0ae03f50db3b70",
+   "release": "0.5.3"
+  },
+  "rsb-c11-i00-standard": {
+   "digest": "sha256:131aef53ebc900c7d46d3f7cd1c91df2adab3077ae7c8f389bd37ffbf2327ac5",
+   "release": "0.5.3"
+  },
+  "rsb-c11-i00-standard-realtime": {
+   "digest": "sha256:d1312473f95ec776f263f47499b23911a8739011c8bd5df696d574df7963b693",
+   "release": "0.5.3"
+  },
+  "rsb-c11-i01-standard": {
+   "digest": "sha256:9a99b1fd610da91b0453ecd8abde3549c853391a1ba7c6c20cd360a26d1dae51",
+   "release": "0.5.3"
+  },
+  "rsb-c11-i01-standard-realtime": {
+   "digest": "sha256:d6c9c3e4793b3f94215f2de8a06dfcea31fff361a8294ca5f677d210c4e2bf89",
+   "release": "0.5.3"
+  },
+  "rsb-c11-i02-standard": {
+   "digest": "sha256:4f63bc924c4096764f3255b9b1a2444c826f909ebf4d56f5384a39b22af27c13",
+   "release": "0.5.3"
+  },
+  "rsb-c11-i03-standard": {
+   "digest": "sha256:e4aa2e795e365613c1975f238d73104fec766610c1cd69ce28437bed8479b59e",
+   "release": "0.5.3"
+  },
+  "rsb-c12-i00-standard": {
+   "digest": "sha256:3e92a0b07a30da21bbca660fc2673b7273cb146b5fbb1475dc497855a7b44ea4",
+   "release": "0.5.3"
+  },
+  "rsb-c12-i00-standard-realtime": {
+   "digest": "sha256:e297a70951c0a565754f64339dd31edd011fb0ed76cfbc530dd18622b2bc320b",
+   "release": "0.5.3"
+  },
+  "rsb-c12-i01-standard": {
+   "digest": "sha256:7695bb41f54fdb4320f7d4bd61388af89aecc71034fa361654df3ecd43dc16c9",
+   "release": "0.5.3"
+  },
+  "rsb-c12-i01-standard-realtime": {
+   "digest": "sha256:4c47bf5d5b7b2c98337540c5760482c2bbd41d42cc8e031b7eeb4e1e553c67bb",
+   "release": "0.5.3"
+  },
+  "rsb-c13-i00-standard": {
+   "digest": "sha256:a0b1dd6be81803f27d02f9a41476c652fd540778ef06fbd18f51b8a848c5ddf5",
+   "release": "0.5.3"
+  },
+  "rsb-c13-i00-standard-realtime": {
+   "digest": "sha256:9f5177f06f64a8d0b8f538a272d203f742a7b28d8c26801b5541f64e831d576f",
+   "release": "0.5.3"
+  },
+  "rsb-c13-i01-standard": {
+   "digest": "sha256:ec4201ef47dbeb45db07c24de83cbc0b1ced12c7f5bd753ea9a006657c343246",
+   "release": "0.5.3"
+  },
+  "rsb-c13-i01-standard-realtime": {
+   "digest": "sha256:88ce73a2ab541cf5254e689905ee8ce3661d2dbcf70375bdd84258581339af77",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i00-standard": {
+   "digest": "sha256:0846337824266379693d5afc5174a93cc0c7c71904920dac5853e2065a08e899",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i01-standard": {
+   "digest": "sha256:3abd408bd299f98d3801b927c37ea6fb74584540fb260bdb8bc5c1087f481aa9",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i02-standard": {
+   "digest": "sha256:7403b0c811eab5745c07f1dbd8538a2d247f9f9d6be26a08edec58e98dce9ea0",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i03-standard": {
+   "digest": "sha256:8a09ad1ec5b48399e376b65580fc730d350032205fc054267a7e1e1f9dfa1dbd",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i04-standard": {
+   "digest": "sha256:b38d2c09dae50614da6b6e089410aa6456811fc3d00c1dfe6593553f9f41a6fb",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i05-standard": {
+   "digest": "sha256:7288fe90bba127597e0ca101cee8483767698d7cfd44a6cc3c8963c163e288ce",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i06-standard": {
+   "digest": "sha256:55faf8da220a85b8e40fc6dc5c81823378b94f24149d967c653ebc19bf3c4840",
+   "release": "0.5.3"
+  },
+  "rsb-c14-i07-standard": {
+   "digest": "sha256:763d41bf26bbb0978acbda8c29ed4f2474638ce600742b02daa9107f9b75cb56",
+   "release": "0.5.3"
+  },
+  "rsb-c16-i00-standard": {
+   "digest": "sha256:b749bccad82559605ed41bd6bd6f816b22d3d1a52cde2582dd1fd0a30d2af84e",
+   "release": "0.5.4"
+  },
+  "rsb-c16-i01-standard": {
+   "digest": "sha256:f667d9c8f271ef01ad4320470fda920a8cd3f7103f449b3090fb5d81769ae207",
+   "release": "0.5.4"
+  },
+  "rsb-d01-i00-standard": {
+   "digest": "sha256:b554a97a56ac4d63bec2abe65dcafd1343df18a64356456307e1248e47de36e8",
+   "release": "0.5.3"
+  },
+  "rsb-d01-i01-standard": {
+   "digest": "sha256:e505dba5170ca75cc7eeac4ec4d684b5a185a9f56fff04b3934b3143e631b43a",
+   "release": "0.5.3"
+  },
+  "rsb-d01-i02-standard": {
+   "digest": "sha256:22241a2dc17f5faa44cd6626c9ce79e46fc5f620205ce0108a614c27f24acf86",
+   "release": "0.5.3"
+  },
+  "rsb-d01-i03-standard": {
+   "digest": "sha256:efb8de24a76aa661731f5c5727b6b4ba6574a5f9f63a7172dcfbaeffd4c5680c",
+   "release": "0.5.3"
+  },
+  "rsb-d02-i00-standard": {
+   "digest": "sha256:789c98855b22fc8ce76e9156dc6057c35d8e32b48e04103c64dc5d7c980d7d80",
+   "release": "0.5.3"
+  },
+  "rsb-d02-i01-standard": {
+   "digest": "sha256:f3104e82e377ccebea57d1002637a31ddf7692b5823a7c9842246aedda9d6619",
+   "release": "0.5.3"
+  },
+  "rsb-d02-i02-standard": {
+   "digest": "sha256:267ce8a73c5751a106cf4e0e0b2be7230dd88f81fa29fe195f4ae75c51d30cd2",
+   "release": "0.5.3"
+  },
+  "rsb-d02-i03-standard": {
+   "digest": "sha256:72f4adda9950a113071816669e89d3b505c7c73568fab0a5c2e874a0363a5545",
+   "release": "0.5.3"
+  },
+  "rsb-d02-i04-standard": {
+   "digest": "sha256:372bb5622deb5f99b372e507df8c40736fc8e38eaf560d0a4b59d4129b4846aa",
+   "release": "0.5.3"
+  },
+  "rsb-d02-i05-standard": {
+   "digest": "sha256:cecad72343f99d5070039a3d0175276509f398199b31406fe4f334b2becf080e",
+   "release": "0.5.3"
+  },
+  "rsb-d03-i00-standard": {
+   "digest": "sha256:ae78a095619bf15dc470222138c9e1a8a638f1913a17abaace76227526e02c98",
+   "release": "0.5.3"
+  },
+  "rsb-d03-i01-standard": {
+   "digest": "sha256:961c38a7f45b5f637e62a5a675a50e33af6974aa333a6875950da16d095dc367",
+   "release": "0.5.3"
+  },
+  "rsb-d04-i00-standard": {
+   "digest": "sha256:86ce38a0672dbcc27ad98b7fa9a64c3b49a32f4f6f2564cdde0ea81d57cd077b",
+   "release": "0.5.3"
+  },
+  "rsb-d04-i01-standard": {
+   "digest": "sha256:214f2f4383daf456773437142356d2a419c6c8955c4c571939cd12233ea08745",
+   "release": "0.5.3"
+  },
+  "rsb-d04-i02-standard": {
+   "digest": "sha256:3e89153028ecbf2f0bcf46b4daf13c986eae8d419326376b8d043f00fdcd1cd9",
+   "release": "0.5.3"
+  },
+  "rsb-d04-i03-standard": {
+   "digest": "sha256:9d796b489f28ef2e642819796f7098d5014014d29a98a08fabf145cdc9b64ef9",
+   "release": "0.5.3"
+  },
+  "rsb-d05-i00-standard": {
+   "digest": "sha256:29aa095736f98229f8e5e9a67a1e05bbbd94e3210c54ff42bb7c44cccf5792d8",
+   "release": "0.5.3"
+  },
+  "rsb-d05-i01-standard": {
+   "digest": "sha256:b84e8353c98afccd051afaf282cd8911f388c35ea33bbfb7a0eef5fde056db29",
+   "release": "0.5.3"
+  },
+  "rsb-d05-i02-standard": {
+   "digest": "sha256:cd2004eb111d2fba1380da2317a3655ed6828be23bac6c03ef5727e9427dd2e0",
+   "release": "0.5.3"
+  },
+  "rsb-d05-i03-standard": {
+   "digest": "sha256:0a47c974e315f69e25ca23ca73d96f716a2197f26184238ef315c2262c79ca7b",
+   "release": "0.5.3"
+  },
+  "rsb-d05-i04-standard": {
+   "digest": "sha256:edd86358e62c1a594f8eca25d4271df51c2782b22d3fae8d3cd2bc91c31780e9",
+   "release": "0.5.4"
+  },
+  "rsb-d05-i06-standard": {
+   "digest": "sha256:28421fe725225c949390379c37dc91729356285e9c1824a9f092950e47053e8a",
+   "release": "0.5.3"
+  },
+  "rsb-d05-i07-standard": {
+   "digest": "sha256:5424c47d434cb5017f1448eed4fa253d4776d8b5fee74b455a46ec562e0216c0",
+   "release": "0.5.4"
+  },
+  "rsb-d06-i00-standard": {
+   "digest": "sha256:eac153e09c8a35989e150c2ecf330a791769c7fa2323afbcd3958baf71114d19",
+   "release": "0.5.3"
+  },
+  "rsb-d06-i01-standard": {
+   "digest": "sha256:78cb5c36b4cd438dafe3a50840bfeb67a379574720ffa01e60979349f7d1b417",
+   "release": "0.5.3"
+  },
+  "rsb-d06-i02-standard": {
+   "digest": "sha256:d11a8fedb8635500f659ac99566fa1e1e72a75f9bcb5d2b3c25e9df372e80a40",
+   "release": "0.5.3"
+  },
+  "rsb-d06-i03-standard": {
+   "digest": "sha256:0f57ce8822c0657f4e81f725284f25d855f71174a70f04e7672c11c66a0f9f68",
+   "release": "0.5.3"
+  },
+  "rsb-d06-i04-standard": {
+   "digest": "sha256:f39fc5b89fb59ba1d8ef8828170fd6acb9ad66b446eceab00765e00219b54e7a",
+   "release": "0.5.3"
+  },
+  "rsb-d06-i05-standard": {
+   "digest": "sha256:3fe9ed729c76825ff54a59e660b0de1ae5d4da15eaf54aad05588c8ba5616acf",
+   "release": "0.5.3"
+  },
+  "rsb-d07-i00-standard": {
+   "digest": "sha256:a10b77e3034e9de7613c78909cc836dee062b6f16b953f5d3a4f086743c3aeff",
+   "release": "0.5.3"
+  },
+  "rsb-d07-i01-standard": {
+   "digest": "sha256:8fb485bde3e8df4198416f36ceef14beb79cc9d44d7cf55fbaeb24f284fbd8ac",
+   "release": "0.5.3"
+  },
+  "rsb-d07-i02-standard": {
+   "digest": "sha256:9a527cb7940e8af2e02629528d2ba3b11994b4076b1ad6f9468f46fbb9b4fa5a",
+   "release": "0.5.3"
+  },
+  "rsb-d07-i03-standard": {
+   "digest": "sha256:6c070670169680f928ff9af5850eb0cec033f6cd9bcafa126cbd3d0937d1357b",
+   "release": "0.5.3"
+  },
+  "rsb-d08-i00-standard": {
+   "digest": "sha256:0c4004ac4318898fa886920a13374579db87b93cdb315768867e801d802ce229",
+   "release": "0.5.3"
+  },
+  "rsb-d08-i01-standard": {
+   "digest": "sha256:e67d56adc09a8ed9aca5f7e1cb3fab9ccb24b6d205b041ee937cfbe71a989356",
+   "release": "0.5.4"
+  },
+  "rsb-d08-i02-standard": {
+   "digest": "sha256:024debce05e6b2874372423b84fc81d3261e061f6756c905313c0f2200b4504b",
+   "release": "0.5.3"
+  },
+  "rsb-d08-i03-standard": {
+   "digest": "sha256:292df34a2bbdd5384220254cfc9eb4de3481bd0809623ee7f6dd4ecadf0c290a",
+   "release": "0.5.3"
+  },
+  "rsb-d09-i01-standard": {
+   "digest": "sha256:3de88b0e8cc66ed439e55d529411bb00dbe81e3d2797bed554ed9cf6936b4567",
+   "release": "0.5.3"
+  },
+  "rsb-d09-i04-standard": {
+   "digest": "sha256:b5d17e0809993b2713bc9e91553f9a8d475ef4d041b384463734510c0b53818b",
+   "release": "0.5.3"
+  },
+  "rsb-d09-i06-standard": {
+   "digest": "sha256:15625e1f1115b678ff8ff632ebaa9fba6c8e57be6c7f8ff172649b1982a52e60",
+   "release": "0.5.3"
+  },
+  "rsb-d09-i07-standard": {
+   "digest": "sha256:99738459b9e386b2c3a61553cadf85d67adc5bdf6ed6686d6bb2c2c90e35c343",
+   "release": "0.5.3"
+  },
+  "rsb-d12-i02-standard": {
+   "digest": "sha256:ac1069d0650d53c23adacd31ba17f4f0c5f265f9de1de7836ff8d595e04581b9",
+   "release": "0.5.4"
+  },
+  "rsb-d12-i04-standard": {
+   "digest": "sha256:e8b53b49824b2995c008899135e27064ea117a8aeca71a0df065f74180a34178",
+   "release": "0.5.4"
+  },
+  "rsb-e01-i00-standard": {
+   "digest": "sha256:8c48694697e549b1aa94df222a136d7aeec9fb85db0be53fce2d4594b17191d8",
+   "release": "0.5.3"
+  },
+  "rsb-e01-i01-standard": {
+   "digest": "sha256:8b2fc876d445cfc73d518cf0884769a745581e09269fa87ee31d352f2ab2c06b",
+   "release": "0.5.3"
+  },
+  "rsb-e01-i02-standard": {
+   "digest": "sha256:8f6967cdd36845d9ebab4c12e608fa2dbad5d9a19d4ea41bf01ff5dfa1988ced",
+   "release": "0.5.3"
+  },
+  "rsb-e01-i03-standard": {
+   "digest": "sha256:d8209f2306a68427dad77e8c536efa8c1cbc0628654dc35ab056d70fe4e6c297",
+   "release": "0.5.3"
+  },
+  "rsb-e01-i04-standard": {
+   "digest": "sha256:e6fff2426c49cd06d05f7bda4ad06326c606c5e90c3abac9f46a93bd0ad3e203",
+   "release": "0.5.3"
+  },
+  "rsb-e01-i05-standard": {
+   "digest": "sha256:44cd2b47c7a4630e4b03b1a7af55a05bc4b337b3276d420a4d969e92f130c5bb",
+   "release": "0.5.3"
+  },
+  "rsb-e02-i00-standard": {
+   "digest": "sha256:fe3fba61db138d2facdd6d9c3bc0c8a590088c4602357e96566b152edf19695d",
+   "release": "0.5.3"
+  },
+  "rsb-e02-i01-standard": {
+   "digest": "sha256:05af6b0fd6f16b2e7904fda25b716c48a11e8da0ffb14b67cf7232dfff90cc79",
+   "release": "0.5.3"
+  },
+  "rsb-e02-i02-standard": {
+   "digest": "sha256:153f8cdc7f9488688a134ae720196fbcbad0ab58e2b463ac3134a23095764762",
+   "release": "0.5.3"
+  },
+  "rsb-e02-i03-standard": {
+   "digest": "sha256:c3c3c693d271544cd9c146e7c2e13ecfb6fe649fba4d001c58b3f44050102050",
+   "release": "0.5.3"
+  },
+  "rsb-e02-i04-standard": {
+   "digest": "sha256:be1eb266318d7c1846cd2cabe6ea5c9b08b8075011cc00e8a4b2d9b966c25eab",
+   "release": "0.5.3"
+  },
+  "rsb-e02-i05-standard": {
+   "digest": "sha256:d4b837481628bc7f782b7bb0f2d4465e0d0a4cf9b0f89146d14984b2a8761820",
+   "release": "0.5.3"
+  },
+  "rsb-e03-i00-standard": {
+   "digest": "sha256:a7cc12e21f858d1f523a0cd12468acc2c3d1aea2f03375145d1822c6f80bd6db",
+   "release": "0.5.3"
+  },
+  "rsb-e03-i01-standard": {
+   "digest": "sha256:799c751883708f89c90966f6a46d1f4c526b28746552c4afa513dee6e2dabafd",
+   "release": "0.5.3"
+  },
+  "rsb-e03-i02-standard": {
+   "digest": "sha256:8def1a2cf5ffa853ed2268846c71d915fc19f86edd094a1c1a557fb4099f1b01",
+   "release": "0.5.3"
+  },
+  "rsb-e03-i03-standard": {
+   "digest": "sha256:7e4dddcef2d10e0cc52304726c8b87215e5e6c145413c5944b959229f49b843b",
+   "release": "0.5.3"
+  },
+  "rsb-e04-i00-standard": {
+   "digest": "sha256:12129c1ed1ee2214963b14f9f839e64568f28ac04d049b8e5cd5bb0256658abb",
+   "release": "0.5.3"
+  },
+  "rsb-e04-i01-standard": {
+   "digest": "sha256:5d22fefbd76d7a0d1485a242b17377c525b016a2804057b477e92e0713f500bd",
+   "release": "0.5.3"
+  },
+  "rsb-e04-i02-standard": {
+   "digest": "sha256:5a6fb877586a7ff437b362eea1ff542ba508ad5b9d5151ce3929a306774a25ea",
+   "release": "0.5.3"
+  },
+  "rsb-e04-i03-standard": {
+   "digest": "sha256:a1d95b1d9bbdbd6ced6ccd51fc843c8bd1cb69fef5a41e6a27f44c701da118bd",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i00-standard": {
+   "digest": "sha256:379f941545f82c37c060c82a8aa7d542df072d1492c2fb85e565b3c405856162",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i01-standard": {
+   "digest": "sha256:baa009be9379b2a93cce8b70cb3095658e723fa7eeb63f35051d0333f4a71b69",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i02-standard": {
+   "digest": "sha256:a6a411a94ee1f36e2eabd98368c2063d2f052749d73f4c7d8868cfd8c66b2255",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i03-standard": {
+   "digest": "sha256:90b7563be7b4677814a2d579291c4f298085a1d61413a4db5d65ac2eb4f45336",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i04-standard": {
+   "digest": "sha256:88245acf14a715358f33b776163687d4259372e0c64a58e8f930d84476ada3c6",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i05-standard": {
+   "digest": "sha256:58f395f0af7d9a3951e35db01d2e783592733993895f2b72d0319c1971511ca9",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i06-standard": {
+   "digest": "sha256:7040533bb5e6222a714e9065b968d2f4aaf3eeb87f90a9252f305dac598d61ab",
+   "release": "0.5.3"
+  },
+  "rsb-e05-i07-standard": {
+   "digest": "sha256:430d9b88ef16498aa43eb553fb9ca50a6bc6f9cfff78e1e1b653356ad0fc2c24",
+   "release": "0.5.3"
+  },
+  "rsb-e06-i00-standard": {
+   "digest": "sha256:076830c60a7f3dea63404ed69982be38d84fe8d377fce7bba10b672c6952764d",
+   "release": "0.5.4"
+  },
+  "rsb-e06-i01-standard": {
+   "digest": "sha256:e8f8d43362ff0929974b431d1f1fc7ce5c1f70a13b6a4ddb2aa826d8f0094fc2",
+   "release": "0.5.3"
+  },
+  "rsb-e06-i02-standard": {
+   "digest": "sha256:15b25bc78585e18675038dce5f209f3ed813811935f4d7ff12aeee6a689ee396",
+   "release": "0.5.3"
+  },
+  "rsb-e06-i03-standard": {
+   "digest": "sha256:d8f49c01f8b60c1140413699a6fc746e7c9d57b49617dae88fb58bec8a82373d",
+   "release": "0.5.4"
+  },
+  "rsb-e07-i00-standard": {
+   "digest": "sha256:ff67bea48351962ed1988ef692905ab5b02969d86f22873ce5c848c5306cda91",
+   "release": "0.5.3"
+  },
+  "rsb-e07-i01-standard": {
+   "digest": "sha256:137ab1e906c5ea2a855b785c980286a5711309a676f0e55884e5c6753b7ca9e6",
+   "release": "0.5.3"
+  },
+  "rsb-e07-i02-standard": {
+   "digest": "sha256:b8fd99a15b1799fa4331c98771b468e314e1e06ef257783b80150e7d832fa2ef",
+   "release": "0.5.3"
+  },
+  "rsb-e08-i00-standard": {
+   "digest": "sha256:71043556192672463531f0736ee9e2aa831148178496583d86bb84b49c92b106",
+   "release": "0.5.3"
+  },
+  "rsb-e08-i01-standard": {
+   "digest": "sha256:1777cc8f9081e303f6b420493799843fa89b7c21f1fdd73145866fa0dffba34b",
+   "release": "0.5.3"
+  },
+  "rsb-e08-i02-standard": {
+   "digest": "sha256:3fb9b876197e9f3c19cc4db49f6ea7bdf34db9a701ec4106ca6709bbaca51291",
+   "release": "0.5.3"
+  },
+  "rsb-e08-i03-standard": {
+   "digest": "sha256:b310c897634c29a9a0a6a405c3bbdc697104ad6291e74abcac3ebd3c5d38a7c8",
+   "release": "0.5.3"
+  },
+  "rsb-e09-i00-standard": {
+   "digest": "sha256:a9f23b6b468f2e21ca4d2777a5ff386f8cf0da828c6eec8e245693a7e34b38d3",
+   "release": "0.5.3"
+  },
+  "rsb-e09-i01-standard": {
+   "digest": "sha256:c628f75982ad8383ee983a097c783c932ce7e454cdfafdd0c7425ad95c5c8cfc",
+   "release": "0.5.3"
+  },
+  "rsb-e09-i02-standard": {
+   "digest": "sha256:401b856978ce74490c4c90416809a90fcdca59e5ca2fb128ce320b5e73563557",
+   "release": "0.5.3"
+  },
+  "rsb-e09-i03-standard": {
+   "digest": "sha256:725071956a7f1e1022224b7e7a7cd7f7952f35bf142c08fc814b4cae62ff7daa",
+   "release": "0.5.3"
+  },
+  "rsb-f01-i00-standard": {
+   "digest": "sha256:2607775a608315df69b4536b484e02a482c8719fc1f7fd6bc4803fd7fd349ecf",
+   "release": "0.5.4"
+  },
+  "rsb-f02-i00-standard": {
+   "digest": "sha256:8d5800bbd460c5f65342f19e4f666330d2181d9a30fd6e94c0e89d1965b90119",
+   "release": "0.5.4"
+  },
+  "rsb-f02-i01-standard": {
+   "digest": "sha256:ff09fda108a027987aea13c266269c5a54f547be0145ed26e339307dee2e5ecb",
+   "release": "0.5.4"
+  },
+  "rsb-f03-i00-standard": {
+   "digest": "sha256:5c349976e92755d1160b4df39a82d96ce452db4c53a549b2a8cc2234e2f4bb46",
+   "release": "0.5.4"
+  },
+  "rsb-f03-i01-standard": {
+   "digest": "sha256:fcd0df8e6b030474f59ed638226a4eb28087ffdd342c422ab892ee35ea737b6f",
+   "release": "0.5.4"
+  },
+  "rsb-f03-i02-standard": {
+   "digest": "sha256:1237271c5a644e7213e0cf958cfd40dafdefbd9d3ee1fb70ca5ad14876ac9322",
+   "release": "0.5.4"
+  },
+  "rsb-f04-i00-standard": {
+   "digest": "sha256:5e17146b0a5acd57bbf2cb177caf28d8a5106ec869b464d19501c432aeee839b",
+   "release": "0.5.4"
+  },
+  "rsb-f04-i01-standard": {
+   "digest": "sha256:bdf5131e866efa7ba2a2cf089ec83899ddda9ae04b5196d2c788d7aee38677ec",
+   "release": "0.5.4"
+  },
+  "rsb-f04-i02-standard": {
+   "digest": "sha256:9924cbbf14b44da67701abfe95267c1a2365bab9a7a78a93b10dec337d5306ba",
+   "release": "0.5.4"
+  },
+  "rsb-f05-i00-standard": {
+   "digest": "sha256:6e9bc60709ebe4c6dda46b966fa36ddc0389e2e1edc57ac696dabd93d042205d",
+   "release": "0.5.4"
+  },
+  "rsb-f05-i01-standard": {
+   "digest": "sha256:0ed59d6c96a64910e5d991304ae002ccbc501190cc0b5f2904d900e07489cb73",
+   "release": "0.5.4"
+  },
+  "rsb-f06-i00-standard": {
+   "digest": "sha256:73304f40cffcf47168b5fa0a0bd2ebed6249d1efec3fa8ebb2a330a613c139fb",
+   "release": "0.5.4"
+  },
+  "rsb-f06-i01-standard": {
+   "digest": "sha256:5719e4e31b7642fd353cb29c204fd6e989e40b23b854f65652b215b498144466",
+   "release": "0.5.4"
+  },
+  "rsb-f07-i00-standard": {
+   "digest": "sha256:aa08dcae7b482ce5af1f9de56c5aa3e36f5a42c29f3566e11d4b52ce3d6bfa2e",
+   "release": "0.5.4"
+  },
+  "rsb-f08-i00-standard": {
+   "digest": "sha256:3250e29735f54a4edc110c5ec7a49b3eee00981835708e561bfd58f60bcfbb29",
+   "release": "0.5.4"
+  },
+  "rsb-f09-i00-standard": {
+   "digest": "sha256:769c07f58051cfac568a68a9d8773d8b704c3f01970de4ff370f898797600237",
+   "release": "0.5.4"
+  },
+  "rsb-f10-i00-standard": {
+   "digest": "sha256:f22221e2cfce01d35a64c97a9b393d7675e10244471f115e172ebdc92b187b6f",
+   "release": "0.5.4"
+  },
+  "rsb-f11-i00-standard": {
+   "digest": "sha256:d89bc7b4da9b392dd1ea882536f704d1d4e4389a407d9fe33756e9d68d24ea51",
+   "release": "0.5.4"
+  }
+ }
+}

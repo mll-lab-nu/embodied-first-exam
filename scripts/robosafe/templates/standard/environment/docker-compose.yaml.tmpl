@@ -10,12 +10,12 @@ services:
     volumes:
       - ./sim:/srv:ro
     working_dir: /tmp
-    command: python /srv/server.py
+    command: @@SIM_COMMAND@@
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "@@AGENT_TIMEOUT@@"
+@@ASSET_PROFILE_LINE@@      RCB_WALL_CLOCK_S: "@@AGENT_TIMEOUT@@"
       RCB_STARTUP_TIMEOUT_S: "300"                      # the scene builds in a few seconds
       RCB_RESET_BUDGET: "0"                             # RoboSafeBench grades one episode: no reset
       PYTHONPATH: /srv
