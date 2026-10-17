@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboOlympics |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
+| Twin | `roboolympics-badminton-match-i02-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_match` / seed 8 |
 | Oracle | `partial` — screening round 16 (2026-10-13, revision 12): the truth-state reference beat level 2 in 10 of 20 seeds, the camera-only version did not win level 2; a model did (Opus 11:8, 11:6); this development seed was not screened |

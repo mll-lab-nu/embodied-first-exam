@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboOlympics |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
+| Twin | `roboolympics-badminton-match-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_match` / seed 7 |
 | Oracle | `partial` — screening round 16 (2026-10-13, revision 12, S = 20): our camera-only reference player beat level 1 in 17 of 20 seeds; on this instance at S = 20 it lost 10:12 (vanilla Harbor 0.23.0, 2026-10-13: a valid, replayed match, 78 min) |
