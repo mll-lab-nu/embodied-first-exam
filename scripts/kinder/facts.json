@@ -93,6 +93,15 @@
   "deterministic": true,
   "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
   "episode_seconds": 6.8,
+  "goal_region": {
+   "along_x": 0.85,
+   "along_y": 0.85,
+   "height": 0.1,
+   "region": "ground_goal_region",
+   "skew_deg": 7.3,
+   "x": 5.115,
+   "y": -2.478
+  },
   "nop_success": false,
   "obs_dim": 70,
   "scene_sha": "56eb0ac29841eb83",
@@ -154,10 +163,10 @@
   ],
   "deterministic": true,
   "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
-  "episode_seconds": 45.7,
+  "episode_seconds": 80.7,
   "nop_success": false,
-  "obs_dim": 595,
-  "scene_sha": "aecb25aa39cdc284",
+  "obs_dim": 915,
+  "scene_sha": "4ab202539580a530",
   "standard": {
    "cameras": [
     "robot_base",
@@ -179,9 +188,9 @@
    "reset_proprio_identical": true,
    "resumes_same_episode": true,
    "step_ms": {
-    "batch": 49.1,
-    "images": 62.9,
-    "single": 58.4
+    "batch": 78.1,
+    "images": 97.8,
+    "single": 117.3
    }
   }
  },
@@ -278,10 +287,19 @@
   ],
   "deterministic": true,
   "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
-  "episode_seconds": 22.1,
+  "episode_seconds": 49.1,
+  "goal_region": {
+   "along_x": 0.475,
+   "along_y": 0.85,
+   "height": 0.1,
+   "region": "sweep_region",
+   "skew_deg": -2.9,
+   "x": 0.508,
+   "y": 0.062
+  },
   "nop_success": false,
-  "obs_dim": 243,
-  "scene_sha": "17b695b0565fb8df",
+  "obs_dim": 883,
+  "scene_sha": "b73343bb8019907a",
   "standard": {
    "cameras": [
     "robot_base",
@@ -303,9 +321,9 @@
    "reset_proprio_identical": true,
    "resumes_same_episode": true,
    "step_ms": {
-    "batch": 19.4,
-    "images": 32.4,
-    "single": 25.5
+    "batch": 45.9,
+    "images": 53.4,
+    "single": 49.9
    }
   }
  }

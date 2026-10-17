@@ -55,7 +55,8 @@ Each action is 11 numbers, one 10 Hz control step, in KinDER's own order (`s.act
 The trajectory is replayed **open-loop**, but nothing stops you from *generating* it closed-loop: replayed from
 `s.reset()`, KinDER on CPU is bit-exact, so actions recorded from a feedback controller reproduce exactly. Use whatever
 you like -- scripted motions, feedback control, search, optimisation. One 1000-step episode costs about
-7 s of one core and the container has 16. `s.env.unwrapped.set_state()` restores KinDER's
+7 s of one core, measured on a lightly loaded host (slower when the host is busy), and the container
+has 16. `s.env.unwrapped.set_state()` restores KinDER's
 object-centric state, not everything the physics carries, so a rollout continued from it can drift from the same actions
 replayed from the start: check the final trajectory with `s.replay`.
 
@@ -66,6 +67,6 @@ You may install packages you need (pip, apt), and you may read anything installe
 Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 16 cores for your container; the cap only slows you down.
 
 ## Time limit
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+You have 1800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
 This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

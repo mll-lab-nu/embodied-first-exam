@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 Two hinged doors above the counter, both opened to within about 9 degrees of fully open at the same time. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
+start) and proprioception, acts through the client, and gets one episode, no reset.
 
 ## Reference solution
 None (as `bigym2-wall-cupboard-open-i00-privileged`).
@@ -51,3 +51,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5,
   docs/benchmarks/bigym2.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are
   unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.
+- 2026-10-16: `RCB_RESET_BUDGET`'s default 10 -> 0 (author decision; PROTOCOL §2, the protocol's default,
+  docs/benchmarks/bigym2.md): one episode, which the practice and the graded attempt share; the instruction says there
+  is no reset. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded
+  with 10 resets are reported separately.

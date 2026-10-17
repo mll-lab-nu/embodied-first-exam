@@ -1,6 +1,6 @@
 # MolmoSpaces · open — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Open the cabinet.
+**Task:** Open the dishwasher.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (a hinged door (revolute joint)).
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one
@@ -12,8 +12,10 @@ client and one episode.
 - **The episode ends** after **455 control steps** (the benchmark's 30 s horizon at
   15.152 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`), when you submit `done`
   (`r.submit("done", [])`), or when your time is up.
-- **Success** is upstream's `judge_success()` on the state at that moment: some joint of any cabinet in the room is open at least 15% of its range (all start closed). The task has to hold at the
-  end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
+- **Success** is upstream's `judge_success()` on the state at that moment: some joint of any dishwasher in the room is open at least 15% of its range (all start closed). The task has to hold at the
+  end: met earlier and undone by then does not count, so end the episode with `done` once it holds. The recorded
+  episode is then replayed from the same start in a fresh process, twice: it scores 1 only if the live episode and
+  both replays succeed and the two replays end in the same state.
 - Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s` and `time_left_s`
   count from your first request to it, so `time_left_s` never reaches 0 before your time is up: plan by it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).

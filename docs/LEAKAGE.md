@@ -152,4 +152,4 @@ Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimTool
 ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboARC, RoboOlympics (formerly RoboFunOlympics), BiGym,
 YAMLab, Panda Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`),
 DexHand (not published at all: its scenes and tooling are this repository's `scripts/dexhand/` and `images/dexhand/`),
-AM-Bench; Isaac Sim does not install from pypi.org.
+AM-Bench, iSpatialGym (GitHub and Hugging Face only); Isaac Sim does not install from pypi.org.

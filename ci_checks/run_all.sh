@@ -109,6 +109,8 @@ add python3 ci_checks/check-protocol.py"$pargs"
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 # issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)
 add python3 ci_checks/check-build-stamps.py
+# PROTOCOL §4: the easy set (docs/easy_set.toml) names existing task bases, with a known reason and their benchmark label
+add python3 scripts/task_conventions.py easy-set --check
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?
