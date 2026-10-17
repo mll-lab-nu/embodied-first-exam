@@ -1,0 +1,1 @@
+Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done; the robot itself does not have to match it.
