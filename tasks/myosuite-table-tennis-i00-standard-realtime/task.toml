@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/myosuite-table-tennis-i00-standard-realtime"
-description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 1): MyoSuite table_tennis (MyoArm with torso, 273 muscles) on the same frozen instance as myosuite-table-tennis-i00-privileged: Return the served ball: hit it with the paddle so that it lands on the opponent's half of the table (MyoChallenge 2025 TableTennis P1's own success test on the ball's contact history: after the serve's bounce on your half, the paddle touches it once, then it touches the opponent's half, with no second paddle touch and no further bounce on your half). Once an episode starts the body and the ball move whatever the agent does, so the agent plans or streams actuator commands from a program of its own through the client (cameras, the body's joints and muscles); 10 resets, only the last episode graded; no object state; the sim service records every executed control step, replays the last episode in a fresh simulator and grades it."
+description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 1): MyoSuite table_tennis (MyoArm with torso, 273 muscles) on the same frozen instance as myosuite-table-tennis-i00-privileged: Return the served ball: hit it with the paddle so that it lands on the opponent's half of the table (MyoChallenge 2025 TableTennis P1's own success test on the ball's contact history: after the serve's bounce on your half, the paddle touches it once, then it touches the opponent's half, with no second paddle touch and no further bounce on your half). Once an episode starts the body and the ball move whatever the agent does, so the agent plans or streams actuator commands from a program of its own through the client (cameras, the body's joints and muscles); 10 resets, only the last episode graded; no object state; the sim service records every executed control step and grades the last episode as it ran (nothing is replayed)."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoarm-torso", "trajectory", "table_tennis", "standard-realtime-mode"]
 
@@ -94,13 +94,13 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it in a
-# fresh simulator. The verdict ("finalized": true, set before any video is rendered) may take until 840 s; then the
-# hook waits for the replay video ("video_pending") until 870 s -- a video that is not ready by then is lost, the
-# verdict is not.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which writes the live
+# episode's verdict (nothing is replayed to grade it). The verdict ("finalized": true, set before any video is rendered)
+# is waited for until 300 s (a restart and a resume included); then the hook waits for the video, rendered from the
+# trajectory ("video_pending"), until 870 s -- a video that is not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
-command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 300 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
 timeout_sec = 900
 
 [agent]
