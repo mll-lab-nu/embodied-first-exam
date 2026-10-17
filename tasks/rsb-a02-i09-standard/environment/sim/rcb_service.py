@@ -47,8 +47,10 @@ Crash recovery: compose restarts a crashed service (restart: on-failure). It rep
 checkpoint, checks the state hash, and continues the SAME episode -- never a reset. A call in flight is lost as a
 whole (its caller got an error, not a result, so nothing was learned). More than RCB_MAX_RESUMES restarts since the
 episode began (every process start counts, also one that died building the scene or replaying the journal) end the
-trial: sim_crashed_on_call if every crash was the agent's (here: it happened while serving a call), else sim_crashed
-(infrastructure, infra_error = 1). Each process writes a fatal signal's record (SIGSEGV, SIGBUS, SIGFPE, SIGILL,
+trial: sim_crashed_on_call if every crash was the agent's (here: it happened while serving one of its calls -- not a
+/reset, whose rebuild is the simulator's -- while the episode was running), else sim_crashed (infrastructure,
+infra_error = 1). Once the outcome is decided (the graded episode ended in success, or failed with no reset left),
+crashes cannot take it away: the restart past the limit resumes the episode and finalizes it as it ended. Each process writes a fatal signal's record (SIGSEGV, SIGBUS, SIGFPE, SIGILL,
 SIGABRT: faulthandler) to crash.log, and startups.jsonl notes crash.log's size at every start, so the death before a
 start is known to be a simulator crash or not (a kill -- SIGKILL, SIGTERM, the OOM killer -- leaves no record);
 "resuming" logs it (fatal_signal), and whether the crashing thread was inside a control step (in_step). This service
@@ -508,17 +510,22 @@ class Service:
         first = int(next(e for e in ev if e["ev"] == "start")["startup"])
         restarts = self.starts - first
         last = max(i for i, e in enumerate(ev) if e["ev"] in ("start", "resuming"))
-        in_call = False                              # did the process that died do so while serving a call?
-        for e in ev[last:]:
-            in_call = {"call_begin": True, "call_end": False}.get(e["ev"], in_call)
+        in_call = self._died_in_call(ev[last:])     # did the process that died do so serving one of the agent's calls?
         in_calls = sum(bool(e["crashed_in_call"]) for e in ev if e["ev"] == "resuming") + int(in_call)
         died = [d for d in deaths(self.data) if d["process"] >= first]      # the deaths since the episode began
         fatal = bool(died and died[-1]["fatal_signal"])                      # the one just before this start
-        if restarts > self.max_resumes:
+        cp = [e for e in ev if "state_sha" in e and "journal_rows" in e][-1]
+        # The live outcome is decided when the graded episode has ended and nothing can follow it: a success, or a
+        # failure with no reset left. Then crashes after it cannot take that outcome away: past the restarts, the
+        # episode is resumed and finalized as it ended (its own verdict, live_verdict() included), not given up.
+        decided = bool(cp["done"]) and cp["reason"] != "reset" and (
+            bool(cp["success"]) or int(cp["resets"]) >= self.reset_budget)
+        finalize_now = restarts > self.max_resumes and decided
+        if restarts > self.max_resumes and not decided:
             agent = self._agent_crashes(ev, died, in_calls) >= restarts   # every crash was the agent's
             self._give_up("sim_crashed_on_call" if agent else "sim_crashed", infra=not agent)
-        self.log("resuming", crashed_in_call=in_call, fatal_signal=fatal, restart=restarts)
-        cp = [e for e in ev if "state_sha" in e and "journal_rows" in e][-1]
+        self.log("resuming", crashed_in_call=in_call, fatal_signal=fatal, restart=restarts,
+                 **({"finalize_decided": True} if finalize_now else {}))
         n, dim = int(cp["journal_rows"]), int(self.sim.raw_dim)
         rows = np.fromfile(self.journal_path, dtype=np.float64) if os.path.exists(self.journal_path) else np.zeros(0)
         if rows.size < n * dim:
@@ -544,6 +551,27 @@ class Service:
         if self.done:
             self.t_end = next((e["ts"] for e in reversed(ev) if e["ev"] == "end"), cp["ts"])
         self._checkpoint("resumed", downtime_s=round(time.time() - float(ev[-1]["ts"]), 1))
+        if finalize_now:
+            # Past the restarts with the outcome decided: grade it now (the agent may still be calling, but nothing it
+            # does can change a decided episode) and serve nothing more -- the crashes it suffered came after its end.
+            self.stopping = True
+            self._finalize()
+            self._give_up("restarted after finalize: crashes after the episode had ended", infra=False)
+
+    @staticmethod
+    def _died_in_call(evs: list[dict]) -> bool:
+        """Did the process whose events these are die serving one of the agent's calls while its episode was still
+        running? A /reset is not counted (its rebuild is the simulator's, infrastructure), nor a call that came after
+        the episode had ended (only deaths before the episode's end count toward the agent's crashes)."""
+        open_call, over = None, False
+        for e in evs:
+            if "journal_rows" in e and "done" in e:
+                over = bool(e["done"]) and e.get("reason") != "reset"
+            if e["ev"] == "call_begin":
+                open_call = (e.get("path"), over)
+            elif e["ev"] == "call_end":
+                open_call = None
+        return bool(open_call) and open_call[0] != "/reset" and not open_call[1]
 
     def _agent_crashes(self, ev: list[dict], died: list[dict], in_calls: int) -> int:
         """How many of the deaths since the episode began were the agent's: here, those while serving a call (its
