@@ -7,7 +7,7 @@ Runs in its own sidecar container (the soccer sim image; the sport code mounted 
 /practice), one per seat, on that seat's internal network only: http://practice:8100/ (the seat's toolkit has a client,
 /opt/robot/scrimmage.py). Every world lives in its own worker process (PRACTICE_WORLDS at a time, default 6).
 
-  POST /new   {"opponent": "L1"|"L2"|"L3"|"L4"|"self", "seed": S, "first": "A"|"B"}
+  POST /new   {"opponent": "L1"|"L2"|"L3"|"L4"|"L5"|"self", "seed": S, "first": "A"|"B"}
               -> {"id", "k", "obs": {"A": ...[, "B": ...]}}       (obs = the match's `game status` for that seat)
   POST /step  {"id", "acts": {"A": [act, ...], "B": [...]}, "n": 1..50}
               -> the acts take effect at this control step (as in the match: an act takes effect at the next 20 ms
@@ -36,7 +36,7 @@ IDLE_S = float(os.environ.get("PRACTICE_IDLE_S", "1800"))
 PORT = int(os.environ.get("PRACTICE_PORT", "8100"))
 SEED_BASE = 1_000_000
 N_MAX = 50
-OPPONENTS = {"L1": 1, "L2": 2, "L3": 3, "L4": 4, "self": 0}   # L4: the RL opponent (soccer.RL_LEVELS)
+OPPONENTS = {"L1": 1, "L2": 2, "L3": 3, "L4": 4, "L5": 5, "self": 0}   # L4, L5: the RL opponents (soccer.RL_LEVELS)
 
 
 def _world_proc(conn, opponent, seed, first):

@@ -359,6 +359,9 @@ class World:
         # {team: level} or {team: (level, style)} (style: the 5 v 5 team plan of the feasibility study)
         self.coaches = {t: (Coach(t, *lv) if isinstance(lv, (tuple, list)) else make_coach(t, lv))
                         for t, lv in self.scripted.items()}
+        for t, c in self.coaches.items():               # a joint-level opponent: its team under joint control
+            if getattr(c, "joint", False):
+                self.joint = tuple(r for r in ROBOTS if r in self.joint or r[0] == t)
         rs = list(self.rob.values())                       # the legs of all robots as (4, 12) index arrays
         self._jq = np.array([r.jq for r in rs])
         self._jv = np.array([r.jv for r in rs])
@@ -1677,16 +1680,22 @@ if N == 2:
 COACH_LEVELS["reference"] = dict(COACH_LEVELS["ref"], style="chase", step=True)
 # level 4 (L-RL, not official; RCB_LEVEL=4): the RL-trained opponent of rl_opponent.py (a fixed-weight policy that
 # chooses skills per robot); levels 1-3 unchanged
-RL_LEVELS = {4: "v2"} if N == 2 else {}
-for _k, _ver in RL_LEVELS.items():
-    COACH_LEVELS[_k] = dict(COACH_LEVELS["reference"], rl=_ver)
+# level 5 (not official; RCB_LEVEL=5): the joint-level RL opponent of rl_joint.py (our own walking policy trained with
+# PPO on the joint level's GPU world, under a team plan): its team is under joint control like the agent's
+RL_LEVELS = {4: ("skills", "v2"), 5: ("joint", "v1")} if N == 2 else {}
+for _k, (_kind, _ver) in RL_LEVELS.items():
+    COACH_LEVELS[_k] = dict(COACH_LEVELS["reference"], rl=_ver, rl_kind=_kind)
 
 
 def make_coach(team, level):
-    """The scripted team of a level: soccer.Coach, or the RL opponent (rl_opponent.RLCoach) for an RL level."""
+    """The scripted team of a level: soccer.Coach, or an RL opponent (rl_opponent.RLCoach, rl_joint.JointTeam)."""
     if level in RL_LEVELS:
+        kind, ver = RL_LEVELS[level]
+        if kind == "joint":
+            import rl_joint
+            return rl_joint.JointTeam(team, version=ver)
         import rl_opponent
-        return rl_opponent.RLCoach(team, version=RL_LEVELS[level])
+        return rl_opponent.RLCoach(team, version=ver)
     return Coach(team, level)
 COACH_STYLES = ("positional", "chase", "defensive")   # 5 v 5 team plans (the single-player opponent: positional)
 STAND_X = HALF_L - 0.3 if BOARDS else PLAY_X - 0.4  # where the scripted players may walk (5 v 5: the border strip too)

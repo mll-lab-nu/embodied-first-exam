@@ -46,7 +46,7 @@ services:
       RO_SEED_INDEX: ""
       RO_TEAM_CHANNEL: "on"
       RO_FIRST: "A"
-      RO_LEVEL: "4"
+      RO_LEVEL: "5"
       RO_SLOWDOWN: "10"
       RO_RENDERER: "mujoco"
       RCB_ACTION_LEVEL: "low"
