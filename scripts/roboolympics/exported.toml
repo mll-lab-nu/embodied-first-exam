@@ -42,7 +42,8 @@ name = "roboolympics-foosball-match-i01-standard-realtime"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
 source_commits = ["d71e9f642ead"]
-patched = ["instruction.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
+patched = ["instruction.md", "environment/docker-compose.yaml"]   # board 0146: LP_NUM_THREADS 2 (OSMesa threads, as the other matches);
+             # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
 
 [[tasks]]
 name = "roboolympics-fencing-bout-i01-standard"
@@ -120,7 +121,7 @@ name = "roboolympics-soccerssl-match-i01-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
-patched = ["instruction.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction; board 0146: the level-4 opponent named as the learned tier, not "scripted"
+patched = ["instruction.md", "task.toml", "README.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction; board 0146: the level-4 opponent named as the learned tier, not "scripted"
 
 [[tasks]]
 name = "roboolympics-tabletennis-duelrl-i01-standard-realtime"

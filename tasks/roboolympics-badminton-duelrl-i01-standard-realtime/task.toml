@@ -82,7 +82,7 @@ allowed = [1001]
 oracle = [1001]
 
 [verifier]
-timeout_sec = 2760.0
+timeout_sec = 2820.0
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -104,7 +104,7 @@ timeout_sec = 30
 [[verifier.collect]]
 service = "sim"
 command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_SPORT_VIDEO = x1 ] && timeout ${RCB_VIDEO_TIMEOUT_S:-1800} python3 /srv/spectator/sport_video.py /srv/sport/plugin.py /data > /dev/null 2>&1; cat /data/final.json | head -c 2000"
-timeout_sec = 2580
+timeout_sec = 2640
 
 [agent]
 timeout_sec = 14400
