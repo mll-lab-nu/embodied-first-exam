@@ -16,8 +16,9 @@ PROTOCOL_HISTORY.md):
   `totals.json` has `refused_paths`, `refused_server_tools` or `refused_bodies` for a look.
 - **No tool outside the container**: the harness's web search, account connectors, apps, plugins, image generation and
   cloud agents off (`WEB_SEARCH=disabled`, `scripts/codex_tools_off.py`; below).
-- **Token budget** per trial: 100M input tokens (Harbor `n_input_tokens`, cache included), 10M output (reasoning
-  included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`); with the gateway, exceeding either stops the agent and
+- **Token budget** per trial: 10B input tokens (Harbor `n_input_tokens`: cached input counts in full) and 10B output
+  (reasoning included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`), set so high that it almost never binds (owner
+  2026-10-17, board 0150; 100M / 10M before, PROTOCOL_HISTORY.md); with the gateway, exceeding either stops the agent and
   fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
   labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
@@ -358,7 +359,7 @@ included); output includes reasoning: the same convention as Harbor's `n_input_t
 summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
 gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
 before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
-(default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
+(default 10B / 10B; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
 the agent stops; `totals.json` records `over_token_budget = 1` and, from the first refused request, `budget_stop`
 (`limit` input|output, `first_refused_at` / `last_refused_at`, the input / cached / output counts at the stop, `refused`):
 a runner records such a trial as `TokenBudgetExceeded` (not the harness's own exception, which reads as a network or API
