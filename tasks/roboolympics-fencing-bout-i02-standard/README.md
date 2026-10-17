@@ -22,8 +22,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. in process (fencing-7): the oracle beats level 2 on this seed 15:13; over 40 player seeds the reference wins this instance 42.5 %, the equilibrium mix 50 % (fresh-seed means 48.0 %, 53.9 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:13 in 32 phrases, replay identical (the world is deterministic).
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
+`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
+the validity rule
 (technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`; `realtime` = 0 for a turn-based match).

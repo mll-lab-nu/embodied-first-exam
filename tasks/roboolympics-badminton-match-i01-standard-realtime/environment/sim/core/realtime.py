@@ -400,8 +400,12 @@ class RealtimeService(Service):
                 with self.cond:
                     if self.phase != "running":
                         continue
-                    self.apply_pending()
-                    events = self.m.step()
+                    try:                                # robot_coding_bench (board 0151): the control step itself
+                        self.apply_pending()
+                        events = self.m.step()
+                    except Exception as exc:  # noqa: BLE001
+                        exc.rcb_where = "world_step"    # its own `where` in final.json errors (tests/grade.py)
+                        raise
                     if events:                          # diagnostics (core 0.2.25): what the step returned
                         self.diag("event", k=self.m.k, events=jsonable(events))
                     self.bc.frame(force=self.m.phase().state != "playing")
@@ -427,7 +431,7 @@ class RealtimeService(Service):
                     if self.m.k % 50 == 0 or self.phase != "running":
                         self.write_final()
         except Exception as exc:  # noqa: BLE001
-            self.failure("world", exc)
+            self.failure(getattr(exc, "rcb_where", "world"), exc)   # world_step: the control step; else bookkeeping
 
     def header_extra(self) -> dict:
         """The episode header's timing (core 0.2.23): what the reaction report of a replay needs."""

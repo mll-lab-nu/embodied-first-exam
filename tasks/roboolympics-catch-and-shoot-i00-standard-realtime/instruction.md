@@ -52,8 +52,8 @@ A referee in the service decides this from the simulator's state. The events tha
   where each is mounted). Not where you or any object is, not the
   referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
   (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
-- There is nothing to hand in: the service records every control step it ran, replays your last attempt in a fresh
-  simulator and grades the replay. Keep the program that drives the robot at `/app/output/gen.py` and a `NOTES.md` of
+- There is nothing to hand in: the service records every control step it ran and grades your last attempt as it ran
+  live (the referee's call). Keep the program that drives the robot at `/app/output/gen.py` and a `NOTES.md` of
   at most 20 lines (your approach, what failed, what you downloaded or installed) for the record: save them early and
   keep them current.
 - Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same

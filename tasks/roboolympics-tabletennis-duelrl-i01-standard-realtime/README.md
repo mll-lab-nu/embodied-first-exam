@@ -23,8 +23,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. screening (Quest, D = 5): the truth-state reference beats it 15/160 (9 %; it beats level 4 in 2/40), the camera-only reference 3/20 (seed 8, A first: 5:2); mirror RL vs RL 68/120 (57 %, Wilson 48-65 %); simple baselines vs RL: center 4/20, center_truth 3/20, fixed 2/20, random 2/20, short_serve 0/20, no_hit 0/20; same-seed reruns 3/3 identical; 0 refused / rejected commands, fewer joint-velocity reflexes than the reference (74 vs 166 per 40 matches). Realtime play varies run to run, hence partial.
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
+`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
+the validity rule
 (technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`).
