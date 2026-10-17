@@ -10,12 +10,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/replay.last.png", service = "sim" },
   { source = "/data/calls/", service = "sim" },
   { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/kinder-constrained-cupboard-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER ConstrainedCupboard3D-o6 on the same frozen instance as kinder-constrained-cupboard-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER ConstrainedCupboard3D-o6 on the same frozen instance as kinder-constrained-cupboard-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). No reset: one episode, which is graded. No privileged state, no goal check; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "constrained-cupboard"]
 
@@ -92,10 +93,11 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
-# The loops run on the clock, inside timeout_sec: the verdict ("finalized": true, set before any video is rendered) may
-# take until 840 s; then the hook waits for the replay video ("video_pending") until 870 s -- a video that is not ready
-# by then is lost, the verdict is not.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it: the
+# live episode's verdict, nothing replayed (board 0151). The loops run on the clock, inside timeout_sec: the verdict
+# ("finalized": true, set before any video is rendered) is in within seconds, or later after a crash-resume, which
+# re-runs the journal (840 s at most); then the hook waits for the video, one pass over the trajectory after the verdict
+# ("video_pending"), until 870 s -- a video that is not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
 command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"

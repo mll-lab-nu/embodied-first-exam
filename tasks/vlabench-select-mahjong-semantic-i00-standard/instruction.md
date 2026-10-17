@@ -5,8 +5,8 @@ a service you cannot open, and you reach it only through a client. **Task: You a
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
-  9000 control steps (900 s of robot time; a technical cap so that the grading replay fits in its
-  time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
+  9000 control steps (900 s of robot time; a technical cap so that the episode's video can be
+  rendered in its time limit), when your time is up, or on a simulator error. `spec()["budget"]["reset"]` is 0.
 - **Time moves only inside calls.** `submit` runs your targets and `get_obs(seconds=s)` holds the last ones for `s`
   seconds; both use up control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no
   seconds is free.
@@ -15,7 +15,7 @@ a service you cannot open, and you reach it only through a client. **Task: You a
   own state: joint angles and velocities, finger positions, the hand's pose (`tcp_*`) and the last command. Not the
   objects' poses, not the task's conditions or success check: the service only tells you that the episode ended and
   why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"` at the step cap, `"error"` after a simulator error).
-- There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script that
+- There is nothing to hand in: the service records the episode and grades it as it ran. Keep the script that
   drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same way, so
   do not stop early.
@@ -23,8 +23,7 @@ a service you cannot open, and you reach it only through a client. **Task: You a
 
 ## Scoring
 VLABench's own success check for `select_mahjong_semantic` (the task's termination condition). The service ends the episode the
-moment it holds (`reason = "success"`), and a fresh replay of the recorded episode must reach it as well and end in
-the same state.
+moment it holds (`reason = "success"`); that live episode is the verdict.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;

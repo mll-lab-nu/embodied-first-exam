@@ -74,7 +74,7 @@ check use), as the privileged instruction says.
 | mode | the agent gets | graded |
 |---|---|---|
 | privileged | the `bigym` package (`Session`: step, reset, replay, MuJoCo model and data, onboard images) | `/app/output/trajectory.npz`, replayed in two fresh processes |
-| standard | the robot's three onboard cameras (84×84 as upstream renders them; `RCB_IMAGE_HW` for others, reported apart), upstream's proprioception, `whole_body` chunks; one episode, no reset | the sidecar's live verdict + a fresh replay (`rcb_service.py`, as HumanoidBench and KinDER) |
+| standard | the robot's three onboard cameras (84×84 as upstream renders them; `RCB_IMAGE_HW` for others, reported apart), upstream's proprioception, `whole_body` chunks; one episode, no reset | the live episode, as it ran (`rcb_service.py`, as HumanoidBench and KinDER; nothing replayed) |
 | standard-realtime | the same on a clock that does not stop; between commands the robot stands still on the last one | as standard (`rcb_realtime.py`, as HumanoidBench) |
 
 Every instruction states, besides upstream's task sentence and success rule: where the named objects are at the start
@@ -86,8 +86,34 @@ the point between each gripper's pads, camera mounts. Reset budget: 0 in both se
 adversarial command patterns of 12 s each, no fall.) `RCB_RESET_BUDGET=N` runs a configuration with N resets; standard
 results recorded with 10 resets (2026-10-11 to 2026-10-16) are reported separately.
 
-Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carries `deterministic` in
-every branch and `sim_error`. The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
+Grading in both service modes, since 2026-10-17 (owner, board 0150/0151): the live episode. The sim sidecar judges the
+episode it runs with upstream's `is_success` at every control step (`step()` in `scripts/bigym2/shared/standard/server.py`)
+and the episode ends where upstream ends it; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`)
+once the agent's container is stopped, and no grading replay runs. The old replay (`rcb_bigym2.replay`) re-ran the same
+rows from the frozen instance and read the same `is_success` where they ended, with no settle or hold of its own (the 1 s
+hold is upstream's, inside the episode), so the live rule is exactly as strict; over the 122 archived standard and
+standard-realtime trials no verdict changes. The frozen start is checked on the live simulator when the scene is built
+(`instance_check`, as the replay did: the instance's `t0` state bit for bit, or within upstream's tolerance), a scene that
+does not rebuild it is `instance_mismatch`, and `start_sha` (that accepted start) is checked when an episode begins;
+both give up as infrastructure (`infra_error = 1`) before the agent is served (every archived start matched `t0`
+exactly), and the service gives up the same way at once if a reset does not return to `start_sha`. Resets are untested
+for that: BiGym 2.0 grants none by default (no archived trial reset); upstream's reset with the seed and its warm-up is
+deterministic on one host, which `RCB_RESET_BUDGET=N` runs would rely on. The video is one render pass over `trajectory.npz` after the verdict (`render_video`: `rcb_bigym2.replay` with
+the recorder; CPU physics and controller, EGL rendering; about a minute a trial at the median); it never changes the
+verdict. The removed replay was a CPU re-run of the episode with the controller (about as long: roughly 3 slot-hours over
+the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the
+agent's calls, a reset whose scene does not rebuild and `instance_mismatch`; simulator errors raised by the agent's calls, crashes inside its calls,
+timeouts and failures are the agent's 0. In standard-realtime (owner, 2026-10-17): once the agent's first command has run, a
+simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
+crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE, SIGILL,
+SIGABRT -- shows the crashing thread in the step; past
+`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); a crash outside a step (building the scene,
+resuming, resetting, rendering, finalizing), anything before the first command, a failed reset rebuild,
+a kill (SIGKILL, SIGTERM, the OOM killer) and a failed resume are infrastructure. Standard mode keeps its rule: a crash
+is the agent's only inside its call (`fatal_signal` is logged as evidence).
+
+Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carried `deterministic` in
+every branch and `sim_error` (since 2026-10-17 `graded_by_live` and `replays` instead of `deterministic`). The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
 the plan's last row, walking velocity included); the shared layer stopped combining rows of different action types (a
 RoboOlympics bug).
 
@@ -97,7 +123,7 @@ up, the cameras are rendered once per control step (`docs/STANDARD_MODE.md`, "Wh
 clock") -- and `final.json` / `reward.json` carry the clock's record: `clock_s`, `max_lag_s` (now the true maximum),
 `stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`, `request_busy_s`. They are
 evidence and decide no verdict. In both service modes a negative `Content-Length` is refused unread (400), and a
-simulator that fails inside `POST /reset` ends the episode `error` (in realtime: `infra_error = 1`), not `reset`.
+simulator that fails inside `POST /reset` ends the episode `error` (`infra_error = 1` in both modes since 2026-10-17; the agent's reset was legitimate), not `reset`.
 
 The success check stays visible in privileged mode (PROTOCOL, owner 2026-10-02): it is sparse, and every instruction
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never

@@ -143,7 +143,7 @@ def reset_vals(n: int, horizon: int) -> dict:
             "RESET_RULE": "**One episode, no reset.** The episode starts when the service comes up, from a fixed starting "
             "state; what ends it is under Success below. `spec()[\"budget\"][\"reset\"]` is authoritative: it is 0 here, "
             "so the one episode is the run. Once it has ended, the run is over and `submit` raises `EpisodeOver`.",
-            "RECORDED": "records the episode, replays it",
+            "RECORDED": "records the episode and grades it as it ran",
             "STATUS_EXTRA": "",
             "RESET_ROW": "",
             "RESET_LEFT": "",
@@ -159,7 +159,7 @@ def reset_vals(n: int, horizon: int) -> dict:
         "frames. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you "
         "reset. **Only the last episode is graded**: a success ends the run at once, and when your time is up the "
         "episode then running is the one graded; `meta[\"episode\"]` and `meta[\"resets_left\"]` count the episodes.",
-        "RECORDED": "records every episode, replays the last one",
+        "RECORDED": "records every episode and grades the last one as it ran",
         "STATUS_EXTRA": ", and `episode`, `resets_left`, `control_steps_total` (all episodes)",
         "RESET_ROW": "| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting state "
         f"(at most {n} in all); returns the start's frames |\n",

@@ -9,12 +9,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/replay.last.png", service = "sim" },
   { source = "/data/calls/", service = "sim" },
   { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/vlabench-select-billiards-common-sense-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench select_billiards_common_sense (Franka Panda) on the same frozen instance as vlabench-select-billiards-common-sense-i00-privileged: Please put the ball worth 7 score in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02. The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench select_billiards_common_sense (Franka Panda) on the same frozen instance as vlabench-select-billiards-common-sense-i00-privileged: Please put the ball worth 7 score in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02. The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -89,11 +90,12 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
-# The loops run on the clock, inside timeout_sec: the verdict ("finalized": true, set before any video is rendered) may
-# take until 1440 s; then the hook waits for the replay video ("video_pending") until 2880 s -- the video replays the
-# episode once more, so it gets as long again as the verdict may take (board 0136: with 1470 s, an episode whose verdict
-# took more than about half of its window lost its video). A video that is not ready by then is lost, the verdict is not.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it: the
+# live episode's verdict, nothing replayed (board 0151). The loops run on the clock, inside timeout_sec: the verdict
+# ("finalized": true, set before any video is rendered) is in within seconds, or later after a crash-resume, which
+# re-runs the journal (1440 s at most); then the hook waits for the video ("video_pending") until 2880 s -- the video
+# re-runs the episode once from the frozen instance, so it keeps a window as long as the longest episode's re-run (board
+# 0136). A video that is not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
 command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 1440 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 2880 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
