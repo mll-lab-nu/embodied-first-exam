@@ -77,8 +77,9 @@ def pybin(tmp: Path) -> Path:
     """A PATH entry whose `python` is this interpreter (the hooks call `python`)."""
     b = tmp / "bin"
     b.mkdir(exist_ok=True)
-    if not (b / "python").exists():
-        os.symlink(sys.executable, b / "python")
+    if not (b / "python").exists():   # a wrapper, not a symlink: a venv's python finds its packages by its own path
+        (b / "python").write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+        (b / "python").chmod(0o755)
     return b
 
 

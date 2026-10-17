@@ -415,4 +415,7 @@ class TestServerCasa(ServerCase, unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # The live-episode grading tests (board 0151: server_mj, the quadruped hook and service, the realtime adapter) run
+    # with these: this file is the one ci_checks/check-unit-tests.sh lists (test_live_grading imports this module).
+    from test_live_grading import QuadrupedHook, QuadrupedService, Realtime, ServerMj, ServerMjPlayground  # noqa: F401
     unittest.main()
