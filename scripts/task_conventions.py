@@ -1181,9 +1181,17 @@ def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
 
 
 def set_of(task: Path) -> str:
-    """`easy` when the task's base is in the easy set (docs/easy_set.toml), else `core`. A recorded marker like
-    `validated`, never part of config_key: the headline statistics count `core` tasks only."""
-    return "easy" if base_of(Path(task)) in easy_set() else "core"
+    """`easy` when the task's base is in the easy set (docs/easy_set.toml), else `core`. A marker like `validated`,
+    never part of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value
+    when it was written; reports re-derive it from the list at the commit they publish. A malformed list never stops a
+    result from being written (a warning, and `core`): `easy-set --check` reports it."""
+    try:
+        es = easy_set()
+    except (ValueError, tomllib.TOMLDecodeError) as e:
+        print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
+              file=sys.stderr)
+        return "core"
+    return "easy" if base_of(Path(task)) in es else "core"
 
 
 def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:

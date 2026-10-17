@@ -6,8 +6,10 @@
 #   benchmark  the base's label (scripts/task_conventions.py BENCHMARKS)
 #   reason     "shortcut": a success came through a goal looser than the task's text, or a grader shortcut (`note`: the
 #              observed pattern); "owner": the benchmark owner judges the task too easy or not discriminative;
-#              "solved": the screening runs solved it in every mode it ships (`note`: which runs)
+#              "solved": the screening runs solved it in every mode it ships (`note`: which runs; their core-set numbers
+#              are then filtered against them, so report those runs on all tasks alongside)
 #   note       optional
+# Append entries in the benchmark's block (one PR per benchmark touches only its own lines).
 # Read by scripts/task_conventions.py (`set_of`: "easy" / "core", recorded with each result as `set`, never part of
 # `config_key`) and checked by `python3 scripts/task_conventions.py easy-set --check` (ci_checks/run_all.sh). Marking a
 # task here changes none of its files: its DIGEST and the results recorded against it stay valid. A task leaves the

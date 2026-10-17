@@ -218,16 +218,22 @@ def test_summary_grouping():
         check("not a result (voided" in out, f"the voided trial is not marked:\n{out}")
 
 
-EASY = "behavior-chop-an-onion-i00"                     # a base of docs/easy_set.toml
-CORE = "behavior-boxing-food-after-dinner-i00"           # a BEHAVIOR-1K base outside it
-
-
 def test_easy_set():
     """PROTOCOL §4: the easy set (docs/easy_set.toml) is valid, marks every mode of a listed base `easy` (recorded with
     the result as `set`, never part of config_key), and the batch summary marks its trials and leaves them out of the rate."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import task_conventions as tc
-    check(tc.check_easy_set() == [], f"docs/easy_set.toml: {tc.check_easy_set()}")
+    names = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    es = tc.easy_set()
+    # a listed base with a privileged and a standard task, and a base outside the list (the list changes over time)
+    EASY = next((b for b in sorted(es) if f"{b}-privileged" in names and f"{b}-standard" in names), None)
+    key = tc.config_key(tc.effective_config(ROOT / "tasks" / f"{EASY}-standard")) if EASY else None
+    CORE = next((b for b in (n[: -len("-privileged")] for n in names if n.endswith("-privileged"))   # same configuration:
+                 if b not in es and f"{b}-standard" in names and b.split("-")[0] == EASY.split("-")[0]   # one summary table
+                 and tc.config_key(tc.effective_config(ROOT / "tasks" / f"{b}-standard")) == key), None) if EASY else None
+    check(EASY is not None and CORE is not None, f"no easy / core base to test with: {EASY}, {CORE}")
+    if EASY is None or CORE is None:
+        return
     for m in ("privileged", "standard"):
         check(tc.set_of(ROOT / "tasks" / f"{EASY}-{m}") == "easy", f"{EASY}-{m} is not in the easy set")
         check(tc.set_of(ROOT / "tasks" / f"{CORE}-{m}") == "core", f"{CORE}-{m} is in the easy set")

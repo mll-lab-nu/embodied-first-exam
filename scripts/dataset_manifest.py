@@ -4,9 +4,9 @@
 Every task carries its own content digest in `tasks/<task>/DIGEST` (written last by scripts/task_conventions.py
 `normalize`; ci_checks/check-dataset-manifest.sh recomputes it) and its own metadata in `task.toml` (mode, family,
 oracle, the agent's cutoff `[agent] timeout_sec`, resources, dynamics, and the settings results are grouped by:
-reset budget, slowdown, network; the `validated` marker; and `set`, core or easy, from docs/easy_set.toml, the one
-list of task bases reported apart). Nothing in the repository lists the tasks: pull
-requests that change different tasks never touch a shared file (as in Terminal-Bench, whose list is its tasks/
+reset budget, slowdown, network; the `validated` marker; and `set`, core or easy, from docs/easy_set.toml). Apart from
+docs/easy_set.toml (a reporting list of task bases reported apart, not the task list), nothing in the repository lists
+the tasks: pull requests that change different tasks never touch a shared file (as in Terminal-Bench, whose list is its tasks/
 directory). After every merge to `main` the workflow `.github/workflows/task-list.yml` writes the list with `list` and
 pushes it to the branch `task-list` (never to `main`); a release attaches the same files (`.github/workflows/release.yml`).
 
@@ -93,7 +93,7 @@ def render_md(rows: list[dict], commit: str) -> str:
            f"{len(rows)} task directories. Modes: " + ", ".join(f"{short[m]} = {m}" for m in modes) + ".", "",
            "## Per benchmark", "",
            "| Benchmark | Tasks (" + " / ".join(short[m] for m in modes) + ") | Cutoff (" + " / ".join(short[m] for m in modes)
-           + ") | Oracle (full / partial / none) | Validated | Easy set | Network (allowlist / open) |", "|---|---|---|---|---|---|---|"]
+           + ") | Oracle (full / partial / none) | Validated | Easy set (tasks) | Network (allowlist / open) |", "|---|---|---|---|---|---|---|"]
     for bench in sorted(by_bench, key=str.lower):
         rs = by_bench[bench]
         n = Counter(r["mode"] for r in rs)
