@@ -1,8 +1,10 @@
 """A stand-in for the MolmoSpaces tooling (no MuJoCo): what environment/sim/server.py needs of Episode, on numpy."""
-import hashlib, types
+import hashlib, os, types
 import numpy as np
-def load_instance(path):
-    return {"family": "pick", "instance": "i00", "t0": {"action_dim": 8}, "facts": {"goal": "pick it", "horizon_s": 2.0},
+START_SHA = hashlib.sha1(np.zeros(8).tobytes() + bytes([0])).hexdigest()[:16]   # Episode(...).state_sha() at the start
+def load_instance(path):   # $STUB_T0_SHA: a frozen hash the start does not have (the service's instance_mismatch)
+    return {"family": "pick", "instance": "i00", "t0": {"action_dim": 8, "state_sha": os.environ.get("STUB_T0_SHA") or START_SHA},
+            "facts": {"goal": "pick it", "horizon_s": 2.0},
             "episode": {"robot": {"robot_name": "franka"}}}
 class Episode:
     def __init__(self, inst):
