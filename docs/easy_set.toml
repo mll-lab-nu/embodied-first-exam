@@ -23,6 +23,8 @@
 # "Easy set").
 # 2026-10-17: AM-Bench 8 (the owner's screening: every mode the base ships solved by a screening run;
 # docs/benchmarks/ambench.md "Easy set").
+# 2026-10-17: RoboCasa 9 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robocasa.md "Easy set").
 
 [[task]]
 base = "ambench-cabinet-pick-place-fahexa-i00"
@@ -382,6 +384,60 @@ reason = "owner"
 base = "roboarc-rope-threading-02-i01"
 benchmark = "RoboARC"
 reason = "owner"
+
+[[task]]
+base = "robocasa-coffee-press-button-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-coffee-setup-mug-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Opus, Sol 6.1 (Luna failed)"
+
+[[task]]
+base = "robocasa-open-drawer-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-pnp-counter-to-cab-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna; judgment: the one standard solve hit the 3600 s agent timeout after its episode was recorded (graded as a success)"
+
+[[task]]
+base = "robocasa-pnp-counter-to-microwave-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Astra, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-pnp-counter-to-sink-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-pnp-sink-to-counter-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-turn-on-microwave-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-turn-sink-spout-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
 
 [[task]]
 base = "robolab-banana-in-bowl-i00"
